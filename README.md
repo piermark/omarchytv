@@ -400,6 +400,7 @@ omarchy-tv adb-lock --tv 192.168.1.9:5555                                 # clos
 | Philips 55OLED718/12 | 14 | ? | 2.13.0-beta | ok (community) | Google TV Home lock: works with the HomeOverride accessibility workaround (no root, survives reboot); OmarchyDream + ASCII Aquarium verified; physical remote Home not verified. Tested by @sevos ([#22](https://github.com/piermark/omarchytv/issues/22)) |
 | LG 32LQ63006LA (2022) | webOS 22 | — | 2.13.1-testing (webOS) | ok | installed with Developer Mode + `ares-cli`; Cinemarchy YouTube playback, dock apps, Grok Bot companion and SpaceX TV verified with the remote |
 | Samsung UN65CU7000FXZA (2023) | Tizen 9.0 | — | 2.13.0-beta (Tizen .wgt) | ok (community) | installs and launches on a retail Samsung, signed with a Samsung certificate; tested by Wes (@wesleygrimes) ([#60](https://github.com/piermark/omarchytv/issues/60)) |
+| Samsung UN65AU7000 (AU7000, 65", 2021) | Tizen 6 | — | 2.13.6-testing (Tizen web app) | ok (community) | working; reported as "UN65AU67000FXZX" (likely UN65AU7000FXZA); community report via X |
 | Amazon Fire TV Stick HD AFTSS | 9 (Fire OS 7.7.1.3) | 138 (Amazon WebView) | 2.13.0-beta | works (community) | installs and launches; HomeOverride works but has Fire OS quirks (double Home events, accessibility reset on reboot); tested by @podzpau ([#58](https://github.com/piermark/omarchytv/issues/58)) |
 
 Tested yours? Open an issue with the "TV report" template.
