@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- **Fix (Android): ◀▶ in the top bar no longer gets stuck on the last workspace when some are hidden.** Hidden workspace slots are skipped, so with 4 workspaces ▶ from "4" now reaches the right-hand icons (Cinemarchy, Wi-Fi, Bluetooth, volume, inputs, screen). The 🚀 SpaceX TV link is now reachable with the D-pad too, between the workspaces and the icons, when the plugin is on. No wrap-around at the ends, as before. Test: `BarFocusTest`.
+
 ## [2.13.0-beta] — 2026-10-29 (pre-release, `versionCode 21`)
 
 Artifacts: `omarchytv-release-2.13.0-beta.apk` (Android TV), `omarchytv-webos-2.13.0-testing.ipk` (LG webOS), `OmarchyTV-tizen-2.13.0-beta-unsigned.wgt` (Samsung Tizen, unsigned testing), `omarchytv-mobile-2.13.0-beta.apk` (phone), `omarchy-tv-pc-plugin-2.13.0-beta.tar.gz` plus separate `omarchy-tv` and `omarchy-link` tarballs, and `SHA256SUMS`.

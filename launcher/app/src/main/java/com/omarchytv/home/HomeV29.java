@@ -1406,10 +1406,11 @@ final class HomeV29 extends FrameLayout {
                 List<View> order = new ArrayList<>();
                 order.add(menuBtn);
                 for (TextView w : ws) order.add(w);
+                order.add(barSpacex);
                 order.addAll(barIcons);
-                int i = order.indexOf(f);
-                int to = i + (r ? 1 : -1);
-                if (i >= 0 && to >= 0 && to < order.size()) order.get(to).requestFocus();
+                // hidden workspaces (and SpaceX TV when off) are GONE: skip them, or focus gets stuck
+                int to = BarFocus.next(order, f, r, v -> v.getVisibility() == VISIBLE && v.isFocusable());
+                if (to >= 0) order.get(to).requestFocus();
                 return true;
             }
             return false;
