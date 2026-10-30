@@ -62,6 +62,14 @@ itself from an HTTPS URL:
 "remotePanes": { "url": "https://example.com/tv/panes.json", "refreshSec": 300 }
 ```
 
+Plain `http://` is accepted only to a literal private / link-local LAN address (10/8, 172.16/12,
+192.168/16, fc00::/7, link-local; no host names, never a public address), the same rule as the web tiles,
+e.g. a home automation server such as Node-RED:
+
+```json
+"remotePanes": { "url": "http://192.168.1.20:1880/omarchytv/panes.json", "refreshSec": 300 }
+```
+
 The body is the one of `PUT /v1/widgets` (PROTOCOL.md §6), **panes only**: shortcuts and actions are
 ignored, so a URL can only show text. Same limits and cleaning (8 panes × 8 lines, label ≤ 16, value ≤ 64,
 printable text). A line may carry `"tone": "up"` or `"down"` to colour its value green or red. Up to 3 panes

@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- **Remote panes over LAN http:** `remotePanes.url` in `omarchytv.json` now also accepts `http://` to a literal private or link-local address (10/8, 172.16/12, 192.168/16, fc00::/7, link-local), the same rule as the web tiles, e.g. Node-RED at `http://192.168.1.20:1880/omarchytv/panes.json`. Host names and public addresses over http are still refused; HTTPS works as before. The rule is checked when the config is read and again before each fetch (`RemotePanes.urlAllowed`, `LanHttpDataSource.lanHost`, `RemotePanesUrlTest`).
+
 ## [2.13.0-beta] — 2026-10-29 (pre-release, `versionCode 21`)
 
 Artifacts: `omarchytv-release-2.13.0-beta.apk` (Android TV), `omarchytv-webos-2.13.0-testing.ipk` (LG webOS), `OmarchyTV-tizen-2.13.0-beta-unsigned.wgt` (Samsung Tizen, unsigned testing), `omarchytv-mobile-2.13.0-beta.apk` (phone), `omarchy-tv-pc-plugin-2.13.0-beta.tar.gz` plus separate `omarchy-tv` and `omarchy-link` tarballs, and `SHA256SUMS`.

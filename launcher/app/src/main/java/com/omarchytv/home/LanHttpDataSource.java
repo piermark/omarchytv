@@ -41,8 +41,12 @@ final class LanHttpDataSource extends BaseDataSource {
 
     /** http:// to a literal 10/8, 172.16/12, 192.168/16, fc00::/7 or link-local address. */
     static boolean allowed(Uri u) {
-        if (u == null || !"http".equals(u.getScheme()) || u.getHost() == null) return false;
-        String h = u.getHost();
+        return u != null && "http".equals(u.getScheme()) && lanHost(u.getHost());
+    }
+
+    /** A literal 10/8, 172.16/12, 192.168/16, fc00::/7 or link-local address (plain Java, also used by RemotePanes). */
+    static boolean lanHost(String h) {
+        if (h == null) return false;
         if (!h.matches("[0-9.]+") && !h.contains(":")) return false;   // literal addresses only, no DNS
         try {
             InetAddress a = InetAddress.getByName(h);
