@@ -21,4 +21,23 @@ public class AppSizeTest {
         assertEquals(0.92f * AppAdapter.PRESET[3], AppAdapter.scaleFor(0.92f, 7), 1e-6f);   // tile scale stays a fine adjust
         assertEquals(4, LauncherConfig.APP_SIZES.length);
     }
+
+    /** v2.x home row: App size sets how many 16:9 tiles show at once; more per row = smaller tiles, lower row. */
+    @Test
+    public void homeRowFollowsAppSize() {
+        for (int cols = 4; cols <= 7; cols++) assertEquals(cols, HomeV29.rowCols(cols));
+        assertEquals(6, HomeV29.rowCols(0));   // no config yet: the v2.9 row
+        assertEquals(4, HomeV29.rowCols(2));
+        assertEquals(7, HomeV29.rowCols(12));
+        int inner = 1920 - 64 - 56 - 4, gap = 20;   // 1920x1080: margins, window padding, border
+        int prevW = Integer.MAX_VALUE;
+        for (int cols = 4; cols <= 7; cols++) {
+            int w = HomeV29.tileW(inner, gap, cols);
+            assertTrue(cols + " tiles fit the row", cols * w + (cols - 1) * gap <= inner);
+            assertTrue(cols + " tiles fill the row", (cols + 1) * w + cols * gap > inner);
+            assertTrue(cols + " per row is smaller", w < prevW);
+            prevW = w;
+        }
+        assertEquals(282, HomeV29.tileW(inner, gap, 6));   // unchanged v2.9 size at the default
+    }
 }

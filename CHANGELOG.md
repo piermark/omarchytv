@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **Fix (Android TV): the home app row now follows Layout → App size.** The v2.x home row always showed 6 tiles; it now shows 4 / 5 / 6 / 7 (large / medium / small / compact), as the menu label says. Tiles stay 16:9, the app window gets lower with more per row, and the grokbot box stays just above it. ◀▶ still steps tile by tile and scrolls to apps past the edge. Test: `AppSizeTest.homeRowFollowsAppSize`.
+
 ## [2.13.0-beta] — 2026-10-29 (pre-release, `versionCode 21`)
 
 Artifacts: `omarchytv-release-2.13.0-beta.apk` (Android TV), `omarchytv-webos-2.13.0-testing.ipk` (LG webOS), `OmarchyTV-tizen-2.13.0-beta-unsigned.wgt` (Samsung Tizen, unsigned testing), `omarchytv-mobile-2.13.0-beta.apk` (phone), `omarchy-tv-pc-plugin-2.13.0-beta.tar.gz` plus separate `omarchy-tv` and `omarchy-link` tarballs, and `SHA256SUMS`.
