@@ -178,6 +178,7 @@ public class GrokbotDirectActivity extends Activity {
                 }
             });
         }
+        if (getIntent().getBooleanExtra("xai_test", false)) testXai();
         String q = getIntent().getStringExtra("q");
         if (q != null && !q.trim().isEmpty()) send(q);
         if (getIntent().getBooleanExtra("voice", false)) voice();
@@ -188,6 +189,10 @@ public class GrokbotDirectActivity extends Activity {
     protected void onDestroy() {
         pendingId = null;
         stopListening();
+        if (player != null) {
+            player.release();
+            player = null;
+        }
         if (tts != null) {
             tts.shutdown();
             tts = null;
@@ -275,17 +280,145 @@ public class GrokbotDirectActivity extends Activity {
         mark.postDelayed(() -> mark.pose("idle"), 2500);
         if (!r.text.isEmpty()) {
             line("Grok Bot", r.text, false);
-            if (ttsReady && tts != null && speak(this)) {
-                // The reply's own "lang" when valid and installed, else the launcher language.
-                Locale want = Locale.forLanguageTag(r.lang.isEmpty() ? MainActivity.speechLanguage(this) : r.lang);
-                int ok = tts.setLanguage(want);
-                if (ok == TextToSpeech.LANG_MISSING_DATA || ok == TextToSpeech.LANG_NOT_SUPPORTED)
-                    tts.setLanguage(Locale.forLanguageTag(MainActivity.speechLanguage(this)));
-                tts.speak(r.text, TextToSpeech.QUEUE_FLUSH, null, id);
-            }
+            if (speak(this) && xaiOn(this)) speakXai(r.text, r.lang, id);
+            else if (speak(this)) speakSystem(r.text, r.lang, id);
         }
         if (r.dropped) line("OmarchyTV", "Grok Bot sent an action I can't run (ignored).", false);
         if (r.action != null) mark.postDelayed(() -> run(r.action), ttsReady ? 600 : 0);
+    }
+
+    /** The system TextToSpeech, in the reply's lang when valid and installed, else the launcher language. */
+    private void speakSystem(String text, String lang, String id) {
+        if (!ttsReady || tts == null) return;
+        int ok = tts.setLanguage(Locale.forLanguageTag(lang == null || lang.isEmpty() ? MainActivity.speechLanguage(this) : lang));
+        if (ok == TextToSpeech.LANG_MISSING_DATA || ok == TextToSpeech.LANG_NOT_SUPPORTED)
+            tts.setLanguage(Locale.forLanguageTag(MainActivity.speechLanguage(this)));
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, id);
+    }
+
+    // ---- optional "Voce di Grok (xAI)": off by default; the key stays in these prefs, masked, never logged ----
+
+    static boolean xaiOn(Context c) {
+        SharedPreferences p = prefs(c);
+        return p.getBoolean("xai_on", false) && GrokbotDirect.validKey(p.getString("xai_key", ""));
+    }
+
+    static String xaiVoice(Context c) {
+        String v = prefs(c).getString("xai_voice", GrokbotDirect.DEFAULT_VOICE);
+        return GrokbotDirect.validVoice(v) ? v : GrokbotDirect.DEFAULT_VOICE;
+    }
+
+    private android.media.MediaPlayer player;
+    private boolean xaiNoted;
+
+    private void speakXai(String text, String lang, String id) {
+        final String key = prefs(this).getString("xai_key", ""), voice = xaiVoice(this);
+        new Thread(() -> {
+            java.io.File f = null;
+            try {
+                HttpURLConnection c = (HttpURLConnection) new URL(GrokbotDirect.XAI_TTS).openConnection();
+                byte[] mp3;
+                try {
+                    c.setConnectTimeout(GrokbotDirect.XAI_TIMEOUT_MS);
+                    c.setReadTimeout(GrokbotDirect.XAI_TIMEOUT_MS);
+                    c.setRequestMethod("POST");
+                    c.setDoOutput(true);
+                    c.setRequestProperty("Authorization", "Bearer " + key);
+                    c.setRequestProperty("Content-Type", "application/json");
+                    try (OutputStream o = c.getOutputStream()) {
+                        o.write(GrokbotDirect.ttsBody(text, voice, lang).getBytes(StandardCharsets.UTF_8));
+                    }
+                    if (c.getResponseCode() != 200) throw new HttpCode(c.getResponseCode());
+                    try (InputStream in = c.getInputStream()) {
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        byte[] buf = new byte[16384];
+                        int n;
+                        long end = System.currentTimeMillis() + GrokbotDirect.XAI_TIMEOUT_MS;
+                        while ((n = in.read(buf)) > 0 && out.size() < 8 * 1024 * 1024) {
+                            out.write(buf, 0, n);
+                            if (System.currentTimeMillis() > end) throw new java.net.SocketTimeoutException();
+                        }
+                        mp3 = out.toByteArray();
+                    }
+                } finally {
+                    c.disconnect();
+                }
+                if (mp3.length < 64) throw new java.io.IOException("empty");
+                f = new java.io.File(getCacheDir(), "grok-voice.mp3");
+                try (java.io.FileOutputStream o = new java.io.FileOutputStream(f)) {
+                    o.write(mp3);
+                }
+                final String path = f.getAbsolutePath();
+                ui.post(() -> playMp3(path, text, lang, id));
+            } catch (Exception e) {
+                ui.post(() -> xaiFallback(text, lang, id));
+            }
+        }, "grok-voice").start();
+    }
+
+    private void playMp3(String path, String text, String lang, String id) {
+        if (isFinishing() || isDestroyed()) return;
+        try {
+            if (player != null) player.release();
+            player = new android.media.MediaPlayer();
+            player.setDataSource(path);
+            player.setOnCompletionListener(mp -> {
+                mp.release();
+                if (player == mp) player = null;
+            });
+            player.setOnErrorListener((mp, w, x) -> {
+                xaiFallback(text, lang, id);
+                return true;
+            });
+            player.prepare();
+            player.start();
+        } catch (Exception e) {
+            xaiFallback(text, lang, id);
+        }
+    }
+
+    /** Any xAI error or timeout: the system voice, and one short note per chat. */
+    private void xaiFallback(String text, String lang, String id) {
+        if (isFinishing() || isDestroyed()) return;
+        if (!xaiNoted) {
+            xaiNoted = true;
+            line("OmarchyTV", "Grok voice unavailable, using the TV voice.", false, false);
+        }
+        speakSystem(text, lang, id);
+    }
+
+    /** Settings › test the Grok voice: refresh the voice list (GET /v1/tts/voices), then speak a line. */
+    private void testXai() {
+        final String key = prefs(this).getString("xai_key", "");
+        if (!GrokbotDirect.validKey(key)) {
+            line("OmarchyTV", "Enter the xAI API key in Settings first.", false, false);
+            return;
+        }
+        new Thread(() -> {
+            try {
+                HttpURLConnection c = (HttpURLConnection) new URL(GrokbotDirect.XAI_VOICES).openConnection();
+                c.setConnectTimeout(GrokbotDirect.XAI_TIMEOUT_MS);
+                c.setReadTimeout(GrokbotDirect.XAI_TIMEOUT_MS);
+                c.setRequestProperty("Authorization", "Bearer " + key);
+                if (c.getResponseCode() == 200) {
+                    try (InputStream in = c.getInputStream()) {
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        byte[] buf = new byte[8192];
+                        int n;
+                        while ((n = in.read(buf)) > 0 && out.size() < 256 * 1024) out.write(buf, 0, n);
+                        List<String> v = GrokbotDirect.voices(out.toString("UTF-8"));
+                        if (!v.isEmpty()) prefs(this).edit().putString("xai_voices", android.text.TextUtils.join(",", v)).apply();
+                    }
+                }
+                c.disconnect();
+            } catch (Exception ignored) {
+            }
+            ui.post(() -> {
+                String say = "Ciao! Sono Grok, con la voce " + xaiVoice(this) + ".";
+                line("Grok Bot", say, false, false);
+                speakXai(say, "it", "test");
+            });
+        }, "grok-voices").start();
     }
 
     private void run(GrokbotDirect.Action a) {

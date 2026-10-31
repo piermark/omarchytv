@@ -456,3 +456,13 @@ Copyright (c) 2026 Marco Porro ([x.com/MarcoPorro](https://x.com/MarcoPorro) · 
 ## Cinemarchy 0.1.0-alpha (preview)
 
 Cinemarchy has its own version (0.1.0-alpha), separate from OmarchyTV. It's an early preview, so I'd really appreciate your feedback: open an issue at https://github.com/piermark/omarchytv/issues.
+
+### Grok Bot: Blue key, PC mode and Direct mode
+
+Press **Blue** to chat with Grok Bot, or hold it to talk. On webOS and Tizen, holding Blue for about 0.65 s starts voice. On Android TV the mic key also works when OmarchyTV is the Assistant. Samsung voice/search keys work when the TV lets apps have them.
+
+- **PC mode**: Tom Ballard's ([@tcballard](https://x.com/tcballard)) Grok Bot Desktop Companion on the Omarchy PC. It needs the PC on.
+- **Direct mode**: your own Grok Bot webhook routine. It works with the PC off and is used when no PC is linked or the PC can't be reached.
+- **Grok voice (optional)**: replies spoken with xAI's TTS (paid API key, off by default).
+
+Full guide: [docs/GROKBOT-DIRECT.md](docs/GROKBOT-DIRECT.md).

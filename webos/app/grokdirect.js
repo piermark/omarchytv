@@ -92,11 +92,44 @@
   }
   function youtubeSearchUrl(q) { return "https://www.youtube.com/results?search_query=" + encodeURIComponent(q).replace(/%20/g, "+"); }
 
+  // ---- optional "Voce di Grok (xAI)", off by default: https://docs.x.ai/developers/model-capabilities/audio/text-to-speech ----
+  var XAI_TTS = "https://api.x.ai/v1/tts", XAI_VOICES = "https://api.x.ai/v1/tts/voices", XAI_TIMEOUT_MS = 8000;
+  function validVoice(v) { return typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v); }
+  function ttsBody(text, voice, lang) {
+    return JSON.stringify({ text: String(text || "").slice(0, 4000), voice_id: validVoice(voice) ? voice : "eve", language: validLang(lang) ? lang : "auto" });
+  }
+  function voices(json) {
+    var out = [];
+    try {
+      var a = (typeof json === "string" ? JSON.parse(json) : json).voices || [];
+      a.forEach(function (v) { var id = v && v.voice_id; if (validVoice(id) && out.indexOf(id) < 0 && out.length < 50) out.push(id); });
+    } catch (e) {}
+    return out;
+  }
+  function xaiOn(s) { return !!(s && s.xaiOn && validKey(s.xaiKey)); }
+  /** Resolves with the MP3 Blob, rejects on any error or after 8 s. */
+  function xaiAudio(s, text, lang, deps) {
+    deps = deps || {};
+    var f = deps.fetch || root.fetch, wait = deps.setTimeout || setTimeout;
+    return new Promise(function (res, rej) {
+      var done = false;
+      wait(function () { if (!done) { done = true; rej(new Error("timeout")); } }, XAI_TIMEOUT_MS);
+      f(XAI_TTS, { method: "POST", headers: { "Authorization": "Bearer " + s.xaiKey, "Content-Type": "application/json" }, body: ttsBody(text, s.xaiVoice, lang) })
+        .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.blob(); })
+        .then(function (b) { if (!done) { done = true; res(b); } }, function (e) { if (!done) { done = true; rej(e); } });
+    });
+  }
+  function xaiVoices(s, deps) {
+    var f = (deps && deps.fetch) || root.fetch;
+    return f(XAI_VOICES, { headers: { "Authorization": "Bearer " + s.xaiKey } }).then(function (r) { return r.ok ? r.json() : {}; }).then(voices);
+  }
+
   function load(store) {
     var s = {};
     try { s = JSON.parse(store.getItem(KEY) || "{}") || {}; } catch (e) { s = {}; }
     if (!validTopic(s.topic)) { s.topic = newTopic(); save(store, s); }
     if (s.speak === undefined) s.speak = true;
+    if (!validVoice(s.xaiVoice)) s.xaiVoice = "eve";
     return s;
   }
   function save(store, s) { try { store.setItem(KEY, JSON.stringify(s)); } catch (e) {} }
@@ -125,7 +158,7 @@
 
   var api = { KEY: KEY, POLL_MS: POLL_MS, TIMEOUT_MS: TIMEOUT_MS, newTopic: newTopic, validTopic: validTopic, validLang: validLang, validUrl: validUrl,
     validKey: validKey, mask: mask, headers: headers, body: body, pollUrl: pollUrl, isYoutube: isYoutube, action: action,
-    parse: parse, dropped: dropped, find: find, youtubeSearchUrl: youtubeSearchUrl, load: load, save: save, enabled: enabled, ask: ask };
+    parse: parse, dropped: dropped, validVoice: validVoice, ttsBody: ttsBody, voices: voices, xaiOn: xaiOn, xaiAudio: xaiAudio, xaiVoices: xaiVoices, XAI_TIMEOUT_MS: XAI_TIMEOUT_MS, find: find, youtubeSearchUrl: youtubeSearchUrl, load: load, save: save, enabled: enabled, ask: ask };
   root.OmarchyGrokDirect = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : this);

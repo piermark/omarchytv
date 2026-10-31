@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 Testing build `2.13.8-testing2` (`versionCode 24`, Android only): Grok Bot diretto now listens with the in-app SpeechRecognizer (`RECORD_AUDIO`, asked at first use) and shows "🎤 Listening…" with partial results. On Android 9 (Sony), Google's recognizer activity heard the words but never returned them. The old intent is still the fallback. On all three platforms, the reply's optional `lang` picks the voice language. A `play_video` with only a `query`/`title` becomes a YouTube search, `open_app` accepts `app` as an alias for `name`, and the chat shows a line when an action is dropped.
+- Grok Bot diretto: optional "Voce di Grok (xAI)" (off by default) on Android TV, webOS and Tizen; falls back to the system voice on any error or after 8 s.
 
 Testing build `2.13.8-testing` (`versionCode 23`; webOS 2.13.8, Tizen 2.13.8).
 

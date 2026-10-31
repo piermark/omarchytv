@@ -126,3 +126,39 @@ made once on your TV, so it's hard to guess. But ntfy topics are not authenticat
 messages published there, for ntfy's cache time (about 12 hours). Don't ask for anything you wouldn't want stored
 there. To get a new topic, clear OmarchyTV's data (Android) or its local storage (webOS/Tizen). Your question goes
 to your Grok Bot routine over HTTPS, and the TV never sends your key anywhere else.
+
+
+## The Blue key, the mic and the two modes
+
+### Keys that open Grok Bot
+
+| Platform | Blue key | Mic / voice key |
+|---|---|---|
+| Android TV / Google TV | `KEYCODE_PROG_BLUE` opens the chat right away. Exception: if `"assistant": {"key": "blue"}` gives Blue to Ask, Blue opens Ask instead. Long-press Menu, then OK, also opens the chat. | The mic (`ACTION_ASSIST` / `KEYCODE_SEARCH`, `KEYCODE_VOICE_ASSIST`) opens the chat by voice when OmarchyTV holds the Assistant role and `"voiceKey": "companion"` is set (the default). With `"launcher"` it opens Walker voice search. Otherwise the key stays with Google Assistant. |
+| LG webOS | Blue (`keyCode 406`): a short press opens the chat, holding it for about 0.65 s opens the chat by voice. | The Magic Remote mic always belongs to the system, so I can't use it. Hold Blue instead. |
+| Samsung Tizen | `ColorF3Blue`: short press for chat, hold for voice (same as webOS). | Search/Voice/Mic keys are registered through `tizen.tvinputdevice` when the TV lets apps have them, and then they open the chat by voice. Otherwise hold Blue. |
+
+### PC mode and Direct mode
+
+- **PC mode**: Grok Bot Desktop Companion by Tom Ballard ([@tcballard](https://x.com/tcballard)), running on the Omarchy PC through omarchy-link. The TV sends the question to the PC, and the PC answers. This needs the PC turned on and linked. All the PC mode code and behaviour are Tom's, and I haven't changed them.
+- **Direct mode (Grok Bot diretto)**: the TV calls your own Grok Bot webhook routine and reads the reply from ntfy.sh. It works with the PC off. You turn it on in Grok Bot settings with your own webhook URL and key (placeholders here: `https://<your-webhook-url>`, `<your-key>`).
+
+How the choice is made:
+
+- On Android, the Blue key or mic opens PC mode when a PC is linked. When no PC is linked and Direct mode is on, it opens Direct mode.
+- On webOS/Tizen, Direct mode is used when no PC is linked. It is also used as a fallback when the PC request fails, for example because the PC is off or unreachable.
+- Ask and the other agents (Claude/Codex/Hermes) never change.
+
+The optional Grok voice (xAI) is described below. It only affects how Direct mode replies are spoken.
+
+## Optional: Grok's own voice (xAI)
+
+By default the TV reads replies with its own system voice. If you want Grok's voice instead, I added an optional **Voce di Grok (xAI)** setting on Android TV, webOS and Tizen. It's off by default and only works in Grok Bot diretto.
+
+1. Create a paid xAI API key in the xAI console. The voice costs about **$15 per 1M characters** (check https://docs.x.ai/developers/pricing for the current price).
+2. On the TV, open Grok Bot settings, turn on **Voce di Grok (xAI)** and enter the key. On webOS/Tizen, type the key in the code field and pick "Save the xAI API key typed above". The key stays on the TV only, is shown masked, and is never logged.
+3. Pick **Test voce di Grok**. It refreshes the voice list from `GET https://api.x.ai/v1/tts/voices` and speaks a test line. Then choose a voice (the default is `eve`).
+
+Each reply is sent to `POST https://api.x.ai/v1/tts` with `{"text", "voice_id", "language"}`, where `language` is the reply's `lang` or `auto`. The MP3 is played with MediaPlayer on Android and with an `<audio>` element on webOS/Tizen. If xAI fails or takes longer than 8 seconds, the TV falls back to its system voice and shows one short note in the chat. Docs: https://docs.x.ai/developers/model-capabilities/audio/text-to-speech
+
+Privacy note: with this on, the reply text also goes to xAI.

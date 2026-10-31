@@ -112,4 +112,18 @@ public class GrokbotDirectTest {
         assertEquals("", GrokbotDirect.parse("{\"id\":\"a\",\"text\":\"x\",\"lang\":\"english please\"}", "a").lang);
         assertEquals("", GrokbotDirect.parse("{\"id\":\"a\",\"text\":\"x\"}", "a").lang);
     }
+
+    @Test
+    public void xaiTtsBodyAndVoices() throws Exception {
+        JSONObject b = new JSONObject(GrokbotDirect.ttsBody("Ciao", "eve", "it"));
+        assertEquals("Ciao", b.getString("text"));
+        assertEquals("eve", b.getString("voice_id"));
+        assertEquals("it", b.getString("language"));
+        JSONObject a = new JSONObject(GrokbotDirect.ttsBody("Hi", "bad voice!", ""));
+        assertEquals("eve", a.getString("voice_id"));
+        assertEquals("auto", a.getString("language"));
+        assertEquals(Arrays.asList("eve", "ara"), GrokbotDirect.voices("{\"voices\":[{\"voice_id\":\"eve\",\"name\":\"Eve\"},{\"voice_id\":\"ara\"},{\"voice_id\":\"x y\"}]}"));
+        assertTrue(GrokbotDirect.voices("not json").isEmpty());
+        assertEquals(8000, GrokbotDirect.XAI_TIMEOUT_MS);
+    }
 }

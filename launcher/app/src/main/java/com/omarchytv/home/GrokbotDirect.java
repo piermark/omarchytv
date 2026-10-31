@@ -196,6 +196,39 @@ final class GrokbotDirect {
         }
     }
 
+    // ---- optional "Voce di Grok (xAI)": https://docs.x.ai/developers/model-capabilities/audio/text-to-speech ----
+    static final String XAI_TTS = "https://api.x.ai/v1/tts", XAI_VOICES = "https://api.x.ai/v1/tts/voices";
+    static final int XAI_TIMEOUT_MS = 8_000;
+    static final String DEFAULT_VOICE = "eve";
+
+    static boolean validVoice(String v) {
+        return v != null && v.matches("[A-Za-z0-9_-]{1,64}");
+    }
+
+    /** POST /v1/tts body; language is the reply's lang when valid, else "auto". The answer is raw MP3. */
+    static String ttsBody(String text, String voice, String lang) throws Exception {
+        return new JSONObject()
+                .put("text", text == null ? "" : (text.length() > 4000 ? text.substring(0, 4000) : text))
+                .put("voice_id", validVoice(voice) ? voice : DEFAULT_VOICE)
+                .put("language", validLang(lang) ? lang : "auto")
+                .toString();
+    }
+
+    /** voice_id values from GET /v1/tts/voices ({"voices":[{"voice_id":…,"name":…}]}); empty on anything odd. */
+    static List<String> voices(String json) {
+        List<String> out = new ArrayList<>();
+        try {
+            JSONArray a = new JSONObject(json).optJSONArray("voices");
+            for (int i = 0; a != null && i < a.length() && out.size() < 50; i++) {
+                JSONObject v = a.optJSONObject(i);
+                String id = v != null ? v.optString("voice_id", "") : "";
+                if (validVoice(id) && !out.contains(id)) out.add(id);
+            }
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
     static String youtubeSearchUrl(String q) {
         try {
             return "https://www.youtube.com/results?search_query=" + java.net.URLEncoder.encode(q, "UTF-8");

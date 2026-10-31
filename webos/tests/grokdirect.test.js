@@ -104,3 +104,20 @@ test("reply lang is kept only when it is a valid BCP-47 tag", () => {
   assert.strictEqual(G.parse(JSON.stringify({ id: "a", text: "x", lang: "english please" }), "a").lang, "");
   assert.strictEqual(G.parse(JSON.stringify({ id: "a", text: "x" }), "a").lang, "");
 });
+
+test("xAI voice: body, voice list, 8 s timeout falls back, blob on success", async () => {
+  assert.deepStrictEqual(JSON.parse(G.ttsBody("Ciao", "eve", "it")), { text: "Ciao", voice_id: "eve", language: "it" });
+  assert.deepStrictEqual(JSON.parse(G.ttsBody("Hi", "bad voice!", "")), { text: "Hi", voice_id: "eve", language: "auto" });
+  assert.deepStrictEqual(G.voices({ voices: [{ voice_id: "eve" }, { voice_id: "ara" }, { voice_id: "x y" }] }), ["eve", "ara"]);
+  assert.deepStrictEqual(G.voices("nope"), []);
+  const st = { xaiOn: true, xaiKey: "placeholder-key-123", xaiVoice: "eve" };
+  assert.ok(G.xaiOn(st));
+  assert.ok(!G.xaiOn({ xaiOn: false, xaiKey: "placeholder-key-123" }));
+  let sent;
+  const blob = await G.xaiAudio(st, "Ciao", "it", { fetch: (u, o) => { sent = [u, o]; return Promise.resolve({ ok: true, blob: () => Promise.resolve("MP3") }); }, setTimeout: () => {} });
+  assert.strictEqual(blob, "MP3");
+  assert.strictEqual(sent[0], "https://api.x.ai/v1/tts");
+  assert.strictEqual(sent[1].headers.Authorization, "Bearer placeholder-key-123");
+  await assert.rejects(G.xaiAudio(st, "x", "", { fetch: () => new Promise(() => {}), setTimeout: (fn) => fn() }), /timeout/);
+  await assert.rejects(G.xaiAudio(st, "x", "", { fetch: () => Promise.resolve({ ok: false, status: 401 }), setTimeout: () => {} }), /401/);
+});

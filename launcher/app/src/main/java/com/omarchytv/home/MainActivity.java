@@ -2124,6 +2124,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 }).setNegativeButton(android.R.string.cancel, null).show();
     }
 
+    /** xAI API key for the optional Grok voice: typed on the TV, kept in its own prefs, never shown back. */
+    private void xaiKeyDialog() {
+        android.content.SharedPreferences sp = GrokbotDirectActivity.prefs(this);
+        android.widget.EditText e = new android.widget.EditText(this);
+        e.setSingleLine(true);
+        e.setHint("xai-…");
+        e.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        new android.app.AlertDialog.Builder(this).setTitle("xAI API key").setView(e)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String v = e.getText().toString().trim();
+                    if (v.isEmpty()) sp.edit().remove("xai_key").apply();
+                    else if (GrokbotDirect.validKey(v)) sp.edit().putString("xai_key", v).apply();
+                    else Toast.makeText(this, "That does not look like an API key", Toast.LENGTH_SHORT).show();
+                    showMenu("grok-bot", null);
+                }).setNegativeButton(android.R.string.cancel, null).show();
+    }
+
     private boolean push(AsciiMenu.Page p) {
         menu.push(p);
         return true;
@@ -3428,6 +3445,28 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         p.add("  Leggi risposte ad alta voce", gd.getBoolean("speak", true) ? str(R.string.on) : str(R.string.off), r -> {
             gd.edit().putBoolean("speak", !gd.getBoolean("speak", true)).apply();
             handler.post(() -> showMenu("grok-bot", "  Leggi risposte ad alta voce"));
+            return false;
+        });
+        // Optional "Voce di Grok (xAI)": off by default (the system TTS stays the default); paid xAI API key.
+        p.add("  Voce di Grok (xAI)", gd.getBoolean("xai_on", false) ? str(R.string.on) : str(R.string.off), r -> {
+            gd.edit().putBoolean("xai_on", !gd.getBoolean("xai_on", false)).apply();
+            handler.post(() -> showMenu("grok-bot", "  Voce di Grok (xAI)"));
+            return false;
+        });
+        p.add("    xAI API key", GrokbotDirect.mask(gd.getString("xai_key", "")) + " ›", r -> {
+            xaiKeyDialog();
+            return false;
+        });
+        p.add("    Voce", GrokbotDirectActivity.xaiVoice(this) + " ›", r -> {
+            String[] list = gd.getString("xai_voices", GrokbotDirect.DEFAULT_VOICE).split(",");
+            new android.app.AlertDialog.Builder(this).setTitle("Grok voice (Test refreshes the list)").setItems(list, (d, w) -> {
+                if (GrokbotDirect.validVoice(list[w])) gd.edit().putString("xai_voice", list[w]).apply();
+                showMenu("grok-bot", "    Voce");
+            }).setNegativeButton(android.R.string.cancel, null).show();
+            return false;
+        });
+        p.add("    Test voce di Grok", "›", r -> {
+            open(new Intent(this, GrokbotDirectActivity.class).putExtra("xai_test", true));
             return false;
         });
         p.add("  Test Grok Bot diretto", "›", r -> {

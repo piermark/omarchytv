@@ -2191,8 +2191,28 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   // ---- v2.13.8 Grok Bot diretto (senza PC): grokdirect.js, replies through ntfy.sh on a random topic ----
   var GBD = window.OmarchyGrokDirect || null;
+  var gbdXaiNoted = false, gbdAudio = null;
   function gbdSpeak(text, lang) {
     var st = GBD.load(window.localStorage);
+    if (st.speak && text && GBD.xaiOn(st) && window.URL && typeof window.Audio === "function") {   // optional Grok voice (xAI)
+      var fallback = function () {
+        if (!gbdXaiNoted) { gbdXaiNoted = true; if (GBC) GBC.push(window.localStorage, gbBotKey(), "bot", "Grok voice unavailable, using the TV voice.", { mode: "error" }); }
+        gbdSystemSpeak(st, text, lang);
+      };
+      GBD.xaiAudio(st, text, lang).then(function (blob) {
+        var url = window.URL.createObjectURL(blob);
+        if (gbdAudio) { try { gbdAudio.pause(); } catch (e) {} }
+        gbdAudio = new window.Audio(url);
+        gbdAudio.onended = function () { window.URL.revokeObjectURL(url); };
+        gbdAudio.onerror = function () { window.URL.revokeObjectURL(url); fallback(); };
+        var p = gbdAudio.play();
+        if (p && p.catch) p.catch(fallback);
+      }, fallback);
+      return;
+    }
+    gbdSystemSpeak(st, text, lang);
+  }
+  function gbdSystemSpeak(st, text, lang) {
     if (!st.speak || !text || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
     try {
       var u = new window.SpeechSynthesisUtterance(text);
@@ -2359,6 +2379,21 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         { label: "Test Grok Bot diretto", right: GBD.enabled(gst) ? "OK ›" : "set URL and key first", act: function () {
           if (!GBD.enabled(gst)) { showToast("Turn it on and save the URL and key first"); return; }
           askDirect("Hi! Reply with one short sentence.", true);
+        } },
+        { label: "Voce di Grok (xAI, optional, paid API key)", right: gst.xaiOn ? "on" : "off", act: function () { gst.xaiOn = !gst.xaiOn; gsave(17); } },
+        { label: "Save the xAI API key typed above", right: GBD.mask(gst.xaiKey), act: function () {
+          var k = code.trim();
+          if (k && !GBD.validKey(k)) { showToast("That does not look like an API key"); return; }
+          gst.xaiKey = k; showToast(k ? "xAI key saved on this TV" : "xAI key removed"); gsave(18);
+        } },
+        { label: "Grok voice", right: gst.xaiVoice + " ›", act: function () {
+          var list = gst.xaiVoices && gst.xaiVoices.length ? gst.xaiVoices : ["eve"];
+          gst.xaiVoice = list[(list.indexOf(gst.xaiVoice) + 1) % list.length]; gsave(19);
+        } },
+        { label: "Test the Grok voice (refreshes the voice list)", right: GBD.xaiOn(gst) ? "OK ›" : "turn on + key first", act: function () {
+          if (!GBD.xaiOn(gst)) { showToast("Turn on the Grok voice and save the xAI key first"); return; }
+          GBD.xaiVoices(gst).then(function (v) { if (v.length) { gst.xaiVoices = v; GBD.save(window.localStorage, gst); } }, function () {})
+            .then(function () { gbdSpeak("Ciao! Sono Grok, con la voce " + gst.xaiVoice + ".", "it"); });
         } });
     }
     openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT) · Blue: chat · hold Blue: voice · " +
