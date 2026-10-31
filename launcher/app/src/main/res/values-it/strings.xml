@@ -357,6 +357,10 @@
     <string name="lights_type">Hub</string>
     <string name="lights_none">nessuno</string>
     <string name="lights_hint_none"># Philips Hue Bridge o Home Assistant</string>
+    <string name="lights_leave">Quando esco dal launcher</string>
+    <string name="lights_leave_off">Spegni</string>
+    <string name="lights_leave_restore">Ripristina come prima</string>
+    <string name="lights_leave_keep">Lascia accese</string>
     <string name="lights_push">Applica ora i colori del tema</string>
     <string name="lights_test">Prova hub</string>
     <string name="lights_incomplete">configurazione incompleta</string>

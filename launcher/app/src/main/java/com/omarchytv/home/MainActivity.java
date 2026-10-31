@@ -150,6 +150,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         Watchdog.install(this);
         setContentView(R.layout.activity_main);
         Theme.apply(getWindow().getDecorView());
+        // Lights hub only while OmarchyTV is on screen; the snapshot ("Restore previous") is queued before the paint.
+        com.omarchytv.home.lights.LightsPresence.install(this, new com.omarchytv.home.lights.LightsPresence.Painter() {
+            @Override
+            public void paint(android.app.Activity a) {
+                AmbilightController.paintHub(a, a instanceof CinemarchyActivity);
+            }
+
+            @Override
+            public boolean active() {
+                return !"off".equals(LauncherConfig.get(MainActivity.this.getApplicationContext()).ambilightMode);
+            }
+        });
         AmbilightController.syncTheme(this);
         {   // Move-mode hint: themed bg with the Hyprland "dragging" orange border (stroke colours can't be remapped from XML).
             android.graphics.drawable.GradientDrawable hb = new android.graphics.drawable.GradientDrawable();
@@ -2441,6 +2453,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 LauncherConfig c = LauncherConfig.get(this);
                 com.omarchytv.home.lights.Lights.push(this, t.accent, t.accent2, t.bg, c.ambilightBrightness, false);
                 r.setValue(h != null && h.configured() ? "✓" : str(R.string.lights_incomplete));
+                return true;
+            });
+            String lLeave = str(R.string.lights_leave);
+            String leave = com.omarchytv.home.lights.LightsLeave.policy(com.omarchytv.home.lights.LightsStore.get(this, "leave"));
+            p.add(lLeave, str(leave.equals("restore") ? R.string.lights_leave_restore : leave.equals("keep") ? R.string.lights_leave_keep : R.string.lights_leave_off), r -> {
+                com.omarchytv.home.lights.LightsStore.put(this, "leave", com.omarchytv.home.lights.LightsLeave.next(leave));
+                com.omarchytv.home.lights.LightsStore.put(this, "snapshot", "");   // a fresh one on the next visit
+                reopenAt("lights", lLeave);
                 return true;
             });
             p.add(str(R.string.lights_test), "›", r -> {

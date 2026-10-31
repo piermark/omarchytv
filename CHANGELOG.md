@@ -25,6 +25,9 @@
 - Top bar: the SpaceX TV pill is centred in the same 44 px row as the Cinemarchy and Wi-Fi icons, and ◀▶ reach it.
 - webOS/Tizen: the YouTube embed is on by default, and without a YouTube app the video opens in the embed, then the browser, instead of a toast.
 
+### Changed (lights hub)
+- Hue / Home Assistant lights now carry the active theme's colour only while OmarchyTV is on screen. Leaving it, whether for another app (Netflix, the YouTube app), screen off or standby, applies the new "When leaving the launcher" setting: Turn off (default), Restore previous (the state read before OmarchyTV painted them; off when none was read) or Keep on. On Android, Cinemarchy, the player and the other launcher screens count as inside, and a 2.5 s debounce covers the hand-over between them. On webOS/Tizen it follows visibilitychange, pagehide and relaunch. Nothing happens when Ambilight is off, and the Philips Ambilight TV LEDs are unchanged.
+
 ## [2.13.0-beta] — 2026-10-29 (pre-release, `versionCode 21`)
 
 Artifacts: `omarchytv-release-2.13.0-beta.apk` (Android TV), `omarchytv-webos-2.13.0-testing.ipk` (LG webOS), `OmarchyTV-tizen-2.13.0-beta-unsigned.wgt` (Samsung Tizen, unsigned testing), `omarchytv-mobile-2.13.0-beta.apk` (phone), `omarchy-tv-pc-plugin-2.13.0-beta.tar.gz` plus separate `omarchy-tv` and `omarchy-link` tarballs, and `SHA256SUMS`.

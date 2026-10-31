@@ -25,4 +25,17 @@ public interface LightsHub {
 
     /** Short human status for the settings row ("ok · 3 lights", "error: unauthorized"). Never contains secrets. */
     String test();
+
+    /** The chosen lights' current state as JSON, taken before OmarchyTV paints them; null when unsupported. */
+    default String snapshot() throws Exception {
+        return null;
+    }
+
+    /** Put the lights back as {@link #snapshot()} found them. */
+    default void restore(String snapshot) throws Exception {
+    }
+
+    /** Turn the chosen lights off (leaving the launcher). */
+    default void off() throws Exception {
+    }
 }

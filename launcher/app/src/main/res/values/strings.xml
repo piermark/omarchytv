@@ -370,6 +370,10 @@
     <string name="lights_type">Hub</string>
     <string name="lights_none">none</string>
     <string name="lights_hint_none"># Philips Hue Bridge or Home Assistant</string>
+    <string name="lights_leave">When leaving the launcher</string>
+    <string name="lights_leave_off">Turn off</string>
+    <string name="lights_leave_restore">Restore previous</string>
+    <string name="lights_leave_keep">Keep on</string>
     <string name="lights_push">Apply theme colours now</string>
     <string name="lights_test">Test hub</string>
     <string name="lights_incomplete">setup incomplete</string>

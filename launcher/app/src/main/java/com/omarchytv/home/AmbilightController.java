@@ -105,6 +105,14 @@ public final class AmbilightController {
         EXEC.execute(() -> applyPhilipsStaticColor(tv, c));
     }
 
+    /** Lights hub only (Hue / Home Assistant), back on screen: theme colours, dim inside Cinemarchy. TV LEDs untouched. */
+    public static void paintHub(Context ctx, boolean dim) {
+        LauncherConfig cfg = LauncherConfig.get(ctx);
+        if ("off".equals(cfg.ambilightMode)) return;
+        Theme t = Theme.cur();
+        com.omarchytv.home.lights.Lights.push(ctx, t.accent, t.accent2, t.bg, cfg.ambilightBrightness, dim || "cinema".equals(cfg.ambilightMode));
+    }
+
     /** Scales an RGB colour by pct 0..100. */
     static int scale(int argb, int pct) {
         int p = Math.max(0, Math.min(100, pct));

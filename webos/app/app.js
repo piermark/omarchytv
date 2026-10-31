@@ -1391,7 +1391,16 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return s < 1e-6 ? [0.3127, 0.3290] : [+(X / s).toFixed(4), +(Y / s).toFixed(4)];
   }
   function pushLightsTheme(t, dim) {
-    if (!cfg.lightsHub || cfg.lightsHub === "off") return;
+    if (!cfg.lightsHub || cfg.lightsHub === "off" || document.hidden) return;
+    var L = window.OmarchyLights;
+    // "Restore previous": read the lights once before the first paint of a visit.
+    if (L && L.takeSnapshot(cfg.lightsLeave, !!getSnap()) && lightsReady()) {
+      lightsSnapshot().then(function () { pushLightsNow(t, dim); });
+      return;
+    }
+    pushLightsNow(t, dim);
+  }
+  function pushLightsNow(t, dim) {
     var rgb = hexRgb(dim ? (t.accent2 || t.accent) : t.accent);
     var pct = dim ? Math.min(12, cfg.lightsBri || 70) : (cfg.lightsBri || 70);
     if (cfg.lightsHub === "hue" && cfg.hueIp && cfg.hueUser && cfg.hueGroup) {
@@ -1407,6 +1416,63 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       }).catch(function () {});
     }
   }
+  // v2.14: the hub follows OmarchyTV being on screen (lights.js). Hidden page = another app or standby.
+  var LIGHTS = window.OmarchyLights, lightsAway = false;
+  function lightsReady() {
+    if (cfg.lightsHub === "hue") return !!(cfg.hueIp && cfg.hueUser && cfg.hueGroup);
+    if (cfg.lightsHub === "ha") return !!(cfg.haUrl && cfg.haToken && cfg.haEntity);
+    return false;
+  }
+  function hueBase() { return "http://" + cfg.hueIp + "/api/" + encodeURIComponent(cfg.hueUser); }
+  function haBase() { return cfg.haUrl.replace(/\/+$/, ""); }
+  function haHeaders() { return { "Authorization": "Bearer " + cfg.haToken, "Content-Type": "application/json" }; }
+  function haIds() { return cfg.haEntity.split(/[,\s]+/).filter(function (e) { return /^light\.[a-z0-9_]+$/.test(e); }); }
+  function getSnap() { try { return localStorage.getItem("omarchy_lights_snapshot") || ""; } catch (e) { return ""; } }
+  function setSnap(v) { var k = "omarchy_lights_snapshot"; try { if (v) localStorage.setItem(k, v); else localStorage.removeItem(k); } catch (e) {} }
+  /** Before painting: remember how the lights were ("Restore previous" only). Resolves either way. */
+  function lightsSnapshot() {
+    var LIGHTS = window.OmarchyLights;
+    if (!LIGHTS || !lightsReady() || !LIGHTS.takeSnapshot(cfg.lightsLeave, !!getSnap())) return Promise.resolve();
+    var j = function (r) { return r.json(); };
+    var p = cfg.lightsHub === "hue"
+      ? Promise.all([fetch(hueBase() + "/groups/" + encodeURIComponent(cfg.hueGroup)).then(j), fetch(hueBase() + "/lights").then(j)])
+          .then(function (a) { return LIGHTS.hueSnapshot(a[0], a[1]); })
+      : Promise.all(haIds().map(function (e) { return fetch(haBase() + "/api/states/" + e, { headers: haHeaders() }).then(j); }))
+          .then(function (a) { var o = {}; haIds().forEach(function (e, i) { o[e] = LIGHTS.haState(a[i]); }); return o; });
+    return p.then(function (o) { if (o && Object.keys(o).length) setSnap(JSON.stringify(o)); }).catch(function () {});
+  }
+  function lightsLeave() {
+    if (lightsAway) return;
+    lightsAway = true;
+    if (!LIGHTS || !lightsReady()) return;
+    var snap = getSnap(), act = LIGHTS.action(cfg.lightsLeave, !!snap);
+    if (act === "none") return;
+    if (act === "restore") {
+      setSnap("");
+      var o = {}; try { o = JSON.parse(snap); } catch (e) {}
+      Object.keys(o).forEach(function (id) {
+        if (cfg.lightsHub === "hue") {
+          if (/^[0-9A-Za-z_-]+$/.test(id)) fetch(hueBase() + "/lights/" + id + "/state", { method: "PUT", body: JSON.stringify(LIGHTS.hueRestoreBody(o[id])), keepalive: true }).catch(function () {});
+        } else if (/^light\.[a-z0-9_]+$/.test(id)) {
+          var c = LIGHTS.haRestoreCall(id, o[id]);
+          fetch(haBase() + "/api/services/light/" + c.service, { method: "POST", headers: haHeaders(), body: JSON.stringify(c.body), keepalive: true }).catch(function () {});
+        }
+      });
+      return;
+    }
+    if (cfg.lightsHub === "hue") fetch(hueBase() + "/groups/" + encodeURIComponent(cfg.hueGroup) + "/action", { method: "PUT", body: JSON.stringify({ on: false, transitiontime: 8 }), keepalive: true }).catch(function () {});
+    else fetch(haBase() + "/api/services/light/turn_off", { method: "POST", headers: haHeaders(), body: JSON.stringify({ entity_id: haIds(), transition: 1 }), keepalive: true }).catch(function () {});
+  }
+  function lightsBack() {
+    if (!lightsAway) return;
+    lightsAway = false;
+    if (!lightsReady()) return;
+    pushLightsTheme(currentThemeObj(), false);   // takes the snapshot first when "Restore previous" needs one
+  }
+  document.addEventListener("visibilitychange", function () { if (document.hidden) lightsLeave(); else lightsBack(); });
+  window.addEventListener("pagehide", lightsLeave);
+  document.addEventListener("webOSRelaunch", lightsBack);
+
   function openLightsModal() {
     var hub = cfg.lightsHub || "off";
     var bri = cfg.lightsBri || 70;
@@ -1460,6 +1526,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } });
     }
     if (hub !== "off") {
+      items.push({ label: "When leaving the launcher", right: { off: "Turn off", restore: "Restore previous", keep: "Keep on" }[LIGHTS.policy(cfg.lightsLeave)], act: function () {
+        cfg.lightsLeave = LIGHTS.next(cfg.lightsLeave); setSnap(""); saveCfg(); openLightsModal();
+      } });
       items.push({ label: "Apply theme colours now", right: "▶", act: function () { pushLightsTheme(currentThemeObj(), false); showToast("Pushed theme to lights"); } });
       items.push({ label: "Forget hub credentials (confirm with OK)", right: "forget", act: function () {
         openModal("Forget hub?", "Remove saved Hue / Home Assistant credentials from this TV?", [

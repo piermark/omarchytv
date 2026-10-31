@@ -135,6 +135,65 @@ public final class HueBridge implements LightsHub {
                 .put("transitiontime", dim ? 20 : 8);
     }
 
+    /** Snapshot from GET /groups/&lt;id&gt; and GET /lights: {"&lt;light&gt;": {on, bri, xy|ct|hue+sat}}. */
+    public static JSONObject snapshotOf(String groupJson, String lightsJson) throws Exception {
+        JSONObject g = new JSONObject(groupJson.trim());
+        JSONObject all = new JSONObject(lightsJson.trim());
+        JSONArray ids = g.optJSONArray("lights");
+        JSONObject out = new JSONObject();
+        for (int i = 0; ids != null && i < ids.length(); i++) {
+            String id = ids.optString(i);
+            JSONObject l = all.optJSONObject(id);
+            JSONObject st = l == null ? null : l.optJSONObject("state");
+            if (st == null) continue;
+            JSONObject s = new JSONObject().put("on", st.optBoolean("on", false));
+            if (st.has("bri")) s.put("bri", st.optInt("bri"));
+            String mode = st.optString("colormode", "");
+            if ("xy".equals(mode) && st.optJSONArray("xy") != null) s.put("xy", st.optJSONArray("xy"));
+            else if ("ct".equals(mode) && st.has("ct")) s.put("ct", st.optInt("ct"));
+            else if ("hs".equals(mode) && st.has("hue")) s.put("hue", st.optInt("hue")).put("sat", st.optInt("sat"));
+            out.put(id, s);
+        }
+        return out;
+    }
+
+    /** PUT /lights/&lt;id&gt;/state body that restores one snapshot entry (colour first, then on/off). */
+    public static JSONObject restoreBody(JSONObject s) throws Exception {
+        JSONObject b = new JSONObject();
+        boolean on = s.optBoolean("on", false);
+        if (on) {
+            for (String k : new String[]{"bri", "xy", "ct", "hue", "sat"}) if (s.has(k)) b.put(k, s.get(k));
+        }
+        return b.put("on", on).put("transitiontime", 8);
+    }
+
+    @Override
+    public String snapshot() throws Exception {
+        if (!configured()) return null;
+        String g = Http.request("GET", base() + "/groups/" + groupId, null, null, 2500);
+        String l = Http.request("GET", base() + "/lights", null, null, 2500);
+        JSONObject s = snapshotOf(g, l);
+        return s.length() == 0 ? null : s.toString();
+    }
+
+    @Override
+    public void restore(String snapshot) throws Exception {
+        if (!configured() || snapshot == null) return;
+        JSONObject s = new JSONObject(snapshot);
+        for (Iterator<String> it = s.keys(); it.hasNext(); ) {
+            String id = it.next();
+            if (!id.matches("[0-9A-Za-z_-]+")) continue;
+            JSONObject e = s.optJSONObject(id);
+            if (e != null) Http.request("PUT", base() + "/lights/" + id + "/state", restoreBody(e).toString(), null, 2500);
+        }
+    }
+
+    @Override
+    public void off() throws Exception {
+        if (!configured()) return;
+        Http.request("PUT", base() + "/groups/" + groupId + "/action", "{\"on\":false,\"transitiontime\":8}", null, 2500);
+    }
+
     // ---- network ----------------------------------------------------------------------------
 
     public static List<String> discover() {
