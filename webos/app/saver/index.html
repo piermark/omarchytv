@@ -110,8 +110,10 @@ window.addEventListener('mousedown',dismiss,true);
       try{ if(fx)fx.destroy(); }catch(x){}
       pre.textContent=clean();fit();
       var frames=0,t0=0;
+      var spd=(S&&S.speed&&S.speed())||'normal',fo={effect:e,autoplay:false,background:'#000',fps:60,seed:Math.floor(Math.random()*1e9),respectReducedMotion:false,onFinish:function(){}};
+      if(spd==='slow')fo.duration=4200;else if(spd==='fast')fo.duration=1350;   // like Android; normal keeps each effect's own pace
       try{
-        fx=new TTE.TextEffect(pre,{effect:e,autoplay:false,background:'#000',fps:60,seed:Math.floor(Math.random()*1e9),respectReducedMotion:false,onFinish:function(){}});
+        fx=new TTE.TextEffect(pre,fo);
       }catch(err){log('effect '+e+' failed: '+err.message);setTimeout(next,200);return}
       function count(ts){ if(!t0)t0=ts; frames++; if(fx&&fx.running)requestAnimationFrame(count); }
       requestAnimationFrame(count);

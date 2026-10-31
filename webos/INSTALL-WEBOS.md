@@ -1,4 +1,4 @@
-# OmarchyTV for LG webOS — Installation Guide (`2.13.8`)
+# OmarchyTV for LG webOS — Installation Guide (`2.13.9`)
 
 > **Status: Experimental (`testing`, NOT beta)**
 > This is an experimental **`testing`** build of **OmarchyTV** for **LG webOS TVs** (webOS 3.x / 4.0 / 5.0 / 6.0 / 22 / 23 / 24; on webOS 3.x the bundled `compat.js` fills in the missing browser features), based on the latest Android TV release (**2.13.0**). Tested on a real LG 32LQ63006LA (webOS 22).
@@ -6,10 +6,10 @@
 
 ---
 
-## Downloads (`v2.13.8`)
+## Downloads (`v2.13.9`)
 
-- **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.13.8.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.13.8/omarchytv-webos-2.13.8.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8))
-  - SHA-256: `d91ea7ebd22ad4bf4ab84a26df6f1c1143a8a7a9f621107d411cc1e216ee5357`
+- **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.13.9.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.13.9/omarchytv-webos-2.13.9.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.9))
+  - SHA-256: `ffcf91c51168d1d2c48ea31e2610d83800258f449a1b8b27793b510d04f76838`
 - **PC Plugin (Android TV + LG webOS):** [`omarchy-tv-pc-plugin-2.13.0-beta.tar.gz`](https://github.com/piermark/omarchytv/releases/tag/v2.13.0-beta)
   - SHA-256: `968c5ffb79f5b88254df6ff922888027c1776c49bcf154980f1427c3338521bf`
 
@@ -48,7 +48,7 @@ Both run on the TV through Homebrew Channel's start-up scripts ([`app/rooted/oma
 3. **On your computer:**
    - Install and open **[webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop)** (available on Linux, macOS, and Windows; on Arch / Omarchy: `yay -S webos-dev-manager-bin` or AppImage).
    - Add your TV using its IP address and the 6-character Passphrase from the Developer Mode app.
-   - Click **Apps → Install** (top right) and select **`omarchytv-webos-2.13.8.ipk`**.
+   - Click **Apps → Install** (top right) and select **`omarchytv-webos-2.13.9.ipk`**.
 4. **Launch OmarchyTV** from your LG TV's Home bar!
 
 ---
@@ -78,14 +78,14 @@ ares-novacom --device lgtv --getkey
 With `ares-install` directly:
 
 ```bash
-ares-install --device lgtv omarchytv-webos-2.13.8.ipk
+ares-install --device lgtv omarchytv-webos-2.13.9.ipk
 ares-launch  --device lgtv com.omarchytv.home
 ```
 
 Or using the **OmarchyTV PC Plugin (`2.13.0-beta`)**:
 
 ```bash
-omarchy-tv update omarchytv-webos-2.13.8.ipk --tv lgtv
+omarchy-tv update omarchytv-webos-2.13.9.ipk --tv lgtv
 ```
 
 ---
@@ -106,7 +106,7 @@ ssh-copy-id root@192.168.1.50
 ### 2. Install & Launch the `.ipk`
 
 ```bash
-scp omarchytv-webos-2.13.8.ipk root@192.168.1.50:/tmp/omarchytv.ipk
+scp omarchytv-webos-2.13.9.ipk root@192.168.1.50:/tmp/omarchytv.ipk
 ssh -t root@192.168.1.50 'luna-send-pub -i luna://com.webos.appInstallService/dev/install "{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/omarchytv.ipk\",\"subscribe\":true}"'
 ```
 
@@ -163,15 +163,15 @@ OmarchyTV reads the apps installed on your LG TV (for example NOW, MUBI, DAZN an
 - **Settings > All settings > Read installed TV apps** turns this on or off (on by default).
 - **Settings > All settings > Re-pair with TV** forgets the key and shows the prompt again, for example after a TV reset or if new apps don't appear.
 
-## Grok Bot · Omarchy TUI (new in `2.13.8`)
+## Grok Bot · Omarchy TUI (new in `2.13.9`)
 
-I ported the Android Grok Bot TUI to LG and Samsung. Open it from **Menu > ⌨ Grok Bot (Omarchy TUI)**, **Plugins**, the companion chat or Companion settings. It's an Omarchy-style box with the legend `grok bot · omarchy tui [theme]`, theme colours and CaskaydiaMono.
+I ported the Android Grok Bot TUI to LG and Samsung. Open it from **Menu > ⌨ Grok Bot (Omarchy TUI)**, **Menu > Grok Bot & AI**, **Plugins**, the companion chat or Companion settings. It's an Omarchy-style box with the legend `grok bot · omarchy tui [theme]`, theme colours and CaskaydiaMono.
 
 - Type with the on-screen keyboard (or select **🎤 Speak**), then **❯ Run**. **Back** closes it.
-- Local commands, no PC needed: `help`, `themes`, `theme <name>`, `next theme`, `wallpaper`, `screensaver [aquarium|classic|logo|cinemarchy]`, `open <app>` / `apri <app>`, `apps`, `status`, `clear`. Italian works too.
-- `open grok.com`, `chatgpt`, `claude`, `x grok` or `hermes` opens that web app in the TV browser.
-- Anything else is a question: it goes to the Grok Bot on your paired PC with the ask code, otherwise to Grok Bot diretto (if on), otherwise to grok.com. Replies type out in the window.
-- The web app has the Grok Bot and Grok Web agents. Claude/Codex/Hermes CLIs on the PC are Android-only (they use OmarchyLink).
+- Local commands, no PC needed: `help`, `themes`, `theme <name>`, `next theme`, `wallpaper`, `screensaver [aquarium|classic|logo|cinemarchy|slow|normal|fast]`, `speed slow|normal|fast`, `open <app>` / `apri <app>`, `apps`, `status`, `clear`. Italian works too.
+- **Agents, like on Android:** `agents` lists them and `agent <name>` (or the **Agent** row) picks one: Grok Bot (companion), every AI signed in on your PC (Claude, ChatGPT/Codex, Grok, Grok Bot, Hermes, Gemini, ollama, API keys) and Grok Web. PC agents need `omarchy-tv webos serve` from this release with omarchy-link installed and the ask code set in Companion settings.
+- `web ▾`, `open grok.com`, `chatgpt`, `claude`, `x grok` or `hermes` opens that web app in the TV browser. **Menu > Web apps** lists them and lets you add your own (`Name=https://…`).
+- With no PC, questions go to Grok Bot diretto (if on), otherwise to grok.com. Replies type out in the window.
 
 ## Text size (new in `2.13.2-testing`)
 

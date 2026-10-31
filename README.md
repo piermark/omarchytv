@@ -6,7 +6,7 @@ Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](http
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **31 October 2026 (latest release)** · Version **2.13.8** (`versionCode 25` — Android TV, PC/Mac Plugin & Mobile Companion) / **2.13.8** (LG webOS) & **2.13.8** (Samsung Tizen), experimental · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **31 October 2026 (latest release)** · Version **2.13.8** (`versionCode 25` — Android TV, PC/Mac Plugin & Mobile Companion) / **2.13.9** (LG webOS) & **2.13.9** (Samsung Tizen), experimental · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 > [!WARNING]
 > **Beta software.** Tested on Sony BRAVIA (Android 9), Google TV Streamer (Android 14), Sharp AQUOS, Noblex/Hisense (Android 11), LG webOS and the Android TV emulator. Some features may be missing on some TVs. It never roots or uninstalls anything, and you can always switch back to your stock home screen (see [INSTALL](launcher/docs/INSTALL.md)).
@@ -40,8 +40,8 @@ I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa6
 | Artifact | Download | Platform | Version | Size | SHA-256 |
 |---|---|---|---|---|---|
 | **`omarchytv-release-2.13.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchytv-release-2.13.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.13.0-beta` (`versionCode 21`) | `8.2 MB` | `53d88d14ffad8933048570e7ae324d11bba0907ff0a8252ad142eb6ac564b2ea` |
-| **`omarchytv-webos-2.13.8.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.8/omarchytv-webos-2.13.8.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.13.8` | `6.8 MB` | `d91ea7ebd22ad4bf4ab84a26df6f1c1143a8a7a9f621107d411cc1e216ee5357` |
-| **`OmarchyTV-tizen-2.13.8-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.8/OmarchyTV-tizen-2.13.8-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8)** | Samsung Tizen TV (unsigned testing build, sign it in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.13.8` | `6.9 MB` | `ddaedc63840b7f355be25e6dbe5a32a8ec1ee0b205fae4ed29ab4c1edd7e1c39` |
+| **`omarchytv-webos-2.13.9.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.9/omarchytv-webos-2.13.9.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.9)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.13.9` | `6.8 MB` | `ffcf91c51168d1d2c48ea31e2610d83800258f449a1b8b27793b510d04f76838` |
+| **`OmarchyTV-tizen-2.13.9-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.9/OmarchyTV-tizen-2.13.9-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.9)** | Samsung Tizen TV (unsigned testing build, sign it in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.13.9` | `6.9 MB` | `3d4bb0a3c2fb1f19b5674be90aa0363f3f564536211bb9ba5bb794678e95a845` |
 | **`omarchytv-mobile-2.13.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchytv-mobile-2.13.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Android phone installer & companion (`com.omarchytv.mobile`, `minSdk 26`) | `2.13.0-beta` (`versionCode 21300`) | `177 KB` | `e45a5c0f7ccd662279d34e80ffbf4e9581061603012e8814e5941e8909b67f79` |
 | **`omarchy-tv-pc-plugin-2.13.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchy-tv-pc-plugin-2.13.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.13.0-beta` | `221 KB` | `968c5ffb79f5b88254df6ff922888027c1776c49bcf154980f1427c3338521bf` |
 | **`omarchy-tv-2.13.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchy-tv-2.13.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | PC plugin `omarchy-tv` only | `2.13.0-beta` | `53 KB` | `620641f5f6c2448b4288f472cac2f09a3b870b8a08f8a7fec22344802fe99271` |
@@ -111,7 +111,7 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
   - **Android:** it now draws Tom's 14 shapes, 11 colours and eyes too, with the same bob, blink, glance, sleep and drift, an unread dot, and the same Settings → Grok Bot options (shape, colour, size, name badge, animation, agent). The Blue key opens the chat (thanks, @andersonleite, #65), the mic/Search key opens it by voice, and long-press Menu, then OK, also works.
   - **Answers:** they come from the Grok Bot on your PC: through omarchy-link on Android, and through `omarchy-tv webos serve` with its ask code on webOS/Tizen. Otherwise, Android uses Ask with your chosen AI provider and webOS/Tizen uses grok.com.
   - **Also:** "open Netflix" / "apri YouTube" opens apps on the TV. Links in a reply become OK-to-play buttons.
-  - **Grok Bot · Omarchy TUI on LG/Samsung (new in `2.13.8`):** the Android TUI window now runs on webOS and Tizen too: Menu > ⌨ Grok Bot (Omarchy TUI). It switches themes, wallpapers and screensavers, opens apps and web apps (grok.com, ChatGPT, Claude, Hermes), and sends questions to your PC or Grok Bot diretto. Details in [INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md).
+  - **Grok Bot · Omarchy TUI on LG/Samsung (new in `2.13.9`):** the Android TUI window now runs on webOS and Tizen too: Menu > ⌨ Grok Bot (Omarchy TUI). It switches themes, wallpapers, screensavers and their speed, opens apps and web apps (grok.com, ChatGPT, Claude, Hermes), and asks the same agents as Android: Grok Bot, the AIs signed in on your PC (Claude, Codex, Grok, Hermes, Gemini, ollama…) or Grok Bot diretto. Also new: Menu > Grok Bot & AI, Menu > Web apps, companion offset, and LG app icons now stay after a theme change. Details in [INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md).
   - **What the platforms allow:** the webOS Magic Remote mic always goes to webOS. On Android, Google Assistant stays one setting away (`"voiceKey": "assistant"`).
 - Config keys: `cinemarchy.embedPlayer`, `cinemarchy.dhhLastSeen`, `plugins.companionOverlay`, `plugins.companionCorner` (`bottom-right`, `bottom-left`, `top-right`, `top-left`), `plugins.companionOffsetX/Y` (dp, max 240). PC side: `grokbotBridge`, `grokbotDesktopDir`, `grokbotTimeoutS`, and `OMARCHY_GROKBOT_DESKTOP_REF` (defaults to his `v0.1.0` tag). Android, webOS and Tizen: `companionShape`, `companionColor`, `companionSize`, `companionBadge`, `companionAnim`, `companionAgent`. webOS/Tizen: `grokbotCode`. Android: `voiceKey` = `companion` (default) | `launcher` | `assistant`.
 
@@ -302,9 +302,9 @@ Full PC plugin documentation: **[pc-plugin/README.md](pc-plugin/README.md)** and
 
 ---
 
-### 5. LG webOS and Samsung Tizen TVs — Experimental (`2.13.8`)
-- **LG webOS:** `omarchytv-webos-2.13.8.ipk`. Install guide: **[webos/INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md)**.
-- **Samsung Tizen:** `OmarchyTV-tizen-2.13.8-unsigned.wgt` is unsigned: sign it with your own Samsung certificate in Tizen Studio before installing. Guide: **[tizen/INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)**.
+### 5. LG webOS and Samsung Tizen TVs — Experimental (`2.13.9`)
+- **LG webOS:** `omarchytv-webos-2.13.9.ipk`. Install guide: **[webos/INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md)**.
+- **Samsung Tizen:** `OmarchyTV-tizen-2.13.9-unsigned.wgt` is unsigned: sign it with your own Samsung certificate in Tizen Studio before installing. Guide: **[tizen/INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)**.
 - Both share the same web app (`webos/app`), including the new **Settings > System > Text size** option (90/100/115/130%), Cinemarchy 0.1.0-alpha, the Grok Bot companion (Blue key), the plugin marketplace and both Aquariums.
 
 ---

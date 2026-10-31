@@ -48,3 +48,12 @@ test("typewriter progress", () => {
   assert.strictEqual(T.typed("hello", 10000), 5);
   assert.ok(T.typed("x".repeat(1000), 2000) >= 500);
 });
+
+test("speed, saver speed and agent commands", () => {
+  assert.deepStrictEqual(T.parse("speed slow"), { kind: "speed", speed: "slow" });
+  assert.deepStrictEqual(T.parse("velocità veloce"), { kind: "speed", speed: "fast" });
+  assert.deepStrictEqual(T.parse("screensaver fast"), { kind: "saver", speed: "fast" });
+  assert.deepStrictEqual(T.parse("agents"), { kind: "agents" });
+  assert.deepStrictEqual(T.parse("agent hermes"), { kind: "agent", query: "hermes" });
+  assert.deepStrictEqual(T.parse("usa claude"), { kind: "agent", query: "claude" });
+});

@@ -1,5 +1,5 @@
 window.OMARCHY_DATA = {
-  "version": "2.13.8",
+  "version": "2.13.9",
   "basedOnAndroidVersion": "2.13.8",
   "themes": {
     "blue-mosaic": {

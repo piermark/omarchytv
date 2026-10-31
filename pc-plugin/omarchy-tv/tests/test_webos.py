@@ -117,5 +117,53 @@ class GrokbotBridgeTest(unittest.TestCase):
         self.assertEqual(self.post("/v1/nope", {}, tok)[0], 404)
 
 
+class FakeAssistantMod:
+    class NoProvider(Exception): pass
+    class RateLimited(Exception): pass
+
+
+class FakeAssistant:
+    def __init__(self):
+        self.asked = []
+
+    def listing(self):
+        return {"providers": [{"id": i, "name": n} for i, n in (("claude-code", "Claude"), ("codex", "ChatGPT (Codex)"),
+                ("grok-cli", "Grok"), ("hermes-cli", "Hermes"))], "default": "claude-code"}
+
+    def ask(self, text, provider=None, conversation=None, lang=None):
+        if not text:
+            raise ValueError("empty text")
+        if provider == "nope":
+            raise FakeAssistantMod.NoProvider("provider 'nope' is not available on the PC")
+        self.asked.append((text, provider, lang))
+        return {"text": provider + " says hi", "provider": provider, "model": None, "conversationId": conversation or "abcd1234"}
+
+
+class AiAgentsBridgeTest(unittest.TestCase):
+    post = GrokbotBridgeTest.post
+
+    def setUp(self):
+        GrokbotBridgeTest.setUp(self)
+        self.old_a = webos._assistant
+        self.asst = FakeAssistant()
+        webos._assistant = lambda: (FakeAssistantMod, self.asst)
+
+    def tearDown(self):
+        webos._assistant = self.old_a
+        GrokbotBridgeTest.tearDown(self)
+
+    def test_agents_list_and_ask(self):
+        self.assertEqual(self.post("/v1/ai/providers", {})[0], 401)
+        tok = webos.bridge_token()
+        st, d = self.post("/v1/ai/providers", {}, tok)
+        self.assertEqual(st, 200)
+        self.assertEqual([p["id"] for p in d["providers"]], ["claude-code", "codex", "grok-cli", "hermes-cli"])
+        st, d = self.post("/v1/ai/ask", {"text": "ciao", "provider": "hermes-cli", "lang": "it-IT"}, tok)
+        self.assertEqual((st, d["text"], d["session"]), (200, "hermes-cli says hi", "abcd1234"))
+        self.assertEqual(self.asst.asked, [("ciao", "hermes-cli", "it-IT")])
+        self.assertEqual(self.post("/v1/ai/ask", {"text": "x", "provider": "nope"}, tok)[0], 404)
+        self.assertEqual(self.post("/v1/ai/ask", {"text": ""}, tok)[0], 400)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -11,11 +11,11 @@ Validated on Samsung UN55U7900FFXZA, Tizen 9, firmware
 The install procedure below uses the standard Tizen Studio tools. Local hardware
 validation used an existing Samsung certificate and developer connection.
 
-## Download (`2.13.8`)
+## Download (`2.13.9`)
 
-- **Unsigned widget:** [`OmarchyTV-tizen-2.13.8-unsigned.wgt`](https://github.com/piermark/omarchytv/releases/download/v2.13.8/OmarchyTV-tizen-2.13.8-unsigned.wgt) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8))
-  - SHA-256: `ddaedc63840b7f355be25e6dbe5a32a8ec1ee0b205fae4ed29ab4c1edd7e1c39`
-  - It's unsigned: sign it with your own Samsung certificate (below) before installing. It's numbered 2.13.8, above the earlier 2.13.5 and 2.13.6 test widgets, so it installs over them.
+- **Unsigned widget:** [`OmarchyTV-tizen-2.13.9-unsigned.wgt`](https://github.com/piermark/omarchytv/releases/download/v2.13.9/OmarchyTV-tizen-2.13.9-unsigned.wgt) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.9))
+  - SHA-256: `3d4bb0a3c2fb1f19b5674be90aa0363f3f564536211bb9ba5bb794678e95a845`
+  - It's unsigned: sign it with your own Samsung certificate (below) before installing. It's numbered 2.13.9, above the earlier 2.13.5 and 2.13.6 test widgets, so it installs over them.
 
 ## Build an unsigned widget
 
@@ -97,15 +97,15 @@ its type and number, then opens Samsung's native viewer. The TV row selects the
 tuner source instead of reopening the last HDMI input. Connected labels describe
 the source catalogue, not a guarantee that an attached device is powered on.
 
-## Grok Bot · Omarchy TUI (new in `2.13.8`)
+## Grok Bot · Omarchy TUI (new in `2.13.9`)
 
-I ported the Android Grok Bot TUI to LG and Samsung. Open it from **Menu > ⌨ Grok Bot (Omarchy TUI)**, **Plugins**, the companion chat or Companion settings. It's an Omarchy-style box with the legend `grok bot · omarchy tui [theme]`, theme colours and CaskaydiaMono.
+I ported the Android Grok Bot TUI to LG and Samsung. Open it from **Menu > ⌨ Grok Bot (Omarchy TUI)**, **Menu > Grok Bot & AI**, **Plugins**, the companion chat or Companion settings. It's an Omarchy-style box with the legend `grok bot · omarchy tui [theme]`, theme colours and CaskaydiaMono.
 
 - Type with the on-screen keyboard (or select **🎤 Speak**), then **❯ Run**. **Back** closes it.
-- Local commands, no PC needed: `help`, `themes`, `theme <name>`, `next theme`, `wallpaper`, `screensaver [aquarium|classic|logo|cinemarchy]`, `open <app>` / `apri <app>`, `apps`, `status`, `clear`. Italian works too.
-- `open grok.com`, `chatgpt`, `claude`, `x grok` or `hermes` opens that web app in the TV browser.
-- Anything else is a question: it goes to the Grok Bot on your paired PC with the ask code, otherwise to Grok Bot diretto (if on), otherwise to grok.com. Replies type out in the window.
-- The web app has the Grok Bot and Grok Web agents. Claude/Codex/Hermes CLIs on the PC are Android-only (they use OmarchyLink).
+- Local commands, no PC needed: `help`, `themes`, `theme <name>`, `next theme`, `wallpaper`, `screensaver [aquarium|classic|logo|cinemarchy|slow|normal|fast]`, `speed slow|normal|fast`, `open <app>` / `apri <app>`, `apps`, `status`, `clear`. Italian works too.
+- **Agents, like on Android:** `agents` lists them and `agent <name>` (or the **Agent** row) picks one: Grok Bot (companion), every AI signed in on your PC (Claude, ChatGPT/Codex, Grok, Grok Bot, Hermes, Gemini, ollama, API keys) and Grok Web. PC agents need `omarchy-tv webos serve` from this release with omarchy-link installed and the ask code set in Companion settings.
+- `web ▾`, `open grok.com`, `chatgpt`, `claude`, `x grok` or `hermes` opens that web app in the TV browser. **Menu > Web apps** lists them and lets you add your own (`Name=https://…`).
+- With no PC, questions go to Grok Bot diretto (if on), otherwise to grok.com. Replies type out in the window.
 
 ## Text size (new in `2.13.2-testing`)
 

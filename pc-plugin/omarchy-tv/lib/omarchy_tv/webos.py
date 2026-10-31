@@ -12,6 +12,10 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
                                       bridge starts (~/.config/omarchy-tv/webos-bridge.token, mode 0600).
                                       Answers like omarchy-link's grokbot_answer {bot, text, mode, links, note?}.
   POST /v1/grokbot/sync            -> same token; runs his bin/grokbot-sync and returns the new roster.
+  POST /v1/ai/providers            -> same token; {providers:[{id,name,kind,model}], default}: the AI agents signed
+                                      in on the PC (Claude, Codex, Grok, Grok Bot, Hermes, Gemini, ollama, APIs),
+                                      exactly the list Android's Grok Bot TUI gets over omarchy-link.
+  POST /v1/ai/ask                  -> same token; {text, provider?, session?, lang?} -> {text, provider, model, session}
 """
 from __future__ import annotations
 
@@ -64,6 +68,23 @@ def _grokbot():
         return grokbot
     except Exception:
         return None
+
+
+_assistant_obj = None
+_assistant_lock = threading.Lock()
+
+
+def _assistant():
+    """omarchy-link's Assistant (the same agent runner Android's TUI uses), or None if omarchy-link is missing."""
+    global _assistant_obj
+    with _assistant_lock:
+        if _assistant_obj is None:
+            try:
+                from omarchy_link import assistant   # noqa: PLC0415 (optional)
+                _assistant_obj = (assistant, assistant.Assistant())
+            except Exception:
+                return None
+        return _assistant_obj
 
 
 def link_cfg() -> dict:
@@ -246,7 +267,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         global _last_ask
         path = self.path.split("?", 1)[0]
-        if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync"):
+        if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask"):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -265,6 +286,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
             body = None
         if not isinstance(body, dict):
             self._send_json({"error": "bad_request"}, 400)
+            return
+        if path.startswith("/v1/ai/"):
+            self._ai(path, body)
             return
         g = _grokbot()
         if not g:
@@ -286,6 +310,34 @@ class WebOSHandler(BaseHTTPRequestHandler):
                 self._send_json(g.ask(cfg, body.get("text"), str(bot) if bot else None))
         except g.GrokbotError as e:
             self._send_json({"error": e.code, "message": str(e)[:200]}, 400 if e.code in ("empty", "unknown_bot") else 502)
+
+    def _ai(self, path: str, body: dict) -> None:
+        a = _assistant()
+        if not a:
+            self._send_json({"error": "not_installed", "message": "omarchy-link is not installed"}, 503)
+            return
+        mod, asst = a
+        if link_cfg().get("assistant", True) is False:
+            self._send_json({"error": "disabled", "message": "the assistant is off on the PC"}, 403)
+            return
+        try:
+            if path == "/v1/ai/providers":
+                self._send_json(asst.listing())
+                return
+            prov = body.get("provider")
+            res = asst.ask(str(body.get("text") or "")[:2000], provider=str(prov) if prov else None,
+                           conversation=str(body["session"]) if body.get("session") else None,
+                           lang=str(body["lang"]) if body.get("lang") else None)
+            self._send_json({"text": res["text"], "provider": res["provider"], "model": res.get("model"),
+                             "session": res["conversationId"]})
+        except ValueError as e:
+            self._send_json({"error": "bad_request", "message": str(e)[:160]}, 400)
+        except mod.NoProvider as e:
+            self._send_json({"error": "no_provider", "message": str(e)[:200]}, 404)
+        except mod.RateLimited as e:
+            self._send_json({"error": "busy", "message": str(e)[:200]}, 429)
+        except Exception as e:   # ProviderError, timeouts: the TV shows the message
+            self._send_json({"error": "provider_error", "message": str(e)[:200]}, 502)
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]

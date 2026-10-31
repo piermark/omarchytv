@@ -133,7 +133,44 @@ test("questions go to the paired PC bridge with the ask code", () => {
   t.ctx.fetch = (url, o) => { seen.push([url, o]); return new Promise(() => {}); };
   t.ctx.OMARCHY_OPEN_TUI();
   runCmd(t, "hello there");
-  assert.strictEqual(seen[0][0], "http://192.168.1.9:8765/v1/grokbot/ask");
-  assert.strictEqual(seen[0][1].headers["X-Omarchy-Token"], "ABCD1234");
+  const ask = seen.find(([u]) => /grokbot\/ask$/.test(u));
+  assert.strictEqual(ask[0], "http://192.168.1.9:8765/v1/grokbot/ask");
+  assert.strictEqual(ask[1].headers["X-Omarchy-Token"], "ABCD1234");
   assert.match(t.byId["tui-log"].innerHTML, /asking/);
+});
+
+test("PC agents (Claude, Codex, Grok, Hermes…) are listed and asked through /v1/ai/ask", async () => {
+  const seen = [];
+  const t = boot({ cfg: { pcHost: "192.168.1.9", grokbotCode: "ABCD1234" } });
+  t.ctx.fetch = (url, o) => {
+    seen.push([url, o]);
+    if (/providers$/.test(url)) return Promise.resolve({ ok: true, json: () => Promise.resolve({ providers: [
+      { id: "claude-code", name: "Claude" }, { id: "codex", name: "ChatGPT (Codex)" }, { id: "grok-cli", name: "Grok" }, { id: "hermes-cli", name: "Hermes" }] }) });
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ text: "ciao da hermes", provider: "hermes-cli", session: "s1" }) });
+  };
+  t.ctx.OMARCHY_OPEN_TUI();
+  await new Promise((r) => setImmediate(r));
+  const names = JSON.parse(t.store.omarchytv_cfg_2110).tuiProviders.map((p) => p.id);
+  assert.deepStrictEqual(names, ["claude-code", "codex", "grok-cli", "hermes-cli"]);
+  runCmd(t, "agent hermes");
+  assert.strictEqual(JSON.parse(t.store.omarchytv_cfg_2110).tuiAgent, "pc:hermes-cli");
+  runCmd(t, "consigliami un film");
+  const ask = seen.find(([u]) => /\/v1\/ai\/ask$/.test(u));
+  assert.ok(ask, "asked the PC agent");
+  assert.strictEqual(JSON.parse(ask[1].body).provider, "hermes-cli");
+  await new Promise((r) => setImmediate(r));
+  assert.match(t.byId["tui-log"].innerHTML, /tui-bot/);
+  runCmd(t, "agent codex");
+  assert.strictEqual(JSON.parse(t.store.omarchytv_cfg_2110).tuiAgent, "pc:codex");
+});
+
+test("Grok Bot & AI hub and Web apps pages (Android parity)", () => {
+  const t = boot();
+  t.ctx.OMARCHY_OPEN_AI_HUB();
+  assert.strictEqual(t.byId["modal-title"].textContent, "Grok Bot & AI");
+  t.ctx.OMARCHY_OPEN_WEBAPPS();
+  const inp = t.byId["modal-input"];
+  inp.value = "Perplexity=https://www.perplexity.ai/"; inp.oninput();
+  t.press("Enter");
+  assert.deepStrictEqual(JSON.parse(t.store.omarchytv_cfg_2110).webapps, [{ name: "Perplexity", url: "https://www.perplexity.ai/" }]);
 });
