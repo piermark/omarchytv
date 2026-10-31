@@ -718,6 +718,11 @@ html, body {
 .gb-unread{position:absolute;right:0;top:0;width:12px;height:12px;border-radius:6px;background:#FF263C;border:2px solid var(--t-bg);}
 #grokbot-sub{max-width:420px;}
 #grokbot-sub.gb-bubble{color:var(--t-fg);opacity:1;}
+/* 2.13.8 refresh: only the moving avatar, no frame; a thin ring only while focused */
+#grokbot-companion.box{background:transparent;border:none;padding:0;}
+#grokbot-companion.box.focused{outline:2px solid var(--t-accent);outline-offset:6px;border-radius:12px;}
+#grokbot-sub{text-shadow:0 1px 3px rgba(0,0,0,.9);}
+#grokbot-sub:empty{display:none;}
 .gb-msg{margin:2px 0 6px;padding:4px 10px;border-left:3px solid var(--t-accent2);white-space:pre-wrap;text-align:left;}
 .gb-msg.gb-me{border-left-color:var(--t-fg);opacity:.75;}
 .gb-credit{opacity:.55;font-size:calc(13px * var(--ts, 1));margin-top:6px;}
@@ -870,7 +875,7 @@ html, body {
     </div>
 
     <!-- Omarchy Grok Bot Desktop Companion (@tcballard MIT plugin) -->
-    <div id="grokbot-companion" class="box" style="position:absolute;right:48px;bottom:340px;padding:10px 18px;border:1px solid var(--t-accent2);background:var(--popup-bg);cursor:pointer;z-index:15;" title="Omarchy Grok Bot Desktop Companion (@tcballard)">
+    <div id="grokbot-companion" class="box" style="position:absolute;right:48px;bottom:340px;cursor:pointer;z-index:15;" title="Omarchy Grok Bot Desktop Companion (@tcballard)">
       <div id="grokbot-eyes" style="font-size:calc(18px * var(--ts, 1));font-weight:700;color:var(--t-accent2);">Grok Bot</div>
       <div id="grokbot-sub" style="font-size:calc(14px * var(--ts, 1));color:var(--t-fg);margin-top:3px;">Blue · chat</div>
     </div>

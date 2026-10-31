@@ -3,8 +3,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 (function () {
   "use strict";
 
-  // One shared app: LG webOS ships as 2.13.2-testing, the Samsung widget as 2.13.6 (above the earlier 2.13.5 test widget).
-  var APP_VERSION = window.OMARCHY_PLATFORM === "tizen" ? "2.13.6-testing" : "2.13.2-testing";
+  // One shared app: LG webOS and the Samsung widget share one version number.
+  var APP_VERSION = "2.13.8";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now() - (42 * 60 * 1000); // default 42m uptime look
@@ -2013,7 +2013,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       if (eyes) eyes.innerHTML = '<span class="gb-mark">' + gbAvatar(px) + dot + "</span>" +
         (cfg.companionBadge !== false ? '<span class="gb-name">' + escHtml(gbName()) + "</span>" : "");
       if (sub) {
-        var line = gbFace.bubble || (gbFace.busy ? "Thinking…" : gbFace.pose === "sleep" ? "zz…" : cfg.grokbotMessage || "Blue · chat · hold Blue · voice");
+        var line = gbFace.bubble || (gbFace.busy ? "Thinking…" : cfg.grokbotMessage || "");   // 2.13.8 refresh: idle shows just the avatar
         sub.textContent = line.length > 120 ? line.slice(0, 117) + "…" : line;
         sub.className = gbFace.bubble ? "gb-bubble" : "";
       }
