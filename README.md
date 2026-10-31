@@ -6,7 +6,7 @@ Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](http
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **29 October 2026 (pre-release)** · Version **2.13.0-beta** (`versionCode 21` — Android TV, PC/Mac Plugin & Mobile Companion) / **2.13.2-testing** (LG webOS) & **2.13.6-testing** (Samsung Tizen), experimental · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **31 October 2026 (latest release)** · Version **2.13.8** (`versionCode 25` — Android TV, PC/Mac Plugin & Mobile Companion) / **2.13.8** (LG webOS) & **2.13.8** (Samsung Tizen), experimental · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 > [!WARNING]
 > **BETA SOFTWARE: THINGS MAY NOT WORK.** OmarchyTV has been tested on several devices (Sony KD-55XE9005 on Android 9,
