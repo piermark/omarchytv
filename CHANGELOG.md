@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Testing build `2.13.7-testing` (`versionCode 22`; webOS 2.13.7, Tizen 2.13.7). It is the first compiled build of the 2.14 work below. All 110 JUnit tests and 72 node tests pass.
+
 - **Grok Bot is now OmarchyTV's default assistant, built on Tom Ballard's Grok Bot Desktop Companion v0.1.0.** Thank you, Tom ([@tcballard](https://x.com/tcballard)), for the companion and for the MIT licence that lets me bring it to the TV. I built against his tag `v0.1.0` (commit `a2efb00`).
   - **webOS and Tizen:** the companion in a corner now draws Tom's own avatar: his 14 shapes, his 11-colour palette and his capsule eyes. I vendored his `qml/shapes.js`, `palette.js` and `face.js` unchanged (MIT header) into `webos/app/vendor/grokbot/` (regenerate with `webos/tools/vendor-grokbot.py`). It bobs, blinks (sometimes twice), glances around, falls asleep after two idle minutes and drifts a few pixels to avoid burn-in. Settings: shape, colour (or follow the PC bot), size, corner, name badge, animation, agent, and on/off.
   - **Ask it from the TV:** Blue opens the chat, holding Blue opens it by voice (Web Speech API where the TV has it). On Tizen, the remote's Search/voice key opens it when the TV lets apps register that key. On webOS the Magic Remote mic stays with the system. Replies come from the Grok Bot on your PC through a new bridge endpoint (`POST /v1/grokbot/ask` on `omarchy-tv webos serve`, protected by an 8-character ask code printed by the bridge). The chat keeps per-bot history and shows an unread dot. You can switch bots from the PC roster. grok.com stays available as the other agent and as the fallback.

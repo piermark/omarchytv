@@ -1330,12 +1330,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function openAboutModal() {
     var sub = "OmarchyTV " + APP_VERSION + " for LG webOS and Samsung Tizen (community testing — NOT a beta)\n" +
-      "Based on OmarchyTV v2.13.0-beta for Android TV by Marco Porro (MIT License).\n" +
+      "Based on OmarchyTV v2.13.7-testing for Android TV by Marco Porro (MIT License).\n" +
       "Includes " + Object.keys(DATA.themes).length + " Omarchy themes, " + [].concat.apply([], Object.keys(DATA.wallpapers).map(function (t) { return DATA.wallpapers[t]; })).length +
       " wallpapers (MIT, and 'Liftoff Sunset' by Tom Ballard), and 37 tte.js effects.";
     openModal(tr("sys_about"), sub, [
       { label: "Version", right: APP_VERSION, act: closeModal },
-      { label: "Android base release", right: "2.13.0-beta", act: closeModal },
+      { label: "Android base release", right: "2.13.7-testing", act: closeModal },
       { label: "Wallpaper credit (tokyo-night)", right: "Liftoff Sunset — Tom Ballard", act: closeModal },
       { label: "Close", right: "ESC / Back", act: closeModal }
     ]);
