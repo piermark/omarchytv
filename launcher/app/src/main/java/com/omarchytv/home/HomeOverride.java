@@ -30,16 +30,13 @@ public class HomeOverride extends AccessibilityService {
 
     /** Ignore the stock home for this long after OmarchyTV sent the user there on purpose. */
     private static final long PASS_MS = 4_000L;
-    /** At most this many takeovers in LOOP_MS: more means OmarchyTV is not staying up, so stop. */
-    private static final int LOOP_LIMIT = 4;
-    private static final long LOOP_MS = 15_000L;
 
     private static volatile HomeOverride instance;
     private static volatile long passUntil;
 
     private final Set<String> homes = new HashSet<>();
-    private final long[] recent = new long[LOOP_LIMIT];
-    private int next;
+    /** Double events per Home press (Fire OS) count once; loop guard of 4 takeovers in 15 s (issue #58). */
+    private final TakeoverGuard guard = new TakeoverGuard();
 
     static boolean enabled() {
         return instance != null;
@@ -68,11 +65,12 @@ public class HomeOverride extends AccessibilityService {
         CharSequence pkg = e.getPackageName(), cls = e.getClassName();
         if (pkg == null || cls == null || !homes.contains(pkg + "/" + cls)) return;
         long now = SystemClock.elapsedRealtime();
-        if (now < passUntil || standDown() || looping(now)) return;
+        if (now < passUntil || standDown() || !guard.allow(pkg + "/" + cls, now)) return;
         Intent i = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME).setClass(this, MainActivity.class)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
         try {
             startActivity(i);
+            guard.started(now);
         } catch (RuntimeException ignored) {   // the system refused the start: the stock home stays, nothing else
         }
     }
@@ -111,12 +109,5 @@ public class HomeOverride extends AccessibilityService {
 
     private boolean standDown() {
         return HomeCheck.isDefaultHome(this) || Originale.isOriginal(this) || Watchdog.crashedTooOften(this);
-    }
-
-    private boolean looping(long now) {
-        long oldest = recent[next];
-        recent[next] = now;
-        next = (next + 1) % LOOP_LIMIT;
-        return oldest != 0 && now - oldest < LOOP_MS;
     }
 }
