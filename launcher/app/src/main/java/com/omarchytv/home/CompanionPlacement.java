@@ -1,6 +1,7 @@
 package com.omarchytv.home;
 
 import android.view.Gravity;
+import android.view.KeyEvent;
 
 /**
  * Where the floating Grok Bot companion sits on the home screen, and where a question goes.
@@ -84,5 +85,10 @@ final class CompanionPlacement {
     /** "companion" = to @tcballard's companion on the PC through omarchy-link; "ask" = OmarchyTV's own Ask. */
     static String route(String mirroredBotName, boolean pcConnected, boolean bridgeOn) {
         return bridgeOn && pcConnected && mirroredBotName != null && !mirroredBotName.isEmpty() ? "companion" : "ask";
+    }
+
+    /** The Blue key opens the chat directly, as on webOS/Tizen, unless "assistant": {"key": "blue"} gave it to Ask. */
+    static boolean opensChat(int keyCode, String askKey) {
+        return keyCode == KeyEvent.KEYCODE_PROG_BLUE && !"blue".equals(askKey);
     }
 }

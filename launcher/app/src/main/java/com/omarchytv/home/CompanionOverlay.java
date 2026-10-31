@@ -12,8 +12,8 @@ import android.widget.TextView;
 
 /**
  * v2.13 floating Grok Bot companion on the launcher: the mirrored bot (or Grok Bot's orange ball) in a corner,
- * blinking now and then and bobbing a few dp. It never takes D-pad focus on its own: long-press Menu arms it
- * (a ring shows), OK opens the chat, any other key disarms it. Touch / mouse can click it directly.
+ * blinking now and then and bobbing a few dp. It never takes D-pad focus on its own: the Blue key opens the chat;
+ * long-press Menu arms it (a ring shows), OK opens the chat, any other key disarms it. Touch / mouse can click it.
  * v2.14: Tom Ballard's own avatar (his 14 shapes, palette, eyes, poses through {@link GrokbotAvatar}), with the
  * webOS/Tizen behaviour: blinks (sometimes twice), glances around, falls asleep after two idle minutes (any key
  * wakes it), a slow burn-in drift, an unread dot, and Settings for shape, colour, size, badge and animation.
@@ -89,7 +89,7 @@ final class CompanionOverlay extends LinearLayout {
         name.setSingleLine(true);
         name.setGravity(Gravity.CENTER);
         addView(name, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
-        setContentDescription("Grok Bot companion: long-press Menu, then OK");
+        setContentDescription("Grok Bot companion: Blue key, or long-press Menu then OK");
         setArmed(false);
     }
 

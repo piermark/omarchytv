@@ -1966,10 +1966,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         open(new Intent(this, CompanionChatActivity.class).putExtra("voice", voice));
     }
 
-    /** Long-press Menu arms the companion (it never takes D-pad focus by itself); OK opens the chat. */
+    /** Long-press Menu arms the companion (it never takes D-pad focus by itself); OK opens the chat. The Blue key
+     * opens it at once, for remotes without a Menu key (Sharp's Tools key never reaches apps). */
     private boolean companionKey(KeyEvent e) {
         if (companion == null || companion.getVisibility() != View.VISIBLE) return false;
         int kc = e.getKeyCode();
+        if (CompanionPlacement.opensChat(kc, LauncherConfig.get(this).askKey)) {
+            if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) openCompanionChat(false);
+            return true;
+        }
         if (kc == KeyEvent.KEYCODE_MENU) {
             if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 1) {
                 companion.setArmed(!companion.isArmed());
@@ -3342,7 +3347,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("grok-bot", lAgent, j -> companionPlugins(j).put("companionAgent", n));
             return true;
         });
-        p.hint("Long-press Menu on the remote to reach the companion, then OK to chat.");
+        p.hint("Blue key on the remote opens the companion chat (or long-press Menu, then OK).");
         p.add("Grok Bot (Omarchy TUI)", "tui ›", r -> {
             LauncherConfig.update(this, j -> LauncherConfig.ensureWebApp(j, grokBot, true));
             builtWith = LauncherConfig.get(this);

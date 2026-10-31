@@ -1,6 +1,7 @@
 package com.omarchytv.home;
 
 import android.view.Gravity;
+import android.view.KeyEvent;
 
 import org.junit.Test;
 
@@ -45,5 +46,14 @@ public class CompanionPlacementTest {
         org.junit.Assert.assertEquals("orb", GrokbotMark.family("orb"));
         org.junit.Assert.assertEquals("round", GrokbotMark.family("circle"));
         org.junit.Assert.assertEquals(0xFFE06512, GrokbotMark.GROKBOT_ORANGE);
+    }
+
+    @Test
+    public void blueKeyOpensTheChatUnlessAskHasIt() {
+        assertTrue(CompanionPlacement.opensChat(KeyEvent.KEYCODE_PROG_BLUE, "none"));
+        assertTrue(CompanionPlacement.opensChat(KeyEvent.KEYCODE_PROG_BLUE, "red"));
+        assertFalse(CompanionPlacement.opensChat(KeyEvent.KEYCODE_PROG_BLUE, "blue"));
+        assertFalse(CompanionPlacement.opensChat(KeyEvent.KEYCODE_PROG_RED, "none"));
+        assertFalse(CompanionPlacement.opensChat(KeyEvent.KEYCODE_MENU, "none"));
     }
 }

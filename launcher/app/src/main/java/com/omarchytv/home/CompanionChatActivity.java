@@ -30,8 +30,8 @@ import java.util.List;
 import java.util.UUID;
 
 /**
- * v2.13 Grok Bot Companion (TV) session: a chat panel opened from the floating companion (OK on it,
- * long-press Menu, or the home tile). Type with the on-screen or a Bluetooth/USB keyboard, or speak through
+ * v2.13 Grok Bot Companion (TV) session: a chat panel opened from the floating companion (the Blue key, OK on
+ * it after long-press Menu, or the home tile). Type with the on-screen or a Bluetooth/USB keyboard, or speak through
  * the system recognizer (the remote's mic on Android TV). With @tcballard's Grok Bot Desktop Companion on
  * a linked PC (omarchy-link) the question goes to it; otherwise to OmarchyTV's own Ask (the AI provider
  * chosen there: Grok Bot, Claude Code, Codex, Hermes…). "open Netflix" / "apri YouTube" opens an installed app
