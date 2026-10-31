@@ -14,7 +14,7 @@ validation used an existing Samsung certificate and developer connection.
 ## Download (`2.13.8`)
 
 - **Unsigned widget:** [`OmarchyTV-tizen-2.13.8-unsigned.wgt`](https://github.com/piermark/omarchytv/releases/download/v2.13.8/OmarchyTV-tizen-2.13.8-unsigned.wgt) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8))
-  - SHA-256: `bdcc6abf104ebf7c0965881519c9f8aaff4c03027b4429807a2cb82211716f1d`
+  - SHA-256: `b84024dcdb75a2920598c39aa79992ef5bb9745b65a5a7d8809f9ac4b02a0dca`
   - It's unsigned: sign it with your own Samsung certificate (below) before installing. It's numbered 2.13.8, above the earlier 2.13.5 and 2.13.6 test widgets, so it installs over them.
 
 ## Build an unsigned widget

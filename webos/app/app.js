@@ -144,6 +144,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     aiCredits: "percent",
     clockFormat: "auto",   // "auto" (12 h in English, 24 h otherwise), "12" or "24"
     widgets: { term: true, weather: true, pc: true, ai: true, deploy: false },
+    tvApps: true,         // LG webOS: read the apps installed on the TV over SSAP (tvapps.js), DEFAULT_APPS stay the fallback
     hiddenApps: [],
     appOrder: []   // app ids in the user's order; apps not listed keep their DEFAULT_APPS position after them
   };
@@ -215,8 +216,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
     return out.length ? out : null;
   }
-  function setTizenApps(list) {
-    var apps = tizenAppList(list);
+  function setTizenApps(list) { applyAppList(tizenAppList(list)); }
+  function applyAppList(apps) {
     if (!apps) return;
     var dockApp = visibleApps()[state.dockIdx], ws3App = visibleApps()[state.ws3Idx];
     DEFAULT_APPS = apps;
@@ -686,7 +687,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     // Tizen: the app's own installed icon wins over text tiles; if every candidate breaks, a generic app icon + name.
     if (app.iconPaths) {
       var icon = tileIcon(app);
-      var fallback = '<div class="tile-fallback"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="var(--t-accent)" stroke-width="2">' +
+      // Built-in LG tiles that got the TV's real icon fall back to their own styled tile, not the generic one.
+      var fallback = app.lgIcon ? '<div class="tile-fallback" style="background:' + (app.bg || "var(--t-bg-alt)") + ';">' +
+        '<div style="font-size:calc(30px * var(--ts, 1));font-weight:700;letter-spacing:1.2px;color:' + (app.fg || "var(--t-fg-bright)") + ';">' + app.sub + '</div></div>' :
+        '<div class="tile-fallback"><svg width="54" height="54" viewBox="0 0 24 24" fill="none" stroke="var(--t-accent)" stroke-width="2">' +
         '<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>' +
         '<div class="tile-text-only">' + app.name + '</div></div>';
       return '<div class="tile-banner tile-art" style="background:' + (app.bg || "var(--t-bg-alt)") + ';">' +
@@ -1244,6 +1248,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.tvEnabled = !cfg.tvEnabled; saveCfg(); renderAll(); openAllSettingsModal();
       } },
       { label: tr("hidden_apps"), right: String(cfg.hiddenApps.length) + " ›", act: openHiddenAppsModal },
+    ].concat(isWebos() ? [
+      { label: "Read installed TV apps", right: cfg.tvApps ? "on" : "off", act: function () {
+        setTvApps(!cfg.tvApps); openAllSettingsModal(true);
+      } },
+      { label: "Re-pair with TV", right: "›", act: function () { repairTv(); closeModal(); } }
+    ] : []).concat([
       { label: tr("reset_order"), right: "", act: function () {
         cfg.appOrder = []; saveCfg(); renderAll(); showToast(tr("order_reset"));
       } },
@@ -1253,7 +1263,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       rootRow("boot", tr("root_boot")),
       rootRow("home", tr("root_home")),
       keepRow()
-    ]);
+    ]));
     if (keepFocus) { state.modalIdx = Math.min(focus, state.modalItems.length - 1); renderModalList(); }
   }
 
@@ -1276,7 +1286,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     // Not on Tizen: the installed-app list can still be loading or briefly miss an app being updated.
     var known = DEFAULT_APPS.map(function (a) { return a.id; });
     var pruned = cfg.hiddenApps.filter(function (id) { return known.indexOf(id) >= 0; });
-    if (window.OMARCHY_PLATFORM !== "tizen" && pruned.length !== cfg.hiddenApps.length) { cfg.hiddenApps = pruned; saveCfg(); }
+    if (window.OMARCHY_PLATFORM !== "tizen" && !(isWebos() && cfg.tvApps) && pruned.length !== cfg.hiddenApps.length) { cfg.hiddenApps = pruned; saveCfg(); }
     var items = DEFAULT_APPS.filter(function (a) { return cfg.hiddenApps.indexOf(a.id) >= 0; }).map(function (a) {
       return { label: a.name, right: tr("hidden_show"), act: function () {
         cfg.hiddenApps = cfg.hiddenApps.filter(function (id) { return id !== a.id; });
@@ -1861,35 +1871,90 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function tvControlApproved() {
     try { return !!localStorage.getItem(SSAP_KEY); } catch (e) { return false; }
   }
-  function ssapRequest(uri, done) {
-    var ws, finished = false, timer;
-    function finish(ok, info) {
+  // Newer webOS (e.g. 7.x) only answers on wss://...:3001, older ones on ws://...:3000: try both, in that order.
+  var SSAP_URLS = ["ws://127.0.0.1:3000", "wss://127.0.0.1:3001"];
+  function ssapRequest(uri, done, reqPayload, urlIdx) {
+    var ws, finished = false, opened = false, timer;
+    urlIdx = urlIdx || 0;
+    function finish(ok, info, data) {
       if (finished) return;
       finished = true; clearTimeout(timer);
       try { ws.close(); } catch (e) {}
-      if (done) done(ok, info);
+      if (!ok && !opened && info === "unavailable" && urlIdx + 1 < SSAP_URLS.length) return ssapRequest(uri, done, reqPayload, urlIdx + 1);
+      if (done) done(ok, info, data);
     }
-    try { ws = new WebSocket("ws://127.0.0.1:3000"); } catch (e) { return finish(false, "unavailable"); }
+    try { ws = new WebSocket(SSAP_URLS[urlIdx]); } catch (e) { return finish(false, "unavailable"); }
     timer = setTimeout(function () { finish(false, "no answer"); }, 90000); // time to accept a prompt
+    // One pairing covers everything the launcher asks the TV for (power, installed apps, launching them).
     var payload = { forcePairing: false, pairingType: "PROMPT", manifest: { appVersion: "1.0", manifestVersion: 1,
-      permissions: ["CONTROL_POWER", "CONTROL_TV_SCREEN", "READ_POWER_STATE"] } };
+      permissions: ["CONTROL_POWER", "CONTROL_TV_SCREEN", "READ_POWER_STATE", "READ_INSTALLED_APPS", "LAUNCH"] } };
     try { var key = localStorage.getItem(SSAP_KEY); if (key) payload["client-key"] = key; } catch (e) {}
     ws.onerror = function () { finish(false, "unavailable"); };
-    ws.onopen = function () { ws.send(JSON.stringify({ type: "register", id: "reg", payload: payload })); };
+    ws.onopen = function () { opened = true; ws.send(JSON.stringify({ type: "register", id: "reg", payload: payload })); };
     ws.onmessage = function (m) {
       var msg;
       try { msg = JSON.parse(m.data); } catch (e) { return; }
       if (msg.id === "reg" && msg.type === "registered") {
         try { localStorage.setItem(SSAP_KEY, msg.payload["client-key"]); } catch (e) {}
-        ws.send(JSON.stringify({ type: "request", id: "req", uri: uri, payload: {} }));
+        ws.send(JSON.stringify({ type: "request", id: "req", uri: uri, payload: reqPayload || {} }));
       } else if (msg.id === "reg" && msg.type === "error") {
         try { localStorage.removeItem(SSAP_KEY); } catch (e) {}
         finish(false, "not approved");
       } else if (msg.id === "req") {
-        finish(msg.type === "response" && !(msg.payload && msg.payload.returnValue === false), msg.type);
+        finish(msg.type === "response" && !(msg.payload && msg.payload.returnValue === false), msg.type, msg.payload);
       }
     };
   }
+
+  // LG webOS: the apps installed on the TV (NOW, MUBI, ...) with their own icons. Dev-mode apps get an empty list
+  // from applicationManager over luna, so this goes through SSAP, which needs the one-time "allow" prompt above.
+  // The last list is cached (titles, ids, icon URLs only) so the dock is right at once on the next start.
+  var BUILTIN_APPS = DEFAULT_APPS;
+  var TVAPPS_CACHE = "omarchytv_tv_apps", TVAPPS_DENIED = "omarchytv_tv_apps_denied";
+  var TVA = window.OmarchyTvApps || null;
+  function isWebos() {
+    return window.OMARCHY_PLATFORM !== "tizen" && !!TVA &&
+      !!(window.PalmServiceBridge || window.webOS || /Web0S|webOS/i.test((navigator && navigator.userAgent) || ""));
+  }
+  function useTvApps(lps) {
+    var apps = TVA.merge(BUILTIN_APPS, lps);
+    if (apps) applyAppList(apps);
+    return !!apps;
+  }
+  function refreshTvApps(manual) {
+    if (!isWebos() || !cfg.tvApps) return;
+    try { if (!manual && localStorage.getItem(TVAPPS_DENIED)) return; } catch (e) {}
+    if (manual) showToast("Accept OmarchyTV on the TV prompt if it appears");
+    ssapRequest("ssap://com.webos.applicationManager/listLaunchPoints", function (ok, info, data) {
+      var lps = ok && data && data.launchPoints;
+      if (lps && useTvApps(lps)) {
+        try {
+          localStorage.removeItem(TVAPPS_DENIED);
+          localStorage.setItem(TVAPPS_CACHE, JSON.stringify(lps.map(function (l) {
+            return { id: l.id, title: l.title, launchPointId: l.launchPointId, lptype: l.lptype, icon: l.icon, largeIcon: l.largeIcon,
+              extraLargeIcon: l.extraLargeIcon, mediumLargeIcon: l.mediumLargeIcon, iconColor: l.iconColor, params: l.params, visible: l.visible };
+          })));
+        } catch (e) {}
+        if (manual) showToast("TV apps updated");
+      } else {
+        if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
+        if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
+      }
+    });
+  }
+  function setTvApps(on) {
+    cfg.tvApps = on; saveCfg();
+    if (on) refreshTvApps(true); else applyAppList(BUILTIN_APPS);
+  }
+  function repairTv() {
+    try { localStorage.removeItem(SSAP_KEY); localStorage.removeItem(TVAPPS_DENIED); } catch (e) {}
+    if (!cfg.tvApps) { cfg.tvApps = true; saveCfg(); }
+    refreshTvApps(true);
+  }
+  if (isWebos() && cfg.tvApps) setTimeout(function () {   // after the first render, so state and the DOM exist
+    try { var cachedLps = JSON.parse(localStorage.getItem(TVAPPS_CACHE) || "null"); if (cachedLps) useTvApps(cachedLps); } catch (e) {}
+    setTimeout(function () { refreshTvApps(false); }, 1500);
+  }, 0);
   // Fire once per idle stretch, only while OmarchyTV is on screen and TV control is approved (an
   // unattended night-time approval prompt would help nobody). Any input re-arms it.
   var offSent = false;
@@ -1912,7 +1977,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       return;
     }
     try {
-      if (app.appId && lunaLaunch(app.appId)) return;
+      if (app.appId && lunaLaunch(app.appId, app.params)) return;
       if (window.tizen && window.tizen.application) {   // Samsung Tizen build (tizen/), see tizen-shim.js
         var tzId = app.tizenId || (window.OMARCHY_TIZEN_IDS || {})[app.id];
         if (!tzId) { showToast(app.name + " is not available on this TV"); return; }
