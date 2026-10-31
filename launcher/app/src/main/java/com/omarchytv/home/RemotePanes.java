@@ -23,8 +23,9 @@ import java.nio.charset.StandardCharsets;
  * Panes the TV fetches itself, for data that has no PC on the LAN to push it (e.g. market prices from a
  * server): omarchytv.json "remotePanes": {"url": "https://…/panes.json", "refreshSec": 300}. The body is the
  * one of PUT /v1/widgets, panes only (a URL cannot add shortcuts or actions), checked with the same limits
- * ({@link LinkServer#cleanPanes}). HTTPS only, no redirects, at most 64 KiB, fetched on a background thread at most every
- * refreshSec, only while the home screen is resumed; the last good answer is cached in the files dir, so the
+ * ({@link LinkServer#cleanPanes}). HTTPS, or plain http:// only to a literal private / link-local LAN address
+ * (the web tiles' rule, {@link #urlAllowed}; e.g. Node-RED at home), no redirects, at most 64 KiB, fetched on a
+ * background thread at most every refreshSec, only while the home screen is resumed; the last good answer is cached in the files dir, so the
  * panes survive a restart and go stale on their own ttl (dim after ttl, hidden after 2 x ttl).
  */
 final class RemotePanes {
@@ -34,6 +35,25 @@ final class RemotePanes {
     private static volatile long lastAttemptMs;
 
     private RemotePanes() {
+    }
+
+    /**
+     * omarchytv.json "remotePanes" url: https://, or http:// whose host is a literal private / link-local address
+     * ({@link LanHttpDataSource#lanHost}, no DNS names, never the internet). At most 512 chars.
+     */
+    static boolean urlAllowed(String url) {
+        if (url == null || url.length() > 512) return false;
+        if (url.startsWith("https://")) return true;
+        if (!url.startsWith("http://")) return false;
+        try {
+            return httpLan(new URL(url));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private static boolean httpLan(URL u) {
+        return "http".equals(u.getProtocol()) && LanHttpDataSource.lanHost(u.getHost());
     }
 
     static File cacheFile(Context c) {
@@ -75,7 +95,7 @@ final class RemotePanes {
             HttpURLConnection con = null;
             try {
                 URL u = new URL(url);
-                if (!"https".equals(u.getProtocol())) return;
+                if (!"https".equals(u.getProtocol()) && !httpLan(u)) return;   // checked again at fetch time
                 con = (HttpURLConnection) u.openConnection();
                 con.setInstanceFollowRedirects(false);   // only the configured URL, never where it points to
                 con.setConnectTimeout(8000);

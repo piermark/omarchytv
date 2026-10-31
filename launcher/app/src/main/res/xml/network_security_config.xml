@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Web apps on the LAN (http://192.168.x.x: the PC, a NAS, Home Assistant…). A network-security config cannot
      name IP ranges, so cleartext is permitted here and narrowed in code: WebAppActivity refuses http:// to
-     anything but a literal private / link-local address (LanHttpDataSource.allowed), never the internet. -->
+     anything but a literal private / link-local address (LanHttpDataSource.allowed), never the internet.
+     Remote panes (omarchytv.json "remotePanes") are narrowed in code by the same rule (RemotePanes.urlAllowed). -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

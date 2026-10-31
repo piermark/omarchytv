@@ -288,7 +288,8 @@ final class LauncherConfig {
 
     /**
      * Panes the TV fetches itself (omarchytv.json "remotePanes": {"url": "https://…", "refreshSec": 300}): same
-     * body as PUT /v1/widgets, panes only. Empty url (default) = off. See {@link RemotePanes}.
+     * body as PUT /v1/widgets, panes only. http:// only to a literal LAN address ({@link RemotePanes#urlAllowed}).
+     * Empty url (default) = off. See {@link RemotePanes}.
      */
     final String remotePanesUrl;
     final int remotePanesRefreshSec;
@@ -640,7 +641,7 @@ final class LauncherConfig {
         workspaceNames = Collections.unmodifiableMap(workspaceNames(workspaces));
         JSONObject rp = j != null ? j.optJSONObject("remotePanes") : null;
         String rpUrl = rp != null ? rp.optString("url", "").trim() : "";
-        remotePanesUrl = rpUrl.startsWith("https://") && rpUrl.length() <= 512 ? rpUrl : "";
+        remotePanesUrl = RemotePanes.urlAllowed(rpUrl) ? rpUrl : "";
         remotePanesRefreshSec = rp != null ? (int) clamp(rp.optInt("refreshSec", 300), 300, 86_400) : 300;
         barWeather = j != null && j.optBoolean("barWeather", false);
         JSONObject wx = j != null ? j.optJSONObject("weather") : null;
