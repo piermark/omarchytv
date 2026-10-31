@@ -323,7 +323,7 @@ final class HomeV29 extends FrameLayout {
         row.setOverScrollMode(OVER_SCROLL_NEVER);
         row.setItemAnimator(null);
         row.setLayoutManager(new LinearLayoutManager(a, LinearLayoutManager.HORIZONTAL, false));
-        rowAdapter = new TileAdapter(true, 6, row);
+        rowAdapter = new TileAdapter(true, rowCols(0), row);   // bind() applies Layout → App size
         row.setAdapter(rowAdapter);
         LinearLayout.LayoutParams rl = new LinearLayout.LayoutParams(-1, -2);
         rl.topMargin = px(16);
@@ -600,6 +600,11 @@ final class HomeV29 extends FrameLayout {
         appName.setTextColor(t.accent);
         appHints.setTextColor(t.fg);
         updateRowHeader();
+        rowAdapter.cols = rowCols(c.columns);
+        // grokbot sits just above the app window: follow its height (296 px fits the 6-per-row tiles)
+        LayoutParams gbl = (LayoutParams) grokbotBox.getLayoutParams();
+        gbl.bottomMargin = px(296) + rowAdapter.tileH(rowAdapter.cols) - rowAdapter.tileH(6);
+        grokbotBox.setLayoutParams(gbl);
         rowAdapter.notifyDataSetChanged();
         gridAdapter.notifyDataSetChanged();
         refresh();
@@ -1636,12 +1641,22 @@ final class HomeV29 extends FrameLayout {
         if (tvFocused) appName.setText("TV");
     }
 
-    // ---- tiles: home row (TV + 5 apps, 16:9) and the 7-per-row grid of workspace 3 ----
+    /** Home row tiles visible at once: Layout → App size (4..7); 0 (no config yet) gives the v2.9 six. */
+    static int rowCols(int columns) {
+        return columns <= 0 ? 6 : Math.max(4, Math.min(7, columns));
+    }
+
+    /** 16:9 tile width that fits cols tiles and cols - 1 gaps in inner px. */
+    static int tileW(int inner, int gap, int cols) {
+        return (inner - gap * (cols - 1)) / cols;
+    }
+
+    // ---- tiles: home row (TV + apps, App size per row, 16:9) and the 7-per-row grid of workspace 3 ----
     // Focus (spec): 4 px accent border + 2 px dark outer outline + scale 1.05; unfocused: 2 px muted border.
 
     private final class TileAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         private final boolean tvFirst;
-        private final int cols;
+        int cols;
         private final RecyclerView rv;
 
         TileAdapter(boolean tvFirst, int cols, RecyclerView rv) {
@@ -1702,13 +1717,22 @@ final class HomeV29 extends FrameLayout {
             };
         }
 
+        private int inner() {
+            return rv.getWidth() > 0 ? rv.getWidth() - rv.getPaddingLeft() - rv.getPaddingRight()
+                    : Math.round(1920 * s) - px(64) - px(56) - px(4) - (tvFirst ? 0 : px(16));
+        }
+
+        /** Tile height with n per row (the row's height follows it). */
+        int tileH(int n) {
+            return tileW(inner(), px(20), n) * 9 / 16;
+        }
+
         @Override
         public void onBindViewHolder(@NonNull RecyclerView.ViewHolder h, int pos) {
             FrameLayout f = (FrameLayout) h.itemView;
-            int inner = rv.getWidth() > 0 ? rv.getWidth() - rv.getPaddingLeft() - rv.getPaddingRight()
-                    : Math.round(1920 * s) - px(64) - px(56) - px(4) - (tvFirst ? 0 : px(16));
+            int inner = inner();
             int gap = px(20);
-            int w = (inner - gap * (cols - 1)) / cols;
+            int w = tileW(inner, gap, cols);
             RecyclerView.LayoutParams lp = new RecyclerView.LayoutParams(tvFirst ? w : (inner / cols), w * 9 / 16);
             if (tvFirst) lp.rightMargin = pos == getItemCount() - 1 ? 0 : gap;
             else {
