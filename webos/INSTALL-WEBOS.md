@@ -9,7 +9,7 @@
 ## Downloads (`v2.13.9`)
 
 - **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.13.9.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.13.9/omarchytv-webos-2.13.9.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.9))
-  - SHA-256: `ffcf91c51168d1d2c48ea31e2610d83800258f449a1b8b27793b510d04f76838`
+  - SHA-256: `3a7efc5452711bb7323f9ff369e9e7c10508f5ea599d27db6062a108f81a9d6f`
 - **PC Plugin (Android TV + LG webOS):** [`omarchy-tv-pc-plugin-2.13.0-beta.tar.gz`](https://github.com/piermark/omarchytv/releases/tag/v2.13.0-beta)
   - SHA-256: `968c5ffb79f5b88254df6ff922888027c1776c49bcf154980f1427c3338521bf`
 
