@@ -335,6 +335,7 @@ omarchy-tv screen start [--audio]        # mirror instead of extend ("Schermo PC
 - **Android TV:** `Settings → Ambilight & Lights`. On Philips TVs I use the local JointSpace API (`TV IP (JointSpace)`, `Auto-detect TV`, `Test connection`). Modes: `theme colours`, `theme + follow video`, `follow video`, `cinema (dim)`, plus `Brightness`. Opening an app or a video switches back to follow video. Under `Lights hub` you choose a Philips Hue Bridge or Home Assistant, then `Test hub` and `Apply theme colours now`.
 - **LG webOS / Samsung Tizen:** `Settings → Ambilight & Lights`. Cycle `Lights hub` (off → Philips Hue → Home Assistant). For Hue: `Find Hue Bridge` (or type the IP), press the bridge button, then `Pair`. For Home Assistant: enter the URL, a long-lived token and the `light.` entity id(s).
 - When you change theme, the lights take the theme's accent colour; Cinemarchy dims them.
+- **Tested on real hardware:** on Oct 31, 2026 I tested this on a Sony BRAVIA 4K GB (Android TV 9) running 2.13.7-testing. Lights hub discovery and connection worked. The lights show the theme colour while the launcher is on screen and turn off when you leave OmarchyTV (`Quando esco dal launcher` / "When I leave the launcher" setting). I haven't tested other TV models yet.
 
 #### Plugin Engine and the plugins.omarchy.org catalog
 - **On the TV:** `Settings → Plugins (SpaceX TV · Grok Bot)` turns each plugin on or off and opens it (SpaceX TV launches & streams, Grok Bot Companion).
