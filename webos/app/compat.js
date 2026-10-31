@@ -10,6 +10,7 @@
 (function () {
   "use strict";
 
+  if (!Math.cbrt) Math.cbrt = function (x) { return x < 0 ? -Math.pow(-x, 1 / 3) : Math.pow(x, 1 / 3); };   // Chrome 38 (vendored Grok Bot palette)
   if (!Object.assign) Object.assign = function (target) {
     for (var i = 1; i < arguments.length; i++) {
       var src = arguments[i];
@@ -18,11 +19,14 @@
     return target;
   };
 
-  // Minimal GET-only fetch (app.js only reads JSON from Open-Meteo and the PC bridge).
-  if (!window.fetch) window.fetch = function (url) {
+  // Minimal fetch: GET JSON from Open-Meteo and the PC bridge, POST a question to the bridge's Grok Bot.
+  if (!window.fetch) window.fetch = function (url, opts) {
+    opts = opts || {};
     return new Promise(function (resolve, reject) {
       var x = new XMLHttpRequest();
-      x.open("GET", url);
+      x.open(opts.method || "GET", url);
+      var h = opts.headers || {};
+      for (var k in h) if (Object.prototype.hasOwnProperty.call(h, k)) x.setRequestHeader(k, h[k]);
       x.onload = function () {
         resolve({
           ok: x.status >= 200 && x.status < 300,
@@ -32,7 +36,7 @@
         });
       };
       x.onerror = x.ontimeout = function () { reject(new TypeError("Network request failed")); };
-      x.send();
+      x.send(opts.body == null ? null : opts.body);
     });
   };
 

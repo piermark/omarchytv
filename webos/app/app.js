@@ -101,8 +101,16 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     randomTheme: true,
     randomWallpaper: true,
     pluginSpacexTv: true,
-    pluginGrokbot: true,
-    grokbotMessage: "", 
+    pluginGrokbot: true,   // the Grok Bot companion: on by default, the default assistant
+    grokbotMessage: "",
+    companionShape: "",    // "" follows the PC bot; else one of Tom's 14 shapes
+    companionColor: "",    // "" follows the PC bot; else one of his 11 colours
+    companionSize: "medium",
+    companionBadge: true,
+    companionAnim: true,
+    companionAgent: "grokbot",
+    companionBot: "",
+    grokbotCode: "",
     lang: "",
     opacity: 0.75,
     wallpaperDim: 0,
@@ -909,6 +917,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (state.cineTab === 0 && dhhState.videos && window.OmarchyDhh) window.OmarchyDhh.markSeen(window.localStorage, dhhState.videos);
     state.cineTab = -1;
     state.modalOpen = false;
+    state.gbChat = false;
     document.getElementById("modal-backdrop").className = "";
     renderAll();
   }
@@ -1833,29 +1842,55 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
 
-  // v2.13 Grok Bot ball mark, redrawn from Tom Ballard's MIT grokbot-desktop.svg ((c) 2026 Tom Ballard):
-  // round orange body (#E06512, or the mirrored bot's colour), soft highlight, capsule eyes (lid 1 open .. 0.1 shut).
-  function orbSvg(color, lid, px) {
-    var c = /^#[0-9a-fA-F]{6}$/.test(color || "") ? color : "#E06512";
-    var n = parseInt(c.slice(1), 16), luma = (0.2126 * (n >> 16) + 0.7152 * ((n >> 8) & 255) + 0.0722 * (n & 255)) / 255;
-    var eye = luma < 0.25 ? "#F4F4F5" : "#141416";
-    var h = Math.max(3.2, 12 * (lid == null ? 1 : lid)), y = 27 - h / 2;
-    return '<svg class="gb-orb" viewBox="0 0 64 64" width="' + (px || 44) + '" height="' + (px || 44) + '" aria-hidden="true">' +
-      '<defs><radialGradient id="gbShine" cx="0.36" cy="0.3" r="0.6"><stop offset="0" stop-color="#fff" stop-opacity="0.42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>' +
-      '<circle cx="32" cy="32" r="28" fill="' + c + '" stroke="#141416" stroke-opacity="0.55" stroke-width="1.6"/>' +
-      '<circle cx="32" cy="32" r="28" fill="url(#gbShine)"/>' +
-      '<rect x="20.4" y="' + y + '" width="5.2" height="' + h + '" rx="2.6" fill="' + eye + '"/>' +
-      '<rect x="38.4" y="' + y + '" width="5.2" height="' + h + '" rx="2.6" fill="' + eye + '"/></svg>';
+  // Grok Bot companion avatar, webOS/Tizen: Tom Ballard's shapes, palette and eyes (MIT, vendored from
+  // his Grok Bot Desktop Companion v0.1.0, see vendor/grokbot/) drawn by companion.js. The motion follows
+  // his Main.qml: an idle bob, a blink every 2.8-5.2 s (a third of them double), a look around now and
+  // then, and sleep after two idle minutes (any key wakes it). "Animation" off keeps it still.
+  var GBC = window.OmarchyCompanion || null;
+  var gbFace = { open: 1, gx: 0, gy: 0, pose: "idle", lastAct: Date.now(), busy: false, bubble: "", bubbleUntil: 0 };
+  var gbPc = null;   // GET /v1/grokbot from the PC bridge: {available, bot, roster, dispatch}
+  function gbAnim() { return cfg.companionAnim !== false; }
+  function gbBot() {
+    var r = (gbPc && gbPc.roster) || [], id = cfg.companionBot;
+    for (var i = 0; i < r.length; i++) if (r[i].id === id || r[i].name === id) return r[i];
+    return (gbPc && gbPc.bot) || null;
   }
-  var gbLid = 1;
-  var grokbotBlink = false;
+  function gbBotKey() { var b = gbBot(); return (b && (b.id || b.name)) || "default"; }
+  function gbName() { var b = gbBot(); return (cfg.grokbotName || (b && (b.shortName || b.name)) || "Grok Bot"); }
+  function gbShape() { var b = gbBot(); return cfg.companionShape || (b && b.avatarShape) || "blob"; }
+  function gbColor() { var b = gbBot(); return cfg.companionColor || (b && (b.color || b.fill)) || cfg.grokbotColor || "orange"; }
+  function gbAvatar(px) {
+    if (!GBC) return "";
+    return GBC.avatarSvg({ shape: gbShape(), color: gbColor(), px: px, open: gbFace.open, gx: gbFace.gx, gy: gbFace.gy,
+      pose: gbFace.busy ? "work" : gbFace.pose });
+  }
+  function gbWake() {
+    gbFace.lastAct = Date.now();
+    if (gbFace.pose === "sleep") { gbFace.pose = "idle"; renderPluginsUI(); }
+  }
+  function gbBlink(twice) {
+    if (!cfg.pluginGrokbot || document.hidden || !gbAnim() || gbFace.pose !== "idle") return;
+    gbFace.open = 0; renderPluginsUI();
+    setTimeout(function () {
+      gbFace.open = 1; renderPluginsUI();
+      if (twice) setTimeout(function () { gbBlink(false); }, 160);
+    }, 150);
+  }
+  function gbBlinkLoop() {
+    gbBlink(Math.random() < 0.35);
+    setTimeout(gbBlinkLoop, 2800 + Math.random() * 2400);
+  }
+  setTimeout(gbBlinkLoop, 3000);
   setInterval(function () {
     if (!cfg.pluginGrokbot || document.hidden) return;
-    if (Math.random() < 0.3) { gbLid = 0.5; renderPluginsUI(); setTimeout(function () { gbLid = 1; renderPluginsUI(); }, 1400); return; }   // idle squint
-    grokbotBlink = true;
+    if (gbAnim() && !gbFace.busy && gbFace.pose !== "sleep" && Date.now() - gbFace.lastAct > 120000) gbFace.pose = "sleep";
+    else if (gbAnim() && gbFace.pose === "idle" && Math.random() < 0.35) {   // a glance, then back to you
+      gbFace.gx = Math.round((Math.random() * 2 - 1) * 10) / 10; gbFace.gy = Math.round((Math.random() * 1.4 - 0.8) * 10) / 10;
+      setTimeout(function () { gbFace.gx = gbFace.gy = 0; renderPluginsUI(); }, 1600);
+    }
+    if (gbFace.bubble && Date.now() > gbFace.bubbleUntil) gbFace.bubble = "";
     renderPluginsUI();
-    setTimeout(function () { grokbotBlink = false; renderPluginsUI(); }, 180);
-  }, 3200);
+  }, 7000);
 
   function renderPluginsUI() {
     var pill = document.getElementById("spacex-pill");
@@ -1865,11 +1900,20 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
     var gb = document.getElementById("grokbot-companion");
     if (gb) {
-      gb.style.display = (cfg.pluginGrokbot && state.ws === 0) ? "block" : "none";
+      gb.style.display = (cfg.pluginGrokbot && !cfg.companionHidden && state.ws === 0) ? "block" : "none";
+      gb.className = "box" + (gbAnim() && gbFace.pose !== "sleep" ? " gb-live" : "") + (gbFace.pose === "sleep" ? " gb-sleep" : "") +
+        (gb.classList && gb.classList.contains("extra-focused") ? " extra-focused focused" : "");
       var eyes = document.getElementById("grokbot-eyes");
       var sub = document.getElementById("grokbot-sub");
-      if (eyes) eyes.innerHTML = orbSvg(cfg.grokbotColor, grokbotBlink ? 0.1 : gbLid, 44) + '<span class="gb-name">' + escHtml(cfg.grokbotName || "Grok Bot") + "</span>";
-      if (sub) sub.textContent = cfg.grokbotMessage ? cfg.grokbotMessage : "Blue key · chat";
+      var px = Math.round(56 * ((GBC && GBC.SIZES[cfg.companionSize]) || 1));
+      var dot = GBC && GBC.unread(window.localStorage) > 0 ? '<span class="gb-unread"></span>' : "";
+      if (eyes) eyes.innerHTML = '<span class="gb-mark">' + gbAvatar(px) + dot + "</span>" +
+        (cfg.companionBadge !== false ? '<span class="gb-name">' + escHtml(gbName()) + "</span>" : "");
+      if (sub) {
+        var line = gbFace.bubble || (gbFace.busy ? "Thinking…" : gbFace.pose === "sleep" ? "zz…" : cfg.grokbotMessage || "Blue · chat · hold Blue · voice");
+        sub.textContent = line.length > 120 ? line.slice(0, 117) + "…" : line;
+        sub.className = gbFace.bubble ? "gb-bubble" : "";
+      }
       placeCompanion(gb);
     }
   }
@@ -1883,14 +1927,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "🤖 Omarchy Grok Bot Desktop Companion (@tcballard · MIT)", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
         cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
-      { label: "🤖 Open Grok Bot Desktop Companion", right: "[ ◉ ◉ ] ›", act: openGrokbotCompanionModal }
+      { label: "🤖 Open Grok Bot companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } }
     ]);
   }
 
   // Plugin extras reachable with the D-pad (Down from the dock): SpaceX pill, Grok Bot companion.
   function pluginExtras() {
     var out = [];
-    if (cfg.pluginGrokbot && document.getElementById("grokbot-companion")) out.push({ id: "grokbot-companion", open: openCompanionChat });
+    if (cfg.pluginGrokbot && document.getElementById("grokbot-companion")) out.push({ id: "grokbot-companion", open: function () { openCompanionChat(false); } });
     if (cfg.pluginSpacexTv && document.getElementById("spacex-pill")) out.push({ id: "spacex-pill", open: openSpacexModal });
     return out;
   }
@@ -1920,14 +1964,20 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     openModal("SpaceX TV · com.sighmon.spacex-tv", "Based on sighmon's Omarchy SpaceX TV plugin (github.com/sighmon/omarchy-spacex-tv · MIT)", items);
   }
 
-  // v2.13 Grok Bot Companion (TV), webOS/Tizen. Experimental, tracks @tcballard's in-development
-  // Grok Bot Desktop Companion (MIT); my own code. Never takes D-pad focus by itself: the Blue colour key
-  // (or a click) opens the chat. There is no omarchy-link channel on webOS/Tizen yet, so questions go to
-  // grok.com in the TV browser. Voice: the Web Speech API when the TV's engine has it, else keyboard only.
+  // Grok Bot companion chat, webOS/Tizen. The chosen agent answers:
+  //  - "grokbot": @tcballard's Grok Bot Desktop Companion on the PC, through the omarchy-tv bridge
+  //    (POST /v1/grokbot/ask with the ask code the bridge prints; it runs omarchy-link's grokbot ask);
+  //  - "grok-web": grok.com in the TV browser (also the fallback when no PC is paired).
+  // "open Netflix" / "apri YouTube" opens a matching app on the TV first, without asking anyone.
+  // Voice: the Web Speech API when the TV's engine has it; Tizen voice/search keys when the TV lets apps
+  // register them; hold Blue everywhere. The webOS Magic Remote mic always belongs to the system.
   var COMPANION_CORNERS = ["bottom-right", "bottom-left", "top-right", "top-left"];
+  var GB_AGENTS = ["grokbot", "grok-web"];
+  var GB_AGENT_NAMES = { "grokbot": "Grok Bot on my PC (omarchy-link)", "grok-web": "Grok on grok.com (TV browser)" };
   function placeCompanion(el) {
     var c = COMPANION_CORNERS.indexOf(cfg.companionCorner) >= 0 ? cfg.companionCorner : "bottom-right";
-    var ox = 48 + (cfg.companionOffsetX || 0), oy = (cfg.companionOffsetY || 0);
+    var d = GBC && gbAnim() ? GBC.drift(Date.now()) : { x: 0, y: 0 };   // burn-in safe: never parked on one pixel
+    var ox = 48 + (cfg.companionOffsetX || 0) + d.x, oy = (cfg.companionOffsetY || 0) + d.y;
     el.style.left = el.style.right = el.style.top = el.style.bottom = "";
     if (c.indexOf("right") >= 0) el.style.right = ox + "px"; else el.style.left = ox + "px";
     if (c.indexOf("bottom") >= 0) el.style.bottom = (340 + oy) + "px"; else el.style.top = (120 + oy) + "px";
@@ -1944,54 +1994,240 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     } catch (e) {}
     showToast("Ask Grok: " + url);
   }
-  function openCompanionChat() {
-    var q = "";
-    var voice = speechCtor();
+  function openUrlOnTv(url) {
+    try {
+      if (lunaLaunch("com.webos.app.browser", { target: url })) return;
+      if (window.tizen && window.tizen.ApplicationControl) {
+        window.tizen.application.launchAppControl(new window.tizen.ApplicationControl("http://tizen.org/appcontrol/operation/view", url), null, null, null);
+        return;
+      }
+    } catch (e) {}
+    showToast("Open on your phone: " + url);
+  }
+  function pcBase() {
+    if (!cfg.pcHost) return "";
+    var base = cfg.pcHost.indexOf("http") === 0 ? cfg.pcHost : ("http://" + cfg.pcHost + (cfg.pcHost.indexOf(":") > 0 ? "" : ":8765"));
+    return base.replace(/\/+$/, "");
+  }
+  function gbAgent() { return GB_AGENTS.indexOf(cfg.companionAgent) >= 0 ? cfg.companionAgent : "grokbot"; }
+  // The PC's bot, roster, shape and colour (Tom's grokbot-bots.json via omarchy-link). No secrets in it.
+  function syncGrokbotFromPc(force) {
+    var base = pcBase();
+    if (!base || typeof fetch !== "function") return Promise.resolve(null);
+    var go = force && cfg.grokbotCode
+      ? fetch(base + "/v1/grokbot/sync", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" }, body: "{}" })
+      : fetch(base + "/v1/grokbot");
+    return go.then(function (r) { return r.json(); }).then(function (j) {
+      gbPc = j && j.available ? j : null;
+      renderPluginsUI();
+      return gbPc;
+    }).catch(function () { return null; });
+  }
+  function gbSay(text, ms) {
+    gbFace.bubble = String(text || "");
+    gbFace.bubbleUntil = Date.now() + (ms || 15000);
+    renderPluginsUI();
+  }
+  // Ask the chosen agent; the answer lands in this bot's history, the bubble and (if the chat is shut) an unread dot.
+  function askCompanion(q, reopen) {
+    q = String(q || "").trim();
+    if (!q || gbFace.busy) return;
+    gbWake();
+    var key = gbBotKey(), store = window.localStorage;
+    if (GBC) {
+      var lq = GBC.launchQuery(q), app = lq && GBC.matchApp(lq, visibleApps());
+      if (app) {
+        GBC.push(store, key, "user", q);
+        GBC.push(store, key, "bot", "Opening " + app.name + "…", { mode: "launch" });
+        closeModal(); gbSay("Opening " + app.name + "…", 4000); launchApp(app);
+        return;
+      }
+    }
+    var base = pcBase();
+    if (gbAgent() !== "grokbot" || !base || !cfg.grokbotCode || typeof fetch !== "function") {
+      if (gbAgent() === "grokbot") showToast(!base ? "Pair the PC (Workspace 4) to ask Grok Bot · opening grok.com" : "Enter the PC ask code in the companion settings · opening grok.com");
+      if (GBC) GBC.push(store, key, "user", q);
+      closeModal(); askGrokWeb(q);
+      return;
+    }
+    if (GBC) GBC.push(store, key, "user", q);
+    gbFace.busy = true; gbSay("Thinking…", 200000);
+    if (reopen) openCompanionChat(false);
+    var bot = gbBot();
+    fetch(base + "/v1/grokbot/ask", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" },
+      body: JSON.stringify({ text: q, bot: bot ? (bot.id || bot.name) : undefined }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j || {} }; }); })
+      .then(function (res) {
+        gbFace.busy = false;
+        var j = res.j, open = state.modalOpen && state.gbChat;
+        if (!res.ok) {
+          var msg = res.j.error === "unauthorized" ? "Wrong ask code: check it in the companion settings" : (j.message || "The PC could not answer");
+          if (GBC) GBC.push(store, key, "bot", msg, { mode: "error" });
+          gbSay(msg, 8000);
+        } else if (j.mode === "sent") {
+          var sent = "Sent ✓ The answer appears on the PC companion.";
+          if (GBC) GBC.push(store, key, "bot", sent, { mode: "sent", unread: !open });
+          gbSay(sent, 10000);
+        } else {
+          var links = GBC ? (j.links && j.links.length ? GBC.cleanLinks(j.links) : GBC.links(j.text)) : [];
+          if (GBC) GBC.push(store, key, "bot", j.text || "(no answer)", { links: links, unread: !open });
+          gbFace.pose = "happy"; setTimeout(function () { if (gbFace.pose === "happy") gbFace.pose = "idle"; renderPluginsUI(); }, 2500);
+          gbSay((j.bot ? j.bot + ": " : "") + (j.text || ""), 30000);
+        }
+        if (open) openCompanionChat(false);
+      }).catch(function () {
+        gbFace.busy = false;
+        var m = "The PC did not answer · is omarchy-tv webos serve running?";
+        if (GBC) GBC.push(store, key, "bot", m, { mode: "error" });
+        gbSay(m, 8000);
+        if (state.modalOpen && state.gbChat) openCompanionChat(false);
+      });
+  }
+  function playLink(l) {
+    if (l.kind === "youtube" && l.videoId) { if (cfg.embedPlayer) openEmbed(l.videoId); else { closeModal(); openYoutubeApp(l.videoId); } return; }
+    closeModal(); openUrlOnTv(l.url);
+  }
+  function listen(onText) {
+    var SR = speechCtor();
+    if (!SR) { showToast("Voice is not available on this TV · use the keyboard"); return false; }
+    try {
+      var r = new SR();
+      r.lang = cfg.lang === "it" ? "it-IT" : cfg.lang === "de" ? "de-DE" : "en-US";
+      r.interimResults = false;
+      r.onresult = function (ev) { var t = ev.results && ev.results[0] && ev.results[0][0] ? ev.results[0][0].transcript : ""; if (t) onText(t); };
+      r.onerror = function () { showToast("I didn't catch that · try again or type"); };
+      r.start(); showToast("Listening…");
+      gbFace.pose = "alert"; setTimeout(function () { if (gbFace.pose === "alert") gbFace.pose = "idle"; renderPluginsUI(); }, 4000);
+      renderPluginsUI();
+      return true;
+    } catch (e) { showToast("Voice is not available here · use the keyboard"); return false; }
+  }
+  function openCompanionChat(voice) {
+    gbWake();
+    var q = "", key = gbBotKey(), store = window.localStorage, hist = GBC ? GBC.history(store, key) : [];
+    if (GBC) GBC.markRead(store, key);
+    var last = null;
+    for (var h = hist.length - 1; h >= 0; h--) if (hist[h].role === "bot") { last = hist[h]; break; }
     var items = [
-      { label: "Send to Grok (opens grok.com in the TV browser)", right: "OK ›", act: function () {
-        if (!q.trim()) { showToast("Type a question first (▲ goes back to the field)"); return; }
-        closeModal(); askGrokWeb(q.trim());
+      { label: gbFace.busy ? "⏳ " + escHtml(gbName()) + " is thinking…" : "➤ Ask " + escHtml(gbName()), right: "OK", act: function () {
+        if (q.trim()) askCompanion(q, true); else showToast("Type a question above, or use 🎤");
       } },
-      voice ? { label: "🎤 Speak instead", right: "voice", act: function () {
-        try {
-          var r = new voice(); r.lang = navigator.language || "en-US";
-          r.onresult = function (ev) { q = ev.results[0][0].transcript; modalInput.value = q; showToast("Heard: " + q); };
-          r.onerror = function () { showToast("Voice is not available here · use the keyboard"); };
-          r.start(); showToast("Listening…");
-        } catch (e) { showToast("Voice is not available here · use the keyboard"); }
-      } } : { label: "Voice: not available on this TV · keyboard only", right: "", act: function () {} },
-      { label: "Companion corner", right: cfg.companionCorner || "bottom-right", act: function () {
-        var i = COMPANION_CORNERS.indexOf(cfg.companionCorner || "bottom-right");
-        cfg.companionCorner = COMPANION_CORNERS[(i + 1) % 4]; saveCfg(); renderPluginsUI();
-        state.modalItems[state.modalIdx].right = cfg.companionCorner; renderModalList();
-      } },
-      { label: "Show floating companion on Home", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
-        cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI();
-        state.modalItems[state.modalIdx].right = cfg.pluginGrokbot ? "on" : "off"; renderModalList();
-      } }
+      speechCtor() ? { label: "🎤 Speak", right: "OK", act: function () { listen(function (t) { askCompanion(t, true); }); } }
+        : { label: "🎤 Voice: not available on this TV · keyboard only", right: "", act: function () {} }
     ];
-    openModal("Grok Bot Companion (TV) · experimental",
-      "Tracks @tcballard's in-development Grok Bot Desktop Companion (MIT) · Blue key opens this chat", items,
-      "Ask anything… (on-screen or Bluetooth keyboard)", function (v) { q = v; },
-      { noAutoFocus: true, focusIdx: voice ? 1 : 0 });
+    ((last && last.links) || []).forEach(function (l) {
+      var lbl = l.kind === "youtube" ? (cfg.embedPlayer ? "▶ Play in Cinemarchy" : "▶ Play on YouTube") : l.kind === "video" ? "▶ Play video in the TV browser" : "🔗 Open link in the TV browser";
+      items.push({ label: lbl + " · " + escHtml(l.url.replace(/^https?:\/\//, "").slice(0, 48)), right: "OK ›", act: function () { playLink(l); } });
+    });
+    var roster = (gbPc && gbPc.roster) || [];
+    if (roster.length > 1) items.push({ label: "Bot", right: escHtml(gbName()) + " ›", act: function () {
+      var i = -1, cur = gbBot();
+      for (var k = 0; k < roster.length; k++) if (cur && roster[k].id === cur.id) i = k;
+      cfg.companionBot = roster[(i + 1) % roster.length].id; saveCfg(); renderPluginsUI(); openCompanionChat(false);
+    } });
+    items.push({ label: "Agent", right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
+      cfg.companionAgent = GB_AGENTS[(GB_AGENTS.indexOf(gbAgent()) + 1) % GB_AGENTS.length]; saveCfg(); openCompanionChat(false);
+    } });
+    if (hist.length) items.push({ label: "Clear this chat", right: "", act: function () { GBC.clear(store, key); gbFace.bubble = ""; openCompanionChat(false); } });
+    items.push({ label: "Hide the companion (Blue brings it back)", right: "", act: function () {
+      cfg.companionHidden = true; saveCfg(); closeModal(); showToast("Companion hidden · press Blue to bring it back");
+    } });
+    items.push({ label: "Companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } });
+    openModal("💬 " + gbName(), "", items, "Ask anything, or say “open Netflix”… (on-screen or Bluetooth keyboard)", function (v) { q = v; },
+      { noAutoFocus: true, focusIdx: voice && speechCtor() ? 1 : 0 });
+    state.gbChat = true;
     var subEl = document.getElementById("modal-sub");
-    if (subEl) subEl.innerHTML = '<div style="display:flex;align-items:center;gap:12px;">' + orbSvg(cfg.grokbotColor, 1, 40) +
-      "<div>Tracks @tcballard's in-development Grok Bot Desktop Companion (MIT) · Blue key opens this chat</div></div>";
+    if (subEl) {
+      var rows = hist.slice(-6).map(function (m) {
+        return '<div class="gb-msg ' + (m.role === "user" ? "gb-me" : "gb-bot") + '">' + escHtml(m.text.length > 400 ? m.text.slice(0, 397) + "…" : m.text) + "</div>";
+      }).join("");
+      subEl.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px;"><span class="gb-mark">' + gbAvatar(48) + "</span><div>" +
+        (rows || "Hi! Ask me anything, or tell me which app to open.") + '<div class="gb-credit">Avatar from @tcballard\'s Grok Bot Desktop Companion v0.1.0 (MIT)</div></div></div>';
+      subEl.style.display = "block";
+    }
+    if (voice && speechCtor()) listen(function (t) { askCompanion(t, true); });
   }
 
-  function openGrokbotCompanionModal() {
-    openModal("Grok Bot Desktop Companion · io.github.tcballard.grokbot-desktop",
-      "Experimental, tracks @tcballard's in-development branch (MIT) · the PC bridge runs on Android TV via omarchy-link", [
-      { label: "💬 Chat with the companion", right: "OK ›", act: openCompanionChat },
-      { label: "Show floating companion on Home", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
-        cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI(); openGrokbotCompanionModal();
+  function cycle(list, cur) { var i = list.indexOf(cur); return list[(i + 1) % list.length]; }
+  function openGrokbotCompanionModal(focusIdx) {
+    var shapes = [""].concat(GBC ? GBC.SHAPES : []), colors = [""].concat(GBC ? GBC.COLORS : []);
+    var code = "";
+    var items = [
+      { label: "💬 Chat with " + escHtml(gbName()), right: "OK ›", act: function () { openCompanionChat(false); } },
+      { label: "Show companion on Home", right: cfg.pluginGrokbot && !cfg.companionHidden ? "on" : "off", act: function () {
+        if (cfg.companionHidden) cfg.companionHidden = false; else cfg.pluginGrokbot = !cfg.pluginGrokbot;
+        saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(1);
       } },
-      { label: "Companion corner", right: cfg.companionCorner || "bottom-right", act: function () {
-        var j = COMPANION_CORNERS.indexOf(cfg.companionCorner || "bottom-right");
-        cfg.companionCorner = COMPANION_CORNERS[(j + 1) % 4]; saveCfg(); renderPluginsUI(); openGrokbotCompanionModal();
-      } }
-    ]);
+      { label: "Shape", right: (cfg.companionShape || "follow PC bot (" + gbShape() + ")") + " ›", act: function () {
+        cfg.companionShape = cycle(shapes, cfg.companionShape || ""); saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(2);
+      } },
+      { label: "Colour", right: (cfg.companionColor || "follow PC bot") + " ›", act: function () {
+        cfg.companionColor = cycle(colors, cfg.companionColor || ""); saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(3);
+      } },
+      { label: "Size", right: (cfg.companionSize || "medium") + " ›", act: function () {
+        cfg.companionSize = cycle(["small", "medium", "large"], cfg.companionSize || "medium"); saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(4);
+      } },
+      { label: "Corner", right: (cfg.companionCorner || "bottom-right") + " ›", act: function () {
+        cfg.companionCorner = cycle(COMPANION_CORNERS, cfg.companionCorner || "bottom-right"); saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(5);
+      } },
+      { label: "Name badge", right: cfg.companionBadge !== false ? "on" : "off", act: function () {
+        cfg.companionBadge = cfg.companionBadge === false; saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(6);
+      } },
+      { label: "Animation (bob, blink, look around, sleep, drift)", right: gbAnim() ? "on" : "off", act: function () {
+        cfg.companionAnim = !gbAnim(); saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(7);
+      } },
+      { label: "Agent", right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
+        cfg.companionAgent = cycle(GB_AGENTS, gbAgent()); saveCfg(); openGrokbotCompanionModal(8);
+      } },
+      { label: "Save the PC ask code typed above", right: cfg.grokbotCode ? "set ✓" : "not set", act: function () {
+        var c = code.replace(/\s+/g, "").toUpperCase();
+        if (c && !/^[A-Z0-9]{8,64}$/.test(c)) { showToast("The ask code has 8 letters and digits"); return; }
+        cfg.grokbotCode = c; saveCfg(); showToast(c ? "Ask code saved" : "Ask code removed"); openGrokbotCompanionModal(9);
+      } },
+      { label: "Sync bot, shape and colour from the PC", right: pcBase() ? "OK ›" : "pair the PC first", act: function () {
+        if (!pcBase()) { showToast("Pair the PC in Workspace 4 first"); return; }
+        showToast("Syncing with the PC…");
+        syncGrokbotFromPc(true).then(function (j) { showToast(j ? "Synced · " + ((j.roster || []).length) + " bots" : "The PC has no Grok Bot Desktop Companion, or the bridge is off"); if (state.modalOpen) openGrokbotCompanionModal(10); });
+      } },
+      { label: "Clear all companion chats", right: "", act: function () { if (GBC) GBC.clear(window.localStorage); gbFace.bubble = ""; renderPluginsUI(); showToast("Chats cleared"); } }
+    ];
+    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT) · Blue: chat · hold Blue: voice · " +
+      (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
+      items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
   }
+
+  // Blue: chat. Hold Blue (or a Tizen voice/search key, when the TV gives it to apps): chat by voice.
+  var GB_VOICE_CODES = {};
+  (function registerVoiceKeys() {
+    try {
+      var tv = window.tizen && window.tizen.tvinputdevice;
+      if (!tv || !tv.getSupportedKeys) return;
+      tv.getSupportedKeys().forEach(function (k) {
+        if (/^(Search|Voice|VoiceRecognition|Mic|Microphone)$/i.test(k.name)) {
+          try { tv.registerKey(k.name); GB_VOICE_CODES[k.code] = true; } catch (e) {}
+        }
+      });
+    } catch (e) {}
+  })();
+  var gbBlue = { timer: 0, held: false };
+  document.addEventListener("keydown", function (e) { gbWake(); }, true);
+  window.addEventListener("keyup", function (e) {
+    if (e.keyCode !== 406 && e.key !== "ColorF3Blue") return;
+    if (gbBlue.timer) { clearTimeout(gbBlue.timer); gbBlue.timer = 0; if (!gbBlue.held) openCompanionChat(false); }
+    gbBlue.held = false;
+  });
+  function companionKey(e, code, k) {
+    if (!cfg.pluginGrokbot || state.modalOpen) return false;
+    if (GB_VOICE_CODES[code]) { cfg.companionHidden = false; openCompanionChat(true); return true; }
+    if (code !== 406 && k !== "ColorF3Blue") return false;
+    if (e.repeat || gbBlue.timer) return true;
+    cfg.companionHidden = false;
+    gbBlue.held = false;
+    gbBlue.timer = setTimeout(function () { gbBlue.held = true; openCompanionChat(true); }, 650);
+    return true;
+  }
+  setTimeout(function () { syncGrokbotFromPc(false); }, 1500);
+  setInterval(function () { if (!document.hidden) syncGrokbotFromPc(false); }, 300000);
 
   function renderAll() {
     renderTerminal();
@@ -2059,7 +2295,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
 
     if (state.embedOpen) { embedKey(k, isBack); e.preventDefault(); return; }
-    if ((code === 406 || k === "ColorF3Blue") && !state.modalOpen && cfg.pluginGrokbot) { openCompanionChat(); e.preventDefault(); return; }
+    if (companionKey(e, code, k)) { e.preventDefault(); return; }
 
     if (state.modalOpen) {
       if (isBack) { closeModal(); e.preventDefault(); return; }
@@ -2256,7 +2492,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   var spEl = document.getElementById("spacex-pill");
   if (spEl) spEl.onclick = openSpacexModal;
   var gbEl = document.getElementById("grokbot-companion");
-  if (gbEl) gbEl.onclick = openCompanionChat;
+  if (gbEl) gbEl.onclick = function () { openCompanionChat(false); };
   document.getElementById("wx-box").onclick = openWeatherModal;
   document.getElementById("term-box").onclick = openThemesModal;
   document.getElementById("pc-box").onclick = function () { switchWorkspace(3); };

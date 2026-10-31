@@ -225,12 +225,12 @@ otherwise OK opens Live TV (Android has no public "tune to number" intent).
   **WebView on this TV:** Android 8/9 get Chrome/WebView up to **138** only (139+ needs Android 10). Update
   "Android System WebView" / Chrome in the Play Store to reach 138; below 110 the web app shows a warning.
   After that it gets no security fixes, so treat logins in web apps accordingly.
-- **> search** (logo menu, or the mic/Search key if `"voiceKey": "launcher"`; default leaves it to Google Assistant):
+- **> search** (logo menu, or the mic/Search key if `"voiceKey": "launcher"`; the default `"companion"` opens the Grok Bot companion by voice, `"assistant"` leaves it to Google Assistant):
   system speech recognizer, then fuzzy match over apps, web apps and channels ("apri Netflix", "metti Rai uno",
   "canale cinque", "open YouTube"). A clear winner opens directly, otherwise a list.
   Some remotes (the SHIELD's, for one) send their mic key as `KEYCODE_ASSIST`, which Android hands to the
   Assistant app before the launcher sees it, so `"voiceKey"` can't catch it. Make OmarchyTV the Assistant app and
-  that key opens Walker from anywhere: `adb shell cmd role add-role-holder android.app.role.ASSISTANT com.omarchytv.home`.
+  that key opens the companion (or Walker, with `"voiceKey": "launcher"`) from anywhere: `adb shell cmd role add-role-holder android.app.role.ASSISTANT com.omarchytv.home`.
   Speech recognition stays with Google. Undo: `adb shell cmd role add-role-holder android.app.role.ASSISTANT com.google.android.katniss`
   (or Settings → Apps → Default apps → Assist app).
 - **Remote buttons** (Launcher settings → Remote buttons, shown only while a remote listed in `assets/remotes.json` is

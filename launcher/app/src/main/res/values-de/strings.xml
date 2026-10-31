@@ -133,6 +133,7 @@
     <string name="voice_key">Mikrofon-/Suchtaste</string>
     <string name="voice_key_assistant">Google Assistant</string>
     <string name="voice_key_launcher">> search</string>
+    <string name="voice_key_companion">Grok-Bot-Begleiter</string>
     <string name="ask_key">> ask-Taste</string>
     <string name="ask_need_link">zuerst Omarchy Linux verbinden (Logo-Menü → Omarchy Linux verbinden). Antworten kommen vom PC; der TV speichert keine API-Schlüssel.</string>
     <string name="ask_need_link_short">zuerst Omarchy Linux verbinden</string>

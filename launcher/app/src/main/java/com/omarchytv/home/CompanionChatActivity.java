@@ -2,8 +2,12 @@ package com.omarchytv.home;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -18,8 +22,10 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -27,8 +33,11 @@ import java.util.UUID;
  * v2.13 Grok Bot Companion (TV) session: a chat panel opened from the floating companion (OK on it,
  * long-press Menu, or the home tile). Type with the on-screen or a Bluetooth/USB keyboard, or speak through
  * the system recognizer (the remote's mic on Android TV). With @tcballard's Grok Bot Desktop Companion on
- * a linked PC (omarchy-link) the question goes to it; otherwise to OmarchyTV's own Ask.
- * Experimental, tracks @tcballard's in-development branch (MIT); the code here is mine.
+ * a linked PC (omarchy-link) the question goes to it; otherwise to OmarchyTV's own Ask (the AI provider
+ * chosen there: Grok Bot, Claude Code, Codex, Hermes…). "open Netflix" / "apri YouTube" opens an installed app
+ * first (CompanionCommands). Links in a reply become buttons: YouTube ones play in the YouTube app, others open
+ * in the WebApp, only after OK on the button. Each bot keeps its last 30 lines. Built against @tcballard's
+ * Grok Bot Desktop Companion v0.1.0 (MIT, commit a2efb00); the code here is mine.
  */
 public class CompanionChatActivity extends Activity implements OmarchyLink.Listener {
     private static final int REQ_VOICE = 41;
@@ -39,6 +48,7 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
     private GrokbotMark mark;
     private String pendingId;
     private String botName = "Grok Bot";
+    private static final int HISTORY = 30;
     private Theme t;
     private Typeface mono;
 
@@ -117,7 +127,13 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
         sendBtn.setOnClickListener(v -> send(input.getText().toString()));
         row.addView(sendBtn);
         panel.addView(row);
-        TextView foot = text("Experimental, tracks @tcballard's in-development branch (MIT) · built for v0.1.0", 10, t.fgDim, false);
+        TextView clear = button("Clear");
+        clear.setOnClickListener(v -> {
+            prefs().edit().remove(historyKey()).apply();
+            log.removeAllViews();
+        });
+        row.addView(clear);
+        TextView foot = text("Built for @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT) · try \"open YouTube\"", 10, t.fgDim, false);
         foot.setPadding(0, dp(8), 0, 0);
         panel.addView(foot);
 
@@ -125,7 +141,8 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
         shade.addView(panel, lp);
         setContentView(shade);
 
-        if (cfg.grokbotMessage != null && !cfg.grokbotMessage.isEmpty()) line(botName, cfg.grokbotMessage, false);
+        restoreHistory();
+        if (cfg.grokbotMessage != null && !cfg.grokbotMessage.isEmpty()) line(botName, cfg.grokbotMessage, false, false);
         String q = getIntent().getStringExtra("q");
         if (q != null && !q.trim().isEmpty()) send(q);
         if (getIntent().getBooleanExtra("voice", false)) voice();
@@ -161,9 +178,10 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
         if (q.length() > 240) q = q.substring(0, 240);
         input.setText("");
         line("You", q, true);
+        if (launchByName(CompanionCommands.launchQuery(q))) return;
         if ("companion".equals(route())) {
             pendingId = UUID.randomUUID().toString();
-            line(botName, "…", false);
+            line(botName, "…", false, false);
             OmarchyLink.grokbotAsk(pendingId, q, null);
         } else {
             line("OmarchyTV", "Opening Ask with your question…", false);
@@ -201,8 +219,12 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
             if (log.getChildCount() > 0) log.removeViewAt(log.getChildCount() - 1);   // the "…" line
             if ("grokbot_answer".equals(type)) {
                 String text = d.optString("text", "");
-                line(d.optString("bot", botName), "ipc".equals(d.optString("mode")) || text.isEmpty()
+                String mode = d.optString("mode");
+                line(d.optString("bot", botName), "sent".equals(mode)
+                        ? "Sent ✓ The answer appears on the PC companion (its webhook replies there)."
+                        : "ipc".equals(mode) || text.isEmpty()
                         ? "Sent to the companion on the PC; the reply is in its desktop bubble (IPC-only mode)." : text, false);
+                linkButtons(d.optJSONArray("links"), text);
                 mark.blink(false);
                 mark.postDelayed(() -> mark.blink(true), 160);
             } else {
@@ -226,10 +248,110 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
     }
 
     private void line(String who, String msg, boolean me) {
+        line(who, msg, me, true);
+    }
+
+    private void line(String who, String msg, boolean me, boolean keep) {
         TextView v = text(who + ": " + msg, 13, me ? t.cyan : t.fgBright, false);
         v.setPadding(0, dp(3), 0, dp(3));
         log.addView(v);
         scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        if (keep) remember(who, msg, me);
+    }
+
+    // ---- local app launching ("open Netflix", "apri YouTube") ----
+
+    /** Opens the installed app that best matches the spoken name; false when none does (the agent answers). */
+    private boolean launchByName(String query) {
+        if (query == null || query.isEmpty()) return false;
+        PackageManager pm = getPackageManager();
+        List<ResolveInfo> found = new ArrayList<>();
+        for (String cat : new String[]{Intent.CATEGORY_LEANBACK_LAUNCHER, Intent.CATEGORY_LAUNCHER}) {
+            List<ResolveInfo> r = pm.queryIntentActivities(new Intent(Intent.ACTION_MAIN).addCategory(cat), 0);
+            if (r != null) found.addAll(r);
+        }
+        List<String[]> names = new ArrayList<>();
+        List<ResolveInfo> infos = new ArrayList<>();
+        for (ResolveInfo ri : found) {
+            if (ri.activityInfo == null || getPackageName().equals(ri.activityInfo.packageName)) continue;
+            names.add(new String[]{String.valueOf(ri.loadLabel(pm)), ri.activityInfo.packageName});
+            infos.add(ri);
+        }
+        int k = CompanionCommands.matchApp(query, names);
+        if (k < 0) return false;
+        ResolveInfo ri = infos.get(k);
+        Intent i = pm.getLeanbackLaunchIntentForPackage(ri.activityInfo.packageName);
+        if (i == null) i = new Intent(Intent.ACTION_MAIN).setComponent(new ComponentName(ri.activityInfo.packageName, ri.activityInfo.name));
+        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
+        try {
+            startActivity(i);
+            line(botName, "Opening " + names.get(k)[0] + "…", false);
+            return true;
+        } catch (ActivityNotFoundException | SecurityException e) {
+            return false;
+        }
+    }
+
+    // ---- links in a reply: a button each, opened only with OK on it ----
+
+    private void linkButtons(JSONArray fromPc, String text) {
+        List<String> urls = new ArrayList<>();
+        if (fromPc != null) {
+            for (int i = 0; i < fromPc.length() && urls.size() < 6; i++) {
+                JSONObject l = fromPc.optJSONObject(i);
+                String u = l != null ? l.optString("url", "") : "";
+                if (u.startsWith("https://") || u.startsWith("http://")) urls.add(u);
+            }
+        }
+        if (urls.isEmpty()) urls = CompanionCommands.links(text);
+        for (String u : urls) {
+            final String url = u;
+            final String id = CompanionCommands.youtubeId(url);
+            String shown = url.replaceFirst("^https?://", "");
+            if (shown.length() > 48) shown = shown.substring(0, 48) + "…";
+            TextView b = button((DhhFeed.validId(id) ? "▶ Play on YouTube · " : "🔗 Open · ") + shown);
+            b.setOnClickListener(v -> {
+                if (DhhFeed.validId(id)) YoutubeEmbedActivity.openInYoutubeApp(this, id, null);
+                else WebAppActivity.openUrl(this, "Link", url);
+            });
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            lp.topMargin = dp(4);
+            log.addView(b, lp);
+            if (urls.indexOf(u) == 0) b.requestFocus();
+        }
+        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+    }
+
+    // ---- per-bot history (the last 30 lines) ----
+
+    private SharedPreferences prefs() {
+        return getSharedPreferences("grokbot_companion", MODE_PRIVATE);
+    }
+
+    private String historyKey() {
+        return "chat:" + botName;
+    }
+
+    private void remember(String who, String msg, boolean me) {
+        try {
+            JSONArray a = new JSONArray(prefs().getString(historyKey(), "[]"));
+            a.put(new JSONObject().put("who", who).put("msg", msg.length() > 4000 ? msg.substring(0, 4000) : msg).put("me", me));
+            JSONArray keep = new JSONArray();
+            for (int i = Math.max(0, a.length() - HISTORY); i < a.length(); i++) keep.put(a.get(i));
+            prefs().edit().putString(historyKey(), keep.toString()).apply();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void restoreHistory() {
+        try {
+            JSONArray a = new JSONArray(prefs().getString(historyKey(), "[]"));
+            for (int i = 0; i < a.length(); i++) {
+                JSONObject o = a.getJSONObject(i);
+                line(o.optString("who"), o.optString("msg"), o.optBoolean("me"), false);
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     private TextView button(String s) {

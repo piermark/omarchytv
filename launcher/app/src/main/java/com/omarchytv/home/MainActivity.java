@@ -956,12 +956,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         builtWith = cfg;
         resumed = true;
         // KEYCODE_ASSIST never reaches dispatchKeyEvent: the system starts the Assistant role holder instead. With
-        // OmarchyTV holding that role, the mic key lands here and opens Walker, like "voiceKey": "launcher"; pressed
-        // again while Walker is open it starts voice search, like Walker's own mic key.
-        if (Intent.ACTION_ASSIST.equals(getIntent().getAction())) {
+        // OmarchyTV holding that role, the mic key lands here: the Grok Bot companion by voice ("voiceKey": "companion",
+        // the default) or Walker ("launcher"; pressed again while Walker is open it starts voice search).
+        String act = getIntent().getAction();
+        if (Intent.ACTION_ASSIST.equals(act) || Intent.ACTION_VOICE_COMMAND.equals(act) || Intent.ACTION_SEARCH_LONG_PRESS.equals(act)) {
             setIntent(new Intent(getIntent()).setAction(Intent.ACTION_MAIN));
             handler.post(() -> {
-                if (walker == null) openWalker();
+                if (voiceToCompanion()) openCompanionChat(true);
+                else if (walker == null) openWalker();
                 else {
                     walkerVoice = true;
                     startVoiceSearch();
@@ -1934,6 +1936,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         companion.bind(LauncherConfig.get(this));
     }
 
+    /** The voice key goes to the Grok Bot companion: chosen (the default) and the companion plugin is on. */
+    private boolean voiceToCompanion() {
+        LauncherConfig cfg = LauncherConfig.get(this);
+        return "companion".equals(cfg.voiceKey) && cfg.pluginGrokbot;
+    }
+
     private void openCompanionChat(boolean voice) {
         if (companion != null) companion.setArmed(false);
         open(new Intent(this, CompanionChatActivity.class).putExtra("voice", voice));
@@ -1978,7 +1986,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 : "Not linked to the desktop companion: questions open the Ask screen. Install omarchy-link and "
                 + "@tcballard's companion on the PC to mirror the bot here.";
         String msg = (cfg.grokbotMessage != null && !cfg.grokbotMessage.isEmpty() ? "Last: " + cfg.grokbotMessage + "\n\n" : "")
-                + state + "\n\nExperimental, tracks @tcballard's in-development branch (MIT)"
+                + state + "\n\nBuilt for @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT)"
                 + (bridge && cfg.grokbotBotVersion != null && !cfg.grokbotBotVersion.isEmpty()
                 ? " · companion v" + cfg.grokbotBotVersion : "") + " · built for v0.1.0.";
         new android.app.AlertDialog.Builder(this)
@@ -3536,11 +3544,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             int kc = e.getKeyCode();
             logKeyOnce(kc);
             if (home.movingApp >= 0) return home.onKey(e);
-            // Voice / search key: Walker with voice on the home (v2.10 default), the system assistant only if chosen.
-            if ((kc == KeyEvent.KEYCODE_SEARCH || kc == KeyEvent.KEYCODE_VOICE_ASSIST || kc == KeyEvent.KEYCODE_ASSIST)
-                    && "launcher".equals(LauncherConfig.get(this).voiceKey)) {
-                if (e.getAction() == KeyEvent.ACTION_UP) openWalker();
-                return true;
+            // Voice / search key: the Grok Bot companion by voice (v2.14 default), Walker, or the system assistant if chosen.
+            if (kc == KeyEvent.KEYCODE_SEARCH || kc == KeyEvent.KEYCODE_VOICE_ASSIST || kc == KeyEvent.KEYCODE_ASSIST) {
+                if (voiceToCompanion()) {
+                    if (e.getAction() == KeyEvent.ACTION_UP) openCompanionChat(true);
+                    return true;
+                }
+                if ("launcher".equals(LauncherConfig.get(this).voiceKey)) {
+                    if (e.getAction() == KeyEvent.ACTION_UP) openWalker();
+                    return true;
+                }
             }
             // v2.10 workspaces: 1-5 jump, CH+/CH− next/previous (only reaches us while the launcher is in front).
             if (kc >= KeyEvent.KEYCODE_1 && kc <= KeyEvent.KEYCODE_5) {
@@ -4412,9 +4425,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("assistant", lTts, j -> assistantJson(j).put("tts", n));
             return true;
         });
-        // The mic / Search key stays with Google Assistant unless the user picks "launcher" here.
-        p.add(lKey, str("launcher".equals(cfg.voiceKey) ? R.string.voice_key_launcher : R.string.voice_key_assistant), r -> {
-            String n = "launcher".equals(cfg.voiceKey) ? "assistant" : "launcher";
+        // The mic / Search key: the Grok Bot companion (default) → Walker's > search → Google Assistant.
+        p.add(lKey, str("companion".equals(cfg.voiceKey) ? R.string.voice_key_companion
+                : "launcher".equals(cfg.voiceKey) ? R.string.voice_key_launcher : R.string.voice_key_assistant), r -> {
+            String n = "companion".equals(cfg.voiceKey) ? "launcher" : "launcher".equals(cfg.voiceKey) ? "assistant" : "companion";
             applyLive("assistant", lKey, j -> j.put("voiceKey", n));
             return true;
         });
@@ -4442,6 +4456,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         LauncherConfig cfg = LauncherConfig.get(this);
         // Only when the user chose it: otherwise the key falls through to the system (Google Assistant).
+        if (keyCode == KeyEvent.KEYCODE_SEARCH && voiceToCompanion() && movingPos < 0) {
+            openCompanionChat(true);
+            return true;
+        }
         if (keyCode == KeyEvent.KEYCODE_SEARCH && "launcher".equals(cfg.voiceKey) && movingPos < 0) {
             startVoiceSearch();
             return true;

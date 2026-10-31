@@ -86,8 +86,8 @@ A LAN link between an Omarchy PC and the TV launcher.
 ## AI assistant ("> ask") over Omarchy Link — UI shipped in v2.3, transport proposed
 
 The TV side exists: logo menu → `> ask` (or a colour key chosen in Settings → Assistant). It never replaces
-Google Assistant: the mic/Search key stays with the system unless the user sets `"voiceKey": "launcher"`,
-and even then only on the home screen and only for `> search`.
+Google Assistant: since v2.14 the mic/Search key opens the Grok Bot companion by voice on the home
+(`"voiceKey": "companion"`, the default); `"launcher"` gives it to `> search`, `"assistant"` leaves it to Google.
 
 Flow: mic → system speech recognizer on the TV (it-IT / en-US / de-DE from the UI language) → text →
 paired Omarchy Linux PC → the PC calls the chosen AI provider with *its* keys → answer → TV shows it in a

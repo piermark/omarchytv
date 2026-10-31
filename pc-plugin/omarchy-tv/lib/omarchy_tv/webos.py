@@ -6,6 +6,12 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
   GET /v1/status (or /status.json) -> JSON {host, kernel, cpu, ram, uptimeSec, theme, palette, ai, deploys, nowPlaying, hasWallpaper}
   GET /v1/themes                   -> JSON {"themes": [...]}
   GET /v1/wallpaper                -> active desktop wallpaper image (webp/png/jpg)
+  GET /v1/grokbot                  -> JSON {available, bot, roster, dispatch, version}: @tcballard's Grok Bot
+                                      Desktop Companion v0.1.0 as omarchy-link's bridge sees it (no secrets)
+  POST /v1/grokbot/ask             -> {text, bot?} with header X-Omarchy-Token: the ask code printed when the
+                                      bridge starts (~/.config/omarchy-tv/webos-bridge.token, mode 0600).
+                                      Answers like omarchy-link's grokbot_answer {bot, text, mode, links, note?}.
+  POST /v1/grokbot/sync            -> same token; runs his bin/grokbot-sync and returns the new roster.
 """
 from __future__ import annotations
 
@@ -16,7 +22,10 @@ import shutil
 import socket
 import subprocess
 import time
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import hmac
+import secrets
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from pathlib import Path
 
 from . import themes, ui
@@ -26,6 +35,61 @@ AI_CFG = Path.home() / ".config/omarchy-link/ai.json"
 LINK_CFG = Path.home() / ".config/omarchy-link/config.json"
 
 _last_cpu: tuple[int, int] | None = None
+
+TOKEN_FILE = Path.home() / ".config/omarchy-tv/webos-bridge.token"
+ASK_GAP_S = 3.0            # one question every 3 seconds, like the Android link
+_ask_lock = threading.Lock()
+_last_ask = 0.0
+
+
+def bridge_token() -> str:
+    """The ask code the TV must send (X-Omarchy-Token). Created once, 8 characters, file mode 0600."""
+    try:
+        t = TOKEN_FILE.read_text(encoding="utf-8").strip()
+        if len(t) >= 8:
+            return t
+    except OSError:
+        pass
+    t = "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(8))
+    TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(TOKEN_FILE), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(t + "\n")
+    return t
+
+
+def _grokbot():
+    try:
+        from omarchy_link import grokbot   # noqa: PLC0415 (optional: omarchy-link may not be installed)
+        return grokbot
+    except Exception:
+        return None
+
+
+def link_cfg() -> dict:
+    try:
+        d = json.loads(LINK_CFG.read_text(encoding="utf-8"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def build_grokbot_payload() -> dict:
+    g = _grokbot()
+    if not g:
+        return {"available": False, "reason": "omarchy-link is not installed"}
+    cfg = link_cfg()
+    cur = g.current(cfg)
+    if not cur:
+        return {"available": False, "reason": "the Grok Bot Desktop Companion is not installed on this PC"}
+    roster = []
+    for b in g.roster(cfg)[:40]:
+        c = g.color_name(b.get("avatarColor"))
+        roster.append({"id": g.plain(b.get("id"), 80), "name": g.plain(b.get("name"), 40),
+                       "shortName": g.plain(b.get("shortName") or b.get("name"), 24),
+                       "avatarShape": g.avatar_shape(b.get("avatarShape")), "color": c, "fill": g.PALETTE[c]})
+    return {"available": True, "bot": cur, "roster": roster, "dispatch": cur.get("dispatch"),
+            "version": cur.get("version"), "source": g.UPSTREAM, "ref": g.UPSTREAM_REF}
 
 
 def cpu_percent() -> int:
@@ -163,22 +227,73 @@ class WebOSHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(raw)))
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token")   # Chrome 38 has no "*"
         self.end_headers()
         self.wfile.write(raw)
 
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token")   # Chrome 38 has no "*"
         self.end_headers()
+
+    def _authorized(self) -> bool:
+        got = (self.headers.get("X-Omarchy-Token") or "").strip().upper()
+        return bool(got) and hmac.compare_digest(got.encode(), bridge_token().upper().encode())
+
+    def do_POST(self):
+        global _last_ask
+        path = self.path.split("?", 1)[0]
+        if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync"):
+            self._send_json({"error": "not found"}, 404)
+            return
+        if not self._authorized():
+            self._send_json({"error": "unauthorized", "message": "wrong or missing ask code"}, 401)
+            return
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            n = -1
+        if n < 0 or n > 8192:
+            self._send_json({"error": "bad_request"}, 400)
+            return
+        try:
+            body = json.loads(self.rfile.read(n).decode("utf-8") or "{}") if n else {}
+        except (ValueError, UnicodeDecodeError):
+            body = None
+        if not isinstance(body, dict):
+            self._send_json({"error": "bad_request"}, 400)
+            return
+        g = _grokbot()
+        if not g:
+            self._send_json({"error": "not_installed", "message": "omarchy-link is not installed"}, 503)
+            return
+        with _ask_lock:
+            now = time.monotonic()
+            if now - _last_ask < ASK_GAP_S:
+                self._send_json({"error": "busy", "message": "one question every 3 seconds"}, 429)
+                return
+            _last_ask = now
+        cfg = link_cfg()
+        try:
+            if path == "/v1/grokbot/sync":
+                res = g.sync_roster(cfg)
+                self._send_json({**res, **build_grokbot_payload()})
+            else:
+                bot = body.get("bot")
+                self._send_json(g.ask(cfg, body.get("text"), str(bot) if bot else None))
+        except g.GrokbotError as e:
+            self._send_json({"error": e.code, "message": str(e)[:200]}, 400 if e.code in ("empty", "unknown_bot") else 502)
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
         if path in ("/v1/status", "/status.json", "/"):
             self._send_json(build_status_payload())
+            return
+        if path == "/v1/grokbot":
+            self._send_json(build_grokbot_payload())
             return
         if path == "/v1/themes":
             self._send_json(build_themes_payload())
@@ -202,7 +317,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
 
 
 def serve(bind: str = "0.0.0.0", port: int = 8765, once: bool = False) -> int:
-    srv = HTTPServer((bind, port), WebOSHandler)
+    srv = ThreadingHTTPServer((bind, port), WebOSHandler)   # an ask can take minutes; status keeps answering
+    ui.say(f"Grok Bot ask code for the TV (Settings > Grok Bot companion > PC ask code): {bridge_token()}")
     ui.say(f"OmarchyTV webOS bridge attivo su http://{bind}:{port}/v1/status (CTRL+C per fermare)")
     try:
         if once:

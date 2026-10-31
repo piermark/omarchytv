@@ -621,8 +621,10 @@ final class LauncherConfig {
         assistantProvider = as != null ? as.optString("provider", "") : "";
         assistantTts = as != null && as.optBoolean("tts", false);
         askKey = as != null ? as.optString("key", "none") : "none";
-        // v2.10: the voice key opens Walker on the home by default (the TV test: Assistant was unusable here).
-        voiceKey = j != null && "assistant".equals(j.optString("voiceKey")) ? "assistant" : "launcher";
+        // v2.14: the voice key opens the Grok Bot companion by default; "launcher" (Walker, the v2.10 default) and
+        // "assistant" (Google Assistant) stay selectable.
+        String vk = j != null ? j.optString("voiceKey", "companion") : "companion";
+        voiceKey = "assistant".equals(vk) || "launcher".equals(vk) ? vk : "companion";
         keys = Collections.unmodifiableMap(keyBindings(j != null ? j.optJSONObject("keys") : null,
                 n -> android.view.KeyEvent.keyCodeFromString("KEYCODE_" + n)));
         JSONObject tv = j != null ? j.optJSONObject("tv") : null;

@@ -711,7 +711,16 @@ html, body {
 .yt-chip.focused{background:var(--t-accent);color:var(--t-bg);}
 .yt-note{position:absolute;left:0;right:0;bottom:12px;text-align:center;color:var(--t-fg);opacity:.6;font-size:calc(14px * var(--ts, 1));}
 @keyframes gbBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-#grokbot-companion{animation:gbBob 4.2s ease-in-out infinite;}
+#grokbot-companion.gb-live{animation:gbBob 4.2s ease-in-out infinite;}
+#grokbot-companion.gb-sleep{animation:gbBob 7s ease-in-out infinite;opacity:.8;}
+.gb-mark{position:relative;display:inline-block;line-height:0;flex-shrink:0;}
+.gb-avatar{display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));}
+.gb-unread{position:absolute;right:0;top:0;width:12px;height:12px;border-radius:6px;background:#FF263C;border:2px solid var(--t-bg);}
+#grokbot-sub{max-width:420px;}
+#grokbot-sub.gb-bubble{color:var(--t-fg);opacity:1;}
+.gb-msg{margin:2px 0 6px;padding:4px 10px;border-left:3px solid var(--t-accent2);white-space:pre-wrap;text-align:left;}
+.gb-msg.gb-me{border-left-color:var(--t-fg);opacity:.75;}
+.gb-credit{opacity:.55;font-size:calc(13px * var(--ts, 1));margin-top:6px;}
 .extra-focused{outline:3px solid var(--t-accent);outline-offset:4px;box-shadow:0 0 18px var(--t-accent);}
 #grokbot-eyes{display:flex;align-items:center;gap:10px;}
 .gb-orb{display:block;flex-shrink:0;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));}
@@ -862,8 +871,8 @@ html, body {
 
     <!-- Omarchy Grok Bot Desktop Companion (@tcballard MIT plugin) -->
     <div id="grokbot-companion" class="box" style="position:absolute;right:48px;bottom:340px;padding:10px 18px;border:1px solid var(--t-accent2);background:var(--popup-bg);cursor:pointer;z-index:15;" title="Omarchy Grok Bot Desktop Companion (@tcballard)">
-      <div id="grokbot-eyes" style="font-size:calc(18px * var(--ts, 1));font-weight:700;color:var(--t-accent2);">[ ◉ ◉ ] grokbot</div>
-      <div id="grokbot-sub" style="font-size:calc(14px * var(--ts, 1));color:var(--t-fg);margin-top:3px;">@tcballard · ready</div>
+      <div id="grokbot-eyes" style="font-size:calc(18px * var(--ts, 1));font-weight:700;color:var(--t-accent2);">Grok Bot</div>
+      <div id="grokbot-sub" style="font-size:calc(14px * var(--ts, 1));color:var(--t-fg);margin-top:3px;">Blue · chat</div>
     </div>
   </div>
 
@@ -949,6 +958,8 @@ html, body {
 <script src="compat.js"></script>
 <script src="data.js"></script>
 <script src="dhh.js"></script>
+<script src="vendor/grokbot/grokbot-avatar.js"></script>
+<script src="companion.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

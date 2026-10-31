@@ -110,6 +110,16 @@
                 <action android:name="android.intent.action.ASSIST" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
+            <!-- v2.14: remotes and keyboards that send a voice command or a long Search press open the Grok Bot
+                 companion (voiceKey "companion", the default; Walker or Google Assistant when chosen). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VOICE_COMMAND" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEARCH_LONG_PRESS" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
         </activity>
 
         <!-- Web apps: own process, so the launcher never holds a WebView; the process exits with the web app. -->

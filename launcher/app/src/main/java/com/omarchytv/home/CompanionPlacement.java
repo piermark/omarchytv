@@ -5,7 +5,7 @@ import android.view.Gravity;
 /**
  * Where the floating Grok Bot companion sits on the home screen, and where a question goes.
  * Pure logic (unit-tested): corner names, clamped offsets, and the routing rule.
- * Experimental, tracks @tcballard's in-development Grok Bot Desktop Companion (MIT); my own code.
+ * Built for @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT); my own code.
  */
 final class CompanionPlacement {
     static final String[] CORNERS = {"bottom-right", "bottom-left", "top-right", "top-left"};

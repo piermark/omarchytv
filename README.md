@@ -108,8 +108,13 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 
 - **@dhh37:** I read DHH's public uploads feed every 6 h (and on open), cache it, merge it with a curated list and mark new videos `NEW`. Only links and metadata; nothing is downloaded.
 - **Play inside Cinemarchy (off by default):** the official YouTube IFrame embed with chapter jumps. If YouTube refuses the embed, I open the YouTube app.
-- **Grok Bot Companion (TV), experimental, tracks @tcballard's in-development branch:** a floating bot in a corner of the home screen. Android: long-press Menu, then OK. webOS/Tizen: the Blue key. Keyboard and (Android) voice input. With Tom Ballard's [Grok Bot Desktop Companion](https://github.com/tcballard/omarchy-plugin-grokbot-desktop) (MIT) on the PC, answers come from it through omarchy-link; otherwise from Ask (Android) or grok.com in the TV browser (webOS/Tizen).
-- Config keys: `cinemarchy.embedPlayer`, `cinemarchy.dhhLastSeen`, `plugins.companionOverlay`, `plugins.companionCorner` (`bottom-right`, `bottom-left`, `top-right`, `top-left`), `plugins.companionOffsetX/Y` (dp, max 240). PC side: `grokbotBridge`, `grokbotDesktopDir`, `grokbotTimeoutS`, and `OMARCHY_GROKBOT_DESKTOP_REF` (defaults to his branch; set `v0.1.0` once the tag exists).
+- **Grok Bot, the default assistant (built on Tom Ballard's [Grok Bot Desktop Companion](https://github.com/tcballard/omarchy-plugin-grokbot-desktop) v0.1.0, MIT, thank you Tom!):** a floating bot in a corner of the home screen.
+  - **webOS/Tizen:** it draws Tom's 14 shapes, palette and eyes. It bobs, blinks, looks around, sleeps and drifts to avoid burn-in. Blue opens the chat, holding Blue opens it by voice, and on Tizen the voice/Search key does too when the TV allows it.
+  - **Android:** the mic/Search key opens it by voice. Long-press Menu, then OK, also works.
+  - **Answers:** they come from the Grok Bot on your PC: through omarchy-link on Android, and through `omarchy-tv webos serve` with its ask code on webOS/Tizen. Otherwise, Android uses Ask with your chosen AI provider and webOS/Tizen uses grok.com.
+  - **Also:** "open Netflix" / "apri YouTube" opens apps on the TV. Links in a reply become OK-to-play buttons.
+  - **What the platforms allow:** the webOS Magic Remote mic always goes to webOS. On Android, Google Assistant stays one setting away (`"voiceKey": "assistant"`).
+- Config keys: `cinemarchy.embedPlayer`, `cinemarchy.dhhLastSeen`, `plugins.companionOverlay`, `plugins.companionCorner` (`bottom-right`, `bottom-left`, `top-right`, `top-left`), `plugins.companionOffsetX/Y` (dp, max 240). PC side: `grokbotBridge`, `grokbotDesktopDir`, `grokbotTimeoutS`, and `OMARCHY_GROKBOT_DESKTOP_REF` (defaults to his `v0.1.0` tag). webOS/Tizen: `companionShape`, `companionColor`, `companionSize`, `companionBadge`, `companionAnim`, `companionAgent`, `grokbotCode`. Android: `voiceKey` = `companion` (default) | `launcher` | `assistant`.
 
 ## What's New in `2.12.0-beta` (`versionCode 20`)
 

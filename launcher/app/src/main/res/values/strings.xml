@@ -145,6 +145,7 @@
     <string name="voice_key">Mic / Search key</string>
     <string name="voice_key_assistant">Google Assistant</string>
     <string name="voice_key_launcher">> search</string>
+    <string name="voice_key_companion">Grok Bot companion</string>
     <string name="ask_key">> ask key</string>
     <string name="ask_need_link">connect Omarchy Linux first (logo menu → Connect Omarchy Linux). Answers come from your PC; the TV holds no API keys.</string>
     <string name="ask_need_link_short">connect Omarchy Linux first</string>

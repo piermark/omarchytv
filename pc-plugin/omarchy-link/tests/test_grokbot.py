@@ -27,7 +27,7 @@ BOTS = {"bots": [
 FAKE_SHELL = f"""#!/bin/sh
 printf '%s\\n' "$*" >> {LOG}
 case "$2" in
-  ping|bot|say) echo ok ;;
+  ping|bot|say|sayLink) echo ok ;;
   ask) if [ -f {helpers.TMP}/gb-busy ]; then echo busy; else echo ok; fi ;;
   *) echo error ;;
 esac
@@ -42,6 +42,10 @@ open({str(helpers.TMP / 'helper-req.json')!r}, 'w').write(json.dumps({{"req": re
     "leak": os.environ.get("OMARCHY_TEST_SECRET")}}))
 if req["prompt"] == "fail":
     print("webhook URL is missing or not https", file=sys.stderr); sys.exit(2)
+if req["prompt"] == "later":
+    print("Sent to " + req["botName"] + "."); sys.exit(10)
+if req["prompt"] == "video":
+    print("Here it is: https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42 enjoy"); sys.exit(0)
 print(req["botName"] + " says: " + req["prompt"][::-1])
 """
 
@@ -96,9 +100,9 @@ class Detect(Base):
     def test_default_bot_is_bob_from_settings_entry(self):
         self.settings(enabled=True)
         cur = grokbot.current({})
-        self.assertEqual((cur["name"], cur["shape"], cur["color"], cur["fill"]), ("Bob", "drop", "orange", "#F28B30"))
+        self.assertEqual((cur["name"], cur["shape"], cur["color"], cur["fill"]), ("Bob", "drop", "orange", "#FF6700"))
         self.assertEqual(cur["mode"], "offline")
-        self.assertIn("experimental", cur["label"])
+        self.assertIn("v0.1.0", cur["label"])
 
     def test_bot_from_roster_and_custom_appearance(self):
         self.checkout()
@@ -107,7 +111,7 @@ class Detect(Base):
         self.assertEqual((cur["name"], cur["shape"], cur["color"], cur["mode"]), ("OmaBot", "bean", "green", "relay"))
         self.settings(botId=BOTS["bots"][2]["id"], syncAppearance=False, shape="hex", color="violet")
         cur = grokbot.current({})
-        self.assertEqual((cur["shortName"], cur["shape"], cur["fill"]), ("Inbox", "hexagon", "#A864FD"))
+        self.assertEqual((cur["shortName"], cur["shape"], cur["fill"]), ("Inbox", "hexagon", "#9159FE"))
 
     def test_user_roster_wins_and_bad_values_are_clamped(self):
         self.settings(botId="x1")
@@ -137,7 +141,7 @@ class Ask(Base):
         self.ipc_on()
         self.settings()
         r = grokbot.ask({}, "hello\x1b there")
-        self.assertEqual(r, {"bot": "Bob", "text": "Bob says: ereht olleh", "mode": "relay"})
+        self.assertEqual(r, {"bot": "Bob", "text": "Bob says: ereht olleh", "mode": "relay", "links": []})
         got = json.loads((helpers.TMP / "helper-req.json").read_text())
         self.assertEqual(got["req"]["botId"], BOTS["bots"][0]["id"])
         self.assertEqual(got["path"], "/usr/bin:/bin")
@@ -188,8 +192,64 @@ class Ask(Base):
         self.assertTrue(self.calls()[0].endswith("ask hi; touch /tmp/pwned-gb $(id)"))
 
 
+class V010(Base):
+    """What his v0.1.0 release added: async webhook answers, links, dispatch settings, shapes, palette."""
+
+    def test_exit_10_is_sent_not_failed(self):
+        self.checkout()
+        self.ipc_on()
+        self.settings()
+        r = grokbot.ask({}, "later")
+        self.assertEqual(r["mode"], "sent")
+        self.assertEqual(r["text"], "")
+        self.assertEqual(r["note"], "Sent to Bob.")
+        self.assertEqual(self.calls(), [])        # nothing mirrored: his `reply` brings the answer to the bubble
+
+    def test_video_link_is_offered_and_mirrored_with_saylink(self):
+        self.checkout()
+        self.ipc_on()
+        self.settings()
+        r = grokbot.ask({}, "video")
+        self.assertEqual(r["links"][0]["kind"], "youtube")
+        self.assertEqual(r["links"][0]["videoId"], "dQw4w9WgXcQ")
+        self.assertEqual(r["links"][0]["position"], 42.0)
+        self.assertTrue(self.calls()[0].startswith(f"{grokbot.COMPANION_ID} sayLink Bob "))
+
+    def test_links_only_http(self):
+        got = grokbot.links("a javascript:alert(1) b file:///etc/passwd c https://ok.example/x.mp4, d http://a.b")
+        self.assertEqual([l["url"] for l in got], ["https://ok.example/x.mp4", "http://a.b"])
+        self.assertEqual(got[0]["kind"], "video")
+        self.assertEqual(got[1]["kind"], "url")
+
+    def test_dispatch_from_desktop_json_and_shell_entry_wins(self):
+        self.checkout()
+        self.assertEqual(grokbot.detect({})["dispatch"], "agent")
+        write(OMA / "grokbot-desktop.json", json.dumps({"dispatch": "webhook", "webhookUrl": "https://x"}))
+        self.assertEqual(grokbot.dispatch_mode(), "webhook")
+        self.settings(dispatch="agent")
+        self.assertEqual(grokbot.dispatch_mode(), "agent")
+
+    def test_avatar_shape_and_colour_aliases(self):
+        self.assertEqual(grokbot.avatar_shape("drop"), "teardrop")
+        self.assertEqual(grokbot.avatar_shape("HEX"), "hex")
+        self.assertEqual(grokbot.avatar_shape("nope"), "blob")
+        self.assertEqual(len(grokbot.AVATAR_SHAPES), 14)
+        self.assertEqual(grokbot.color_name("purple"), "violet")
+        self.checkout()
+        self.settings()
+        self.assertEqual(grokbot.current({})["avatarShape"], "teardrop")
+
+    def test_sync_roster_runs_his_helper(self):
+        self.checkout()
+        with self.assertRaises(grokbot.GrokbotError):
+            grokbot.sync_roster({})
+        write(CHECKOUT / "bin/grokbot-sync", "#!/usr/bin/python3\nprint('synced 1 bot')\n", 0o755)
+        r = grokbot.sync_roster({})
+        self.assertEqual(r["message"], "synced 1 bot")
+
+
 class Version(Base):
-    """The bridge targets his v0.1.0 and still accepts the in-development branch."""
+    """The bridge targets his v0.1.0 release and still accepts older checkouts."""
 
     def test_reads_manifest_then_version_file(self):
         self.checkout()
@@ -212,6 +272,7 @@ class Version(Base):
         self.assertEqual(c("0.2.0"), "newer")
         self.assertEqual(c("1.0.0"), "unsupported")
         self.assertEqual(grokbot.UPSTREAM_TAG, "v0.1.0")
+        self.assertEqual(grokbot.UPSTREAM_REF, "v0.1.0")
 
     def test_new_major_disables_the_helper_relay(self):
         self.checkout()
@@ -274,7 +335,7 @@ class OverLink(Base):
         while time.time() < end and not (tv.config().get("plugins") or {}).get("grokbotBot"):
             time.sleep(0.1)
         bot = tv.config()["plugins"]["grokbotBot"]
-        self.assertEqual((bot["name"], bot["shape"], bot["fill"]), ("OmaBot", "bean", "#5BC67A"))
+        self.assertEqual((bot["name"], bot["shape"], bot["fill"]), ("OmaBot", "bean", "#00C972"))
         while time.time() < end and not tv.clients:
             time.sleep(0.05)
         m = tv.grokbot_ask("ping me")
