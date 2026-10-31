@@ -47,4 +47,36 @@ public class YoutubeLaunchTest {
         assertEquals("refused", YoutubeLaunch.onHttpError("https://example.com/a.mp4", 403));
         assertEquals("refused", YoutubeLaunch.onHttpError("https://rr3---sn-x.googlevideo.com/videoplayback", 503));
     }
+
+    // omarchy-tv send / LAN token streams / PC library files: never YouTube, always the internal player.
+    private static final String[] PC_SENT = {
+            "http://192.168.1.20:8765/cast/3f9a1c/movie.mkv",
+            "http://192.168.1.20:8765/cast/3f9a1c/youtube.com/watch?v=dQw4w9WgXcQ",
+            "http://omarchy.local:8765/cast/tok/My YouTube video [dQw4w9WgXcQ].webm",
+            "http://10.0.0.5:8765/files/youtu.be/dQw4w9WgXcQ.mp4",
+            "file:///storage/emulated/0/Movies/youtube-dQw4w9WgXcQ.mp4",
+            "/sdcard/Download/Rick Astley - Never Gonna Give You Up [dQw4w9WgXcQ].mkv",
+            "http://192.168.1.20:8765/sub/youtube.srt",
+            "smb://nas/youtube/dQw4w9WgXcQ.mp4",
+            "http://youtube.com.lan:8080/watch?v=dQw4w9WgXcQ",
+            "content://com.omarchytv.home/cast/youtube",
+    };
+
+    @Test
+    public void pcSentAndLanUrlsStayInTheInternalPlayer() {
+        for (String u : PC_SENT) {
+            assertEquals(u, "", YoutubeLaunch.idOf(u));
+            assertFalse(u, YoutubeLaunch.youtubeOrigin(u));
+            assertEquals(u, "refused", YoutubeLaunch.onHttpError(u, 403));
+            assertEquals(u, "refused", YoutubeLaunch.onHttpError(u, 410));
+        }
+    }
+
+    @Test
+    public void onlyRealYoutubePagesAreRouted() {
+        String[] yt = {"https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://m.youtube.com/watch?feature=x&v=dQw4w9WgXcQ",
+                "https://youtu.be/dQw4w9WgXcQ", "https://www.youtube.com/shorts/dQw4w9WgXcQ",
+                "https://www.youtube.com/live/dQw4w9WgXcQ", "https://www.youtube.com/embed/dQw4w9WgXcQ", "vnd.youtube:dQw4w9WgXcQ"};
+        for (String u : yt) assertEquals(u, "dQw4w9WgXcQ", YoutubeLaunch.idOf(u));
+    }
 }

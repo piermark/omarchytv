@@ -72,3 +72,14 @@ test("per-bot history and unread dots", () => {
 test("drift stays small", () => {
   for (let t = 0; t < 1.2e6; t += 7e3) { const d = C.drift(t); assert.ok(Math.abs(d.x) <= 14 && Math.abs(d.y) <= 8); }
 });
+
+test("PC-sent LAN streams and local files are never YouTube links (internal player)", () => {
+  ["http://192.168.1.20:8765/cast/3f9a1c/movie.mkv",
+   "http://192.168.1.20:8765/cast/3f9a1c/youtube.com/watch?v=dQw4w9WgXcQ",
+   "http://omarchy.local:8765/cast/tok/My YouTube video [dQw4w9WgXcQ].webm",
+   "file:///media/youtube-dQw4w9WgXcQ.mp4",
+   "http://youtube.com.lan:8080/watch?v=dQw4w9WgXcQ"].forEach((u) => assert.strictEqual(C.youtubeId(u), "", u));
+  assert.strictEqual(C.cleanLinks([{ url: "http://192.168.1.20:8765/cast/t/youtube.mp4", kind: "video" }])[0].kind, "video");
+  ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "https://youtu.be/dQw4w9WgXcQ", "https://www.youtube.com/shorts/dQw4w9WgXcQ"]
+    .forEach((u) => assert.strictEqual(C.youtubeId(u), "dQw4w9WgXcQ", u));
+});
