@@ -928,6 +928,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     state.cineTab = -1;
     state.modalOpen = false;
     state.gbChat = false;
+    state.tuiOpen = false;
     document.getElementById("modal-backdrop").className = "";
     renderAll();
   }
@@ -1770,6 +1771,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("wx_title"), right: "°" + cfg.tempUnit, act: openWeatherModal },
       { label: tr("sys_saver"), right: "›", act: openSaverModal },
       { label: tr("sys_all"), right: "›", act: openAllSettingsModal },
+      { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
       { label: "AI meter", right: cfg.aiCredits === "dollars" ? "dollars" : "percent", act: function () {
         cfg.aiCredits = cfg.aiCredits === "dollars" ? "percent" : "dollars";
         saveCfg();
@@ -2095,7 +2097,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "🤖 Omarchy Grok Bot Desktop Companion (@tcballard · MIT)", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
         cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
-      { label: "🤖 Open Grok Bot companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } }
+      { label: "🤖 Open Grok Bot companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } },
+      { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui }
     ]);
   }
 
@@ -2318,6 +2321,139 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         if (rep && rep.action) gbdRun(rep.action);
       });
   }
+  // ---- "Grok Bot · Omarchy TUI" (port of Android's AskActivity): local TV commands, then the agent ----
+  // Parsing lives in tui.js (node-tested). Local commands: themes, wallpaper, screensaver, apps, status, web apps.
+  // Questions go to the PC bridge (POST /v1/grokbot/ask with the ask code); no PC or PC off → Grok Bot diretto
+  // when it's on; otherwise grok.com in the TV browser. Replies type out in the box. Back closes the window.
+  var TUI = window.OmarchyTui || null;
+  var tuiLog = [], tuiBusy = false, tuiTimer = null;
+  function tuiAdd(cls, text, typed) {
+    tuiLog.push({ cls: cls, text: String(text || ""), t0: typed ? Date.now() : 0 });
+    if (tuiLog.length > 60) tuiLog.splice(0, tuiLog.length - 60);
+    tuiRender();
+  }
+  function tuiThemeName() { return cfg.theme || "omarchy"; }
+  function tuiRender() {
+    var box = document.getElementById("tui-log");
+    if (!box || !state.modalOpen || !state.tuiOpen) return;
+    var now = Date.now(), typing = false;
+    box.innerHTML = tuiLog.slice(-14).map(function (l) {
+      var txt = l.text;
+      if (l.t0 && TUI) { var n = TUI.typed(txt, now - l.t0); if (n < txt.length) { typing = true; txt = txt.slice(0, n) + "▌"; } }
+      return '<div class="tui-line tui-' + l.cls + '">' + escHtml(txt) + "</div>";
+    }).join("") || '<div class="tui-line tui-dim">type “help” for the commands</div>';
+    box.scrollTop = box.scrollHeight;
+    var leg = document.getElementById("tui-legend");
+    if (leg) leg.textContent = "grok bot · omarchy tui  [" + tuiThemeName() + "]";
+    clearTimeout(tuiTimer);
+    if (typing) tuiTimer = setTimeout(tuiRender, 40);
+  }
+  function tuiOpenUrl(url, name) { tuiAdd("ok", "opening " + name + " in the TV browser…"); openUrlOnTv(url); }
+  function tuiRun(q) {
+    var themes = Object.keys(DATA.themes || {}), c = TUI ? TUI.parse(q, themes) : { kind: "ask", text: q };
+    if (c.kind === "empty") return;
+    if (c.kind !== "clear") tuiAdd("me", "❯ " + q);
+    if (c.kind === "clear") { tuiLog = []; tuiRender(); }
+    else if (c.kind === "help") TUI.HELP.forEach(function (h) { tuiAdd("dim", h); });
+    else if (c.kind === "themes") tuiAdd("dim", themes.join(" · "));
+    else if (c.kind === "next-theme" || c.kind === "theme") {
+      var n = c.kind === "theme" ? c.name : themes[(themes.indexOf(cfg.theme) + 1) % themes.length];
+      cfg.theme = n; cfg.randomTheme = false; cfg.wallpaperIdx = 0; saveCfg(); applyTheme(); renderAll(); tuiAdd("ok", "theme → " + n);
+    } else if (c.kind === "theme-unknown") tuiAdd("err", "no single theme matches “" + c.query + "” · try “themes”");
+    else if (c.kind === "wallpaper") { cfg.wallpaperIdx = (cfg.wallpaperIdx || 0) + 1; cfg.wallpaper = ""; saveCfg(); applyTheme(); tuiAdd("ok", "next wallpaper"); }
+    else if (c.kind === "saver") {
+      if (c.style === "aquarium") { cfg.saverMode = "aquarium"; cfg.saverArt = "aquarium"; }
+      else if (c.style === "classic") { cfg.saverMode = "aquarium"; cfg.saverArt = "aquarium-classic"; }
+      else if (c.style === "logo") { cfg.saverMode = "logo"; cfg.saverArt = "omarchy-tv"; }
+      else if (c.style === "cinemarchy") { cfg.saverMode = "logo"; cfg.saverArt = "cinemarchy"; }
+      saveCfg(); tuiAdd("ok", "screensaver" + (c.style ? " → " + c.style : "") + " · any key wakes the TV");
+      setTimeout(function () { closeModal(); startScreensaver(); }, 700);
+    } else if (c.kind === "status") {
+      var base = pcBase(), st = GBD ? GBD.load(window.localStorage) : null;
+      tuiAdd("dim", "OmarchyTV " + APP_VERSION + " · " + (window.OMARCHY_PLATFORM === "tizen" ? "Samsung Tizen" : "LG webOS"));
+      tuiAdd("dim", "theme " + tuiThemeName() + " · " + visibleApps().length + " apps on the dock");
+      tuiAdd("dim", "PC bridge " + (base ? base + (cfg.grokbotCode ? " (ask code set)" : " (no ask code)") : "not paired") +
+        " · Grok Bot diretto " + (st && GBD.enabled(st) ? "on" : "off") + " · agent " + GB_AGENT_NAMES[gbAgent()]);
+    } else if (c.kind === "apps") tuiAdd("dim", visibleApps().map(function (a) { return a.name; }).join(" · "));
+    else if (c.kind === "web") tuiOpenUrl(c.url, c.url.replace(/^https?:\/\//, "").replace(/\/$/, ""));
+    else if (c.kind === "open") {
+      var t = c.target.toLowerCase(), app = GBC && GBC.matchApp(c.target, visibleApps());
+      if (!app) app = visibleApps().filter(function (a) { return a.name.toLowerCase().indexOf(t) >= 0; })[0];
+      if (app) { tuiAdd("ok", "opening " + app.name + "…"); closeModal(); launchApp(app); }
+      else tuiAdd("err", "no app matches “" + c.target + "” · try “apps”");
+    } else tuiAsk(c.text);
+  }
+  function tuiReply(who, text) { tuiAdd("bot", (who ? who + ": " : "") + (text || "(no answer)"), true); }
+  function tuiDirect(q) {
+    var st = GBD.load(window.localStorage);
+    tuiBusy = true; tuiAdd("dim", "asking Grok Bot diretto…");
+    GBD.ask(st, q, cfg.lang === "it" ? "it" : cfg.lang === "de" ? "de" : "en", visibleApps().map(function (a) { return a.name; }),
+      window.OMARCHY_PLATFORM === "tizen" ? "OmarchyTV on Samsung Tizen" : "OmarchyTV on LG webOS", function (err, rep) {
+        tuiBusy = false;
+        if (err) { tuiAdd("err", err); return; }
+        if (rep.text) { tuiReply("Grok Bot", rep.text); gbdSpeak(rep.text, rep.lang); }
+        if (rep.dropped) tuiAdd("err", "Grok Bot sent an action I can't run (ignored)");
+        if (rep.action) gbdRun(rep.action);
+      });
+  }
+  function tuiAsk(q) {
+    if (tuiBusy) { tuiAdd("err", "still waiting for the last answer…"); return; }
+    var base = pcBase(), direct = GBD && GBD.enabled(GBD.load(window.localStorage));
+    if (gbAgent() === "grok-web") { tuiOpenUrl("https://grok.com/?q=" + encodeURIComponent(q), "grok.com"); return; }
+    if (!base || !cfg.grokbotCode || typeof fetch !== "function") {
+      if (direct) { tuiDirect(q); return; }
+      tuiAdd("err", !base ? "no PC paired and Grok Bot diretto is off · opening grok.com" : "no PC ask code (companion settings) · opening grok.com");
+      askGrokWeb(q); return;
+    }
+    var bot = gbBot();
+    tuiBusy = true; tuiAdd("dim", "asking " + gbName() + " on the PC…");
+    fetch(base + "/v1/grokbot/ask", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" },
+      body: JSON.stringify({ text: q, bot: bot ? (bot.id || bot.name) : undefined }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j || {} }; }); })
+      .then(function (res) {
+        tuiBusy = false;
+        var j = res.j;
+        if (!res.ok) tuiAdd("err", j.error === "unauthorized" ? "wrong ask code: check it in the companion settings" : (j.message || "the PC could not answer"));
+        else if (j.mode === "sent") tuiAdd("ok", "sent ✓ the answer appears on the PC companion");
+        else tuiReply(j.bot || gbName(), j.text);
+      }).catch(function () {
+        tuiBusy = false;
+        if (direct) { tuiAdd("dim", "the PC did not answer · trying Grok Bot diretto"); tuiDirect(q); return; }
+        tuiAdd("err", "the PC did not answer · is omarchy-tv webos serve running?");
+      });
+  }
+  window.OMARCHY_OPEN_TUI = function () { openGrokTui(); };   // other entry points (and tests) can open the TUI
+  function openGrokTui() {
+    var q = "";
+    var items = [
+      { label: "❯ Run", right: "OK", act: function () {
+        var v = q.trim(); if (!v) { showToast("Type a command or a question above (▲)"); return; }
+        q = ""; var inp = document.getElementById("modal-input"); if (inp) inp.value = "";
+        tuiRun(v);
+      } },
+      speechCtor() ? { label: "🎤 Speak", right: "OK", act: function () { listen(function (t) { tuiRun(t); }); } }
+        : { label: "🎤 Voice: not available on this TV · keyboard only", right: "", act: function () {} },
+      { label: "help", right: "›", act: function () { tuiRun("help"); } },
+      { label: "status", right: "›", act: function () { tuiRun("status"); } },
+      { label: "next theme", right: "›", act: function () { tuiRun("next theme"); } },
+      { label: "Agent", right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
+        cfg.companionAgent = cycle(GB_AGENTS, gbAgent()); saveCfg(); tuiAdd("dim", "agent → " + GB_AGENT_NAMES[gbAgent()]); openGrokTui();
+      } },
+      { label: "Open grok.com in the TV browser", right: "›", act: function () { tuiRun("grok.com"); } },
+      { label: "clear", right: "", act: function () { tuiRun("clear"); } }
+    ];
+    openModal("Grok Bot · Omarchy TUI", "", items, "❯ command or question… (help, theme cumulus, open MUBI, what should I watch?)", function (v) { q = v; },
+      { noAutoFocus: true });
+    state.tuiOpen = true;
+    var subEl = document.getElementById("modal-sub");
+    if (subEl) {
+      subEl.innerHTML = '<div class="tui-win"><span id="tui-legend" class="tui-legend"></span><div id="tui-log" class="tui-log"></div></div>';
+      subEl.style.display = "block";
+    }
+    if (!tuiLog.length) tuiAdd("dim", "OmarchyTV " + APP_VERSION + " · type “help” · Back closes");
+    tuiRender();
+  }
+
   function playLink(l) {
     if (l.kind === "youtube" && l.videoId) { if (cfg.embedPlayer) openEmbed(l.videoId); else { closeModal(); openYoutubeApp(l.videoId); } return; }
     closeModal(); openUrlOnTv(l.url);
@@ -2368,6 +2504,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cfg.companionHidden = true; saveCfg(); closeModal(); showToast("Companion hidden · press Blue to bring it back");
     } });
     items.push({ label: "Companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } });
+    items.push({ label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui });
     openModal("💬 " + gbName(), "", items, "Ask anything, or say “open Netflix”… (on-screen or Bluetooth keyboard)", function (v) { q = v; },
       { noAutoFocus: true, focusIdx: voice && speechCtor() ? 1 : 0 });
     state.gbChat = true;
@@ -2461,6 +2598,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
             .then(function () { gbdSpeak("Ciao! Sono Grok, con la voce " + gst.xaiVoice + ".", "it"); });
         } });
     }
+    items.push({ label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui });   // last, so the indices above stay
     openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT) · Blue: chat · hold Blue: voice · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });

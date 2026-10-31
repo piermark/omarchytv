@@ -9,7 +9,7 @@
 ## Downloads (`v2.13.8`)
 
 - **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.13.8.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.13.8/omarchytv-webos-2.13.8.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8))
-  - SHA-256: `0eb94c90af75dfd031a60f9c2a08753699b225788aed4659e58dab777edeec18`
+  - SHA-256: `d91ea7ebd22ad4bf4ab84a26df6f1c1143a8a7a9f621107d411cc1e216ee5357`
 - **PC Plugin (Android TV + LG webOS):** [`omarchy-tv-pc-plugin-2.13.0-beta.tar.gz`](https://github.com/piermark/omarchytv/releases/tag/v2.13.0-beta)
   - SHA-256: `968c5ffb79f5b88254df6ff922888027c1776c49bcf154980f1427c3338521bf`
 
@@ -162,6 +162,16 @@ OmarchyTV reads the apps installed on your LG TV (for example NOW, MUBI, DAZN an
 - If you decline or the prompt times out, the built-in app list stays and OmarchyTV doesn't ask again on its own.
 - **Settings > All settings > Read installed TV apps** turns this on or off (on by default).
 - **Settings > All settings > Re-pair with TV** forgets the key and shows the prompt again, for example after a TV reset or if new apps don't appear.
+
+## Grok Bot · Omarchy TUI (new in `2.13.8`)
+
+I ported the Android Grok Bot TUI to LG and Samsung. Open it from **Menu > ⌨ Grok Bot (Omarchy TUI)**, **Plugins**, the companion chat or Companion settings. It's an Omarchy-style box with the legend `grok bot · omarchy tui [theme]`, theme colours and CaskaydiaMono.
+
+- Type with the on-screen keyboard (or select **🎤 Speak**), then **❯ Run**. **Back** closes it.
+- Local commands, no PC needed: `help`, `themes`, `theme <name>`, `next theme`, `wallpaper`, `screensaver [aquarium|classic|logo|cinemarchy]`, `open <app>` / `apri <app>`, `apps`, `status`, `clear`. Italian works too.
+- `open grok.com`, `chatgpt`, `claude`, `x grok` or `hermes` opens that web app in the TV browser.
+- Anything else is a question: it goes to the Grok Bot on your paired PC with the ask code, otherwise to Grok Bot diretto (if on), otherwise to grok.com. Replies type out in the window.
+- The web app has the Grok Bot and Grok Web agents. Claude/Codex/Hermes CLIs on the PC are Android-only (they use OmarchyLink).
 
 ## Text size (new in `2.13.2-testing`)
 

@@ -717,6 +717,16 @@ html, body {
 .gb-avatar{display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,.45));}
 .gb-unread{position:absolute;right:0;top:0;width:12px;height:12px;border-radius:6px;background:#FF263C;border:2px solid var(--t-bg);}
 #grokbot-sub{max-width:420px;}
+/* Grok Bot · Omarchy TUI: Omarchy/Hyprland-style box, btop legend cut into the top border */
+.tui-win{position:relative;border:2px solid var(--t-accent);margin:14px 0 6px;padding:18px 14px 10px;font-family:'CaskaydiaMono',monospace;background:var(--t-bg);}
+.tui-legend{position:absolute;top:-0.8em;left:18px;padding:0 8px;background:var(--t-bg);color:var(--t-accent);font-weight:700;font-size:calc(16px * var(--ts, 1));}
+.tui-log{max-height:340px;overflow:hidden;text-align:left;font-size:calc(16px * var(--ts, 1));line-height:1.45;}
+.tui-line{white-space:pre-wrap;word-break:break-word;color:var(--t-fg);}
+.tui-me{color:var(--t-accent2);}
+.tui-dim{opacity:.7;}
+.tui-ok{color:var(--t-accent);}
+.tui-err{color:#ff5f5f;}
+.tui-bot{color:var(--t-fg-bright);}
 #grokbot-sub.gb-bubble{color:var(--t-fg);opacity:1;}
 /* 2.13.8 refresh: only the moving avatar, no frame; a thin ring only while focused */
 #grokbot-companion.box{background:transparent;border:none;padding:0;}
@@ -971,6 +981,7 @@ html, body {
 <script src="companion.js"></script>
 <script src="grokdirect.js"></script>
 <script src="tvapps.js"></script>
+<script src="tui.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

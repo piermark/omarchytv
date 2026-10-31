@@ -14,7 +14,7 @@ validation used an existing Samsung certificate and developer connection.
 ## Download (`2.13.8`)
 
 - **Unsigned widget:** [`OmarchyTV-tizen-2.13.8-unsigned.wgt`](https://github.com/piermark/omarchytv/releases/download/v2.13.8/OmarchyTV-tizen-2.13.8-unsigned.wgt) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8))
-  - SHA-256: `b84024dcdb75a2920598c39aa79992ef5bb9745b65a5a7d8809f9ac4b02a0dca`
+  - SHA-256: `ddaedc63840b7f355be25e6dbe5a32a8ec1ee0b205fae4ed29ab4c1edd7e1c39`
   - It's unsigned: sign it with your own Samsung certificate (below) before installing. It's numbered 2.13.8, above the earlier 2.13.5 and 2.13.6 test widgets, so it installs over them.
 
 ## Build an unsigned widget
@@ -96,6 +96,16 @@ Selecting TV or HDMI refreshes the source catalogue, changes the source, confirm
 its type and number, then opens Samsung's native viewer. The TV row selects the
 tuner source instead of reopening the last HDMI input. Connected labels describe
 the source catalogue, not a guarantee that an attached device is powered on.
+
+## Grok Bot · Omarchy TUI (new in `2.13.8`)
+
+I ported the Android Grok Bot TUI to LG and Samsung. Open it from **Menu > ⌨ Grok Bot (Omarchy TUI)**, **Plugins**, the companion chat or Companion settings. It's an Omarchy-style box with the legend `grok bot · omarchy tui [theme]`, theme colours and CaskaydiaMono.
+
+- Type with the on-screen keyboard (or select **🎤 Speak**), then **❯ Run**. **Back** closes it.
+- Local commands, no PC needed: `help`, `themes`, `theme <name>`, `next theme`, `wallpaper`, `screensaver [aquarium|classic|logo|cinemarchy]`, `open <app>` / `apri <app>`, `apps`, `status`, `clear`. Italian works too.
+- `open grok.com`, `chatgpt`, `claude`, `x grok` or `hermes` opens that web app in the TV browser.
+- Anything else is a question: it goes to the Grok Bot on your paired PC with the ask code, otherwise to Grok Bot diretto (if on), otherwise to grok.com. Replies type out in the window.
+- The web app has the Grok Bot and Grok Web agents. Claude/Codex/Hermes CLIs on the PC are Android-only (they use OmarchyLink).
 
 ## Text size (new in `2.13.2-testing`)
 
