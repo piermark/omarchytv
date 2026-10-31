@@ -13,6 +13,13 @@ It's an addition. Nothing else changes:
 
 It works on Android TV, LG webOS and Samsung Tizen (from 2.13.8).
 
+> [!NOTE]
+> **Known issue:** replies go through the free public [ntfy.sh](https://ntfy.sh), which allows 250 messages per day per
+> sending IP. Grok Bot routines send from shared IPs, so on some days the quota can run out and the TV shows
+> "No answer from Grok Bot within 90 s" even if your setup is correct. The quota resets daily (00:00 UTC). This will be
+> fixed in the next OmarchyTV release with a configurable reply server
+> ([issue #70](https://github.com/piermark/omarchytv/issues/70)).
+
 ## How it works
 
 1. You ask, by typing or with the remote's mic. Local app commands are handled first.
@@ -116,6 +123,8 @@ Pick **Test Grok Bot diretto**. Within a few seconds you should see and hear a o
 - **"Could not reach the webhook"**: check the URL and the TV's internet connection.
 - **"No answer from Grok Bot within 90 s"**: open the routine's run history. Check that it ran and that it POSTed to
   `https://ntfy.sh/<reply_topic>` with the same `id`. The body must be raw JSON, not wrapped in text.
+  If the run shows `HTTP 429 daily message quota reached`, the shared ntfy.sh quota ran out: wait for the daily reset
+  (00:00 UTC). See the known issue at the top and [issue #70](https://github.com/piermark/omarchytv/issues/70).
 - **It still goes to the PC**: a linked PC companion always wins. Turn the PC link off (or the PC) to use the direct mode.
 - **Nothing is spoken**: turn on "Leggi risposte ad alta voce". On Android, install or enable a TTS engine. Some webOS/Tizen browsers have no `speechSynthesis`.
 
