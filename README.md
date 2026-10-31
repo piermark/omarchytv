@@ -9,9 +9,7 @@ Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)]
 Published: **31 October 2026 (latest release)** · Version **2.13.8** (`versionCode 25` — Android TV, PC/Mac Plugin & Mobile Companion) / **2.13.8** (LG webOS) & **2.13.8** (Samsung Tizen), experimental · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 > [!WARNING]
-> **BETA SOFTWARE: THINGS MAY NOT WORK.** OmarchyTV has been tested on several devices (Sony KD-55XE9005 on Android 9,
-> Google TV Streamer on Android 14, Sharp AQUOS, Noblex/Hisense on Android 11) plus the Android TV emulator. Expect rough edges, missing features on some TVs and bugs. It never roots or uninstalls
-> anything, and you can always switch back to the stock home screen (see [INSTALL](launcher/docs/INSTALL.md)), but use it at your own risk.
+> **Beta software.** Tested on Sony BRAVIA (Android 9), Google TV Streamer (Android 14), Sharp AQUOS, Noblex/Hisense (Android 11), LG webOS and the Android TV emulator. Some features may be missing on some TVs. It never roots or uninstalls anything, and you can always switch back to your stock home screen (see [INSTALL](launcher/docs/INSTALL.md)).
 
 ![OmarchyTV 2.13.8 home on a Sony BRAVIA: Tokyo Roadster theme, Grok Bot companion, SpaceX TV pill, app row](docs/screenshots/home-sony-bravia.png)
 
