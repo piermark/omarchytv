@@ -25,6 +25,12 @@
 - Top bar: the SpaceX TV pill is centred in the same 44 px row as the Cinemarchy and Wi-Fi icons, and ◀▶ reach it.
 - webOS/Tizen: the YouTube embed is on by default, and without a YouTube app the video opens in the embed, then the browser, instead of a toast.
 
+### Added (themes)
+- Four MIT themes by Erik Johansson (@erikrjohansson): Neon Glow (7 neon wordmark wallpapers), Norrsken, Green Mosaic and Blue Mosaic, on Android, webOS and Tizen. That makes 32 bundled themes. The wallpapers are WebP at 1920x1080, which adds about 0.4 MB per package. I reviewed the other community themes, but their artwork is not clearly MIT (SpaceX/Audi photos, Unsplash, uncredited art, GPL), so I left them out. They are listed in THIRD-PARTY.md.
+
+### Added (wallpaper)
+- New "Always-animated wallpaper" setting, off by default. When it is off, the animated wallpaper plays once and then settles on the still image, as before. When it is on, it loops while Home is on screen and pauses behind video, Cinemarchy, the screensaver and other apps. Android: Settings → Wallpaper. webOS/Tizen: All settings.
+
 ### Changed (lights hub)
 - Hue / Home Assistant lights now carry the active theme's colour only while OmarchyTV is on screen. Leaving it, whether for another app (Netflix, the YouTube app), screen off or standby, applies the new "When leaving the launcher" setting: Turn off (default), Restore previous (the state read before OmarchyTV painted them; off when none was read) or Keep on. On Android, Cinemarchy, the player and the other launcher screens count as inside, and a 2.5 s debounce covers the hand-over between them. On webOS/Tizen it follows visibilitychange, pagehide and relaunch. Nothing happens when Ambilight is off, and the Philips Ambilight TV LEDs are unchanged.
 

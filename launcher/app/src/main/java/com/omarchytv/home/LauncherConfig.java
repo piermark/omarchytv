@@ -398,6 +398,9 @@ final class LauncherConfig {
     final boolean syncPcWallpaper;
     /** v2.13: play animated MP4 intro (e.g. cumulus, last-horizon) before settling on still wallpaper. */
     final boolean wallpaperIntro;
+    /** v2.14 "Always-animated wallpaper" (default false): loop the theme's animated wallpaper while Home is on screen
+     *  instead of playing it once and settling on the still. Video, Cinemarchy and the screensaver pause it (onPause). */
+    final boolean wallpaperLoop;
     /** v2.13: rotate among animated themes on Home resume/boot (default true; locked false on manual pick). */
     final boolean randomTheme;
     /** v2.13: rotate among animated wallpapers/intros on Home resume/boot (default true; locked false on manual pick). */
@@ -653,6 +656,7 @@ final class LauncherConfig {
         wallpaper = j != null ? j.optString("wallpaper", defWp).trim() : defWp;
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
         wallpaperIntro = j == null || j.optBoolean("wallpaper_intro", j.optBoolean("wallpaperIntro", true));
+        wallpaperLoop = j != null && j.optBoolean("wallpaperLoop", false);
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
         randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;

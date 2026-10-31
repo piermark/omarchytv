@@ -133,6 +133,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverLogoScale: 0.65,
     saverShowClock: false,
     wallpaperIntro: true,
+    wallpaperLoop: false,   // v2.14 "Always-animated wallpaper": loop the intro while Home is on screen
     antiBurnIn: true,
     offIdleMin: 0,
     offMode: "screen",
@@ -378,9 +379,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (wv) {
       var intro = cfg.wallpaperIntro && activeWp && DATA.wallpaperIntros && DATA.wallpaperIntros[activeWp];
       if (intro) {
-        wv.src = intro;
+        if (wv.getAttribute("src") !== intro || !cfg.wallpaperLoop) wv.src = intro;   // once: restart like before
+        wv.loop = !!cfg.wallpaperLoop;
         wv.style.display = "block";
-        wv.onended = function () { wv.style.display = "none"; };
+        wv.onended = function () { if (!wv.loop) wv.style.display = "none"; };
         wv.onerror = function () { wv.style.display = "none"; };
         try { wv.play().catch(function () { wv.style.display = "none"; }); } catch (e) { wv.style.display = "none"; }
       } else {
@@ -388,6 +390,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         wv.style.display = "none";
       }
     }
+    wallpaperLoopTick();
     var dim = document.getElementById("wallpaper-dim");
     dim.style.background = "rgba(0,0,0," + (cfg.wallpaperDim || 0) + ")";
     pushLightsTheme(t, false);
@@ -1228,6 +1231,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "Next background", right: wlist.length ? ((cfg.wallpaperIdx % wlist.length) + 1) + "/" + wlist.length : "procedural", act: function () {
         cfg.wallpaperIdx++; cfg.wallpaper = ""; saveCfg(); applyTheme(); openAllSettingsModal();
       } },
+      { label: "Always-animated wallpaper", right: cfg.wallpaperLoop ? "on" : "off", act: function () {
+        cfg.wallpaperLoop = !cfg.wallpaperLoop; saveCfg(); applyTheme(); openAllSettingsModal();
+      } },
       { label: "Wallpaper dimming", right: Math.round((cfg.wallpaperDim || 0) * 100) + "%", act: function () {
         var d = [0, 0.25, 0.5];
         cfg.wallpaperDim = d[(d.indexOf(cfg.wallpaperDim) + 1) % d.length];
@@ -1472,6 +1478,18 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   document.addEventListener("visibilitychange", function () { if (document.hidden) lightsLeave(); else lightsBack(); });
   window.addEventListener("pagehide", lightsLeave);
   document.addEventListener("webOSRelaunch", lightsBack);
+
+  // v2.14 Always-animated wallpaper: pause the loop behind Cinemarchy, the screensaver or another app; resume on Home.
+  function wallpaperLoopTick() {
+    var wv = document.getElementById("wallpaper-video"), L = window.OmarchyWpLoop;
+    if (!wv || !L || !cfg.wallpaperLoop || wv.style.display !== "block") return;
+    var play = L.shouldPlay({ loop: true, hidden: document.hidden,
+      saver: document.getElementById("saver-overlay").className === "active",
+      cinemarchy: !!(state && state.modalOpen && state.cineTab >= 0) });
+    try { if (play && wv.paused) wv.play().catch(function () {}); else if (!play && !wv.paused) wv.pause(); } catch (e) {}
+  }
+  setInterval(wallpaperLoopTick, 1000);
+  document.addEventListener("visibilitychange", wallpaperLoopTick);
 
   function openLightsModal() {
     var hub = cfg.lightsHub || "off";

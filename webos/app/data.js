@@ -2,6 +2,37 @@ window.OMARCHY_DATA = {
   "version": "2.13.0-beta",
   "basedOnAndroidVersion": "2.13.0-beta",
   "themes": {
+    "blue-mosaic": {
+      "accent": "#354b67",
+      "background": "#fafbfc",
+      "blue": "#354b67",
+      "bright_blue": "#4b5e76",
+      "bright_cyan": "#62748a",
+      "bright_foreground": "#283545",
+      "bright_green": "#4b5e76",
+      "bright_magenta": "#354b67",
+      "bright_red": "#354b67",
+      "bright_yellow": "#62748a",
+      "brown": "#4b5e76",
+      "cyan": "#4b5e76",
+      "dark_background": "#f0f2f5",
+      "dark_foreground": "#62748a",
+      "darker_background": "#e5e8ed",
+      "foreground": "#283545",
+      "green": "#354b67",
+      "hyprland_active_border": "#354b67",
+      "hyprland_inactive_border": "#a8b3c1",
+      "light_foreground": "#354b67",
+      "lighter_background": "#e0e5eb",
+      "magenta": "#283545",
+      "mode": "light",
+      "muted": "#62748a",
+      "orange": "#4b5e76",
+      "red": "#283545",
+      "selection": "#e0e5eb",
+      "selection_foreground": "#283545",
+      "yellow": "#4b5e76"
+    },
     "catppuccin": {
       "accent": "#89b4fa",
       "background": "#1e1e2e",
@@ -148,6 +179,37 @@ window.OMARCHY_DATA = {
       "red": "#D14D41",
       "selection": "#CECDC3",
       "yellow": "#D0A215"
+    },
+    "green-mosaic": {
+      "accent": "#365b43",
+      "background": "#f8f4eb",
+      "blue": "#365b43",
+      "bright_blue": "#62755e",
+      "bright_cyan": "#62755e",
+      "bright_foreground": "#293c30",
+      "bright_green": "#62755e",
+      "bright_magenta": "#365b43",
+      "bright_red": "#365b43",
+      "bright_yellow": "#62755e",
+      "brown": "#62755e",
+      "cyan": "#62755e",
+      "dark_background": "#f1eadb",
+      "dark_foreground": "#62755e",
+      "darker_background": "#dfd6c5",
+      "foreground": "#293c30",
+      "green": "#365b43",
+      "hyprland_active_border": "#365b43",
+      "hyprland_inactive_border": "#acb79c",
+      "light_foreground": "#365b43",
+      "lighter_background": "#acb79c",
+      "magenta": "#293c30",
+      "mode": "light",
+      "muted": "#62755e",
+      "orange": "#62755e",
+      "red": "#293c30",
+      "selection": "#acb79c",
+      "selection_foreground": "#293c30",
+      "yellow": "#62755e"
     },
     "gruvbox": {
       "accent": "#7daea3",
@@ -399,6 +461,36 @@ window.OMARCHY_DATA = {
       "selection": "#383838",
       "yellow": "#b36d43"
     },
+    "neon-glow": {
+      "accent": "#0acde9",
+      "background": "#061214",
+      "blue": "#e37cbf",
+      "bright_blue": "#ec9dcf",
+      "bright_cyan": "#8cdde7",
+      "bright_foreground": "#dee2e3",
+      "bright_green": "#0acde9",
+      "bright_magenta": "#0acde9",
+      "bright_red": "#f3a29e",
+      "bright_yellow": "#e37cbf",
+      "brown": "#7a5436",
+      "cyan": "#6cccd9",
+      "dark_background": "#040e0f",
+      "dark_foreground": "#838a8c",
+      "darker_background": "#03090a",
+      "foreground": "#c7cbcc",
+      "green": "#85cbad",
+      "hyprland_active_border": "rgba(8b527bee) rgba(088294ee) 45deg",
+      "hyprland_inactive_border": "rgba(074e58ee)",
+      "light_foreground": "#adb2b3",
+      "lighter_background": "#131f22",
+      "magenta": "#a7a6cb",
+      "mode": "dark",
+      "muted": "#698186",
+      "orange": "#f3a76b",
+      "red": "#eb817f",
+      "selection": "#074650",
+      "yellow": "#e6d17f"
+    },
     "nord": {
       "accent": "#81a1c1",
       "background": "#2e3440",
@@ -422,6 +514,36 @@ window.OMARCHY_DATA = {
       "red": "#bf616a",
       "selection": "#434c5e",
       "yellow": "#ebcb8b"
+    },
+    "norrsken": {
+      "accent": "#5dffb0",
+      "background": "#050c0b",
+      "blue": "#7fc4ff",
+      "bright_blue": "#a6d6ff",
+      "bright_cyan": "#95ffd0",
+      "bright_foreground": "#f0fff8",
+      "bright_green": "#cfff9f",
+      "bright_magenta": "#dcbaff",
+      "bright_red": "#ff8fa9",
+      "bright_yellow": "#ffeaa8",
+      "brown": "#7a6a50",
+      "cyan": "#5dffb0",
+      "dark_background": "#040908",
+      "dark_foreground": "#6f9a8c",
+      "darker_background": "#020605",
+      "foreground": "#cdf2e3",
+      "green": "#b6ff7a",
+      "hyprland_active_border": "rgba(5dffb066)",
+      "hyprland_inactive_border": "rgba(ffffff1a)",
+      "light_foreground": "#dcf8ec",
+      "lighter_background": "#0c1a17",
+      "magenta": "#c99cff",
+      "mode": "dark",
+      "muted": "#2f5347",
+      "orange": "#ffb07a",
+      "red": "#ff6f91",
+      "selection": "#12352b",
+      "yellow": "#ffe08a"
     },
     "osaka-jade": {
       "accent": "#509475",
@@ -697,6 +819,10 @@ window.OMARCHY_DATA = {
     }
   },
   "wallpapers": {
+    "blue-mosaic": [
+      "wallpapers/blue-mosaic/01-blue-mosaic-wordmark.webp",
+      "wallpapers/blue-mosaic/02-blue-mosaic-logo.webp"
+    ],
     "catppuccin": [
       "wallpapers/catppuccin/04-omarchy.webp"
     ],
@@ -718,6 +844,10 @@ window.OMARCHY_DATA = {
     ],
     "flexoki-light": [
       "wallpapers/flexoki-light/02-omarchy.webp"
+    ],
+    "green-mosaic": [
+      "wallpapers/green-mosaic/01-green-mosaic-wordmark.webp",
+      "wallpapers/green-mosaic/02-green-mosaic-logo.webp"
     ],
     "gruvbox": [
       "wallpapers/gruvbox/06-omarchy.webp"
@@ -756,8 +886,20 @@ window.OMARCHY_DATA = {
     "miasma": [
       "wallpapers/miasma/03-omarchy.webp"
     ],
+    "neon-glow": [
+      "wallpapers/neon-glow/01-cyberpunk-wordmark.webp",
+      "wallpapers/neon-glow/02-emerald-wordmark.webp",
+      "wallpapers/neon-glow/03-orchid-wordmark.webp",
+      "wallpapers/neon-glow/04-gold-wordmark.webp",
+      "wallpapers/neon-glow/05-ice-white-wordmark.webp",
+      "wallpapers/neon-glow/06-hot-coral-wordmark.webp",
+      "wallpapers/neon-glow/07-red-white-blue-wordmark.webp"
+    ],
     "nord": [
       "wallpapers/nord/04-omarchy.webp"
+    ],
+    "norrsken": [
+      "wallpapers/norrsken/01-horisont.webp"
     ],
     "osaka-jade": [
       "wallpapers/osaka-jade/04-omarchy.webp"

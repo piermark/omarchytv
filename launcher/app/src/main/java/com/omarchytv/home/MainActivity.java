@@ -2827,7 +2827,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return;
         }
         String key = Theme.cur().name + ":" + mp4;
-        if (key.equals(lastIntroKey)) return;
+        // Played once already: stay on the still, unless "Always-animated wallpaper" loops it on every return.
+        if (key.equals(lastIntroKey) && (!cfg.wallpaperLoop || introView != null)) return;
         lastIntroKey = key;
         stopWallpaperIntro();
         java.io.File tmp = new java.io.File(getCacheDir(), "wp_intro.mp4");
@@ -2854,7 +2855,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                     mp.setSurface(new android.view.Surface(surface));
                     mp.setDataSource(tmp.getAbsolutePath());
                     mp.setVolume(0f, 0f);
-                    mp.setLooping(false);
+                    mp.setLooping(cfg.wallpaperLoop);
                     mp.setOnCompletionListener(m -> {
                         if (introView != null) {
                             introView.animate().alpha(0f).setDuration(300).withEndAction(MainActivity.this::stopWallpaperIntro).start();
@@ -2974,6 +2975,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         p.add(lSync, str(cfg.syncPcWallpaper ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.syncPcWallpaper;
             applyLive("wallpaper", lSync, j -> j.put("syncPcWallpaper", n));
+            return true;
+        });
+        String lLoop = str(R.string.wp_loop);
+        p.add(lLoop, str(cfg.wallpaperLoop ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.wallpaperLoop;
+            applyLive("wallpaper", lLoop, j -> j.put("wallpaperLoop", n));   // recreate() replays it with the new mode
             return true;
         });
         return p;

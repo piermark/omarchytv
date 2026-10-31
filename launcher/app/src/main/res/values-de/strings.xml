@@ -401,4 +401,5 @@
     <string name="keys_action_workspace">Workspace %1$s</string>
     <string name="keys_none">Keine unterstützte Fernbedienung verbunden.</string>
     <string name="keys_default">Ohne Belegung: %1$s</string>
+    <string name="wp_loop">Immer animierter Hintergrund</string>
 </resources>

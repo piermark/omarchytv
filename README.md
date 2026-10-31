@@ -1,6 +1,6 @@
 # OmarchyTV
 
-**An Omarchy-style home screen for Android TV, featuring a native Omarchy TUI Grok Bot assistant, 28 MIT themes with 4K wallpapers, a desktop link to your Omarchy PC / Mac, a native MCP server, and an Android smartphone wireless installer.**
+**An Omarchy-style home screen for Android TV, featuring a native Omarchy TUI Grok Bot assistant, 32 MIT themes with TV wallpapers, a desktop link to your Omarchy PC / Mac, a native MCP server, and an Android smartphone wireless installer.**
 
 Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](https://x.com/MarcoPorro) · [www.marcoporro.it](https://www.marcoporro.it))
 
@@ -120,7 +120,7 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 
 1. **Native Grok Bot · Omarchy TUI (`AskActivity`) on the TV Home Shelf:**
    - Clicking the **Grok Bot** tile (`grokbot@tv:~$ > GROK BOT [ omarchy · tui ]`) on the TV Home shelf — or selecting `Grok Bot (Omarchy TUI)` in the menu — opens a **native Omarchy-styled TUI assistant window** (`BoxView` 2 px border, `btop`-style legend `grok bot · omarchy tui [<theme>]`, translucent theme surface over the live 4K `WallpaperView`, `CaskaydiaMono` font, and `grokbot@omarchytv:~$` prompt) instead of jumping straight into a raw web browser.
-   - **Standalone Local TV & MCP Control (works offline without a PC):** Switch any of the 28 MIT themes (`theme jade-horse`, `theme year-of-the-horse`, `theme hermarchy`, `next theme`, `themes`), cycle 4K wallpapers (`wallpaper`), launch or configure the 37 `tte.js` ASCII screensavers (`screensaver`, `speed slow|normal|fast`), launch installed TV apps or Live TV (`open YouTube`, `open TV`, `apps`), or inspect TV/network/MCP status (`status`, `mcp`) via voice, keyboard, or 1-click D-pad quick chips (`[ ⏭ next theme ]`, `[ 🖼 wallpaper ]`, `[ ✦ screensaver ]`, `[ 📊 status ]`, `[ 📦 apps ]`, `[ ❓ help ]`).
+   - **Standalone Local TV & MCP Control (works offline without a PC):** Switch any of the 32 MIT themes (`theme jade-horse`, `theme year-of-the-horse`, `theme hermarchy`, `next theme`, `themes`), cycle 4K wallpapers (`wallpaper`), launch or configure the 37 `tte.js` ASCII screensavers (`screensaver`, `speed slow|normal|fast`), launch installed TV apps or Live TV (`open YouTube`, `open TV`, `apps`), or inspect TV/network/MCP status (`status`, `mcp`) via voice, keyboard, or 1-click D-pad quick chips (`[ ⏭ next theme ]`, `[ 🖼 wallpaper ]`, `[ ✦ screensaver ]`, `[ 📊 status ]`, `[ 📦 apps ]`, `[ ❓ help ]`).
    - **Paired PC / Mac AI Bridge (`OmarchyLink`):** Automatically forwards open-ended AI questions over the encrypted LAN link to your already-authenticated PC/Mac CLI (`grok`, `claude`, `codex`, `gemini`, `hermes`, or local `ollama`) and streams the reply typewriter-style in the TUI terminal.
    - **Optional 1-Click Full Browser WebApp Mode (`[ 🌐 grok.com ]` / `[ 🌐 web ▾ ]`):** Whenever you want the full web interface, select `[ 🌐 grok.com ]` or `[ 🌐 web ▾ ]` inside the TUI header (or from `> Grok Bot & AI`) to open **Grok Web** (`grok.com`), **Grok (X)** (`x.com/i/grok`), **ChatGPT** (`chatgpt.com`), **Claude** (`claude.ai`), or **Hermes** (`hermes.nousresearch.com`) in the sandboxed `:web` process (`WebAppActivity`) with persistent cookies/DOM storage and D-pad cursor.
 2. **26 100%-MIT Themes & Bundled 4K Wallpapers + `Sync PC wallpaper` Toggle:**
@@ -145,7 +145,7 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 - **Workspaces 1–5**: `1` Home, `2` TV & Inputs, `3` All Apps, `4` PC Link & AI, `5` System & Settings. Switch workspaces with number keys `1–5` or the top bar.
 - **Native Grok Bot · Omarchy TUI (`AskActivity`)**: Built-in terminal assistant on the Home shelf supporting standalone local TV commands, voice recognition, paired PC CLI streaming, and 1-click launch of full AI WebApps (`Grok Web`, `Grok (X)`, `ChatGPT`, `Claude`, `Hermes`).
 - **One-Press Live TV & HDMI Inputs**: Supports Sony BRAVIA, Sharp AQUOS, Google TV, AOSP TV, DTVKit, TCL, Hisense, Philips, and standard Android TV Input Framework (`TIF`) channels.
-- **28 Bundled MIT Themes & 4K Wallpapers**: Instant live theme switching with bundled 4K WebP backgrounds, `"next wallpaper"` cycling, custom image support, procedural aurora fallback, and custom theme packs pushed from your PC.
+- **32 Bundled MIT Themes & 4K Wallpapers**: Instant live theme switching with bundled 4K WebP backgrounds, `"next wallpaper"` cycling, custom image support, procedural aurora fallback, and custom theme packs pushed from your PC.
 - **Customizable Home Panels**: Toggle individual panels (Clock, Weather with `°C / °F` switch and auto-location, PC Stats, AI Credits, Deploys, Terminal) and move them on a **12×8 grid** with **Arrange panels**.
 - **App Shelf & Hidden Apps Manager**: Reorder or pin favorite apps, hide unwanted system tiles (including optional Sony bloatware toggle), restore hidden tiles in Workspace 5 (`System → Hidden apps`), and push custom 16:9 PNG app banners (`omarchy-tv icons push`).
 - **37 `tte.js` ASCII Screensaver Effects**: Runs all 37 `TerminalTextEffects` / `tte.js` animations in a dedicated `:saver` process with configurable idle timeout (`1 / 2.5 / 5 / 10 min` or `Never`), **Effect speed (`Slow / Normal / Fast`)**, native fallback for legacy WebViews, and Android Daydream (`OmarchyDream`) support.
@@ -163,12 +163,12 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 
 ### 3. Android Smartphone Companion (`OmarchyTV Mobile`, `178 KB`) — [mobile-companion/](mobile-companion/README-MOBILE.md)
 - **No-PC Wireless TV Installer**: Scans your `/24` Wi-Fi LAN, downloads the latest release from GitLab/GitHub, verifies its SHA-256 checksum, performs a pure-Java 2048-bit RSA Wireless ADB handshake (`:5555`), installs OmarchyTV (`pm install -r`), and pins it as your default Home launcher in one tap.
-- **Live Theme Switcher & Touch Remote**: Switch all **28 MIT themes** in real time, control the TV with a tactile D-Pad and media keys, upload custom phone photos as TV wallpapers, and run safe 1-tap reversible brand debloat (`pm disable-user --user 0` / `pm enable`).
+- **Live Theme Switcher & Touch Remote**: Switch all **32 MIT themes** in real time, control the TV with a tactile D-Pad and media keys, upload custom phone photos as TV wallpapers, and run safe 1-tap reversible brand debloat (`pm disable-user --user 0` / `pm enable`).
 - **LG webOS & Universal Smart TV Bridge (`:8765`)**: Serves themes/wallpapers to LG webOS TVs and hosts the full 1080p HTML5 OmarchyTV Web Launcher (`http://<phone-ip>:8765/tv`) for **Samsung Tizen** and **Hisense VIDAA** TVs.
 
 ---
 
-## All 28 Bundled MIT Themes & Repositories
+## All 32 Bundled MIT Themes & Repositories
 
 Every theme bundled in OmarchyTV `2.13.0-beta` is **100% MIT-licensed** and ships inside the APK with its palette (`assets/omarchy_themes.json`) and verified 4K WebP wallpapers (`assets/wallpapers/<theme>/`). Full file-by-file provenance is documented in **[THIRD-PARTY.md](THIRD-PARTY.md)**, **[NOTICE](NOTICE)**, and **[launcher/WALLPAPER-PROVENANCE.csv](launcher/WALLPAPER-PROVENANCE.csv)**.
 
@@ -202,6 +202,10 @@ Every theme bundled in OmarchyTV `2.13.0-beta` is **100% MIT-licensed** and ship
 | 26 | **`white`** | `#6e6e6e` | `04-omarchy.webp` | David Heinemeier Hansson / Omarchy contributors | [basecamp/omarchy (`themes/white`)](https://github.com/basecamp/omarchy/tree/master/themes/white) (MIT) |
 | 27 | **`cumulus`** *(animated)* | theme palette | `01-cloud-town-path` .. `04-lighthouse` + 4 animated intros, `05-omarchy.webp` | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-cumulus-theme](https://github.com/erikrjohansson/omarchy-cumulus-theme) (MIT) |
 | 28 | **`tokyo-roadster`** | theme palette | `01-tokyo-wall-ride` .. `10-tokyo-starlight`, `11-omarchy.webp` | Tom Ballard ([@tcballard](https://github.com/tcballard)) | [tcballard/omarchy-theme-tokyo-roadster](https://github.com/tcballard/omarchy-theme-tokyo-roadster) (MIT) |
+| 29 | **`neon-glow`** | theme palette | `01-cyberpunk-wordmark` .. `07-red-white-blue-wordmark` (7 neon Omarchy wordmarks) | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-neon-glow-theme](https://github.com/erikrjohansson/omarchy-neon-glow-theme) (MIT) |
+| 30 | **`norrsken`** | theme palette | `01-horisont` (aurora planet edge) | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-norrsken-theme](https://github.com/erikrjohansson/omarchy-norrsken-theme) (MIT) |
+| 31 | **`green-mosaic`** | theme palette | `01-green-mosaic-wordmark`, `02-green-mosaic-logo` | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-green-mosaic-theme](https://github.com/erikrjohansson/omarchy-green-mosaic-theme) (MIT) |
+| 32 | **`blue-mosaic`** | theme palette | `01-blue-mosaic-wordmark`, `02-blue-mosaic-logo` | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-blue-mosaic-theme](https://github.com/erikrjohansson/omarchy-blue-mosaic-theme) (MIT) |
 
 ---
 

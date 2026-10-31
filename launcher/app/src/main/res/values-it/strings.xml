@@ -401,4 +401,5 @@
     <string name="keys_action_workspace">Workspace %1$s</string>
     <string name="keys_none">Nessun telecomando supportato collegato.</string>
     <string name="keys_default">Senza assegnazione: %1$s</string>
+    <string name="wp_loop">Sfondo sempre animato</string>
 </resources>

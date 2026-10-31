@@ -59,7 +59,7 @@ import java.util.Locale;
  *
  * Works in three complementary zero-API-cost modes:
  * 1. Immediate Local TV & MCP Control (works offline / standalone on the TV with zero setup):
- *    switch any of the 26 MIT themes, cycle 4K wallpapers, trigger or configure the 37 TTE ASCII screensavers
+ *    switch any of the 32 MIT themes, cycle 4K wallpapers, trigger or configure the 37 TTE ASCII screensavers
  *    and speed (slow/normal/fast), launch installed TV apps or Live TV by name, or inspect TV/network/MCP status.
  * 2. Paired PC / Mac CLI Bridge (Omarchy Link PROTOCOL.md §6 "Assistant"):
  *    forwards open-ended questions over the encrypted LAN link to the user's authenticated CLI on their PC/Mac
@@ -479,7 +479,7 @@ public class AskActivity extends Activity implements OmarchyLink.Listener {
         if (low.equals("help") || low.equals("aiuto") || low.equals("?") || low.equals("comandi") || low.equals("commands")) {
             String msg = isIt()
                     ? "Comandi Omarchy TUI disponibili:\n"
-                      + "  • tema <nome> / next theme   → cambia uno dei 26 temi MIT (es. tema jade-horse, tema year-of-the-horse, tema hermarchy)\n"
+                      + "  • tema <nome> / next theme   → cambia uno dei 32 temi MIT (es. tema jade-horse, tema year-of-the-horse, tema hermarchy)\n"
                       + "  • temi / themes              → elenca tutti i 26 temi integrati\n"
                       + "  • sfondo / next wallpaper    → passa allo sfondo 4K successivo del tema attivo\n"
                       + "  • screensaver [effetto]      → avvia lo screensaver ASCII (es. screensaver matrix, speed fast)\n"
@@ -488,7 +488,7 @@ public class AskActivity extends Activity implements OmarchyLink.Listener {
                       + "  • stato / status / mcp       → mostra stato TV, rete, tema e server MCP (:47800/mcp)\n"
                       + "  • web [grok|chatgpt|claude]  → apre l'interfaccia Web completa nel processo :web"
                     : "Available Omarchy TUI commands:\n"
-                      + "  • theme <name> / next theme  → switch any of the 26 MIT themes (e.g. theme jade-horse, theme year-of-the-horse, theme hermarchy)\n"
+                      + "  • theme <name> / next theme  → switch any of the 32 MIT themes (e.g. theme jade-horse, theme year-of-the-horse, theme hermarchy)\n"
                       + "  • themes                     → list all 26 bundled MIT themes\n"
                       + "  • wallpaper / next wallpaper → cycle 4K wallpapers for the active theme\n"
                       + "  • screensaver [effect]       → start TTE ASCII screensaver (e.g. screensaver matrix, speed fast)\n"
