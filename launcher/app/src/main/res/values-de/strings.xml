@@ -209,6 +209,10 @@
     <string name="cast_text">Text</string>
     <string name="cast_image">Bild</string>
     <string name="cast_from">von %1$s</string>
+    <string name="cast_http_refused">Der Server hat den Stream abgelehnt (HTTP %1$d). Der Link ist evtl. abgelaufen: bitte erneut senden.</string>
+    <string name="cast_yt_expired_app">Der YouTube-Stream-Link ist abgelaufen (HTTP %1$d): die YouTube-App wird geöffnet.</string>
+    <string name="cast_yt_expired">Der YouTube-Stream-Link ist abgelaufen (HTTP %1$d). Sende den Link der YouTube-Seite statt des Streams.</string>
+    <string name="cast_cant_play">Dieser Stream kann nicht abgespielt werden (%1$s).</string>
     <string name="cast_no_adaptive">HLS/DASH-Streams werden noch nicht unterstützt</string>
     <string name="set_prompt_name">Prompt-Name</string>
     <string name="set_prompt_host">Hostname</string>

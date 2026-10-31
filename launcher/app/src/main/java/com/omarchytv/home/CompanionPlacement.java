@@ -87,6 +87,11 @@ final class CompanionPlacement {
         return bridgeOn && pcConnected && mirroredBotName != null && !mirroredBotName.isEmpty() ? "companion" : "ask";
     }
 
+    /** The home "companion · ask" tile: only when the floating companion is off, so there is one companion. */
+    static boolean homeTile(boolean pluginGrokbot, boolean companionOverlay) {
+        return pluginGrokbot && !companionOverlay;
+    }
+
     /** The Blue key opens the chat directly, as on webOS/Tizen, unless "assistant": {"key": "blue"} gave it to Ask. */
     static boolean opensChat(int keyCode, String askKey) {
         return keyCode == KeyEvent.KEYCODE_PROG_BLUE && !"blue".equals(askKey);

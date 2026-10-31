@@ -233,7 +233,7 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
 
             @Override
             public void onPlayerError(PlaybackException e) {
-                fail(e.getErrorCodeName().replace("ERROR_CODE_", "").toLowerCase(java.util.Locale.ROOT));
+                playerError(e);
             }
 
             @Override
@@ -351,6 +351,44 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         }
         OmarchyLink.castState(id, state, pos, dur, null);
         if ("stopped".equals(state) || "ended".equals(state) && live) done = true;
+    }
+
+    /** HTTP status of a source error (InvalidResponseCodeException anywhere in the cause chain), else -1. */
+    private static int httpStatus(Throwable e) {
+        for (Throwable c = e; c != null; c = c.getCause()) {
+            if (c instanceof androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException) {
+                return ((androidx.media3.datasource.HttpDataSource.InvalidResponseCodeException) c).responseCode;
+            }
+            if (c.getCause() == c) break;
+        }
+        return -1;
+    }
+
+    /**
+     * A YouTube URL that answers 4xx (signed googlevideo stream expired, or a page that is not a stream) goes to the
+     * YouTube app / embed when its id is known; every other error is a readable sentence, not "io_bad_http_status".
+     */
+    private void playerError(PlaybackException e) {
+        int status = httpStatus(e);
+        String code = e.getErrorCodeName().replace("ERROR_CODE_", "").toLowerCase(java.util.Locale.ROOT);
+        String url = mediaUrl;
+        if (listIdx >= 0 && listUrls() != null && listIdx < listUrls().length) url = listUrls()[listIdx];
+        if (status < 0 && YoutubeLaunch.youtubeOrigin(url)) status = 403;   // e.g. a watch page parsed as media
+        if (status >= 0) {
+            String act = YoutubeLaunch.onHttpError(url, status);
+            if ("app".equals(act)) {
+                android.widget.Toast.makeText(this, getString(R.string.cast_yt_expired_app, status), android.widget.Toast.LENGTH_LONG).show();
+                if (!done && !replaced) OmarchyLink.castState(id, "error", -1, -1, "youtube_" + status + "_app");
+                done = true;
+                release();
+                YoutubeEmbedActivity.openInYoutubeApp(this, YoutubeLaunch.idOf(url), getIntent().getStringExtra(CastRouter.EXTRA_TITLE));
+                finish();
+                return;
+            }
+            fail("expired".equals(act) ? getString(R.string.cast_yt_expired, status) : getString(R.string.cast_http_refused, status));
+            return;
+        }
+        fail(getString(R.string.cast_cant_play, code));
     }
 
     private void fail(String why) {

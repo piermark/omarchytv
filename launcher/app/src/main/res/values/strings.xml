@@ -222,6 +222,10 @@
     <string name="cast_text">Text</string>
     <string name="cast_image">Image</string>
     <string name="cast_from">from %1$s</string>
+    <string name="cast_http_refused">This server refused the stream (HTTP %1$d). The link may have expired: send it again.</string>
+    <string name="cast_yt_expired_app">This YouTube stream link expired (HTTP %1$d): opening the YouTube app.</string>
+    <string name="cast_yt_expired">This YouTube stream link expired (HTTP %1$d). Send the YouTube page link instead of the stream.</string>
+    <string name="cast_cant_play">Can\'t play this stream (%1$s).</string>
     <string name="cast_no_adaptive">HLS/DASH streams are not supported yet</string>
     <string name="set_prompt_name">Prompt name</string>
     <string name="set_prompt_host">Host name</string>

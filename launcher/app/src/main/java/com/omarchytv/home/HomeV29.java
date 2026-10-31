@@ -68,6 +68,8 @@ final class HomeV29 extends FrameLayout {
         void pairPc();
         void sys(String id);
         void savePanelPos(String id, int cx, int cy);
+        /** ▶ past the last top-bar icon: select (arm) the floating companion; false when it is not shown. */
+        boolean selectCompanion();
     }
 
     /** v2.10 workspace 2 tile: TV or an HDMI input (CEC name when known). */
@@ -181,10 +183,13 @@ final class HomeV29 extends FrameLayout {
         barSpacex = text("🚀 SpaceX TV", 18, true);
         barSpacex.setFocusable(true);
         barSpacex.setClickable(true);
-        barSpacex.setPadding(px(12), px(4), px(12), px(4));
+        barSpacex.setGravity(Gravity.CENTER);   // same row as the icons: centred in a 44 px box like iconButton
+        barSpacex.setSingleLine(true);
+        barSpacex.setPadding(px(12), 0, px(12), 0);
         barSpacex.setBackground(new Underline());
         barSpacex.setOnClickListener(v -> host.sys("spacex-tv"));
-        LinearLayout.LayoutParams sxl = new LinearLayout.LayoutParams(-2, -1);
+        LinearLayout.LayoutParams sxl = new LinearLayout.LayoutParams(-2, px(44));
+        sxl.gravity = Gravity.CENTER_VERTICAL;
         sxl.rightMargin = px(16);
         right.addView(barSpacex, sxl);
         barWx = hbox();
@@ -571,7 +576,8 @@ final class HomeV29 extends FrameLayout {
         String gbMsg = c.grokbotMessage != null && !c.grokbotMessage.isEmpty() ? c.grokbotMessage : null;
         grokbotText.setText(mirrored ? "  " + c.grokbotBotName + (gbMsg != null ? ": " + gbMsg : " · ask")
                 : gbMsg != null ? " " + gbMsg : " companion · ask");
-        grokbotBox.setVisibility(activeWs == 1 && c.pluginGrokbot ? VISIBLE : GONE);
+        // The floating face is the one companion: this "companion · ask" tile only stands in when it is off.
+        grokbotBox.setVisibility(activeWs == 1 && CompanionPlacement.homeTile(c.pluginGrokbot, c.companionOverlay) ? VISIBLE : GONE);
         for (BoxView b : remoteBox) b.setColors(winBg, t.muted, t.accent, t.cyan);
         // v2.10: every home widget can be switched off (Settings → Widgets); the clock lives only in the bar.
         wxBox.setVisibility(c.wWeather ? VISIBLE : GONE);
@@ -889,7 +895,7 @@ final class HomeV29 extends FrameLayout {
         term.setVisibility(home && (cfg == null || cfg.wTerm) ? VISIBLE : GONE);
         widgets.setVisibility(home ? VISIBLE : GONE);
         appWin.setVisibility(home ? VISIBLE : GONE);
-        grokbotBox.setVisibility(home && (cfg == null || cfg.pluginGrokbot) ? VISIBLE : GONE);
+        grokbotBox.setVisibility(home && (cfg == null ? false : CompanionPlacement.homeTile(cfg.pluginGrokbot, cfg.companionOverlay)) ? VISIBLE : GONE);
         tvWin.setVisibility(n == 2 ? VISIBLE : GONE);
         appsWin.setVisibility(n == 3 ? VISIBLE : GONE);
         pcWin.setVisibility(n == 4 ? VISIBLE : GONE);
@@ -1416,6 +1422,7 @@ final class HomeV29 extends FrameLayout {
                 // hidden workspaces (and SpaceX TV when off) are GONE: skip them, or focus gets stuck
                 int to = BarFocus.next(order, f, r, v -> v.getVisibility() == VISIBLE && v.isFocusable());
                 if (to >= 0) order.get(to).requestFocus();
+                else if (BarFocus.pastEnd(order, f, r, v -> v.getVisibility() == VISIBLE && v.isFocusable())) host.selectCompanion();
                 return true;
             }
             return false;

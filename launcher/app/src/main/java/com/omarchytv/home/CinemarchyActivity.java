@@ -565,7 +565,7 @@ public final class CinemarchyActivity extends Activity {
 
     private boolean embedPlayerOn() {
         JSONObject c = LauncherConfig.readJson(this).optJSONObject("cinemarchy");
-        return c != null && c.optBoolean("embedPlayer", false);
+        return c == null || c.optBoolean("embedPlayer", true);   // on by default (works on Sony); an explicit false stays off
     }
 
     static void setEmbedPlayer(Context ctx, boolean on) {
@@ -801,6 +801,13 @@ public final class CinemarchyActivity extends Activity {
                 if (c != null) c.put("queue", new JSONArray());
             });
             selectSource(SRC_QUEUE, false);
+            return;
+        }
+        // A YouTube page URL (queued @dhh37 pick, PC library, From PC) is not a stream: the video player can't play it.
+        String ytId = "youtube".equals(e.kind) ? e.pkg : YoutubeLaunch.idOf(e.url);
+        if (!e.kind.startsWith("iptv_") && DhhFeed.validId(ytId)) {
+            AmbilightController.restoreFollowVideo(this);
+            openYoutube(ytId, e.title);
             return;
         }
         if ("iptv_channel".equals(e.kind)) {

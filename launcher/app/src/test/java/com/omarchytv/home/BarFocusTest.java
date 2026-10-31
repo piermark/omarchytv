@@ -68,4 +68,20 @@ public class BarFocusTest {
     public void unknownCurrentStays() {
         assertEquals(-1, BarFocus.next(BAR, "clock", true, s -> true));
     }
+
+    @Test
+    public void rightOnTheLastIconGoesToTheCompanionOnlyThere() {
+        org.junit.Assert.assertTrue(BarFocus.pastEnd(BAR, "screen", true, hidden()));
+        org.junit.Assert.assertTrue(BarFocus.pastEnd(BAR, "input", true, hidden("screen")));
+        org.junit.Assert.assertFalse(BarFocus.pastEnd(BAR, "input", true, hidden()));
+        org.junit.Assert.assertFalse(BarFocus.pastEnd(BAR, "screen", false, hidden()));
+        org.junit.Assert.assertFalse(BarFocus.pastEnd(BAR, "elsewhere", true, hidden()));
+    }
+
+    @Test
+    public void spacexSitsBetweenTheWorkspacesAndCinemarchy() {
+        assertEquals("spacex", step("ws5", true, hidden()));
+        assertEquals("cinemarchy", step("spacex", true, hidden()));
+        assertEquals("spacex", step("cinemarchy", false, hidden()));
+    }
 }

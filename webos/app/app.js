@@ -101,6 +101,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     randomTheme: true,
     randomWallpaper: true,
     pluginSpacexTv: true,
+    embedPlayer: true,     // Cinemarchy: YouTube plays inside (official embed) by default; an explicit false stays off
     pluginGrokbot: true,   // the Grok Bot companion: on by default, the default assistant
     grokbotMessage: "",
     companionShape: "",    // "" follows the PC bot; else one of Tom's 14 shapes
@@ -1521,7 +1522,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   // YouTube deep links. Not verified on a real TV: webOS takes contentTarget, Tizen a v=ID payload.
-  function openYoutubeApp(id) {
+  // No YouTube app took it: the in-app embed (unless the embed itself is falling back), then the TV browser.
+  function openYoutubeApp(id, fromEmbed) {
     var url = "https://www.youtube.com/watch?v=" + id;
     try {
       if (lunaLaunch("youtube.leanback.v4", { contentTarget: "https://www.youtube.com/tv?v=" + id })) return;
@@ -1532,6 +1534,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         return;
       }
     } catch (e) {}
+    if (!fromEmbed) { openEmbed(id); return; }
+    try { if (window.open(url, "_blank")) return; } catch (e2) {}
     showToast("Open on YouTube: " + url);
   }
 
@@ -1555,7 +1559,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     else if (i === 4) embedCmd("seekTo", [Math.max(0, embed.t - 30), true]);
     else if (i === 5) embedCmd("seekTo", [embed.t + 30, true]);
     else if (i === 6) { embedCmd(embed.playing ? "pauseVideo" : "playVideo"); embed.playing = !embed.playing; }
-    else { var id = embed.id; closeEmbed(); openYoutubeApp(id); }
+    else { var id = embed.id; closeEmbed(); openYoutubeApp(id, true); }
   }
   function openEmbed(id) {
     closeModal();
@@ -1574,7 +1578,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     renderEmbedRail();
     var f = document.getElementById("yt-embed-frame");
     f.onload = function () { f.contentWindow.postMessage(JSON.stringify({ event: "listening", id: 1 }), "*"); };
-    embed.timer = setTimeout(function () { if (!embed.dur) { showToast("Embed did not start · opening the YouTube app"); var i2 = embed.id; closeEmbed(); openYoutubeApp(i2); } }, 20000);
+    embed.timer = setTimeout(function () { if (!embed.dur) { showToast("Embed did not start · opening the YouTube app"); var i2 = embed.id; closeEmbed(); openYoutubeApp(i2, true); } }, 20000);
   }
   function closeEmbed() {
     var ov = document.getElementById("yt-embed");
@@ -1589,7 +1593,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (m.event === "onError") {
       var id = embed.id;
       showToast("YouTube does not allow this video here (error " + m.info + ") · opening the YouTube app");
-      closeEmbed(); openYoutubeApp(id);
+      closeEmbed(); openYoutubeApp(id, true);
     } else if (m.event === "infoDelivery" && m.info) {
       if (m.info.duration) embed.dur = m.info.duration;
       if (m.info.currentTime != null) embed.t = m.info.currentTime;

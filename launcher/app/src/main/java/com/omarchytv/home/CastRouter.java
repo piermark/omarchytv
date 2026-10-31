@@ -142,6 +142,15 @@ final class CastRouter {
             }
             case "video":
             case "audio":
+                // A YouTube page sent as "video": ExoPlayer can't play it (and signed streams 403): the YouTube app.
+                if (c.url != null && DhhFeed.validId(YoutubeLaunch.idOf(c.url))) {
+                    final String yt = YoutubeLaunch.idOf(c.url);
+                    main.post(() -> {
+                        YoutubeEmbedActivity.openInYoutubeApp(app, yt, c.title);
+                        OmarchyLink.castState(c.id, "playing", -1, -1, null);
+                    });
+                    return null;
+                }
                 i = surfaceIntent(app, CastPlayerActivity.class, c);
                 break;
             default:   // image, text

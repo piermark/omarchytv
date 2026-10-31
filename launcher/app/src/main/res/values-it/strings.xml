@@ -209,6 +209,10 @@
     <string name="cast_text">Testo</string>
     <string name="cast_image">Immagine</string>
     <string name="cast_from">da %1$s</string>
+    <string name="cast_http_refused">Il server ha rifiutato lo stream (HTTP %1$d). Il link potrebbe essere scaduto: rinvialo.</string>
+    <string name="cast_yt_expired_app">Il link dello stream YouTube è scaduto (HTTP %1$d): apro l\'app YouTube.</string>
+    <string name="cast_yt_expired">Il link dello stream YouTube è scaduto (HTTP %1$d). Invia il link della pagina YouTube invece dello stream.</string>
+    <string name="cast_cant_play">Impossibile riprodurre questo stream (%1$s).</string>
     <string name="cast_no_adaptive">Stream HLS/DASH non ancora supportati</string>
     <string name="set_prompt_name">Nome prompt</string>
     <string name="set_prompt_host">Nome host</string>

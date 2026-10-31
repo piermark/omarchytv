@@ -359,6 +359,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
 
             @Override
+            public boolean selectCompanion() {
+                if (companion == null || companion.getVisibility() != View.VISIBLE) return false;
+                companion.setArmed(true);   // the ring + "OK: chat"; OK opens the chat, any other key goes back
+                return true;
+            }
+
+            @Override
             public boolean pcPaired() {
                 return !OmarchyLink.pcs().isEmpty();
             }
@@ -1747,7 +1754,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     /** v2.13: Cinemarchy's optional official YouTube embed for @dhh37 (off = YouTube app). */
     private boolean cinemarchyEmbedOn() {
         org.json.JSONObject c = LauncherConfig.readJson(this).optJSONObject("cinemarchy");
-        return c != null && c.optBoolean("embedPlayer", false);
+        return c == null || c.optBoolean("embedPlayer", true);   // on by default (works on Sony); an explicit false stays off
     }
 
     private AsciiMenu.Page mainPage() {

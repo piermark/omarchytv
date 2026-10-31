@@ -56,4 +56,11 @@ public class CompanionPlacementTest {
         assertFalse(CompanionPlacement.opensChat(KeyEvent.KEYCODE_PROG_RED, "none"));
         assertFalse(CompanionPlacement.opensChat(KeyEvent.KEYCODE_MENU, "none"));
     }
+
+    @Test
+    public void oneCompanionTheHomeTileOnlyWhenTheFaceIsOff() {
+        org.junit.Assert.assertFalse(CompanionPlacement.homeTile(true, true));
+        org.junit.Assert.assertTrue(CompanionPlacement.homeTile(true, false));
+        org.junit.Assert.assertFalse(CompanionPlacement.homeTile(false, false));
+    }
 }

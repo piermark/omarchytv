@@ -17,6 +17,14 @@
 - **Fix (Android, Fire OS): the HomeOverride home button no longer gives up after two Home presses.** Fire OS sends two window events per press; events for the same home activity within 1 s now count once, and only a takeover that actually starts counts against the loop guard (4 in 15 s), so a burst of stock-home events no longer keeps it tripped. Test: `TakeoverGuardTest`. Reported by @podzpau ([#58](https://github.com/piermark/omarchytv/issues/58)).
 - **webOS/Tizen app on other TV browsers:** after the Vestel/Novatek field report by ekollof1 ([#66](https://github.com/piermark/omarchytv/issues/66), GitLab #4), a platform script loaded before `app.js` can now set `window.OMARCHY_LAUNCH(app)` (its own app launcher), `window.OMARCHY_PREFERS_24H` (what Clock "auto" means when the browser says `en-US`) and `window.OMARCHY_FIT_SCREEN` (size the stage from `screen / devicePixelRatio` when `innerWidth` ignores the real viewport). None of them is set on webOS or Tizen, so nothing changes there. Test: `webos/tests/hooks.test.js`.
 
+### Fixed (Sony BRAVIA / Android TV report)
+- Cinemarchy YouTube: "Play DHH inside YouTube embed" is now on by default (it works on Sony; an explicit off stays off). Videos go to the YouTube TV app (watch URL, then `vnd.youtube:`), the phone app, SmartTube, any handler, then the in-app embed, then the WebApp. Queued, PC-library and "From PC" YouTube links no longer go to the video player.
+- Video player: a YouTube or googlevideo source that answers HTTP 4xx (expired signed stream, 403/410) opens the YouTube app when the video id is known. Every other error now shows a readable, localized message instead of `io_bad_http_status`.
+- YouTube embed: a WebView that fails to start, fails to load, or loses its renderer hands off to the YouTube app instead of crashing.
+- Grok Bot companion: ▶ past the last top-bar icon selects the floating face (ring + "OK: chat") and OK opens the chat. The Blue key still opens it directly. The duplicate "companion · ask" home tile only shows when the floating companion is off.
+- Top bar: the SpaceX TV pill is centred in the same 44 px row as the Cinemarchy and Wi-Fi icons, and ◀▶ reach it.
+- webOS/Tizen: the YouTube embed is on by default, and without a YouTube app the video opens in the embed, then the browser, instead of a toast.
+
 ## [2.13.0-beta] — 2026-10-29 (pre-release, `versionCode 21`)
 
 Artifacts: `omarchytv-release-2.13.0-beta.apk` (Android TV), `omarchytv-webos-2.13.0-testing.ipk` (LG webOS), `OmarchyTV-tizen-2.13.0-beta-unsigned.wgt` (Samsung Tizen, unsigned testing), `omarchytv-mobile-2.13.0-beta.apk` (phone), `omarchy-tv-pc-plugin-2.13.0-beta.tar.gz` plus separate `omarchy-tv` and `omarchy-link` tarballs, and `SHA256SUMS`.

@@ -2,7 +2,6 @@ package com.omarchytv.home;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -34,6 +33,8 @@ import android.widget.Toast;
 public class YoutubeEmbedActivity extends Activity {
     static final String EXTRA_ID = "yt_id";
     static final String EXTRA_TITLE = "yt_title";
+    /** Opened because no YouTube app took the video: its own fallback goes to the WebApp. */
+    static final String EXTRA_NO_APP = "yt_no_app";
     /** YouTube identifies embedders by HTTP Referer; for an app WebView that is its package as an https origin. */
     static final String ORIGIN = "https://com.omarchytv.home";
 
@@ -42,6 +43,7 @@ public class YoutubeEmbedActivity extends Activity {
     private TextView status;
     private String videoId, title;
     private boolean fellBack;
+    private boolean noApp;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -71,16 +73,37 @@ public class YoutubeEmbedActivity extends Activity {
                 + "</script></body></html>";
     }
 
-    /** The YouTube app on this exact video: TV app, then the phone app, then any handler, then the WebApp. */
+    /** The YouTube app on this exact video, falling back to the in-app embed player, then the WebApp. */
     static void openInYoutubeApp(Context c, String id, String title) {
-        Uri watch = Uri.parse(DhhFeed.watchUrl(id));
-        for (String pkg : new String[]{"com.google.android.youtube.tv", "com.google.android.youtube", null}) {
-            Intent i = new Intent(Intent.ACTION_VIEW, watch).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            if (pkg != null) i.setPackage(pkg);
+        openInYoutubeApp(c, id, title, true);
+    }
+
+    /**
+     * YoutubeLaunch.appSteps in order (TV app watch URL, TV app vnd.youtube:, phone app, any handler). The TV app is
+     * declared in the manifest's queries, so it is resolved first and a step whose app is missing is skipped
+     * instead of ending the chain. allowEmbed is false when the embed player itself is falling back (no loop).
+     */
+    static void openInYoutubeApp(Context c, String id, String title, boolean allowEmbed) {
+        if (!DhhFeed.validId(id)) return;
+        android.content.pm.PackageManager pm = c.getPackageManager();
+        for (YoutubeLaunch.Step s : YoutubeLaunch.appSteps(id, 0)) {
+            Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(s.uri)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            if (s.pkg != null) i.setPackage(s.pkg);
+            if (s.uri.startsWith("vnd.youtube:")) i.putExtra("force_fullscreen", true);
+            // Only the TV app is visible to resolveActivity on Android 11+; the others are just tried.
+            if (YoutubeLaunch.TV.equals(s.pkg) && i.resolveActivity(pm) == null) continue;
             try {
                 c.startActivity(i);
                 return;
-            } catch (ActivityNotFoundException | SecurityException ignored) {
+            } catch (RuntimeException ignored) {   // ActivityNotFoundException, SecurityException
+            }
+        }
+        if (allowEmbed) {
+            try {
+                c.startActivity(new Intent(c, YoutubeEmbedActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        .putExtra(EXTRA_ID, id).putExtra(EXTRA_TITLE, title).putExtra(EXTRA_NO_APP, true));
+                return;
+            } catch (RuntimeException ignored) {
             }
         }
         WebAppActivity.openUrl(c, title == null ? "YouTube" : title, DhhFeed.watchUrl(id));
@@ -92,6 +115,7 @@ public class YoutubeEmbedActivity extends Activity {
         super.onCreate(b);
         videoId = getIntent().getStringExtra(EXTRA_ID);
         title = getIntent().getStringExtra(EXTRA_TITLE);
+        noApp = getIntent().getBooleanExtra(EXTRA_NO_APP, false);
         if (!DhhFeed.validId(videoId)) {
             finish();
             return;
@@ -108,7 +132,16 @@ public class YoutubeEmbedActivity extends Activity {
         root.setOrientation(LinearLayout.HORIZONTAL);
         root.setBackgroundColor(0xFF000000);
 
-        web = new WebView(this);
+        // Android 9 TVs throw here while the system WebView updates or is disabled (MissingWebViewPackageException,
+        // AndroidRuntimeException): no player page then, the YouTube app instead of a crash.
+        try {
+            web = new WebView(this);
+        } catch (RuntimeException e) {
+            web = null;
+            openInYoutubeApp(this, videoId, title, false);
+            finish();
+            return;
+        }
         WebSettings ws = web.getSettings();
         ws.setJavaScriptEnabled(true);
         ws.setDomStorageEnabled(true);
@@ -126,6 +159,19 @@ public class YoutubeEmbedActivity extends Activity {
                     return true;
                 }
                 return false;
+            }
+
+            @android.annotation.TargetApi(26)
+            @Override
+            public boolean onRenderProcessGone(WebView v, android.webkit.RenderProcessGoneDetail d) {
+                // The WebView renderer crashed or was killed for memory: without this the whole app dies.
+                if (web == v) {
+                    ((ViewGroup) v.getParent()).removeView(v);
+                    v.destroy();
+                    web = null;
+                }
+                fallback(-4);
+                return true;
             }
         });
         web.addJavascriptInterface(new Bridge(), "OTV");
@@ -157,7 +203,12 @@ public class YoutubeEmbedActivity extends Activity {
         root.addView(rail, new LinearLayout.LayoutParams(dp(300), ViewGroup.LayoutParams.MATCH_PARENT));
 
         setContentView(root);
-        web.loadDataWithBaseURL(ORIGIN + "/", html(videoId), "text/html", "utf-8", null);
+        try {
+            web.loadDataWithBaseURL(ORIGIN + "/", html(videoId), "text/html", "utf-8", null);
+        } catch (RuntimeException e) {   // a WebView that dies while loading (renderer gone): hand off, no crash
+            fallback(-3);
+            return;
+        }
         if (rail.getChildCount() > 3) rail.getChildAt(3).requestFocus();
         // No onReady in 20 s (blocked network, no WebView codecs): hand off rather than show a black box.
         handler.postDelayed(() -> {
@@ -191,7 +242,8 @@ public class YoutubeEmbedActivity extends Activity {
         if (fellBack || isFinishing()) return;
         fellBack = true;
         if (code != 0) Toast.makeText(this, "Can't play here (" + code + "): opening the YouTube app", Toast.LENGTH_SHORT).show();
-        openInYoutubeApp(this, videoId, title);
+        if (noApp) WebAppActivity.openUrl(this, title == null ? "YouTube" : title, DhhFeed.watchUrl(videoId));
+        else openInYoutubeApp(this, videoId, title, false);
         finish();
     }
 
