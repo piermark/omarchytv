@@ -401,9 +401,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function fitStage() {
     var st = document.getElementById("stage");
-    var sx = window.innerWidth / 1920;
-    var sy = window.innerHeight / 1080;
-    var s = Math.min(sx, sy);
+    var H = window.OmarchyHooks, sc = window.screen || {};
+    var s = H ? H.stageScale(window.innerWidth, window.innerHeight, window.OMARCHY_FIT_SCREEN === true, sc.width, sc.height, window.devicePixelRatio)
+      : Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
     st.style.transform = "scale(" + s + ")";
   }
   window.addEventListener("resize", fitStage);
@@ -426,6 +426,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   // 12 or 24 hour time for the bar and the screensaver clock (cfg.clockFormat, "auto" follows the language).
   function use24h() {
+    var H = window.OmarchyHooks;
+    if (H) return H.clock24(cfg.clockFormat, getLang(), window.OMARCHY_PREFERS_24H);
     return cfg.clockFormat === "24" || (cfg.clockFormat !== "12" && getLang() !== "en");
   }
   function clockText(d) {
@@ -1809,6 +1811,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function launchApp(app) {
     if (!app) return;
+    if (typeof window.OMARCHY_LAUNCH === "function") {   // another TV browser's own launcher (#66)
+      try { if (window.OMARCHY_LAUNCH(app) !== false) return; } catch (e) { showToast("Could not open " + app.name); return; }
+    }
     if (app.tizenInput) {   // Samsung source switch through the Tizen adapter, see tizen-shim.js
       var fail = function (err) { showToast("Could not switch to " + app.name + ": " + ((err && (err.message || err.name)) || "input switch failed")); };
       if (typeof window.OMARCHY_TIZEN_SWITCH_INPUT !== "function") { showToast(app.name + " is not available on this TV"); return; }
