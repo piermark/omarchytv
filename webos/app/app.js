@@ -681,25 +681,47 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   function tileIcon(app) { return iconCandidates(app).filter(function (p) { return !brokenIcons[p]; })[0]; }
   function appTileClass(app) { return "app-tile" + (app.iconPaths && !tileIcon(app) ? " icon-failed" : ""); }
-  function saveIconData(app, img) {
-    if (/^data:/.test(img.src) || !(app.lgIcon || app.tvApp)) return;
+  function storeIconData(key, img) {   // a small PNG copy of a loaded icon, by app id; false if the TV refuses the pixels
     try {
       var c = document.createElement("canvas"), w = Math.min(160, img.naturalWidth || 0), h = Math.round(w * (img.naturalHeight || 1) / (img.naturalWidth || 1));
-      if (!w || !c.getContext) return;
+      if (!w || !c.getContext) return false;
       c.width = w; c.height = h; c.getContext("2d").drawImage(img, 0, 0, w, h);
-      var url = c.toDataURL("image/png");   // throws on a tainted canvas: then only the in-memory node is kept
-      if (url.length > 60000) return;
-      iconData[iconKey(app)] = url;
-      localStorage.setItem(ICON_CACHE, JSON.stringify(iconData));
-    } catch (e) {}
+      var url = c.toDataURL("image/png");
+      if (url.length > 150000) return false;
+      iconData[key] = url;
+      return true;
+    } catch (e) { return false; }
+  }
+  function saveIconCache() { try { localStorage.setItem(ICON_CACHE, JSON.stringify(iconData)); } catch (e) {} }
+  // LG: copy every launch point's icon while the SSAP session that listed them is still open (afterwards the
+  // /resources/ URLs answer 404 and the next session hands out new ones), then let the session close.
+  function cacheLaunchPointIcons(lps, release) {
+    var left = 0, done = false;
+    function end() { if (done) return; done = true; saveIconCache(); iconNodes = {}; release(); }
+    (lps || []).forEach(function (lp) {
+      var urls = [lp.largeIcon, lp.mediumLargeIcon, lp.icon].filter(function (u) { return /^https?:/.test(u || ""); });
+      if (!lp.id || !urls.length || typeof Image === "undefined") return;
+      left++;
+      var im = new Image(), i = 0;
+      im.onload = function () { if (storeIconData(lp.id, im) || ++i >= urls.length) { if (!--left) end(); } else im.src = urls[i]; };
+      im.onerror = function () { if (++i < urls.length) im.src = urls[i]; else if (!--left) end(); };
+      im.src = urls[0];
+    });
+    if (!left) end(); else setTimeout(end, 8000);
+  }
+  function saveIconData(app, img) {
+    if (/^data:/.test(img.src) || !(app.lgIcon || app.tvApp)) return;
+    if (storeIconData(iconKey(app), img)) saveIconCache();
   }
   function wireTileIcon(tile, app) {
     var src = tileIcon(app), img = src && tile.querySelector("img.tile-icon");
     if (!img) return;
     var kept = iconNodes[src];
     if (kept && kept.complete && kept.naturalWidth) {   // reuse the already-decoded image: no new request
-      if (kept.parentNode) kept.parentNode.removeChild(kept);
-      img.parentNode.replaceChild(kept, img);
+      // the same app can sit in the dock and in a workspace grid: a node already on screen is copied, not moved
+      var node = kept.parentNode && document.body && document.body.contains(kept) ? kept.cloneNode(false) : kept;
+      if (node.parentNode) node.parentNode.removeChild(node);
+      img.parentNode.replaceChild(node, img);
       return;
     }
     img.onload = function () { iconNodes[img.src] = img; iconNodes[src] = img; saveIconData(app, img); };
@@ -1915,14 +1937,15 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   // Newer webOS (e.g. 7.x) only answers on wss://...:3001, older ones on ws://...:3000: try both, in that order.
   var SSAP_URLS = ["ws://127.0.0.1:3000", "wss://127.0.0.1:3001"];
-  function ssapRequest(uri, done, reqPayload, urlIdx) {
+  // hold(payload, release): optional, runs while the session is still open; the socket closes on release().
+  function ssapRequest(uri, done, reqPayload, urlIdx, hold) {
     var ws, finished = false, opened = false, timer;
     urlIdx = urlIdx || 0;
     function finish(ok, info, data) {
       if (finished) return;
       finished = true; clearTimeout(timer);
       try { ws.close(); } catch (e) {}
-      if (!ok && !opened && info === "unavailable" && urlIdx + 1 < SSAP_URLS.length) return ssapRequest(uri, done, reqPayload, urlIdx + 1);
+      if (!ok && !opened && info === "unavailable" && urlIdx + 1 < SSAP_URLS.length) return ssapRequest(uri, done, reqPayload, urlIdx + 1, hold);
       if (done) done(ok, info, data);
     }
     try { ws = new WebSocket(SSAP_URLS[urlIdx]); } catch (e) { return finish(false, "unavailable"); }
@@ -1943,6 +1966,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         try { localStorage.removeItem(SSAP_KEY); } catch (e) {}
         finish(false, "not approved");
       } else if (msg.id === "req") {
+        var ok = msg.type === "response" && !(msg.payload && msg.payload.returnValue === false);
+        if (ok && hold) { clearTimeout(timer); timer = setTimeout(function () { finish(true, msg.type, msg.payload); }, 15000);
+          try { return hold(msg.payload, function () { finish(true, msg.type, msg.payload); }); } catch (e) {} }
         finish(msg.type === "response" && !(msg.payload && msg.payload.returnValue === false), msg.type, msg.payload);
       }
     };
@@ -1983,7 +2009,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
         if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
       }
-    });
+    }, null, 0, function (data, release) { cacheLaunchPointIcons(data && data.launchPoints, release); });
   }
   function setTvApps(on) {
     cfg.tvApps = on; saveCfg();
