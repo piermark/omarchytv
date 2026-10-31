@@ -31,7 +31,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       tile_move: "Move", tile_hide: "Hide", tile_cancel: "Cancel", move_hint: "◀▶▲▼ move · OK save · Back cancel",
       app_hidden: "Hidden. Show it again in All settings › Hidden apps", hidden_apps: "Hidden apps", hidden_none: "No hidden apps",
       hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
-      wx_title: "Weather", wx_auto: "Automatic (from IP)", wx_search: "Search city…", wx_unit: "Temperature unit",
+      wx_title: "Weather", wx_auto: "Automatic (from IP)", wx_auto_fail: "Couldn't find your location, keeping the current city", wx_search: "Search city…", wx_unit: "Temperature unit",
       root_boot: "Open when the TV starts", root_home: "Home button opens OmarchyTV", root_needed: "rooted TV only",
       root_keep: "Keep loaded in the background", root_keep_na: "not on this TV",
       root_missing: "Needs a rooted TV with Homebrew Channel (unrooted: see homewatch/ in the repo)", root_failed: "Could not change it: ",
@@ -59,7 +59,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       tile_move: "Sposta", tile_hide: "Nascondi", tile_cancel: "Annulla", move_hint: "◀▶▲▼ sposta · OK salva · Indietro annulla",
       app_hidden: "Nascosta. Mostrala di nuovo in Tutte le impostazioni › App nascoste", hidden_apps: "App nascoste", hidden_none: "Nessuna app nascosta",
       hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV e Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
-      wx_title: "Meteo", wx_auto: "Automatica (da IP)", wx_search: "Cerca città…", wx_unit: "Unità temperatura",
+      wx_title: "Meteo", wx_auto: "Automatica (da IP)", wx_auto_fail: "Posizione non trovata, resta la città attuale", wx_search: "Cerca città…", wx_unit: "Unità temperatura",
       root_boot: "Apri all'avvio della TV", root_home: "Il tasto Home apre OmarchyTV", root_needed: "solo TV con root",
       root_keep: "Tieni caricata in background", root_keep_na: "non su questa TV",
       root_missing: "Serve una TV con root e Homebrew Channel (senza root: vedi homewatch/ nel repo)", root_failed: "Impossibile cambiarlo: ",
@@ -87,7 +87,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       tile_move: "Verschieben", tile_hide: "Ausblenden", tile_cancel: "Abbrechen", move_hint: "◀▶▲▼ verschieben · OK speichern · Zurück abbrechen",
       app_hidden: "Ausgeblendet. Wieder einblenden unter Alle Einstellungen › Ausgeblendete Apps", hidden_apps: "Ausgeblendete Apps", hidden_none: "Keine ausgeblendeten Apps",
       hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
-      wx_title: "Wetter", wx_auto: "Automatisch (über IP)", wx_search: "Stadt suchen…", wx_unit: "Temperatureinheit",
+      wx_title: "Wetter", wx_auto: "Automatisch (über IP)", wx_auto_fail: "Standort nicht gefunden, die aktuelle Stadt bleibt", wx_search: "Stadt suchen…", wx_unit: "Temperatureinheit",
       root_boot: "Beim Einschalten öffnen", root_home: "Home-Taste öffnet OmarchyTV", root_needed: "nur gerootete TVs",
       root_keep: "Im Hintergrund geladen lassen", root_keep_na: "nicht auf diesem TV",
       root_missing: "Benötigt einen gerooteten TV mit Homebrew Channel (ohne Root: siehe homewatch/ im Repo)", root_failed: "Konnte nicht geändert werden: ",
@@ -997,8 +997,15 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function openWeatherModal() {
     var items = [
       { label: tr("wx_auto"), right: "", act: function () {
-        cfg.weatherCity = "Alessandria"; cfg.weatherLat = 44.913; cfg.weatherLon = 8.615;
-        saveCfg(); fetchWeather(); renderAll(); closeModal();
+        // #5: really locate the TV from its public IP (ipapi.co, then ipwho.is), as on Android; keep the city if both fail
+        closeModal();
+        var G = window.OmarchyGeo;
+        if (!G) return;
+        G.locate(function (u) { return fetch(u).then(function (r) { return r.json(); }); }).then(function (p) {
+          if (!p) { showToast(tr("wx_auto_fail")); return; }
+          cfg.weatherCity = p.city || (p.lat + ", " + p.lon); cfg.weatherLat = p.lat; cfg.weatherLon = p.lon;
+          saveCfg(); fetchWeather(); renderAll();
+        });
       } },
       { label: tr("wx_search"), right: cfg.weatherCity, act: function () {
         openModal(tr("wx_search"), "Type city name (e.g. Milan, Rome, Berlin, New York):", [
