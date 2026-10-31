@@ -11,7 +11,7 @@ It's an addition. Nothing else changes:
 - "open Netflix" / "apri YouTube" still opens the installed app locally first, with no network call.
 - OmarchyTV Ask and its agents (Claude, Codex, Hermes and the others) are untouched. If you pick Ask as the companion agent, Ask still wins.
 
-It works on Android TV, LG webOS and Samsung Tizen (from `2.13.8-testing`).
+It works on Android TV, LG webOS and Samsung Tizen (from 2.13.8).
 
 ## How it works
 

@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [2.13.8] — 2026-10-31 (`versionCode 25`; webOS 2.13.8, Tizen 2.13.8)
+
+Final 2.13.8 release for Android TV, LG webOS and Samsung Tizen. It is the `2.13.8-testing2` build that I tested on my Sony BRAVIA, with only the version number changed.
+
+- **Grok Bot Direct mode, with the PC off.** When no PC is linked or the PC can't be reached, the TV asks your own Grok Bot webhook routine and gets the reply back through ntfy.sh on a random `otv-…` topic. Your webhook URL and key stay on your TV. Guide: [docs/GROKBOT-DIRECT.md](docs/GROKBOT-DIRECT.md).
+- **Fix: the in-app mic.** Direct mode listens with the in-app SpeechRecognizer, so the words you say on Android 9 (Sony) now reach the chat. The old recognizer intent is the fallback.
+- **Fix: video playback.** `play_video` plays the video the routine sends. When it only has a title or query, it becomes a YouTube search (`search_youtube`).
+- **Spoken replies in your language.** The reply's `lang` picks the voice language.
+- **Optional "Grok voice (xAI)"**, off by default: it reads replies with xAI's text-to-speech and falls back to the system voice on any error or after 8 s.
+- **The Blue key launches Grok Bot.** The docs now explain PC mode (Tom Ballard's Grok Bot Desktop Companion on the PC, unchanged) vs Direct mode.
+- **Lights / Ambilight tested on a Sony BRAVIA:** OmarchyTV finds the Philips Hue hub on the LAN, syncs the lights with the theme colour, and turns them off when you leave the launcher. How it works and how to connect it: [docs/LIGHTS.md](docs/LIGHTS.md).
+
+### Testing builds that led to 2.13.8
+
 Testing build `2.13.8-testing2` (`versionCode 24`, Android only): Grok Bot diretto now listens with the in-app SpeechRecognizer (`RECORD_AUDIO`, asked at first use) and shows "🎤 Listening…" with partial results. On Android 9 (Sony), Google's recognizer activity heard the words but never returned them. The old intent is still the fallback. On all three platforms, the reply's optional `lang` picks the voice language. A `play_video` with only a `query`/`title` becomes a YouTube search, `open_app` accepts `app` as an alias for `name`, and the chat shows a line when an action is dropped.
 - Lights: tested on real hardware on Oct 31, 2026 (Sony BRAVIA 4K GB, Android TV 9, 2.13.7-testing). OmarchyTV finds the Philips Hue hub (bridge) on the LAN automatically and the lights sync to the active theme's colour; theme colour while the launcher is on screen, off when leaving OmarchyTV ("Quando esco dal launcher"). No other TV models tested yet.
 - Grok Bot diretto: optional "Voce di Grok (xAI)" (off by default) on Android TV, webOS and Tizen; falls back to the system voice on any error or after 8 s.
