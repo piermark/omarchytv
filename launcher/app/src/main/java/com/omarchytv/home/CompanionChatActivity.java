@@ -51,6 +51,8 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
     private static final int HISTORY = 30;
     private Theme t;
     private Typeface mono;
+    /** True while the chat is on screen: replies then land here, not in the unread count. */
+    static volatile boolean visible;
 
     @Override
     protected void attachBaseContext(Context base) {
@@ -83,8 +85,7 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
         LinearLayout head = new LinearLayout(this);
         head.setGravity(Gravity.CENTER_VERTICAL);
         mark = new GrokbotMark(this);
-        boolean mirrored = cfg.grokbotBotName != null && !cfg.grokbotBotName.isEmpty();
-        mark.set(mirrored ? cfg.grokbotBotShape : "orb", mirrored && cfg.grokbotBotFill != 0 ? cfg.grokbotBotFill : GrokbotMark.GROKBOT_ORANGE);
+        CompanionOverlay.paint(mark, cfg);
         head.addView(mark, new LinearLayout.LayoutParams(dp(40), dp(40)));
         TextView title = text(botName + " · Grok Bot Companion (TV)", 16, t.fgBright, true);
         title.setPadding(dp(12), 0, 0, 0);
@@ -163,6 +164,7 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
 
     private String route() {
         LauncherConfig cfg = LauncherConfig.get(this);
+        if ("ask".equals(cfg.companionAgent)) return "ask";   // Settings → Agent: OmarchyTV's Ask (Claude, Codex, Hermes…)
         return CompanionPlacement.route(cfg.grokbotBotName, OmarchyLink.hasPc(), true);
     }
 
@@ -182,6 +184,7 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
         if ("companion".equals(route())) {
             pendingId = UUID.randomUUID().toString();
             line(botName, "…", false, false);
+            mark.pose("think");
             OmarchyLink.grokbotAsk(pendingId, q, null);
         } else {
             line("OmarchyTV", "Opening Ask with your question…", false);
@@ -217,6 +220,8 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
             if (pendingId == null || !pendingId.equals(d.optString("id"))) return;
             pendingId = null;
             if (log.getChildCount() > 0) log.removeViewAt(log.getChildCount() - 1);   // the "…" line
+            mark.pose("grokbot_answer".equals(type) ? "happy" : "alert");
+            mark.postDelayed(() -> mark.pose("idle"), 2500);
             if ("grokbot_answer".equals(type)) {
                 String text = d.optString("text", "");
                 String mode = d.optString("mode");
@@ -238,11 +243,14 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
     @Override
     protected void onResume() {
         super.onResume();
+        visible = true;
+        markRead(this, LauncherConfig.get(this));
         OmarchyLink.addListener(this);
     }
 
     @Override
     protected void onPause() {
+        visible = false;
         OmarchyLink.removeListener(this);
         super.onPause();
     }
@@ -325,22 +333,66 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
     // ---- per-bot history (the last 30 lines) ----
 
     private SharedPreferences prefs() {
-        return getSharedPreferences("grokbot_companion", MODE_PRIVATE);
+        return prefs(this);
+    }
+
+    private static SharedPreferences prefs(Context c) {
+        return c.getSharedPreferences("grokbot_companion", MODE_PRIVATE);
     }
 
     private String historyKey() {
         return "chat:" + botName;
     }
 
+    /** The bot name the chat files history and unread under. */
+    static String botName(LauncherConfig cfg) {
+        return cfg.grokbotBotName != null && !cfg.grokbotBotName.isEmpty() ? cfg.grokbotBotName : "Grok Bot";
+    }
+
     private void remember(String who, String msg, boolean me) {
+        remember(prefs(), historyKey(), who, msg, me);
+    }
+
+    private static void remember(SharedPreferences p, String key, String who, String msg, boolean me) {
         try {
-            JSONArray a = new JSONArray(prefs().getString(historyKey(), "[]"));
+            JSONArray a = new JSONArray(p.getString(key, "[]"));
             a.put(new JSONObject().put("who", who).put("msg", msg.length() > 4000 ? msg.substring(0, 4000) : msg).put("me", me));
             JSONArray keep = new JSONArray();
             for (int i = Math.max(0, a.length() - HISTORY); i < a.length(); i++) keep.put(a.get(i));
-            prefs().edit().putString(historyKey(), keep.toString()).apply();
+            p.edit().putString(key, keep.toString()).apply();
         } catch (Exception ignored) {
         }
+    }
+
+    // ---- unread (the dot on the floating companion) ----
+
+    /** A reply that arrived while the chat was closed: kept in the bot's history and counted as unread. */
+    static void deliver(Context c, LauncherConfig cfg, String who, String msg) {
+        if (msg == null || msg.isEmpty()) return;
+        String bot = botName(cfg);
+        SharedPreferences p = prefs(c);
+        remember(p, "chat:" + bot, who == null || who.isEmpty() ? bot : who, msg, false);
+        p.edit().putInt("unread:" + bot, Math.min(99, p.getInt("unread:" + bot, 0) + 1)).apply();
+    }
+
+    /** A new desktop bubble line from the PC companion counts once as unread. */
+    static void noteBubble(Context c, LauncherConfig cfg) {
+        String m = cfg.grokbotMessage;
+        if (visible || m == null || m.isEmpty()) return;
+        String bot = botName(cfg);
+        SharedPreferences p = prefs(c);
+        if (m.equals(p.getString("seen:" + bot, ""))) return;
+        p.edit().putString("seen:" + bot, m).putInt("unread:" + bot, Math.min(99, p.getInt("unread:" + bot, 0) + 1)).apply();
+    }
+
+    static int unread(Context c, LauncherConfig cfg) {
+        return prefs(c).getInt("unread:" + botName(cfg), 0);
+    }
+
+    static void markRead(Context c, LauncherConfig cfg) {
+        String bot = botName(cfg);
+        String m = cfg.grokbotMessage == null ? "" : cfg.grokbotMessage;
+        prefs(c).edit().putInt("unread:" + bot, 0).putString("seen:" + bot, m).apply();
     }
 
     private void restoreHistory() {

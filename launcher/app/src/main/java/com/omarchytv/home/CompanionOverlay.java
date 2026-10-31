@@ -14,6 +14,9 @@ import android.widget.TextView;
  * v2.13 floating Grok Bot companion on the launcher: the mirrored bot (or Grok Bot's orange ball) in a corner,
  * blinking now and then and bobbing a few dp. It never takes D-pad focus on its own: long-press Menu arms it
  * (a ring shows), OK opens the chat, any other key disarms it. Touch / mouse can click it directly.
+ * v2.14: Tom Ballard's own avatar (his 14 shapes, palette, eyes, poses through {@link GrokbotAvatar}), with the
+ * webOS/Tizen behaviour: blinks (sometimes twice), glances around, falls asleep after two idle minutes (any key
+ * wakes it), a slow burn-in drift, an unread dot, and Settings for shape, colour, size, badge and animation.
  * Built for @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT); my own code.
  */
 final class CompanionOverlay extends LinearLayout {
@@ -21,15 +24,22 @@ final class CompanionOverlay extends LinearLayout {
     private final TextView name;
     private final Handler h = new Handler(Looper.getMainLooper());
     private final float density;
-    private boolean armed, running;
+    private boolean armed, running, anim = true, badge = true;
     private String label = "Grok Bot";
     private final long t0 = System.currentTimeMillis();
+    private long lastAct = System.currentTimeMillis();
 
     private final Runnable bobber = new Runnable() {
         @Override
         public void run() {
             if (!running) return;
-            mark.setTranslationY(CompanionPlacement.bob(System.currentTimeMillis() - t0) * density);
+            long t = System.currentTimeMillis() - t0;
+            boolean asleep = "sleep".equals(mark.pose());
+            mark.setTranslationY(asleep ? 0f : CompanionPlacement.bob(t) * density);
+            // Slow burn-in drift: a few dp on a 10 minute loop (same curve as webos/app/companion.js drift()).
+            double d = t / 600000.0 * Math.PI * 2;
+            setTranslationX((float) (Math.sin(d) * 14 * density / 2));
+            setTranslationY((float) (Math.sin(d * 2 + 1) * 8 * density / 2));
             h.postDelayed(this, 50);
         }
     };
@@ -37,16 +47,31 @@ final class CompanionOverlay extends LinearLayout {
         @Override
         public void run() {
             if (!running) return;
-            if (Math.random() < 0.3) {   // idle squint instead of a blink
-                mark.narrow(0.5f);
-                h.postDelayed(() -> mark.narrow(1f), 1400);
-            } else {
-                mark.blink(false);
-                h.postDelayed(() -> mark.blink(true), 150);
+            if (CompanionPlacement.asleep(System.currentTimeMillis() - lastAct, anim)) {
+                mark.pose("sleep");
+                mark.gaze(0f, 0f);
+            } else if ("idle".equals(mark.pose())) {
+                double r = Math.random();
+                if (mark.isAvatar() && r < 0.35) {   // a glance, then back to you
+                    mark.gaze((float) (Math.round((Math.random() * 2 - 1) * 10) / 10.0),
+                            (float) (Math.round((Math.random() * 1.4 - 0.8) * 10) / 10.0));
+                    h.postDelayed(() -> mark.gaze(0f, 0f), 1600);
+                } else if (r < 0.55) {   // idle squint instead of a blink
+                    mark.narrow(0.5f);
+                    h.postDelayed(() -> mark.narrow(1f), 1400);
+                } else {
+                    blinkOnce(0);
+                    if (Math.random() < 0.25) blinkOnce(320);   // sometimes twice
+                }
             }
             h.postDelayed(this, CompanionPlacement.blinkDelay(Math.random()));
         }
     };
+
+    private void blinkOnce(long after) {
+        h.postDelayed(() -> mark.blink(false), after);
+        h.postDelayed(() -> mark.blink(true), after + 150);
+    }
 
     CompanionOverlay(Context c) {
         super(c);
@@ -68,12 +93,35 @@ final class CompanionOverlay extends LinearLayout {
         setArmed(false);
     }
 
+    /**
+     * Shape and colour for a mark, as on webOS/Tizen: the Settings choice, else the PC bot, else Tom's blob in
+     * his orange. Shared with the chat header.
+     */
+    static void paint(GrokbotMark m, LauncherConfig cfg) {
+        boolean mirrored = cfg.grokbotBotName != null && !cfg.grokbotBotName.isEmpty();
+        String shape = !cfg.companionShape.isEmpty() ? cfg.companionShape
+                : mirrored && cfg.grokbotBotShape != null && !cfg.grokbotBotShape.isEmpty() ? cfg.grokbotBotShape : "blob";
+        if (!cfg.companionColor.isEmpty()) {
+            m.set(shape, GrokbotAvatar.fill(cfg.companionColor), GrokbotAvatar.eye(cfg.companionColor));
+        } else if (mirrored && cfg.grokbotBotFill != 0) {
+            m.set(shape, cfg.grokbotBotFill, GrokbotAvatar.eyeForFill(cfg.grokbotBotFill));
+        } else {
+            m.set(shape, GrokbotAvatar.fill("orange"), GrokbotAvatar.eye("orange"));
+        }
+    }
+
     void bind(LauncherConfig cfg) {
         Theme t = Theme.cur();
         boolean mirrored = cfg.grokbotBotName != null && !cfg.grokbotBotName.isEmpty();
-        mark.set(mirrored ? cfg.grokbotBotShape : "orb", mirrored && cfg.grokbotBotFill != 0 ? cfg.grokbotBotFill : GrokbotMark.GROKBOT_ORANGE);
+        paint(mark, cfg);
+        anim = cfg.companionAnim;
+        badge = cfg.companionBadge;
+        int px = Math.round(56 * CompanionPlacement.sizeScale(cfg.companionSize));
+        mark.setLayoutParams(new LayoutParams(dp(px), dp(px)));
+        mark.unread(CompanionChatActivity.unread(getContext(), cfg) > 0);
         label = mirrored ? cfg.grokbotBotName : "Grok Bot";
         name.setText(armed ? "OK: chat" : label);
+        name.setVisibility(badge || armed ? VISIBLE : GONE);
         name.setTextColor(t.fgBright);
         name.setShadowLayer(4f, 0f, 1f, 0xCC000000);   // readable on bright wallpapers
         setVisibility(cfg.companionOverlay ? VISIBLE : GONE);
@@ -84,8 +132,19 @@ final class CompanionOverlay extends LinearLayout {
         int vert = dp(CompanionPlacement.safeVertical(cfg.companionCorner, cfg.companionOffsetY, 196, 70));   // clears the dock and the Grok Bot home tile
         lp.setMargins(side, vert, side, vert);
         setLayoutParams(lp);
-        if (cfg.companionOverlay) start();
-        else stop();
+        if (cfg.companionOverlay && anim) {
+            start();
+        } else {
+            stop();
+            mark.pose("idle");
+            mark.gaze(0f, 0f);
+        }
+    }
+
+    /** A key was pressed on the home screen: wake up if asleep. */
+    void poke() {
+        lastAct = System.currentTimeMillis();
+        if ("sleep".equals(mark.pose())) mark.pose("idle");
     }
 
     boolean isArmed() {
@@ -101,11 +160,13 @@ final class CompanionOverlay extends LinearLayout {
         g.setStroke(on ? dp(2) : 0, t.activeBorder);
         setBackground(g);
         name.setText(on ? "OK: chat" : label);
+        name.setVisibility(badge || on ? VISIBLE : GONE);
     }
 
     void start() {
         if (running || getVisibility() != VISIBLE) return;
         running = true;
+        lastAct = System.currentTimeMillis();
         h.post(bobber);
         h.postDelayed(blinker, CompanionPlacement.blinkDelay(Math.random()));
     }
@@ -114,6 +175,10 @@ final class CompanionOverlay extends LinearLayout {
         running = false;
         h.removeCallbacksAndMessages(null);
         mark.setTranslationY(0);
+        mark.blink(true);
+        mark.narrow(1f);
+        setTranslationX(0);
+        setTranslationY(0);
     }
 
     @Override

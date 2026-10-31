@@ -55,6 +55,32 @@ final class CompanionPlacement {
         return 3500 + (long) (Math.max(0, Math.min(1, r)) * 3500);
     }
 
+    static final String[] SIZES = {"small", "medium", "large"};
+
+    static String size(String v) {
+        for (String s : SIZES) if (s.equals(v)) return s;
+        return "medium";
+    }
+
+    static String nextSize(String v) {
+        String c = size(v);
+        for (int i = 0; i < SIZES.length; i++) if (SIZES[i].equals(c)) return SIZES[(i + 1) % SIZES.length];
+        return "medium";
+    }
+
+    /** Same scale as webos/app/companion.js SIZES. */
+    static float sizeScale(String v) {
+        String c = size(v);
+        return "small".equals(c) ? 0.75f : "large".equals(c) ? 1.35f : 1f;
+    }
+
+    /** Two idle minutes without a key and the companion falls asleep (his face.js "sleep" pose). */
+    static final long SLEEP_AFTER_MS = 120000;
+
+    static boolean asleep(long idleMs, boolean anim) {
+        return anim && idleMs > SLEEP_AFTER_MS;
+    }
+
     /** "companion" = to @tcballard's companion on the PC through omarchy-link; "ask" = OmarchyTV's own Ask. */
     static String route(String mirroredBotName, boolean pcConnected, boolean bridgeOn) {
         return bridgeOn && pcConnected && mirroredBotName != null && !mirroredBotName.isEmpty() ? "companion" : "ask";

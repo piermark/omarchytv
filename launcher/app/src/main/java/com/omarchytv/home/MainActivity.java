@@ -870,6 +870,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 break;
             case "grokbot_answer":
             case "grokbot_error":
+                keepCompanionReply(type, data);
                 onGrokbotReply(type, data);
                 break;
             case "ai_sources_ok":
@@ -1889,8 +1890,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     private void onGrokbotCompanion() {
         builtWith = LauncherConfig.get(this);
+        CompanionChatActivity.noteBubble(this, builtWith);
         if (companion != null) companion.bind(builtWith);
         if (home != null) home.bind(builtWith, adapter);
+    }
+
+    /**
+     * v2.14: an answer that lands while the companion chat is closed (asked from the chat, which was left before
+     * the PC replied) goes into that bot's history and lights the unread dot. Answers to the home dialog keep
+     * their own dialog (onGrokbotReply).
+     */
+    private void keepCompanionReply(String type, org.json.JSONObject d) {
+        if (!"grokbot_answer".equals(type) || CompanionChatActivity.visible) return;
+        if (pendingGrokbotId != null && pendingGrokbotId.equals(d.optString("id"))) return;
+        String mode = d.optString("mode");
+        String text = d.optString("text", "");
+        String body = "sent".equals(mode) ? "Sent ✓ The answer appears on the PC companion (its webhook replies there)."
+                : "ipc".equals(mode) || text.isEmpty() ? "" : text;
+        LauncherConfig cfg = LauncherConfig.get(this);
+        CompanionChatActivity.deliver(this, cfg, d.optString("bot", ""), body);
+        if (companion != null) companion.bind(cfg);
     }
 
     private void onGrokbotReply(String type, org.json.JSONObject d) {
@@ -3284,6 +3303,45 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("grok-bot", lOff, j -> companionPlugins(j).put("companionOffsetX", nx).put("companionOffsetY", nx / 2));
             return true;
         });
+        String lShape = "Companion shape (Tom Ballard's 14)";
+        p.add(lShape, gc.companionShape.isEmpty() ? "follow PC bot" : gc.companionShape, r -> {
+            // "" (follow the PC bot) → blob → cloud → … → pebble → "".
+            String n = gc.companionShape.isEmpty() ? GrokbotAvatar.NAMES_FIRST
+                    : GrokbotAvatar.index(gc.companionShape) == GrokbotAvatar.COUNT - 1 ? "" : GrokbotAvatar.next(gc.companionShape);
+            applyLive("grok-bot", lShape, j -> companionPlugins(j).put("companionShape", n));
+            return true;
+        });
+        String lColor = "Companion colour";
+        p.add(lColor, gc.companionColor.isEmpty() ? "follow PC bot" : gc.companionColor, r -> {
+            int i = GrokbotAvatar.colorIndex(gc.companionColor);
+            String n = i + 1 < GrokbotAvatar.COLOR_NAMES.length ? GrokbotAvatar.COLOR_NAMES[i + 1] : "";
+            applyLive("grok-bot", lColor, j -> companionPlugins(j).put("companionColor", n));
+            return true;
+        });
+        String lSize = "Companion size";
+        p.add(lSize, gc.companionSize, r -> {
+            String n = CompanionPlacement.nextSize(gc.companionSize);
+            applyLive("grok-bot", lSize, j -> companionPlugins(j).put("companionSize", n));
+            return true;
+        });
+        String lBadge = "Companion name badge";
+        p.add(lBadge, str(gc.companionBadge ? R.string.on : R.string.off), r -> {
+            boolean n = !gc.companionBadge;
+            applyLive("grok-bot", lBadge, j -> companionPlugins(j).put("companionBadge", n));
+            return true;
+        });
+        String lAnim = "Companion animation (bob, blink, look around, sleep, drift)";
+        p.add(lAnim, str(gc.companionAnim ? R.string.on : R.string.off), r -> {
+            boolean n = !gc.companionAnim;
+            applyLive("grok-bot", lAnim, j -> companionPlugins(j).put("companionAnim", n));
+            return true;
+        });
+        String lAgent = "Companion agent";
+        p.add(lAgent, "ask".equals(gc.companionAgent) ? "OmarchyTV Ask" : "Grok Bot (PC companion)", r -> {
+            String n = "ask".equals(gc.companionAgent) ? "grokbot" : "ask";
+            applyLive("grok-bot", lAgent, j -> companionPlugins(j).put("companionAgent", n));
+            return true;
+        });
         p.hint("Long-press Menu on the remote to reach the companion, then OK to chat.");
         p.add("Grok Bot (Omarchy TUI)", "tui ›", r -> {
             LauncherConfig.update(this, j -> LauncherConfig.ensureWebApp(j, grokBot, true));
@@ -3535,6 +3593,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return true;
         }
         resetIdle();
+        if (companion != null) companion.poke();   // any key wakes a sleeping companion
         if (walker == null && movingPos < 0 && (menu == null || !menu.isShowing()) && companionKey(e)) return true;
         if (walker != null) {
             if (walker.onKey(e)) return true;

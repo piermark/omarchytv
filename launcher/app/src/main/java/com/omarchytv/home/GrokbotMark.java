@@ -19,6 +19,9 @@ import android.view.View;
  * v2.13: "orb" is Grok Bot's own ball mark, redrawn from Tom Ballard's MIT asset
  * (grokbot-desktop.svg, (c) 2026 Tom Ballard): a round body in Grok Bot orange #E06512 with a soft top
  * highlight and two capsule eyes that blink and, when idle, narrow for a moment.
+ * v2.14: any of Tom Ballard's shape names (his 14 and their aliases) draws his own avatar through
+ * {@link GrokbotAvatar}: his outline, his eyes, his look (gaze) and poses, the same as webOS/Tizen.
+ * "orb" and names he doesn't have still draw the contours above.
  */
 final class GrokbotMark extends View {
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -31,6 +34,13 @@ final class GrokbotMark extends View {
     private String shape = "orb";
     private boolean open = true;
     private float lid = 1f;   // 1 open, ~0.5 idle squint
+    private int avatar = -1;   // index in Tom's shapes, -1 = the primitives below
+    private float gx, gy;      // gaze, -1..1 each (+y down)
+    private String pose = "idle";
+    private final RectF eyeBox = new RectF();
+    private final Paint stemPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final Paint dot = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private boolean unread;
 
     GrokbotMark(Context c) {
         super(c);
@@ -43,10 +53,55 @@ final class GrokbotMark extends View {
 
     void set(String shapeName, int color) {
         shape = shapeName == null || shapeName.isEmpty() ? "orb" : shapeName;
+        avatar = "orb".equals(shape) ? -1 : GrokbotAvatar.index(shape);
         fill.setColor(color);
         // Dark cut-out eyes, light ones on a dark body (same readability rule as on the desktop).
-        eye.setColor(luma(color) < 0.25f ? 0xFFF4F4F5 : 0xFF141416);
+        eye.setColor(avatar >= 0 ? GrokbotAvatar.eyeForFill(color) : luma(color) < 0.25f ? 0xFFF4F4F5 : 0xFF141416);
         invalidate();
+    }
+
+    /** Tom's avatar with an explicit eye colour (his palette: black draws white with dark eyes). */
+    void set(String shapeName, int color, int eyeColor) {
+        set(shapeName, color);
+        eye.setColor(eyeColor);
+        invalidate();
+    }
+
+    /** True when this mark draws one of Tom's 14 shapes. */
+    boolean isAvatar() {
+        return avatar >= 0;
+    }
+
+    /** Where the face looks: -1..1 each, 0, 0 = at you. Only Tom's shapes turn. */
+    void gaze(float x, float y) {
+        x = Math.max(-1f, Math.min(1f, x));
+        y = Math.max(-1f, Math.min(1f, y));
+        if (x != gx || y != gy) {
+            gx = x;
+            gy = y;
+            invalidate();
+        }
+    }
+
+    /** One of his face.js poses: idle, sleep, think, work, alert, happy, celebrate. */
+    void pose(String name) {
+        String n = name == null ? "idle" : name;
+        if (!n.equals(pose)) {
+            pose = n;
+            invalidate();
+        }
+    }
+
+    String pose() {
+        return pose;
+    }
+
+    /** The unread dot (red, like webOS/Tizen's .gb-unread) at the top right. */
+    void unread(boolean on) {
+        if (on != unread) {
+            unread = on;
+            invalidate();
+        }
     }
 
     void blink(boolean on) {
@@ -93,6 +148,11 @@ final class GrokbotMark extends View {
 
     @Override
     protected void onDraw(Canvas c) {
+        if (avatar >= 0) {
+            drawAvatar(c);
+            drawDot(c);
+            return;
+        }
         float w = getWidth(), h = getHeight(), s = Math.min(w, h) * 0.46f, cx = w / 2f, cy = h / 2f;
         path.reset();
         String f = family(shape);
@@ -179,5 +239,60 @@ final class GrokbotMark extends View {
         c.drawRoundRect(r, ew / 2, ew / 2, eye);
         r.set(cx + gap - ew / 2, ey - eh / 2, cx + gap + ew / 2, ey + eh / 2);
         c.drawRoundRect(r, ew / 2, ew / 2, eye);
+        drawDot(c);
+    }
+
+    private void drawDot(Canvas c) {
+        if (!unread) return;
+        float d = Math.min(getWidth(), getHeight()) * 0.11f, ring = d + Math.max(1f, d * 0.3f);
+        float x = getWidth() - ring - 1f, y = ring + 1f;
+        dot.setColor(0xFF141416);
+        c.drawCircle(x, y, ring, dot);
+        dot.setColor(0xFFFF263C);
+        c.drawCircle(x, y, d, dot);
+    }
+
+    /** Tom's avatar, drawn like webos/app/companion.js avatarSvg() (his shapes.js svgPath + face.js eyes). */
+    private void drawAvatar(Canvas c) {
+        float w = getWidth(), h = getHeight(), rad = Math.min(w, h) * 0.44f, cx = w / 2f, cy = h / 2f;
+        float[] pts = GrokbotAvatar.points(avatar);
+        float[] eyes = GrokbotAvatar.eyes(avatar);
+        if (gx != 0f || gy != 0f) {
+            GrokbotAvatar.Look l = GrokbotAvatar.look(avatar, gx, gy);
+            pts = GrokbotAvatar.rotatePoints(pts, l.turn, l.cx, l.cy);
+            eyes = l.eyes;
+        }
+        smooth(pts, rad, cx, cy);
+        c.drawPath(path, fill);
+        if (GrokbotAvatar.hasStem(avatar)) {
+            smooth(GrokbotAvatar.stem(), rad, cx, cy);
+            stemPaint.setColor(GrokbotAvatar.argb(GrokbotAvatarData.STEM_COLOR));
+            c.drawPath(path, stemPaint);
+        }
+        float[] p = GrokbotAvatar.pose(pose);   // tilt, height, open
+        float open = Math.min(p[2], this.open ? 1f : 0f);
+        for (int e = 0; e + 4 < eyes.length; e += 5) {
+            float[] b = GrokbotAvatar.eyeBox(eyes[e + 2], eyes[e + 3], rad, open, p[1] * lid);
+            float ex = cx + eyes[e] * rad, ey = cy + eyes[e + 1] * rad;
+            c.save();
+            c.rotate(GrokbotAvatar.rotation(eyes[e + 4], p[0]), ex, ey);
+            eyeBox.set(ex - b[0] / 2f, ey - b[1] / 2f, ex + b[0] / 2f, ey + b[1] / 2f);
+            c.drawRoundRect(eyeBox, b[2], b[2], eye);
+            c.restore();
+        }
+    }
+
+    /** His svgPath(): each point a quadratic control, the curve through the midpoints, closed. */
+    private void smooth(float[] pts, float rad, float cx, float cy) {
+        path.reset();
+        int n = pts.length / 2;
+        if (n < 3) return;
+        path.moveTo(cx + (pts[(n - 1) * 2] + pts[0]) / 2f * rad, cy + (pts[(n - 1) * 2 + 1] + pts[1]) / 2f * rad);
+        for (int i = 0; i < n; i++) {
+            int j = (i + 1) % n;
+            path.quadTo(cx + pts[i * 2] * rad, cy + pts[i * 2 + 1] * rad,
+                    cx + (pts[i * 2] + pts[j * 2]) / 2f * rad, cy + (pts[i * 2 + 1] + pts[j * 2 + 1]) / 2f * rad);
+        }
+        path.close();
     }
 }

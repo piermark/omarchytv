@@ -413,6 +413,11 @@ final class LauncherConfig {
     final boolean companionOverlay;
     final String companionCorner;
     final int companionOffsetX, companionOffsetY;
+    /** v2.14 companion look, as on webOS/Tizen: shape / colour ("" follows the PC bot; else one of Tom Ballard's
+     *  14 shapes / 11 colours), size (small, medium, large), name badge, animation (bob, blink, look around,
+     *  sleep), and agent ("grokbot" = the PC companion when linked, "ask" = OmarchyTV's Ask). */
+    final String companionShape, companionColor, companionSize, companionAgent;
+    final boolean companionBadge, companionAnim;
     static final String[] ANIMATED_THEMES = {"last-horizon", "cumulus"};
     static final String[][] ANIMATED_INTROS = {
             {"last-horizon", "0", "wallpapers/last-horizon/01-eyes-wide.webp"},
@@ -669,6 +674,15 @@ final class LauncherConfig {
         companionCorner = CompanionPlacement.corner(plObj != null ? plObj.optString("companionCorner", "bottom-right") : "bottom-right");
         companionOffsetX = CompanionPlacement.offset(plObj != null ? plObj.optInt("companionOffsetX", 0) : 0);
         companionOffsetY = CompanionPlacement.offset(plObj != null ? plObj.optInt("companionOffsetY", 0) : 0);
+        String cShape = plObj != null ? plObj.optString("companionShape", "").trim() : "";
+        companionShape = GrokbotAvatar.known(cShape) ? GrokbotAvatar.resolve(cShape) : "";
+        String cColor = plObj != null ? plObj.optString("companionColor", "").trim() : "";
+        int cColorIdx = GrokbotAvatar.colorIndex(cColor);
+        companionColor = cColorIdx >= 0 ? GrokbotAvatar.COLOR_NAMES[cColorIdx] : "";
+        companionSize = CompanionPlacement.size(plObj != null ? plObj.optString("companionSize", "medium") : "medium");
+        companionBadge = plObj == null || plObj.optBoolean("companionBadge", true);
+        companionAnim = plObj == null || plObj.optBoolean("companionAnim", true);
+        companionAgent = plObj != null && "ask".equals(plObj.optString("companionAgent", "grokbot")) ? "ask" : "grokbot";
         antiBurnIn = j == null || j.optBoolean("anti_burn_in", j.optBoolean("antiBurnIn", true));
         String ambMode = j != null ? j.optString("ambilight_mode", j.optString("ambilightMode", "off")).trim() : "off";
         if (!"theme".equals(ambMode) && !"hybrid".equals(ambMode) && !"video".equals(ambMode) && !"cinema".equals(ambMode)) ambMode = "off";
