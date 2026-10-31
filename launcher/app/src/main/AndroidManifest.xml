@@ -203,6 +203,16 @@
             android:windowSoftInputMode="adjustResize|stateHidden"
             android:theme="@style/Theme.TvHome" />
 
+        <!-- v2.13.8: "Grok Bot diretto (senza PC)" chat: the user's own webhook routine, replies via ntfy.sh. Not exported. -->
+        <activity
+            android:name=".GrokbotDirectActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:windowSoftInputMode="adjustResize|stateHidden"
+            android:theme="@style/Theme.TvHome" />
+
         <!-- v2.13: "Play inside Cinemarchy" (official YouTube IFrame embed, off by default). Not exported. -->
         <activity
             android:name=".YoutubeEmbedActivity"

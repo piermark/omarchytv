@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+Testing build `2.13.8-testing` (`versionCode 23`; webOS 2.13.8, Tizen 2.13.8).
+
+- **Grok Bot diretto (senza PC)** on Android TV, LG webOS and Samsung Tizen. With no PC companion linked, the TV asks your own Grok Bot webhook routine and gets the reply back through ntfy.sh on a random `otv-…` topic. It shows and speaks the reply (a "Leggi risposte ad alta voce" toggle, on by default) and runs one action: `play_video`, `open_app` or `search_youtube`. Local app commands still run first. The PC companion, Ask and its agents are unchanged. The webhook URL and key stay on the TV, and the key is masked. Guide: [docs/GROKBOT-DIRECT.md](docs/GROKBOT-DIRECT.md). Privacy: anyone who knows the topic can read the replies on ntfy.sh.
+
 Testing build `2.13.7-testing` (`versionCode 22`; webOS 2.13.7, Tizen 2.13.7). It is the first compiled build of the 2.14 work below. All 110 JUnit tests and 72 node tests pass.
 
 - **Grok Bot is now OmarchyTV's default assistant, built on Tom Ballard's Grok Bot Desktop Companion v0.1.0.** Thank you, Tom ([@tcballard](https://x.com/tcballard)), for the companion and for the MIT licence that lets me bring it to the TV. I built against his tag `v0.1.0` (commit `a2efb00`).

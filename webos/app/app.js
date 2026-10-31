@@ -1330,12 +1330,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function openAboutModal() {
     var sub = "OmarchyTV " + APP_VERSION + " for LG webOS and Samsung Tizen (community testing — NOT a beta)\n" +
-      "Based on OmarchyTV v2.13.7-testing for Android TV by Marco Porro (MIT License).\n" +
+      "Based on OmarchyTV v2.13.8-testing for Android TV by Marco Porro (MIT License).\n" +
       "Includes " + Object.keys(DATA.themes).length + " Omarchy themes, " + [].concat.apply([], Object.keys(DATA.wallpapers).map(function (t) { return DATA.wallpapers[t]; })).length +
       " wallpapers (MIT, and 'Liftoff Sunset' by Tom Ballard), and 37 tte.js effects.";
     openModal(tr("sys_about"), sub, [
       { label: "Version", right: APP_VERSION, act: closeModal },
-      { label: "Android base release", right: "2.13.7-testing", act: closeModal },
+      { label: "Android base release", right: "2.13.8-testing", act: closeModal },
       { label: "Wallpaper credit (tokyo-night)", right: "Liftoff Sunset — Tom Ballard", act: closeModal },
       { label: "Close", right: "ESC / Back", act: closeModal }
     ]);
@@ -2147,6 +2147,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       }
     }
     var base = pcBase();
+    // v2.13.8 "Grok Bot diretto": no PC companion paired, a webhook routine set → the TV asks Grok Bot itself.
+    if (gbAgent() === "grokbot" && (!base || !cfg.grokbotCode) && GBD && GBD.enabled(GBD.load(store))) { askDirect(q, reopen); return; }
     if (gbAgent() !== "grokbot" || !base || !cfg.grokbotCode || typeof fetch !== "function") {
       if (gbAgent() === "grokbot") showToast(!base ? "Pair the PC (Workspace 4) to ask Grok Bot · opening grok.com" : "Enter the PC ask code in the companion settings · opening grok.com");
       if (GBC) GBC.push(store, key, "user", q);
@@ -2180,10 +2182,54 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         if (open) openCompanionChat(false);
       }).catch(function () {
         gbFace.busy = false;
+        if (GBD && GBD.enabled(GBD.load(store))) { askDirect(q, false, true); return; }   // PC off: Grok Bot diretto
         var m = "The PC did not answer · is omarchy-tv webos serve running?";
         if (GBC) GBC.push(store, key, "bot", m, { mode: "error" });
         gbSay(m, 8000);
         if (state.modalOpen && state.gbChat) openCompanionChat(false);
+      });
+  }
+  // ---- v2.13.8 Grok Bot diretto (senza PC): grokdirect.js, replies through ntfy.sh on a random topic ----
+  var GBD = window.OmarchyGrokDirect || null;
+  function gbdSpeak(text) {
+    var st = GBD.load(window.localStorage);
+    if (!st.speak || !text || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
+    try {
+      var u = new window.SpeechSynthesisUtterance(text);
+      u.lang = cfg.lang === "it" ? "it-IT" : cfg.lang === "de" ? "de-DE" : "en-US";
+      window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+  function gbdRun(a) {
+    if (!a) return;
+    if (a.type === "play_video") {
+      if (a.youtube && a.videoId) { if (cfg.embedPlayer) openEmbed(a.videoId); else { closeModal(); openYoutubeApp(a.videoId); } }
+      else { closeModal(); openUrlOnTv(a.url); }
+    } else if (a.type === "open_app") {
+      var app = GBC && GBC.matchApp(a.name, visibleApps());
+      if (app) { closeModal(); launchApp(app); } else showToast("No app matches “" + a.name + "”");
+    } else if (a.type === "search_youtube") { closeModal(); openUrlOnTv(GBD.youtubeSearchUrl(a.query)); }
+  }
+  function askDirect(q, reopen, pushed) {
+    var store = window.localStorage, key = gbBotKey(), st = GBD.load(store);
+    if (GBC && !pushed) GBC.push(store, key, "user", q);
+    gbFace.busy = true; gbSay("Thinking…", 200000);
+    if (reopen) openCompanionChat(false);
+    var apps = visibleApps().map(function (a) { return a.name; });
+    GBD.ask(st, q, cfg.lang === "it" ? "it" : cfg.lang === "de" ? "de" : "en", apps,
+      window.OMARCHY_PLATFORM === "tizen" ? "OmarchyTV on Samsung Tizen" : "OmarchyTV on LG webOS", function (err, rep) {
+        gbFace.busy = false;
+        var open = state.modalOpen && state.gbChat;
+        if (err) {
+          if (GBC) GBC.push(store, key, "bot", err, { mode: "error" });
+          gbSay(err, 8000);
+        } else {
+          if (GBC && rep.text) GBC.push(store, key, "bot", rep.text, { unread: !open });
+          gbFace.pose = "happy"; setTimeout(function () { if (gbFace.pose === "happy") gbFace.pose = "idle"; renderPluginsUI(); }, 2500);
+          if (rep.text) { gbSay(rep.text, 30000); gbdSpeak(rep.text); }
+        }
+        if (open && !(rep && rep.action)) openCompanionChat(false);
+        if (rep && rep.action) gbdRun(rep.action);
       });
   }
   function playLink(l) {
@@ -2294,6 +2340,26 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } },
       { label: "Clear all companion chats", right: "", act: function () { if (GBC) GBC.clear(window.localStorage); gbFace.bubble = ""; renderPluginsUI(); showToast("Chats cleared"); } }
     ];
+    if (GBD) {   // v2.13.8 Grok Bot diretto (senza PC): URL and key stay in this TV's own storage, the key never shown
+      var gst = GBD.load(window.localStorage), gsave = function (idx) { GBD.save(window.localStorage, gst); openGrokbotCompanionModal(idx); };
+      items.push(
+        { label: "Grok Bot diretto (senza PC)", right: gst.enabled ? "on" : "off", act: function () { gst.enabled = !gst.enabled; gsave(12); } },
+        { label: "Save the webhook URL typed above", right: gst.url ? "set ✓" : "not set", act: function () {
+          var u = code.trim();
+          if (u && !GBD.validUrl(u)) { showToast("The webhook URL must start with https://"); return; }
+          gst.url = u; showToast(u ? "Webhook URL saved" : "Webhook URL removed"); gsave(13);
+        } },
+        { label: "Save the Sender key typed above", right: GBD.mask(gst.key), act: function () {
+          var k = code.trim();
+          if (k && !GBD.validKey(k)) { showToast("That does not look like a Sender key"); return; }
+          gst.key = k; showToast(k ? "Key saved on this TV" : "Key removed"); gsave(14);
+        } },
+        { label: "Leggi risposte ad alta voce", right: gst.speak ? "on" : "off", act: function () { gst.speak = !gst.speak; gsave(15); } },
+        { label: "Test Grok Bot diretto", right: GBD.enabled(gst) ? "OK ›" : "set URL and key first", act: function () {
+          if (!GBD.enabled(gst)) { showToast("Turn it on and save the URL and key first"); return; }
+          askDirect("Hi! Reply with one short sentence.", true);
+        } });
+    }
     openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT) · Blue: chat · hold Blue: voice · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });

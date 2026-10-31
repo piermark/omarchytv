@@ -1982,6 +1982,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     private void openCompanionChat(boolean voice) {
         if (companion != null) companion.setArmed(false);
+        // v2.13.8 "Grok Bot diretto": with no PC companion linked and a webhook routine set, the TV asks Grok Bot
+        // itself (GrokbotDirectActivity). The PC companion chat is unchanged and still wins when the PC is linked.
+        if (!"ask".equals(LauncherConfig.get(this).companionAgent) && !OmarchyLink.hasPc() && GrokbotDirectActivity.enabled(this)) {
+            open(new Intent(this, GrokbotDirectActivity.class).putExtra("voice", voice));
+            return;
+        }
         open(new Intent(this, CompanionChatActivity.class).putExtra("voice", voice));
     }
 
@@ -2092,6 +2098,29 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                     String v = e.getText().toString().trim().replaceAll("[^a-zA-Z0-9_=+.-]", "");
                     if (!v.isEmpty() && v.length() <= 15) sp.edit().putString("wg_tunnel", v).apply();
                     showMenu("wireguard", null);
+                }).setNegativeButton(android.R.string.cancel, null).show();
+    }
+
+    /** Webhook URL or Sender key for Grok Bot diretto: typed on the TV, kept in its own prefs, the key never shown back. */
+    private void directDialog(boolean key) {
+        android.content.SharedPreferences sp = GrokbotDirectActivity.prefs(this);
+        android.widget.EditText e = new android.widget.EditText(this);
+        e.setSingleLine(true);
+        if (key) {
+            e.setHint("crsr_…");
+            e.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        } else {
+            e.setText(sp.getString("url", ""));
+            e.setHint("https://…");
+            e.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        }
+        new android.app.AlertDialog.Builder(this).setTitle(key ? "Grok Bot routine Sender key" : "Grok Bot routine webhook URL").setView(e)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String v = e.getText().toString().trim();
+                    if (v.isEmpty()) sp.edit().remove(key ? "key" : "url").apply();
+                    else if (key ? GrokbotDirect.validKey(v) : GrokbotDirect.validUrl(v)) sp.edit().putString(key ? "key" : "url", v).apply();
+                    else Toast.makeText(this, key ? "That does not look like a Sender key" : "The webhook URL must start with https://", Toast.LENGTH_SHORT).show();
+                    showMenu("grok-bot", null);
                 }).setNegativeButton(android.R.string.cancel, null).show();
     }
 
@@ -3380,6 +3409,30 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             String n = "ask".equals(gc.companionAgent) ? "grokbot" : "ask";
             applyLive("grok-bot", lAgent, j -> companionPlugins(j).put("companionAgent", n));
             return true;
+        });
+        // v2.13.8 "Grok Bot diretto (senza PC)": used when no PC companion is linked. URL and key stay on this TV only.
+        android.content.SharedPreferences gd = GrokbotDirectActivity.prefs(this);
+        p.add("Grok Bot diretto (senza PC)", gd.getBoolean("enabled", false) ? str(R.string.on) : str(R.string.off), r -> {
+            gd.edit().putBoolean("enabled", !gd.getBoolean("enabled", false)).apply();
+            handler.post(() -> showMenu("grok-bot", "Grok Bot diretto (senza PC)"));
+            return false;
+        });
+        p.add("  Webhook URL", gd.getString("url", "").isEmpty() ? "not set ›" : "set ✓ ›", r -> {
+            directDialog(false);
+            return false;
+        });
+        p.add("  Sender key", GrokbotDirect.mask(gd.getString("key", "")) + " ›", r -> {
+            directDialog(true);
+            return false;
+        });
+        p.add("  Leggi risposte ad alta voce", gd.getBoolean("speak", true) ? str(R.string.on) : str(R.string.off), r -> {
+            gd.edit().putBoolean("speak", !gd.getBoolean("speak", true)).apply();
+            handler.post(() -> showMenu("grok-bot", "  Leggi risposte ad alta voce"));
+            return false;
+        });
+        p.add("  Test Grok Bot diretto", "›", r -> {
+            open(new Intent(this, GrokbotDirectActivity.class).putExtra("q", "Hi! Reply with one short sentence."));
+            return false;
         });
         p.hint("Blue key on the remote opens the companion chat (or long-press Menu, then OK).");
         p.add("Grok Bot (Omarchy TUI)", "tui ›", r -> {

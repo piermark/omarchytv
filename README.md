@@ -241,6 +241,8 @@ Every theme bundled in OmarchyTV `2.13.0-beta` is **100% MIT-licensed** and ship
 2. Tap **Scan LAN** to auto-discover your TV on `:5555` / `:47800`.
 3. Tap **1-Tap Install / Update OmarchyTV** — the phone downloads the release APK, verifies the SHA-256 digest, performs a 2048-bit RSA Wireless ADB handshake, installs the APK via `pm install -r`, and pins OmarchyTV as your Home screen.
 
+Grok Bot without a PC: **[docs/GROKBOT-DIRECT.md](docs/GROKBOT-DIRECT.md)** (your own webhook routine, replies through ntfy.sh on a random topic).
+
 Full step-by-step guide: **[launcher/docs/INSTALL.md](launcher/docs/INSTALL.md)** · Safe debloat: **[docs/DEBLOAT.md](docs/DEBLOAT.md)** · AI-assisted setup: **[docs/AI-ASSISTED-SETUP.md](docs/AI-ASSISTED-SETUP.md)**.
 
 ---
