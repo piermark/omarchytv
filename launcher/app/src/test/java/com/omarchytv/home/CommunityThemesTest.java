@@ -15,7 +15,7 @@ public class CommunityThemesTest {
     private static final String[] ADDED = {"neon-glow", "norrsken", "green-mosaic", "blue-mosaic"};
 
     @Test
-    public void everyAddedThemeHasAPaletteAndWallpapersOnBothPlatforms() throws Exception {
+    public void everyAddedThemeHasAPaletteAndTvSizedWallpapers() throws Exception {
         JSONObject themes = new JSONObject(new String(Files.readAllBytes(
                 Paths.get("src/main/assets/omarchy_themes.json")), StandardCharsets.UTF_8)).getJSONObject("themes");
         for (String t : ADDED) {

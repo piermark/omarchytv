@@ -853,10 +853,12 @@ public final class CinemarchyActivity extends Activity {
                     }
                 }
             }
-            if (e.url != null && !e.url.isEmpty()) {
+            // A direct HLS/DASH/media URL plays natively; the WebApp is only for web pages.
+            if (e.url != null && !e.url.isEmpty() && !StreamUrls.isDirectStream(e.url)) {
                 WebAppActivity.openUrl(this, e.title, e.url);
+                return;
             }
-            return;
+            if (e.url == null || e.url.isEmpty()) return;
         }
         if (e.url != null && !e.url.isEmpty()) {
             Intent i = new Intent(this, CastPlayerActivity.class)

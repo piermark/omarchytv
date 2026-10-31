@@ -65,6 +65,16 @@ public class WebAppActivity extends Activity {
         open(c, new LauncherConfig.WebApp(LauncherConfig.slug(name), name, url, "", "desktop"));
     }
 
+    private void fallBackToBrowser(String url) {
+        Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show();
+        try {
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
+        } catch (Throwable ignored) {
+            // No browser on this TV either: the toast is all we can do.
+        }
+        finish();
+    }
+
     @Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(LauncherConfig.wrap(base));
@@ -85,7 +95,14 @@ public class WebAppActivity extends Activity {
         float d = getResources().getDisplayMetrics().density;
         FrameLayout root = new FrameLayout(this);
         root.setBackgroundColor(Theme.m(0xFF1A1B26));
-        web = new WebView(this);
+        if (Build.VERSION.SDK_INT >= 28) OmarchyApp.useOwnWebViewDir(getPackageName());   // no-op when already set
+        try {
+            web = new WebView(this);
+        } catch (Throwable t) {
+            // No usable WebView (missing/updating package, data dir locked): open the page in a browser instead.
+            fallBackToBrowser(url);
+            return;
+        }
         root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
 
         pointer = new View(this);

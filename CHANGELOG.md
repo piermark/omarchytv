@@ -25,6 +25,11 @@
 - Top bar: the SpaceX TV pill is centred in the same 44 px row as the Cinemarchy and Wi-Fi icons, and ◀▶ reach it.
 - webOS/Tizen: the YouTube embed is on by default, and without a YouTube app the video opens in the embed, then the browser, instead of a toast.
 
+### Fixed (web apps on Android 9+)
+- SpaceX TV "Launches & Streams", Euronews Live and the other web apps no longer crash on Sony BRAVIA (Android 9). The `:web` process now has its own WebView data directory (`WebView.setDataDirectorySuffix`, set in the new `OmarchyApp`), so it no longer clashes with the WebView used by the YouTube embed (crbug 558377). Web app cookies and logins persist in that directory, but logins saved before this change have to be entered again once.
+- If a WebView still can't start, the web app shows a toast and opens the page in the browser instead of crashing.
+- Cinemarchy entries that point to a direct stream (`.m3u8` HLS or plain media) play in the native player. The WebApp is kept for web pages.
+
 ### Added (themes)
 - Four MIT themes by Erik Johansson (@erikrjohansson): Neon Glow (7 neon wordmark wallpapers), Norrsken, Green Mosaic and Blue Mosaic, on Android, webOS and Tizen. That makes 32 bundled themes. The wallpapers are WebP at 1920x1080, which adds about 0.4 MB per package. I reviewed the other community themes, but their artwork is not clearly MIT (SpaceX/Audi photos, Unsplash, uncredited art, GPL), so I left them out. They are listed in THIRD-PARTY.md.
 
