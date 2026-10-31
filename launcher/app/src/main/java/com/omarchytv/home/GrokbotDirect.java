@@ -47,6 +47,11 @@ final class GrokbotDirect {
         return b.toString();
     }
 
+    /** A plain BCP-47 tag such as "en", "it", "pt-BR", "zh-Hant-TW". */
+    static boolean validLang(String l) {
+        return l != null && l.length() <= 35 && l.matches("[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*");
+    }
+
     static boolean validUrl(String u) {
         return u != null && u.matches("https://[^\\s/?#]+(/[^\\s]*)?") && u.length() <= 512;
     }
@@ -96,10 +101,16 @@ final class GrokbotDirect {
     static final class Reply {
         final String text;
         final Action action;
+        /** True when the routine sent an action the TV could not use (shown as a short line in the chat). */
+        final boolean dropped;
+        /** The reply's BCP-47 language for speech ("" = the launcher language). */
+        final String lang;
 
-        Reply(String text, Action action) {
+        Reply(String text, Action action, boolean dropped, String lang) {
             this.text = text;
             this.action = action;
+            this.dropped = dropped;
+            this.lang = lang;
         }
     }
 
@@ -143,10 +154,19 @@ final class GrokbotDirect {
             JSONObject m = new JSONObject(message);
             if (!id.equals(m.optString("id"))) return null;
             String text = clean(m.optString("text", ""), 2000);
-            return new Reply(text, action(m.opt("action")));
+            Object raw = m.opt("action");
+            Action a = action(raw);
+            String lang = m.optString("lang", "").trim();
+            return new Reply(text, a, a == null && dropped(raw), validLang(lang) ? lang : "");
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /** An action that was sent but is not usable: anything but missing, null, "none" or {"type":"none"}. */
+    static boolean dropped(Object raw) {
+        if (raw == null || raw == JSONObject.NULL || "none".equals(raw) || "".equals(raw)) return false;
+        return !(raw instanceof JSONObject) || !"none".equals(((JSONObject) raw).optString("type", "none"));
     }
 
     static Action action(Object o) {
@@ -156,11 +176,15 @@ final class GrokbotDirect {
         switch (type) {
             case "play_video": {
                 String u = a.optString("url", "").trim();
-                if (!u.matches("https?://\\S+") || u.length() > 2000) return null;
+                if (!u.matches("https?://\\S+") || u.length() > 2000) {
+                    // No usable url: a query (or title) becomes a YouTube search.
+                    String q = clean(a.optString("query", a.optString("title", "")), 120);
+                    return q.isEmpty() ? null : new Action("search_youtube", "", "", "", q);
+                }
                 return new Action(type, u, clean(a.optString("title", ""), 120), "", "");
             }
             case "open_app": {
-                String n = clean(a.optString("name", ""), 40);
+                String n = clean(a.optString("name", a.optString("app", "")), 40);
                 return n.isEmpty() ? null : new Action(type, "", "", n, "");
             }
             case "search_youtube": {

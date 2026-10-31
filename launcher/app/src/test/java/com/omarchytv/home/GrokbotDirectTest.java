@@ -83,4 +83,33 @@ public class GrokbotDirectTest {
         assertEquals(2000, GrokbotDirect.POLL_MS);
         assertEquals(90000, GrokbotDirect.TIMEOUT_MS);
     }
+
+    @Test
+    public void tolerantActions() throws Exception {
+        GrokbotDirect.Action q = GrokbotDirect.action(new JSONObject("{\"type\":\"play_video\",\"query\":\"dhh rails\"}"));
+        assertEquals("search_youtube", q.type);
+        assertEquals("dhh rails", q.query);
+        GrokbotDirect.Action t = GrokbotDirect.action(new JSONObject("{\"type\":\"play_video\",\"url\":\"\",\"title\":\"Omarchy\"}"));
+        assertEquals("search_youtube", t.type);
+        assertEquals("Omarchy", t.query);
+        assertNull(GrokbotDirect.action(new JSONObject("{\"type\":\"play_video\"}")));
+        assertEquals("Netflix", GrokbotDirect.action(new JSONObject("{\"type\":\"open_app\",\"app\":\"Netflix\"}")).name);
+    }
+
+    @Test
+    public void droppedActionsAreFlagged() {
+        String msg = "{\"event\":\"message\",\"message\":\"{\\\"id\\\":\\\"a\\\",\\\"text\\\":\\\"x\\\",\\\"action\\\":{\\\"type\\\":\\\"rm\\\"}}\"}";
+        assertTrue(GrokbotDirect.find(msg, "a").dropped);
+        assertFalse(GrokbotDirect.parse("{\"id\":\"b\",\"text\":\"x\",\"action\":{\"type\":\"none\"}}", "b").dropped);
+        assertFalse(GrokbotDirect.parse("{\"id\":\"c\",\"text\":\"x\"}", "c").dropped);
+        assertTrue(GrokbotDirect.parse("{\"id\":\"d\",\"text\":\"x\",\"action\":\"play_video\"}", "d").dropped);
+    }
+
+    @Test
+    public void replyLangIsKeptOnlyWhenValid() {
+        assertEquals("en", GrokbotDirect.parse("{\"id\":\"a\",\"text\":\"x\",\"lang\":\"en\"}", "a").lang);
+        assertEquals("pt-BR", GrokbotDirect.parse("{\"id\":\"a\",\"text\":\"x\",\"lang\":\"pt-BR\"}", "a").lang);
+        assertEquals("", GrokbotDirect.parse("{\"id\":\"a\",\"text\":\"x\",\"lang\":\"english please\"}", "a").lang);
+        assertEquals("", GrokbotDirect.parse("{\"id\":\"a\",\"text\":\"x\"}", "a").lang);
+    }
 }

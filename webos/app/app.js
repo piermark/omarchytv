@@ -2191,12 +2191,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   // ---- v2.13.8 Grok Bot diretto (senza PC): grokdirect.js, replies through ntfy.sh on a random topic ----
   var GBD = window.OmarchyGrokDirect || null;
-  function gbdSpeak(text) {
+  function gbdSpeak(text, lang) {
     var st = GBD.load(window.localStorage);
     if (!st.speak || !text || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
     try {
       var u = new window.SpeechSynthesisUtterance(text);
-      u.lang = cfg.lang === "it" ? "it-IT" : cfg.lang === "de" ? "de-DE" : "en-US";
+      u.lang = lang || (cfg.lang === "it" ? "it-IT" : cfg.lang === "de" ? "de-DE" : "en-US");   // the reply's own lang when valid
       window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
     } catch (e) {}
   }
@@ -2226,9 +2226,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         } else {
           if (GBC && rep.text) GBC.push(store, key, "bot", rep.text, { unread: !open });
           gbFace.pose = "happy"; setTimeout(function () { if (gbFace.pose === "happy") gbFace.pose = "idle"; renderPluginsUI(); }, 2500);
-          if (rep.text) { gbSay(rep.text, 30000); gbdSpeak(rep.text); }
+          if (rep.text) { gbSay(rep.text, 30000); gbdSpeak(rep.text, rep.lang); }
         }
         if (open && !(rep && rep.action)) openCompanionChat(false);
+        if (rep && rep.dropped) { if (GBC) GBC.push(store, key, "bot", "Grok Bot sent an action I can't run (ignored).", { mode: "error" }); showToast("Grok Bot sent an action I can't run"); }
         if (rep && rep.action) gbdRun(rep.action);
       });
   }

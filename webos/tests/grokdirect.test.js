@@ -83,3 +83,24 @@ test("ask reports a refused key without echoing it", async () => {
   assert.match(e, /HTTP 401/);
   assert.ok(!e.includes("crsr_placeholder123"));
 });
+
+test("tolerant actions: play_video with only a query or title searches YouTube; app aliases name", () => {
+  assert.deepStrictEqual(G.action({ type: "play_video", query: "dhh rails" }), { type: "search_youtube", query: "dhh rails" });
+  assert.deepStrictEqual(G.action({ type: "play_video", url: "", title: "Omarchy" }), { type: "search_youtube", query: "Omarchy" });
+  assert.strictEqual(G.action({ type: "play_video" }), null);
+  assert.strictEqual(G.action({ type: "open_app", app: "Netflix" }).name, "Netflix");
+});
+
+test("dropped actions are flagged, none is not", () => {
+  assert.strictEqual(G.parse(JSON.stringify({ id: "a", text: "x", action: { type: "rm" } }), "a").dropped, true);
+  assert.strictEqual(G.parse(JSON.stringify({ id: "b", text: "x", action: { type: "none" } }), "b").dropped, false);
+  assert.strictEqual(G.parse(JSON.stringify({ id: "c", text: "x" }), "c").dropped, false);
+  assert.strictEqual(G.parse(JSON.stringify({ id: "d", text: "x", action: "play_video" }), "d").dropped, true);
+});
+
+test("reply lang is kept only when it is a valid BCP-47 tag", () => {
+  assert.strictEqual(G.parse(JSON.stringify({ id: "a", text: "x", lang: "it" }), "a").lang, "it");
+  assert.strictEqual(G.parse(JSON.stringify({ id: "a", text: "x", lang: "pt-BR" }), "a").lang, "pt-BR");
+  assert.strictEqual(G.parse(JSON.stringify({ id: "a", text: "x", lang: "english please" }), "a").lang, "");
+  assert.strictEqual(G.parse(JSON.stringify({ id: "a", text: "x" }), "a").lang, "");
+});

@@ -12,6 +12,8 @@
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Only used by the optional weather pane (Open-Meteo), off by default. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- v2.13.8: Grok Bot diretto listens with the in-app SpeechRecognizer (the remote mic). -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Lets "Uninstall" in the tile menu open the system uninstall dialog (the system always asks). -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
     <!-- Omarchy Link status: which app is in front. Granted by the user (Usage access) or over adb:

@@ -187,6 +187,7 @@ public class GrokbotDirectActivity extends Activity {
     @Override
     protected void onDestroy() {
         pendingId = null;
+        stopListening();
         if (tts != null) {
             tts.shutdown();
             tts = null;
@@ -274,8 +275,16 @@ public class GrokbotDirectActivity extends Activity {
         mark.postDelayed(() -> mark.pose("idle"), 2500);
         if (!r.text.isEmpty()) {
             line("Grok Bot", r.text, false);
-            if (ttsReady && tts != null && speak(this)) tts.speak(r.text, TextToSpeech.QUEUE_FLUSH, null, id);
+            if (ttsReady && tts != null && speak(this)) {
+                // The reply's own "lang" when valid and installed, else the launcher language.
+                Locale want = Locale.forLanguageTag(r.lang.isEmpty() ? MainActivity.speechLanguage(this) : r.lang);
+                int ok = tts.setLanguage(want);
+                if (ok == TextToSpeech.LANG_MISSING_DATA || ok == TextToSpeech.LANG_NOT_SUPPORTED)
+                    tts.setLanguage(Locale.forLanguageTag(MainActivity.speechLanguage(this)));
+                tts.speak(r.text, TextToSpeech.QUEUE_FLUSH, null, id);
+            }
         }
+        if (r.dropped) line("OmarchyTV", "Grok Bot sent an action I can't run (ignored).", false);
         if (r.action != null) mark.postDelayed(() -> run(r.action), ttsReady ? 600 : 0);
     }
 
@@ -391,7 +400,113 @@ public class GrokbotDirectActivity extends Activity {
         }
     }
 
+    // ---- voice: the in-app SpeechRecognizer. Through RECOGNIZE_SPEECH, Google's katniss on Android 9 (Sony) heard the
+    // words but returned nothing to onActivityResult and opened its own search box, so the intent is only a fallback. ----
+
+    private static final int REQ_MIC = 44;
+    private android.speech.SpeechRecognizer recognizer;
+    private TextView listening;
+
     private void voice() {
+        if (!android.speech.SpeechRecognizer.isRecognitionAvailable(this)) {
+            voiceIntent();
+            return;
+        }
+        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, REQ_MIC);
+            return;
+        }
+        listen();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (req != REQ_MIC) return;
+        if (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) listen();
+        else voiceIntent();   // no mic permission: the system recognizer may still work
+    }
+
+    private void listen() {
+        stopListening();
+        try {
+            recognizer = android.speech.SpeechRecognizer.createSpeechRecognizer(this);
+        } catch (Exception e) {
+            voiceIntent();
+            return;
+        }
+        listening = text("🎤 Listening…", 13, t.cyan, false);
+        listening.setPadding(0, dp(3), 0, dp(3));
+        log.addView(listening);
+        scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+        mark.pose("alert");
+        recognizer.setRecognitionListener(new android.speech.RecognitionListener() {
+            @Override public void onReadyForSpeech(Bundle p) { }
+            @Override public void onBeginningOfSpeech() { }
+            @Override public void onRmsChanged(float v) { }
+            @Override public void onBufferReceived(byte[] b) { }
+            @Override public void onEndOfSpeech() {
+                if (listening != null) listening.setText("🎤 …");
+            }
+            @Override public void onEvent(int type, Bundle p) { }
+
+            @Override public void onPartialResults(Bundle r) {
+                String s = first(r);
+                if (listening != null && !s.isEmpty()) listening.setText("🎤 Listening… " + s);
+            }
+
+            @Override public void onResults(Bundle r) {
+                String s = first(r);
+                stopListening();
+                mark.pose("idle");
+                if (!s.isEmpty()) send(s);
+                else line("OmarchyTV", "I didn't catch that. Try again or type.", false, false);
+            }
+
+            @Override public void onError(int err) {
+                stopListening();
+                mark.pose("idle");
+                line("OmarchyTV", err == android.speech.SpeechRecognizer.ERROR_NO_MATCH || err == android.speech.SpeechRecognizer.ERROR_SPEECH_TIMEOUT
+                        ? "I didn't catch that. Try again or type."
+                        : err == android.speech.SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ? "The microphone permission is off for OmarchyTV."
+                        : "Voice error " + err + ". Try again or type.", false, false);
+            }
+        });
+        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, MainActivity.speechLanguage(this))
+                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
+        try {
+            recognizer.startListening(i);
+        } catch (Exception e) {
+            stopListening();
+            voiceIntent();
+        }
+    }
+
+    private static String first(Bundle r) {
+        if (r == null) return "";
+        List<String> l = r.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION);
+        return l != null && !l.isEmpty() && l.get(0) != null ? l.get(0).trim() : "";
+    }
+
+    private void stopListening() {
+        if (listening != null) {
+            log.removeView(listening);
+            listening = null;
+        }
+        if (recognizer != null) {
+            try {
+                recognizer.destroy();
+            } catch (Exception ignored) {
+            }
+            recognizer = null;
+        }
+    }
+
+    /** Fallback: the system recognizer activity. */
+    private void voiceIntent() {
         Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE, MainActivity.speechLanguage(this))
@@ -409,7 +524,14 @@ public class GrokbotDirectActivity extends Activity {
         super.onActivityResult(req, res, data);
         if (req != REQ_VOICE || res != RESULT_OK || data == null) return;
         List<String> r = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-        if (r != null && !r.isEmpty()) send(r.get(0));
+        String q = r != null && !r.isEmpty() ? r.get(0) : data.getStringExtra("query");   // some recognizers only set "query"
+        if (q != null && !q.trim().isEmpty()) send(q);
+    }
+
+    @Override
+    protected void onPause() {
+        stopListening();
+        super.onPause();
     }
 
     // ---- chat lines and history ----

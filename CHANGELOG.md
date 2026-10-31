@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+Testing build `2.13.8-testing2` (`versionCode 24`, Android only): Grok Bot diretto now listens with the in-app SpeechRecognizer (`RECORD_AUDIO`, asked at first use) and shows "🎤 Listening…" with partial results. On Android 9 (Sony), Google's recognizer activity heard the words but never returned them. The old intent is still the fallback. On all three platforms, the reply's optional `lang` picks the voice language. A `play_video` with only a `query`/`title` becomes a YouTube search, `open_app` accepts `app` as an alias for `name`, and the chat shows a line when an action is dropped.
+
 Testing build `2.13.8-testing` (`versionCode 23`; webOS 2.13.8, Tizen 2.13.8).
 
 - **Grok Bot diretto (senza PC)** on Android TV, LG webOS and Samsung Tizen. With no PC companion linked, the TV asks your own Grok Bot webhook routine and gets the reply back through ntfy.sh on a random `otv-…` topic. It shows and speaks the reply (a "Leggi risposte ad alta voce" toggle, on by default) and runs one action: `play_video`, `open_app` or `search_youtube`. Local app commands still run first. The PC companion, Ask and its agents are unchanged. The webhook URL and key stay on the TV, and the key is masked. Guide: [docs/GROKBOT-DIRECT.md](docs/GROKBOT-DIRECT.md). Privacy: anyone who knows the topic can read the replies on ntfy.sh.

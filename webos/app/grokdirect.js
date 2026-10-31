@@ -20,6 +20,7 @@
   }
   function newTopic(rnd) { return "otv-" + rand(32, rnd); }
   function validTopic(t) { return /^otv-[a-z0-9]{32}$/.test(t || ""); }
+  function validLang(l) { return typeof l === "string" && l.length <= 35 && /^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(l); }
   function validUrl(u) { return typeof u === "string" && u.length <= 512 && /^https:\/\/[^\s\/?#]+(\/\S*)?$/.test(u); }
   function validKey(k) { return typeof k === "string" && /^[A-Za-z0-9_\-.]{8,256}$/.test(k); }
   function mask(k) {
@@ -50,18 +51,28 @@
     if (!a || typeof a !== "object") return null;
     if (a.type === "play_video") {
       var u = String(a.url || "").trim();
-      if (!/^https?:\/\/\S+$/.test(u) || u.length > 2000) return null;
+      if (!/^https?:\/\/\S+$/.test(u) || u.length > 2000) {   // no usable url: a query (or title) becomes a YouTube search
+        var sq = clean(a.query || a.title, 120);
+        return sq ? { type: "search_youtube", query: sq } : null;
+      }
       return { type: "play_video", url: u, title: clean(a.title, 120), youtube: isYoutube(u), videoId: youtubeId(u) };
     }
-    if (a.type === "open_app") { var n = clean(a.name, 40); return n ? { type: "open_app", name: n } : null; }
+    if (a.type === "open_app") { var n = clean(a.name || a.app, 40); return n ? { type: "open_app", name: n } : null; }
     if (a.type === "search_youtube") { var q = clean(a.query, 120); return q ? { type: "search_youtube", query: q } : null; }
     return null;
+  }
+  /** An action that was sent but is not usable (anything but missing, null, "none" or {type:"none"}). */
+  function dropped(raw) {
+    if (raw == null || raw === "" || raw === "none") return false;
+    return typeof raw !== "object" || (raw.type || "none") !== "none";
   }
   function parse(message, id) {
     try {
       var m = JSON.parse(message);
       if (!m || m.id !== id) return null;
-      return { text: clean(m.text, 2000), action: action(m.action) };
+      var act = action(m.action);
+      var lg = typeof m.lang === "string" ? m.lang.trim() : "";
+      return { text: clean(m.text, 2000), action: act, dropped: !act && dropped(m.action), lang: validLang(lg) ? lg : "" };
     } catch (e) { return null; }
   }
   /** The reply for id in an ntfy poll body (newline-delimited JSON), or null. */
@@ -112,9 +123,9 @@
     }).catch(function () { cb("Could not reach the webhook."); });
   }
 
-  var api = { KEY: KEY, POLL_MS: POLL_MS, TIMEOUT_MS: TIMEOUT_MS, newTopic: newTopic, validTopic: validTopic, validUrl: validUrl,
+  var api = { KEY: KEY, POLL_MS: POLL_MS, TIMEOUT_MS: TIMEOUT_MS, newTopic: newTopic, validTopic: validTopic, validLang: validLang, validUrl: validUrl,
     validKey: validKey, mask: mask, headers: headers, body: body, pollUrl: pollUrl, isYoutube: isYoutube, action: action,
-    parse: parse, find: find, youtubeSearchUrl: youtubeSearchUrl, load: load, save: save, enabled: enabled, ask: ask };
+    parse: parse, dropped: dropped, find: find, youtubeSearchUrl: youtubeSearchUrl, load: load, save: save, enabled: enabled, ask: ask };
   root.OmarchyGrokDirect = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : this);
