@@ -4,12 +4,13 @@
 @font-face{font-family:mono;src:url("../fonts/caskaydia_mono_regular.ttf")}
 html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none;user-select:none}
 body{display:flex;flex-direction:column;align-items:center;justify-content:center}
-pre{margin:0;font-family:mono,monospace;line-height:1.15;color:#7aa2f7;white-space:pre}
+pre{margin:0;font-family:mono,monospace;line-height:1;color:#7aa2f7;white-space:pre}
 #aqcanvas{position:fixed;top:0;left:0;width:100vw;height:100vh;display:none}
 #ssclock{margin-top:28px;font-family:mono,monospace;font-size:28px;color:#a9b1d6;letter-spacing:1px;display:none;z-index:10}
 #ssstatus{margin-top:14px;font-family:mono,monospace;font-size:22px;color:#7aa2f7;letter-spacing:0.6px;display:none;z-index:10}
 </style></head><body><canvas id="aqcanvas"></canvas><pre id="art"></pre><div id="ssstatus"></div><div id="ssclock"></div>
 <script src="homage.js"></script>
+<script src="block-glyphs.js"></script>
 <script>
 // omarchy-screensaver on LG webOS: loop `ttfx --random-effect` over screensaver-tv.txt, or render the
 // multi-layer Omarchy Cyber-TUI Aquarium when mode === 'aquarium'.
@@ -96,6 +97,7 @@ window.addEventListener('mousedown',dismiss,true);
   addEventListener('resize',function(){fit()});
   function whenSized(cb){ if(fit())cb(); else requestAnimationFrame(function(){whenSized(cb)}); }
   function run(TTE,mName){
+    var TextEffect=OmarchyBlockGlyphs.wrap(TTE.TextEffect);
     var names=TTE.effectNames().filter(function(n){return excl.indexOf(n)<0});
     if(!names.length)names=TTE.effectNames();
     log('tte effects available: '+TTE.effectNames().length+' (mode '+mName+', active '+names.length+')');
@@ -110,10 +112,10 @@ window.addEventListener('mousedown',dismiss,true);
       try{ if(fx)fx.destroy(); }catch(x){}
       pre.textContent=clean();fit();
       var frames=0,t0=0;
-      var spd=(S&&S.speed&&S.speed())||'normal',fo={effect:e,autoplay:false,background:'#000',fps:60,seed:Math.floor(Math.random()*1e9),respectReducedMotion:false,onFinish:function(){}};
+      var spd=(S&&S.speed&&S.speed())||'normal',fo={effect:e,autoplay:false,background:'#000',fontScale:1,fps:60,seed:Math.floor(Math.random()*1e9),respectReducedMotion:false,onFinish:function(){}};
       if(spd==='slow')fo.duration=4200;else if(spd==='fast')fo.duration=1350;   // like Android; normal keeps each effect's own pace
       try{
-        fx=new TTE.TextEffect(pre,fo);
+        fx=new TextEffect(pre,fo);
       }catch(err){log('effect '+e+' failed: '+err.message);setTimeout(next,200);return}
       function count(ts){ if(!t0)t0=ts; frames++; if(fx&&fx.running)requestAnimationFrame(count); }
       requestAnimationFrame(count);
