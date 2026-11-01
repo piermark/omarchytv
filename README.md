@@ -452,7 +452,7 @@ Third-party wallpapers whose licence could not be verified are **not** included.
 
 ## Support
 
-OmarchyTV is free and MIT-licensed. If you find it useful and want to support development, you can [buy me a coffee](https://buymeacoffee.com/piermark) or via [GitHub Sponsors](https://github.com/sponsors/piermark) — totally optional.
+OmarchyTV is free and MIT-licensed. If you find it useful and want to support development, you can [buy me a coffee](https://buymeacoffee.com/piermark) or sponsor me on [GitHub Sponsors](https://github.com/sponsors/piermark) — totally optional.
 
 ## License
 MIT, see [LICENSE](LICENSE).
