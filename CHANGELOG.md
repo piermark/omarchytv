@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 - **Top bar focus loops.** ◀ on the menu logo goes to the last icon, and ▶ on the last icon goes to the menu logo (the floating companion, when shown, is still the stop after the last icon). Hidden items are skipped as before.
+- **Home widgets keep one column.** With only one top-row widget on, it no longer stretches across the whole row.
+- **webOS 4.0: dock and grids lay out in a row (#72).** compat.js now also rewrites the stylesheet when CSS grid is missing (Chrome 53), not only when CSS variables are; the stage is re-fitted after load for engines that report the window size late.
+- **Tizen 5.5: HDMI inputs open the HDMI source (#87).** On Tizen 5.5 and older, selecting HDMI hides OmarchyTV instead of launching the TV viewer, which restored Samsung TV Plus. TV tuner and Tizen 6+ keep the viewer hand-off.
 
 ## [2.13.8] — 2026-10-31 (`versionCode 25`; webOS 2.13.8, Tizen 2.13.8)
 
