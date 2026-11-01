@@ -669,12 +669,22 @@ during the screensaver (that is when the PC shows "screensaver"), with at most
 
 ## 9. Security notes and limits of v1
 
-- **Authenticated, not encrypted.** Integrity and authenticity hold for every request,
-  response and event. Confidentiality does not: someone on the same Wi-Fi can
-  read theme colours, app names, pane text and AI numbers. Nothing secret is
-  sent (no tokens, no keys, no code). v2 can add TLS with the TV's
+- **Authenticated everywhere, encrypted only in part.** Integrity and authenticity hold
+  for every request, response and event (HMAC-SHA256 with the pairing token, timestamp,
+  nonce). Since 2.13, REST bodies can also be encrypted: the TV advertises `enc-a256gcm`
+  in `/v1/status` capabilities, and a PC with `python-cryptography` then sends
+  `X-OTV-Enc: A256GCM` and seals the body with AES-256-GCM (key = HKDF of the token,
+  AAD bound to the request nonce and direction; the HMAC signs the ciphertext). The TV
+  seals the response the same way. `OMARCHY_LINK_ENCRYPT=0` turns it off.
+  Not encrypted, so readable by someone on the same Wi-Fi: request paths, headers and
+  query strings, bodies when the PC lacks `python-cryptography`, file uploads (themes,
+  wallpapers), WebSocket event frames (pane text, telemetry and AI `ask`/`answer` text),
+  and cast streams. No tokens or keys are ever sent. v2 can add TLS with the TV's
   AndroidKeyStore self-signed certificate. Its SHA-256 would be bound into the
   SPAKE2 transcript (`LP("cert:"+fp)`), so pinning would come with pairing.
+- This section covers Omarchy Link (Android TV). The LG webOS / Samsung Tizen bridge
+  (`omarchy-tv webos serve`) is plain HTTP with a static ask code in the
+  `X-Omarchy-Token` header: no encryption and no per-request signing.
 - No unauthenticated endpoint does anything: `/v1/info` is read-only and minimal,
   and `pair/*` only work while the user has the pairing page open.
 - LAN only, enforced on both sides. The TV checks its subnet. The PC refuses

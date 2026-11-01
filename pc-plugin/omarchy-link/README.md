@@ -86,7 +86,10 @@ Keys, when you choose to use API providers, are referenced (`env:NAME`, `file:PA
 - The TV is the server and the PC the client. Omarchy's default-deny firewall stays as it is.
 - Pairing uses a single-use 6-digit code with SPAKE2: no offline guessing, and 5 attempts per code.
 - Every request, response and event is authenticated (HMAC with the pairing token), timestamped
-  and replay-protected. v1 is not encrypted, but nothing secret travels (see PROTOCOL.md §9).
+  and replay-protected. Since 2.13, REST request and response bodies are also encrypted (AES-256-GCM)
+  when `python-cryptography` is installed and the TV advertises `enc-a256gcm`. Paths, headers, file
+  uploads, WebSocket events (including AI questions and answers) and cast streams are not encrypted
+  (see PROTOCOL.md §9).
 - The TV can't run commands on the PC. "PC" shortcuts are ids mapped to commands you wrote, and
   they ask for confirmation by default. The assistant runs AI CLIs with tools and MCP off, in an empty temp dir.
 - State: `~/.local/state/omarchy-link/pairing.json` (chmod 600).
