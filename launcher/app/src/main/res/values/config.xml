@@ -36,6 +36,9 @@
         <item>org.droidtv.channels</item>
         <item>org.droidtv.zapster</item>
         <item>org.droidtv.eum</item>
+        <!-- Amazon Fire OS: the Live TV guide app. Its launcher is permission-gated, so the TV
+             tile enters it through .GuideWrapperActivity (see LiveTv.java). -->
+        <item>com.amazon.tv.livetv</item>
     </string-array>
     <!-- Xiaomi / MediaTek sets: com.mediatek.wwtv.tvcenter -->
 
