@@ -9,6 +9,7 @@ pre{margin:0;font-family:mono,monospace;line-height:1.15;color:#7aa2f7;white-spa
 #ssclock{margin-top:28px;font-family:mono,monospace;font-size:28px;color:#a9b1d6;letter-spacing:1px;display:none;z-index:10}
 #ssstatus{margin-top:14px;font-family:mono,monospace;font-size:22px;color:#7aa2f7;letter-spacing:0.6px;display:none;z-index:10}
 </style></head><body><canvas id="aqcanvas"></canvas><pre id="art"></pre><div id="ssstatus"></div><div id="ssclock"></div>
+<script src="viewport.js"></script>
 <script src="homage.js"></script>
 <script>
 // omarchy-screensaver on LG webOS: loop `ttfx --random-effect` over screensaver-tv.txt, or render the
@@ -115,6 +116,7 @@ window.addEventListener('mousedown',dismiss,true);
       try{
         fx=new TTE.TextEffect(pre,fo);
       }catch(err){log('effect '+e+' failed: '+err.message);setTimeout(next,200);return}
+      OmarchySaverViewport.attach(fx);
       function count(ts){ if(!t0)t0=ts; frames++; if(fx&&fx.running)requestAnimationFrame(count); }
       requestAnimationFrame(count);
       if(first){first=false;try{S&&S.drawn&&S.drawn(mName,TTE.effectNames().length,e)}catch(x){}}
