@@ -3,16 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 function boot(info, options = {}) {
-  const handlers = {}, events = [], sets = [], launches = [];
+  const handlers = {}, events = [], sets = [], launches = [], hides = [];
   let current = null, sourceCalls = 0;
   const ctx = {setTimeout:options.setTimeout || setTimeout, clearTimeout:options.clearTimeout || clearTimeout, Date:options.Date || Date, Promise, Number, Error,
     document:{hidden:false,title:'TV',addEventListener:(k,f)=>handlers[k]=f},
     CustomEvent:function(type,init){this.type=type;this.detail=init.detail;},dispatchEvent:e=>events.push(e),
-    tizen:{application:{getAppsInfo:ok=>ok([]),getAppsContext:ok=>ok([{appId:'OmKeyCtrl0.Keys'}]),launch:(id,ok,fail)=>{launches.push(id);options.launchError?fail(options.launchError):ok();}},tvinputdevice:{registerKey(){}},
-      systeminfo:{getPropertyValue:(key,ok,fail)=>{assert.equal(key,'VIDEOSOURCE');sourceCalls++;if(options.sourceHook)options.sourceHook(ok,fail,sourceCalls);else options.readError?fail(options.readError):ok(info);}},
+    tizen:{application:{getCurrentApplication:()=>({hide(){if(options.hideError)throw options.hideError;hides.push(1);}}),getAppsInfo:ok=>ok([]),getAppsContext:ok=>ok([{appId:'OmKeyCtrl0.Keys'}]),launch:(id,ok,fail)=>{launches.push(id);options.launchError?fail(options.launchError):ok();}},tvinputdevice:{registerKey(){}},
+      systeminfo:{getCapability:k=>{if(options.capError)throw options.capError;return options.platform||'6.0';},getPropertyValue:(key,ok,fail)=>{assert.equal(key,'VIDEOSOURCE');sourceCalls++;if(options.sourceHook)options.sourceHook(ok,fail,sourceCalls);else options.readError?fail(options.readError):ok(info);}},
       tvwindow:{setSource:(s,ok,fail,type)=>{sets.push(s);assert.equal(type,'MAIN');current=s;if(options.setHook)options.setHook(ok,fail);else options.setError?fail(options.setError):ok();},getSource:()=>options.readback || (options.mismatch?{type:'HDMI',number:99}:current)}}};
   ctx.window=ctx;vm.runInNewContext(fs.readFileSync(__dirname+'/tizen-shim.js','utf8'),ctx);
-  return {ctx,handlers,events,sets,launches,sourceCalls:()=>sourceCalls};
+  return {ctx,handlers,events,sets,launches,hides,sourceCalls:()=>sourceCalls};
 }
 function select(b,id){return new Promise((ok,no)=>b.ctx.OMARCHY_TIZEN_SWITCH_INPUT(id,ok,no));}
 const hdmi1={type:'HDMI',number:1,signal:false,editName:'Console'};
@@ -129,4 +129,23 @@ test('artwork candidates retain the native icon after the store cache and dedupl
   assert.deepEqual(Array.from(apps[1].iconPaths),[rows[1].iconPath]);
   assert.deepEqual(Array.from(apps[2].iconPaths),['/native/future.png']);
   assert.equal(apps[0].iconPath,cache,'legacy single-path consumers keep the preferred candidate');
+});
+
+test('Tizen 5.5: HDMI is shown by hiding OmarchyTV, without launching the tv-viewer (#87)',async()=>{
+  const b=boot({connected:[hdmi2],disconnected:[]},{platform:'5.5'});
+  await select(b,'hdmi2');
+  assert.deepEqual(b.sets,[hdmi2]);assert.equal(b.launches.length,0);assert.equal(b.hides.length,1);
+});
+test('Tizen 5.5: TV tuner still opens the viewer; hide failure falls back to the viewer',async()=>{
+  const tv={type:'TV',number:0,signal:null,editName:null};
+  const b=boot({connected:[hdmi2,tv],disconnected:[]},{platform:'5.5'});
+  await select(b,'tv');assert.deepEqual(b.launches,['org.tizen.tv-viewer']);assert.equal(b.hides.length,0);
+  const c=boot({connected:[hdmi2],disconnected:[]},{platform:'5.5',hideError:new Error('no')});
+  await select(c,'hdmi2');assert.deepEqual(c.launches,['org.tizen.tv-viewer']);
+});
+test('Tizen 6+ and unknown versions keep the viewer hand-off for HDMI',async()=>{
+  for(const options of [{platform:'6.5'},{capError:new Error('x')}]){
+    const b=boot({connected:[hdmi2],disconnected:[]},options);
+    await select(b,'hdmi2');assert.deepEqual(b.launches,['org.tizen.tv-viewer']);assert.equal(b.hides.length,0);
+  }
 });

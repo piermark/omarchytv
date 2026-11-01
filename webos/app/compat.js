@@ -1,6 +1,7 @@
 /*
  * OmarchyTV webOS: compatibility layer for older LG TVs (webOS 3.x, WebAppManager on Chrome 38).
- * Loaded before data.js / app.js. Every part is feature-detected, so on webOS 4+ it does nothing.
+ * Loaded before data.js / app.js. Every part is feature-detected, so on TVs with var() and grid (webOS 4.5+)
+ * it does nothing.
  *
  * Chrome 38 lacks Object.assign, fetch, CSS custom properties, CSS grid, flex `gap`, `inset` and
  * `aspect-ratio`. Without them app.js throws on startup and the UI renders black. This file adds the
@@ -40,7 +41,10 @@
     });
   };
 
-  if (window.CSS && CSS.supports && CSS.supports("color", "var(--x)")) return;
+  // Rewrite the sheet when var() OR grid is missing. webOS 4.0 (Chrome 53) has var() but no grid (Chrome 57),
+  // so checking var() alone left its dock tiles stacked in one column (issue #72). The rewrite also turns
+  // flex `gap` (Chrome 84) into margins there.
+  if (window.CSS && CSS.supports && CSS.supports("color", "var(--x)") && CSS.supports("display", "grid")) return;
 
   var styleEl = document.querySelector("style");
   var src = styleEl.textContent.replace(/\/\*[\s\S]*?\*\//g, "");

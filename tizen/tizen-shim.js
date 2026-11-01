@@ -127,6 +127,20 @@
         });
       } catch (e) { finish(e); }
     }
+    // Tizen 5.5 and older (2020 sets, issue #87): org.tizen.tv-viewer restores its own last source (Samsung TV
+    // Plus) on launch and overrides the HDMI we just set. There, step aside instead: hiding OmarchyTV shows the
+    // MAIN window, which already plays the confirmed HDMI source. Newer firmware keeps the viewer hand-off.
+    function oldViewer() {
+      try {
+        var v = String(window.tizen.systeminfo.getCapability("http://tizen.org/feature/platform.version") || "");
+        var major = parseInt(v, 10);
+        return major > 0 && major < 6;
+      } catch (e) { return false; }
+    }
+    function showSource() {
+      try { window.tizen.application.getCurrentApplication().hide(); finish(); }
+      catch (e) { viewer(); }
+    }
     try {
       window.tizen.systeminfo.getPropertyValue("VIDEOSOURCE", function (info) {
         if (!active()) return;
@@ -142,7 +156,7 @@
               if (!current || current.type !== source.type || current.number !== source.number) {
                 finish(new Error(label + " may have switched, but the TV could not confirm it")); return;
               }
-              viewer();
+              if (selection.type === "HDMI" && oldViewer()) showSource(); else viewer();
             } catch (e) { finish(new Error(label + " may have switched, but the TV could not confirm it")); }
           }, finish, "MAIN");
         } catch (e) { finish(e); }

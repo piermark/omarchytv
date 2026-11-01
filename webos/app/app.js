@@ -4,7 +4,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.13.9";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.13.10";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now() - (42 * 60 * 1000); // default 42m uptime look
@@ -413,6 +413,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     st.style.transform = "scale(" + s + ")";
   }
   window.addEventListener("resize", fitStage);
+  // Some older engines (webOS 4.0) report the final window size only after load, without a resize event (#72).
+  window.addEventListener("load", fitStage);
+  setTimeout(fitStage, 500);
+  setTimeout(fitStage, 2000);
 
   function updateClock() {
     var d = new Date();
