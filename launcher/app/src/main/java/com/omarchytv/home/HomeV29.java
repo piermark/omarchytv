@@ -1429,7 +1429,15 @@ final class HomeV29 extends FrameLayout {
                 // hidden workspaces (and SpaceX TV when off) are GONE: skip them, or focus gets stuck
                 int to = BarFocus.next(order, f, r, v -> v.getVisibility() == VISIBLE && v.isFocusable());
                 if (to >= 0) order.get(to).requestFocus();
-                else if (BarFocus.pastEnd(order, f, r, v -> v.getVisibility() == VISIBLE && v.isFocusable())) host.selectCompanion();
+                else {
+                    // Off either end the bar loops. ▶ past the last icon still stops at the floating companion first
+                    // when it is on screen; with no companion (or going ◀ off the menu logo) it wraps to the other end.
+                    boolean companion = BarFocus.pastEnd(order, f, r, v -> v.getVisibility() == VISIBLE && v.isFocusable()) && host.selectCompanion();
+                    if (!companion) {
+                        int w = BarFocus.wrap(order, f, r, v -> v.getVisibility() == VISIBLE && v.isFocusable());
+                        if (w >= 0) order.get(w).requestFocus();
+                    }
+                }
                 return true;
             }
             return false;
