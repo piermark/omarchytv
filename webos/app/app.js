@@ -11,6 +11,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   var STRINGS = {
     en: {
+      menu_plugins: "Plugins", menu_apps: "Apps", menu_setup: "Setup", menu_terminal: "Terminal", menu_hint: "↑↓ select   OK open   Back close",
       tip_cinemarchy: "Cinemarchy (Media & TV)", tip_wifi: "Wi-Fi & network", tip_bt: "Bluetooth", tip_vol: "Audio", tip_inputs: "Inputs (TV / HDMI)", tip_saver: "Start screensaver",
       sys_clock: "Clock",
       box_weather: "weather", box_pc: "omarchy · pc", box_ai: "ai credits · pc", box_tv: "tv", box_app: "app", box_ws_pc: "pc", box_system: "system",
@@ -39,6 +40,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
+      menu_plugins: "Plugin", menu_apps: "App", menu_setup: "Impostazioni", menu_terminal: "Terminale", menu_hint: "↑↓ seleziona   OK apri   Indietro chiudi",
       tip_cinemarchy: "Cinemarchy (Media e TV)", tip_wifi: "Wi-Fi e rete", tip_bt: "Bluetooth", tip_vol: "Audio", tip_inputs: "Ingressi (TV / HDMI)", tip_saver: "Avvia salvaschermo",
       sys_clock: "Orologio",
       box_weather: "meteo", box_pc: "omarchy · pc", box_ai: "crediti ia · pc", box_tv: "tv", box_app: "app", box_ws_pc: "pc", box_system: "sistema",
@@ -67,6 +69,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
+      menu_plugins: "Plugins", menu_apps: "Apps", menu_setup: "Einrichtung", menu_terminal: "Terminal", menu_hint: "↑↓ auswählen   OK öffnen   Zurück schließen",
       tip_cinemarchy: "Cinemarchy (Medien & TV)", tip_wifi: "WLAN & Netzwerk", tip_bt: "Bluetooth", tip_vol: "Audio", tip_inputs: "Eingänge (TV / HDMI)", tip_saver: "Bildschirmschoner starten",
       sys_clock: "Uhr",
       box_weather: "wetter", box_pc: "omarchy · pc", box_ai: "ki-guthaben · pc", box_tv: "tv", box_app: "app", box_ws_pc: "pc", box_system: "system",
@@ -942,6 +945,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     state.modalIdx = opts.focusIdx > 0 && opts.focusIdx < state.modalItems.length ? opts.focusIdx : 0;
     state.modalDigit = null;
     document.getElementById("modal-title").textContent = title;
+    // Keep ordinary menus narrow; input and prose-heavy dialogs retain their reading width.
+    document.getElementById("modal-box").className = "box" + (withInput || (sub && sub.length > 160) ? " wide" : "");
+    document.getElementById("modal-hint").textContent = tr("menu_hint");
     var subEl = document.getElementById("modal-sub");
     subEl.textContent = sub || "";
     subEl.style.display = sub ? "block" : "none";
@@ -993,13 +999,35 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     renderAll();
   }
 
+  function menuIcon(icon) {
+    // Inline paths avoid missing Nerd Font glyphs on older TV firmware.
+    var paths = {
+      "󰕼": "M3 5h18v14H3z M7 5v14 M17 5v14 M3 10h4 M17 10h4 M3 14h4 M17 14h4",
+      "": "M8 3h8v5h5v8h-5v5H8v-5H3V8h5z",
+      "󰀻": "M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z",
+      "󰸌": "M12 3a9 9 0 1 0 0 18h2a2 2 0 0 0 0-4h-1a2 2 0 0 1 0-4h3a5 5 0 0 0 0-10z M7 9h1 M11 6h1 M16 7h1 M6 14h1",
+      "": "M3 4h18v16H3z M3 17l6-6 4 4 3-3 5 5 M15 8h1",
+      "󰖐": "M7 18a5 5 0 1 1 1-10 6 6 0 0 1 11 3 4 4 0 0 1-1 7z",
+      "󱄄": "M3 4h18v13H3z M8 21h8 M12 17v4 M8 8l8 5 M16 8l-8 5",
+      "": "M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M10 15v6",
+      "": "M3 4h18v16H3z M7 9l3 3-3 3 M13 15h4",
+      "󰚩": "M5 7h14v13H5z M12 3v4 M2 11v5 M22 11v5 M8 11h1 M15 11h1 M8 16h8",
+      "󰖟": "M3 12h18 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 3c-5 5-5 13 0 18 M12 3c5 5 5 13 0 18",
+      "󰾆": "M4 19V9 M9 19V5 M14 19v-7 M19 19V3"
+    };
+    return paths[icon] ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + paths[icon] + '"></path></svg>' : escHtml(icon);
+  }
+
   function renderModalList() {
     var list = document.getElementById("modal-list");
     list.innerHTML = "";
     state.modalItems.forEach(function (it, idx) {
       var d = document.createElement("div");
       d.className = "modal-item" + (idx === state.modalIdx ? " focused" : "");
-      d.innerHTML = '<span>' + it.label + '</span><span class="mi-right">' + (it.right || "") + '</span>';
+      d.setAttribute("role", "option");
+      d.setAttribute("aria-selected", idx === state.modalIdx ? "true" : "false");
+      d.innerHTML = (it.icon ? '<span class="mi-icon" aria-hidden="true">' + menuIcon(it.icon) + '</span>' : '') +
+        '<span class="mi-label">' + it.label + '</span><span class="mi-right">' + (it.right || "") + '</span>';
       d.onclick = function () { state.modalIdx = idx; if (it.act) it.act(); };
       list.appendChild(d);
       if (idx === state.modalIdx && d.scrollIntoView) d.scrollIntoView({ block: "nearest" });
@@ -1825,19 +1853,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   function openOmarchyMenu() {
-    openModal("Omarchy Menu", "OmarchyTV " + APP_VERSION, [
-      { label: "🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", right: "C ›", act: function () { openCinemarchyModal(0); } },
-      { label: "🧩 " + tr("sys_plugins"), right: ((cfg.pluginSpacexTv ? 1 : 0) + (cfg.pluginGrokbot ? 1 : 0)) + " on ›", act: openPluginsModal },
-      { label: "Walker (app launcher)", right: "›", act: openWalkerModal },
-      { label: tr("sys_themes"), right: cfg.theme, act: openThemesModal },
-      { label: tr("wp_title"), right: "›", act: function () { openWallpaperModal(); } },
-      { label: tr("wx_title"), right: "°" + cfg.tempUnit, act: openWeatherModal },
-      { label: tr("sys_saver"), right: "›", act: openSaverModal },
-      { label: tr("sys_all"), right: "›", act: openAllSettingsModal },
-      { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
-      { label: "Grok Bot & AI", right: "›", act: openGrokBotHub },
-      { label: "Web apps", right: "›", act: openWebAppsModal },
-      { label: "AI meter", right: cfg.aiCredits === "dollars" ? "dollars" : "percent", act: function () {
+    openModal("Omarchy", "", [
+      { icon: "󰕼", label: "Cinemarchy", right: "C ›", act: function () { openCinemarchyModal(0); } },
+      { icon: "", label: tr("menu_plugins"), right: "›", act: openPluginsModal },
+      { icon: "󰀻", label: tr("menu_apps"), right: "›", act: openWalkerModal },
+      { icon: "󰸌", label: tr("sys_themes"), right: "›", act: openThemesModal },
+      { icon: "", label: tr("wp_title"), right: "›", act: function () { openWallpaperModal(); } },
+      { icon: "󰖐", label: tr("wx_title"), right: "›", act: openWeatherModal },
+      { icon: "󱄄", label: tr("sys_saver"), right: "›", act: openSaverModal },
+      { icon: "", label: tr("menu_setup"), right: "›", act: openAllSettingsModal },
+      { icon: "", label: tr("menu_terminal"), right: "›", act: openGrokTui },
+      { icon: "󰚩", label: "Grok Bot & AI", right: "›", act: openGrokBotHub },
+      { icon: "󰖟", label: "Web apps", right: "›", act: openWebAppsModal },
+      { icon: "󰾆", label: "AI meter", right: cfg.aiCredits === "dollars" ? "dollars" : "percent", act: function () {
         cfg.aiCredits = cfg.aiCredits === "dollars" ? "percent" : "dollars";
         saveCfg();
         renderWidgets();
