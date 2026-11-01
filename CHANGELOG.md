@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- **Top bar focus loops.** ◀ on the menu logo goes to the last icon, and ▶ on the last icon goes to the menu logo (the floating companion, when shown, is still the stop after the last icon). Hidden items are skipped as before.
+
 ## [2.13.8] — 2026-10-31 (`versionCode 25`; webOS 2.13.8, Tizen 2.13.8)
 
 Final 2.13.8 release for Android TV, LG webOS and Samsung Tizen. It is the `2.13.8-testing2` build that I tested on my Sony BRAVIA, with only the version number changed.

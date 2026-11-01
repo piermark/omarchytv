@@ -56,12 +56,38 @@ public class BarFocusTest {
     }
 
     @Test
-    public void endsDoNotWrap() {
+    public void nextDoesNotWrapAtTheEnds() {
         Predicate<String> u = hidden("ws5");
         assertEquals(null, step("menu", false, u));
         assertEquals(null, step("screen", true, u));
         // nothing usable further left of a hidden-only stretch: stay
         assertEquals(null, step("ws1", false, hidden("menu")));
+    }
+
+    @Test
+    public void wrapGoesToTheOppositeEnd() {
+        Predicate<String> u = hidden("ws5", "spacex");
+        assertEquals("menu", BAR.get(BarFocus.wrap(BAR, "screen", true, u)));
+        assertEquals("screen", BAR.get(BarFocus.wrap(BAR, "menu", false, u)));
+        // the first/last usable item is found past hidden slots
+        assertEquals("ws1", BAR.get(BarFocus.wrap(BAR, "screen", true, hidden("menu"))));
+        assertEquals("input", BAR.get(BarFocus.wrap(BAR, "ws1", false, hidden("menu", "screen"))));
+    }
+
+    @Test
+    public void wrapOnlyAtAnEnd() {
+        assertEquals(-1, BarFocus.wrap(BAR, "ws2", true, hidden()));
+        assertEquals(-1, BarFocus.wrap(BAR, "ws2", false, hidden()));
+        assertEquals(-1, BarFocus.wrap(BAR, "menu", true, hidden()));
+        assertEquals(-1, BarFocus.wrap(BAR, "screen", false, hidden()));
+        assertEquals(-1, BarFocus.wrap(BAR, "clock", true, hidden()));
+    }
+
+    @Test
+    public void wrapWithOneUsableItemStays() {
+        Predicate<String> only = s -> s.equals("menu");
+        assertEquals(-1, BarFocus.wrap(BAR, "menu", true, only));
+        assertEquals(-1, BarFocus.wrap(BAR, "menu", false, only));
     }
 
     @Test
