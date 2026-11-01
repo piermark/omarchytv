@@ -450,6 +450,10 @@ of them.
 Full list with sources, licences, modifications and licence texts: [THIRD-PARTY.md](THIRD-PARTY.md), [NOTICE](NOTICE), and [launcher/WALLPAPER-PROVENANCE.csv](launcher/WALLPAPER-PROVENANCE.csv).
 Third-party wallpapers whose licence could not be verified are **not** included.
 
+## Support
+
+OmarchyTV is free and MIT-licensed. If you find it useful and want to support development, you can [buy me a coffee](https://buymeacoffee.com/piermark) — totally optional.
+
 ## License
 MIT, see [LICENSE](LICENSE).
 Copyright (c) 2026 Marco Porro ([x.com/MarcoPorro](https://x.com/MarcoPorro) · [www.marcoporro.it](https://www.marcoporro.it)).
