@@ -8,6 +8,8 @@ pre{margin:0;font-family:mono,monospace;line-height:1;color:#7aa2f7;white-space:
 #aqcanvas{position:fixed;top:0;left:0;width:100vw;height:100vh;display:none}
 #ssclock{margin-top:28px;font-family:mono,monospace;font-size:28px;color:#a9b1d6;letter-spacing:1px;display:none;z-index:10}
 #ssstatus{margin-top:14px;font-family:mono,monospace;font-size:22px;color:#7aa2f7;letter-spacing:0.6px;display:none;z-index:10}
+/* tte.js uses inset:0, unsupported by Chromium 38; anchor its overlay explicitly. */
+[data-text-effect]>canvas{top:0;left:0;width:100%!important;height:100%!important}
 </style></head><body><canvas id="aqcanvas"></canvas><pre id="art"></pre><div id="ssstatus"></div><div id="ssclock"></div>
 <script src="viewport.js"></script>
 <script src="homage.js"></script>
