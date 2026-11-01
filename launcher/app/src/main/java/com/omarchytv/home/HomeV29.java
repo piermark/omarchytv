@@ -271,6 +271,13 @@ final class HomeV29 extends FrameLayout {
         wxBox = widget(r1, act.getString(R.string.v29_weather), 0);
         pcBox = widget(r1, "omarchy · pc", 16);
         BoxView ai = widget(r1, "ai credits · pc", 16);
+        // Keep each top-row panel one column wide, (1120 - 2 x 16) / 3, even when its siblings are switched off.
+        // With weight 1 a lone panel (e.g. only the weather widget on) stretched across the whole 1120 px row.
+        for (View col : new View[]{wxBox, pcBox, ai}) {
+            LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
+            cl.width = px((1120 - 32) / 3f);
+            cl.weight = 0f;
+        }
         r2.addView(new View(a), new LinearLayout.LayoutParams(0, 1, 2f));
         View gap = new View(a);
         r2.addView(gap, new LinearLayout.LayoutParams(px(32), 1));
