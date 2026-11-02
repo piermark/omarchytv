@@ -16,6 +16,8 @@
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!-- Lets "Uninstall" in the tile menu open the system uninstall dialog (the system always asks). -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <!-- v2.14 "Update OmarchyTV": hands the official release APK to Android's installer (the system always asks). -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <!-- Omarchy Link status: which app is in front. Granted by the user (Usage access) or over adb:
          adb shell appops set com.omarchytv.home GET_USAGE_STATS allow   (nothing breaks without it) -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
@@ -136,6 +138,10 @@
             android:theme="@style/Theme.TvHome" />
 
         <!-- After a reboot: if the stock launcher took the home screen back, ask once (never changes it). -->
+        <!-- v2.14 Updater: PackageInstaller result (shows Android's confirm, reports failures). -->
+        <receiver
+            android:name=".Updater$Done"
+            android:exported="false" />
         <receiver
             android:name=".HomeCheck"
             android:exported="true">

@@ -2194,6 +2194,18 @@ public final class LinkServer {
             case "grokbot_error":
                 host.onEvent(c.pcId, type, grokbotReply(type, data));
                 break;
+            case "pc_wol": {   // v2.14 the PC's MAC for Wake-on-LAN ("TV and PC power together")
+                String mac = data.optString("mac", "").toLowerCase(Locale.ROOT);
+                String bc = data.optString("broadcast", "");
+                if (!mac.matches("^([0-9a-f]{2}:){5}[0-9a-f]{2}$")) break;
+                JSONObject wol = new JSONObject().put("mac", mac);
+                if (bc.matches("^\\d{1,3}(\\.\\d{1,3}){3}$")) wol.put("broadcast", bc);
+                host.onEvent(c.pcId, "pc_wol", wol);
+                break;
+            }
+            case "liftoff":   // v2.14 a build/update on the PC: rocket countdown on Home (LiftoffView)
+                host.onEvent(c.pcId, type, liftoff(data));
+                break;
             default:
                 break;   // ping/pong (keep-alive only; the TV uses WebSocket ping frames) and unknown types
         }
@@ -2208,6 +2220,25 @@ public final class LinkServer {
                 c.close();
             }
         }
+    }
+
+    static final Set<String> LIFTOFF_KINDS = new HashSet<>(Arrays.asList("build", "update"));
+    static final Set<String> LIFTOFF_STATES = new HashSet<>(Arrays.asList("running", "ok", "failed"));
+
+    /** v2.14 "liftoff" from the PC, re-built with only known fields, clipped; state "invalid" if unusable. */
+    static JSONObject liftoff(JSONObject d) throws JSONException {
+        String kind = d.optString("kind", ""), st = d.optString("state", "");
+        if (!LIFTOFF_KINDS.contains(kind) || !LIFTOFF_STATES.contains(st)) return new JSONObject().put("state", "invalid");
+        JSONObject o = new JSONObject().put("id", printable(d.optString("id", ""), 32)).put("kind", kind).put("state", st)
+                .put("name", printable(d.optString("name", ""), 40)).put("stage", printable(d.optString("stage", ""), 40))
+                .put("elapsedS", Math.max(0, Math.min(864_000, d.optInt("elapsedS", 0))));
+        int exp = d.optInt("expectedS", 0);
+        if (exp > 0 && exp < 86_400) o.put("expectedS", exp);
+        if (d.has("pct") && !d.isNull("pct")) o.put("pct", Math.max(0, Math.min(100, d.optInt("pct"))));
+        if (d.has("code") && !d.isNull("code")) o.put("code", d.optInt("code"));
+        JSONArray tail = d.optJSONArray("tail"), t = new JSONArray();
+        if (tail != null) for (int i = Math.max(0, tail.length() - 6); i < tail.length(); i++) t.put(printable(tail.optString(i, ""), 120));
+        return o.put("tail", t);
     }
 
     /** Sends an event to every connected PC. */

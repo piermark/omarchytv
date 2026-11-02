@@ -399,4 +399,24 @@
     <string name="keys_none">Ingen støttet fjernkontroll er tilkoblet.</string>
     <string name="keys_default">Ikke tildelt: %1$s</string>
     <string name="wp_loop">Alltid animert bakgrunn</string>
+    <string name="set_boot_screen">Oppstartsskjerm</string>
+    <string name="boot_mode_boot">ved oppstart</string>
+    <string name="boot_mode_wake">oppstart og oppvåkning</string>
+    <string name="set_pc_power">TV og PC slås på og av sammen</string>
+    <string name="pc_power_no_mac">TV-en lærer PC-ens adresse neste gang Omarchy Link kobler til</string>
+    <string name="set_update">Oppdater OmarchyTV</string>
+    <string name="update_checking">Ser etter oppdateringer…</string>
+    <string name="update_none">OmarchyTV %1$s er den nyeste versjonen</string>
+    <string name="update_available_title">OmarchyTV %1$s er tilgjengelig</string>
+    <string name="update_available_msg">Du har %1$s. Laste ned og installere? Android ber deg bekrefte.</string>
+    <string name="update_install">Installer</string>
+    <string name="update_failed">Oppdateringen mislyktes: %1$s</string>
+    <string name="update_allow_unknown">Tillat OmarchyTV å installere apper, og trykk Oppdater igjen</string>
+    <string name="update_bad_apk">nedlastingen er ikke en OmarchyTV-versjon signert som denne</string>
+    <string name="liftoff_build">bygg</string>
+    <string name="liftoff_update">oppdatering</string>
+    <string name="liftoff_ok">AVFYRING</string>
+    <string name="liftoff_abort">AVBRUTT</string>
+    <string name="liftoff_hint">hvilken som helst tast: skjul</string>
+    <string name="liftoff_failed_toast">%1$s mislyktes</string>
 </resources>

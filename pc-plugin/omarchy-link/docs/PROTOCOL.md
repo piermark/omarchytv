@@ -256,6 +256,28 @@ theme the PC doesn't have changes only the TV (logged on the PC). LG/Samsung use
 `POST /v1/theme/set` on `omarchy-tv webos-serve`, header `X-Omarchy-Token`, body `{"name"}` →
 `{"result": "ok"|"same"}` 200, `"unknown"` 404, `"busy"` 429, 403 when `themeFromTv` is off, 503 without omarchy-link.
 
+### Power together and liftoff (v2.14)
+
+**Event `pc_wol`** (PC → TV, `{"mac": "aa:bb:cc:dd:ee:ff", "broadcast": "192.168.1.255"}`), sent after each connect
+while `powerFromTv` is not `false`: the MAC and subnet broadcast of the interface the PC uses to reach the TV. The TV
+keeps them in `omarchytv.json` `link.pcWol` (rewritten only when they change).
+
+**Event `tv_power`** (TV → PC, `{"state": "standby"|"on"}`), only while the TV setting "TV and PC power together"
+(`pcPower`, default off) is on. On screen off the TV sends `standby`; the PC suspends after `powerGraceS` (default 60 s,
+10…3600) with `systemctl suspend` (`pmset sleepnow` on macOS), unless `powerFromTv` is `false`, a liftoff is running, or
+`on` arrives first. On screen on (and when the launcher starts) the TV sends a Wake-on-LAN magic packet to that MAC
+(255.255.255.255 and the subnet broadcast, UDP 9 and 7, three times) and `on`. Waking needs Wake-on-LAN enabled on the
+PC (BIOS + `ethtool -s <dev> wol g`); most PCs only wake over Ethernet. LG uses the bridge (`POST /v1/power`, same
+body, needs "TV control" approved so the app can tell a real power-off from another app in front); LG/Samsung web
+apps cannot send Wake-on-LAN.
+
+**Event `liftoff`** (PC → TV): a build run with `omarchy-link liftoff -- <command>` or an update via the PC.
+`{"id", "kind": "build"|"update", "name", "state": "running"|"ok"|"failed", "stage", "elapsedS", "expectedS"?,
+"pct"?, "code"?, "tail": [last lines, failures only]}`. Sent on every change and every 5 s while it runs; a finished
+one stays available for 90 s. `expectedS` is the last duration of the same name (T-minus countdown; T-plus without
+it). The TV clips every field and draws it over Home; LG/Samsung read the same object from `GET /v1/status`
+`"liftoff"`. Nothing is sent unless `liftoffToTv` is not `false`.
+
 ### Widgets (`PUT /v1/widgets`)
 
 ```json

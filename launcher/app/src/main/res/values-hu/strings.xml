@@ -399,4 +399,24 @@
     <string name="keys_none">Nincs csatlakoztatva támogatott távirányító.</string>
     <string name="keys_default">Nincs hozzárendelve: %1$s</string>
     <string name="wp_loop">Mindig animált háttérkép</string>
+    <string name="set_boot_screen">Indítóképernyő</string>
+    <string name="boot_mode_boot">indításkor</string>
+    <string name="boot_mode_wake">indításkor és ébredéskor</string>
+    <string name="set_pc_power">TV és PC együtt be/ki</string>
+    <string name="pc_power_no_mac">A TV a következő Omarchy Link-kapcsolatkor megtanulja a PC címét</string>
+    <string name="set_update">OmarchyTV frissítése</string>
+    <string name="update_checking">Frissítések keresése…</string>
+    <string name="update_none">Az OmarchyTV %1$s a legújabb verzió</string>
+    <string name="update_available_title">Elérhető az OmarchyTV %1$s</string>
+    <string name="update_available_msg">A te verziód: %1$s. Letöltöd és telepíted? Az Android megerősítést kér.</string>
+    <string name="update_install">Telepítés</string>
+    <string name="update_failed">A frissítés sikertelen: %1$s</string>
+    <string name="update_allow_unknown">Engedélyezd az OmarchyTV-nek az alkalmazások telepítését, majd nyomd meg újra a Frissítés gombot</string>
+    <string name="update_bad_apk">a letöltött fájl nem ugyanígy aláírt OmarchyTV-verzió</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">frissítés</string>
+    <string name="liftoff_ok">KILÖVÉS</string>
+    <string name="liftoff_abort">MEGSZAKÍTVA</string>
+    <string name="liftoff_hint">bármely gomb: elrejtés</string>
+    <string name="liftoff_failed_toast">%1$s sikertelen</string>
 </resources>

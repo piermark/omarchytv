@@ -399,4 +399,24 @@
     <string name="keys_none">Nie podłączono obsługiwanego pilota.</string>
     <string name="keys_default">Nieprzypisany: %1$s</string>
     <string name="wp_loop">Zawsze animowana tapeta</string>
+    <string name="set_boot_screen">Ekran startowy</string>
+    <string name="boot_mode_boot">przy starcie</string>
+    <string name="boot_mode_wake">start i wybudzenie</string>
+    <string name="set_pc_power">TV i PC włączane razem</string>
+    <string name="pc_power_no_mac">TV pozna adres PC przy następnym połączeniu Omarchy Link</string>
+    <string name="set_update">Aktualizuj OmarchyTV</string>
+    <string name="update_checking">Szukam aktualizacji…</string>
+    <string name="update_none">OmarchyTV %1$s to najnowsza wersja</string>
+    <string name="update_available_title">Dostępna jest wersja OmarchyTV %1$s</string>
+    <string name="update_available_msg">Masz %1$s. Pobrać i zainstalować? Android poprosi o potwierdzenie.</string>
+    <string name="update_install">Zainstaluj</string>
+    <string name="update_failed">Aktualizacja nie powiodła się: %1$s</string>
+    <string name="update_allow_unknown">Zezwól OmarchyTV na instalowanie aplikacji i ponownie naciśnij Aktualizuj</string>
+    <string name="update_bad_apk">pobrany plik nie jest wersją OmarchyTV podpisaną tak jak ta</string>
+    <string name="liftoff_build">kompilacja</string>
+    <string name="liftoff_update">aktualizacja</string>
+    <string name="liftoff_ok">START</string>
+    <string name="liftoff_abort">PRZERWANO</string>
+    <string name="liftoff_hint">dowolny klawisz: ukryj</string>
+    <string name="liftoff_failed_toast">%1$s: niepowodzenie</string>
 </resources>

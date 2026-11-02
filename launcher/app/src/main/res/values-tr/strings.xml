@@ -399,4 +399,24 @@
     <string name="keys_none">Desteklenen kumanda bağlı değil.</string>
     <string name="keys_default">Atanmamış: %1$s</string>
     <string name="wp_loop">Her zaman hareketli duvar kâğıdı</string>
+    <string name="set_boot_screen">Açılış ekranı</string>
+    <string name="boot_mode_boot">açılışta</string>
+    <string name="boot_mode_wake">açılış ve uyanma</string>
+    <string name="set_pc_power">TV ve PC birlikte açılıp kapansın</string>
+    <string name="pc_power_no_mac">TV, Omarchy Link bir sonraki bağlandığında PC\'nin adresini öğrenir</string>
+    <string name="set_update">OmarchyTV\'yi güncelle</string>
+    <string name="update_checking">Güncellemeler aranıyor…</string>
+    <string name="update_none">OmarchyTV %1$s en son sürüm</string>
+    <string name="update_available_title">OmarchyTV %1$s mevcut</string>
+    <string name="update_available_msg">Sizdeki sürüm %1$s. İndirip kurulsun mu? Android onay isteyecek.</string>
+    <string name="update_install">Kur</string>
+    <string name="update_failed">Güncelleme başarısız: %1$s</string>
+    <string name="update_allow_unknown">OmarchyTV\'nin uygulama yüklemesine izin verin, ardından Güncelle\'ye tekrar basın</string>
+    <string name="update_bad_apk">indirilen dosya bununla aynı imzalı bir OmarchyTV sürümü değil</string>
+    <string name="liftoff_build">derleme</string>
+    <string name="liftoff_update">güncelleme</string>
+    <string name="liftoff_ok">KALKIŞ</string>
+    <string name="liftoff_abort">İPTAL</string>
+    <string name="liftoff_hint">herhangi bir tuş: gizle</string>
+    <string name="liftoff_failed_toast">%1$s başarısız oldu</string>
 </resources>

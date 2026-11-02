@@ -151,6 +151,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         setContentView(R.layout.activity_main);
         Theme.apply(getWindow().getDecorView());
         BootScreenView.onCreate(this, findViewById(R.id.root));   // v2.14 boot screen (once per boot by default)
+        current = new java.lang.ref.WeakReference<>(this);
         // Lights hub only while OmarchyTV is on screen; the snapshot ("Restore previous") is queued before the paint.
         com.omarchytv.home.lights.LightsPresence.install(this, new com.omarchytv.home.lights.LightsPresence.Painter() {
             @Override
@@ -879,6 +880,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "stats":
                 if (resumed && home != null) home.refresh();
                 break;
+            case "liftoff":   // v2.14 a build/update on the PC: rocket countdown, alarm if it fails
+                LiftoffView.onState(this, findViewById(R.id.root), data, resumed);
+                break;
             case "banners":   // a custom app banner was pushed or removed (banners/<package>.png)
                 if (resumed && adapter != null) {
                     adapter.reload();
@@ -1075,6 +1079,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     protected void onDestroy() {
         super.onDestroy();
         BootScreenView.onDestroy(this);
+        LiftoffView.onDestroy();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm != null) cm.unregisterNetworkCallback(networkCallback);
         OmarchyLink.removeListener(linkListener);
@@ -2179,6 +2184,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 .show();
     }
 
+    private String bootLabel(String mode) {
+        if ("wake".equals(mode)) return str(R.string.boot_mode_wake);
+        if ("off".equals(mode)) return str(R.string.off);
+        return str(R.string.boot_mode_boot);
+    }
+
     private AsciiMenu.Page launcherPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
         String[] sizes = {"small", "medium", "large"};
@@ -2214,6 +2225,31 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             });
             themeToPc(n);
             return true;
+        });
+        // v2.14: boot screen, theme sync and power with the PC, update: switched here.
+        String lBoot = str(R.string.set_boot_screen);
+        String[] bootModes = {"boot", "wake", "off"};
+        p.add(lBoot, bootLabel(cfg.bootScreen), r -> {
+            String n = next(bootModes, cfg.bootScreen);
+            applyLive("launcher", lBoot, j -> j.put("bootScreen", n));
+            return true;
+        });
+        String lToPc = str(R.string.theme_to_pc);
+        p.add(lToPc, str(cfg.themeToPc ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.themeToPc;
+            applyLive("launcher", lToPc, j -> j.put("themeToPc", n));
+            return true;
+        });
+        String lPower = str(R.string.set_pc_power);
+        p.add(lPower, str(cfg.pcPower ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.pcPower;
+            applyLive("launcher", lPower, j -> j.put("pcPower", n));
+            if (n && cfg.pcMac.isEmpty()) Toast.makeText(this, R.string.pc_power_no_mac, Toast.LENGTH_LONG).show();
+            return true;
+        });
+        p.add(str(R.string.set_update), Updater.currentVersion(this), r -> {
+            handler.post(this::checkUpdate);
+            return false;
         });
         // v2.10: the old per-pane toggles (clock, ai, sysinfo, ...) drove the removed pane layer and did nothing on the
         // home; every home panel is switched in Widgets (workspace 5).
@@ -2996,6 +3032,84 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
      * is sent to the PC, which switches with omarchy-theme-set when it has that theme (else only the TV changes).
      * The PC's normal theme push then comes back with the same theme, so nothing loops.
      */
+    // ---- v2.14 "Update OmarchyTV": official release APK, checked, Android's installer confirms ----
+
+    private static java.lang.ref.WeakReference<MainActivity> current;
+    private String updateId = "", updateName = "";
+    private long updateStart;
+    private boolean updating;
+
+    private void checkUpdate() {
+        if (updating) return;
+        Toast.makeText(this, R.string.update_checking, Toast.LENGTH_SHORT).show();
+        new Thread(() -> {
+            Updater.Asset a;
+            try {
+                a = Updater.check(this);
+            } catch (Exception e) {
+                String m = e.getMessage() != null ? e.getMessage() : e.toString();
+                handler.post(() -> Toast.makeText(this, getString(R.string.update_failed, m), Toast.LENGTH_LONG).show());
+                return;
+            }
+            String cur = Updater.currentVersion(this);
+            handler.post(() -> {
+                if (isFinishing()) return;
+                if (a == null) {
+                    Toast.makeText(this, getString(R.string.update_none, cur), Toast.LENGTH_LONG).show();
+                    return;
+                }
+                new android.app.AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.update_available_title, a.version))
+                        .setMessage(getString(R.string.update_available_msg, cur))
+                        .setPositiveButton(R.string.update_install, (d, w) -> startUpdate(a))
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show();
+            });
+        }, "update-check").start();
+    }
+
+    private void startUpdate(Updater.Asset a) {
+        if (updating || !Updater.mayInstall(this)) return;
+        updating = true;
+        updateId = "tv-" + System.currentTimeMillis();
+        updateName = "OmarchyTV " + a.version;
+        updateStart = android.os.SystemClock.elapsedRealtime();
+        localLiftoff("running", "download", 0, null);
+        new Thread(() -> {
+            try {
+                java.io.File apk = Updater.download(this, a, pct -> handler.post(() -> localLiftoff("running", "download", pct < 0 ? -1 : pct * 8 / 10, null)));
+                handler.post(() -> localLiftoff("running", "install", 90, null));
+                Updater.install(this, apk);   // Android asks to confirm; on success the launcher restarts as the new version
+            } catch (Exception e) {
+                updateFinished(false, e.getMessage() != null ? e.getMessage() : e.toString());
+            }
+        }, "update").start();
+    }
+
+    /** The install failed or was cancelled (Updater.Done, or the download/checks). */
+    static void updateFinished(boolean ok, String message) {
+        MainActivity a = current != null ? current.get() : null;
+        if (a == null) return;
+        a.handler.post(() -> {
+            if (!a.updating) return;
+            a.updating = false;
+            a.localLiftoff(ok ? "ok" : "failed", ok ? "" : "install", ok ? 100 : -1, message);
+        });
+    }
+
+    private void localLiftoff(String st, String stage, int pct, String message) {
+        try {
+            org.json.JSONObject o = new org.json.JSONObject().put("id", updateId).put("kind", "update").put("name", updateName)
+                    .put("state", st).put("stage", stage).put("expectedS", 90)
+                    .put("elapsedS", (android.os.SystemClock.elapsedRealtime() - updateStart) / 1000);
+            if (pct >= 0) o.put("pct", pct);
+            org.json.JSONArray t = new org.json.JSONArray();
+            if (message != null) t.put(message.length() > 120 ? message.substring(0, 120) : message);
+            LiftoffView.onState(this, findViewById(R.id.root), o.put("tail", t), resumed);
+        } catch (org.json.JSONException ignored) {
+        }
+    }
+
     private void themeToPc(String name) {
         if (LauncherConfig.get(this).themeToPc && OmarchyLink.hasPc()) OmarchyLink.themeSet(name);
     }
@@ -3763,6 +3877,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (BootScreenView.consumeKey(e)) return true;   // boot screen: any key skips, none reaches Home
+        if (LiftoffView.consumeKey(e)) return true;      // liftoff countdown: any key hides it
         if (swallowKeyUp == e.getKeyCode() && e.getAction() == KeyEvent.ACTION_UP) {
             swallowKeyUp = -1;
             return true;

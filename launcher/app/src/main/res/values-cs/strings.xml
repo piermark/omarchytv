@@ -399,4 +399,24 @@
     <string name="keys_none">Není připojen žádný podporovaný ovladač.</string>
     <string name="keys_default">Nepřiřazeno: %1$s</string>
     <string name="wp_loop">Vždy animované pozadí</string>
+    <string name="set_boot_screen">Úvodní obrazovka</string>
+    <string name="boot_mode_boot">při startu</string>
+    <string name="boot_mode_wake">start a probuzení</string>
+    <string name="set_pc_power">TV a PC zapínat společně</string>
+    <string name="pc_power_no_mac">TV zjistí adresu PC při příštím připojení Omarchy Link</string>
+    <string name="set_update">Aktualizovat OmarchyTV</string>
+    <string name="update_checking">Hledám aktualizace…</string>
+    <string name="update_none">OmarchyTV %1$s je nejnovější verze</string>
+    <string name="update_available_title">Je k dispozici OmarchyTV %1$s</string>
+    <string name="update_available_msg">Máte %1$s. Stáhnout a nainstalovat? Android požádá o potvrzení.</string>
+    <string name="update_install">Instalovat</string>
+    <string name="update_failed">Aktualizace selhala: %1$s</string>
+    <string name="update_allow_unknown">Povolte OmarchyTV instalovat aplikace a znovu stiskněte Aktualizovat</string>
+    <string name="update_bad_apk">stažený soubor není verze OmarchyTV podepsaná stejně jako tato</string>
+    <string name="liftoff_build">sestavení</string>
+    <string name="liftoff_update">aktualizace</string>
+    <string name="liftoff_ok">START</string>
+    <string name="liftoff_abort">PŘERUŠENO</string>
+    <string name="liftoff_hint">libovolná klávesa: skrýt</string>
+    <string name="liftoff_failed_toast">%1$s selhalo</string>
 </resources>

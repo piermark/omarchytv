@@ -398,6 +398,10 @@ final class LauncherConfig {
     final boolean syncPcWallpaper;
     /** v2.14 reverse theme sync (default false): a theme picked on the TV also switches the paired PC. */
     final boolean themeToPc;
+    /** v2.14 "TV and PC power together" (default false): TV on wakes the PC (Wake-on-LAN), TV off suspends it. */
+    final boolean pcPower;
+    /** The paired PC's MAC / subnet broadcast for Wake-on-LAN, from omarchy-link's "pc_wol" ("" until it sent them). */
+    final String pcMac, pcBroadcast;
     /** v2.13: play animated MP4 intro (e.g. cumulus, last-horizon) before settling on still wallpaper. */
     final boolean wallpaperIntro;
     /** v2.14 "Always-animated wallpaper" (default false): loop the theme's animated wallpaper while Home is on screen
@@ -662,6 +666,10 @@ final class LauncherConfig {
         wallpaper = j != null ? j.optString("wallpaper", defWp).trim() : defWp;
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
         themeToPc = j != null && j.optBoolean("themeToPc", false);
+        pcPower = j != null && j.optBoolean("pcPower", false);
+        JSONObject lkWol = j != null && j.optJSONObject("link") != null ? j.optJSONObject("link").optJSONObject("pcWol") : null;
+        pcMac = lkWol != null && WakeOnLan.mac(lkWol.optString("mac", "")) != null ? lkWol.optString("mac") : "";
+        pcBroadcast = lkWol != null && WakeOnLan.ipv4(lkWol.optString("broadcast", "")) ? lkWol.optString("broadcast") : "";
         wallpaperIntro = j == null || j.optBoolean("wallpaper_intro", j.optBoolean("wallpaperIntro", true));
         wallpaperLoop = j != null && j.optBoolean("wallpaperLoop", false);
         bootScreen = bootScreenMode(j != null ? j.optString("bootScreen", "boot") : "boot");

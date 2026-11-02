@@ -399,4 +399,24 @@
     <string name="keys_none">Tuettua kaukosäädintä ei ole yhdistetty.</string>
     <string name="keys_default">Ei määritetty: %1$s</string>
     <string name="wp_loop">Aina animoitu taustakuva</string>
+    <string name="set_boot_screen">Käynnistysnäyttö</string>
+    <string name="boot_mode_boot">käynnistyksessä</string>
+    <string name="boot_mode_wake">käynnistys ja herätys</string>
+    <string name="set_pc_power">TV ja PC päälle yhdessä</string>
+    <string name="pc_power_no_mac">TV oppii PC:n osoitteen, kun Omarchy Link seuraavan kerran yhdistää</string>
+    <string name="set_update">Päivitä OmarchyTV</string>
+    <string name="update_checking">Etsitään päivityksiä…</string>
+    <string name="update_none">OmarchyTV %1$s on uusin versio</string>
+    <string name="update_available_title">OmarchyTV %1$s on saatavilla</string>
+    <string name="update_available_msg">Sinulla on %1$s. Ladataanko ja asennetaanko? Android pyytää vahvistusta.</string>
+    <string name="update_install">Asenna</string>
+    <string name="update_failed">Päivitys epäonnistui: %1$s</string>
+    <string name="update_allow_unknown">Salli OmarchyTV:n asentaa sovelluksia ja paina sitten Päivitä uudelleen</string>
+    <string name="update_bad_apk">ladattu tiedosto ei ole samalla tavalla allekirjoitettu OmarchyTV-versio</string>
+    <string name="liftoff_build">koonti</string>
+    <string name="liftoff_update">päivitys</string>
+    <string name="liftoff_ok">LAUKAISU</string>
+    <string name="liftoff_abort">KESKEYTETTY</string>
+    <string name="liftoff_hint">mikä tahansa näppäin: piilota</string>
+    <string name="liftoff_failed_toast">%1$s epäonnistui</string>
 </resources>

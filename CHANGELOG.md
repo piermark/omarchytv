@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### TV and PC together, updates from the TV, liftoff (draft, Android TV + LG webOS + Samsung Tizen + PC)
+
+- **TV and PC power together** (Launcher settings, off by default). Android TV: turning the TV on wakes the Omarchy PC (Wake-on-LAN; the PC tells the TV its address over Omarchy Link), turning it off suspends the PC after 60 s, unless the TV comes back on or a build is running. LG: the PC follows the TV into sleep (needs "TV control" approved); waking from LG/Samsung is not possible, TV web apps can't send Wake-on-LAN. Samsung: not available. PC side: `powerFromTv`, `powerGraceS`.
+- **Settings on/off:** Boot screen (at start / start and wake / off), "Also change the PC theme" and the power switch are now in Launcher settings (Android) and All OmarchyTV settings (LG/Samsung).
+- **Update OmarchyTV (Android TV):** checks the official GitHub releases, and when a newer `omarchytv-release-<version>.apk` exists asks, downloads it, checks the release checksum, the package and that it is signed with the same key as the installed launcher, then hands it to Android's installer (Android asks to confirm; the first time it asks to allow installs from OmarchyTV).
+- **Update via PC (LG/Samsung):** the TV asks the PC (`omarchy-tv webos-serve`); the PC downloads the newest official `.ipk` / `.wgt`, checks it and installs it: `ares-install` on LG, signed with your own Samsung certificate profile (`tizenProfile`) and `tizen install` on Samsung. PC side: `updateFromTv`.
+- **Liftoff on the big screen:** `omarchy-link liftoff -- <build command>` and every update show an Omarchy-style rocket countdown on the TV: T-minus from the last run of the same build, stage and progress, LIFTOFF when it worked, a red blinking ABORT with the last lines and an alarm when it fails. Any key hides it.
+- Protocol: events `pc_wol`, `tv_power`, `liftoff`; bridge `POST /v1/update/tv`, `POST /v1/power`, `liftoff` in `/v1/status` (PROTOCOL.md). Tests: `test_liftoff_power.py`, `test_tvupdate.py`, `test_webos.py`, `LiftoffScriptTest`, `webos/tests/liftoff.test.js` (Android and LG/Samsung checked against the same cases).
+
 ### Theme sync both ways (draft, Android TV + LG webOS + Samsung Tizen + PC)
 
 - **Change the theme from the remote and the PC follows.** New switch in Themes: **"Also change the PC theme"** (off by default). With it on and a PC paired, picking a theme on the TV also runs `omarchy-theme-set` on the Omarchy PC; the PC then sends its palette back as usual, so TV and PC stay the same.

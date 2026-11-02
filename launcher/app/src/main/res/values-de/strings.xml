@@ -403,4 +403,24 @@
     <string name="keys_none">Keine unterstützte Fernbedienung verbunden.</string>
     <string name="keys_default">Ohne Belegung: %1$s</string>
     <string name="wp_loop">Immer animierter Hintergrund</string>
+    <string name="set_boot_screen">Startbildschirm</string>
+    <string name="boot_mode_boot">beim Start</string>
+    <string name="boot_mode_wake">Start und Aufwachen</string>
+    <string name="set_pc_power">TV und PC gemeinsam ein/aus</string>
+    <string name="pc_power_no_mac">Der TV lernt die Adresse des PCs bei der nächsten Omarchy-Link-Verbindung</string>
+    <string name="set_update">OmarchyTV aktualisieren</string>
+    <string name="update_checking">Suche nach Updates…</string>
+    <string name="update_none">OmarchyTV %1$s ist die neueste Version</string>
+    <string name="update_available_title">OmarchyTV %1$s ist verfügbar</string>
+    <string name="update_available_msg">Du hast %1$s. Herunterladen und installieren? Android fragt nach einer Bestätigung.</string>
+    <string name="update_install">Installieren</string>
+    <string name="update_failed">Update fehlgeschlagen: %1$s</string>
+    <string name="update_allow_unknown">Erlaube OmarchyTV, Apps zu installieren, und drücke dann erneut Aktualisieren</string>
+    <string name="update_bad_apk">der Download ist keine OmarchyTV-Version mit derselben Signatur</string>
+    <string name="liftoff_build">Build</string>
+    <string name="liftoff_update">Update</string>
+    <string name="liftoff_ok">ABHEBEN</string>
+    <string name="liftoff_abort">ABBRUCH</string>
+    <string name="liftoff_hint">beliebige Taste: ausblenden</string>
+    <string name="liftoff_failed_toast">%1$s fehlgeschlagen</string>
 </resources>

@@ -701,6 +701,30 @@ html, body {
   height: 100%;
   border: none;
 }
+/* v2.14 liftoff: build/update countdown (liftoff.js) */
+#liftoff { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; background: rgba(0,0,0,.86); font-family: inherit; }
+#liftoff.failed.blink { background: rgba(120,0,0,.55); }
+#liftoff .box { position: absolute; left: 13%; top: 15%; width: 74%; height: 70%; border: 3px solid var(--t-accent, #e68e0d); box-sizing: border-box; }
+#liftoff.failed .box { border-color: var(--t-red, #e06c75); }
+#liftoff.ok .box { border-color: var(--t-green, #98c379); }
+#liftoff .title { position: absolute; left: 32px; top: -18px; padding: 0 10px; background: #000; color: var(--t-accent, #e68e0d); font-size: 26px; white-space: nowrap; }
+#liftoff.failed .title { color: var(--t-red, #e06c75); }
+#liftoff pre { margin: 0; font-family: inherit; }
+#liftoff .rocket { position: absolute; left: 7%; top: 16%; font-size: 40px; line-height: 1.15; color: var(--t-fg, #ddd); transition: transform 3s cubic-bezier(.6,0,1,1); }
+#liftoff.failed .rocket { color: var(--t-red, #e06c75); }
+#liftoff.ok .rocket { transform: translateY(-900px); }
+#liftoff .flame { color: var(--t-accent, #e68e0d); }
+#liftoff.ok .flame { color: var(--t-yellow, #e5c07b); }
+#liftoff .right { position: absolute; left: 38%; top: 14%; right: 4%; }
+#liftoff .clock { font-size: 120px; font-weight: bold; color: var(--t-accent, #e68e0d); line-height: 1.1; }
+#liftoff .clock.dim { opacity: .35; }
+#liftoff.ok .clock { color: var(--t-green, #98c379); }
+#liftoff.failed .clock { color: var(--t-red, #e06c75); }
+#liftoff .stage, #liftoff .bar, #liftoff .plus { font-size: 34px; color: var(--t-fg, #ddd); margin-top: 18px; white-space: nowrap; }
+#liftoff .bar { color: var(--t-accent, #e68e0d); }
+#liftoff .plus { font-size: 28px; opacity: .6; }
+#liftoff .tail { position: absolute; left: 7%; right: 4%; bottom: 14%; font-size: 26px; color: var(--t-fg, #ddd); white-space: pre; overflow: hidden; }
+#liftoff .hint { position: absolute; right: 24px; bottom: 14px; font-size: 22px; opacity: .55; color: var(--t-fg, #ddd); }
 </style>
 <style>
 /* v2.13: official YouTube embed overlay + companion idle bob */
@@ -984,6 +1008,7 @@ html, body {
 <script src="tvapps.js"></script>
 <script src="tui.js"></script>
 <script src="boot.js"></script>
+<script src="liftoff.js"></script>
 <script src="lang.js"></script>
 <script src="i18n.js"></script>
 <script src="app.js"></script>

@@ -403,4 +403,24 @@
     <string name="keys_none">Nessun telecomando supportato collegato.</string>
     <string name="keys_default">Senza assegnazione: %1$s</string>
     <string name="wp_loop">Sfondo sempre animato</string>
+    <string name="set_boot_screen">Schermata di avvio</string>
+    <string name="boot_mode_boot">all\'avvio</string>
+    <string name="boot_mode_wake">avvio e risveglio</string>
+    <string name="set_pc_power">Accensione TV e PC insieme</string>
+    <string name="pc_power_no_mac">La TV impara l\'indirizzo del PC alla prossima connessione di Omarchy Link</string>
+    <string name="set_update">Aggiorna OmarchyTV</string>
+    <string name="update_checking">Cerco aggiornamenti…</string>
+    <string name="update_none">OmarchyTV %1$s è l\'ultima versione</string>
+    <string name="update_available_title">È disponibile OmarchyTV %1$s</string>
+    <string name="update_available_msg">Hai la %1$s. Scaricarla e installarla? Android chiederà conferma.</string>
+    <string name="update_install">Installa</string>
+    <string name="update_failed">Aggiornamento non riuscito: %1$s</string>
+    <string name="update_allow_unknown">Consenti a OmarchyTV di installare app, poi premi di nuovo Aggiorna</string>
+    <string name="update_bad_apk">il file scaricato non è una release di OmarchyTV firmata come questa</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">aggiornamento</string>
+    <string name="liftoff_ok">DECOLLO</string>
+    <string name="liftoff_abort">ANNULLATO</string>
+    <string name="liftoff_hint">un tasto qualsiasi: nascondi</string>
+    <string name="liftoff_failed_toast">%1$s non riuscito</string>
 </resources>

@@ -399,4 +399,24 @@
     <string name="keys_none">対応するリモコンが接続されていません。</string>
     <string name="keys_default">割り当てなし: %1$s</string>
     <string name="wp_loop">壁紙を常にアニメーション</string>
+    <string name="set_boot_screen">起動画面</string>
+    <string name="boot_mode_boot">起動時</string>
+    <string name="boot_mode_wake">起動時と復帰時</string>
+    <string name="set_pc_power">テレビとPCの電源を連動</string>
+    <string name="pc_power_no_mac">次に Omarchy Link が接続したときに、テレビが PC のアドレスを覚えます</string>
+    <string name="set_update">OmarchyTV をアップデート</string>
+    <string name="update_checking">アップデートを確認中…</string>
+    <string name="update_none">OmarchyTV %1$s は最新バージョンです</string>
+    <string name="update_available_title">OmarchyTV %1$s が利用可能です</string>
+    <string name="update_available_msg">現在は %1$s です。ダウンロードしてインストールしますか？Android が確認を求めます。</string>
+    <string name="update_install">インストール</string>
+    <string name="update_failed">アップデートに失敗しました：%1$s</string>
+    <string name="update_allow_unknown">OmarchyTV にアプリのインストールを許可してから、もう一度アップデートを押してください</string>
+    <string name="update_bad_apk">ダウンロードしたファイルは、これと同じ署名の OmarchyTV ではありません</string>
+    <string name="liftoff_build">ビルド</string>
+    <string name="liftoff_update">アップデート</string>
+    <string name="liftoff_ok">発射</string>
+    <string name="liftoff_abort">中止</string>
+    <string name="liftoff_hint">任意のキー：非表示</string>
+    <string name="liftoff_failed_toast">%1$s が失敗しました</string>
 </resources>

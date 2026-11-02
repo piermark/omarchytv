@@ -1,4 +1,5 @@
 import json, os, sys, threading, unittest, urllib.error, urllib.request
+from unittest import mock
 from http.server import HTTPServer
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 from omarchy_tv import webos
@@ -160,6 +161,58 @@ class ThemeSetBridgeTest(unittest.TestCase):
         self.assertEqual(self.th.asked, [])
         webos._link_theme = lambda: None
         self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"}, tok)[0], 503)
+
+
+class UpdatePowerBridgeTest(unittest.TestCase):
+    post = GrokbotBridgeTest.post
+
+    def setUp(self):
+        GrokbotBridgeTest.setUp(self)
+        self.old_cfg, self.old_mod = webos.link_cfg, webos._link_mod
+        self.cfg = {}
+        webos.link_cfg = lambda: self.cfg
+        self.power_calls = []
+        outer = self
+
+        class P:
+            @staticmethod
+            def tv_power(state, cfg, log):
+                outer.power_calls.append(state)
+                return "scheduled"
+        webos._link_mod = lambda n: P if n == "power" else None
+
+    def tearDown(self):
+        webos.link_cfg, webos._link_mod = self.old_cfg, self.old_mod
+        GrokbotBridgeTest.tearDown(self)
+
+    def test_power_needs_the_code_and_reaches_omarchy_link(self):
+        self.assertEqual(self.post("/v1/power", {"state": "standby"})[0], 401)
+        tok = webos.bridge_token()
+        self.assertEqual(self.post("/v1/power", {"state": "standby"}, tok), (200, {"result": "scheduled"}))
+        self.assertEqual(self.power_calls, ["standby"])
+        webos._link_mod = lambda n: None
+        self.assertEqual(self.post("/v1/power", {"state": "on"}, tok)[0], 503)
+
+    def test_update_check_install_and_off(self):
+        from omarchy_tv import tvupdate
+        tok = webos.bridge_token()
+        self.assertEqual(self.post("/v1/update/tv", {"action": "check", "platform": "webos"})[0], 401)
+        with mock.patch.object(tvupdate, "check", return_value={"current": "2.13.11", "latest": "2.13.12", "name": "x"}):
+            st, d = self.post("/v1/update/tv", {"action": "check", "platform": "webos", "version": "2.13.11"}, tok)
+        self.assertEqual((st, d["latest"]), (200, "2.13.12"))
+        with mock.patch.object(tvupdate, "start", return_value="started") as stt:
+            st, d = self.post("/v1/update/tv", {"action": "install", "platform": "tizen", "version": "2.13.11",
+                                                "want": "2.13.12"}, tok)
+        self.assertEqual((st, d), (200, {"result": "started"}))
+        self.assertEqual(stt.call_args[0][:4], ("tizen", "2.13.11", "2.13.12", "127.0.0.1"))
+        with mock.patch.object(tvupdate, "check", side_effect=tvupdate.UpdateError("bad_platform")):
+            self.assertEqual(self.post("/v1/update/tv", {"platform": "x"}, tok)[0], 400)
+        self.cfg["updateFromTv"] = False
+        self.assertEqual(self.post("/v1/update/tv", {"action": "install"}, tok)[0], 403)
+
+    def test_status_has_liftoff(self):
+        with urllib.request.urlopen(self.base + "/v1/status", timeout=5) as r:
+            self.assertIn("liftoff", json.loads(r.read()))
 
 class FakeAssistantMod:
     class NoProvider(Exception): pass

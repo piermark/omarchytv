@@ -37,6 +37,23 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       root_missing: "Needs a rooted TV with Homebrew Channel (unrooted: see homewatch/ in the repo)", root_failed: "Could not change it: ",
       wx_min: "min ", wx_max: "max ",
       theme_to_pc: "Also change the PC theme", theme_not_on_pc: "Not on the PC: only the TV changed",
+      boot_screen: "Boot screen",
+      boot_mode_boot: "at start",
+      boot_mode_wake: "start and wake",
+      pc_power: "PC sleeps with the TV",
+      pc_power_note: "When the TV turns off, the PC suspends. Waking the PC with the TV needs Android TV.",
+      update_via_pc: "Update via PC",
+      update_checking: "Checking for updates…",
+      update_none: "OmarchyTV %s is the latest version",
+      update_confirm: "Install OmarchyTV %s with the PC? The app restarts.",
+      update_need_pc: "Pair the Omarchy PC and set the PC ask code first",
+      update_failed: "Update failed: %s",
+      liftoff_build: "build",
+      liftoff_update: "update",
+      liftoff_ok: "LIFTOFF",
+      liftoff_abort: "ABORT",
+      liftoff_hint: "any key: hide",
+      update_install: "Install",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -66,6 +83,23 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       root_missing: "Serve una TV con root e Homebrew Channel (senza root: vedi homewatch/ nel repo)", root_failed: "Impossibile cambiarlo: ",
       wx_min: "min ", wx_max: "max ",
       theme_to_pc: "Cambia anche il tema del PC", theme_not_on_pc: "Non presente sul PC: è cambiata solo la TV",
+      boot_screen: "Schermata di avvio",
+      boot_mode_boot: "all'avvio",
+      boot_mode_wake: "avvio e risveglio",
+      pc_power: "Il PC dorme con la TV",
+      pc_power_note: "Quando spegni la TV, il PC va in sospensione. Per risvegliare il PC con la TV serve Android TV.",
+      update_via_pc: "Aggiorna tramite PC",
+      update_checking: "Cerco aggiornamenti…",
+      update_none: "OmarchyTV %s è l'ultima versione",
+      update_confirm: "Installare OmarchyTV %s tramite il PC? L'app si riavvia.",
+      update_need_pc: "Prima collega il PC Omarchy e imposta il codice del PC",
+      update_failed: "Aggiornamento non riuscito: %s",
+      liftoff_build: "build",
+      liftoff_update: "aggiornamento",
+      liftoff_ok: "DECOLLO",
+      liftoff_abort: "ANNULLATO",
+      liftoff_hint: "un tasto qualsiasi: nascondi",
+      update_install: "Installa",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -95,6 +129,23 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       root_missing: "Benötigt einen gerooteten TV mit Homebrew Channel (ohne Root: siehe homewatch/ im Repo)", root_failed: "Konnte nicht geändert werden: ",
       wx_min: "Min ", wx_max: "Max ",
       theme_to_pc: "Auch das PC-Theme ändern", theme_not_on_pc: "Nicht auf dem PC: nur der Fernseher wurde geändert",
+      boot_screen: "Startbildschirm",
+      boot_mode_boot: "beim Start",
+      boot_mode_wake: "Start und Aufwachen",
+      pc_power: "PC schläft mit dem TV",
+      pc_power_note: "Wenn der TV ausgeht, geht der PC in den Ruhezustand. Den PC mit dem TV aufwecken geht nur mit Android TV.",
+      update_via_pc: "Über den PC aktualisieren",
+      update_checking: "Suche nach Updates…",
+      update_none: "OmarchyTV %s ist die neueste Version",
+      update_confirm: "OmarchyTV %s über den PC installieren? Die App startet neu.",
+      update_need_pc: "Zuerst den Omarchy-PC koppeln und den PC-Code eingeben",
+      update_failed: "Update fehlgeschlagen: %s",
+      liftoff_build: "Build",
+      liftoff_update: "Update",
+      liftoff_ok: "ABHEBEN",
+      liftoff_abort: "ABBRUCH",
+      liftoff_hint: "beliebige Taste: ausblenden",
+      update_install: "Installieren",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -142,6 +193,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverShowClock: false,
     wallpaperIntro: true,
     wallpaperLoop: false,   // v2.14 "Always-animated wallpaper": loop the intro while Home is on screen
+    pcPower: false,         // v2.14 LG: the PC suspends when the TV turns off (POST /v1/power; needs TV control approved)
     themeToPc: false,       // v2.14 reverse theme sync: a theme picked here also switches the PC (POST /v1/theme/set)
     bootScreen: "boot",     // v2.14 boot screen (boot.js): "boot" at app start, "wake" also after standby, "off"
     bootFx: true,           // v2.14 boot screen scanlines and glow
@@ -641,6 +693,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var url = base.replace(/\/+$/, "") + "/v1/status";
     return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
       state.pcStatus = j;
+      liftoffState(j && j.liftoff);
       if (j && j.theme && DATA.themes[j.theme] && cfg.syncPcTheme) {
         cfg.theme = j.theme;
         applyTheme();
@@ -1090,6 +1143,139 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   // v2.14 reverse theme sync: with "Also change the PC theme" on and a real PC paired, the theme just picked here
   // goes to the PC bridge (omarchy-tv webos-serve), which runs omarchy-theme-set when it has that theme. The PC's
   // status then reports the same theme, so nothing loops. A theme the PC doesn't have changes only the TV.
+  // ---- v2.14 PC requests with the ask code (update via PC, power) ----
+  function pcPost(path, body, keepalive) {
+    var o = { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode || "", "Content-Type": "text/plain" }, body: JSON.stringify(body) };
+    if (keepalive) o.keepalive = true;
+    return fetch(pcBase() + path, o).then(function (r) {
+      return r.json().then(function (j) { return { status: r.status, j: j || {} }; }, function () { return { status: r.status, j: {} }; });
+    });
+  }
+  function pcReady() { return !!(cfg.pcHost && !cfg.pcSimulated && cfg.grokbotCode); }
+  function updateFailed(r) {
+    showToast(tr("update_failed").replace("%s", (r && r.j && (r.j.message || r.j.error)) || (r && r.status ? "HTTP " + r.status : "offline")));
+  }
+
+  // "Update via PC": the PC downloads the newest official release for this TV, checks it and installs it
+  // (LG: ares-install; Samsung: signed with the user's own certificate profile). The countdown comes from /v1/status.
+  function updateViaPc() {
+    if (!pcReady()) { showToast(tr("update_need_pc")); return; }
+    var plat = window.OMARCHY_PLATFORM === "tizen" ? "tizen" : "webos";
+    showToast(tr("update_checking"));
+    pcPost("/v1/update/tv", { action: "check", platform: plat, version: APP_VERSION }).then(function (r) {
+      if (r.status !== 200) { updateFailed(r); return; }
+      if (!r.j.latest) { showToast(tr("update_none").replace("%s", APP_VERSION)); return; }
+      var v = String(r.j.latest);
+      openModal(tr("update_via_pc"), tr("update_confirm").replace("%s", v), [
+        { label: tr("update_install"), right: v, act: function () {
+          closeModal();
+          pcPost("/v1/update/tv", { action: "install", platform: plat, version: APP_VERSION, want: v }).then(function (r2) {
+            if (r2.status !== 200 && r2.status !== 409) { updateFailed(r2); return; }
+            if (r2.j.result === "uptodate") showToast(tr("update_none").replace("%s", APP_VERSION));
+            pollPcStatus();
+          }, function () { updateFailed(null); });
+        } },
+        { label: tr("tile_cancel"), right: "", act: closeModal }
+      ]);
+    }, function () { updateFailed(null); });
+  }
+
+  // ---- v2.14 PC sleeps with the TV (LG only: a web app can't send Wake-on-LAN, so waking needs Android TV) ----
+  var powerSent = "";
+  function pcPowerSend(st) {
+    if (!cfg.pcPower || !pcReady() || powerSent === st) return;
+    powerSent = st;
+    try { pcPost("/v1/power", { state: st }, true).then(null, function () {}); } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", function () {
+    if (!cfg.pcPower || !isWebos()) return;
+    if (!document.hidden) { if (powerSent === "standby") pcPowerSend("on"); return; }
+    if (!tvControlApproved()) return;
+    // Hidden also means "another app is in front": only a TV that is really going off counts.
+    ssapRequest("ssap://com.webos.service.tvpower/power/getPowerState", function (ok, info, data) {
+      var st = ok && data && data.state;
+      if (st && st !== "Active") pcPowerSend("standby");
+    });
+  });
+
+  // ---- v2.14 Liftoff: a build or an update on the big screen (liftoff.js) ----
+  var LIFT = window.OmarchyLiftoff || null;
+  var lift = { s: null, at: 0, endedAt: 0, el: null, dismissed: "", endShown: "", seen: "", alarmed: "", timer: null };
+  function liftoffState(s) {
+    if (!LIFT || !s || ["running", "ok", "failed"].indexOf(s.state) < 0) return;
+    var id = String(s.id || ""), st = s.state, news = st !== "running";
+    if (st === "failed" && id !== lift.alarmed) { lift.alarmed = id; LIFT.alarm(); }
+    if (id === lift.dismissed && !news) return;
+    if (news && id + st === lift.endShown) return;
+    if (!lift.s && st === "ok" && id !== lift.seen) return;
+    lift.seen = id;
+    if (news) { lift.endShown = id + st; lift.endedAt = Date.now(); }
+    lift.s = s; lift.at = Date.now();
+    liftoffShow();
+  }
+  function liftoffEl() {
+    if (lift.el) return lift.el;
+    var d = document.createElement("div");
+    d.id = "liftoff";
+    d.innerHTML = '<div class="box"><div class="title"></div><pre class="rocket"></pre><div class="right"><div class="clock"></div>' +
+      '<div class="stage"></div><div class="bar"></div><div class="plus"></div></div><pre class="tail"></pre><div class="hint"></div></div>';
+    document.body.appendChild(d);
+    lift.el = d;
+    return d;
+  }
+  function liftoffShow() {
+    var d = liftoffEl();
+    d.style.display = "block";
+    liftoffRender();
+    if (!lift.timer) lift.timer = setInterval(liftoffRender, 200);
+  }
+  function liftoffHide() {
+    if (lift.timer) { clearInterval(lift.timer); lift.timer = null; }
+    if (lift.el) { lift.el.style.display = "none"; lift.el.className = ""; }
+    lift.s = null;
+  }
+  function liftoffRender() {
+    var s = lift.s, d = lift.el;
+    if (!s || !d) return;
+    var now = Date.now(), since = Math.floor((now - lift.at) / 1000), st = s.state;
+    if (st === "ok" && now - lift.endedAt > 5000) { liftoffHide(); return; }
+    if (st === "failed" && now - lift.endedAt > 120000) { liftoffHide(); return; }
+    var blink = Math.floor(now / 400) % 2 === 0;
+    d.className = st + (st === "failed" && blink ? " blink" : "");
+    function q(c) { return d.querySelector("." + c); }
+    q("title").textContent = "liftoff \u00b7 " + tr(s.kind === "update" ? "liftoff_update" : "liftoff_build") + " \u00b7 " + (s.name || "");
+    var flame = st === "failed" ? [] : st === "ok" ? [LIFT.FLAME[1][Math.floor(now / 120) % 2], LIFT.FLAME[1][(Math.floor(now / 120) + 1) % 2]]
+      : [LIFT.FLAME[0][Math.floor(now / 120) % 2]];
+    var r = q("rocket");
+    r.textContent = LIFT.ROCKET.join("\n") + "\n";
+    var fl = document.createElement("span"); fl.className = "flame"; fl.textContent = flame.join("\n");
+    r.appendChild(fl);
+    var clock = q("clock");
+    clock.textContent = st === "ok" ? tr("liftoff_ok") : st === "failed" ? tr("liftoff_abort") : LIFT.clock(s, since);
+    clock.className = "clock" + (LIFT.finalCount(s, since) && !blink ? " dim" : "");
+    var stage = s.stage || "";
+    if (st === "failed" && typeof s.code === "number") stage = (stage ? stage + " \u00b7 " : "") + "exit " + s.code;
+    q("stage").textContent = stage;
+    q("bar").textContent = st === "failed" ? "" : LIFT.bar(LIFT.progress(s, since), 24);
+    q("plus").textContent = st === "running" ? "T+" + LIFT.mmss(LIFT.elapsed(s, since)) : "";
+    q("tail").textContent = st === "failed" && s.tail ? s.tail.join("\n") : "";
+    q("hint").textContent = tr("liftoff_hint");
+  }
+  // Any key hides it (and never reaches Home); a new state shows it again.
+  window.addEventListener("keydown", function (e) {
+    if (!lift.el || lift.el.style.display !== "block") return;
+    if (lift.s) lift.dismissed = String(lift.s.id || "");
+    liftoffHide();
+    e.preventDefault(); e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }, true);
+  // While a liftoff runs, ask the PC every second instead of every 5 s.
+  setInterval(function () {
+    if (!lift.s || lift.s.state !== "running" || document.hidden || pcPollPending) return;
+    pcPollPending = true;
+    pollPcStatus().then(function () { pcPollPending = false; }, function () { pcPollPending = false; });
+  }, 1000);
+
   function themeToPc(name) {
     if (!cfg.themeToPc || !cfg.pcHost || cfg.pcSimulated) return;
     fetch(pcBase() + "/v1/theme/set", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode || "", "Content-Type": "text/plain" },
@@ -1381,6 +1567,23 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "Temperature unit", right: "°" + cfg.tempUnit, act: function () {
         cfg.tempUnit = cfg.tempUnit === "C" ? "F" : "C"; saveCfg(); renderAll(); openAllSettingsModal(true);
       } },
+      { label: tr("boot_screen"), right: tr(cfg.bootScreen === "wake" ? "boot_mode_wake" : cfg.bootScreen === "off" ? "off" : "boot_mode_boot"), act: function () {
+        var m = ["boot", "wake", "off"];
+        cfg.bootScreen = m[(m.indexOf(cfg.bootScreen || "boot") + 1) % m.length]; saveCfg(); openAllSettingsModal(true);
+      } },
+      { label: tr("theme_to_pc"), right: cfg.themeToPc ? "on" : "off", act: function () {
+        cfg.themeToPc = !cfg.themeToPc; saveCfg(); openAllSettingsModal(true);
+      } }
+    ]).concat(isWebos() ? [
+      { label: tr("pc_power"), right: cfg.pcPower ? "on" : "off", act: function () {
+        cfg.pcPower = !cfg.pcPower; saveCfg(); openAllSettingsModal(true);
+        if (cfg.pcPower) {
+          showToast(tr("pc_power_note"));
+          ssapRequest("ssap://com.webos.service.tvpower/power/getPowerState", function () {});   // asks for TV control once
+        }
+      } }
+    ] : []).concat([
+      { label: tr("update_via_pc"), right: APP_VERSION + " ›", act: updateViaPc },
       rootRow("boot", tr("root_boot")),
       rootRow("home", tr("root_home")),
       keepRow()

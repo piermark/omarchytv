@@ -406,6 +406,8 @@ public final class OmarchyLink implements LinkServer.Host {
                 String a = i.getAction();
                 if (Intent.ACTION_DREAMING_STARTED.equals(a)) screensaver = true;
                 else if (Intent.ACTION_DREAMING_STOPPED.equals(a)) screensaver = false;
+                else if (Intent.ACTION_SCREEN_ON.equals(a)) powerChanged(true);
+                else if (Intent.ACTION_SCREEN_OFF.equals(a)) powerChanged(false);
                 maybeBroadcastStatus();
             }
         }, f);
@@ -421,6 +423,25 @@ public final class OmarchyLink implements LinkServer.Host {
             }
         }, pf);
         rebind();
+        if (screenOn()) powerChanged(true);   // the TV just booted: wake the PC too
+    }
+
+    /**
+     * v2.14 "TV and PC power together" (pcPower, default off). On: Wake-on-LAN to the PC's MAC (from "pc_wol") and
+     * "tv_power" on (cancels a pending suspend). Off (standby): "tv_power" standby, the PC suspends after its grace
+     * time. Sent at once from the network thread: the TV may cut the network a few seconds after standby.
+     */
+    private void powerChanged(boolean on) {
+        LauncherConfig cfg = LauncherConfig.get(app);
+        if (!cfg.pcPower) return;
+        bg.execute(() -> {
+            if (on && !cfg.pcMac.isEmpty()) WakeOnLan.send(cfg.pcMac, cfg.pcBroadcast);
+            if (!live() || server.connectedClients() == 0) return;
+            try {
+                server.broadcast("tv_power", new JSONObject().put("state", on ? "on" : "standby"));
+            } catch (Exception ignored) {
+            }
+        });
     }
 
     private boolean polling;
@@ -871,6 +892,18 @@ public final class OmarchyLink implements LinkServer.Host {
 
     @Override
     public void onEvent(String pcId, String type, JSONObject data) {
+        if ("pc_wol".equals(type)) {   // remember the PC's MAC for Wake-on-LAN; rewrite only when it changed
+            LauncherConfig cur = LauncherConfig.get(app);
+            String mac = data.optString("mac", ""), bc = data.optString("broadcast", "");
+            if (!mac.equals(cur.pcMac) || !bc.equals(cur.pcBroadcast)) {
+                LauncherConfig.update(app, j -> {
+                    JSONObject link = j.optJSONObject("link");
+                    if (link == null) j.put("link", link = new JSONObject());
+                    link.put("pcWol", data);
+                });
+            }
+            return;
+        }
         emit(type, data);
     }
 

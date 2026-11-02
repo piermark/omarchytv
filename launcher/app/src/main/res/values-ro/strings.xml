@@ -399,4 +399,24 @@
     <string name="keys_none">Nicio telecomandă compatibilă conectată.</string>
     <string name="keys_default">Neatribuit: %1$s</string>
     <string name="wp_loop">Fundal mereu animat</string>
+    <string name="set_boot_screen">Ecran de pornire</string>
+    <string name="boot_mode_boot">la pornire</string>
+    <string name="boot_mode_wake">pornire și trezire</string>
+    <string name="set_pc_power">TV și PC pornesc împreună</string>
+    <string name="pc_power_no_mac">TV-ul află adresa PC-ului la următoarea conectare Omarchy Link</string>
+    <string name="set_update">Actualizează OmarchyTV</string>
+    <string name="update_checking">Caut actualizări…</string>
+    <string name="update_none">OmarchyTV %1$s este cea mai nouă versiune</string>
+    <string name="update_available_title">Este disponibil OmarchyTV %1$s</string>
+    <string name="update_available_msg">Ai %1$s. O descarci și o instalezi? Android va cere confirmarea.</string>
+    <string name="update_install">Instalează</string>
+    <string name="update_failed">Actualizarea a eșuat: %1$s</string>
+    <string name="update_allow_unknown">Permite OmarchyTV să instaleze aplicații, apoi apasă din nou Actualizează</string>
+    <string name="update_bad_apk">fișierul descărcat nu este o versiune OmarchyTV semnată ca aceasta</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">actualizare</string>
+    <string name="liftoff_ok">DECOLARE</string>
+    <string name="liftoff_abort">ANULAT</string>
+    <string name="liftoff_hint">orice tastă: ascunde</string>
+    <string name="liftoff_failed_toast">%1$s a eșuat</string>
 </resources>

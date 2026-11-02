@@ -436,4 +436,24 @@
     <string name="keys_none">No supported remote connected.</string>
     <string name="keys_default">Unbound: %1$s</string>
     <string name="wp_loop">Always-animated wallpaper</string>
+    <string name="set_boot_screen">Boot screen</string>
+    <string name="boot_mode_boot">at start</string>
+    <string name="boot_mode_wake">start and wake</string>
+    <string name="set_pc_power">TV and PC power together</string>
+    <string name="pc_power_no_mac">The TV learns the PC\'s address the next time Omarchy Link connects</string>
+    <string name="set_update">Update OmarchyTV</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_none">OmarchyTV %1$s is the latest version</string>
+    <string name="update_available_title">OmarchyTV %1$s is available</string>
+    <string name="update_available_msg">You have %1$s. Download and install it? Android will ask you to confirm.</string>
+    <string name="update_install">Install</string>
+    <string name="update_failed">Update failed: %1$s</string>
+    <string name="update_allow_unknown">Allow OmarchyTV to install apps, then press Update again</string>
+    <string name="update_bad_apk">the download is not an OmarchyTV release signed like this one</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">update</string>
+    <string name="liftoff_ok">LIFTOFF</string>
+    <string name="liftoff_abort">ABORT</string>
+    <string name="liftoff_hint">any key: hide</string>
+    <string name="liftoff_failed_toast">%1$s failed</string>
 </resources>

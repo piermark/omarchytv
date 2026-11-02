@@ -399,4 +399,24 @@
     <string name="keys_none">Δεν έχει συνδεθεί υποστηριζόμενο τηλεχειριστήριο.</string>
     <string name="keys_default">Χωρίς ανάθεση: %1$s</string>
     <string name="wp_loop">Πάντα κινούμενο φόντο</string>
+    <string name="set_boot_screen">Οθόνη εκκίνησης</string>
+    <string name="boot_mode_boot">κατά την εκκίνηση</string>
+    <string name="boot_mode_wake">εκκίνηση και αφύπνιση</string>
+    <string name="set_pc_power">Τηλεόραση και PC ανάβουν μαζί</string>
+    <string name="pc_power_no_mac">Η τηλεόραση μαθαίνει τη διεύθυνση του PC στην επόμενη σύνδεση του Omarchy Link</string>
+    <string name="set_update">Ενημέρωση OmarchyTV</string>
+    <string name="update_checking">Αναζήτηση ενημερώσεων…</string>
+    <string name="update_none">Το OmarchyTV %1$s είναι η πιο πρόσφατη έκδοση</string>
+    <string name="update_available_title">Το OmarchyTV %1$s είναι διαθέσιμο</string>
+    <string name="update_available_msg">Έχετε την %1$s. Λήψη και εγκατάσταση; Το Android θα ζητήσει επιβεβαίωση.</string>
+    <string name="update_install">Εγκατάσταση</string>
+    <string name="update_failed">Η ενημέρωση απέτυχε: %1$s</string>
+    <string name="update_allow_unknown">Επιτρέψτε στο OmarchyTV να εγκαθιστά εφαρμογές και πατήστε ξανά Ενημέρωση</string>
+    <string name="update_bad_apk">η λήψη δεν είναι έκδοση του OmarchyTV με την ίδια υπογραφή</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">ενημέρωση</string>
+    <string name="liftoff_ok">ΕΚΤΟΞΕΥΣΗ</string>
+    <string name="liftoff_abort">ΜΑΤΑΙΩΣΗ</string>
+    <string name="liftoff_hint">οποιοδήποτε πλήκτρο: απόκρυψη</string>
+    <string name="liftoff_failed_toast">%1$s: αποτυχία</string>
 </resources>

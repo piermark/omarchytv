@@ -18,6 +18,7 @@ import threading
 import time
 
 from . import ai, assistant, client as link, config, grokbot, mdns, netcheck, panes, stats, sync, theme
+from . import liftoff, power
 
 KEYS = {"home", "back", "up", "down", "left", "right", "select", "play_pause", "play", "pause",
         "stop", "next", "previous", "rewind", "fast_forward", "volume_up", "volume_down", "mute",
@@ -169,6 +170,8 @@ class Session:
             self.push_home(c)
             self.grokbot_sig = None
             self.push_grokbot(c)
+            self.liftoff_sig = None
+            self.send_wol_info()
         except (link.LinkError, OSError, ValueError, RuntimeError, subprocess.SubprocessError) as e:
             self.log(f"initial push: {e}")
 
@@ -182,6 +185,8 @@ class Session:
             self.run_action(str(data.get("command", "")), confirmed=False)
         elif kind == "theme_set":
             self.handle_theme_set(data)
+        elif kind == "tv_power":
+            power.tv_power(data.get("state"), self.cfg, self.log)
         elif kind == "screen_mirror":
             self.handle_screen_mirror(str(data.get("action", "")))
         elif kind == "unpaired":
@@ -453,6 +458,27 @@ class Session:
         except OSError:
             self.log("cannot start screen mirroring (omarchy-notification-send or omarchy-link missing)")
 
+    def send_wol_info(self) -> None:
+        """Tell the TV this PC's MAC, so "TV and PC power together" can wake it (Wake-on-LAN from the TV)."""
+        tv = self.pairing.tv or {}
+        info = power.wol_info(tv.get("address"))
+        if info and self.stream and self.cfg.get("powerFromTv", True) is not False:
+            if info.get("wifi"):
+                self.log("Wake-on-LAN: this PC reaches the TV over Wi-Fi; most PCs only wake over Ethernet")
+            self.stream.send("pc_wol", {"mac": info["mac"], "broadcast": info.get("broadcast")})
+
+    def push_liftoff(self) -> None:
+        """A build/update countdown for the TV: on every change, and every 5 s while it runs."""
+        if not self.stream or self.cfg.get("liftoffToTv", True) is False:
+            return
+        pub = liftoff.public(liftoff.read_state())
+        sig = None if pub is None else (pub["id"], pub["state"], pub["stage"], pub["pct"], pub["elapsedS"] // 5)
+        if sig == getattr(self, "liftoff_sig", None):
+            return
+        self.liftoff_sig = sig
+        if pub is not None:
+            self.stream.send("liftoff", pub)
+
     def handle_theme_set(self, data: dict) -> None:
         """Reverse theme sync: the TV changed theme; follow it on the PC (themeFromTv, default on)."""
         if self.cfg.get("themeFromTv", True) is False:
@@ -528,6 +554,10 @@ class Session:
             tick += 1
             if not self.state["connected"]:
                 continue
+            try:
+                self.push_liftoff()
+            except (OSError, ValueError) as e:
+                self.log(f"liftoff push failed: {e}")
             if tick % 3:
                 c = self._client()
                 try:

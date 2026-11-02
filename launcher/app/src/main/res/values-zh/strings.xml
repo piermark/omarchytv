@@ -399,4 +399,24 @@
     <string name="keys_none">未连接受支持的遥控器。</string>
     <string name="keys_default">未分配：%1$s</string>
     <string name="wp_loop">壁纸始终动态</string>
+    <string name="set_boot_screen">开机画面</string>
+    <string name="boot_mode_boot">启动时</string>
+    <string name="boot_mode_wake">启动和唤醒</string>
+    <string name="set_pc_power">电视和电脑同步开关</string>
+    <string name="pc_power_no_mac">下次 Omarchy Link 连接时，电视会记住电脑的地址</string>
+    <string name="set_update">更新 OmarchyTV</string>
+    <string name="update_checking">正在检查更新…</string>
+    <string name="update_none">OmarchyTV %1$s 已是最新版本</string>
+    <string name="update_available_title">OmarchyTV %1$s 可用</string>
+    <string name="update_available_msg">当前版本为 %1$s。下载并安装？Android 会要求确认。</string>
+    <string name="update_install">安装</string>
+    <string name="update_failed">更新失败：%1$s</string>
+    <string name="update_allow_unknown">请允许 OmarchyTV 安装应用，然后再次按“更新”</string>
+    <string name="update_bad_apk">下载的文件不是与此版本签名相同的 OmarchyTV</string>
+    <string name="liftoff_build">构建</string>
+    <string name="liftoff_update">更新</string>
+    <string name="liftoff_ok">发射</string>
+    <string name="liftoff_abort">中止</string>
+    <string name="liftoff_hint">任意键：隐藏</string>
+    <string name="liftoff_failed_toast">%1$s 失败</string>
 </resources>

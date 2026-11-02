@@ -399,4 +399,24 @@
     <string name="keys_none">لا يوجد جهاز تحكم مدعوم متصل.</string>
     <string name="keys_default">غير معيّن: %1$s</string>
     <string name="wp_loop">خلفية متحركة دائمًا</string>
+    <string name="set_boot_screen">شاشة الإقلاع</string>
+    <string name="boot_mode_boot">عند التشغيل</string>
+    <string name="boot_mode_wake">التشغيل والاستيقاظ</string>
+    <string name="set_pc_power">تشغيل التلفاز والحاسوب معًا</string>
+    <string name="pc_power_no_mac">سيتعرّف التلفاز على عنوان الحاسوب عند اتصال Omarchy Link التالي</string>
+    <string name="set_update">تحديث OmarchyTV</string>
+    <string name="update_checking">جارٍ البحث عن تحديثات…</string>
+    <string name="update_none">OmarchyTV %1$s هو أحدث إصدار</string>
+    <string name="update_available_title">يتوفر OmarchyTV %1$s</string>
+    <string name="update_available_msg">لديك %1$s. هل تريد تنزيله وتثبيته؟ سيطلب Android التأكيد.</string>
+    <string name="update_install">تثبيت</string>
+    <string name="update_failed">فشل التحديث: %1$s</string>
+    <string name="update_allow_unknown">اسمح لـ OmarchyTV بتثبيت التطبيقات ثم اضغط تحديث مرة أخرى</string>
+    <string name="update_bad_apk">الملف الذي تم تنزيله ليس إصدار OmarchyTV موقّعًا مثل هذا</string>
+    <string name="liftoff_build">بناء</string>
+    <string name="liftoff_update">تحديث</string>
+    <string name="liftoff_ok">انطلاق</string>
+    <string name="liftoff_abort">إلغاء</string>
+    <string name="liftoff_hint">أي زر: إخفاء</string>
+    <string name="liftoff_failed_toast">فشل %1$s</string>
 </resources>

@@ -1,7 +1,7 @@
-# HANDOFF — branch `feature/theme-sync-reverse`
+# HANDOFF — branch `feature/tv-pc-together`
 
-Notes for whoever continues this branch. Three features: **A. Boot screen**, **B. Twenty new languages** and
-**C. Theme sync both ways** (C is built on top of A + B).
+Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff** (each built on the previous).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -162,4 +162,87 @@ Pick a theme with the remote and the Omarchy PC switches too. TV switch **"Also 
   TV keeps the same theme (no flip-flop when the palette comes back).
 - Theme names: TV theme names must match the PC folder names (stock Omarchy themes do). A ★ custom theme pushed
   from the PC has its PC name, so it works; one made only on the TV gets "unknown" and changes only the TV.
+
+
+# D. TV and PC power together + settings switches
+
+Launcher settings (Android) / All OmarchyTV settings (LG/Samsung): **Boot screen** (at start / start and wake / off),
+**Also change the PC theme** (C), **TV and PC power together** (Android; LG shows "PC sleeps with the TV").
+All default as before (boot screen on, the other two off).
+
+- Android: on screen ON (and at launcher start) `WakeOnLan.send(pcMac)` + event `tv_power` on; on screen OFF `tv_power`
+  standby. The MAC comes from omarchy-link's `pc_wol` after each connect, kept in omarchytv.json `link.pcWol`.
+- PC (`omarchy_link/power.py`): standby → suspend after `powerGraceS` (60 s) with `systemctl suspend` / `pmset
+  sleepnow`; cancelled by `on`; skipped while a liftoff runs; off with `powerFromTv: false`.
+- LG: on `visibilitychange` hidden, asks the TV's power state over SSAP (needs "TV control" approved) and only when it
+  is not "Active" POSTs `/v1/power` standby (keepalive); visible again → on. LG/Samsung can't send Wake-on-LAN (no UDP
+  in TV web apps): said in the UI. Samsung: no power row.
+
+# E. Update from the TV
+
+- **Android** (`Updater.java`, `REQUEST_INSTALL_PACKAGES`, receiver `Updater$Done`): GitHub releases API → newest
+  `omarchytv-release-<ver>.apk` newer than the installed versionName (drafts and non-github.com URLs ignored) → confirm
+  dialog → download (redirects https only, 128 MB cap, release `digest` sha256 when present) → same package, higher
+  versionCode, same signer as the running launcher → PackageInstaller session; Android shows its own confirm.
+  Android 8+: first time it opens "Install unknown apps" for OmarchyTV.
+- **LG/Samsung** (`pc-plugin/omarchy-tv/lib/omarchy_tv/tvupdate.py`, bridge `POST /v1/update/tv` with the ask code):
+  `check` → `{current, latest}`; `install` (with `want` = the confirmed version) → background job:
+  LG `omarchytv-webos-<ver>[-testing].ipk` → `update.check_ipk` → `ares-install [--device webosDevice]` → `ares-launch`;
+  Samsung `OmarchyTV-tizen-<ver>-unsigned.wgt` → unpacked (config.xml must say package OmarchyTV0, no `..` paths, old
+  signatures dropped) → `tizen package -t wgt -s <tizenProfile>` (the user's own certificate, same as build-wgt.sh)
+  → `sdb connect <TV IP>` → `tizen install -t <TV IP>:26101`. One job at a time; `updateFromTv: false` turns it off.
+- Neither side changes version numbers, signs with the release key, or publishes anything.
+
+# F. Liftoff (build/update on the big screen)
+
+- `omarchy-link liftoff [--name N] -- <command>`: runs it without a shell, output still in the terminal, exit code
+  passed through; state in `$XDG_RUNTIME_DIR/omarchy-link-<uid>/liftoff.json`, last duration per name in
+  `~/.local/state/omarchy-link/liftoff-history.json` (T-minus next time).
+- Sent to Android as event `liftoff` (session ticker, on change / every 5 s); LG/Samsung read `liftoff` in `/v1/status`
+  (polled every second while it runs). Updates (E) write the same state, kind "update".
+- TV: `LiftoffView.java` / `webos/app/liftoff.js` + overlay in app.js: ASCII rocket with the OT badge, T-minus clock
+  (blinks in the last 10 s), stage, progress bar; LIFTOFF = rocket climbs away, hides after 5 s; failure = red blinking
+  ABORT, exit code, last 6 lines, three-beep alarm (ToneGenerator / WebAudio), toast if Home is not on screen. Any key
+  hides it. Shared words and numbers: `LiftoffScript.java` = `liftoff.js`, same cases in `webos/tests/liftoff-cases.json`.
+
+## Files (D, E, F)
+
+| File | Change |
+|---|---|
+| `launcher/.../WakeOnLan.java`, `Updater.java`, `LiftoffScript.java`, `LiftoffView.java` | New |
+| `launcher/.../OmarchyLink.java` | Screen on/off → `powerChanged()`; `pc_wol` saved to config |
+| `launcher/.../link/LinkServer.java` | Incoming `pc_wol`, `liftoff` (clipped by `liftoff()`) |
+| `launcher/.../LauncherConfig.java` | `pcPower`, `pcMac`, `pcBroadcast` |
+| `launcher/.../MainActivity.java` | Settings rows; update flow; `liftoff` event; key hook; onDestroy |
+| `launcher/app/src/main/AndroidManifest.xml` | `REQUEST_INSTALL_PACKAGES`, receiver `.Updater$Done` |
+| `launcher/.../res/values*/strings.xml` | 20 new strings × 23 languages |
+| `launcher/app/src/test/.../LiftoffScriptTest.java` | Countdown cases, Wake-on-LAN packet, release picker |
+| `webos/app/liftoff.js` (new), `index.html` (script + CSS), `app.js`, `i18n.js` | Settings rows, update via PC, LG power, overlay, strings |
+| `webos/tests/liftoff.test.js`, `liftoff-cases.json` (new) | Same cases as Java; rocket identical on both |
+| `pc-plugin/omarchy-link/lib/omarchy_link/liftoff.py`, `power.py` (new) | See above |
+| `pc-plugin/omarchy-link/lib/omarchy_link/session.py`, `config.py`, `cli.py` | Events, ticker push, `pc_wol` on connect, defaults, `liftoff` command |
+| `pc-plugin/omarchy-tv/lib/omarchy_tv/tvupdate.py` (new), `webos.py` | Update job; `/v1/update/tv`, `/v1/power`, `liftoff` in status |
+| `pc-plugin/omarchy-link/tests/test_liftoff_power.py` (new, in run.sh), `omarchy-tv/tests/test_tvupdate.py` (new), `test_webos.py` | Tests |
+| `pc-plugin/omarchy-link/docs/PROTOCOL.md`, `README.md`, `CHANGELOG.md` | Docs |
+
+## Verified (D, E, F)
+
+- omarchy-link `tests/run.sh`: 124 OK. omarchy-tv `test_webos`, `test_tvupdate`, `test_update`: OK.
+- `node --test webos/tests/*.test.js` (114) and `tizen/*.test.cjs` (29) pass; `tizen/verify-build.py` PASS.
+- Java: LiftoffScriptTest (3) and TranslationsTest (4) pass; every changed Java line compiles against API 34 (javac,
+  only androidx missing from the classpath).
+- LG/Samsung app in headless Chromium with a fake PC: countdown, ABORT with alarm and last lines, any key hides it,
+  settings rows, "Update via PC" check → confirm → install request. Real bridge + real `omarchy-link liftoff`:
+  `/v1/status` shows running, then failed with exit code and last lines.
+
+## NOT verified (to do)
+
+- Gradle build + lint (NewApi is fatal here: new API calls are guarded by SDK_INT checks).
+- On a real Android TV: Wake-on-LAN reaching the PC (Ethernet, WoL on), suspend after standby, the update from a real
+  newer release (the first release after this one is the first that can be installed this way: the installed APK
+  must already have the Update row), the installer confirm on Google TV / Fire OS.
+- On LG: getPowerState while the TV powers off (does the app get time to POST before suspend?), ares-install with
+  the user's device name (`webosDevice`). On Samsung: `tizen package` re-signing with the user's profile, `tizen
+  install` target name format.
+- The GitHub API is unauthenticated (60 requests/hour per IP): fine for a button, not for polling.
 

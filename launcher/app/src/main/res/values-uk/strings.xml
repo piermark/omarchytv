@@ -399,4 +399,24 @@
     <string name="keys_none">Підтримуваний пульт не підключено.</string>
     <string name="keys_default">Не призначено: %1$s</string>
     <string name="wp_loop">Завжди анімований фон</string>
+    <string name="set_boot_screen">Екран завантаження</string>
+    <string name="boot_mode_boot">під час запуску</string>
+    <string name="boot_mode_wake">запуск і пробудження</string>
+    <string name="set_pc_power">ТБ і ПК вмикаються разом</string>
+    <string name="pc_power_no_mac">ТБ дізнається адресу ПК під час наступного з\'єднання Omarchy Link</string>
+    <string name="set_update">Оновити OmarchyTV</string>
+    <string name="update_checking">Пошук оновлень…</string>
+    <string name="update_none">OmarchyTV %1$s — найновіша версія</string>
+    <string name="update_available_title">Доступна OmarchyTV %1$s</string>
+    <string name="update_available_msg">У вас %1$s. Завантажити та встановити? Android попросить підтвердження.</string>
+    <string name="update_install">Встановити</string>
+    <string name="update_failed">Помилка оновлення: %1$s</string>
+    <string name="update_allow_unknown">Дозвольте OmarchyTV встановлювати застосунки й знову натисніть «Оновити»</string>
+    <string name="update_bad_apk">завантажений файл — не версія OmarchyTV з тим самим підписом</string>
+    <string name="liftoff_build">збірка</string>
+    <string name="liftoff_update">оновлення</string>
+    <string name="liftoff_ok">ЗЛІТ</string>
+    <string name="liftoff_abort">СКАСОВАНО</string>
+    <string name="liftoff_hint">будь-яка кнопка: сховати</string>
+    <string name="liftoff_failed_toast">%1$s: помилка</string>
 </resources>

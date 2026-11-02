@@ -399,4 +399,24 @@
     <string name="keys_none">Поддерживаемый пульт не подключён.</string>
     <string name="keys_default">Не назначено: %1$s</string>
     <string name="wp_loop">Всегда анимированный фон</string>
+    <string name="set_boot_screen">Экран загрузки</string>
+    <string name="boot_mode_boot">при запуске</string>
+    <string name="boot_mode_wake">запуск и пробуждение</string>
+    <string name="set_pc_power">ТВ и ПК включаются вместе</string>
+    <string name="pc_power_no_mac">ТВ узнает адрес ПК при следующем подключении Omarchy Link</string>
+    <string name="set_update">Обновить OmarchyTV</string>
+    <string name="update_checking">Поиск обновлений…</string>
+    <string name="update_none">OmarchyTV %1$s — последняя версия</string>
+    <string name="update_available_title">Доступна OmarchyTV %1$s</string>
+    <string name="update_available_msg">У вас %1$s. Скачать и установить? Android попросит подтверждение.</string>
+    <string name="update_install">Установить</string>
+    <string name="update_failed">Ошибка обновления: %1$s</string>
+    <string name="update_allow_unknown">Разрешите OmarchyTV устанавливать приложения и снова нажмите «Обновить»</string>
+    <string name="update_bad_apk">загруженный файл — не версия OmarchyTV с той же подписью</string>
+    <string name="liftoff_build">сборка</string>
+    <string name="liftoff_update">обновление</string>
+    <string name="liftoff_ok">ПУСК</string>
+    <string name="liftoff_abort">ОТМЕНА</string>
+    <string name="liftoff_hint">любая кнопка: скрыть</string>
+    <string name="liftoff_failed_toast">%1$s: ошибка</string>
 </resources>

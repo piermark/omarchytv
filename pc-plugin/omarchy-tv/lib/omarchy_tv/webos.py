@@ -19,6 +19,13 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
   POST /v1/theme/set               -> same token; {name}: reverse theme sync, the TV picked a theme and the PC follows
                                       (omarchy-theme-set, installed themes only, themeFromTv in omarchy-link's config)
                                       -> {result: ok|same|unknown|busy|failed}
+  POST /v1/update/tv               -> same token; {action: check|install, platform: webos|tizen, version, want?}:
+                                      "Update via PC" (tvupdate.py): newest official release for that TV, checked,
+                                      installed with ares-install / your Samsung profile + tizen install
+                                      (updateFromTv in omarchy-link's config) -> {current, latest} | {result}
+  POST /v1/power                   -> same token; {state: standby|on}: TV and PC power together (omarchy-link
+                                      power.py: suspend after powerGraceS, cancelled when the TV comes back)
+  GET /v1/status also carries "liftoff": a running/just finished build or update (omarchy-link liftoff) or null.
 """
 from __future__ import annotations
 
@@ -71,6 +78,39 @@ def _link_theme():
         return theme
     except Exception:
         return None
+
+
+def _link_mod(name: str):
+    try:
+        return __import__(f"omarchy_link.{name}", fromlist=[name])   # optional: omarchy-link may not be installed
+    except Exception:
+        return None
+
+
+def _liftoff_public():
+    lo = _link_mod("liftoff")
+    try:
+        return lo.public(lo.read_state()) if lo else None
+    except Exception:
+        return None
+
+
+class _NoTracker:
+    """Without omarchy-link the update still runs; there is just no countdown to show."""
+
+    def __init__(self, *a):
+        pass
+
+    def stage(self, *a, **k):
+        pass
+
+    def done(self, *a, **k):
+        pass
+
+
+def _tracker(kind: str, name: str):
+    lo = _link_mod("liftoff")
+    return lo.Tracker(kind, name, 90) if lo else _NoTracker()
 
 
 def _grokbot():
@@ -236,6 +276,7 @@ def build_status_payload() -> dict:
         "nowPlaying": now_playing(),
         "hasWallpaper": wp is not None,
         "deploy": "omarchytv-webos 2.11.0-testing ✓",
+        "liftoff": _liftoff_public(),
     }
 
 
@@ -278,7 +319,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         global _last_ask
         path = self.path.split("?", 1)[0]
-        if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set"):
+        if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
+                        "/v1/update/tv", "/v1/power"):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -303,6 +345,12 @@ class WebOSHandler(BaseHTTPRequestHandler):
             return
         if path == "/v1/theme/set":
             self._theme_set(body)
+            return
+        if path == "/v1/update/tv":
+            self._update_tv(body)
+            return
+        if path == "/v1/power":
+            self._power(body)
             return
         g = _grokbot()
         if not g:
@@ -336,6 +384,30 @@ class WebOSHandler(BaseHTTPRequestHandler):
         res = th.set_theme(body.get("name"))
         code = {"ok": 200, "same": 200, "unknown": 404, "busy": 429}.get(res, 502)
         self._send_json({"result": res}, code)
+
+    def _update_tv(self, body: dict) -> None:
+        from . import tvupdate   # noqa: PLC0415
+        cfg = link_cfg()
+        if cfg.get("updateFromTv", True) is False:
+            self._send_json({"error": "disabled", "message": "updateFromTv is off on the PC"}, 403)
+            return
+        plat, cur = str(body.get("platform", "")), str(body.get("version", ""))[:32]
+        try:
+            if body.get("action") == "install":
+                res = tvupdate.start(plat, cur, str(body.get("want", ""))[:32], self.client_address[0], cfg, _tracker)
+                self._send_json({"result": res}, 409 if res == "busy" else 200)
+            else:
+                self._send_json(tvupdate.check(plat, cur))
+        except tvupdate.UpdateError as e:
+            bad = e.code in ("bad_platform", "bad_request", "changed")
+            self._send_json({"error": e.code, "message": str(e)[:200]}, 400 if bad else 502)
+
+    def _power(self, body: dict) -> None:
+        pw = _link_mod("power")
+        if not pw:
+            self._send_json({"error": "not_installed", "message": "omarchy-link is not installed"}, 503)
+            return
+        self._send_json({"result": pw.tv_power(body.get("state"), link_cfg(), lambda m: ui.say(m))})
 
     def _ai(self, path: str, body: dict) -> None:
         a = _assistant()

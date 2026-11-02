@@ -399,4 +399,24 @@
     <string name="keys_none">No hay ningún mando compatible conectado.</string>
     <string name="keys_default">Sin asignar: %1$s</string>
     <string name="wp_loop">Fondo siempre animado</string>
+    <string name="set_boot_screen">Pantalla de arranque</string>
+    <string name="boot_mode_boot">al iniciar</string>
+    <string name="boot_mode_wake">inicio y reactivación</string>
+    <string name="set_pc_power">TV y PC se encienden juntos</string>
+    <string name="pc_power_no_mac">La TV aprende la dirección del PC la próxima vez que Omarchy Link se conecte</string>
+    <string name="set_update">Actualizar OmarchyTV</string>
+    <string name="update_checking">Buscando actualizaciones…</string>
+    <string name="update_none">OmarchyTV %1$s es la última versión</string>
+    <string name="update_available_title">OmarchyTV %1$s está disponible</string>
+    <string name="update_available_msg">Tienes la %1$s. ¿Descargarla e instalarla? Android pedirá confirmación.</string>
+    <string name="update_install">Instalar</string>
+    <string name="update_failed">Error al actualizar: %1$s</string>
+    <string name="update_allow_unknown">Permite que OmarchyTV instale apps y vuelve a pulsar Actualizar</string>
+    <string name="update_bad_apk">la descarga no es una versión de OmarchyTV firmada como esta</string>
+    <string name="liftoff_build">compilación</string>
+    <string name="liftoff_update">actualización</string>
+    <string name="liftoff_ok">DESPEGUE</string>
+    <string name="liftoff_abort">ABORTADO</string>
+    <string name="liftoff_hint">cualquier tecla: ocultar</string>
+    <string name="liftoff_failed_toast">%1$s ha fallado</string>
 </resources>

@@ -647,6 +647,17 @@ def cmd_prompt(a, cfg):
     return 0
 
 
+def cmd_liftoff(a, cfg):
+    from . import liftoff   # noqa: PLC0415
+    argv = list(a.command)
+    if argv[:1] == ["--"]:
+        argv = argv[1:]
+    if not argv:
+        print("usage: omarchy-link liftoff [--name NAME] -- <command> [args…]", file=sys.stderr)
+        return 2
+    return liftoff.run(argv, a.name)
+
+
 def cmd_session(a, cfg):
     return Session().run()
 
@@ -753,6 +764,11 @@ def main(argv=None) -> int:
     s.add_argument("host", nargs="?")
     s.add_argument("--now", action="store_true", help="send the theme now")
     s.set_defaults(fn=cmd_prompt)
+    s = sub.add_parser("liftoff", help="run a build with a rocket countdown on the TV (alarm if it fails)",
+                       description="omarchy-link liftoff -- make release   (no shell; exit code passed through)")
+    s.add_argument("--name", help="what the TV shows (default: the command)")
+    s.add_argument("command", nargs=argparse.REMAINDER)
+    s.set_defaults(fn=cmd_liftoff)
     s = sub.add_parser("desktop", help="install \"Send to TV\" launcher / Open-with entries")
     s.add_argument("--remove", action="store_true")
     s.set_defaults(fn=cmd_desktop)

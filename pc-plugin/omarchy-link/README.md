@@ -56,6 +56,7 @@ omarchy-link push-widgets [widgets.json] [--dry-run]
 omarchy-link push-ai --dry-run       # AI credits that would be sent
 omarchy-link ai providers            # AIs the TV assistant can use
 omarchy-link ai ask "a film for tonight?"
+omarchy-link liftoff -- make release   # rocket countdown on the TV, red alarm if it fails (exit code passed through)
 omarchy-link unpair
 ```
 
@@ -71,7 +72,7 @@ Files live in `~/.config/omarchy-link/`. See `examples/`.
 
 | File | What |
 |---|---|
-| `config.json` | `themeSync`, `themeFromTv` (TV may switch the PC theme, default on; the TV side is off until enabled there), `wallpaperSync`, `pcPane`, `aiCredits`, `aiRefreshMinutes`, `aiSourcesFromTv`, `agentMonitor`, `agentControlFromTv`, `agentConfirm`, `agentToolApprovalFromTv`, `prompt`, `castPrefer` (`cast`\|`link`), `castDevice`, `castServe`, `screenCommand`, `assistant`, `allowOtherSubnets`, `actions` (PC commands a TV shortcut may run: `{"lock": {"label": "Lock PC", "exec": ["omarchy-system-lock"], "confirm": true}}`) |
+| `config.json` | `themeSync`, `themeFromTv` (TV may switch the PC theme, default on; the TV side is off until enabled there), `powerFromTv` / `powerGraceS` (TV off → PC suspends after 60 s; TV on wakes it), `updateFromTv` (LG/Samsung "Update via PC"), `liftoffToTv`, `tizenProfile` / `webosDevice` (where the TV update installs), `wallpaperSync`, `pcPane`, `aiCredits`, `aiRefreshMinutes`, `aiSourcesFromTv`, `agentMonitor`, `agentControlFromTv`, `agentConfirm`, `agentToolApprovalFromTv`, `prompt`, `castPrefer` (`cast`\|`link`), `castDevice`, `castServe`, `screenCommand`, `assistant`, `allowOtherSubnets`, `actions` (PC commands a TV shortcut may run: `{"lock": {"label": "Lock PC", "exec": ["omarchy-system-lock"], "confirm": true}}`) |
 | `widgets.json` | extra panes and shortcuts for the TV |
 | `ai.json` | AI credits: which bar widget to mirror (`omarchy-link ai setup`), manual entries, API fallbacks, auto-detection. See [docs/AI-CREDITS.md](docs/AI-CREDITS.md). |
 | `assistant.json` | voice assistant providers, default, memory, API fallbacks. See [docs/ASSISTANT.md](docs/ASSISTANT.md). |

@@ -399,4 +399,24 @@
     <string name="keys_none">Ingen fjärrkontroll som stöds är ansluten.</string>
     <string name="keys_default">Inte tilldelad: %1$s</string>
     <string name="wp_loop">Alltid animerad bakgrund</string>
+    <string name="set_boot_screen">Startskärm</string>
+    <string name="boot_mode_boot">vid start</string>
+    <string name="boot_mode_wake">start och väckning</string>
+    <string name="set_pc_power">TV och dator på/av tillsammans</string>
+    <string name="pc_power_no_mac">TV:n lär sig datorns adress nästa gång Omarchy Link ansluter</string>
+    <string name="set_update">Uppdatera OmarchyTV</string>
+    <string name="update_checking">Söker efter uppdateringar…</string>
+    <string name="update_none">OmarchyTV %1$s är den senaste versionen</string>
+    <string name="update_available_title">OmarchyTV %1$s finns</string>
+    <string name="update_available_msg">Du har %1$s. Ladda ner och installera? Android ber dig bekräfta.</string>
+    <string name="update_install">Installera</string>
+    <string name="update_failed">Uppdateringen misslyckades: %1$s</string>
+    <string name="update_allow_unknown">Tillåt OmarchyTV att installera appar och tryck sedan på Uppdatera igen</string>
+    <string name="update_bad_apk">nedladdningen är inte en OmarchyTV-version signerad som denna</string>
+    <string name="liftoff_build">bygge</string>
+    <string name="liftoff_update">uppdatering</string>
+    <string name="liftoff_ok">LYFT</string>
+    <string name="liftoff_abort">AVBRUTET</string>
+    <string name="liftoff_hint">valfri knapp: dölj</string>
+    <string name="liftoff_failed_toast">%1$s misslyckades</string>
 </resources>

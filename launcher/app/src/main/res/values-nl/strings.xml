@@ -399,4 +399,24 @@
     <string name="keys_none">Geen ondersteunde afstandsbediening verbonden.</string>
     <string name="keys_default">Niet toegewezen: %1$s</string>
     <string name="wp_loop">Altijd geanimeerde achtergrond</string>
+    <string name="set_boot_screen">Opstartscherm</string>
+    <string name="boot_mode_boot">bij het starten</string>
+    <string name="boot_mode_wake">starten en ontwaken</string>
+    <string name="set_pc_power">Tv en pc samen aan/uit</string>
+    <string name="pc_power_no_mac">De tv leert het adres van de pc bij de volgende Omarchy Link-verbinding</string>
+    <string name="set_update">OmarchyTV bijwerken</string>
+    <string name="update_checking">Zoeken naar updates…</string>
+    <string name="update_none">OmarchyTV %1$s is de nieuwste versie</string>
+    <string name="update_available_title">OmarchyTV %1$s is beschikbaar</string>
+    <string name="update_available_msg">Je hebt %1$s. Downloaden en installeren? Android vraagt om bevestiging.</string>
+    <string name="update_install">Installeren</string>
+    <string name="update_failed">Bijwerken mislukt: %1$s</string>
+    <string name="update_allow_unknown">Sta OmarchyTV toe apps te installeren en druk opnieuw op Bijwerken</string>
+    <string name="update_bad_apk">de download is geen OmarchyTV-versie met dezelfde handtekening</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">update</string>
+    <string name="liftoff_ok">LANCERING</string>
+    <string name="liftoff_abort">AFGEBROKEN</string>
+    <string name="liftoff_hint">willekeurige toets: verbergen</string>
+    <string name="liftoff_failed_toast">%1$s mislukt</string>
 </resources>

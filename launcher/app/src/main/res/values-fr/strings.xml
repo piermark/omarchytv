@@ -399,4 +399,24 @@
     <string name="keys_none">Aucune télécommande compatible connectée.</string>
     <string name="keys_default">Non attribué : %1$s</string>
     <string name="wp_loop">Fond d\'écran toujours animé</string>
+    <string name="set_boot_screen">Écran de démarrage</string>
+    <string name="boot_mode_boot">au démarrage</string>
+    <string name="boot_mode_wake">démarrage et réveil</string>
+    <string name="set_pc_power">TV et PC allumés ensemble</string>
+    <string name="pc_power_no_mac">Le téléviseur apprend l\'adresse du PC à la prochaine connexion d\'Omarchy Link</string>
+    <string name="set_update">Mettre à jour OmarchyTV</string>
+    <string name="update_checking">Recherche de mises à jour…</string>
+    <string name="update_none">OmarchyTV %1$s est la dernière version</string>
+    <string name="update_available_title">OmarchyTV %1$s est disponible</string>
+    <string name="update_available_msg">Vous avez %1$s. Le télécharger et l\'installer ? Android demandera de confirmer.</string>
+    <string name="update_install">Installer</string>
+    <string name="update_failed">Échec de la mise à jour : %1$s</string>
+    <string name="update_allow_unknown">Autorisez OmarchyTV à installer des applis, puis appuyez à nouveau sur Mettre à jour</string>
+    <string name="update_bad_apk">le fichier téléchargé n\'est pas une version d\'OmarchyTV signée comme celle-ci</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">mise à jour</string>
+    <string name="liftoff_ok">DÉCOLLAGE</string>
+    <string name="liftoff_abort">ABANDON</string>
+    <string name="liftoff_hint">n\'importe quelle touche : masquer</string>
+    <string name="liftoff_failed_toast">%1$s a échoué</string>
 </resources>

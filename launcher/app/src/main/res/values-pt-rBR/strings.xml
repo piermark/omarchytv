@@ -399,4 +399,24 @@
     <string name="keys_none">Nenhum controle remoto compatível conectado.</string>
     <string name="keys_default">Não atribuído: %1$s</string>
     <string name="wp_loop">Fundo sempre animado</string>
+    <string name="set_boot_screen">Tela de inicialização</string>
+    <string name="boot_mode_boot">ao iniciar</string>
+    <string name="boot_mode_wake">inicialização e despertar</string>
+    <string name="set_pc_power">TV e PC ligam e desligam juntos</string>
+    <string name="pc_power_no_mac">A TV aprende o endereço do PC na próxima conexão do Omarchy Link</string>
+    <string name="set_update">Atualizar o OmarchyTV</string>
+    <string name="update_checking">Procurando atualizações…</string>
+    <string name="update_none">O OmarchyTV %1$s é a versão mais recente</string>
+    <string name="update_available_title">O OmarchyTV %1$s está disponível</string>
+    <string name="update_available_msg">Você tem a %1$s. Baixar e instalar? O Android vai pedir confirmação.</string>
+    <string name="update_install">Instalar</string>
+    <string name="update_failed">Falha na atualização: %1$s</string>
+    <string name="update_allow_unknown">Permita que o OmarchyTV instale apps e pressione Atualizar de novo</string>
+    <string name="update_bad_apk">o download não é uma versão do OmarchyTV assinada como esta</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">atualização</string>
+    <string name="liftoff_ok">DECOLAGEM</string>
+    <string name="liftoff_abort">ABORTADO</string>
+    <string name="liftoff_hint">qualquer tecla: ocultar</string>
+    <string name="liftoff_failed_toast">%1$s falhou</string>
 </resources>
