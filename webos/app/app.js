@@ -1078,21 +1078,45 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           saveCfg(); fetchWeather(); renderAll();
         });
       } },
-      { label: tr("wx_search"), right: cfg.weatherCity, act: function () {
-        openModal(tr("wx_search"), "Type city name (e.g. Milan, Rome, Berlin, New York):", [
-          { label: "Milano, IT", right: "45.46, 9.19", act: function () { setCity("Milano", 45.464, 9.190); } },
-          { label: "Alessandria, IT", right: "44.91, 8.61", act: function () { setCity("Alessandria", 44.913, 8.615); } },
-          { label: "Roma, IT", right: "41.89, 12.48", act: function () { setCity("Roma", 41.893, 12.483); } },
-          { label: "Berlin, DE", right: "52.52, 13.40", act: function () { setCity("Berlin", 52.520, 13.405); } },
-          { label: "San Francisco, US", right: "37.77, -122.42", act: function () { setCity("San Francisco", 37.775, -122.419); } }
-        ], "City name…");
-      } },
+      { label: tr("wx_search"), right: cfg.weatherCity, act: openCitySearch },
       { label: tr("wx_unit"), right: "°" + cfg.tempUnit, act: function () {
         cfg.tempUnit = cfg.tempUnit === "C" ? "F" : "C";
         saveCfg(); renderAll(); openWeatherModal();
       } }
     ];
     openModal(tr("wx_title"), "", items);
+  }
+
+  // City search (issue #88): typed text goes to Open-Meteo geocoding like Android; curated presets stay as fallback.
+  var DEFAULT_CITIES = [
+    { name: "Milano", label: "Milano, IT", lat: 45.464, lon: 9.190 }, { name: "Alessandria", label: "Alessandria, IT", lat: 44.913, lon: 8.615 },
+    { name: "Roma", label: "Roma, IT", lat: 41.893, lon: 12.483 }, { name: "Berlin", label: "Berlin, DE", lat: 52.520, lon: 13.405 },
+    { name: "San Francisco", label: "San Francisco, US", lat: 37.775, lon: -122.419 }
+  ];
+  function openCitySearch() {
+    var G = window.OmarchyGeo, presets = (window.OMARCHY_DATA && OMARCHY_DATA.weatherCities) || DEFAULT_CITIES;
+    var timer = null, seq = 0;
+    function cityItem(c) { return { label: c.label, right: c.lat.toFixed(2) + ", " + c.lon.toFixed(2), act: function () { setCity(c.name, c.lat, c.lon); } }; }
+    function show(found, q) {
+      var list = found.map(cityItem), pre = G ? G.filterPresets(presets, q) : presets;
+      if (!pre.length && !found.length) pre = presets;
+      state.modalItems = list.concat(pre.map(cityItem));
+      if (state.modalIdx >= state.modalItems.length) state.modalIdx = 0;
+      renderModalList();
+    }
+    function search(q) {
+      q = (q || "").trim();
+      clearTimeout(timer);
+      show([], q);
+      if (q.length < 2 || !G || !G.searchUrl) return;
+      var my = ++seq;
+      timer = setTimeout(function () {
+        fetch(G.searchUrl(q, getLang())).then(function (r) { return r.json(); }).then(function (j) {
+          if (my === seq && state.modalOpen) show(G.parseSearch(j), q);
+        }).catch(function () {});   // offline / blocked: presets stay
+      }, 600);
+    }
+    openModal(tr("wx_search"), "Type a city name (e.g. Milan, Lisbon, Tokyo):", presets.map(cityItem), "City name…", search);
   }
 
   function setCity(name, lat, lon) {
