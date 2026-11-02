@@ -1,7 +1,7 @@
 # OmarchyTV for LG webOS — Installation Guide (`2.13.9`)
 
 > **Status: Experimental (`testing`, NOT beta)**
-> This is an experimental **`testing`** build of **OmarchyTV** for **LG webOS TVs** (webOS 3.x / 4.0 / 5.0 / 6.0 / 22 / 23 / 24; on webOS 3.x the bundled `compat.js` fills in the missing browser features), based on the latest Android TV release (**2.13.0**). Tested on a real LG 32LQ63006LA (webOS 22).
+> This is an experimental **`testing`** build of **OmarchyTV** for **LG webOS TVs** (webOS 3.x / 4.0 / 5.0 / 6.0 / 22 / 23 / 24 / 25; on webOS 3.x the bundled `compat.js` fills in the missing browser features), based on the latest Android TV release (**2.13.0**). Tested on a real LG 32LQ63006LA (webOS 22); the community reported an LG 55QNED80T6A on webOS 25 working with 2.13.9 ([#95](https://github.com/piermark/omarchytv/issues/95)).
 > Community feedback and compatibility reports from LG webOS TV users are warmly welcome!
 
 ---
