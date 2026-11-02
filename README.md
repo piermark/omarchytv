@@ -6,7 +6,7 @@ Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](http
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **2 November 2026 (latest release: LG webOS & Samsung Tizen 2.13.11)** · Version **2.13.8** (`versionCode 25` — Android TV, PC/Mac Plugin & Mobile Companion) / **2.13.11** (LG webOS) & **2.13.11** (Samsung Tizen), experimental · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **2 November 2026 (latest release: LG webOS & Samsung Tizen 2.13.11)** · Version **2.13.8** (`versionCode 25` — Android TV) / **2.13.11** (LG webOS) & **2.13.11** (Samsung Tizen), experimental · PC/Mac Plugin & Mobile Companion downloads **2.13.0-beta** (latest published) · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 > [!WARNING]
 > **Beta software.** Tested on Sony BRAVIA (Android 9), Google TV Streamer (Android 14), Sharp AQUOS, Noblex/Hisense (Android 11), LG webOS and the Android TV emulator. Some features may be missing on some TVs. It never roots or uninstalls anything, and you can always switch back to your stock home screen (see [INSTALL](launcher/docs/INSTALL.md)).
