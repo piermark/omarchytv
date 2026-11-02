@@ -401,6 +401,10 @@ final class LauncherConfig {
     /** v2.14 "Always-animated wallpaper" (default false): loop the theme's animated wallpaper while Home is on screen
      *  instead of playing it once and settling on the still. Video, Cinemarchy and the screensaver pause it (onPause). */
     final boolean wallpaperLoop;
+    /** v2.14 boot screen (BootScreenView): "boot" (default, once per TV boot), "wake" (also when the screen turns on), "off". */
+    final String bootScreen;
+    /** v2.14 boot screen scanlines and text glow (default true). */
+    final boolean bootFx;
     /** v2.13: rotate among animated themes on Home resume/boot (default true; locked false on manual pick). */
     final boolean randomTheme;
     /** v2.13: rotate among animated wallpapers/intros on Home resume/boot (default true; locked false on manual pick). */
@@ -657,6 +661,8 @@ final class LauncherConfig {
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
         wallpaperIntro = j == null || j.optBoolean("wallpaper_intro", j.optBoolean("wallpaperIntro", true));
         wallpaperLoop = j != null && j.optBoolean("wallpaperLoop", false);
+        bootScreen = bootScreenMode(j != null ? j.optString("bootScreen", "boot") : "boot");
+        bootFx = j == null || j.optBoolean("bootFx", true);
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
         randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
@@ -1099,5 +1105,11 @@ final class LauncherConfig {
             if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '.' || ch == '_' || ch == '-') b.append(ch);
         }
         return b.length() == 0 ? def : b.toString();
+    }
+
+    /** omarchytv.json "bootScreen": "boot", "wake" or "off"; anything else is "boot". */
+    static String bootScreenMode(String v) {
+        String m = v == null ? "" : v.trim().toLowerCase(java.util.Locale.ROOT);
+        return "wake".equals(m) || "off".equals(m) ? m : "boot";
     }
 }

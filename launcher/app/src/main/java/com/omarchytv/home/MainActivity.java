@@ -150,6 +150,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         Watchdog.install(this);
         setContentView(R.layout.activity_main);
         Theme.apply(getWindow().getDecorView());
+        BootScreenView.onCreate(this, findViewById(R.id.root));   // v2.14 boot screen (once per boot by default)
         // Lights hub only while OmarchyTV is on screen; the snapshot ("Restore previous") is queued before the paint.
         com.omarchytv.home.lights.LightsPresence.install(this, new com.omarchytv.home.lights.LightsPresence.Painter() {
             @Override
@@ -961,6 +962,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     protected void onResume() {
         super.onResume();
+        BootScreenView.onResume(this, findViewById(R.id.root));   // "wake" mode: replay after the screen came on
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
         LauncherConfig cfg = LauncherConfig.get(this);
@@ -1072,6 +1074,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        BootScreenView.onDestroy(this);
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm != null) cm.unregisterNetworkCallback(networkCallback);
         OmarchyLink.removeListener(linkListener);
@@ -3719,6 +3722,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
+        if (BootScreenView.consumeKey(e)) return true;   // boot screen: any key skips, none reaches Home
         if (swallowKeyUp == e.getKeyCode() && e.getAction() == KeyEvent.ACTION_UP) {
             swallowKeyUp = -1;
             return true;

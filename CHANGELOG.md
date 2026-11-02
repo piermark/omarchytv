@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Boot screen (draft, Android TV + LG webOS + Samsung Tizen)
+
+- **Omarchy TV boot screen.** When OmarchyTV starts, the screen powers on like a CRT (a bright line that opens to full screen), runs a 90s BIOS POST with an OTV block badge top right, then systemd lines as Arch prints them, auto-logs in, types `omarchy-tv`, draws the OMARCHY TV block wordmark row by row (as on Home) and fades to Home. About 7 s; any key skips it and no key reaches Home while it plays. Theme colours, Caskaydia font, light scanlines and glow.
+- **Real data from your TV:** launcher version, TV model, RAM (counting up), display mode, active theme, number of apps. The network and omarchy-link lines really wait for the TV while their `[ *** ]` spinner turns (up to 2.5 s): `Connected to Wi-Fi "<name>", <ip>.` / `Connected via Ethernet, <ip>.` and `omarchy-link: connected to <PC name>.`; if the answer doesn't come in time the line shows `[ WARN ]` with what is known. On webOS/Tizen the network line says online/offline (the web app can't read the Wi-Fi name or IP) and the model is the real one when the TV exposes it. The ads and Couch lines are jokes.
+- **Settings:** `bootScreen` = `"boot"` (default: once per TV boot on Android, at app start on webOS/Tizen), `"wake"` (also when the TV comes back from standby) or `"off"`; `bootFx` = scanlines and glow (default on). Android: omarchytv.json; webOS/Tizen: saved settings `cfg.bootScreen` / `cfg.bootFx` (no menu entry yet).
+- One script on all platforms: `launcher/.../BootScript.java` and `webos/app/boot.js` (Tizen packs the same file). Tests: `BootScriptTest`, `webos/tests/boot.test.js` (also checks both platforms say the same lines with the same timings, and that the block font matches `BlockFont.java`).
+
 ### LG webOS / Samsung Tizen 2.13.11 (draft, not released)
 
 LG and Samsung only. Android TV is unchanged in this build: Android users stay on the current Android release (2.13.8); Android work resumes separately.

@@ -135,6 +135,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverShowClock: false,
     wallpaperIntro: true,
     wallpaperLoop: false,   // v2.14 "Always-animated wallpaper": loop the intro while Home is on screen
+    bootScreen: "boot",     // v2.14 boot screen (boot.js): "boot" at app start, "wake" also after standby, "off"
+    bootFx: true,           // v2.14 boot screen scanlines and glow
     antiBurnIn: true,
     offIdleMin: 0,
     offMode: "screen",
@@ -3162,6 +3164,56 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   // Boot
   fitStage();
   applyTheme();
+  // Boot screen: the real network and omarchy-link state, asked while their spinners turn (boot.js clock()).
+  function bootLive(key, timedOut) {
+    if (key === "net") {
+      if (navigator.onLine === false) return timedOut ? { ok: false, text: "Network Manager: no connection yet." } : null;
+      return { ok: true, text: "Network online." };
+    }
+    if (key === "pc") {
+      if (!cfg.pcHost && !cfg.pcSimulated) return { ok: true, text: "Started omarchy-link.service (no PC paired yet)." };
+      var st = state.pcStatus;
+      if (st) return { ok: true, text: "omarchy-link: connected to " + (st.host || "your PC") + "." };
+      return timedOut ? { ok: false, text: "omarchy-link: " + (cfg.pcHost || "your PC") + " not reachable." } : null;
+    }
+    return { ok: true, text: "" };
+  }
+  // Boot screen "System Model": the TV's real model when the platform says it, else a generic name.
+  function tvModel() {
+    try {   // Samsung: only when webapis.js is loaded
+      var pi = window.webapis && window.webapis.productinfo;
+      var sm = pi && (pi.getRealModel ? pi.getRealModel() : pi.getModel && pi.getModel());
+      if (sm) return "Samsung " + sm;
+    } catch (e) {}
+    try {   // LG: PalmSystem.deviceInfo is a JSON string with modelName
+      var d = window.PalmSystem && window.PalmSystem.deviceInfo && JSON.parse(window.PalmSystem.deviceInfo);
+      if (d && d.modelName) return "LG " + d.modelName;
+    } catch (e) {}
+    return window.tizen ? "Samsung Smart TV (Tizen)" : "LG Smart TV (webOS)";
+  }
+  if (window.OmarchyBoot) {
+    window.OmarchyBoot.install(function () {
+      var bt = currentThemeObj();
+      var mem = Number(navigator.deviceMemory) || 0;   // GB, rounded by the browser; absent on old engines
+      return {
+        mode: cfg.bootScreen || "boot",
+        version: APP_VERSION,
+        theme: cfg.theme,
+        model: tvModel(),
+        ramMb: mem * 1024,
+        display: (function () {   // the web UI's mode: TVs often report 1920x1080 even on a 4K panel
+          try { var r = window.devicePixelRatio || 1; return Math.round(screen.width * r) + "x" + Math.round(screen.height * r); } catch (e) { return ""; }
+        })(),
+        apps: (function () { try { return visibleApps().length; } catch (e) { return -1; } })(),
+        live: bootLive,
+        user: cfg.promptUser,
+        host: cfg.promptHost,
+        pcLinked: !!cfg.pcHost && !cfg.pcSimulated,
+        fx: cfg.bootFx !== false,
+        colors: { bg: bt.bg, fg: bt.fg, fgBright: bt.fgBright, fgDim: bt.fgDim, accent: bt.accent, accent2: bt.accent2, green: bt.green, red: bt.red, yellow: bt.yellow }
+      };
+    });
+  }
   updateClock();
   setInterval(updateClock, 15000);
   animateLogo();
