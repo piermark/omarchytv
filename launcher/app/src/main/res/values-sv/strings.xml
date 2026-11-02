@@ -419,4 +419,18 @@
     <string name="liftoff_abort">AVBRUTET</string>
     <string name="liftoff_hint">valfri knapp: dölj</string>
     <string name="liftoff_failed_toast">%1$s misslyckades</string>
+    <string name="living">Living-skärmsläckare</string>
+    <string name="living_notes">Datorns aviseringar på skärmsläckaren</string>
+    <string name="living_notes_note">Alla aviseringar från Omarchy-datorn visas på TV:n medan skärmsläckaren är igång</string>
+    <string name="living_x">X på skärmsläckaren</string>
+    <string name="living_x_notify">datorns aviseringar</string>
+    <string name="living_x_api">X-API</string>
+    <string name="living_x_api_note">Omnämnanden via X-API:t (X tar betalt per användning): ställ in på datorn med omarchy-link x setup</string>
+    <string name="living_weather">väder</string>
+    <string name="living_notes_title">aviseringar · dator</string>
+    <string name="living_x_title">x · omnämnanden</string>
+    <string name="living_x_not_set_up">X-API:t är inte inställt: omarchy-link x setup på datorn</string>
+    <string name="living_x_budget">X-API:ts månadsgräns nådd (xMonthlyUsd)</string>
+    <string name="living_x_error">X-API:t går inte att nå just nu</string>
+    <string name="x_keys_hint">X · ▲▼ inlägg · OK öppna · 1 gilla · 2 svara · 3 repost · 4 nytt inlägg · 5 sök · 0 hem · 9 aviseringar · 8 meddelanden</string>
 </resources>

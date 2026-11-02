@@ -96,4 +96,19 @@ if(!window.ResizeObserver)window.ResizeObserver=function(){this.observe=function
   if(!text){fetch('screensaver-tv.txt').then(function(r){return r.text()}).then(function(t){text=t;boot()}).catch(function(){text='OMARCHY TV';boot()})}
   else boot();
 })();
+</script>
+<script src="living.js"></script>
+<script>
+/* v2.14 Living screensaver: weather, GitHub, PC notifications and X from the launcher (OmarchySaver.living()). */
+(function(){
+  var S=window.OmarchySaver; if(!S||!S.living||!window.OmarchyLiving)return;
+  var ui=null;
+  function tick(){
+    var d; try{d=JSON.parse(S.living())}catch(e){return}
+    if(!d||!d.enabled){if(ui){ui.destroy();ui=null}return}
+    if(!ui)ui=OmarchyLiving.mount(document.body,{labels:d.labels,color:d.color,accent:d.accent});
+    ui.update(d.data||{});
+  }
+  tick(); setInterval(tick,2000);
+})();
 </script></body></html>

@@ -419,4 +419,18 @@
     <string name="liftoff_abort">PRZERWANO</string>
     <string name="liftoff_hint">dowolny klawisz: ukryj</string>
     <string name="liftoff_failed_toast">%1$s: niepowodzenie</string>
+    <string name="living">Wygaszacz Living</string>
+    <string name="living_notes">Powiadomienia z PC na wygaszaczu</string>
+    <string name="living_notes_note">Wszystkie powiadomienia z PC Omarchy pojawią się na TV, gdy działa wygaszacz</string>
+    <string name="living_x">X na wygaszaczu</string>
+    <string name="living_x_notify">powiadomienia z PC</string>
+    <string name="living_x_api">API X</string>
+    <string name="living_x_api_note">Wzmianki przez API X (X pobiera opłaty za użycie): skonfiguruj na PC poleceniem omarchy-link x setup</string>
+    <string name="living_weather">pogoda</string>
+    <string name="living_notes_title">powiadomienia · pc</string>
+    <string name="living_x_title">x · wzmianki</string>
+    <string name="living_x_not_set_up">API X nieskonfigurowane: omarchy-link x setup na PC</string>
+    <string name="living_x_budget">Osiągnięto miesięczny limit API X (xMonthlyUsd)</string>
+    <string name="living_x_error">API X jest teraz niedostępne</string>
+    <string name="x_keys_hint">X · ▲▼ posty · OK otwórz · 1 polub · 2 odpowiedz · 3 repost · 4 nowy post · 5 szukaj · 0 start · 9 powiadomienia · 8 wiadomości</string>
 </resources>

@@ -419,4 +419,18 @@
     <string name="liftoff_abort">KESKEYTETTY</string>
     <string name="liftoff_hint">mikä tahansa näppäin: piilota</string>
     <string name="liftoff_failed_toast">%1$s epäonnistui</string>
+    <string name="living">Living-näytönsäästäjä</string>
+    <string name="living_notes">PC:n ilmoitukset näytönsäästäjässä</string>
+    <string name="living_notes_note">Kaikki Omarchy-PC:n ilmoitukset näkyvät TV:ssä näytönsäästäjän ollessa päällä</string>
+    <string name="living_x">X näytönsäästäjässä</string>
+    <string name="living_x_notify">PC:n ilmoitukset</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">Maininnat X API:n kautta (X laskuttaa käytön mukaan): määritä PC:llä komennolla omarchy-link x setup</string>
+    <string name="living_weather">sää</string>
+    <string name="living_notes_title">ilmoitukset · pc</string>
+    <string name="living_x_title">x · maininnat</string>
+    <string name="living_x_not_set_up">X API:a ei ole määritetty: omarchy-link x setup PC:llä</string>
+    <string name="living_x_budget">X API:n kuukausiraja täynnä (xMonthlyUsd)</string>
+    <string name="living_x_error">X API ei vastaa juuri nyt</string>
+    <string name="x_keys_hint">X · ▲▼ julkaisut · OK avaa · 1 tykkää · 2 vastaa · 3 repost · 4 uusi julkaisu · 5 haku · 0 koti · 9 ilmoitukset · 8 viestit</string>
 </resources>

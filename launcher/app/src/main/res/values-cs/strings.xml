@@ -419,4 +419,18 @@
     <string name="liftoff_abort">PŘERUŠENO</string>
     <string name="liftoff_hint">libovolná klávesa: skrýt</string>
     <string name="liftoff_failed_toast">%1$s selhalo</string>
+    <string name="living">Spořič Living</string>
+    <string name="living_notes">Oznámení z PC na spořiči</string>
+    <string name="living_notes_note">Všechna oznámení z PC Omarchy se zobrazí na TV, dokud běží spořič</string>
+    <string name="living_x">X na spořiči</string>
+    <string name="living_x_notify">oznámení z PC</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">Zmínky přes X API (X účtuje podle využití): nastavte na PC příkazem omarchy-link x setup</string>
+    <string name="living_weather">počasí</string>
+    <string name="living_notes_title">oznámení · pc</string>
+    <string name="living_x_title">x · zmínky</string>
+    <string name="living_x_not_set_up">X API není nastaveno: omarchy-link x setup na PC</string>
+    <string name="living_x_budget">Dosažen měsíční limit X API (xMonthlyUsd)</string>
+    <string name="living_x_error">X API teď není dostupné</string>
+    <string name="x_keys_hint">X · ▲▼ příspěvky · OK otevřít · 1 líbí se · 2 odpovědět · 3 repost · 4 nový příspěvek · 5 hledat · 0 domů · 9 oznámení · 8 zprávy</string>
 </resources>

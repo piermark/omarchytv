@@ -419,4 +419,18 @@
     <string name="liftoff_abort">ANULAT</string>
     <string name="liftoff_hint">orice tastă: ascunde</string>
     <string name="liftoff_failed_toast">%1$s a eșuat</string>
+    <string name="living">Screensaver Living</string>
+    <string name="living_notes">Notificările PC-ului pe screensaver</string>
+    <string name="living_notes_note">Toate notificările de pe PC-ul Omarchy vor apărea pe TV cât timp rulează screensaverul</string>
+    <string name="living_x">X pe screensaver</string>
+    <string name="living_x_notify">notificările PC-ului</string>
+    <string name="living_x_api">API X</string>
+    <string name="living_x_api_note">Mențiuni prin API-ul X (X taxează la utilizare): configurează pe PC cu omarchy-link x setup</string>
+    <string name="living_weather">vreme</string>
+    <string name="living_notes_title">notificări · pc</string>
+    <string name="living_x_title">x · mențiuni</string>
+    <string name="living_x_not_set_up">API-ul X nu e configurat: omarchy-link x setup pe PC</string>
+    <string name="living_x_budget">Limita lunară a API-ului X a fost atinsă (xMonthlyUsd)</string>
+    <string name="living_x_error">API-ul X nu răspunde acum</string>
+    <string name="x_keys_hint">X · ▲▼ postări · OK deschide · 1 apreciez · 2 răspunde · 3 repost · 4 postare nouă · 5 căutare · 0 acasă · 9 notificări · 8 mesaje</string>
 </resources>

@@ -419,4 +419,18 @@
     <string name="liftoff_abort">中止</string>
     <string name="liftoff_hint">任意键：隐藏</string>
     <string name="liftoff_failed_toast">%1$s 失败</string>
+    <string name="living">Living 屏保</string>
+    <string name="living_notes">在屏保上显示电脑通知</string>
+    <string name="living_notes_note">屏保运行时，Omarchy 电脑的所有通知都会显示在电视上</string>
+    <string name="living_x">屏保上的 X</string>
+    <string name="living_x_notify">电脑通知</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">通过 X API 获取提及（X 按用量收费）：在电脑上运行 omarchy-link x setup 进行设置</string>
+    <string name="living_weather">天气</string>
+    <string name="living_notes_title">通知 · 电脑</string>
+    <string name="living_x_title">x · 提及</string>
+    <string name="living_x_not_set_up">未设置 X API：在电脑上运行 omarchy-link x setup</string>
+    <string name="living_x_budget">已达到 X API 每月上限（xMonthlyUsd）</string>
+    <string name="living_x_error">暂时无法连接 X API</string>
+    <string name="x_keys_hint">X · ▲▼ 帖子 · OK 打开 · 1 喜欢 · 2 回复 · 3 转帖 · 4 发帖 · 5 搜索 · 0 主页 · 9 通知 · 8 私信</string>
 </resources>

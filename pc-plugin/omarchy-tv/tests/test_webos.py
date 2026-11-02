@@ -210,6 +210,35 @@ class UpdatePowerBridgeTest(unittest.TestCase):
         self.cfg["updateFromTv"] = False
         self.assertEqual(self.post("/v1/update/tv", {"action": "install"}, tok)[0], 403)
 
+    def test_living_needs_the_code_and_returns_the_feed(self):
+        class FakeLiving:
+            def __init__(self, *a):
+                self.prefs = None
+                self.touched = False
+
+            def set_prefs(self, p):
+                self.prefs = p
+
+            def touch(self):
+                self.touched = True
+
+            def payload(self):
+                return {"github": [], "notes": [{"app": "Slack", "title": "Ola", "body": "ciao"}], "x": [], "xMode": "off"}
+
+        class Mod:
+            Living = FakeLiving
+        webos._living_obj = None
+        webos._link_mod = lambda n: Mod if n == "living" else None
+        self.assertEqual(self.post("/v1/living", {"notes": True})[0], 401)
+        tok = webos.bridge_token()
+        st, d = self.post("/v1/living", {"notes": True, "x": "notify"}, tok)
+        self.assertEqual((st, d["notes"][0]["title"]), (200, "Ola"))
+        self.assertEqual(webos._living_obj.prefs, {"notes": True, "x": "notify"})
+        self.assertTrue(webos._living_obj.touched)
+        self.cfg["livingToTv"] = False
+        self.assertEqual(self.post("/v1/living", {}, tok)[0], 403)
+        webos._living_obj = None
+
     def test_status_has_liftoff(self):
         with urllib.request.urlopen(self.base + "/v1/status", timeout=5) as r:
             self.assertIn("liftoff", json.loads(r.read()))

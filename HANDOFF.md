@@ -1,7 +1,7 @@
-# HANDOFF — branch `feature/tv-pc-together`
+# HANDOFF — branch `feature/living-x`
 
 Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
-**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff** (each built on the previous).
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app** (each built on the previous).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -245,4 +245,44 @@ All default as before (boot screen on, the other two off).
   the user's device name (`webosDevice`). On Samsung: `tizen package` re-signing with the user's profile, `tizen
   install` target name format.
 - The GitHub API is unauthenticated (60 requests/hour per IP): fine for a button, not for polling.
+
+
+# G. Living screensaver
+
+Screensaver settings (Android: Screensaver page; LG/Samsung: Screensaver modal): **Living screensaver** (off),
+**PC notifications on the screensaver** (off), **X on the screensaver** (off / PC notifications / X API), **GitHub** (on).
+
+- Drawing: `webos/app/living.js` (ES5, pure `render()` + `mount()`), the same file copied to
+  `launcher/app/src/main/assets/saver/living.js` (test enforces identical). Right-hand `<pre>` over the screensaver art.
+- Android: `Living.java` keeps the PC feed in memory (event `living`, clipped by `LinkServer.living()`) and hands
+  `{enabled, data, labels, colors}` + the TV's cached weather to the saver page through `OmarchySaver.living()`
+  (TteSaver JS interface); the page polls it every 2 s. Prefs go to the PC as `living_prefs` on connect and on change.
+  Not in the native fallback saver (TVs without a WebView).
+- LG/Samsung: app.js mounts it in `#saver-overlay` and POSTs `/v1/living` every 3 s while the screensaver runs.
+- PC: `omarchy_link/living.py` (`Living` collector, one per process; `dbus-monitor` for notifications; GitHub via
+  `gh`; X API via `x.json`), session events, `omarchy-link x setup|status|forget`, config defaults; bridge
+  `POST /v1/living`. If an Android TV and an LG TV both use the same PC, each process polls on its own.
+
+# H. X app
+
+- Android: `LauncherConfig.X_WEBAPP` (x.com/home, desktop UA so X's keyboard shortcuts exist), Walker entry
+  "X (x.com)", `XKeys.JS` injected by `WebAppActivity.onPageFinished` (capturing keydown → j/k/l/r/t/n/'/'/g h/g n/g m,
+  skipped while a text field has focus), autoplay off, a one-time hint line. Pointer mode (menu) still works.
+- LG/Samsung: "X" first in Web apps (opens the TV browser; no key mapping possible in another app).
+
+## Verified (G, H)
+
+- omarchy-link `run.sh` (incl. `test_living`), omarchy-tv `test_webos`: OK. Real `dbus-monitor` on a private session
+  bus: a `Notify` call arrives at once with app/title/body.
+- `node --test webos/tests/*.test.js` (120) pass; TranslationsTest passes; every changed Java line compiles (API 34).
+- Headless Chromium: the Living boxes with a fake PC (screenshot), prefs POSTed; `XKeys.JS` maps ▼/1/0 to j, l, g h and
+  leaves keys alone inside a textarea.
+
+## NOT verified (to do)
+
+- Gradle build; Android saver WebView with the panel on a real TV (font size 1.25vw, readable from the sofa?).
+- X login inside the TV web view (username/password; Google sign-in is usually refused in web views) and whether X's
+  shortcuts fire from synthetic key events on every X build.
+- X API with a real token: endpoint access on the account's plan, real billing vs the estimate in `living.py`.
+- Notifications from Omarchy's mako on a real Omarchy PC (dbus-monitor permission is per user, no root needed).
 

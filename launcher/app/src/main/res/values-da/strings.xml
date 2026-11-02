@@ -419,4 +419,18 @@
     <string name="liftoff_abort">AFBRUDT</string>
     <string name="liftoff_hint">vilkårlig tast: skjul</string>
     <string name="liftoff_failed_toast">%1$s mislykkedes</string>
+    <string name="living">Living-pauseskærm</string>
+    <string name="living_notes">Pc-notifikationer på pauseskærmen</string>
+    <string name="living_notes_note">Alle notifikationer fra Omarchy-pc\'en vises på tv\'et, mens pauseskærmen kører</string>
+    <string name="living_x">X på pauseskærmen</string>
+    <string name="living_x_notify">pc-notifikationer</string>
+    <string name="living_x_api">X-API</string>
+    <string name="living_x_api_note">Omtaler via X-API\'et (X tager betaling pr. brug): sæt det op på pc\'en med omarchy-link x setup</string>
+    <string name="living_weather">vejr</string>
+    <string name="living_notes_title">notifikationer · pc</string>
+    <string name="living_x_title">x · omtaler</string>
+    <string name="living_x_not_set_up">X-API ikke sat op: omarchy-link x setup på pc\'en</string>
+    <string name="living_x_budget">X-API\'ets månedsgrænse er nået (xMonthlyUsd)</string>
+    <string name="living_x_error">X-API\'et kan ikke nås lige nu</string>
+    <string name="x_keys_hint">X · ▲▼ opslag · OK åbn · 1 synes godt om · 2 svar · 3 repost · 4 nyt opslag · 5 søg · 0 hjem · 9 notifikationer · 8 beskeder</string>
 </resources>

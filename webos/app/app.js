@@ -54,6 +54,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_abort: "ABORT",
       liftoff_hint: "any key: hide",
       update_install: "Install",
+      living: "Living screensaver",
+      living_notes: "PC notifications on the screensaver",
+      living_notes_note: "Every notification from the Omarchy PC will show on the TV while the screensaver runs",
+      living_x: "X on the screensaver",
+      living_x_notify: "PC notifications",
+      living_x_api: "X API",
+      living_x_api_note: "Mentions via the X API (X charges per use): set it up on the PC with omarchy-link x setup",
+      living_weather: "weather",
+      living_notes_title: "notifications · pc",
+      living_x_title: "x · mentions",
+      living_x_not_set_up: "X API not set up: omarchy-link x setup on the PC",
+      living_x_budget: "X API monthly limit reached (xMonthlyUsd)",
+      living_x_error: "X API not reachable right now",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -100,6 +113,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_abort: "ANNULLATO",
       liftoff_hint: "un tasto qualsiasi: nascondi",
       update_install: "Installa",
+      living: "Salvaschermo Living",
+      living_notes: "Notifiche del PC nel salvaschermo",
+      living_notes_note: "Tutte le notifiche del PC Omarchy appariranno sulla TV mentre è attivo il salvaschermo",
+      living_x: "X nel salvaschermo",
+      living_x_notify: "notifiche del PC",
+      living_x_api: "API di X",
+      living_x_api_note: "Menzioni tramite l'API di X (X fa pagare a consumo): configurala sul PC con omarchy-link x setup",
+      living_weather: "meteo",
+      living_notes_title: "notifiche · pc",
+      living_x_title: "x · menzioni",
+      living_x_not_set_up: "API di X non configurata: omarchy-link x setup sul PC",
+      living_x_budget: "Raggiunto il limite mensile dell'API di X (xMonthlyUsd)",
+      living_x_error: "API di X non raggiungibile ora",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -146,6 +172,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_abort: "ABBRUCH",
       liftoff_hint: "beliebige Taste: ausblenden",
       update_install: "Installieren",
+      living: "Living-Bildschirmschoner",
+      living_notes: "PC-Benachrichtigungen im Bildschirmschoner",
+      living_notes_note: "Alle Benachrichtigungen des Omarchy-PCs erscheinen auf dem TV, solange der Bildschirmschoner läuft",
+      living_x: "X im Bildschirmschoner",
+      living_x_notify: "PC-Benachrichtigungen",
+      living_x_api: "X-API",
+      living_x_api_note: "Erwähnungen über die X-API (X berechnet pro Nutzung): auf dem PC mit omarchy-link x setup einrichten",
+      living_weather: "Wetter",
+      living_notes_title: "Benachrichtigungen · PC",
+      living_x_title: "x · Erwähnungen",
+      living_x_not_set_up: "X-API nicht eingerichtet: omarchy-link x setup auf dem PC",
+      living_x_budget: "Monatslimit der X-API erreicht (xMonthlyUsd)",
+      living_x_error: "X-API gerade nicht erreichbar",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -193,6 +232,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverShowClock: false,
     wallpaperIntro: true,
     wallpaperLoop: false,   // v2.14 "Always-animated wallpaper": loop the intro while Home is on screen
+    living: false,          // v2.14 Living screensaver: weather, GitHub, PC notifications, X in ASCII boxes (living.js)
+    livingNotes: false,     // ...with every notification from the Omarchy PC (POST /v1/living)
+    livingX: "off",         // ..."off" | "notify" (X notifications shown on the PC, free) | "api" (X API on the PC, paid)
+    livingGithub: true,
     pcPower: false,         // v2.14 LG: the PC suspends when the TV turns off (POST /v1/power; needs TV control approved)
     themeToPc: false,       // v2.14 reverse theme sync: a theme picked here also switches the PC (POST /v1/theme/set)
     bootScreen: "boot",     // v2.14 boot screen (boot.js): "boot" at app start, "wake" also after standby, "off"
@@ -1386,6 +1429,21 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.offIdleMin = opts[(opts.indexOf(cfg.offIdleMin) + 1) % opts.length];
         saveCfg(); openSaverModal(true);
       } },
+      { label: tr("living"), right: cfg.living ? "on" : "off", act: function () {
+        cfg.living = !cfg.living; saveCfg(); openSaverModal(true);
+      } },
+      { label: "  " + tr("living_notes"), right: cfg.livingNotes ? "on" : "off", act: function () {
+        cfg.livingNotes = !cfg.livingNotes; saveCfg(); openSaverModal(true);
+        if (cfg.livingNotes) showToast(tr("living_notes_note"));
+      } },
+      { label: "  " + tr("living_x"), right: tr(cfg.livingX === "api" ? "living_x_api" : cfg.livingX === "notify" ? "living_x_notify" : "off"), act: function () {
+        var m = ["off", "notify", "api"];
+        cfg.livingX = m[(m.indexOf(cfg.livingX) + 1) % m.length]; saveCfg(); openSaverModal(true);
+        if (cfg.livingX === "api") showToast(tr("living_x_api_note"));
+      } },
+      { label: "  GitHub", right: cfg.livingGithub !== false ? "on" : "off", act: function () {
+        cfg.livingGithub = cfg.livingGithub === false; saveCfg(); openSaverModal(true);
+      } },
       { label: "Turn off", right: cfg.offMode === "tv" ? "TV" : "screen only", act: function () {
         cfg.offMode = cfg.offMode === "tv" ? "screen" : "tv";
         saveCfg(); openSaverModal(true);
@@ -2135,11 +2193,54 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var fr = document.getElementById("saver-frame");
     fr.src = "saver/index.html";
     ov.className = "active";
+    livingStart(ov);
+  }
+
+  // ---- v2.14 Living screensaver (living.js): weather here, the rest from the PC bridge every 3 s ----
+  var livingUi = null, livingTimer = null, livingData = {};
+  function livingWeather() {
+    var wx = state.weather;
+    if (!wx || typeof wx.tempC !== "number") return null;
+    var c = Number(wx.code) || 0, keys = [95, 80, 71, 61, 51, 45, 3, 2, 1, 0], k = 0;
+    for (var i = 0; i < keys.length; i++) if (c >= keys[i]) { k = keys[i]; break; }
+    var f = cfg.tempUnit === "F", t = function (v) { return Math.round(f ? v * 9 / 5 + 32 : v); };
+    return { t: t(wx.tempC), unit: f ? "F" : "", code: c, desc: (tr("wmo") || {})[k] || "", place: wx.city || cfg.weatherCity,
+      min: typeof wx.minC === "number" ? t(wx.minC) : undefined, max: typeof wx.maxC === "number" ? t(wx.maxC) : undefined };
+  }
+  function livingLabels() {
+    return { weather: tr("living_weather"), notes: tr("living_notes_title"), x: tr("living_x_title"), github: "github",
+      x_not_set_up: tr("living_x_not_set_up"), x_budget: tr("living_x_budget"), x_error: tr("living_x_error"), x_user: tr("living_x_error") };
+  }
+  function livingStart(host) {
+    livingStop();
+    if (!cfg.living || !window.OmarchyLiving) return;
+    var t = (DATA.themes[cfg.theme] || {});
+    livingUi = window.OmarchyLiving.mount(host, { labels: livingLabels(), color: t.foreground || "#c0caf5", accent: t.accent || "#7aa2f7" });
+    livingData = { weather: livingWeather() };
+    livingUi.update(livingData);
+    var tick = function () {
+      if (!livingUi) return;
+      livingData.weather = livingWeather();
+      if (!pcReady()) { livingUi.update(livingData); return; }
+      pcPost("/v1/living", { notes: !!cfg.livingNotes, github: cfg.livingGithub !== false, x: cfg.livingX || "off" }).then(function (r) {
+        if (!livingUi || r.status !== 200) return;
+        var j = r.j;
+        livingData = { weather: livingWeather(), notes: j.notes, github: j.github, x: j.x, xMode: j.xMode, xError: j.xError };
+        livingUi.update(livingData);
+      }, function () {});
+    };
+    tick();
+    livingTimer = setInterval(tick, 3000);
+  }
+  function livingStop() {
+    if (livingTimer) { clearInterval(livingTimer); livingTimer = null; }
+    if (livingUi) { livingUi.destroy(); livingUi = null; }
   }
 
   function stopScreensaver() {
     var ov = document.getElementById("saver-overlay");
     var fr = document.getElementById("saver-frame");
+    livingStop();
     if (ov.className === "active") {
       ov.className = "";
       fr.src = "about:blank";
@@ -2835,7 +2936,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     ]);
   }
   function webApps() {
-    return AI_WEBAPPS.map(function (w) { return { name: w[0], url: w[1], builtin: true }; }).concat(cfg.webapps || []);
+    // v2.14 X first: the TV browser opens x.com (on LG/Samsung the remote works with the TV browser's own pointer).
+    return [{ name: "X", url: "https://x.com/home", builtin: true }]
+      .concat(AI_WEBAPPS.map(function (w) { return { name: w[0], url: w[1], builtin: true }; })).concat(cfg.webapps || []);
   }
   function openWebAppsModal() {
     var typed = "";

@@ -419,4 +419,18 @@
     <string name="liftoff_abort">СКАСОВАНО</string>
     <string name="liftoff_hint">будь-яка кнопка: сховати</string>
     <string name="liftoff_failed_toast">%1$s: помилка</string>
+    <string name="living">Заставка Living</string>
+    <string name="living_notes">Сповіщення ПК на заставці</string>
+    <string name="living_notes_note">Усі сповіщення з ПК Omarchy показуватимуться на ТБ, поки працює заставка</string>
+    <string name="living_x">X на заставці</string>
+    <string name="living_x_notify">сповіщення ПК</string>
+    <string name="living_x_api">API X</string>
+    <string name="living_x_api_note">Згадки через API X (X бере плату за використання): налаштуйте на ПК командою omarchy-link x setup</string>
+    <string name="living_weather">погода</string>
+    <string name="living_notes_title">сповіщення · пк</string>
+    <string name="living_x_title">x · згадки</string>
+    <string name="living_x_not_set_up">API X не налаштовано: omarchy-link x setup на ПК</string>
+    <string name="living_x_budget">Досягнуто місячного ліміту API X (xMonthlyUsd)</string>
+    <string name="living_x_error">API X зараз недоступний</string>
+    <string name="x_keys_hint">X · ▲▼ дописи · OK відкрити · 1 вподобати · 2 відповісти · 3 репост · 4 новий допис · 5 пошук · 0 головна · 9 сповіщення · 8 повідомлення</string>
 </resources>

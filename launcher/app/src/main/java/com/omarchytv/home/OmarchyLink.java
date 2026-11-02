@@ -326,6 +326,14 @@ public final class OmarchyLink implements LinkServer.Host {
     }
 
     /** Reverse theme sync: tell the paired PC(s) the theme just picked on the TV. Fire and forget. */
+    /** v2.14 send the Living screensaver prefs to the connected PCs (on connect and when a setting changes). */
+    static void livingPrefs() {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || r.server.connectedClients() == 0) return;
+        JSONObject p = Living.prefs(LauncherConfig.get(r.app));
+        bg.execute(() -> r.server.livingPrefs(p));
+    }
+
     static void themeSet(String name) {
         OmarchyLink r = runtime;
         if (r == null || !r.live() || name == null || name.isEmpty()) return;
@@ -373,6 +381,7 @@ public final class OmarchyLink implements LinkServer.Host {
         // Foreground-app checks run only while a PC listens; with no PC there is no timer at all.
         s.setOnClientsChanged(() -> {
             main.post(this::schedulePoll);
+            livingPrefs();   // a PC (re)connected: tell it what the Living screensaver wants
             emit("clients", new JSONObject());   // AI pane: "pc offline" mark on/off
         });
         server = s;
@@ -892,6 +901,10 @@ public final class OmarchyLink implements LinkServer.Host {
 
     @Override
     public void onEvent(String pcId, String type, JSONObject data) {
+        if ("living".equals(type)) {   // v2.14: kept for the screensaver page, not an event for the UI
+            Living.set(data);
+            return;
+        }
         if ("pc_wol".equals(type)) {   // remember the PC's MAC for Wake-on-LAN; rewrite only when it changed
             LauncherConfig cur = LauncherConfig.get(app);
             String mac = data.optString("mac", ""), bc = data.optString("broadcast", "");

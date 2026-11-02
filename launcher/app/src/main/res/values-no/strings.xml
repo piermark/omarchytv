@@ -419,4 +419,18 @@
     <string name="liftoff_abort">AVBRUTT</string>
     <string name="liftoff_hint">hvilken som helst tast: skjul</string>
     <string name="liftoff_failed_toast">%1$s mislyktes</string>
+    <string name="living">Living-skjermsparer</string>
+    <string name="living_notes">PC-varsler på skjermspareren</string>
+    <string name="living_notes_note">Alle varsler fra Omarchy-PC-en vises på TV-en mens skjermspareren kjører</string>
+    <string name="living_x">X på skjermspareren</string>
+    <string name="living_x_notify">PC-varsler</string>
+    <string name="living_x_api">X-API</string>
+    <string name="living_x_api_note">Omtaler via X-API-et (X tar betalt per bruk): sett det opp på PC-en med omarchy-link x setup</string>
+    <string name="living_weather">vær</string>
+    <string name="living_notes_title">varsler · pc</string>
+    <string name="living_x_title">x · omtaler</string>
+    <string name="living_x_not_set_up">X-API-et er ikke satt opp: omarchy-link x setup på PC-en</string>
+    <string name="living_x_budget">Månedsgrensen for X-API-et er nådd (xMonthlyUsd)</string>
+    <string name="living_x_error">X-API-et kan ikke nås nå</string>
+    <string name="x_keys_hint">X · ▲▼ innlegg · OK åpne · 1 lik · 2 svar · 3 repost · 4 nytt innlegg · 5 søk · 0 hjem · 9 varsler · 8 meldinger</string>
 </resources>

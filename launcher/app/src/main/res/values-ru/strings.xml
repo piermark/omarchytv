@@ -419,4 +419,18 @@
     <string name="liftoff_abort">ОТМЕНА</string>
     <string name="liftoff_hint">любая кнопка: скрыть</string>
     <string name="liftoff_failed_toast">%1$s: ошибка</string>
+    <string name="living">Заставка Living</string>
+    <string name="living_notes">Уведомления ПК на заставке</string>
+    <string name="living_notes_note">Все уведомления с ПК Omarchy будут показываться на ТВ, пока работает заставка</string>
+    <string name="living_x">X на заставке</string>
+    <string name="living_x_notify">уведомления ПК</string>
+    <string name="living_x_api">API X</string>
+    <string name="living_x_api_note">Упоминания через API X (X берёт плату за использование): настройте на ПК командой omarchy-link x setup</string>
+    <string name="living_weather">погода</string>
+    <string name="living_notes_title">уведомления · пк</string>
+    <string name="living_x_title">x · упоминания</string>
+    <string name="living_x_not_set_up">API X не настроен: omarchy-link x setup на ПК</string>
+    <string name="living_x_budget">Достигнут месячный лимит API X (xMonthlyUsd)</string>
+    <string name="living_x_error">API X сейчас недоступен</string>
+    <string name="x_keys_hint">X · ▲▼ посты · OK открыть · 1 нравится · 2 ответить · 3 репост · 4 новый пост · 5 поиск · 0 главная · 9 уведомления · 8 сообщения</string>
 </resources>

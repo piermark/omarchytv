@@ -419,4 +419,18 @@
     <string name="liftoff_abort">ΜΑΤΑΙΩΣΗ</string>
     <string name="liftoff_hint">οποιοδήποτε πλήκτρο: απόκρυψη</string>
     <string name="liftoff_failed_toast">%1$s: αποτυχία</string>
+    <string name="living">Προφύλαξη Living</string>
+    <string name="living_notes">Ειδοποιήσεις PC στην προφύλαξη</string>
+    <string name="living_notes_note">Όλες οι ειδοποιήσεις του PC Omarchy θα εμφανίζονται στην τηλεόραση όσο τρέχει η προφύλαξη οθόνης</string>
+    <string name="living_x">X στην προφύλαξη</string>
+    <string name="living_x_notify">ειδοποιήσεις PC</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">Αναφορές μέσω του X API (το X χρεώνει ανά χρήση): ρυθμίστε το στο PC με omarchy-link x setup</string>
+    <string name="living_weather">καιρός</string>
+    <string name="living_notes_title">ειδοποιήσεις · pc</string>
+    <string name="living_x_title">x · αναφορές</string>
+    <string name="living_x_not_set_up">Το X API δεν έχει ρυθμιστεί: omarchy-link x setup στο PC</string>
+    <string name="living_x_budget">Συμπληρώθηκε το μηνιαίο όριο του X API (xMonthlyUsd)</string>
+    <string name="living_x_error">Το X API δεν είναι διαθέσιμο τώρα</string>
+    <string name="x_keys_hint">X · ▲▼ αναρτήσεις · OK άνοιγμα · 1 μου αρέσει · 2 απάντηση · 3 repost · 4 νέα ανάρτηση · 5 αναζήτηση · 0 αρχική · 9 ειδοποιήσεις · 8 μηνύματα</string>
 </resources>

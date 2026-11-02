@@ -419,4 +419,18 @@
     <string name="liftoff_abort">中止</string>
     <string name="liftoff_hint">任意のキー：非表示</string>
     <string name="liftoff_failed_toast">%1$s が失敗しました</string>
+    <string name="living">Living スクリーンセーバー</string>
+    <string name="living_notes">スクリーンセーバーに PC の通知</string>
+    <string name="living_notes_note">スクリーンセーバー中は Omarchy PC のすべての通知がテレビに表示されます</string>
+    <string name="living_x">スクリーンセーバーに X</string>
+    <string name="living_x_notify">PC の通知</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">X API でメンションを取得（X は従量課金）：PC で omarchy-link x setup を実行して設定</string>
+    <string name="living_weather">天気</string>
+    <string name="living_notes_title">通知 · pc</string>
+    <string name="living_x_title">x · メンション</string>
+    <string name="living_x_not_set_up">X API が未設定です：PC で omarchy-link x setup</string>
+    <string name="living_x_budget">X API の月間上限に達しました（xMonthlyUsd）</string>
+    <string name="living_x_error">現在 X API に接続できません</string>
+    <string name="x_keys_hint">X · ▲▼ ポスト · OK 開く · 1 いいね · 2 返信 · 3 リポスト · 4 新規ポスト · 5 検索 · 0 ホーム · 9 通知 · 8 メッセージ</string>
 </resources>

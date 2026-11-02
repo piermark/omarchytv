@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Living screensaver and the X app (draft, Android TV + LG webOS + Samsung Tizen + PC)
+
+- **Living screensaver** (Screensaver settings, off by default): next to the screensaver art, Omarchy-style ASCII boxes with the weather (ASCII sky), your GitHub activity (pushes, PRs, stars and forks on your repos), **every notification from the Omarchy PC** (its own switch, off by default) and **X mentions**, live while the screensaver runs. The newest item blinks when it arrives.
+- **X on the screensaver:** off / "PC notifications" (free: X notifications your browser shows on the PC) / "X API" (opt-in, X charges per use: `omarchy-link x setup` stores your token on the PC only, polled only while the screensaver runs, only new mentions, stops at `xMonthlyUsd`, 1 USD a month by default).
+- **X app:** x.com in OmarchyTV's own web view (nothing extra, so it stays light) with the remote mapped to X's shortcuts on Android TV: ▲▼ posts, OK opens, 1 like, 2 reply, 3 repost, 4 new post, 5 search, 0 home, 9 notifications, 8 messages (never while typing); videos wait for OK. In Walker as "X (x.com)"; on LG/Samsung first in Web apps (TV browser).
+- Protocol: `living_prefs`, `living`, bridge `POST /v1/living`. Tests: `test_living.py` (incl. the D-Bus notification parser), `test_webos.py`, `webos/tests/living.test.js` (Android's copy of living.js must be identical).
+
 ### TV and PC together, updates from the TV, liftoff (draft, Android TV + LG webOS + Samsung Tizen + PC)
 
 - **TV and PC power together** (Launcher settings, off by default). Android TV: turning the TV on wakes the Omarchy PC (Wake-on-LAN; the PC tells the TV its address over Omarchy Link), turning it off suspends the PC after 60 s, unless the TV comes back on or a build is running. LG: the PC follows the TV into sleep (needs "TV control" approved); waking from LG/Samsung is not possible, TV web apps can't send Wake-on-LAN. Samsung: not available. PC side: `powerFromTv`, `powerGraceS`.

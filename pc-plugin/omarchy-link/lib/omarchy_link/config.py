@@ -37,6 +37,12 @@ DEFAULTS = {
     "powerFromTv": True,        # TV off -> suspend after powerGraceS; TV on -> it wakes this PC (TV side: off until enabled)
     "powerGraceS": 60,
     "updateFromTv": True,       # LG/Samsung "Update via PC" (omarchy-tv webos-serve) may install official releases
+    "livingToTv": True,         # Living screensaver feed (the TV asks for notifications / GitHub / X; off there by default)
+    "githubUser": None,         # default: gh's signed-in login
+    "githubRepos": [],          # e.g. ["piermark/omarchytv"]: stars, forks, PRs on your repos
+    "xApi": True,               # X API mentions when the TV picks "X: API" (needs `omarchy-link x setup`)
+    "xPollMinutes": 3,          # only while the TV screensaver runs, only new mentions
+    "xMonthlyUsd": 1.0,         # estimated X API spend per month; polling stops at this
     "liftoffToTv": True,        # show `omarchy-link liftoff -- <build>` and TV updates as a countdown on the TV        # the TV may switch the PC's theme ("theme_set"; the TV asks only when its own setting is on)
     "pcPane": True,             # push the "this PC" info pane every minute while connected
     "aiCredits": True,          # push ai.json providers (if the file exists)

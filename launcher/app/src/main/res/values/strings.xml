@@ -456,4 +456,18 @@
     <string name="liftoff_abort">ABORT</string>
     <string name="liftoff_hint">any key: hide</string>
     <string name="liftoff_failed_toast">%1$s failed</string>
+    <string name="living">Living screensaver</string>
+    <string name="living_notes">PC notifications on the screensaver</string>
+    <string name="living_notes_note">Every notification from the Omarchy PC will show on the TV while the screensaver runs</string>
+    <string name="living_x">X on the screensaver</string>
+    <string name="living_x_notify">PC notifications</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">Mentions via the X API (X charges per use): set it up on the PC with omarchy-link x setup</string>
+    <string name="living_weather">weather</string>
+    <string name="living_notes_title">notifications · pc</string>
+    <string name="living_x_title">x · mentions</string>
+    <string name="living_x_not_set_up">X API not set up: omarchy-link x setup on the PC</string>
+    <string name="living_x_budget">X API monthly limit reached (xMonthlyUsd)</string>
+    <string name="living_x_error">X API not reachable right now</string>
+    <string name="x_keys_hint">X · ▲▼ posts · OK open · 1 like · 2 reply · 3 repost · 4 post · 5 search · 0 home · 9 notifications · 8 messages</string>
 </resources>

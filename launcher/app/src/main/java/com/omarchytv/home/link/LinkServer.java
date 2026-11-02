@@ -2203,6 +2203,9 @@ public final class LinkServer {
                 host.onEvent(c.pcId, "pc_wol", wol);
                 break;
             }
+            case "living":   // v2.14 Living screensaver feed (GitHub, PC notifications, X), memory only
+                host.onEvent(c.pcId, type, living(data));
+                break;
             case "liftoff":   // v2.14 a build/update on the PC: rocket countdown on Home (LiftoffView)
                 host.onEvent(c.pcId, type, liftoff(data));
                 break;
@@ -2220,6 +2223,35 @@ public final class LinkServer {
                 c.close();
             }
         }
+    }
+
+    /** v2.14 "living" from the PC, re-built with known fields only, every string clipped and printable. */
+    static JSONObject living(JSONObject d) throws JSONException {
+        JSONObject o = new JSONObject();
+        String[][] spec = {
+                {"github", "6", "repo:60", "what:24", "who:39", "text:90", "at:24"},
+                {"notes", "12", "app:32", "title:80", "body:200", "at:24"},
+                {"x", "8", "kind:10", "user:80", "text:240", "at:24"},
+        };
+        for (String[] s : spec) {
+            JSONArray in = d.optJSONArray(s[0]), out = new JSONArray();
+            int max = Integer.parseInt(s[1]);
+            for (int i = 0; in != null && i < in.length() && out.length() < max; i++) {
+                JSONObject x = in.optJSONObject(i);
+                if (x == null) continue;
+                JSONObject y = new JSONObject();
+                for (int k = 2; k < s.length; k++) {
+                    String[] f = s[k].split(":");
+                    y.put(f[0], printable(x.optString(f[0], ""), Integer.parseInt(f[1])));
+                }
+                out.put(y);
+            }
+            o.put(s[0], out);
+        }
+        String xm = d.optString("xMode", "off");
+        o.put("xMode", "notify".equals(xm) || "api".equals(xm) ? xm : "off");
+        if (d.has("xError")) o.put("xError", printable(d.optString("xError", ""), 100));
+        return o;
     }
 
     static final Set<String> LIFTOFF_KINDS = new HashSet<>(Arrays.asList("build", "update"));
@@ -2330,6 +2362,11 @@ public final class LinkServer {
     }
 
     /** Reverse theme sync: the TV picked a theme; the PC switches to it if installed there (omarchy-link theme_set). */
+    /** v2.14 what the Living screensaver wants from the PC ({notes, github, x}). */
+    public void livingPrefs(JSONObject prefs) {
+        broadcast("living_prefs", prefs);
+    }
+
     public void themeSet(String name) throws JSONException {
         broadcast("theme_set", new JSONObject().put("name", name));
     }

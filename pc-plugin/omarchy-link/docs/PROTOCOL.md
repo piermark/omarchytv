@@ -278,6 +278,23 @@ one stays available for 90 s. `expectedS` is the last duration of the same name 
 it). The TV clips every field and draws it over Home; LG/Samsung read the same object from `GET /v1/status`
 `"liftoff"`. Nothing is sent unless `liftoffToTv` is not `false`.
 
+### Living screensaver (v2.14)
+
+**Event `living_prefs`** (TV → PC, `{"notes": bool, "github": bool, "x": "off"|"notify"|"api"}`): what the TV's
+Living screensaver wants, sent on connect and on every change (all off while the Living screensaver is off).
+
+**Event `living`** (PC → TV, on every change while something is wanted): `{"github": [{repo, what, who, text, at}] (≤6),
+"notes": [{app, title, body, at}] (≤12), "x": [{kind: mention|notify, user, text, at}] (≤8), "xMode", "xError"?}`.
+- `notes`: every desktop notification (D-Bus `org.freedesktop.Notifications.Notify`, read with `dbus-monitor`), only
+  while the TV asked; kept in memory, never written to disk.
+- `x` with `notify`: browser notifications from X on the PC (free). With `api`: `GET /2/users/:id/mentions` with the
+  user's bearer token (`omarchy-link x setup`, `~/.config/omarchy-link/x.json`, 0600), only while the TV screensaver
+  runs, every `xPollMinutes` (3), only new posts (`since_id`), stopped at `xMonthlyUsd` (estimated, default 1 USD);
+  `xError`: `x_not_set_up`, `x_budget`, `x_user`, `x_error: …`.
+- `github`: `gh api users/<login>/events` (or the public API) and `repos/<r>/events` for `githubRepos`, every 5 min.
+The TV clips every field. LG/Samsung: `POST /v1/living` on `omarchy-tv webos-serve` with the prefs as body and the ask
+code, every 3 s while the screensaver runs → the same object. The PC refuses all of it with `livingToTv: false`.
+
 ### Widgets (`PUT /v1/widgets`)
 
 ```json

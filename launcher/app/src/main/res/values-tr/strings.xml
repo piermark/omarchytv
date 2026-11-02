@@ -419,4 +419,18 @@
     <string name="liftoff_abort">İPTAL</string>
     <string name="liftoff_hint">herhangi bir tuş: gizle</string>
     <string name="liftoff_failed_toast">%1$s başarısız oldu</string>
+    <string name="living">Living ekran koruyucu</string>
+    <string name="living_notes">Ekran koruyucuda PC bildirimleri</string>
+    <string name="living_notes_note">Ekran koruyucu çalışırken Omarchy PC\'nin tüm bildirimleri TV\'de görünür</string>
+    <string name="living_x">Ekran koruyucuda X</string>
+    <string name="living_x_notify">PC bildirimleri</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">X API ile bahsetmeler (X kullanım başına ücret alır): PC\'de omarchy-link x setup ile kurun</string>
+    <string name="living_weather">hava</string>
+    <string name="living_notes_title">bildirimler · pc</string>
+    <string name="living_x_title">x · bahsetmeler</string>
+    <string name="living_x_not_set_up">X API kurulmadı: PC\'de omarchy-link x setup</string>
+    <string name="living_x_budget">X API aylık sınırına ulaşıldı (xMonthlyUsd)</string>
+    <string name="living_x_error">X API şu anda ulaşılamıyor</string>
+    <string name="x_keys_hint">X · ▲▼ gönderiler · OK aç · 1 beğen · 2 yanıtla · 3 repost · 4 yeni gönderi · 5 ara · 0 ana sayfa · 9 bildirimler · 8 mesajlar</string>
 </resources>

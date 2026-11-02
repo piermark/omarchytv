@@ -419,4 +419,18 @@
     <string name="liftoff_abort">ABANDON</string>
     <string name="liftoff_hint">n\'importe quelle touche : masquer</string>
     <string name="liftoff_failed_toast">%1$s a échoué</string>
+    <string name="living">Économiseur Living</string>
+    <string name="living_notes">Notifications du PC sur l\'économiseur</string>
+    <string name="living_notes_note">Toutes les notifications du PC Omarchy s\'afficheront sur la TV pendant l\'économiseur d\'écran</string>
+    <string name="living_x">X sur l\'économiseur</string>
+    <string name="living_x_notify">notifications du PC</string>
+    <string name="living_x_api">API X</string>
+    <string name="living_x_api_note">Mentions via l\'API X (payante à l\'usage) : configurez-la sur le PC avec omarchy-link x setup</string>
+    <string name="living_weather">météo</string>
+    <string name="living_notes_title">notifications · pc</string>
+    <string name="living_x_title">x · mentions</string>
+    <string name="living_x_not_set_up">API X non configurée : omarchy-link x setup sur le PC</string>
+    <string name="living_x_budget">Limite mensuelle de l\'API X atteinte (xMonthlyUsd)</string>
+    <string name="living_x_error">API X injoignable pour le moment</string>
+    <string name="x_keys_hint">X · ▲▼ posts · OK ouvrir · 1 j\'aime · 2 répondre · 3 repost · 4 nouveau post · 5 recherche · 0 accueil · 9 notifications · 8 messages</string>
 </resources>

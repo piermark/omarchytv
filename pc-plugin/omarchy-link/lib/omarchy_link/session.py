@@ -18,7 +18,7 @@ import threading
 import time
 
 from . import ai, assistant, client as link, config, grokbot, mdns, netcheck, panes, stats, sync, theme
-from . import liftoff, power
+from . import liftoff, living, power
 
 KEYS = {"home", "back", "up", "down", "left", "right", "select", "play_pause", "play", "pause",
         "stop", "next", "previous", "rewind", "fast_forward", "volume_up", "volume_down", "mute",
@@ -171,6 +171,7 @@ class Session:
             self.grokbot_sig = None
             self.push_grokbot(c)
             self.liftoff_sig = None
+            self.living_sig = None
             self.send_wol_info()
         except (link.LinkError, OSError, ValueError, RuntimeError, subprocess.SubprocessError) as e:
             self.log(f"initial push: {e}")
@@ -185,6 +186,9 @@ class Session:
             self.run_action(str(data.get("command", "")), confirmed=False)
         elif kind == "theme_set":
             self.handle_theme_set(data)
+        elif kind == "living_prefs":
+            self._living().set_prefs(data)
+            self.living_sig = None
         elif kind == "tv_power":
             power.tv_power(data.get("state"), self.cfg, self.log)
         elif kind == "screen_mirror":
@@ -467,6 +471,24 @@ class Session:
                 self.log("Wake-on-LAN: this PC reaches the TV over Wi-Fi; most PCs only wake over Ethernet")
             self.stream.send("pc_wol", {"mac": info["mac"], "broadcast": info.get("broadcast")})
 
+    def _living(self) -> living.Living:
+        lv = getattr(self, "living", None)
+        if lv is None:
+            lv = self.living = living.Living(lambda: self.cfg, self.log)
+        return lv
+
+    def push_living(self) -> None:
+        """Living screensaver feed (notifications, GitHub, X) for the TV, on every change, only once it asked."""
+        lv = getattr(self, "living", None)
+        if lv is None or not self.stream or not lv.wanted():
+            return
+        lv.set_active(bool(self.state.get("screensaver")))
+        pub = lv.payload()
+        sig = json.dumps(pub, sort_keys=True)
+        if sig != getattr(self, "living_sig", None):
+            self.living_sig = sig
+            self.stream.send("living", pub)
+
     def push_liftoff(self) -> None:
         """A build/update countdown for the TV: on every change, and every 5 s while it runs."""
         if not self.stream or self.cfg.get("liftoffToTv", True) is False:
@@ -556,8 +578,9 @@ class Session:
                 continue
             try:
                 self.push_liftoff()
+                self.push_living()
             except (OSError, ValueError) as e:
-                self.log(f"liftoff push failed: {e}")
+                self.log(f"liftoff/living push failed: {e}")
             if tick % 3:
                 c = self._client()
                 try:

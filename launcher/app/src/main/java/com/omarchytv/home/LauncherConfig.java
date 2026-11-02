@@ -131,6 +131,9 @@ final class LauncherConfig {
     }
 
     /** Built-in AI & Grok Bot WebApps (like Omarchy desktop webapps, zero API cost, persistent login in :web). */
+    /** v2.14 the X app: x.com with the remote mapped to X's shortcuts (XKeys). */
+    static final WebApp X_WEBAPP = new WebApp("x", "X", "https://x.com/home", "X", "desktop");
+
     static final WebApp[] BUILTIN_AI_WEBAPPS = new WebApp[]{
             new WebApp("grok-bot", "Grok Bot", "https://grok.com", "G", "desktop"),
             new WebApp("grok", "Grok (X)", "https://x.com/i/grok", "X", "desktop"),
@@ -398,6 +401,10 @@ final class LauncherConfig {
     final boolean syncPcWallpaper;
     /** v2.14 reverse theme sync (default false): a theme picked on the TV also switches the paired PC. */
     final boolean themeToPc;
+    /** v2.14 Living screensaver (default off): weather, GitHub, PC notifications (livingNotes, default off) and X
+     *  (livingX "off" | "notify" | "api") in ASCII boxes next to the screensaver art. */
+    final boolean living, livingNotes, livingGithub;
+    final String livingX;
     /** v2.14 "TV and PC power together" (default false): TV on wakes the PC (Wake-on-LAN), TV off suspends it. */
     final boolean pcPower;
     /** The paired PC's MAC / subnet broadcast for Wake-on-LAN, from omarchy-link's "pc_wol" ("" until it sent them). */
@@ -667,6 +674,12 @@ final class LauncherConfig {
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
         themeToPc = j != null && j.optBoolean("themeToPc", false);
         pcPower = j != null && j.optBoolean("pcPower", false);
+        JSONObject lv = j != null ? j.optJSONObject("living") : null;
+        living = lv != null && lv.optBoolean("enabled", false);
+        livingNotes = lv != null && lv.optBoolean("notes", false);
+        livingGithub = lv == null || lv.optBoolean("github", true);
+        String lx = lv != null ? lv.optString("x", "off") : "off";
+        livingX = "notify".equals(lx) || "api".equals(lx) ? lx : "off";
         JSONObject lkWol = j != null && j.optJSONObject("link") != null ? j.optJSONObject("link").optJSONObject("pcWol") : null;
         pcMac = lkWol != null && WakeOnLan.mac(lkWol.optString("mac", "")) != null ? lkWol.optString("mac") : "";
         pcBroadcast = lkWol != null && WakeOnLan.ipv4(lkWol.optString("broadcast", "")) ? lkWol.optString("broadcast") : "";

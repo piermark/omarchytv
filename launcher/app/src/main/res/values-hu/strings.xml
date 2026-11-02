@@ -419,4 +419,18 @@
     <string name="liftoff_abort">MEGSZAKÍTVA</string>
     <string name="liftoff_hint">bármely gomb: elrejtés</string>
     <string name="liftoff_failed_toast">%1$s sikertelen</string>
+    <string name="living">Living képernyővédő</string>
+    <string name="living_notes">PC-értesítések a képernyővédőn</string>
+    <string name="living_notes_note">Az Omarchy PC összes értesítése megjelenik a TV-n, amíg a képernyővédő fut</string>
+    <string name="living_x">X a képernyővédőn</string>
+    <string name="living_x_notify">PC-értesítések</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">Említések az X API-n keresztül (az X használat alapján számláz): állítsd be a PC-n: omarchy-link x setup</string>
+    <string name="living_weather">időjárás</string>
+    <string name="living_notes_title">értesítések · pc</string>
+    <string name="living_x_title">x · említések</string>
+    <string name="living_x_not_set_up">Az X API nincs beállítva: omarchy-link x setup a PC-n</string>
+    <string name="living_x_budget">Elérted az X API havi limitjét (xMonthlyUsd)</string>
+    <string name="living_x_error">Az X API most nem érhető el</string>
+    <string name="x_keys_hint">X · ▲▼ bejegyzések · OK megnyitás · 1 tetszik · 2 válasz · 3 repost · 4 új bejegyzés · 5 keresés · 0 kezdőlap · 9 értesítések · 8 üzenetek</string>
 </resources>

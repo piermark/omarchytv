@@ -771,6 +771,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 items.add(new Walker.Item(w.name, tApp, () -> WebAppActivity.open(this, fw)));
             }
         }
+        items.add(new Walker.Item("X (x.com)", tApp, () -> WebAppActivity.open(this, LauncherConfig.X_WEBAPP)));
         items.add(new Walker.Item("🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", str(R.string.cinemarchy_hub), () -> open(new Intent(this, CinemarchyActivity.class))));
         items.add(new Walker.Item("Aquarium Screensaver (Omarchy Cyber-TUI Ocean)", str(R.string.menu_screensaver), () -> {
             LauncherConfig.update(this, j -> screensaver(j).put("art", "aquarium").put("mode", "aquarium"));
@@ -2184,6 +2185,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 .show();
     }
 
+    private static org.json.JSONObject living(org.json.JSONObject j) throws org.json.JSONException {
+        org.json.JSONObject o = j.optJSONObject("living");
+        if (o == null) j.put("living", o = new org.json.JSONObject());
+        return o;
+    }
+
+    private String livingXLabel(String m) {
+        if ("api".equals(m)) return str(R.string.living_x_api);
+        if ("notify".equals(m)) return str(R.string.living_x_notify);
+        return str(R.string.off);
+    }
+
     private String bootLabel(String mode) {
         if ("wake".equals(mode)) return str(R.string.boot_mode_wake);
         if ("off".equals(mode)) return str(R.string.off);
@@ -3202,6 +3215,35 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         p.add(lClock, str(cfg.screensaverClock ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.screensaverClock;
             applyLive("screensaver", lClock, j -> screensaver(j).put("clock", n));
+            return true;
+        });
+        // v2.14 Living screensaver: weather, GitHub, PC notifications and X in ASCII boxes.
+        String lLiving = str(R.string.living), lNotes = str(R.string.living_notes), lX = str(R.string.living_x);
+        p.add(lLiving, str(cfg.living ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.living;
+            applyLive("screensaver", lLiving, j -> living(j).put("enabled", n));
+            OmarchyLink.livingPrefs();
+            return true;
+        });
+        p.add("  " + lNotes, str(cfg.livingNotes ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.livingNotes;
+            applyLive("screensaver", "  " + lNotes, j -> living(j).put("notes", n));
+            if (n) Toast.makeText(this, R.string.living_notes_note, Toast.LENGTH_LONG).show();
+            OmarchyLink.livingPrefs();
+            return true;
+        });
+        String[] xModes = {"off", "notify", "api"};
+        p.add("  " + lX, livingXLabel(cfg.livingX), r -> {
+            String n = next(xModes, cfg.livingX);
+            applyLive("screensaver", "  " + lX, j -> living(j).put("x", n));
+            if ("api".equals(n)) Toast.makeText(this, R.string.living_x_api_note, Toast.LENGTH_LONG).show();
+            OmarchyLink.livingPrefs();
+            return true;
+        });
+        p.add("  GitHub", str(cfg.livingGithub ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.livingGithub;
+            applyLive("screensaver", "  GitHub", j -> living(j).put("github", n));
+            OmarchyLink.livingPrefs();
             return true;
         });
         String lSound = "Aquarium ST3 Synth Audio";

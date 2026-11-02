@@ -25,6 +25,9 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
                                       (updateFromTv in omarchy-link's config) -> {current, latest} | {result}
   POST /v1/power                   -> same token; {state: standby|on}: TV and PC power together (omarchy-link
                                       power.py: suspend after powerGraceS, cancelled when the TV comes back)
+  POST /v1/living                  -> same token; {notes, github, x: off|notify|api}: the Living screensaver asks
+                                      while it runs (every few seconds) -> {github, notes, x, xMode, xError?}
+                                      (omarchy-link living.py; notifications only when asked, never stored)
   GET /v1/status also carries "liftoff": a running/just finished build or update (omarchy-link liftoff) or null.
 """
 from __future__ import annotations
@@ -106,6 +109,22 @@ class _NoTracker:
 
     def done(self, *a, **k):
         pass
+
+
+_living_obj = None
+_living_lock = threading.Lock()
+
+
+def _living_collector():
+    """omarchy-link's Living feed collector for this bridge process (lazy: nothing runs until a TV asks)."""
+    global _living_obj
+    mod = _link_mod("living")
+    if not mod:
+        return None
+    with _living_lock:
+        if _living_obj is None:
+            _living_obj = mod.Living(link_cfg, lambda m: ui.say(m))
+        return _living_obj
 
 
 def _tracker(kind: str, name: str):
@@ -320,7 +339,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
         global _last_ask
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
-                        "/v1/update/tv", "/v1/power"):
+                        "/v1/update/tv", "/v1/power", "/v1/living"):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -351,6 +370,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
             return
         if path == "/v1/power":
             self._power(body)
+            return
+        if path == "/v1/living":
+            self._living(body)
             return
         g = _grokbot()
         if not g:
@@ -401,6 +423,18 @@ class WebOSHandler(BaseHTTPRequestHandler):
         except tvupdate.UpdateError as e:
             bad = e.code in ("bad_platform", "bad_request", "changed")
             self._send_json({"error": e.code, "message": str(e)[:200]}, 400 if bad else 502)
+
+    def _living(self, body: dict) -> None:
+        lv = _living_collector()
+        if not lv:
+            self._send_json({"error": "not_installed", "message": "omarchy-link is not installed"}, 503)
+            return
+        if link_cfg().get("livingToTv", True) is False:
+            self._send_json({"error": "disabled", "message": "livingToTv is off on the PC"}, 403)
+            return
+        lv.set_prefs(body)
+        lv.touch()
+        self._send_json(lv.payload())
 
     def _power(self, body: dict) -> None:
         pw = _link_mod("power")

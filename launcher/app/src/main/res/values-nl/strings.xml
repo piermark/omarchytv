@@ -419,4 +419,18 @@
     <string name="liftoff_abort">AFGEBROKEN</string>
     <string name="liftoff_hint">willekeurige toets: verbergen</string>
     <string name="liftoff_failed_toast">%1$s mislukt</string>
+    <string name="living">Living-schermbeveiliging</string>
+    <string name="living_notes">Pc-meldingen op de schermbeveiliging</string>
+    <string name="living_notes_note">Alle meldingen van de Omarchy-pc verschijnen op de tv zolang de schermbeveiliging loopt</string>
+    <string name="living_x">X op de schermbeveiliging</string>
+    <string name="living_x_notify">pc-meldingen</string>
+    <string name="living_x_api">X-API</string>
+    <string name="living_x_api_note">Vermeldingen via de X-API (X rekent per gebruik): stel in op de pc met omarchy-link x setup</string>
+    <string name="living_weather">weer</string>
+    <string name="living_notes_title">meldingen · pc</string>
+    <string name="living_x_title">x · vermeldingen</string>
+    <string name="living_x_not_set_up">X-API niet ingesteld: omarchy-link x setup op de pc</string>
+    <string name="living_x_budget">Maandlimiet van de X-API bereikt (xMonthlyUsd)</string>
+    <string name="living_x_error">X-API nu niet bereikbaar</string>
+    <string name="x_keys_hint">X · ▲▼ posts · OK openen · 1 vind-ik-leuk · 2 reageren · 3 repost · 4 nieuwe post · 5 zoeken · 0 home · 9 meldingen · 8 berichten</string>
 </resources>

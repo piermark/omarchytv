@@ -423,4 +423,18 @@
     <string name="liftoff_abort">ABBRUCH</string>
     <string name="liftoff_hint">beliebige Taste: ausblenden</string>
     <string name="liftoff_failed_toast">%1$s fehlgeschlagen</string>
+    <string name="living">Living-Bildschirmschoner</string>
+    <string name="living_notes">PC-Benachrichtigungen im Bildschirmschoner</string>
+    <string name="living_notes_note">Alle Benachrichtigungen des Omarchy-PCs erscheinen auf dem TV, solange der Bildschirmschoner läuft</string>
+    <string name="living_x">X im Bildschirmschoner</string>
+    <string name="living_x_notify">PC-Benachrichtigungen</string>
+    <string name="living_x_api">X-API</string>
+    <string name="living_x_api_note">Erwähnungen über die X-API (X berechnet pro Nutzung): auf dem PC mit omarchy-link x setup einrichten</string>
+    <string name="living_weather">Wetter</string>
+    <string name="living_notes_title">Benachrichtigungen · PC</string>
+    <string name="living_x_title">x · Erwähnungen</string>
+    <string name="living_x_not_set_up">X-API nicht eingerichtet: omarchy-link x setup auf dem PC</string>
+    <string name="living_x_budget">Monatslimit der X-API erreicht (xMonthlyUsd)</string>
+    <string name="living_x_error">X-API gerade nicht erreichbar</string>
+    <string name="x_keys_hint">X · ▲▼ Posts · OK öffnen · 1 Gefällt mir · 2 Antworten · 3 Repost · 4 Neuer Post · 5 Suche · 0 Start · 9 Mitteilungen · 8 Nachrichten</string>
 </resources>

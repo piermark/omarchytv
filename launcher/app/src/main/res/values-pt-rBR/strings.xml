@@ -419,4 +419,18 @@
     <string name="liftoff_abort">ABORTADO</string>
     <string name="liftoff_hint">qualquer tecla: ocultar</string>
     <string name="liftoff_failed_toast">%1$s falhou</string>
+    <string name="living">Proteção de tela Living</string>
+    <string name="living_notes">Notificações do PC na proteção de tela</string>
+    <string name="living_notes_note">Todas as notificações do PC Omarchy vão aparecer na TV enquanto a proteção de tela estiver ativa</string>
+    <string name="living_x">X na proteção de tela</string>
+    <string name="living_x_notify">notificações do PC</string>
+    <string name="living_x_api">API do X</string>
+    <string name="living_x_api_note">Menções pela API do X (o X cobra por uso): configure no PC com omarchy-link x setup</string>
+    <string name="living_weather">clima</string>
+    <string name="living_notes_title">notificações · pc</string>
+    <string name="living_x_title">x · menções</string>
+    <string name="living_x_not_set_up">API do X não configurada: omarchy-link x setup no PC</string>
+    <string name="living_x_budget">Limite mensal da API do X atingido (xMonthlyUsd)</string>
+    <string name="living_x_error">API do X indisponível no momento</string>
+    <string name="x_keys_hint">X · ▲▼ posts · OK abrir · 1 curtir · 2 responder · 3 repost · 4 novo post · 5 buscar · 0 início · 9 notificações · 8 mensagens</string>
 </resources>

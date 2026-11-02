@@ -423,4 +423,18 @@
     <string name="liftoff_abort">ANNULLATO</string>
     <string name="liftoff_hint">un tasto qualsiasi: nascondi</string>
     <string name="liftoff_failed_toast">%1$s non riuscito</string>
+    <string name="living">Salvaschermo Living</string>
+    <string name="living_notes">Notifiche del PC nel salvaschermo</string>
+    <string name="living_notes_note">Tutte le notifiche del PC Omarchy appariranno sulla TV mentre è attivo il salvaschermo</string>
+    <string name="living_x">X nel salvaschermo</string>
+    <string name="living_x_notify">notifiche del PC</string>
+    <string name="living_x_api">API di X</string>
+    <string name="living_x_api_note">Menzioni tramite l\'API di X (X fa pagare a consumo): configurala sul PC con omarchy-link x setup</string>
+    <string name="living_weather">meteo</string>
+    <string name="living_notes_title">notifiche · pc</string>
+    <string name="living_x_title">x · menzioni</string>
+    <string name="living_x_not_set_up">API di X non configurata: omarchy-link x setup sul PC</string>
+    <string name="living_x_budget">Raggiunto il limite mensile dell\'API di X (xMonthlyUsd)</string>
+    <string name="living_x_error">API di X non raggiungibile ora</string>
+    <string name="x_keys_hint">X · ▲▼ post · OK apri · 1 mi piace · 2 rispondi · 3 repost · 4 nuovo post · 5 cerca · 0 home · 9 notifiche · 8 messaggi</string>
 </resources>

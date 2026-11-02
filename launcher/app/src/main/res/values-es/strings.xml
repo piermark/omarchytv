@@ -419,4 +419,18 @@
     <string name="liftoff_abort">ABORTADO</string>
     <string name="liftoff_hint">cualquier tecla: ocultar</string>
     <string name="liftoff_failed_toast">%1$s ha fallado</string>
+    <string name="living">Salvapantallas Living</string>
+    <string name="living_notes">Notificaciones del PC en el salvapantallas</string>
+    <string name="living_notes_note">Todas las notificaciones del PC Omarchy aparecerán en la TV mientras esté el salvapantallas</string>
+    <string name="living_x">X en el salvapantallas</string>
+    <string name="living_x_notify">notificaciones del PC</string>
+    <string name="living_x_api">API de X</string>
+    <string name="living_x_api_note">Menciones mediante la API de X (X cobra por uso): configúrala en el PC con omarchy-link x setup</string>
+    <string name="living_weather">tiempo</string>
+    <string name="living_notes_title">notificaciones · pc</string>
+    <string name="living_x_title">x · menciones</string>
+    <string name="living_x_not_set_up">API de X sin configurar: omarchy-link x setup en el PC</string>
+    <string name="living_x_budget">Límite mensual de la API de X alcanzado (xMonthlyUsd)</string>
+    <string name="living_x_error">La API de X no responde ahora</string>
+    <string name="x_keys_hint">X · ▲▼ posts · OK abrir · 1 me gusta · 2 responder · 3 repost · 4 nuevo post · 5 buscar · 0 inicio · 9 notificaciones · 8 mensajes</string>
 </resources>

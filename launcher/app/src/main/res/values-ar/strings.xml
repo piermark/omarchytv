@@ -419,4 +419,18 @@
     <string name="liftoff_abort">إلغاء</string>
     <string name="liftoff_hint">أي زر: إخفاء</string>
     <string name="liftoff_failed_toast">فشل %1$s</string>
+    <string name="living">شاشة توقف Living</string>
+    <string name="living_notes">إشعارات الحاسوب على شاشة التوقف</string>
+    <string name="living_notes_note">ستظهر كل إشعارات حاسوب Omarchy على التلفاز أثناء تشغيل شاشة التوقف</string>
+    <string name="living_x">X على شاشة التوقف</string>
+    <string name="living_x_notify">إشعارات الحاسوب</string>
+    <string name="living_x_api">واجهة X API</string>
+    <string name="living_x_api_note">الإشارات عبر X API (يفرض X رسومًا حسب الاستخدام): اضبطها على الحاسوب بالأمر omarchy-link x setup</string>
+    <string name="living_weather">الطقس</string>
+    <string name="living_notes_title">الإشعارات · pc</string>
+    <string name="living_x_title">x · الإشارات</string>
+    <string name="living_x_not_set_up">لم يتم إعداد X API: omarchy-link x setup على الحاسوب</string>
+    <string name="living_x_budget">تم بلوغ الحد الشهري لـ X API (xMonthlyUsd)</string>
+    <string name="living_x_error">تعذّر الوصول إلى X API الآن</string>
+    <string name="x_keys_hint">X · ▲▼ المنشورات · OK فتح · 1 إعجاب · 2 رد · 3 إعادة نشر · 4 منشور جديد · 5 بحث · 0 الرئيسية · 9 الإشعارات · 8 الرسائل</string>
 </resources>
