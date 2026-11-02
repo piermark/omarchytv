@@ -454,4 +454,6 @@
     <string name="living_waiting">正在等待 Omarchy 电脑…</string>
     <string name="boot_sound">开机声音</string>
     <string name="omafire_sound">OmaFire 声音</string>
+    <string name="arcade_sound">街机厅音效</string>
+    <string name="arcade_pc_theme">街机厅: RICE WARS 也会切换电脑主题</string>
 </resources>

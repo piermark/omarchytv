@@ -458,4 +458,6 @@
     <string name="living_waiting">warte auf den Omarchy-PC…</string>
     <string name="boot_sound">Startton</string>
     <string name="omafire_sound">OmaFire-Ton</string>
+    <string name="arcade_sound">Spielhallen-Sound</string>
+    <string name="arcade_pc_theme">Spielhalle: RICE WARS ändert auch das PC-Theme</string>
 </resources>

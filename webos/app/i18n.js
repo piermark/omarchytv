@@ -128,6 +128,8 @@
         "living_waiting": "à espera do PC Omarchy…",
         "boot_sound": "Som de arranque",
         "omafire_sound": "Som do OmaFire",
+        "arcade_sound": "Som da sala de jogos",
+        "arcade_pc_theme": "Sala de jogos: RICE WARS muda também o tema do PC",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -290,6 +292,8 @@
         "living_waiting": "aguardando o PC Omarchy…",
         "boot_sound": "Som de inicialização",
         "omafire_sound": "Som do OmaFire",
+        "arcade_sound": "Som do fliperama",
+        "arcade_pc_theme": "Fliperama: RICE WARS muda o tema do PC também",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -452,6 +456,8 @@
         "living_waiting": "esperando al PC Omarchy…",
         "boot_sound": "Sonido de arranque",
         "omafire_sound": "Sonido de OmaFire",
+        "arcade_sound": "Sonido de la sala",
+        "arcade_pc_theme": "Sala: RICE WARS cambia también el tema del PC",
         "wmo": {
           "0": "despejado",
           "1": "mayormente despejado",
@@ -614,6 +620,8 @@
         "living_waiting": "en attente du PC Omarchy…",
         "boot_sound": "Son au démarrage",
         "omafire_sound": "Son d'OmaFire",
+        "arcade_sound": "Son de l'arcade",
+        "arcade_pc_theme": "Arcade : RICE WARS change aussi le thème du PC",
         "wmo": {
           "0": "dégagé",
           "1": "plutôt dégagé",
@@ -776,6 +784,8 @@
         "living_waiting": "wachten op de Omarchy-pc…",
         "boot_sound": "Opstartgeluid",
         "omafire_sound": "OmaFire-geluid",
+        "arcade_sound": "Speelhalgeluid",
+        "arcade_pc_theme": "Speelhal: RICE WARS wijzigt ook het pc-thema",
         "wmo": {
           "0": "helder",
           "1": "overwegend helder",
@@ -938,6 +948,8 @@
         "living_waiting": "czekam na PC z Omarchy…",
         "boot_sound": "Dźwięk startu",
         "omafire_sound": "Dźwięk OmaFire",
+        "arcade_sound": "Dźwięk salonu gier",
+        "arcade_pc_theme": "Salon gier: RICE WARS zmienia też motyw PC",
         "wmo": {
           "0": "bezchmurnie",
           "1": "przeważnie bezchmurnie",
@@ -1100,6 +1112,8 @@
         "living_waiting": "väntar på Omarchy-datorn…",
         "boot_sound": "Startljud",
         "omafire_sound": "OmaFire-ljud",
+        "arcade_sound": "Spelhallsljud",
+        "arcade_pc_theme": "Spelhall: RICE WARS byter även tema på datorn",
         "wmo": {
           "0": "klart",
           "1": "mestadels klart",
@@ -1262,6 +1276,8 @@
         "living_waiting": "venter på Omarchy-pc'en…",
         "boot_sound": "Startlyd",
         "omafire_sound": "OmaFire-lyd",
+        "arcade_sound": "Spillehallyd",
+        "arcade_pc_theme": "Spillehal: RICE WARS skifter også pc'ens tema",
         "wmo": {
           "0": "klart",
           "1": "overvejende klart",
@@ -1424,6 +1440,8 @@
         "living_waiting": "čekám na PC s Omarchy…",
         "boot_sound": "Zvuk při startu",
         "omafire_sound": "Zvuk OmaFire",
+        "arcade_sound": "Zvuk herny",
+        "arcade_pc_theme": "Herna: RICE WARS mění motiv i na PC",
         "wmo": {
           "0": "jasno",
           "1": "skoro jasno",
@@ -1586,6 +1604,8 @@
         "living_waiting": "aștept PC-ul Omarchy…",
         "boot_sound": "Sunet la pornire",
         "omafire_sound": "Sunet OmaFire",
+        "arcade_sound": "Sunetul sălii de jocuri",
+        "arcade_pc_theme": "Sala de jocuri: RICE WARS schimbă și tema PC-ului",
         "wmo": {
           "0": "senin",
           "1": "mai mult senin",
@@ -1748,6 +1768,8 @@
         "living_waiting": "αναμονή για το PC Omarchy…",
         "boot_sound": "Ήχος εκκίνησης",
         "omafire_sound": "Ήχος OmaFire",
+        "arcade_sound": "Ήχος αίθουσας",
+        "arcade_pc_theme": "Αίθουσα: το RICE WARS αλλάζει και το θέμα του PC",
         "wmo": {
           "0": "αίθριος",
           "1": "κυρίως αίθριος",
@@ -1910,6 +1932,8 @@
         "living_waiting": "жду ПК Omarchy…",
         "boot_sound": "Звук загрузки",
         "omafire_sound": "Звук OmaFire",
+        "arcade_sound": "Звук игрового зала",
+        "arcade_pc_theme": "Игровой зал: RICE WARS меняет и тему ПК",
         "wmo": {
           "0": "ясно",
           "1": "преимущественно ясно",
@@ -2072,6 +2096,8 @@
         "living_waiting": "正在等待 Omarchy 电脑…",
         "boot_sound": "开机声音",
         "omafire_sound": "OmaFire 声音",
+        "arcade_sound": "街机厅音效",
+        "arcade_pc_theme": "街机厅: RICE WARS 也会切换电脑主题",
         "wmo": {
           "0": "晴",
           "1": "大致晴朗",
@@ -2234,6 +2260,8 @@
         "living_waiting": "Omarchy PC を待っています…",
         "boot_sound": "起動音",
         "omafire_sound": "OmaFire のサウンド",
+        "arcade_sound": "ゲームセンターの音",
+        "arcade_pc_theme": "ゲームセンター: RICE WARS で PC のテーマも変更",
         "wmo": {
           "0": "晴れ",
           "1": "おおむね晴れ",
@@ -2396,6 +2424,8 @@
         "living_waiting": "في انتظار حاسوب Omarchy…",
         "boot_sound": "صوت الإقلاع",
         "omafire_sound": "صوت OmaFire",
+        "arcade_sound": "صوت صالة الألعاب",
+        "arcade_pc_theme": "صالة الألعاب: RICE WARS يغيّر سمة الحاسوب أيضًا",
         "wmo": {
           "0": "صافٍ",
           "1": "صافٍ غالبًا",
@@ -2558,6 +2588,8 @@
         "living_waiting": "Omarchy PC bekleniyor…",
         "boot_sound": "Açılış sesi",
         "omafire_sound": "OmaFire sesi",
+        "arcade_sound": "Oyun salonu sesi",
+        "arcade_pc_theme": "Oyun salonu: RICE WARS PC temasını da değiştirir",
         "wmo": {
           "0": "açık",
           "1": "çoğunlukla açık",
@@ -2720,6 +2752,8 @@
         "living_waiting": "чекаю на ПК Omarchy…",
         "boot_sound": "Звук завантаження",
         "omafire_sound": "Звук OmaFire",
+        "arcade_sound": "Звук ігрової зали",
+        "arcade_pc_theme": "Ігрова зала: RICE WARS змінює і тему ПК",
         "wmo": {
           "0": "ясно",
           "1": "переважно ясно",
@@ -2882,6 +2916,8 @@
         "living_waiting": "várakozás az Omarchy PC-re…",
         "boot_sound": "Indítási hang",
         "omafire_sound": "OmaFire hang",
+        "arcade_sound": "Játékterem hangja",
+        "arcade_pc_theme": "Játékterem: a RICE WARS a PC témáját is váltja",
         "wmo": {
           "0": "derült",
           "1": "többnyire derült",
@@ -3044,6 +3080,8 @@
         "living_waiting": "odotetaan Omarchy-PC:tä…",
         "boot_sound": "Käynnistysääni",
         "omafire_sound": "OmaFire-ääni",
+        "arcade_sound": "Pelihallin äänet",
+        "arcade_pc_theme": "Pelihalli: RICE WARS vaihtaa myös PC:n teeman",
         "wmo": {
           "0": "selkeää",
           "1": "enimmäkseen selkeää",
@@ -3206,6 +3244,8 @@
         "living_waiting": "venter på Omarchy-PC-en…",
         "boot_sound": "Oppstartslyd",
         "omafire_sound": "OmaFire-lyd",
+        "arcade_sound": "Spillehallyd",
+        "arcade_pc_theme": "Spillehall: RICE WARS bytter også PC-ens tema",
         "wmo": {
           "0": "klarvær",
           "1": "for det meste klart",

@@ -454,4 +454,6 @@
     <string name="living_waiting">várakozás az Omarchy PC-re…</string>
     <string name="boot_sound">Indítási hang</string>
     <string name="omafire_sound">OmaFire hang</string>
+    <string name="arcade_sound">Játékterem hangja</string>
+    <string name="arcade_pc_theme">Játékterem: a RICE WARS a PC témáját is váltja</string>
 </resources>

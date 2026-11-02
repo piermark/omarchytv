@@ -454,4 +454,6 @@
     <string name="living_waiting">Omarchy PC bekleniyor…</string>
     <string name="boot_sound">Açılış sesi</string>
     <string name="omafire_sound">OmaFire sesi</string>
+    <string name="arcade_sound">Oyun salonu sesi</string>
+    <string name="arcade_pc_theme">Oyun salonu: RICE WARS PC temasını da değiştirir</string>
 </resources>

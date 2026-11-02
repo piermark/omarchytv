@@ -423,6 +423,8 @@ final class LauncherConfig {
     final boolean bootFx;
     /** v2.14 boot screen sound (default true) and OmaFire wallpaper sound (default false). */
     final boolean bootSound, omafireSound;
+    /** v2.14 OmarchyTV Arcade: sound effects (default true) and RICE WARS re-theming the Omarchy PC (default false). */
+    final boolean arcadeSound, arcadePcTheme;
     /** v2.13: rotate among animated themes on Home resume/boot (default true; locked false on manual pick). */
     final boolean randomTheme;
     /** v2.13: rotate among animated wallpapers/intros on Home resume/boot (default true; locked false on manual pick). */
@@ -695,6 +697,8 @@ final class LauncherConfig {
         bootFx = j == null || j.optBoolean("bootFx", true);
         bootSound = j == null || j.optBoolean("bootSound", true);
         omafireSound = j != null && j.optBoolean("omafireSound", false);
+        arcadeSound = j == null || j.optBoolean("arcadeSound", true);
+        arcadePcTheme = j != null && j.optBoolean("arcadePcTheme", false);
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
         randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;

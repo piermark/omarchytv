@@ -82,6 +82,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_waiting: "waiting for the Omarchy PC…",
       boot_sound: "Boot sound",
       omafire_sound: "OmaFire sound",
+      arcade_sound: "Arcade sound", arcade_pc_theme: "Arcade: RICE WARS changes the PC theme too",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -156,6 +157,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_waiting: "in attesa del PC Omarchy…",
       boot_sound: "Suono all'avvio",
       omafire_sound: "Suono di OmaFire",
+      arcade_sound: "Suoni della sala giochi", arcade_pc_theme: "Sala giochi: RICE WARS cambia tema anche al PC",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -230,6 +232,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_waiting: "warte auf den Omarchy-PC…",
       boot_sound: "Startton",
       omafire_sound: "OmaFire-Ton",
+      arcade_sound: "Spielhallen-Sound", arcade_pc_theme: "Spielhalle: RICE WARS ändert auch das PC-Theme",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -284,6 +287,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     livingRadar: false,     // ...Omastorm's radar in the weather box (a snapshot of the PC's Omastorm window every 90 s)
     bootSound: true,        // v2.14 boot screen sound (synthesised: CRT power-on, POST beep, disk, keys, wordmark)
     omafireSound: false,    // v2.14 OmaFire wallpaper sound (Wes Grimes' fire loops, log/stoke, night ambience)
+    arcadeSound: true,      // v2.14 OmarchyTV Arcade sound effects (synthesised; a game is opened on purpose)
+    arcadePcTheme: false,   // v2.14 RICE WARS re-themes the Omarchy PC per cleared level (its own theme comes back on exit)
     pluginRetroCrt: "off",  // v2.14 Retro CRT plugin: "off" | "light" | "strong" (scanlines, mask, vignette, theme bezel)
     pcPower: false,         // v2.14 LG: the PC suspends when the TV turns off (POST /v1/power; needs TV control approved)
     themeToPc: false,       // v2.14 reverse theme sync: a theme picked here also switches the PC (POST /v1/theme/set)
@@ -1082,6 +1087,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var idleStr = cfg.saverIdleMin === 0 ? "never" : (cfg.saverIdleMin + " min");
     return [
       { label: "🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", val: "C ›", act: function () { openCinemarchyModal(0); } },
+      { label: "🕹 OmarchyTV Arcade", val: "›", act: openArcade },
       { label: "🧩 " + tr("sys_plugins"), val: ((cfg.pluginSpacexTv ? 1 : 0) + (cfg.pluginGrokbot ? 1 : 0)) + " enabled ›", act: openPluginsModal },
       { label: tr("sys_webos"), val: "›", act: function () { launchApp({ name: "LG Settings", appId: "com.palm.app.settings" }); } },
       { label: tr("sys_themes"), val: cfg.theme, act: openThemesModal },
@@ -1376,6 +1382,35 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     e.preventDefault(); e.stopPropagation();
     if (e.stopImmediatePropagation) e.stopImmediatePropagation();
   }, true);
+  // ---- v2.14 OmarchyTV Arcade (games/*.js): inside #stage, so with Retro CRT on it plays inside the set ----
+  var arcadeUi = null;
+  function openArcade() {
+    if (arcadeUi || !window.OmarchyArcade) return;
+    if (state.modalOpen) closeModal();
+    var host = document.getElementById("stage") || document.body;
+    arcadeUi = window.OmarchyArcade.open(host, {
+      lang: getLang(), theme: DATA.themes[cfg.theme], themeName: cfg.theme, themes: DATA.themes,
+      sound: cfg.arcadeSound !== false, pcTheme: !!cfg.arcadePcTheme && pcReady(),
+      onPcTheme: function (name) { arcadePcTheme(name || cfg.theme); },
+      onExit: function () { arcadeUi = null; renderAll(); }
+    });
+  }
+  function arcadePcTheme(name) {   // like themeToPc, but only for the game (its own setting); the PC's theme comes back on exit
+    if (!pcReady()) return;
+    fetch(pcBase() + "/v1/theme/set", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode || "", "Content-Type": "text/plain" },
+      body: JSON.stringify({ name: name }) }).then(function () {}, function () {});
+  }
+  window.OMARCHY_OPEN_ARCADE = openArcade;
+  // While the arcade is open every key goes to the game: arrows, OK and Back only, so nothing leaves the launcher.
+  window.addEventListener("keydown", function (e) {
+    if (!arcadeUi) return;
+    if (lift.el && lift.el.style.display === "block") return;   // a failed build's alarm still shows on top
+    var n = window.OmarchyArcade.keyName(e);
+    if (n) arcadeUi.key(n);
+    e.preventDefault(); e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }, true);
+
   // While a liftoff runs, ask the PC every second instead of every 5 s.
   setInterval(function () {
     if (!lift.s || lift.s.state !== "running" || document.hidden || pcPollPending) return;
@@ -1701,6 +1736,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } },
       { label: tr("theme_to_pc"), right: cfg.themeToPc ? "on" : "off", act: function () {
         cfg.themeToPc = !cfg.themeToPc; saveCfg(); openAllSettingsModal(true);
+      } },
+      { label: "🕹 " + tr("arcade_sound"), right: cfg.arcadeSound !== false ? "on" : "off", act: function () {
+        cfg.arcadeSound = cfg.arcadeSound === false; saveCfg(); openAllSettingsModal(true);
+      } },
+      { label: "🕹 " + tr("arcade_pc_theme"), right: cfg.arcadePcTheme ? "on" : "off", act: function () {
+        cfg.arcadePcTheme = !cfg.arcadePcTheme; saveCfg(); openAllSettingsModal(true);
       } }
     ]).concat(isWebos() ? [
       { label: tr("pc_power"), right: cfg.pcPower ? "on" : "off", act: function () {
@@ -2248,6 +2289,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function openOmarchyMenu() {
     openModal("Omarchy Menu", "OmarchyTV " + APP_VERSION, [
       { label: "🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", right: "C ›", act: function () { openCinemarchyModal(0); } },
+      { label: "🕹 OmarchyTV Arcade", right: "V-HOLD · RICE WARS · FORK BOMB ›", act: openArcade },
       { label: "🧩 " + tr("sys_plugins"), right: ((cfg.pluginSpacexTv ? 1 : 0) + (cfg.pluginGrokbot ? 1 : 0)) + " on ›", act: openPluginsModal },
       { label: "Walker (app launcher)", right: "›", act: openWalkerModal },
       { label: tr("sys_themes"), right: cfg.theme, act: openThemesModal },
@@ -2367,7 +2409,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   });
   document.addEventListener("visibilitychange", markInput);
   setInterval(function () {
-    if (!cfg.saverIdleMin || document.hidden || state.modalOpen) return;
+    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi) return;
     if (document.getElementById("saver-overlay").className === "active") return;
     if (Date.now() - lastInput >= cfg.saverIdleMin * 60000) startScreensaver();
   }, 5000);

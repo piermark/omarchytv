@@ -774,6 +774,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         }
         items.add(new Walker.Item("X (x.com)", tApp, () -> WebAppActivity.open(this, LauncherConfig.X_WEBAPP)));
         if (cfg.pluginOmastorm) items.add(new Walker.Item("⛈ Omastorm (radar)", tApp, this::openOmastorm));
+        items.add(new Walker.Item("🕹 OmarchyTV Arcade (V-HOLD · RICE WARS · FORK BOMB)", tApp, () -> ArcadeActivity.open(this)));
         items.add(new Walker.Item("🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", str(R.string.cinemarchy_hub), () -> open(new Intent(this, CinemarchyActivity.class))));
         items.add(new Walker.Item("Aquarium Screensaver (Omarchy Cyber-TUI Ocean)", str(R.string.menu_screensaver), () -> {
             LauncherConfig.update(this, j -> screensaver(j).put("art", "aquarium").put("mode", "aquarium"));
@@ -1903,6 +1904,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(this::openOmastorm);
             return false;
         });
+        // v2.14 OmarchyTV Arcade: V-HOLD, RICE WARS, FORK BOMB (assets/games, the same as on LG/Samsung).
+        p.add("🕹 OmarchyTV Arcade", "V-HOLD · RICE WARS · FORK BOMB ›", r -> {
+            handler.post(() -> ArcadeActivity.open(this));
+            return false;
+        });
         return p;
     }
 
@@ -2309,6 +2315,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         p.add(lToPc, str(cfg.themeToPc ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.themeToPc;
             applyLive("launcher", lToPc, j -> j.put("themeToPc", n));
+            return true;
+        });
+        String lArcSnd = "🕹 " + str(R.string.arcade_sound);
+        p.add(lArcSnd, str(cfg.arcadeSound ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.arcadeSound;
+            applyLive("launcher", lArcSnd, j -> j.put("arcadeSound", n));
+            return true;
+        });
+        String lArcPc = "🕹 " + str(R.string.arcade_pc_theme);
+        p.add(lArcPc, str(cfg.arcadePcTheme ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.arcadePcTheme;
+            applyLive("launcher", lArcPc, j -> j.put("arcadePcTheme", n));
             return true;
         });
         String lPower = str(R.string.set_pc_power);

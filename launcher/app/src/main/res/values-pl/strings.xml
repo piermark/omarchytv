@@ -454,4 +454,6 @@
     <string name="living_waiting">czekam na PC z Omarchy…</string>
     <string name="boot_sound">Dźwięk startu</string>
     <string name="omafire_sound">Dźwięk OmaFire</string>
+    <string name="arcade_sound">Dźwięk salonu gier</string>
+    <string name="arcade_pc_theme">Salon gier: RICE WARS zmienia też motyw PC</string>
 </resources>

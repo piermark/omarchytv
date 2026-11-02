@@ -454,4 +454,6 @@
     <string name="living_waiting">aștept PC-ul Omarchy…</string>
     <string name="boot_sound">Sunet la pornire</string>
     <string name="omafire_sound">Sunet OmaFire</string>
+    <string name="arcade_sound">Sunetul sălii de jocuri</string>
+    <string name="arcade_pc_theme">Sala de jocuri: RICE WARS schimbă și tema PC-ului</string>
 </resources>

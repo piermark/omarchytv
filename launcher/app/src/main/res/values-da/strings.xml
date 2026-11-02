@@ -454,4 +454,6 @@
     <string name="living_waiting">venter på Omarchy-pc\'en…</string>
     <string name="boot_sound">Startlyd</string>
     <string name="omafire_sound">OmaFire-lyd</string>
+    <string name="arcade_sound">Spillehallyd</string>
+    <string name="arcade_pc_theme">Spillehal: RICE WARS skifter også pc\'ens tema</string>
 </resources>

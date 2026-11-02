@@ -454,4 +454,6 @@
     <string name="living_waiting">في انتظار حاسوب Omarchy…</string>
     <string name="boot_sound">صوت الإقلاع</string>
     <string name="omafire_sound">صوت OmaFire</string>
+    <string name="arcade_sound">صوت صالة الألعاب</string>
+    <string name="arcade_pc_theme">صالة الألعاب: RICE WARS يغيّر سمة الحاسوب أيضًا</string>
 </resources>

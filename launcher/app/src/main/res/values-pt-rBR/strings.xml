@@ -454,4 +454,6 @@
     <string name="living_waiting">aguardando o PC Omarchy…</string>
     <string name="boot_sound">Som de inicialização</string>
     <string name="omafire_sound">Som do OmaFire</string>
+    <string name="arcade_sound">Som do fliperama</string>
+    <string name="arcade_pc_theme">Fliperama: RICE WARS muda o tema do PC também</string>
 </resources>

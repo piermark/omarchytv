@@ -454,4 +454,6 @@
     <string name="living_waiting">čekám na PC s Omarchy…</string>
     <string name="boot_sound">Zvuk při startu</string>
     <string name="omafire_sound">Zvuk OmaFire</string>
+    <string name="arcade_sound">Zvuk herny</string>
+    <string name="arcade_pc_theme">Herna: RICE WARS mění motiv i na PC</string>
 </resources>

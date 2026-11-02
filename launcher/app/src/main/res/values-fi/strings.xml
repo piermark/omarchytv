@@ -454,4 +454,6 @@
     <string name="living_waiting">odotetaan Omarchy-PC:tä…</string>
     <string name="boot_sound">Käynnistysääni</string>
     <string name="omafire_sound">OmaFire-ääni</string>
+    <string name="arcade_sound">Pelihallin äänet</string>
+    <string name="arcade_pc_theme">Pelihalli: RICE WARS vaihtaa myös PC:n teeman</string>
 </resources>

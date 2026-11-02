@@ -454,4 +454,6 @@
     <string name="living_waiting">väntar på Omarchy-datorn…</string>
     <string name="boot_sound">Startljud</string>
     <string name="omafire_sound">OmaFire-ljud</string>
+    <string name="arcade_sound">Spelhallsljud</string>
+    <string name="arcade_pc_theme">Spelhall: RICE WARS byter även tema på datorn</string>
 </resources>

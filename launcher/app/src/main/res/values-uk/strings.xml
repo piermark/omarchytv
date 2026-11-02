@@ -454,4 +454,6 @@
     <string name="living_waiting">чекаю на ПК Omarchy…</string>
     <string name="boot_sound">Звук завантаження</string>
     <string name="omafire_sound">Звук OmaFire</string>
+    <string name="arcade_sound">Звук ігрової зали</string>
+    <string name="arcade_pc_theme">Ігрова зала: RICE WARS змінює і тему ПК</string>
 </resources>

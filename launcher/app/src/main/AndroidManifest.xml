@@ -127,6 +127,15 @@
             </intent-filter>
         </activity>
 
+        <!-- v2.14 OmarchyTV Arcade: the games in a WebView (assets/games), in the launcher's process so it can reach the PC link. -->
+        <activity
+            android:name=".ArcadeActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
+
         <!-- Web apps: own process, so the launcher never holds a WebView; the process exits with the web app. -->
         <activity
             android:name=".WebAppActivity"

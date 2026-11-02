@@ -1,7 +1,7 @@
 # HANDOFF — branch `feature/omarchytv-v214-pack`
 
 Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
-**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live**, **Q. OmaFire sound**, **R. Boot sound** (each built on the previous).
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live**, **Q. OmaFire sound**, **R. Boot sound**, **S. OmarchyTV Arcade** (each built on the previous).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -398,3 +398,54 @@ Tests: `boot.test.js` and `BootScriptTest.bootSoundCues` (frame-by-frame playbac
 - Real TVs: autoplay at app start (webOS/Tizen may hold audio until the first key press), volume level, AudioTrack
   latency on low-end Android TV boxes.
 
+
+# S. OmarchyTV Arcade (three games of our own)
+
+A games room in Omarchy style on **Android TV, LG webOS and Samsung Tizen**, the same files everywhere
+(`webos/app/games/*.js`, copied unchanged to `launcher/app/src/main/assets/games/`; a test checks they are identical).
+Open it from the Omarchy menu / system menu ("🕹 OmarchyTV Arcade") on LG/Samsung, from Plugins and Walker on Android.
+
+- **Hall** (`arcade.js`): marquee "OMARCHY TV ARCADE" with chasing bulbs, three cartridges with their high score,
+  ◀ ▶ choose, OK inserts the cartridge (it slides down, channel-change static, "CH 0x"), ▼ or 25 s idle shows the
+  high scores (top 5 per game, local storage `omarchytv.arcade.v1`). Back in a game pauses (resume / restart / back
+  to the hall); a run left from the pause or ended by game over is recorded.
+- **V-HOLD** (`vhold.js`): a runner in a terminal (▲ ▼ lanes, dodge ▓ bad sectors, grab ◆ packages) while the TV
+  breaks: vertical roll, horizontal lean, colour loss (◀ ▶ turn the blinking knob until it locks; the target drifts)
+  and collapse to one line (OK OK = slap the set; a slap may also fix or break something). Score multiplier = 1 +
+  faults on screen. The faults are CSS transforms of the picture rows only (roll = row rotation + translateY with a
+  black frame bar, skewX, scaleY, a mono class); the OSD row and the knob panel are never distorted.
+- **RICE WARS** (`ricewars.js`): bugs in three colours, one per Omarchy theme of the level (level 1 starts with the
+  TV's theme); only the bugs of the current theme are visible and hittable, a bullet through an unseen bug shows its
+  ghost. OK re-themes the whole screen (sweep, theme name, a chord per theme). ◀ ▶ move, ▲ fire. Every third level:
+  BLOATWARE boss that changes theme. With "Arcade: RICE WARS changes the PC theme too" (off by default) a cleared
+  level re-themes the Omarchy PC (`/v1/theme/set` on LG/Samsung, `OmarchyLink.themeSet` on Android); leaving the
+  arcade puts the launcher's theme back on the PC.
+- **FORK BOMB** (`forkbomb.js`): turn-based for the player (each arrow = one step for every process, front ones
+  first), OK forks every process into a free neighbour cell; RAM cap = target + 3 (forking past it enrages the
+  OOM killer). The killer (BFS, holes passable) wakes after 3 s and steps faster with more processes alive; a second
+  one from level 4. Mazes generated per level (seeded), always start → exit connected (test: 60 levels).
+- **Look**: an 80×25 text grid in the theme's colours (`dim` = fg/bg mix), rows of spans rewritten only when they
+  change, at most ~30 frames/s, no canvas/images/CSS filters/CSS variables (old webOS). Scanline veil, block-font
+  titles. Inside `#stage`, so with Retro CRT on it plays inside the set; on Android `CrtOverlay.attach` on the
+  activity does the same.
+- **Keys**: only arrows, OK and Back (they never leave the launcher on any TV). LG/Samsung: a capture-phase key
+  listener in app.js sends every key to the game while it is open (the idle screensaver waits). Android:
+  `ArcadeActivity.dispatchKeyEvent` maps D-pad / OK / Back (and a gamepad's D-pad, A, B) to the page; Home, volume,
+  power behave as always.
+- **Sound** (`sfx.js`): synthesised like the boot sound (no files), on by default ("Arcade sound" switch).
+- **Strings**: `games/i18n.js`, 23 languages (game titles and V-HOLD/H-HOLD stay the same everywhere). The two
+  settings rows go through the usual strings (values*/strings.xml, i18n.js via the translation JSON, en/it/de in app.js).
+- **Settings**: `arcadeSound` (true), `arcadePcTheme` (false), in LauncherConfig and app.js DEFAULT_CFG.
+- **Android**: `ArcadeActivity` (main process, so it can reach the PC link), WebView serving only `assets/games/`,
+  `assets/omarchy_themes.json` and the font; the launcher's theme colours (custom PC themes too) and language go
+  in the page hash; DOM storage on for the records; `OmarchyAndroid.exit()` / `pcTheme(name)` bridge.
+
+Tests: `webos/tests/arcade.test.js` (13: identical copies, strings in 23 languages fit the screen, grid, the hall
+→ coin → play → pause → hall → exit flow with a fake DOM, each game's rules, long random runs, maze connectivity,
+every sound cue).
+
+## NOT verified (S)
+
+- Gradle build and lint of `ArcadeActivity` (checked with javac against android-all-34 only).
+- Real TVs: speed on old webOS/Tizen and cheap Android boxes, the Back key reaching the page, audio after the first
+  key, a Bluetooth gamepad, `/v1/theme/set` round trips during RICE WARS.
