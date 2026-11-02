@@ -423,7 +423,9 @@ Open it from the Omarchy menu / system menu ("🕹 OmarchyTV Arcade") on LG/Sams
 - **FORK BOMB** (`forkbomb.js`): turn-based for the player (each arrow = one step for every process, front ones
   first), OK forks every process into a free neighbour cell; RAM cap = target + 3 (forking past it enrages the
   OOM killer). The killer (BFS, holes passable) wakes after 3 s and steps faster with more processes alive; a second
-  one from level 4. Mazes generated per level (seeded), always start → exit connected (test: 60 levels).
+  one from level 4. **Level 1 is the Omarchy logo** (icon.txt, MIT, sampled to 20x19 cells, walls in the accent colour): start in the
+  middle room, exit through the bottom gap, the killer starts by the exit. Later mazes are generated per level (seeded),
+  always start → exit connected (test: 60 levels).
 - **Look**: an 80×25 text grid in the theme's colours (`dim` = fg/bg mix), rows of spans rewritten only when they
   change, at most ~30 frames/s, no canvas/images/CSS filters/CSS variables (old webOS). Scanline veil, block-font
   titles. Inside `#stage`, so with Retro CRT on it plays inside the set; on Android `CrtOverlay.attach` on the

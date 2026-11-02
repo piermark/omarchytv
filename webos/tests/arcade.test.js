@@ -199,6 +199,17 @@ test("FORK BOMB: every generated maze links the start to the exit", () => {
   }
 });
 
+test("FORK BOMB: level 1 is the Omarchy logo, playable from the middle room to the bottom gap", () => {
+  const win = load(), F = game(win, "forkbomb"), [MW] = F._size, L = F._makeLevel(1, 1);
+  assert.ok(L.logo);
+  const d = F._bfs(L.map, L.start.x, L.start.y, false);
+  assert.ok(d[L.exit.x + L.exit.y * MW] > 20, "a long way round");
+  assert.ok(d[L.oom.x + L.oom.y * MW] > 0, "the killer can reach you");
+  assert.strictEqual(L.exit.y, 18);
+  const icon = fs.readFileSync(path.join(__dirname, "../../launcher/app/src/main/res/drawable/omarchy_icon.xml"), "utf8");
+  assert.ok(icon.indexOf("Copyright (c) David Heinemeier Hansson") > 0);
+});
+
 test("FORK BOMB: OK forks, arrows move every process, the exit saves them, RAM caps the forks", () => {
   const win = load(), { api, g } = fakeApi(win);
   const fb = game(win, "forkbomb").create(api), s = fb._state();

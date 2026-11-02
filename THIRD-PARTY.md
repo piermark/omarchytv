@@ -18,7 +18,7 @@ Audit date: 2026-10-25. Per-background provenance: `launcher/WALLPAPER-PROVENANC
 ## 2. Omarchy
 | Item | Author | Source | Licence | Modifications |
 |---|---|---|---|---|
-| `logo.txt` (home/screensaver logo), `icon.txt` (bar icon → `res/drawable/omarchy_icon.xml`) | David Heinemeier Hansson / Omarchy contributors | https://github.com/basecamp/omarchy (omacom/omarchy) | MIT, `licenses/OMARCHY-LICENSE-MIT.txt` | Icon vectorised; logo animated; "TV" glyphs original. |
+| `logo.txt` (home/screensaver logo), `icon.txt` (bar icon → `res/drawable/omarchy_icon.xml`) | David Heinemeier Hansson / Omarchy contributors | https://github.com/basecamp/omarchy (omacom/omarchy) | MIT, `licenses/OMARCHY-LICENSE-MIT.txt` | Icon vectorised; logo animated; "TV" glyphs original; the icon sampled to 20x19 cells is the maze of FORK BOMB's first level (OmarchyTV Arcade, `webos/app/games/forkbomb.js`). |
 | Theme palettes (`themes/*/colors.toml`, colour values only) → `assets/omarchy_themes.json` | same | same, commit be54892 | MIT | Converted to JSON. Tokyo Night palette originally by enkia/folke (colour values only). |
 | Theme backgrounds: **all 28 Omarchy-original wordmark images** (`NN-omarchy.webp`, flat theme-background + accent across all 28 bundled MIT themes) | David Heinemeier Hansson (commit "Add omarchy bg option to all themes", 2026-04-28) | same | MIT | PNG → WebP, scaled to 3840x2160. |
 | **Jade Horse** theme (`jade-horse`) & 3 original wallpapers (`01-ink-horse.webp`, `02-carved-jade-horse.webp`, `03-mountain-horses.webp`) | David Heinemeier Hansson | https://github.com/dhh/omarchy-jade-horse-theme | MIT (Copyright (c) 2026 David Heinemeier Hansson) | `colors.toml` added to `omarchy_themes.json`; PNG 1672x941 → WebP (q88). |

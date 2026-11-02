@@ -7,7 +7,7 @@
   var A = root.OmarchyArcade;
   if (!A) return;
   var C = A.C, MW = 30, MH = 19, X0 = 10, Y0 = 3;
-  var WALL = 1, HOLE = 2, EXIT = 3;
+  var WALL = 1, HOLE = 2, EXIT = 3, VOID = 4;   // VOID: outside the logo level, not drawn, never entered
   var DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 
   function rng(seed) { var x = seed % 2147483647; if (x <= 0) x += 2147483646; return function () { x = x * 16807 % 2147483647; return (x - 1) / 2147483646; }; }
@@ -20,14 +20,53 @@
       for (var d in DIRS) {
         var nx = x + DIRS[d][0], ny = y + DIRS[d][1], n = nx + ny * MW;
         if (nx < 0 || ny < 0 || nx >= MW || ny >= MH || dist[n] >= 0) continue;
-        if (map[n] === WALL || (map[n] === HOLE && !passHoles)) continue;
+        if (map[n] === WALL || map[n] === VOID || (map[n] === HOLE && !passHoles)) continue;
         dist[n] = dist[c] + 1; q.push(n);
       }
     }
     return dist;
   }
+  // Level 1 is Omarchy's own logo, which is a maze already: icon.txt (MIT, (c) David Heinemeier Hansson, as in
+  // res/drawable/omarchy_icon.xml) sampled to 20x19 cells. You start in the middle room; the way out is the gap at
+  // the bottom; the OOM killer sleeps by the exit and comes in
+  // through the top gap, so you dodge it in the room and slip out behind it. The closed corridors are drawn as in the
+  // logo but can't be reached. # wall, . floor, S start, E exit, K the killer.
+  var LOGO = [
+    "####################",
+    "#........##.......##",
+    "#........##.......##",
+    "#..########...###.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "####.....S.....##.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "#..#...........##.##",
+    "#..##############.##",
+    "#........##......K##",
+    "###########.########",
+    "###########E########"
+  ];
+  function logoLevel() {
+    var map = [], ox = Math.floor((MW - LOGO[0].length) / 2), L = { map: map, logo: true };
+    for (var y = 0; y < MH; y++) for (var x = 0; x < MW; x++) {
+      var ch = (LOGO[y] || "").charAt(x - ox);
+      if (!ch) { map.push(VOID); continue; }
+      map.push(ch === "#" ? WALL : ch === "E" ? EXIT : 0);
+      if (ch === "S") L.start = { x: x, y: y };
+      if (ch === "E") L.exit = { x: x, y: y };
+      if (ch === "K") L.oom = { x: x, y: y };
+    }
+    return L;
+  }
   /** A level's maze: border, wall segments, /dev/null holes, start on the left, exit on the right, all connected. */
   function makeLevel(lv, seed) {
+    if (lv === 1) return logoLevel();
     for (var tries = 0; tries < 40; tries++) {
       var R = rng(seed + tries * 7919), map = [], i;
       for (i = 0; i < MW * MH; i++) { var x = i % MW, y = Math.floor(i / MW); map.push(x === 0 || y === 0 || x === MW - 1 || y === MH - 1 ? WALL : 0); }
@@ -55,13 +94,13 @@
     var t = api.t, sfx = api.sfx;
     var s = { over: false, score: 0, lives: 3, level: 0, clock: 0, procs: [], pid: 100, saved: 0, target: 3, cap: 6,
       map: null, exit: null, ooms: [], oomT: 0, wake: 3, rage: 0, pops: [], end: 0, endKind: "", last: "right" };
-    function cell(x, y) { return x < 0 || y < 0 || x >= MW || y >= MH ? WALL : s.map[x + y * MW]; }
+    function cell(x, y) { var c = x < 0 || y < 0 || x >= MW || y >= MH ? WALL : s.map[x + y * MW]; return c === VOID ? WALL : c; }
     function procAt(x, y) { for (var i = 0; i < s.procs.length; i++) if (s.procs[i].x === x && s.procs[i].y === y) return s.procs[i]; return null; }
-    function pop(text, c) { s.pops.push({ text: text, c: c, t: 1.4 }); if (s.pops.length > 3) s.pops.shift(); }
+    function pop(text, c) { s.pops.push({ text: text, c: c, t: 1.4 }); if (s.pops.length > 2) s.pops.shift(); }
     function level(again) {
       if (!again) s.level++;
       var L = makeLevel(s.level, 1000 + s.level * 31) || makeLevel(1, 7);
-      s.map = L.map; s.exit = L.exit;
+      s.map = L.map; s.exit = L.exit; s.logo = !!L.logo;
       s.procs = [{ x: L.start.x, y: L.start.y, pid: s.pid++, born: 0 }];
       s.ooms = [{ x: L.oom.x, y: L.oom.y }];
       if (s.level >= 4) s.ooms.push({ x: L.oom.x, y: MH - 1 - L.oom.y > 0 && cell(L.oom.x, MH - 1 - L.oom.y) === 0 ? MH - 1 - L.oom.y : L.oom.y });
@@ -169,13 +208,14 @@
         for (var y = 0; y < MH; y++) {
           for (var x = 0; x < MW; x++) {
             var c = s.map[x + y * MW], gx = X0 + x * 2, gy = Y0 + y;
-            if (c === WALL) g.put(gx, gy, "▓▓", C.DIM);
+            if (c === VOID) continue;
+            if (c === WALL) g.put(gx, gy, s.logo ? "██" : "▓▓", s.logo ? C.ACC : C.DIM);
             else if (c === HOLE) g.put(gx, gy, "░░", C.RED);
             else if (c === EXIT) g.put(gx, gy, blink ? "▒▒" : "██", C.GREEN);
             else if ((x + y) % 2 === 0) g.put(gx, gy, " ·", C.DIM);
           }
         }
-        g.put(X0 + s.exit.x * 2 - 1, Y0 + s.exit.y - 1, "EXIT", C.GREEN);
+        if (!s.logo) g.put(X0 + s.exit.x * 2 - 1, Y0 + s.exit.y - 1, "EXIT", C.GREEN);   // the logo's gap is its own sign
         for (var p = 0; p < s.procs.length; p++) {
           var pr = s.procs[p];
           g.put(X0 + pr.x * 2, Y0 + pr.y, "@" + (pr.pid % 10), pr.born > 0 ? C.BRIGHT : C.ACC);
