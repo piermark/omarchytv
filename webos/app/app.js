@@ -4,10 +4,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.13.10";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.13.11";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
-  var START_TIME = Date.now() - (42 * 60 * 1000); // default 42m uptime look
+  var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)
 
   var STRINGS = {
     en: {
@@ -526,7 +526,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var info = document.getElementById("term-info");
     info.innerHTML =
       '<span style="color:' + t.accent + '">' + tr("term_theme") + '</span><span style="color:' + t.fg + '">' + cfg.theme + '</span>\n' +
-      '<span style="color:' + t.accent + '">' + tr("term_net") + '</span><span style="color:' + t.fg + '">Wi-Fi</span>\n' +
+      '<span style="color:' + t.accent + '">' + tr("term_net") + '</span><span style="color:' + t.fg + '">' + (navigator.onLine === false ? "offline" : "online") + '</span>\n' +
       '<span style="color:' + t.accent + '">' + tr("term_up") + '</span><span style="color:' + t.fg + '">' + upStr + '</span>' +
       '<span style="color:' + t.fgDim + '"> · ' + APP_VERSION + '</span>';
   }
@@ -540,7 +540,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function formatAiPane(s) {
     if (!Array.isArray(s.ai)) {
-      return "Claude   $" + (s.claude || "18.40") + " left\nOpenAI   $" + (s.openai || "42.10") + " left\nxAI Grok $" + (s.xai || "95.00") + " left";
+      // No made-up amounts when the PC doesn't send them (issue #5, point 10).
+      return "Claude   " + (s.claude ? "$" + s.claude + " left" : "—") + "\nOpenAI   " + (s.openai ? "$" + s.openai + " left" : "—") + "\nxAI Grok " + (s.xai ? "$" + s.xai + " left" : "—");
     }
     var mode = cfg.aiCredits === "dollars" ? "dollars" : "percent";
     var rows = s.ai;
@@ -1078,21 +1079,45 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           saveCfg(); fetchWeather(); renderAll();
         });
       } },
-      { label: tr("wx_search"), right: cfg.weatherCity, act: function () {
-        openModal(tr("wx_search"), "Type city name (e.g. Milan, Rome, Berlin, New York):", [
-          { label: "Milano, IT", right: "45.46, 9.19", act: function () { setCity("Milano", 45.464, 9.190); } },
-          { label: "Alessandria, IT", right: "44.91, 8.61", act: function () { setCity("Alessandria", 44.913, 8.615); } },
-          { label: "Roma, IT", right: "41.89, 12.48", act: function () { setCity("Roma", 41.893, 12.483); } },
-          { label: "Berlin, DE", right: "52.52, 13.40", act: function () { setCity("Berlin", 52.520, 13.405); } },
-          { label: "San Francisco, US", right: "37.77, -122.42", act: function () { setCity("San Francisco", 37.775, -122.419); } }
-        ], "City name…");
-      } },
+      { label: tr("wx_search"), right: cfg.weatherCity, act: openCitySearch },
       { label: tr("wx_unit"), right: "°" + cfg.tempUnit, act: function () {
         cfg.tempUnit = cfg.tempUnit === "C" ? "F" : "C";
         saveCfg(); renderAll(); openWeatherModal();
       } }
     ];
     openModal(tr("wx_title"), "", items);
+  }
+
+  // City search (issue #88): typed text goes to Open-Meteo geocoding like Android; curated presets stay as fallback.
+  var DEFAULT_CITIES = [
+    { name: "Milano", label: "Milano, IT", lat: 45.464, lon: 9.190 }, { name: "Alessandria", label: "Alessandria, IT", lat: 44.913, lon: 8.615 },
+    { name: "Roma", label: "Roma, IT", lat: 41.893, lon: 12.483 }, { name: "Berlin", label: "Berlin, DE", lat: 52.520, lon: 13.405 },
+    { name: "San Francisco", label: "San Francisco, US", lat: 37.775, lon: -122.419 }
+  ];
+  function openCitySearch() {
+    var G = window.OmarchyGeo, presets = (window.OMARCHY_DATA && OMARCHY_DATA.weatherCities) || DEFAULT_CITIES;
+    var timer = null, seq = 0;
+    function cityItem(c) { return { label: c.label, right: c.lat.toFixed(2) + ", " + c.lon.toFixed(2), act: function () { setCity(c.name, c.lat, c.lon); } }; }
+    function show(found, q) {
+      var list = found.map(cityItem), pre = G ? G.filterPresets(presets, q) : presets;
+      if (!pre.length && !found.length) pre = presets;
+      state.modalItems = list.concat(pre.map(cityItem));
+      if (state.modalIdx >= state.modalItems.length) state.modalIdx = 0;
+      renderModalList();
+    }
+    function search(q) {
+      q = (q || "").trim();
+      clearTimeout(timer);
+      show([], q);
+      if (q.length < 2 || !G || !G.searchUrl) return;
+      var my = ++seq;
+      timer = setTimeout(function () {
+        fetch(G.searchUrl(q, getLang())).then(function (r) { return r.json(); }).then(function (j) {
+          if (my === seq && state.modalOpen) show(G.parseSearch(j), q);
+        }).catch(function () {});   // offline / blocked: presets stay
+      }, 600);
+    }
+    openModal(tr("wx_search"), "Type a city name (e.g. Milan, Lisbon, Tokyo):", presets.map(cityItem), "City name…", search);
   }
 
   function setCity(name, lat, lon) {
@@ -3014,10 +3039,20 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           cfg.pcSimulated = !cfg.pcSimulated;
           saveCfg(); pollPcStatus(); renderAll();
         } else {
-          openModal("Pair Omarchy Linux PC", "Enter your Omarchy PC LAN IP (serves http://<ip>:8765/v1/status):", [
+          // Typed address is used (issue #5, point 4): "Connect to …" appears as the first item once it looks valid.
+          var pairTyped = "";
+          var pairItems = [
             { label: "Use 192.168.1.100:8765", right: "LAN", act: function () { cfg.pcHost = "192.168.1.100"; saveCfg(); pollPcStatus(); closeModal(); } },
             { label: "Toggle simulated PC link", right: cfg.pcSimulated ? "on" : "off", act: function () { cfg.pcSimulated = !cfg.pcSimulated; saveCfg(); pollPcStatus(); closeModal(); } }
-          ], "192.168.1.x");
+          ];
+          openModal("Pair Omarchy Linux PC", "Enter your Omarchy PC LAN IP (serves http://<ip>:8765/v1/status):", pairItems.slice(), "192.168.1.x", function (v) {
+            pairTyped = (v || "").trim();
+            var ok = /^(https?:\/\/)?[A-Za-z0-9.-]+(:\d{1,5})?\/?$/.test(pairTyped);
+            state.modalItems = (ok ? [{ label: "Connect to " + pairTyped, right: "OK", act: function () {
+              cfg.pcHost = pairTyped.replace(/\/+$/, ""); cfg.pcSimulated = false; saveCfg(); pollPcStatus(); closeModal();
+            } }] : []).concat(pairItems);
+            state.modalIdx = 0; renderModalList();
+          });
         }
         e.preventDefault(); return;
       }

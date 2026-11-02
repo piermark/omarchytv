@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+### LG webOS / Samsung Tizen 2.13.11 (draft, not released)
+
+LG and Samsung only. Android TV is unchanged in this build: Android users stay on the current Android release (2.13.8); Android work resumes separately.
+
+- **Weather: search any city (#88).** "Search city…" now uses what you type: it asks Open-Meteo's geocoding (no key, the same service and query as the Android launcher) and lists up to 6 matches. A curated list of 58 cities (world capitals and key APAC cities, plus the old 5) filters as you type and stays as the offline fallback.
+- **Pair the PC you type (#5, point 4).** In "Pair Omarchy Linux PC", a valid typed `host[:port]` adds "Connect to …" as the first item. The old items are still there.
+- **No placeholder data (#5, point 10).** The terminal pane shows OmarchyTV's real uptime (no fixed +42 min) and online/offline instead of a fixed "Wi-Fi"; the AI pane shows "—" instead of made-up amounts when the PC doesn't send them.
+- **Screensaver fixes by @OldJobobo:** block art without glyph gaps ([#98](https://github.com/piermark/omarchytv/pull/98)), text effects across the full screen ([#100](https://github.com/piermark/omarchytv/pull/100)); top-bar clock vertically centred ([#99](https://github.com/piermark/omarchytv/pull/99)).
+- **Docs:** webOS 25 reported working on an LG 55QNED80T6A by @Imacx-maria (#95).
+
+### Earlier unreleased notes
+
 - **Top bar focus loops.** ◀ on the menu logo goes to the last icon, and ▶ on the last icon goes to the menu logo (the floating companion, when shown, is still the stop after the last icon). Hidden items are skipped as before.
 - **Home widgets keep one column.** With only one top-row widget on, it no longer stretches across the whole row.
 - **webOS 4.0: dock and grids lay out in a row (#72).** compat.js now also rewrites the stylesheet when CSS grid is missing (Chrome 53), not only when CSS variables are; the stage is re-fitted after load for engines that report the window size late.
