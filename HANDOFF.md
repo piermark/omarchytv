@@ -1,6 +1,9 @@
-# HANDOFF — branch `feature/boot-screen`
+# HANDOFF — branch `feature/boot-and-translations`
 
-Notes for whoever continues this branch. Delete this file before merging to `main`.
+Notes for whoever continues this branch. Two features: **A. Boot screen** and **B. Twenty new languages**.
+Delete this file before merging to `main`.
+
+# A. Boot screen
 
 ## What was done
 
@@ -79,3 +82,43 @@ Nothing keeps running after it ends.
 ## Do not touch
 
 Signing, release, tags: unchanged and not part of this branch.
+
+
+# B. Twenty new languages
+
+French (`fr`), Spanish (`es`), Portuguese Portugal (`pt-PT`) and Brazil (`pt-BR`), Dutch (`nl`), Polish (`pl`),
+Swedish (`sv`), Danish (`da`), Norwegian Bokmål (`nb`), Finnish (`fi`), Czech (`cs`), Hungarian (`hu`),
+Romanian (`ro`), Greek (`el`), Turkish (`tr`), Ukrainian (`uk`), Russian (`ru`), Arabic (`ar`), Chinese Simplified
+(`zh-CN`), Japanese (`ja`), on top of en/it/de: 23 in all. Machine-translated from English; product words kept as in
+the Italian/German files (OmarchyTV, Omarchy Linux, Walker, Hyprland, Cinemarchy, Grok Bot, `> search`, `> ask`).
+Arabic is RTL text only (no supportsRtl, layout not mirrored); any Chinese locale shows Simplified.
+
+## Files
+
+| File | What |
+|---|---|
+| `launcher/app/src/main/res/values-{fr,es,pt,pt-rBR,nl,pl,sv,da,nb,no,fi,cs,hu,ro,el,tr,uk,ru,ar,zh,ja}/strings.xml` | New. All 397 translatable strings each (`values-pt` = Portugal, `values-zh` = Simplified, `values-no` = copy of `values-nb` for TVs that report "no"); zh/ja/hu also override `date_format` |
+| `launcher/app/src/main/res/values/strings.xml` | `lang_fr` … `lang_ja` native names (translatable="false") |
+| `launcher/.../LauncherConfig.java` | `LANGUAGES`, `nextLanguage()`, `speechTag()`; `wrap()` uses `Locale.forLanguageTag` (needed for pt-BR) |
+| `launcher/.../MainActivity.java` | Language menu cycles `LANGUAGES`; `langLabel()` maps to `R.string.lang_*` (explicit ids: release has shrinkResources); `speechLanguage()` → `speechTag()` |
+| `launcher/app/src/test/.../TranslationsTest.java` | New. Every values-xx has every string, same placeholders, escaped apostrophes; menu names; speech tags |
+| `webos/app/i18n.js` | New. Strings, weather (wmo), days, months, native name for the 20 languages |
+| `webos/app/lang.js` | New. `resolve()` (saved → TV language → en; pt-BR vs pt-PT), `next()`, `speechTag()`, `askTag()`, `name()` |
+| `webos/app/app.js` | Merges i18n.js into STRINGS; getLang/days/months/Language menu use them; zh/ja bar date "11月2日 周一"; speech and Grok Bot lang now follow `getLang()` (before: English unless picked) |
+| `webos/app/index.html` | `lang.js`, `i18n.js` before app.js |
+| `webos/tests/i18n.test.js` | New. Same keys as English, same language list as Android, resolve/cycle/tags |
+| `CONTRIBUTING.md` | New section "5. Fix a translation" |
+
+## Verified
+
+- `node --test webos/tests/*.test.js` and `tizen/*.test.cjs` pass; `tizen/verify-build.py` PASS (boot + translations together).
+- TranslationsTest (4 tests) passes against the real res/ files (javac + JUnit, stub for the LauncherConfig helpers).
+- LG/Samsung app rendered in headless Chromium in fr, ru, el, pt-BR, zh-CN, ja, ar, tr: no script errors ("11月2日 周一", "пн 2 ноя").
+
+## NOT verified (to do)
+
+- Gradle build (`./gradlew :app:testDebugUnitTest assembleRelease`): resource compile (aapt2) of the new files.
+- On the TV: long strings (ru, el, pl, nl, hu, fi) in menus and hint bars; CJK and Arabic glyphs come from the TV's
+  fallback fonts (Caskaydia has none); Arabic mixed with English words reads right-to-left inside a left-to-right
+  layout, so a native speaker should look at it. Pick each language once in Launcher settings → Language.
+- Speech recognition: the TV needs the Google voice pack for that language, else it falls back.

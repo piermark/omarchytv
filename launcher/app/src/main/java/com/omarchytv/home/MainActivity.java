@@ -2181,14 +2181,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     private AsciiMenu.Page launcherPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
-        String[] langs = {"auto", "en", "it", "de"};
         String[] sizes = {"small", "medium", "large"};
         String[] logos = {"omarchy-tv", "omarchy", "cinemarchy", "original"};
         AsciiMenu.Page p = new AsciiMenu.Page(str(R.string.menu_launcher));
         String lLang = str(R.string.set_language), lSize = str(R.string.set_ui_size), lLogo = str(R.string.set_logo),
                 lAcc = str(R.string.set_accent);
         p.add(lLang, langLabel(cfg.language), r -> {
-            String n = next(langs, cfg.language);
+            String n = LauncherConfig.nextLanguage(cfg.language);
             applyLive("launcher", lLang, j -> j.put("language", n));
             return true;
         });
@@ -3343,10 +3342,33 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     private String langLabel(String l) {
-        if ("en".equals(l)) return str(R.string.lang_en);
-        if ("it".equals(l)) return str(R.string.lang_it);
-        if ("de".equals(l)) return str(R.string.lang_de);
-        return str(R.string.lang_auto);
+        if (l == null || "auto".equals(l)) return str(R.string.lang_auto);
+        switch (l) {   // each language's own name (values/strings.xml, not translated)
+            case "en": return str(R.string.lang_en);
+            case "it": return str(R.string.lang_it);
+            case "de": return str(R.string.lang_de);
+            case "fr": return str(R.string.lang_fr);
+            case "es": return str(R.string.lang_es);
+            case "pt-PT": return str(R.string.lang_pt_pt);
+            case "pt-BR": return str(R.string.lang_pt_br);
+            case "nl": return str(R.string.lang_nl);
+            case "pl": return str(R.string.lang_pl);
+            case "sv": return str(R.string.lang_sv);
+            case "da": return str(R.string.lang_da);
+            case "cs": return str(R.string.lang_cs);
+            case "ro": return str(R.string.lang_ro);
+            case "el": return str(R.string.lang_el);
+            case "ru": return str(R.string.lang_ru);
+            case "uk": return str(R.string.lang_uk);
+            case "tr": return str(R.string.lang_tr);
+            case "hu": return str(R.string.lang_hu);
+            case "fi": return str(R.string.lang_fi);
+            case "nb": return str(R.string.lang_nb);
+            case "ar": return str(R.string.lang_ar);
+            case "zh-CN": return str(R.string.lang_zh_cn);
+            case "ja": return str(R.string.lang_ja);
+            default: return l;
+        }
     }
 
     private String sizeLabel(String s) {
@@ -4682,8 +4704,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     static String speechLanguage(Context c) {
-        String lang = c.getResources().getConfiguration().getLocales().get(0).getLanguage();
-        return "it".equals(lang) ? "it-IT" : "de".equals(lang) ? "de-DE" : "en-US";
+        return LauncherConfig.speechTag(c.getResources().getConfiguration().getLocales().get(0));
     }
 
     private void typedSearch() {

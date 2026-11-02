@@ -28,7 +28,7 @@ final class LauncherConfig {
     /** Saved order of the non-dock apps (package names), written by move mode. */
     final List<String> order;
     final List<String> hidden;
-    /** "auto" (follow the TV), "en", "it", "de". */
+    /** "auto" (follow the TV) or one of {@link #LANGUAGES}. */
     final String language;
     /** Info panes shown top right: "clock", "sysinfo", "weather". */
     final List<String> panes;
@@ -894,6 +894,53 @@ final class LauncherConfig {
     }
 
     /**
+     * Launcher languages, in menu order after "auto". Each has res/values-xx/strings.xml (pt-PT is values-pt,
+     * pt-BR values-pt-rBR, zh-CN values-zh, nb also values-no) and a native name in {@code lang_*}
+     * (values/strings.xml). Arabic is right-to-left text only: the layout is not mirrored (no supportsRtl).
+     */
+    static final String[] LANGUAGES = {"en", "it", "de", "fr", "es", "pt-PT", "pt-BR", "nl", "pl", "sv", "da",
+            "nb", "fi", "cs", "hu", "ro", "el", "tr", "uk", "ru", "ar", "zh-CN", "ja"};
+
+    /** Speech recognition / text-to-speech tag for a locale: its language with the usual country ("it" → it-IT). */
+    static String speechTag(java.util.Locale l) {
+        String lang = l == null ? "en" : l.getLanguage();
+        switch (lang) {
+            case "it": return "it-IT";
+            case "de": return "de-DE";
+            case "fr": return "fr-FR";
+            case "es": return "es-ES";
+            case "pt": return "BR".equals(l.getCountry()) ? "pt-BR" : "pt-PT";
+            case "nl": return "nl-NL";
+            case "pl": return "pl-PL";
+            case "sv": return "sv-SE";
+            case "da": return "da-DK";
+            case "cs": return "cs-CZ";
+            case "ro": return "ro-RO";
+            case "el": return "el-GR";
+            case "ru": return "ru-RU";
+            case "uk": return "uk-UA";
+            case "tr": return "tr-TR";
+            case "hu": return "hu-HU";
+            case "fi": return "fi-FI";
+            case "nb":
+            case "no": return "nb-NO";
+            case "ar": return "ar-SA";
+            case "zh": return "zh-CN";
+            case "ja": return "ja-JP";
+            default: return "en-US";
+        }
+    }
+
+    /** Next value in the language menu cycle: auto → en → it → … → ja → auto. */
+    static String nextLanguage(String cur) {
+        if (cur == null || "auto".equals(cur)) return LANGUAGES[0];
+        for (int i = 0; i < LANGUAGES.length; i++) {
+            if (LANGUAGES[i].equalsIgnoreCase(cur)) return i + 1 < LANGUAGES.length ? LANGUAGES[i + 1] : "auto";
+        }
+        return "auto";
+    }
+
+    /**
      * Wraps a base context with the configured language, UI scale and text scale. The UI scale is
      * computed from the real screen: layouts are designed for a 960dp-wide screen (a 1920x1080 surface
      * at density 320), so any TV gets the same proportions, times 0.9 / 1.0 / 1.12 for small / medium / large.
@@ -909,7 +956,7 @@ final class LauncherConfig {
             if (dpi >= 120 && dpi <= 960) conf.densityDpi = dpi;
             conf.fontScale = conf.fontScale * cfg.fontScale;
             if (!"auto".equals(cfg.language) && !cfg.language.isEmpty()) {
-                java.util.Locale loc = new java.util.Locale(cfg.language);
+                java.util.Locale loc = java.util.Locale.forLanguageTag(cfg.language);   // "pt-BR" needs the tag form
                 java.util.Locale.setDefault(loc);
                 conf.setLocale(loc);
                 conf.setLayoutDirection(loc);

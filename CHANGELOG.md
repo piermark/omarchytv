@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Twenty new languages (draft, Android TV + LG webOS + Samsung Tizen)
+
+- **OmarchyTV now speaks 23 languages.** New: French, Spanish, Portuguese (Portugal and Brazil), Dutch, Polish, Swedish, Danish, Norwegian (Bokmål), Finnish, Czech, Hungarian, Romanian, Greek, Turkish, Ukrainian, Russian, Arabic, Chinese (Simplified) and Japanese, on top of English, Italian and German. Every launcher string on Android TV (about 400) and on LG/Samsung (about 85, plus weather, days and months) is translated.
+- **Language menu:** Launcher settings → Language cycles Auto → English → Italiano → … → 日本語, each shown in its own name. "Auto" follows the TV's language (Brazilian vs European Portuguese, any Chinese → Simplified, "no" → Bokmål).
+- **Dates:** Chinese and Japanese show "11月2日 周一"; Hungarian, Chinese and Japanese use their own date order on Android.
+- **Arabic** is right-to-left text in the same terminal layout (the screens are not mirrored).
+- **Voice and Grok Bot follow the language:** speech recognition and spoken replies use the matching voice (fr-FR, pt-BR, ja-JP …). On LG/Samsung, "Auto" now also follows the TV for voice (before it always used English unless a language was picked).
+- The new languages are machine-translated from English: corrections from native speakers are very welcome (see CONTRIBUTING.md). Tests check that every language has every string with the same placeholders (`TranslationsTest`, `webos/tests/i18n.test.js`).
+
 ### Boot screen (draft, Android TV + LG webOS + Samsung Tizen)
 
 - **Omarchy TV boot screen.** When OmarchyTV starts, the screen powers on like a CRT (a bright line that opens to full screen), runs a 90s BIOS POST with an OTV block badge top right, then systemd lines as Arch prints them, auto-logs in, types `omarchy-tv`, draws the OMARCHY TV block wordmark row by row (as on Home) and fades to Home. About 7 s; any key skips it and no key reaches Home while it plays. Theme colours, Caskaydia font, light scanlines and glow.

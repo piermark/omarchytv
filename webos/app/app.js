@@ -95,6 +95,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
+  // fr, es, pt-PT, pt-BR, nl, pl, sv, da, cs, ro, el, ru: i18n.js (generated with the Android strings), lang.js rules.
+  var I18N = window.OMARCHY_I18N || {};
+  var LANG = window.OmarchyLang;
+  for (var lc in I18N) if (Object.prototype.hasOwnProperty.call(I18N, lc)) STRINGS[lc] = I18N[lc].strings;
 
   var DEFAULT_CFG = {
     theme: "last-horizon",
@@ -163,10 +167,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   function getLang() {
+    var has = function (l) { return !!STRINGS[l]; };
+    if (LANG) return LANG.resolve(cfg.lang, navigator.language, has);
     if (cfg.lang && STRINGS[cfg.lang]) return cfg.lang;
     var nav = (navigator.language || "en").slice(0, 2).toLowerCase();
     return STRINGS[nav] ? nav : "en";
   }
+  function speechLang() { return LANG ? LANG.speechTag(getLang()) : "en-US"; }
+  function askLang() { return LANG ? LANG.askTag(getLang()) : "en"; }
 
   function tr(key) {
     var l = getLang();
@@ -427,13 +435,16 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       en: ["sun","mon","tue","wed","thu","fri","sat"],
       it: ["dom","lun","mar","mer","gio","ven","sab"],
       de: ["so","mo","di","mi","do","fr","sa"]
-    }[lang] || ["sun","mon","tue","wed","thu","fri","sat"];
+    }[lang] || (I18N[lang] && I18N[lang].days) || ["sun","mon","tue","wed","thu","fri","sat"];
     var months = {
       en: ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"],
       it: ["gen","feb","mar","apr","mag","giu","lug","ago","set","ott","nov","dic"],
       de: ["jan","feb","mär","apr","mai","jun","jul","aug","sep","okt","nov","dez"]
-    }[lang] || ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
-    document.getElementById("bar-clock").textContent = days[d.getDay()] + " " + d.getDate() + " " + months[d.getMonth()] + "  " + clockText(d);
+    }[lang] || (I18N[lang] && I18N[lang].months) || ["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+    var date = lang === "zh-CN" || lang === "ja"   // 11月2日 周一 / 11月2日(月)
+      ? months[d.getMonth()] + d.getDate() + "日 " + days[d.getDay()]
+      : days[d.getDay()] + " " + d.getDate() + " " + months[d.getMonth()];
+    document.getElementById("bar-clock").textContent = date + "  " + clockText(d);
   }
 
   // 12 or 24 hour time for the bar and the screensaver clock (cfg.clockFormat, "auto" follows the language).
@@ -1312,9 +1323,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       keepRefresh(function () { if (state.modalOpen) openAllSettingsModal(true); });
     }
     openModal(tr("sys_all"), "OmarchyTV " + APP_VERSION, [
-      { label: "Language", right: cfg.lang || "auto", act: function () {
-        var l = ["", "en", "it", "de"];
-        cfg.lang = l[(l.indexOf(cfg.lang) + 1) % l.length];
+      { label: "Language", right: cfg.lang ? (LANG ? LANG.name(cfg.lang, I18N) : cfg.lang) : "auto", act: function () {
+        if (LANG) cfg.lang = LANG.next(cfg.lang);
+        else { var l = ["", "en", "it", "de"]; cfg.lang = l[(l.indexOf(cfg.lang) + 1) % l.length]; }
         saveCfg(); updateClock(); renderAll(); openAllSettingsModal();
       } },
       { label: tr("sys_clock"), right: cfg.clockFormat === "12" || cfg.clockFormat === "24" ? cfg.clockFormat + " h" : "auto (" + (use24h() ? "24" : "12") + " h)", act: function () {
@@ -2382,7 +2393,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (!st.speak || !text || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
     try {
       var u = new window.SpeechSynthesisUtterance(text);
-      u.lang = lang || (cfg.lang === "it" ? "it-IT" : cfg.lang === "de" ? "de-DE" : "en-US");   // the reply's own lang when valid
+      u.lang = lang || speechLang();   // the reply's own lang when valid
       window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
     } catch (e) {}
   }
@@ -2402,7 +2413,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     gbFace.busy = true; gbSay("Thinking…", 200000);
     if (reopen) openCompanionChat(false);
     var apps = visibleApps().map(function (a) { return a.name; });
-    GBD.ask(st, q, cfg.lang === "it" ? "it" : cfg.lang === "de" ? "de" : "en", apps,
+    GBD.ask(st, q, askLang(), apps,
       window.OMARCHY_PLATFORM === "tizen" ? "OmarchyTV on Samsung Tizen" : "OmarchyTV on LG webOS", function (err, rep) {
         gbFace.busy = false;
         var open = state.modalOpen && state.gbChat;
@@ -2464,7 +2475,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var base = pcBase(), a = tuiAgent();
     tuiBusy = true; tuiAdd("dim", "asking " + a.name + "…");
     fetch(base + "/v1/ai/ask", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" },
-      body: JSON.stringify({ text: q, provider: prov, session: tuiSession || undefined, lang: cfg.lang === "it" ? "it-IT" : cfg.lang === "de" ? "de-DE" : "en-US" }) })
+      body: JSON.stringify({ text: q, provider: prov, session: tuiSession || undefined, lang: speechLang() }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j || {} }; }); })
       .then(function (res) {
         tuiBusy = false;
@@ -2544,7 +2555,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function tuiDirect(q) {
     var st = GBD.load(window.localStorage);
     tuiBusy = true; tuiAdd("dim", "asking Grok Bot diretto…");
-    GBD.ask(st, q, cfg.lang === "it" ? "it" : cfg.lang === "de" ? "de" : "en", visibleApps().map(function (a) { return a.name; }),
+    GBD.ask(st, q, askLang(), visibleApps().map(function (a) { return a.name; }),
       window.OMARCHY_PLATFORM === "tizen" ? "OmarchyTV on Samsung Tizen" : "OmarchyTV on LG webOS", function (err, rep) {
         tuiBusy = false;
         if (err) { tuiAdd("err", err); return; }
@@ -2675,7 +2686,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (!SR) { showToast("Voice is not available on this TV · use the keyboard"); return false; }
     try {
       var r = new SR();
-      r.lang = cfg.lang === "it" ? "it-IT" : cfg.lang === "de" ? "de-DE" : "en-US";
+      r.lang = speechLang();
       r.interimResults = false;
       r.onresult = function (ev) { var t = ev.results && ev.results[0] && ev.results[0][0] ? ev.results[0][0].transcript : ""; if (t) onText(t); };
       r.onerror = function () { showToast("I didn't catch that · try again or type"); };
