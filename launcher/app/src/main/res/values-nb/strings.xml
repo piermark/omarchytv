@@ -433,4 +433,15 @@
     <string name="living_x_budget">Månedsgrensen for X-API-et er nådd (xMonthlyUsd)</string>
     <string name="living_x_error">X-API-et kan ikke nås nå</string>
     <string name="x_keys_hint">X · ▲▼ innlegg · OK åpne · 1 lik · 2 svar · 3 repost · 4 nytt innlegg · 5 søk · 0 hjem · 9 varsler · 8 meldinger</string>
+    <string name="omafire_campfire">leirbål</string>
+    <string name="omafire_embers">glør</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">lett</string>
+    <string name="crt_strong">kraftig</string>
+    <string name="omastorm_open">Åpne Omastorm (radar)</string>
+    <string name="omastorm_need_pc">Omastorm kjører på Omarchy-PC-en: par PC-en først</string>
+    <string name="omastorm_opening">Åpner Omastorm på PC-en…</string>
+    <string name="omastorm_not_installed">Omastorm er ikke installert på PC-en (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm kunne ikke starte: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ panorer · OK spill av · ⏩⏪ bilder · 1 2 3 stil · 4 nærmeste radar · 5 6 zoom · 7 alle radarer · 8 min posisjon · 9 luftfart · 0 tilbakestill · TILBAKE lukk</string>
 </resources>

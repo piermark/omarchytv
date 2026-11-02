@@ -433,4 +433,15 @@
     <string name="living_x_budget">X API:n kuukausiraja täynnä (xMonthlyUsd)</string>
     <string name="living_x_error">X API ei vastaa juuri nyt</string>
     <string name="x_keys_hint">X · ▲▼ julkaisut · OK avaa · 1 tykkää · 2 vastaa · 3 repost · 4 uusi julkaisu · 5 haku · 0 koti · 9 ilmoitukset · 8 viestit</string>
+    <string name="omafire_campfire">nuotio</string>
+    <string name="omafire_embers">hiillos</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">kevyt</string>
+    <string name="crt_strong">voimakas</string>
+    <string name="omastorm_open">Avaa Omastorm (tutka)</string>
+    <string name="omastorm_need_pc">Omastorm toimii Omarchy-PC:llä: muodosta ensin pari PC:n kanssa</string>
+    <string name="omastorm_opening">Avataan Omastorm PC:llä…</string>
+    <string name="omastorm_not_installed">Omastormia ei ole asennettu PC:lle (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm ei käynnistynyt: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ siirrä · OK toista · ⏩⏪ kuvat · 1 2 3 tyyli · 4 lähin tutka · 5 6 zoomaus · 7 kaikki tutkat · 8 sijaintini · 9 ilmailu · 0 nollaa · TAKAISIN sulje</string>
 </resources>

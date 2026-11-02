@@ -433,4 +433,15 @@
     <string name="living_x_budget">Достигнут месячный лимит API X (xMonthlyUsd)</string>
     <string name="living_x_error">API X сейчас недоступен</string>
     <string name="x_keys_hint">X · ▲▼ посты · OK открыть · 1 нравится · 2 ответить · 3 репост · 4 новый пост · 5 поиск · 0 главная · 9 уведомления · 8 сообщения</string>
+    <string name="omafire_campfire">костёр</string>
+    <string name="omafire_embers">угли</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">слабый</string>
+    <string name="crt_strong">сильный</string>
+    <string name="omastorm_open">Открыть Omastorm (радар)</string>
+    <string name="omastorm_need_pc">Omastorm работает на ПК Omarchy: сначала подключите ПК</string>
+    <string name="omastorm_opening">Открываю Omastorm на ПК…</string>
+    <string name="omastorm_not_installed">Omastorm не установлен на ПК (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm не запустился: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ сдвиг · OK пуск · ⏩⏪ кадры · 1 2 3 стиль · 4 ближайший радар · 5 6 масштаб · 7 все радары · 8 моё место · 9 авиация · 0 сброс · НАЗАД закрыть</string>
 </resources>

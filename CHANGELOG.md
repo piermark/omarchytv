@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Retro CRT, OmaFire wallpapers, Omastorm on the TV, livelier Living screensaver (draft)
+
+- **Retro CRT plugin** (Plugins: off / light / strong): scanlines, phosphor mask, vignette, a gentle flicker and a thin rounded bezel in the active theme's colours (it follows every theme change). "strong" on Android 13+ also curves the picture like a tube.
+- **OmaFire animated wallpapers** (Wallpaper: "OmaFire · campfire" / "OmaFire · embers"): Wes Grimes' OmaFire campsite (MIT) exactly as in his Omarchy bar plugin, the fire and the moonlit lake, full screen; kept burning (campfire) or low (embers). Runs only while Home is on screen.
+- **Omastorm on the TV** (Plugins, Android TV, off by default): the real Omastorm radar window from your Omarchy PC (Wes Grimes, MIT), unchanged, streamed to the TV and driven by the remote (pan, frames, play, Pixels/Glyphs/Stipple, mosaic, aviation…). Needs Omastorm installed on the PC. LG/Samsung: next step (native view).
+- **Living screensaver:** the boxes are typed in line by line and every new line decrypts in like the tte effects, then glows; colours from the active theme.
+
 ### Living screensaver and the X app (draft, Android TV + LG webOS + Samsung Tizen + PC)
 
 - **Living screensaver** (Screensaver settings, off by default): next to the screensaver art, Omarchy-style ASCII boxes with the weather (ASCII sky), your GitHub activity (pushes, PRs, stars and forks on your repos), **every notification from the Omarchy PC** (its own switch, off by default) and **X mentions**, live while the screensaver runs. The newest item blinks when it arrives.

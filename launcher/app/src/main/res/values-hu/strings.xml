@@ -433,4 +433,15 @@
     <string name="living_x_budget">Elérted az X API havi limitjét (xMonthlyUsd)</string>
     <string name="living_x_error">Az X API most nem érhető el</string>
     <string name="x_keys_hint">X · ▲▼ bejegyzések · OK megnyitás · 1 tetszik · 2 válasz · 3 repost · 4 új bejegyzés · 5 keresés · 0 kezdőlap · 9 értesítések · 8 üzenetek</string>
+    <string name="omafire_campfire">tábortűz</string>
+    <string name="omafire_embers">parázs</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">enyhe</string>
+    <string name="crt_strong">erős</string>
+    <string name="omastorm_open">Omastorm megnyitása (radar)</string>
+    <string name="omastorm_need_pc">Az Omastorm az Omarchy PC-n fut: előbb párosítsd a PC-t</string>
+    <string name="omastorm_opening">Az Omastorm megnyitása a PC-n…</string>
+    <string name="omastorm_not_installed">Az Omastorm nincs telepítve a PC-n (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Az Omastorm nem indult el: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ mozgatás · OK lejátszás · ⏩⏪ képkockák · 1 2 3 stílus · 4 legközelebbi radar · 5 6 nagyítás · 7 összes radar · 8 helyzetem · 9 repülés · 0 alaphelyzet · VISSZA bezárás</string>
 </resources>

@@ -295,6 +295,17 @@ Living screensaver wants, sent on connect and on every change (all off while the
 The TV clips every field. LG/Samsung: `POST /v1/living` on `omarchy-tv webos-serve` with the prefs as body and the ask
 code, every 3 s while the screensaver runs → the same object. The PC refuses all of it with `livingToTv: false`.
 
+### Omastorm on the TV (v2.14)
+
+**Event `omastorm`** (TV → PC): `{"action": "start"}` | `{"action": "key", "key": <name>}` | `{"action": "stop"}`, only
+with the TV's Omastorm plugin on. `start`: the PC summons Omastorm (`omarchy shell shell summon com.omastorm.radar '{}'`),
+resizes the window to 1280×720 and casts just that rectangle (`OMARCHY_LINK_SCREEN_REGION`, gpu-screen-recorder
+`-w region` or wf-recorder `-g`) as a live cast titled `Omastorm`. `key` names (`left right up down play next prev
+oldest newest zoom_in zoom_out reset pixels glyphs stipple nearest mosaic locate aviation focus weak help close`) become
+Omastorm's own default bindings via `hyprctl dispatch sendshortcut … address:<that window>`. `stop` ends the stream and
+closes the window. `omastormFromTv: false` refuses.
+**Event `omastorm_state`** (PC → TV, `{"state"}`): why it did not start (`disabled`, `no_omarchy`, `not_installed`, `failed`).
+
 ### Widgets (`PUT /v1/widgets`)
 
 ```json

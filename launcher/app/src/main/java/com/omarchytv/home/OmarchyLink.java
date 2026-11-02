@@ -326,6 +326,20 @@ public final class OmarchyLink implements LinkServer.Host {
     }
 
     /** Reverse theme sync: tell the paired PC(s) the theme just picked on the TV. Fire and forget. */
+    /** v2.14 Omastorm from the PC: action "start" | "key" (with key) | "stop". */
+    static void omastorm(String action, String key) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || r.server.connectedClients() == 0) return;
+        bg.execute(() -> {
+            try {
+                JSONObject o = new JSONObject().put("action", action);
+                if (key != null) o.put("key", key);
+                r.server.broadcast("omastorm", o);
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
     /** v2.14 send the Living screensaver prefs to the connected PCs (on connect and when a setting changes). */
     static void livingPrefs() {
         OmarchyLink r = runtime;

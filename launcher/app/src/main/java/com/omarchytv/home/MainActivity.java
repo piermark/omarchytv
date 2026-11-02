@@ -152,6 +152,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         Theme.apply(getWindow().getDecorView());
         BootScreenView.onCreate(this, findViewById(R.id.root));   // v2.14 boot screen (once per boot by default)
         current = new java.lang.ref.WeakReference<>(this);
+        CrtOverlay.attach(findViewById(R.id.root), LauncherConfig.get(this).pluginRetroCrt);   // v2.14 Retro CRT plugin
         // Lights hub only while OmarchyTV is on screen; the snapshot ("Restore previous") is queued before the paint.
         com.omarchytv.home.lights.LightsPresence.install(this, new com.omarchytv.home.lights.LightsPresence.Painter() {
             @Override
@@ -772,6 +773,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
         }
         items.add(new Walker.Item("X (x.com)", tApp, () -> WebAppActivity.open(this, LauncherConfig.X_WEBAPP)));
+        if (cfg.pluginOmastorm) items.add(new Walker.Item("⛈ Omastorm (radar)", tApp, this::openOmastorm));
         items.add(new Walker.Item("🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", str(R.string.cinemarchy_hub), () -> open(new Intent(this, CinemarchyActivity.class))));
         items.add(new Walker.Item("Aquarium Screensaver (Omarchy Cyber-TUI Ocean)", str(R.string.menu_screensaver), () -> {
             LauncherConfig.update(this, j -> screensaver(j).put("art", "aquarium").put("mode", "aquarium"));
@@ -881,6 +883,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "stats":
                 if (resumed && home != null) home.refresh();
                 break;
+            case "omastorm_state": {   // v2.14 the PC could not open Omastorm
+                String st = data.optString("state");
+                Toast.makeText(this, "not_installed".equals(st) ? str(R.string.omastorm_not_installed)
+                        : getString(R.string.omastorm_failed, st), Toast.LENGTH_LONG).show();
+                break;
+            }
             case "liftoff":   // v2.14 a build/update on the PC: rocket countdown, alarm if it fails
                 LiftoffView.onState(this, findViewById(R.id.root), data, resumed);
                 break;
@@ -967,7 +975,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     protected void onResume() {
         super.onResume();
-        BootScreenView.onResume(this, findViewById(R.id.root));   // "wake" mode: replay after the screen came on
+        BootScreenView.onResume(this, findViewById(R.id.root));
+        OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));   // v2.14 OmaFire animated wallpaper   // "wake" mode: replay after the screen came on
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
         LauncherConfig cfg = LauncherConfig.get(this);
@@ -1061,6 +1070,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     protected void onPause() {
         super.onPause();
         if (companion != null) { companion.setArmed(false); companion.stop(); }
+        OmaFireLayer.onPause();
         resumed = false;
         OmarchyLink.setHomeVisible(false);
         handler.removeCallbacks(idle);
@@ -1081,6 +1091,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         super.onDestroy();
         BootScreenView.onDestroy(this);
         LiftoffView.onDestroy();
+        OmaFireLayer.onPause();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm != null) cm.unregisterNetworkCallback(networkCallback);
         OmarchyLink.removeListener(linkListener);
@@ -1873,6 +1884,25 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(this::showGrokbotCompanionDialog);
             return false;
         });
+        // v2.14 Retro CRT: off -> light -> strong (curved tube on Android 13+).
+        String lCrt = str(R.string.plugin_retro_crt);
+        String[] crtModes = {"off", "light", "strong"};
+        p.add(lCrt, crtLabel(cfg.pluginRetroCrt), r -> {
+            String n = next(crtModes, cfg.pluginRetroCrt);
+            applyLive("plugins", lCrt, j -> plugins(j).put("retroCrt", n));
+            return true;
+        });
+        // v2.14 Omastorm (Wes Grimes, MIT): the real radar window from the Omarchy PC, driven by the remote.
+        String lStorm = "Omastorm (@wesleygrimes, MIT)";
+        p.add(lStorm, cfg.pluginOmastorm ? on : off, r -> {
+            boolean n = !cfg.pluginOmastorm;
+            applyLive("plugins", lStorm, j -> plugins(j).put("omastorm", n));
+            return true;
+        });
+        if (cfg.pluginOmastorm) p.add(str(R.string.omastorm_open), "⛈ ›", r -> {
+            handler.post(this::openOmastorm);
+            return false;
+        });
         return p;
     }
 
@@ -2194,6 +2224,28 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     private String livingXLabel(String m) {
         if ("api".equals(m)) return str(R.string.living_x_api);
         if ("notify".equals(m)) return str(R.string.living_x_notify);
+        return str(R.string.off);
+    }
+
+    /** v2.14 Omastorm: ask the PC to show its Omastorm window here (it arrives as a cast titled "Omastorm"). */
+    private void openOmastorm() {
+        if (!OmarchyLink.hasPc()) {
+            Toast.makeText(this, R.string.omastorm_need_pc, Toast.LENGTH_LONG).show();
+            return;
+        }
+        OmarchyLink.omastorm("start", null);
+        Toast.makeText(this, R.string.omastorm_opening, Toast.LENGTH_LONG).show();
+    }
+
+    private static org.json.JSONObject plugins(org.json.JSONObject j) throws org.json.JSONException {
+        org.json.JSONObject o = j.optJSONObject("plugins");
+        if (o == null) j.put("plugins", o = new org.json.JSONObject());
+        return o;
+    }
+
+    private String crtLabel(String m) {
+        if ("light".equals(m)) return str(R.string.crt_light);
+        if ("strong".equals(m)) return str(R.string.crt_strong);
         return str(R.string.off);
     }
 
@@ -3157,6 +3209,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             String label = Theme.cur().name + " · " + f;
             p.add(label, !cfg.randomWallpaper && omarchy && idx == cur ? str(R.string.mark_current) : (omarchy && idx == cur ? "●" : ""), r -> {
                 applyLive("wallpaper", label, j -> LauncherConfig.lockWallpaper(j, "omarchy", idx));
+                return true;
+            });
+        }
+        for (String fm : new String[]{"campfire", "embers"}) {   // v2.14 OmaFire (Wes Grimes, MIT), animated
+            String label = "OmaFire · " + str("campfire".equals(fm) ? R.string.omafire_campfire : R.string.omafire_embers);
+            p.add(label, ("omafire:" + fm).equals(cfg.wallpaper) ? str(R.string.mark_current) : "", r -> {
+                applyLive("wallpaper", label, j -> LauncherConfig.lockWallpaper(j, "omafire:" + fm, 0));
                 return true;
             });
         }

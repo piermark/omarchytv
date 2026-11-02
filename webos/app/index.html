@@ -701,6 +701,22 @@ html, body {
   height: 100%;
   border: none;
 }
+/* v2.14 Retro CRT plugin: scanlines, phosphor mask, vignette, flicker, theme-coloured bezel (applyCrt) */
+#crt-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 8000; pointer-events: none; display: none;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.19) 2px, rgba(0,0,0,.19) 3px),
+    repeating-linear-gradient(to right, rgba(255,0,0,.045) 0, rgba(255,0,0,.045) 1px, rgba(0,255,0,.03) 1px, rgba(0,255,0,.03) 2px, rgba(0,0,255,.045) 2px, rgba(0,0,255,.045) 3px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,.42) 100%);
+  border: 1.1vh solid var(--t-bg, #1a1b26); border-radius: 3.2vh; box-sizing: border-box;
+  box-shadow: inset 0 0 0 .25vh var(--t-accent, #7aa2f7), inset 0 0 4vh rgba(0,0,0,.65), inset 0 0 1.4vh var(--t-accent, #7aa2f7);
+  -webkit-animation: crt-flicker 3.2s infinite; animation: crt-flicker 3.2s infinite; }
+#crt-overlay.on { display: block; }
+#crt-overlay.strong { background:
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.33) 2px, rgba(0,0,0,.33) 3px),
+    repeating-linear-gradient(to right, rgba(255,0,0,.07) 0, rgba(255,0,0,.07) 1px, rgba(0,255,0,.05) 1px, rgba(0,255,0,.05) 2px, rgba(0,0,255,.07) 2px, rgba(0,0,255,.07) 3px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%); }
+@-webkit-keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .97; } 48% { opacity: 1; } 76% { opacity: .985; } }
+@keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .97; } 48% { opacity: 1; } 76% { opacity: .985; } }
 /* v2.14 liftoff: build/update countdown (liftoff.js) */
 #liftoff { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; background: rgba(0,0,0,.86); font-family: inherit; }
 #liftoff.failed.blink { background: rgba(120,0,0,.55); }
@@ -1010,6 +1026,8 @@ html, body {
 <script src="boot.js"></script>
 <script src="liftoff.js"></script>
 <script src="living.js"></script>
+<script src="vendor/omafire/fire.js"></script>
+<script src="vendor/omafire/omafire-wall.js"></script>
 <script src="lang.js"></script>
 <script src="i18n.js"></script>
 <script src="app.js"></script>

@@ -433,4 +433,15 @@
     <string name="living_x_budget">Maandlimiet van de X-API bereikt (xMonthlyUsd)</string>
     <string name="living_x_error">X-API nu niet bereikbaar</string>
     <string name="x_keys_hint">X · ▲▼ posts · OK openen · 1 vind-ik-leuk · 2 reageren · 3 repost · 4 nieuwe post · 5 zoeken · 0 home · 9 meldingen · 8 berichten</string>
+    <string name="omafire_campfire">kampvuur</string>
+    <string name="omafire_embers">gloeiende kolen</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">licht</string>
+    <string name="crt_strong">sterk</string>
+    <string name="omastorm_open">Omastorm openen (radar)</string>
+    <string name="omastorm_need_pc">Omastorm draait op de Omarchy-pc: koppel eerst de pc</string>
+    <string name="omastorm_opening">Omastorm wordt geopend op de pc…</string>
+    <string name="omastorm_not_installed">Omastorm is niet geïnstalleerd op de pc (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm kon niet starten: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ verschuiven · OK afspelen · ⏩⏪ beelden · 1 2 3 stijl · 4 dichtstbijzijnde radar · 5 6 zoom · 7 alle radars · 8 mijn locatie · 9 luchtvaart · 0 reset · TERUG sluiten</string>
 </resources>

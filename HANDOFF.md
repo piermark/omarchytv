@@ -1,7 +1,7 @@
-# HANDOFF — branch `feature/living-x`
+# HANDOFF — branch `feature/crt-omafire-omastorm`
 
 Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
-**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app** (each built on the previous).
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation** (each built on the previous).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -285,4 +285,48 @@ Screensaver settings (Android: Screensaver page; LG/Samsung: Screensaver modal):
   shortcuts fire from synthetic key events on every X build.
 - X API with a real token: endpoint access on the account's plan, real billing vs the estimate in `living.py`.
 - Notifications from Omarchy's mako on a real Omarchy PC (dbus-monitor permission is per user, no root needed).
+
+
+# I. Retro CRT plugin
+
+`plugins.retroCrt` "off" (default) | "light" | "strong". Android: `CrtOverlay.java` on R.id.root (scanline 1×3 shader,
+RGB mask 3×1 shader, radial vignette, rounded bezel: theme bgDarker body, accent edge + glow, flicker every 120 ms);
+"strong" + Android 13 (API 33) adds `RenderEffect.createRuntimeShaderEffect` with a small AGSL barrel shader on the
+root (guarded by SDK_INT and @TargetApi(33)). LG/Samsung: `#crt-overlay` CSS (index.html) toggled by `applyCrt()`
+in app.js, colours from the theme CSS variables, so it follows theme changes. Plugins page/modal row.
+
+# J. OmaFire animated wallpapers
+
+`webos/app/vendor/omafire/` and `launcher/app/src/main/assets/omafire/` (identical, test enforces): Wes Grimes'
+`fire.js` (only `.pragma library` dropped and wrapped as `window.OmaFire`, header says so), `campsite-approved.webp`,
+LICENSE (MIT); `omafire-wall.js` (ours) runs it full screen at 30 fps, modes campfire/embers. Wallpaper values
+`omafire:campfire` / `omafire:embers`. Android: `OmaFireLayer.java` adds a WebView (assets only, no network) above
+the still wallpaper on resume and removes it on pause. NOTICE + assets/licenses/omafire-MIT.txt.
+
+# K. Omastorm from the PC (Android TV)
+
+- PC `omarchy_link/omastorm.py`: summon the window (title "Omastorm"), resize 1280×720, cast its rectangle
+  (`cast.screen_argv` honours `OMARCHY_LINK_SCREEN_REGION`), remote keys → `hyprctl dispatch sendshortcut` to that
+  window only (names = Omastorm ui/Keys.js defaults), stop = Escape. Events `omastorm` / `omastorm_state`.
+- Android: plugin toggle + "Open Omastorm" (Plugins page, Walker), `OmastormKeys.java` (remote → names, test checks
+  every name exists on the PC), CastPlayerActivity forwards keys when the cast title is "Omastorm" and the plugin is on.
+- LG/Samsung: not in this package (their app has no live-cast player); the native view comes next.
+
+# L. Living animation
+
+`living.js` `mount()`: lines typed in at 45 ms each, changed lines (ignoring the "3m"→"4m" ticks) decrypt from
+random glyphs over 0.9 s (`scramble()`), then the panel glows in the accent colour.
+
+## Verified (I–L)
+
+- Headless Chromium (LG/Samsung page): OmaFire campfire + Retro CRT strong render together (screenshot), no errors.
+- node 123 tests (incl. omafire.test.js, living), omarchy-link run.sh incl. test_omastorm, Java OmastormKeysTest,
+  LiftoffScriptTest, TranslationsTest; every changed Java line compiles against API 34.
+
+## NOT verified (to do)
+
+- Gradle build + lint; CRT overlay and AGSL curve on a real Android TV (GPU cost on low-end boxes).
+- OmaFire in the Android WebView on a TV (30 fps, memory), and on webOS 3/4 (no `image-rendering: pixelated`: soft).
+- Omastorm with a real Omastorm install: window title/size, `hyprctl sendshortcut` reaching a Quickshell
+  FloatingWindow, gpu-screen-recorder `-region` syntax on the installed version, latency.
 

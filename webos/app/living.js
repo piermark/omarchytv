@@ -116,7 +116,24 @@
     var a = (d.notes || [])[0], b = (d.x || [])[0];
     return (a ? "n" + a.at + a.title + a.body : "") + "|" + (b ? "x" + b.at + b.user + b.text : "");
   }
-  /** Shows the scene on the right of host; update(data) as often as you like. */
+  var GLYPHS = "\u2588\u2593\u2592\u2591/\\|<>*+#=-_";
+  /** tte-style "decrypt": the first p (0..1) of the non-space characters are real, the rest random glyphs. */
+  function scramble(line, p, rnd) {
+    rnd = rnd || Math.random;
+    var out = "", n = 0, total = line.replace(/\s/g, "").length, keep = Math.floor(total * Math.max(0, Math.min(1, p)));
+    for (var i = 0; i < line.length; i++) {
+      var ch = line.charAt(i);
+      if (/\s/.test(ch) || /[\u2500-\u257f]/.test(ch)) { out += ch; continue; }
+      out += n < keep ? ch : GLYPHS.charAt(Math.floor(rnd() * GLYPHS.length));
+      n++;
+    }
+    return out;
+  }
+  /**
+   * Shows the scene on the right of host; update(data) as often as you like. Omarchy-style motion: the boxes are
+   * typed in line by line the first time, and every line that changes (a notification, a mention, a new push)
+   * "decrypts" from random glyphs like the tte screensaver effects, then glows for a few seconds.
+   */
   function mount(host, opts) {
     opts = opts || {};
     var doc = host.ownerDocument || document;
@@ -130,26 +147,49 @@
     s.textShadow = "0 0 6px " + (opts.accent || "#7aa2f7");
     s.transition = "color .4s";
     host.appendChild(pre);
-    var last = null, data = null, blinkUntil = 0, timer = null;
-    function draw() {
+    var data = null, lines = [], prevText = {}, born = {}, t0 = 0, last = null, blinkUntil = 0, timer = null;
+    var TYPE_MS = 45, DECRYPT_MS = 900;
+    function same(l) { return l.replace(/(now|\d+[mhd]) *\u2502$/, "\u2502").replace(/ +\u2502$/, "\u2502"); }   // "3m" -> "4m" is not news
+    function frame() {
+      timer = setTimeout(frame, busy() ? 60 : 350);
       if (!data) return;
-      var lines = render(data, { width: opts.width || 44, labels: opts.labels, maxItems: opts.maxItems || 3 });
-      pre.textContent = lines.join("\n");
+      var now = Date.now(), shown = Math.floor((now - t0) / TYPE_MS), out = [];
+      for (var i = 0; i < lines.length && i <= shown; i++) {
+        var b = born[i];
+        out.push(b && now - b < DECRYPT_MS ? scramble(lines[i], (now - b) / DECRYPT_MS) : lines[i]);
+      }
+      pre.textContent = out.join("\n");
       pre.style.display = lines.length ? "block" : "none";
-      var hot = Date.now() < blinkUntil && Math.floor(Date.now() / 350) % 2 === 0;
+      var hot = now < blinkUntil && Math.floor(now / 350) % 2 === 0;
       pre.style.color = hot ? (opts.accent || "#7aa2f7") : (opts.color || "#c0caf5");
     }
-    timer = setInterval(draw, 350);
+    function busy() {
+      var now = Date.now();
+      if (now - t0 < lines.length * TYPE_MS) return true;
+      for (var k in born) if (now - born[k] < DECRYPT_MS) return true;
+      return now < blinkUntil;
+    }
+    frame();
     return {
       update: function (d) {
-        var k = newest(d);
-        if (last !== null && k !== last && k !== "|") blinkUntil = Date.now() + 4000;
-        last = k; data = d; draw();
+        var k = newest(d), first = data === null, now = Date.now();
+        if (last !== null && k !== last && k !== "|") blinkUntil = now + 4000;
+        last = k; data = d;
+        var next = render(d, { width: opts.width || 44, labels: opts.labels, maxItems: opts.maxItems || 3 });
+        if (first) t0 = now;
+        else {
+          for (var i = 0; i < next.length; i++) {   // a line that is new or different decrypts in
+            if (!prevText[same(next[i])] && /[^\s\u2500-\u257f]/.test(next[i]) && !/^\u2502 *\u2502$/.test(next[i])) born[i] = now;
+          }
+        }
+        prevText = {};
+        for (var j = 0; j < next.length; j++) prevText[same(next[j])] = true;
+        lines = next;
       },
-      destroy: function () { clearInterval(timer); if (pre.parentNode) pre.parentNode.removeChild(pre); }
+      destroy: function () { clearTimeout(timer); timer = null; data = null; if (pre.parentNode) pre.parentNode.removeChild(pre); }
     };
   }
-  var api = { ART: ART, artFor: artFor, ago: ago, wrap: wrap, box: box, render: render, newest: newest, mount: mount };
+  var api = { ART: ART, artFor: artFor, ago: ago, wrap: wrap, box: box, render: render, newest: newest, scramble: scramble, mount: mount };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.OmarchyLiving = api;
 })(typeof window !== "undefined" ? window : this);

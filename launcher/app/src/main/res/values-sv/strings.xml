@@ -433,4 +433,15 @@
     <string name="living_x_budget">X-API:ts månadsgräns nådd (xMonthlyUsd)</string>
     <string name="living_x_error">X-API:t går inte att nå just nu</string>
     <string name="x_keys_hint">X · ▲▼ inlägg · OK öppna · 1 gilla · 2 svara · 3 repost · 4 nytt inlägg · 5 sök · 0 hem · 9 aviseringar · 8 meddelanden</string>
+    <string name="omafire_campfire">lägereld</string>
+    <string name="omafire_embers">glöd</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">lätt</string>
+    <string name="crt_strong">stark</string>
+    <string name="omastorm_open">Öppna Omastorm (radar)</string>
+    <string name="omastorm_need_pc">Omastorm körs på Omarchy-datorn: para datorn först</string>
+    <string name="omastorm_opening">Öppnar Omastorm på datorn…</string>
+    <string name="omastorm_not_installed">Omastorm är inte installerat på datorn (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm kunde inte starta: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ panorera · OK spela · ⏩⏪ bilder · 1 2 3 stil · 4 närmaste radar · 5 6 zoom · 7 alla radarer · 8 min plats · 9 flyg · 0 återställ · TILLBAKA stäng</string>
 </resources>

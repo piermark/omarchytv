@@ -18,7 +18,7 @@ import threading
 import time
 
 from . import ai, assistant, client as link, config, grokbot, mdns, netcheck, panes, stats, sync, theme
-from . import liftoff, living, power
+from . import liftoff, living, omastorm, power
 
 KEYS = {"home", "back", "up", "down", "left", "right", "select", "play_pause", "play", "pause",
         "stop", "next", "previous", "rewind", "fast_forward", "volume_up", "volume_down", "mute",
@@ -186,6 +186,8 @@ class Session:
             self.run_action(str(data.get("command", "")), confirmed=False)
         elif kind == "theme_set":
             self.handle_theme_set(data)
+        elif kind == "omastorm":   # v2.14 Omastorm radar window from this PC to the TV
+            self.handle_omastorm(data)
         elif kind == "living_prefs":
             self._living().set_prefs(data)
             self.living_sig = None
@@ -470,6 +472,22 @@ class Session:
             if info.get("wifi"):
                 self.log("Wake-on-LAN: this PC reaches the TV over Wi-Fi; most PCs only wake over Ethernet")
             self.stream.send("pc_wol", {"mac": info["mac"], "broadcast": info.get("broadcast")})
+
+    def handle_omastorm(self, data: dict) -> None:
+        st = getattr(self, "omastorm", None)
+        if st is None:
+            st = self.omastorm = omastorm.Session(self.log)
+        action = data.get("action")
+        if action == "start":
+            res = st.start(self.cfg)
+            if res not in ("ok", "running"):
+                self.log(f"Omastorm on the TV: {res}")
+                if self.stream:
+                    self.stream.send("omastorm_state", {"state": res})
+        elif action == "key":
+            st.key(str(data.get("key", "")))
+        elif action == "stop":
+            st.stop()
 
     def _living(self) -> living.Living:
         lv = getattr(self, "living", None)

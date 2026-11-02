@@ -2203,6 +2203,9 @@ public final class LinkServer {
                 host.onEvent(c.pcId, "pc_wol", wol);
                 break;
             }
+            case "omastorm_state":   // v2.14 the PC could not open Omastorm (not_installed, disabled, ...)
+                host.onEvent(c.pcId, type, new JSONObject().put("state", printable(data.optString("state", ""), 24)));
+                break;
             case "living":   // v2.14 Living screensaver feed (GitHub, PC notifications, X), memory only
                 host.onEvent(c.pcId, type, living(data));
                 break;

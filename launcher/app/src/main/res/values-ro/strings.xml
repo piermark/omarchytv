@@ -433,4 +433,15 @@
     <string name="living_x_budget">Limita lunară a API-ului X a fost atinsă (xMonthlyUsd)</string>
     <string name="living_x_error">API-ul X nu răspunde acum</string>
     <string name="x_keys_hint">X · ▲▼ postări · OK deschide · 1 apreciez · 2 răspunde · 3 repost · 4 postare nouă · 5 căutare · 0 acasă · 9 notificări · 8 mesaje</string>
+    <string name="omafire_campfire">foc de tabără</string>
+    <string name="omafire_embers">jar</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">ușor</string>
+    <string name="crt_strong">puternic</string>
+    <string name="omastorm_open">Deschide Omastorm (radar)</string>
+    <string name="omastorm_need_pc">Omastorm rulează pe PC-ul Omarchy: asociază mai întâi PC-ul</string>
+    <string name="omastorm_opening">Deschid Omastorm pe PC…</string>
+    <string name="omastorm_not_installed">Omastorm nu este instalat pe PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm nu a pornit: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ mută · OK redare · ⏩⏪ cadre · 1 2 3 stil · 4 cel mai apropiat radar · 5 6 zoom · 7 toate radarele · 8 locația mea · 9 aviație · 0 resetare · ÎNAPOI închide</string>
 </resources>

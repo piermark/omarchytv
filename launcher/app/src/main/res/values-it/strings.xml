@@ -437,4 +437,15 @@
     <string name="living_x_budget">Raggiunto il limite mensile dell\'API di X (xMonthlyUsd)</string>
     <string name="living_x_error">API di X non raggiungibile ora</string>
     <string name="x_keys_hint">X · ▲▼ post · OK apri · 1 mi piace · 2 rispondi · 3 repost · 4 nuovo post · 5 cerca · 0 home · 9 notifiche · 8 messaggi</string>
+    <string name="omafire_campfire">falò</string>
+    <string name="omafire_embers">braci</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">leggero</string>
+    <string name="crt_strong">forte</string>
+    <string name="omastorm_open">Apri Omastorm (radar)</string>
+    <string name="omastorm_need_pc">Omastorm gira sul PC Omarchy: collega prima il PC</string>
+    <string name="omastorm_opening">Apro Omastorm sul PC…</string>
+    <string name="omastorm_not_installed">Omastorm non è installato sul PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm non si è avviato: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ sposta · OK play · ⏩⏪ fotogrammi · 1 2 3 stile · 4 radar vicino · 5 6 zoom · 7 tutti i radar · 8 la mia posizione · 9 aviazione · 0 reset · INDIETRO chiudi</string>
 </resources>

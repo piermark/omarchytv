@@ -67,6 +67,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_not_set_up: "X API not set up: omarchy-link x setup on the PC",
       living_x_budget: "X API monthly limit reached (xMonthlyUsd)",
       living_x_error: "X API not reachable right now",
+      omafire_campfire: "campfire",
+      omafire_embers: "embers",
+      plugin_retro_crt: "Retro CRT",
+      crt_light: "light",
+      crt_strong: "strong",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -126,6 +131,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_not_set_up: "API di X non configurata: omarchy-link x setup sul PC",
       living_x_budget: "Raggiunto il limite mensile dell'API di X (xMonthlyUsd)",
       living_x_error: "API di X non raggiungibile ora",
+      omafire_campfire: "falò",
+      omafire_embers: "braci",
+      plugin_retro_crt: "Retro CRT",
+      crt_light: "leggero",
+      crt_strong: "forte",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -185,6 +195,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_not_set_up: "X-API nicht eingerichtet: omarchy-link x setup auf dem PC",
       living_x_budget: "Monatslimit der X-API erreicht (xMonthlyUsd)",
       living_x_error: "X-API gerade nicht erreichbar",
+      omafire_campfire: "Lagerfeuer",
+      omafire_embers: "Glut",
+      plugin_retro_crt: "Retro CRT",
+      crt_light: "leicht",
+      crt_strong: "stark",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -236,6 +251,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     livingNotes: false,     // ...with every notification from the Omarchy PC (POST /v1/living)
     livingX: "off",         // ..."off" | "notify" (X notifications shown on the PC, free) | "api" (X API on the PC, paid)
     livingGithub: true,
+    pluginRetroCrt: "off",  // v2.14 Retro CRT plugin: "off" | "light" | "strong" (scanlines, mask, vignette, theme bezel)
     pcPower: false,         // v2.14 LG: the PC suspends when the TV turns off (POST /v1/power; needs TV control approved)
     themeToPc: false,       // v2.14 reverse theme sync: a theme picked here also switches the PC (POST /v1/theme/set)
     bootScreen: "boot",     // v2.14 boot screen (boot.js): "boot" at app start, "wake" also after standby, "off"
@@ -478,7 +494,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var wlist = DATA.wallpapers[cfg.theme] || [];
     var picked = cfg.wallpaper && cfg.wallpaper !== "plain" && allWallpapers().indexOf(cfg.wallpaper) >= 0 ? cfg.wallpaper : "";
     var activeWp = "";
-    if (picked) {
+    omafireWall(wl);
+    applyCrt();
+    if (/^omafire:/.test(cfg.wallpaper || "")) {
+      wl.style.backgroundImage = "none";   // v2.14 OmaFire draws into the layer itself
+    } else if (picked) {
       activeWp = picked;
       wl.style.backgroundImage = "url('" + picked + "')";
     } else if (cfg.proceduralBg || cfg.wallpaper === "plain" || !wlist.length) {
@@ -1751,6 +1771,29 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   // Wallpaper picker: follow the theme (default), plain theme colours, or any theme's background.
   // Picking applies at once and keeps the menu open on that row, so you can compare a few.
+  // ---- v2.14 Retro CRT plugin: CSS overlay, bezel in the theme's colours (follows every theme change) ----
+  function applyCrt() {
+    var el = document.getElementById("crt-overlay");
+    if (!el) { el = document.createElement("div"); el.id = "crt-overlay"; document.body.appendChild(el); }
+    var m = cfg.pluginRetroCrt === "light" || cfg.pluginRetroCrt === "strong" ? cfg.pluginRetroCrt : "off";
+    el.className = m === "off" ? "" : "on" + (m === "strong" ? " strong" : "");
+  }
+
+  // ---- v2.14 OmaFire animated wallpapers (vendor/omafire: Wes Grimes' campsite, MIT) ----
+  var omafireUi = null, omafireMode = "";
+  function omafireWall(layer) {
+    var m = /^omafire:(campfire|embers)$/.exec(cfg.wallpaper || "");
+    if (!m || !window.OmaFireWall) {
+      if (omafireUi) { omafireUi.destroy(); omafireUi = null; omafireMode = ""; }
+      return;
+    }
+    if (omafireUi && omafireMode === m[1]) return;
+    if (omafireUi) omafireUi.destroy();
+    layer.style.position = layer.style.position || "absolute";
+    omafireUi = window.OmaFireWall.mount(layer, { mode: m[1] });
+    omafireMode = m[1];
+  }
+
   function openWallpaperModal(keepFocus) {
     var focus = state.modalIdx;
     function pick(v) { cfg.wallpaper = v; cfg.randomWallpaper = false; saveCfg(); applyTheme(); openWallpaperModal(true); }
@@ -1759,7 +1802,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.randomWallpaper = !cfg.randomWallpaper; saveCfg(); openWallpaperModal(true);
       } },
       { label: tr("wp_follow"), right: !cfg.randomWallpaper && !cfg.wallpaper ? "✓" : (!cfg.wallpaper ? "●" : ""), act: function () { pick(""); } },
-      { label: tr("wp_plain"), right: !cfg.randomWallpaper && cfg.wallpaper === "plain" ? "✓" : "", act: function () { pick("plain"); } }
+      { label: tr("wp_plain"), right: !cfg.randomWallpaper && cfg.wallpaper === "plain" ? "✓" : "", act: function () { pick("plain"); } },
+      { label: "OmaFire \u00b7 " + tr("omafire_campfire"), right: cfg.wallpaper === "omafire:campfire" ? "✓" : "", act: function () { pick("omafire:campfire"); } },
+      { label: "OmaFire \u00b7 " + tr("omafire_embers"), right: cfg.wallpaper === "omafire:embers" ? "✓" : "", act: function () { pick("omafire:embers"); } }
     ];
     allWallpapers().forEach(function (p) {
       var parts = p.split("/");   // wallpapers/<theme>/<NN-name>.webp
@@ -2530,7 +2575,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
       { label: "🤖 Open Grok Bot companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } },
-      { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui }
+      { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
+      { label: "📺 " + tr("plugin_retro_crt"), right: tr(cfg.pluginRetroCrt === "strong" ? "crt_strong" : cfg.pluginRetroCrt === "light" ? "crt_light" : "off"), act: function () {
+        var m = ["off", "light", "strong"];
+        cfg.pluginRetroCrt = m[(m.indexOf(cfg.pluginRetroCrt || "off") + 1) % m.length]; saveCfg(); applyCrt(); openPluginsModal();
+      } }
     ]);
   }
 

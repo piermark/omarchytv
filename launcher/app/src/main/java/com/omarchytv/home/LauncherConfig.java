@@ -401,6 +401,9 @@ final class LauncherConfig {
     final boolean syncPcWallpaper;
     /** v2.14 reverse theme sync (default false): a theme picked on the TV also switches the paired PC. */
     final boolean themeToPc;
+    /** v2.14 plugins: Retro CRT ("off" | "light" | "strong") and Omastorm (radar from the PC), both off by default. */
+    final String pluginRetroCrt;
+    final boolean pluginOmastorm;
     /** v2.14 Living screensaver (default off): weather, GitHub, PC notifications (livingNotes, default off) and X
      *  (livingX "off" | "notify" | "api") in ASCII boxes next to the screensaver art. */
     final boolean living, livingNotes, livingGithub;
@@ -692,6 +695,9 @@ final class LauncherConfig {
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
         pluginSpacexTv = plObj == null || plObj.optBoolean("spacexTv", true);
         pluginGrokbot = plObj == null || plObj.optBoolean("grokbot", true);
+        String crt = plObj != null ? plObj.optString("retroCrt", "off") : "off";
+        pluginRetroCrt = "light".equals(crt) || "strong".equals(crt) ? crt : "off";
+        pluginOmastorm = plObj != null && plObj.optBoolean("omastorm", false);
         grokbotMessage = plObj != null ? plObj.optString("grokbotMessage", "") : "";
         JSONObject gbBot = plObj != null ? plObj.optJSONObject("grokbotBot") : null;
         grokbotBotName = gbBot != null ? gbBot.optString("shortName", gbBot.optString("name", "")) : "";

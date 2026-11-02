@@ -433,4 +433,15 @@
     <string name="living_x_budget">Συμπληρώθηκε το μηνιαίο όριο του X API (xMonthlyUsd)</string>
     <string name="living_x_error">Το X API δεν είναι διαθέσιμο τώρα</string>
     <string name="x_keys_hint">X · ▲▼ αναρτήσεις · OK άνοιγμα · 1 μου αρέσει · 2 απάντηση · 3 repost · 4 νέα ανάρτηση · 5 αναζήτηση · 0 αρχική · 9 ειδοποιήσεις · 8 μηνύματα</string>
+    <string name="omafire_campfire">φωτιά κατασκήνωσης</string>
+    <string name="omafire_embers">θράκα</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">ελαφρύ</string>
+    <string name="crt_strong">έντονο</string>
+    <string name="omastorm_open">Άνοιγμα Omastorm (ραντάρ)</string>
+    <string name="omastorm_need_pc">Το Omastorm τρέχει στο PC Omarchy: συνδέστε πρώτα το PC</string>
+    <string name="omastorm_opening">Άνοιγμα του Omastorm στο PC…</string>
+    <string name="omastorm_not_installed">Το Omastorm δεν είναι εγκατεστημένο στο PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Το Omastorm δεν ξεκίνησε: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ μετακίνηση · OK αναπαραγωγή · ⏩⏪ καρέ · 1 2 3 στυλ · 4 κοντινότερο ραντάρ · 5 6 ζουμ · 7 όλα τα ραντάρ · 8 η θέση μου · 9 αεροπορία · 0 επαναφορά · ΠΙΣΩ κλείσιμο</string>
 </resources>

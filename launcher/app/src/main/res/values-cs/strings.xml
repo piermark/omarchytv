@@ -433,4 +433,15 @@
     <string name="living_x_budget">Dosažen měsíční limit X API (xMonthlyUsd)</string>
     <string name="living_x_error">X API teď není dostupné</string>
     <string name="x_keys_hint">X · ▲▼ příspěvky · OK otevřít · 1 líbí se · 2 odpovědět · 3 repost · 4 nový příspěvek · 5 hledat · 0 domů · 9 oznámení · 8 zprávy</string>
+    <string name="omafire_campfire">táborák</string>
+    <string name="omafire_embers">žhavé uhlíky</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">jemný</string>
+    <string name="crt_strong">silný</string>
+    <string name="omastorm_open">Otevřít Omastorm (radar)</string>
+    <string name="omastorm_need_pc">Omastorm běží na PC s Omarchy: nejprve spárujte PC</string>
+    <string name="omastorm_opening">Otevírám Omastorm na PC…</string>
+    <string name="omastorm_not_installed">Omastorm není na PC nainstalován (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm se nespustil: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ posun · OK přehrát · ⏩⏪ snímky · 1 2 3 styl · 4 nejbližší radar · 5 6 zoom · 7 všechny radary · 8 moje poloha · 9 letectví · 0 reset · ZPĚT zavřít</string>
 </resources>

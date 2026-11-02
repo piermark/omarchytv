@@ -43,6 +43,7 @@ DEFAULTS = {
     "xApi": True,               # X API mentions when the TV picks "X: API" (needs `omarchy-link x setup`)
     "xPollMinutes": 3,          # only while the TV screensaver runs, only new mentions
     "xMonthlyUsd": 1.0,         # estimated X API spend per month; polling stops at this
+    "omastormFromTv": True,     # the TV's Omastorm plugin may show this PC's Omastorm window (stream of that window only)
     "liftoffToTv": True,        # show `omarchy-link liftoff -- <build>` and TV updates as a countdown on the TV        # the TV may switch the PC's theme ("theme_set"; the TV asks only when its own setting is on)
     "pcPane": True,             # push the "this PC" info pane every minute while connected
     "aiCredits": True,          # push ai.json providers (if the file exists)

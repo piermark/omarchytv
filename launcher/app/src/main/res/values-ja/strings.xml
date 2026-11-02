@@ -433,4 +433,15 @@
     <string name="living_x_budget">X API の月間上限に達しました（xMonthlyUsd）</string>
     <string name="living_x_error">現在 X API に接続できません</string>
     <string name="x_keys_hint">X · ▲▼ ポスト · OK 開く · 1 いいね · 2 返信 · 3 リポスト · 4 新規ポスト · 5 検索 · 0 ホーム · 9 通知 · 8 メッセージ</string>
+    <string name="omafire_campfire">たき火</string>
+    <string name="omafire_embers">熾火</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">弱</string>
+    <string name="crt_strong">強</string>
+    <string name="omastorm_open">Omastorm を開く（レーダー）</string>
+    <string name="omastorm_need_pc">Omastorm は Omarchy PC で動きます：先に PC をペアリングしてください</string>
+    <string name="omastorm_opening">PC で Omastorm を開いています…</string>
+    <string name="omastorm_not_installed">PC に Omastorm がインストールされていません（omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable）</string>
+    <string name="omastorm_failed">Omastorm を起動できませんでした：%1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ 移動 · OK 再生 · ⏩⏪ コマ · 1 2 3 スタイル · 4 最寄りのレーダー · 5 6 ズーム · 7 全レーダー · 8 現在地 · 9 航空 · 0 リセット · 戻る 閉じる</string>
 </resources>

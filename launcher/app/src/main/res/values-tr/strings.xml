@@ -433,4 +433,15 @@
     <string name="living_x_budget">X API aylık sınırına ulaşıldı (xMonthlyUsd)</string>
     <string name="living_x_error">X API şu anda ulaşılamıyor</string>
     <string name="x_keys_hint">X · ▲▼ gönderiler · OK aç · 1 beğen · 2 yanıtla · 3 repost · 4 yeni gönderi · 5 ara · 0 ana sayfa · 9 bildirimler · 8 mesajlar</string>
+    <string name="omafire_campfire">kamp ateşi</string>
+    <string name="omafire_embers">köz</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">hafif</string>
+    <string name="crt_strong">güçlü</string>
+    <string name="omastorm_open">Omastorm\'u aç (radar)</string>
+    <string name="omastorm_need_pc">Omastorm Omarchy PC\'de çalışır: önce PC\'yi eşleştirin</string>
+    <string name="omastorm_opening">Omastorm PC\'de açılıyor…</string>
+    <string name="omastorm_not_installed">Omastorm PC\'de kurulu değil (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm başlatılamadı: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ kaydır · OK oynat · ⏩⏪ kareler · 1 2 3 stil · 4 en yakın radar · 5 6 yakınlaştır · 7 tüm radarlar · 8 konumum · 9 havacılık · 0 sıfırla · GERİ kapat</string>
 </resources>

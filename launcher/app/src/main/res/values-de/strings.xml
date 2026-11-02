@@ -437,4 +437,15 @@
     <string name="living_x_budget">Monatslimit der X-API erreicht (xMonthlyUsd)</string>
     <string name="living_x_error">X-API gerade nicht erreichbar</string>
     <string name="x_keys_hint">X · ▲▼ Posts · OK öffnen · 1 Gefällt mir · 2 Antworten · 3 Repost · 4 Neuer Post · 5 Suche · 0 Start · 9 Mitteilungen · 8 Nachrichten</string>
+    <string name="omafire_campfire">Lagerfeuer</string>
+    <string name="omafire_embers">Glut</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">leicht</string>
+    <string name="crt_strong">stark</string>
+    <string name="omastorm_open">Omastorm öffnen (Radar)</string>
+    <string name="omastorm_need_pc">Omastorm läuft auf dem Omarchy-PC: zuerst den PC koppeln</string>
+    <string name="omastorm_opening">Omastorm wird auf dem PC geöffnet…</string>
+    <string name="omastorm_not_installed">Omastorm ist auf dem PC nicht installiert (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm konnte nicht starten: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ verschieben · OK Wiedergabe · ⏩⏪ Bilder · 1 2 3 Stil · 4 nächstes Radar · 5 6 Zoom · 7 alle Radare · 8 mein Standort · 9 Luftfahrt · 0 zurücksetzen · ZURÜCK schließen</string>
 </resources>
