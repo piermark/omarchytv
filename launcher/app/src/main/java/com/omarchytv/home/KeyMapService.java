@@ -49,6 +49,7 @@ public class KeyMapService extends AccessibilityService {
         int code = e.getKeyCode();
         LauncherConfig.KeyBinding[] b = LauncherConfig.get(this).keys.get(code);
         if (b != null && !RemoteProfiles.handles(this, e)) b = null;   // only profiled buttons of known remotes
+        if (b != null && code == KeyEvent.KEYCODE_HOME && homeGivenBack()) b = null;   // let the TV's own Home through
         if (b == null) {
             if (code == activeKey) reset();   // unbound while a press was in progress
             return false;
@@ -81,6 +82,14 @@ public class KeyMapService extends AccessibilityService {
         int n = count;
         reset();
         if (b != null && n > 0) run(LauncherConfig.keyPressBinding(b, n));
+    }
+
+    /**
+     * Same rule as HomeOverride: after the crash watchdog gave the home screen back, or in "Originale" mode,
+     * a bound Home button must not keep opening OmarchyTV.
+     */
+    private boolean homeGivenBack() {
+        return Watchdog.crashedTooOften(this) || Originale.isOriginal(this);
     }
 
     private void reset() {
