@@ -7,7 +7,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   var APP_VERSION = "2.13.10";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
-  var START_TIME = Date.now() - (42 * 60 * 1000); // default 42m uptime look
+  var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)
 
   var STRINGS = {
     en: {
@@ -526,7 +526,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var info = document.getElementById("term-info");
     info.innerHTML =
       '<span style="color:' + t.accent + '">' + tr("term_theme") + '</span><span style="color:' + t.fg + '">' + cfg.theme + '</span>\n' +
-      '<span style="color:' + t.accent + '">' + tr("term_net") + '</span><span style="color:' + t.fg + '">Wi-Fi</span>\n' +
+      '<span style="color:' + t.accent + '">' + tr("term_net") + '</span><span style="color:' + t.fg + '">' + (navigator.onLine === false ? "offline" : "online") + '</span>\n' +
       '<span style="color:' + t.accent + '">' + tr("term_up") + '</span><span style="color:' + t.fg + '">' + upStr + '</span>' +
       '<span style="color:' + t.fgDim + '"> · ' + APP_VERSION + '</span>';
   }
@@ -540,7 +540,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function formatAiPane(s) {
     if (!Array.isArray(s.ai)) {
-      return "Claude   $" + (s.claude || "18.40") + " left\nOpenAI   $" + (s.openai || "42.10") + " left\nxAI Grok $" + (s.xai || "95.00") + " left";
+      // No made-up amounts when the PC doesn't send them (issue #5, point 10).
+      return "Claude   " + (s.claude ? "$" + s.claude + " left" : "—") + "\nOpenAI   " + (s.openai ? "$" + s.openai + " left" : "—") + "\nxAI Grok " + (s.xai ? "$" + s.xai + " left" : "—");
     }
     var mode = cfg.aiCredits === "dollars" ? "dollars" : "percent";
     var rows = s.ai;
@@ -3038,10 +3039,20 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           cfg.pcSimulated = !cfg.pcSimulated;
           saveCfg(); pollPcStatus(); renderAll();
         } else {
-          openModal("Pair Omarchy Linux PC", "Enter your Omarchy PC LAN IP (serves http://<ip>:8765/v1/status):", [
+          // Typed address is used (issue #5, point 4): "Connect to …" appears as the first item once it looks valid.
+          var pairTyped = "";
+          var pairItems = [
             { label: "Use 192.168.1.100:8765", right: "LAN", act: function () { cfg.pcHost = "192.168.1.100"; saveCfg(); pollPcStatus(); closeModal(); } },
             { label: "Toggle simulated PC link", right: cfg.pcSimulated ? "on" : "off", act: function () { cfg.pcSimulated = !cfg.pcSimulated; saveCfg(); pollPcStatus(); closeModal(); } }
-          ], "192.168.1.x");
+          ];
+          openModal("Pair Omarchy Linux PC", "Enter your Omarchy PC LAN IP (serves http://<ip>:8765/v1/status):", pairItems.slice(), "192.168.1.x", function (v) {
+            pairTyped = (v || "").trim();
+            var ok = /^(https?:\/\/)?[A-Za-z0-9.-]+(:\d{1,5})?\/?$/.test(pairTyped);
+            state.modalItems = (ok ? [{ label: "Connect to " + pairTyped, right: "OK", act: function () {
+              cfg.pcHost = pairTyped.replace(/\/+$/, ""); cfg.pcSimulated = false; saveCfg(); pollPcStatus(); closeModal();
+            } }] : []).concat(pairItems);
+            state.modalIdx = 0; renderModalList();
+          });
         }
         e.preventDefault(); return;
       }
