@@ -126,6 +126,8 @@
         "liftoff_stage_launch": "a iniciar",
         "liftoff_exit": "código %s",
         "living_waiting": "à espera do PC Omarchy…",
+        "boot_sound": "Som de arranque",
+        "omafire_sound": "Som do OmaFire",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -286,6 +288,8 @@
         "liftoff_stage_launch": "iniciando",
         "liftoff_exit": "código %s",
         "living_waiting": "aguardando o PC Omarchy…",
+        "boot_sound": "Som de inicialização",
+        "omafire_sound": "Som do OmaFire",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -446,6 +450,8 @@
         "liftoff_stage_launch": "iniciando",
         "liftoff_exit": "código %s",
         "living_waiting": "esperando al PC Omarchy…",
+        "boot_sound": "Sonido de arranque",
+        "omafire_sound": "Sonido de OmaFire",
         "wmo": {
           "0": "despejado",
           "1": "mayormente despejado",
@@ -606,6 +612,8 @@
         "liftoff_stage_launch": "démarrage",
         "liftoff_exit": "code %s",
         "living_waiting": "en attente du PC Omarchy…",
+        "boot_sound": "Son au démarrage",
+        "omafire_sound": "Son d'OmaFire",
         "wmo": {
           "0": "dégagé",
           "1": "plutôt dégagé",
@@ -766,6 +774,8 @@
         "liftoff_stage_launch": "starten",
         "liftoff_exit": "code %s",
         "living_waiting": "wachten op de Omarchy-pc…",
+        "boot_sound": "Opstartgeluid",
+        "omafire_sound": "OmaFire-geluid",
         "wmo": {
           "0": "helder",
           "1": "overwegend helder",
@@ -926,6 +936,8 @@
         "liftoff_stage_launch": "uruchamianie",
         "liftoff_exit": "kod %s",
         "living_waiting": "czekam na PC z Omarchy…",
+        "boot_sound": "Dźwięk startu",
+        "omafire_sound": "Dźwięk OmaFire",
         "wmo": {
           "0": "bezchmurnie",
           "1": "przeważnie bezchmurnie",
@@ -1086,6 +1098,8 @@
         "liftoff_stage_launch": "startar",
         "liftoff_exit": "kod %s",
         "living_waiting": "väntar på Omarchy-datorn…",
+        "boot_sound": "Startljud",
+        "omafire_sound": "OmaFire-ljud",
         "wmo": {
           "0": "klart",
           "1": "mestadels klart",
@@ -1246,6 +1260,8 @@
         "liftoff_stage_launch": "starter",
         "liftoff_exit": "kode %s",
         "living_waiting": "venter på Omarchy-pc'en…",
+        "boot_sound": "Startlyd",
+        "omafire_sound": "OmaFire-lyd",
         "wmo": {
           "0": "klart",
           "1": "overvejende klart",
@@ -1406,6 +1422,8 @@
         "liftoff_stage_launch": "spouštění",
         "liftoff_exit": "kód %s",
         "living_waiting": "čekám na PC s Omarchy…",
+        "boot_sound": "Zvuk při startu",
+        "omafire_sound": "Zvuk OmaFire",
         "wmo": {
           "0": "jasno",
           "1": "skoro jasno",
@@ -1566,6 +1584,8 @@
         "liftoff_stage_launch": "pornire",
         "liftoff_exit": "cod %s",
         "living_waiting": "aștept PC-ul Omarchy…",
+        "boot_sound": "Sunet la pornire",
+        "omafire_sound": "Sunet OmaFire",
         "wmo": {
           "0": "senin",
           "1": "mai mult senin",
@@ -1726,6 +1746,8 @@
         "liftoff_stage_launch": "εκκίνηση",
         "liftoff_exit": "κωδικός %s",
         "living_waiting": "αναμονή για το PC Omarchy…",
+        "boot_sound": "Ήχος εκκίνησης",
+        "omafire_sound": "Ήχος OmaFire",
         "wmo": {
           "0": "αίθριος",
           "1": "κυρίως αίθριος",
@@ -1886,6 +1908,8 @@
         "liftoff_stage_launch": "запуск приложения",
         "liftoff_exit": "код %s",
         "living_waiting": "жду ПК Omarchy…",
+        "boot_sound": "Звук загрузки",
+        "omafire_sound": "Звук OmaFire",
         "wmo": {
           "0": "ясно",
           "1": "преимущественно ясно",
@@ -2046,6 +2070,8 @@
         "liftoff_stage_launch": "正在启动",
         "liftoff_exit": "退出码 %s",
         "living_waiting": "正在等待 Omarchy 电脑…",
+        "boot_sound": "开机声音",
+        "omafire_sound": "OmaFire 声音",
         "wmo": {
           "0": "晴",
           "1": "大致晴朗",
@@ -2206,6 +2232,8 @@
         "liftoff_stage_launch": "起動中",
         "liftoff_exit": "終了コード %s",
         "living_waiting": "Omarchy PC を待っています…",
+        "boot_sound": "起動音",
+        "omafire_sound": "OmaFire のサウンド",
         "wmo": {
           "0": "晴れ",
           "1": "おおむね晴れ",
@@ -2366,6 +2394,8 @@
         "liftoff_stage_launch": "جارٍ التشغيل",
         "liftoff_exit": "الرمز %s",
         "living_waiting": "في انتظار حاسوب Omarchy…",
+        "boot_sound": "صوت الإقلاع",
+        "omafire_sound": "صوت OmaFire",
         "wmo": {
           "0": "صافٍ",
           "1": "صافٍ غالبًا",
@@ -2526,6 +2556,8 @@
         "liftoff_stage_launch": "başlatılıyor",
         "liftoff_exit": "çıkış %s",
         "living_waiting": "Omarchy PC bekleniyor…",
+        "boot_sound": "Açılış sesi",
+        "omafire_sound": "OmaFire sesi",
         "wmo": {
           "0": "açık",
           "1": "çoğunlukla açık",
@@ -2686,6 +2718,8 @@
         "liftoff_stage_launch": "запуск",
         "liftoff_exit": "код %s",
         "living_waiting": "чекаю на ПК Omarchy…",
+        "boot_sound": "Звук завантаження",
+        "omafire_sound": "Звук OmaFire",
         "wmo": {
           "0": "ясно",
           "1": "переважно ясно",
@@ -2846,6 +2880,8 @@
         "liftoff_stage_launch": "indítás",
         "liftoff_exit": "kód %s",
         "living_waiting": "várakozás az Omarchy PC-re…",
+        "boot_sound": "Indítási hang",
+        "omafire_sound": "OmaFire hang",
         "wmo": {
           "0": "derült",
           "1": "többnyire derült",
@@ -3006,6 +3042,8 @@
         "liftoff_stage_launch": "käynnistetään",
         "liftoff_exit": "koodi %s",
         "living_waiting": "odotetaan Omarchy-PC:tä…",
+        "boot_sound": "Käynnistysääni",
+        "omafire_sound": "OmaFire-ääni",
         "wmo": {
           "0": "selkeää",
           "1": "enimmäkseen selkeää",
@@ -3166,6 +3204,8 @@
         "liftoff_stage_launch": "starter",
         "liftoff_exit": "kode %s",
         "living_waiting": "venter på Omarchy-PC-en…",
+        "boot_sound": "Oppstartslyd",
+        "omafire_sound": "OmaFire-lyd",
         "wmo": {
           "0": "klarvær",
           "1": "for det meste klart",

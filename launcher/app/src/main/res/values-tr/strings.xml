@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">başlatılıyor</string>
     <string name="liftoff_exit">çıkış %1$s</string>
     <string name="living_waiting">Omarchy PC bekleniyor…</string>
+    <string name="boot_sound">Açılış sesi</string>
+    <string name="omafire_sound">OmaFire sesi</string>
 </resources>

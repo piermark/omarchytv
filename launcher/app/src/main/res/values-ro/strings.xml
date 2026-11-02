@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">pornire</string>
     <string name="liftoff_exit">cod %1$s</string>
     <string name="living_waiting">aștept PC-ul Omarchy…</string>
+    <string name="boot_sound">Sunet la pornire</string>
+    <string name="omafire_sound">Sunet OmaFire</string>
 </resources>

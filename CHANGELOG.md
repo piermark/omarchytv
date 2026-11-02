@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Sounds: OmaFire and the boot screen (draft)
+
+- **OmaFire sound** (Wallpaper settings, off by default: with it off you get only the animated wallpaper): Wes Grimes' own sounds and mixing, as in his plugin: the embers, crackle and roar loops follow the fire's heat, a log and a stoke land when the fire is fed, and crickets and frogs call across the lake. Only while Home is on screen.
+- **Boot sound** (Launcher settings, on by default, quiet): the CRT's power-on thump and degauss hum, the POST beep, the memory count, a disk seek per systemd line, keystrokes as `omarchy-tv` is typed, and a whoosh with a soft chord when the wordmark appears. Synthesised live, no audio files; the same cues on Android TV, LG and Samsung.
+
 ### Live screensaver, Retro CRT set, liftoff in every language (draft)
 
 - **Live screensaver** (Screensaver settings, off by default): a screensaver of its own, no art under it. Big glowing block clock, an animated ASCII sky (rain falls, the sun's rays turn, snow, storms), the PC's notifications, X mentions, GitHub, the PC's CPU/RAM bars and a turning ASCII radar, a ticker and a status line, on dark glass panels so everything stays readable. Behind them: theme-coloured glyph rain, a synthwave grid rolling in at the bottom and a refresh sweep. Every new notification or mention crashes in as an INCOMING banner across the bottom (shake + decrypt, never over the boxes), then settles in its box. Light: half-resolution backdrop, redraws only what changed, pauses when hidden, drops the rain on slow TVs by itself; drifts a few pixels a minute against burn-in.

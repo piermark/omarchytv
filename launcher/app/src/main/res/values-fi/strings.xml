@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">käynnistetään</string>
     <string name="liftoff_exit">koodi %1$s</string>
     <string name="living_waiting">odotetaan Omarchy-PC:tä…</string>
+    <string name="boot_sound">Käynnistysääni</string>
+    <string name="omafire_sound">OmaFire-ääni</string>
 </resources>

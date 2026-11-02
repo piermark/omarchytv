@@ -80,6 +80,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_stage_launch: "starting",
       liftoff_exit: "exit %s",
       living_waiting: "waiting for the Omarchy PC…",
+      boot_sound: "Boot sound",
+      omafire_sound: "OmaFire sound",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -152,6 +154,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_stage_launch: "avvio",
       liftoff_exit: "uscita %s",
       living_waiting: "in attesa del PC Omarchy…",
+      boot_sound: "Suono all'avvio",
+      omafire_sound: "Suono di OmaFire",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -224,6 +228,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_stage_launch: "Start der App",
       liftoff_exit: "Exit %s",
       living_waiting: "warte auf den Omarchy-PC…",
+      boot_sound: "Startton",
+      omafire_sound: "OmaFire-Ton",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -276,6 +282,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     livingX: "off",         // ..."off" | "notify" (X notifications shown on the PC, free) | "api" (X API on the PC, paid)
     livingGithub: true,
     livingRadar: false,     // ...Omastorm's radar in the weather box (a snapshot of the PC's Omastorm window every 90 s)
+    bootSound: true,        // v2.14 boot screen sound (synthesised: CRT power-on, POST beep, disk, keys, wordmark)
+    omafireSound: false,    // v2.14 OmaFire wallpaper sound (Wes Grimes' fire loops, log/stoke, night ambience)
     pluginRetroCrt: "off",  // v2.14 Retro CRT plugin: "off" | "light" | "strong" (scanlines, mask, vignette, theme bezel)
     pcPower: false,         // v2.14 LG: the PC suspends when the TV turns off (POST /v1/power; needs TV control approved)
     themeToPc: false,       // v2.14 reverse theme sync: a theme picked here also switches the PC (POST /v1/theme/set)
@@ -1688,6 +1696,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         var m = ["boot", "wake", "off"];
         cfg.bootScreen = m[(m.indexOf(cfg.bootScreen || "boot") + 1) % m.length]; saveCfg(); openAllSettingsModal(true);
       } },
+      { label: "  " + tr("boot_sound"), right: cfg.bootSound !== false ? "on" : "off", act: function () {
+        cfg.bootSound = cfg.bootSound === false; saveCfg(); openAllSettingsModal(true);
+      } },
       { label: tr("theme_to_pc"), right: cfg.themeToPc ? "on" : "off", act: function () {
         cfg.themeToPc = !cfg.themeToPc; saveCfg(); openAllSettingsModal(true);
       } }
@@ -1831,10 +1842,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       if (omafireUi) { omafireUi.destroy(); omafireUi = null; omafireMode = ""; }
       return;
     }
-    if (omafireUi && omafireMode === m[1]) return;
+    if (omafireUi && omafireMode === m[1]) { omafireUi.setSound(!!cfg.omafireSound); return; }
     if (omafireUi) omafireUi.destroy();
     layer.style.position = layer.style.position || "absolute";
-    omafireUi = window.OmaFireWall.mount(layer, { mode: m[1] });
+    omafireUi = window.OmaFireWall.mount(layer, { mode: m[1], sound: !!cfg.omafireSound });
     omafireMode = m[1];
   }
 
@@ -1848,7 +1859,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("wp_follow"), right: !cfg.randomWallpaper && !cfg.wallpaper ? "✓" : (!cfg.wallpaper ? "●" : ""), act: function () { pick(""); } },
       { label: tr("wp_plain"), right: !cfg.randomWallpaper && cfg.wallpaper === "plain" ? "✓" : "", act: function () { pick("plain"); } },
       { label: "OmaFire \u00b7 " + tr("omafire_campfire"), right: cfg.wallpaper === "omafire:campfire" ? "✓" : "", act: function () { pick("omafire:campfire"); } },
-      { label: "OmaFire \u00b7 " + tr("omafire_embers"), right: cfg.wallpaper === "omafire:embers" ? "✓" : "", act: function () { pick("omafire:embers"); } }
+      { label: "OmaFire \u00b7 " + tr("omafire_embers"), right: cfg.wallpaper === "omafire:embers" ? "✓" : "", act: function () { pick("omafire:embers"); } },
+      { label: "  " + tr("omafire_sound"), right: cfg.omafireSound ? "on" : "off", act: function () {
+        cfg.omafireSound = !cfg.omafireSound; saveCfg(); applyTheme(); openWallpaperModal(true);
+      } }
     ];
     allWallpapers().forEach(function (p) {
       var parts = p.split("/");   // wallpapers/<theme>/<NN-name>.webp
@@ -3633,6 +3647,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       var mem = Number(navigator.deviceMemory) || 0;   // GB, rounded by the browser; absent on old engines
       return {
         mode: cfg.bootScreen || "boot",
+        sound: cfg.bootSound !== false,
         version: APP_VERSION,
         theme: cfg.theme,
         model: tvModel(),

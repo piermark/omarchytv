@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">démarrage</string>
     <string name="liftoff_exit">code %1$s</string>
     <string name="living_waiting">en attente du PC Omarchy…</string>
+    <string name="boot_sound">Son au démarrage</string>
+    <string name="omafire_sound">Son d\'OmaFire</string>
 </resources>

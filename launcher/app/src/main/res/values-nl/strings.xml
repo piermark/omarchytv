@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">starten</string>
     <string name="liftoff_exit">code %1$s</string>
     <string name="living_waiting">wachten op de Omarchy-pc…</string>
+    <string name="boot_sound">Opstartgeluid</string>
+    <string name="omafire_sound">OmaFire-geluid</string>
 </resources>

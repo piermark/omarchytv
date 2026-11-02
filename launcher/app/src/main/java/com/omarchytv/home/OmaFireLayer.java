@@ -57,6 +57,7 @@ final class OmaFireLayer {
         s.setJavaScriptEnabled(true);
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
+        s.setMediaPlaybackRequiresUserGesture(false);   // v2.14 OmaFire sound (only when omafireSound is on)
         final android.content.res.AssetManager assets = a.getAssets();
         w.setWebViewClient(new WebViewClient() {
             @Override
@@ -69,7 +70,7 @@ final class OmaFireLayer {
                 try {
                     InputStream in = assets.open(p.substring("/assets/".length()));
                     String mime = p.endsWith(".js") ? "text/javascript" : p.endsWith(".html") ? "text/html"
-                            : p.endsWith(".webp") ? "image/webp" : "application/octet-stream";
+                            : p.endsWith(".webp") ? "image/webp" : p.endsWith(".wav") ? "audio/wav" : "application/octet-stream";
                     return new WebResourceResponse(mime, "utf-8", in);
                 } catch (Exception e) {
                     return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found", null, null);
@@ -82,7 +83,7 @@ final class OmaFireLayer {
             }
         });
         parent.addView(w, parent.indexOfChild(wall) + 1, new ViewGroup.LayoutParams(wall.getLayoutParams()));
-        w.loadUrl("https://" + HOST + "/assets/omafire/index.html#" + m);
+        w.loadUrl("https://" + HOST + "/assets/omafire/index.html#" + m + (LauncherConfig.get(a).omafireSound ? "&sound" : ""));
         web = w;
     }
 

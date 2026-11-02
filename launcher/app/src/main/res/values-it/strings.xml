@@ -456,4 +456,6 @@
     <string name="liftoff_stage_launch">avvio</string>
     <string name="liftoff_exit">uscita %1$s</string>
     <string name="living_waiting">in attesa del PC Omarchy…</string>
+    <string name="boot_sound">Suono all\'avvio</string>
+    <string name="omafire_sound">Suono di OmaFire</string>
 </resources>

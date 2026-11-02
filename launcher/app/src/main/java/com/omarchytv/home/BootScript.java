@@ -272,6 +272,36 @@ final class BootScript {
     }
 
     /** True during the dark half of the flicker right after a CLEAR. */
+    /**
+     * v2.14 boot sound: the cues between two clock times (from exclusive, to inclusive; from &lt; 0 = the start):
+     * power, beep (first BIOS line), tick (memory count), zap (screen clear), disk (each systemd line), key (each
+     * typed character), whoosh (the wordmark). Same as webos/app/boot.js cues(); played by {@link BootSound}.
+     */
+    java.util.List<String> cues(int from, int to) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (from < 0 && to >= 0) out.add("power");
+        boolean firstPost = true, firstLogo = true;
+        for (Line l : lines) {
+            boolean hit = l.at > from && l.at <= to;
+            if (l.kind == Kind.POST) {
+                if (firstPost && hit) out.add("beep");
+                firstPost = false;
+            } else if (l.kind == Kind.MEMTEST && hit) out.add("tick");
+            else if (l.kind == Kind.CLEAR && hit) out.add("zap");
+            else if (l.kind == Kind.OK && hit) out.add("disk");
+            else if (l.kind == Kind.PROMPT && l.detail != null) {
+                for (int c = 0; c < l.detail.length(); c++) {
+                    int at = l.at + c * 55;
+                    if (at > from && at <= to) out.add("key");
+                }
+            } else if (l.kind == Kind.LOGO) {
+                if (firstLogo && hit) out.add("whoosh");
+                firstLogo = false;
+            }
+        }
+        return out;
+    }
+
     boolean flickering(int ms) {
         for (Line l : lines) {
             if (l.kind == Kind.CLEAR && ms >= l.at && ms < l.at + FLICKER_MS) return ((ms - l.at) / 35) % 2 == 0;

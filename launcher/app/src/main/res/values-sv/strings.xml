@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">startar</string>
     <string name="liftoff_exit">kod %1$s</string>
     <string name="living_waiting">väntar på Omarchy-datorn…</string>
+    <string name="boot_sound">Startljud</string>
+    <string name="omafire_sound">OmaFire-ljud</string>
 </resources>

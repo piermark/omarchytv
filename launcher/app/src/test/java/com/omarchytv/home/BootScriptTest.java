@@ -208,4 +208,21 @@ public class BootScriptTest {
         assertEquals("wake", LauncherConfig.bootScreenMode(" Wake "));
         assertEquals("off", LauncherConfig.bootScreenMode("off"));
     }
+
+    @Test
+    public void bootSoundCues() {
+        BootScript s = BootScript.build("2.14.0", "gruvbox", "Sony KD-55XE9005", 2048, "1920x1080", 12, "user", "omarchytv", READY);
+        java.util.List<String> all = s.cues(-1, Integer.MAX_VALUE);
+        org.junit.Assert.assertEquals(1, java.util.Collections.frequency(all, "power"));
+        org.junit.Assert.assertEquals(1, java.util.Collections.frequency(all, "beep"));
+        org.junit.Assert.assertEquals(1, java.util.Collections.frequency(all, "whoosh"));
+        org.junit.Assert.assertEquals("omarchy-tv".length(), java.util.Collections.frequency(all, "key"));
+        java.util.List<String> step = new java.util.ArrayList<>();
+        int last = -1;
+        for (int ms = 0; ms < s.fadeAt + 1000; ms += 33) { step.addAll(s.cues(last, ms)); last = ms; }
+        java.util.Collections.sort(step);
+        java.util.List<String> sorted = new java.util.ArrayList<>(s.cues(-1, s.fadeAt + 1000));
+        java.util.Collections.sort(sorted);
+        org.junit.Assert.assertEquals(sorted, step);
+    }
 }

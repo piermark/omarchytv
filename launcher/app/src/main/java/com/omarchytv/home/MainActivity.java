@@ -2299,6 +2299,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("launcher", lBoot, j -> j.put("bootScreen", n));
             return true;
         });
+        String lBootSnd = "  " + str(R.string.boot_sound);
+        p.add(lBootSnd, str(cfg.bootSound ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.bootSound;
+            applyLive("launcher", lBootSnd, j -> j.put("bootSound", n));
+            return true;
+        });
         String lToPc = str(R.string.theme_to_pc);
         p.add(lToPc, str(cfg.themeToPc ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.themeToPc;
@@ -3219,6 +3225,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 return true;
             });
         }
+        String lFireSnd = "  " + str(R.string.omafire_sound);
+        p.add(lFireSnd, str(cfg.omafireSound ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.omafireSound;
+            applyLive("wallpaper", lFireSnd, j -> j.put("omafireSound", n));
+            return true;
+        });
         p.add(str(R.string.wp_procedural), "procedural".equals(cfg.wallpaper) ? str(R.string.mark_current) : "", r -> {
             applyLive("wallpaper", str(R.string.wp_procedural), j -> LauncherConfig.lockWallpaper(j, "procedural", 0));
             return true;

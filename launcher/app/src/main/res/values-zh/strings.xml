@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">正在启动</string>
     <string name="liftoff_exit">退出码 %1$s</string>
     <string name="living_waiting">正在等待 Omarchy 电脑…</string>
+    <string name="boot_sound">开机声音</string>
+    <string name="omafire_sound">OmaFire 声音</string>
 </resources>

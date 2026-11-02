@@ -134,3 +134,15 @@ test("index.html loads boot.js before app.js", () => {
   const html = fs.readFileSync(__dirname + "/../app/index.html", "utf8");
   assert.ok(html.indexOf("boot.js") > 0 && html.indexOf("boot.js") < html.indexOf("app.js"));
 });
+
+test("boot sound cues: power, one beep, a disk per systemd line, a key per typed letter, one whoosh", () => {
+  const s = B.build(opts(READY));
+  const all = B.cues(s, -1, 1e9), n = (k) => all.filter((x) => x === k).length;
+  assert.deepStrictEqual([n("power"), n("beep"), n("tick"), n("zap"), n("whoosh"), n("key")], [1, 1, 1, 1, 1, "omarchy-tv".length]);
+  assert.strictEqual(n("disk"), s.lines.filter((l) => l.kind === "ok").length);
+  let step = [], last = -1;   // played frame by frame, nothing is lost or repeated
+  for (let ms = 0; ms < s.endAt; ms += 33) { step = step.concat(B.cues(s, last, ms)); last = ms; }
+  assert.deepStrictEqual(step.slice().sort(), B.cues(s, -1, s.endAt).sort());
+  const java = fs.readFileSync(JAVA + "BootScript.java", "utf8");
+  ["power", "beep", "tick", "zap", "disk", "key", "whoosh"].forEach((c) => assert.ok(java.indexOf('"' + c + '"') > 0, c));
+});

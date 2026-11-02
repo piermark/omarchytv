@@ -456,4 +456,6 @@
     <string name="liftoff_stage_launch">Start der App</string>
     <string name="liftoff_exit">Exit %1$s</string>
     <string name="living_waiting">warte auf den Omarchy-PC…</string>
+    <string name="boot_sound">Startton</string>
+    <string name="omafire_sound">OmaFire-Ton</string>
 </resources>

@@ -1,7 +1,7 @@
 # HANDOFF — branch `feature/omarchytv-v214-pack`
 
 Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
-**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live** (each built on the previous).
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live**, **Q. OmaFire sound**, **R. Boot sound** (each built on the previous).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -374,4 +374,27 @@ The TV puts it in the weather box in place of the ASCII sky. Test: `test_omastor
 - Gradle build + lint. Live screen on a real Android TV saver WebView (font fit, 10 fps backdrop cost, lite switch).
 - CRT on Android: decor-view overlay + scaled root with AsciiMenu popups and dialogs (they are separate windows,
   not scaled). Omastorm snapshot with a real Omastorm window and grim on Hyprland.
+
+
+# Q. OmaFire sound
+
+`omafireSound` (default false; Wallpaper settings row "OmaFire sound"). Vendored unchanged with a wrapper like
+fire.js: `sound.js` (layer gains), `night.js` (ambience), the 8 .wav files. `omafire-audio.js` (ours) follows his
+`FireAudio.qml`: three WebAudio loops with gains `0.5 × sound.js(heat, boost)` eased over 0.6 s, one-shots at 0.2,
+night calls every 100 ms, 0.3 s fade, resumes on the first key (TV autoplay rules). `omafire-wall.js` feeds it the
+fire's heat/boost and plays log/stoke when it feeds the fire. Android: `OmaFireLayer` passes `&sound` in the page
+hash, allows media without a gesture, serves .wav. Test: `omafire.test.js` (files identical on both, gains, night).
+
+# R. Boot sound
+
+`bootSound` (default true; Launcher settings row under Boot screen). `boot.js cues(script, from, to)` and
+`BootScript.cues(from, to)` give the same cues from the script's own line times (power, beep, tick, zap, disk ×
+systemd lines, key × typed letters, whoosh). LG/Samsung: `boot-sound.js` (WebAudio synthesis, optional
+OfflineAudioContext for previews); Android: `BootSound.java` (PCM synthesis, static AudioTrack on its own thread).
+Tests: `boot.test.js` and `BootScriptTest.bootSoundCues` (frame-by-frame playback loses or repeats nothing).
+
+## NOT verified (Q, R)
+
+- Real TVs: autoplay at app start (webOS/Tizen may hold audio until the first key press), volume level, AudioTrack
+  latency on low-end Android TV boxes.
 

@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">起動中</string>
     <string name="liftoff_exit">終了コード %1$s</string>
     <string name="living_waiting">Omarchy PC を待っています…</string>
+    <string name="boot_sound">起動音</string>
+    <string name="omafire_sound">OmaFire のサウンド</string>
 </resources>

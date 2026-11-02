@@ -421,6 +421,8 @@ final class LauncherConfig {
     final String bootScreen;
     /** v2.14 boot screen scanlines and text glow (default true). */
     final boolean bootFx;
+    /** v2.14 boot screen sound (default true) and OmaFire wallpaper sound (default false). */
+    final boolean bootSound, omafireSound;
     /** v2.13: rotate among animated themes on Home resume/boot (default true; locked false on manual pick). */
     final boolean randomTheme;
     /** v2.13: rotate among animated wallpapers/intros on Home resume/boot (default true; locked false on manual pick). */
@@ -691,6 +693,8 @@ final class LauncherConfig {
         wallpaperLoop = j != null && j.optBoolean("wallpaperLoop", false);
         bootScreen = bootScreenMode(j != null ? j.optString("bootScreen", "boot") : "boot");
         bootFx = j == null || j.optBoolean("bootFx", true);
+        bootSound = j == null || j.optBoolean("bootSound", true);
+        omafireSound = j != null && j.optBoolean("omafireSound", false);
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
         randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;

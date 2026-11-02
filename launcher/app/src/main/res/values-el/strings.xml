@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">εκκίνηση</string>
     <string name="liftoff_exit">κωδικός %1$s</string>
     <string name="living_waiting">αναμονή για το PC Omarchy…</string>
+    <string name="boot_sound">Ήχος εκκίνησης</string>
+    <string name="omafire_sound">Ήχος OmaFire</string>
 </resources>

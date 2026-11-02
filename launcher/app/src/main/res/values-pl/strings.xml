@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">uruchamianie</string>
     <string name="liftoff_exit">kod %1$s</string>
     <string name="living_waiting">czekam na PC z Omarchy…</string>
+    <string name="boot_sound">Dźwięk startu</string>
+    <string name="omafire_sound">Dźwięk OmaFire</string>
 </resources>

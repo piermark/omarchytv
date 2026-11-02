@@ -52,6 +52,9 @@ final class BootScreenView extends View {
     private final int bg, fg, fgBright, fgDim, accent, accent2, green, red, yellow;
     private long start;
     private boolean fading, done;
+    /** v2.14 boot sound (bootSound, default on): cues from {@link BootScript#cues}, played by {@link BootSound}. */
+    private BootSound sound;
+    private int lastMs = -1;
 
     private BootScreenView(Context c, BootScript script, boolean fx) {
         super(c);
@@ -159,6 +162,7 @@ final class BootScreenView extends View {
         BootScript s = BootScript.build(version, Theme.cur().name, model, ramMb, displayMode(a), appCount(a),
                 cfg.promptUser, cfg.promptHost, new TvState(a.getApplicationContext()));
         BootScreenView v = new BootScreenView(a, s, cfg.bootFx);
+        if (cfg.bootSound) v.sound = new BootSound(0.5f);
         showing = v;
         root.addView(v, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
@@ -272,6 +276,8 @@ final class BootScreenView extends View {
         if (w == 0 || h == 0) return;
         int real = (int) (SystemClock.uptimeMillis() - start);
         int ms = script.clock(real);   // held while network / omarchy-link really wait
+        if (sound != null && !fading) for (String cue : script.cues(lastMs, ms)) sound.cue(cue);
+        lastMs = ms;
 
         if (ms < BootScript.CRT_MS) {
             drawCrt(canvas, w, h, BootScript.crt(ms));
@@ -419,6 +425,10 @@ final class BootScreenView extends View {
     }
 
     private void finish() {
+        if (sound != null) {
+            sound.close();
+            sound = null;
+        }
         if (done) return;
         done = true;
         animate().cancel();

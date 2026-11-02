@@ -165,6 +165,28 @@
   function crt(ms) { return Math.max(0, Math.min(1, ms / CRT_MS)); }
 
   /** True during the dark half of the flicker right after a "clear". */
+  /**
+   * v2.14 boot sound: the cues between two clock times (from exclusive, to inclusive; from < 0 = the start).
+   * power (the tube switching on), beep (the POST beep with the first BIOS line), tick (the memory count),
+   * zap (the screen clearing), disk (each systemd line), key (each typed character), whoosh (the wordmark).
+   * Same cues as BootScript.cues on Android.
+   */
+  function cues(script, from, to) {
+    var out = [], firstPost = true, firstLogo = true;
+    if (from < 0 && to >= 0) out.push("power");
+    for (var i = 0; i < script.lines.length; i++) {
+      var l = script.lines[i], hit = l.at > from && l.at <= to;
+      if (l.kind === "post") { if (firstPost && hit) out.push("beep"); firstPost = false; }
+      else if (l.kind === "memtest" && hit) out.push("tick");
+      else if (l.kind === "clear" && hit) out.push("zap");
+      else if (l.kind === "ok" && hit) out.push("disk");
+      else if (l.kind === "prompt" && l.detail) {
+        for (var c = 0; c < l.detail.length; c++) { var at = l.at + c * 55; if (at > from && at <= to) out.push("key"); }
+      } else if (l.kind === "logo") { if (firstLogo && hit) out.push("whoosh"); firstLogo = false; }
+    }
+    return out;
+  }
+
   function flickering(script, ms) {
     for (var i = 0; i < script.lines.length; i++) {
       var l = script.lines[i];
@@ -319,6 +341,7 @@
       window.removeEventListener("keydown", onKey, true);
       window.removeEventListener("keyup", onKey, true);
       if (el.parentNode) el.parentNode.removeChild(el);
+      if (sound) sound.close();
       playing = null;
       if (done) done();
     }
@@ -337,8 +360,11 @@
     window.addEventListener("keydown", onKey, true);
     window.addEventListener("keyup", onKey, true);
 
+    var sound = o.sound !== false && root.OmarchyBootSound ? root.OmarchyBootSound.create() : null, lastMs = -1;
     function tick() {
       var real = Date.now() - start, ms = clock(script, real);   // held while network / omarchy-link really wait
+      if (sound && !fading) { var cs = cues(script, lastMs, ms); for (var ci = 0; ci < cs.length; ci++) sound.cue(cs[ci]); }
+      lastMs = ms;
       if (ms < CRT_MS) {   // power-on: a bright line grows across, then opens vertically
         var p = crt(ms), line = 3 / h;
         if (p < 0.5) {
@@ -384,7 +410,7 @@
   }
 
   var api = { build: build, clock: clock, doneText: doneText, doneOk: doneOk, visibleAt: visibleAt, typedChars: typedChars, memText: memText, spinning: spinning,
-              spinner: spinner, flickering: flickering, crt: crt, blockRows: blockRows, splitColumn: splitColumn,
+              spinner: spinner, flickering: flickering, cues: cues, crt: crt, blockRows: blockRows, splitColumn: splitColumn,
               shouldPlay: shouldPlay, play: play, install: install, COLUMNS: COLUMNS, MAX_WAIT_MS: MAX_WAIT_MS };
   root.OmarchyBoot = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

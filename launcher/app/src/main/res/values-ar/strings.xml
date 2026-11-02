@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">جارٍ التشغيل</string>
     <string name="liftoff_exit">الرمز %1$s</string>
     <string name="living_waiting">في انتظار حاسوب Omarchy…</string>
+    <string name="boot_sound">صوت الإقلاع</string>
+    <string name="omafire_sound">صوت OmaFire</string>
 </resources>

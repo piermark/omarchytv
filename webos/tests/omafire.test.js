@@ -23,7 +23,7 @@ test("vendored as-is: MIT licence kept, only the wrapper added, Android has the 
   assert.ok(/Wes Grimes/.test(fs.readFileSync(V + "LICENSE", "utf8")));
   assert.ok(src.indexOf(".pragma library") < 0 || src.indexOf("\".pragma library\" line is dropped") > 0);
   assert.ok(/^\(function \(root\) \{$/m.test(src) && /root\.OmaFire = /.test(src));
-  ["fire.js", "omafire-wall.js", "LICENSE", "campsite-approved.webp"].forEach((f) =>
+  ["fire.js", "sound.js", "night.js", "omafire-audio.js", "omafire-wall.js", "LICENSE", "campsite-approved.webp", "fire-crackle.wav", "fire-embers.wav", "fire-roar.wav", "fire-log.wav", "fire-stoke.wav", "cricket.wav", "peep.wav", "croak.wav"].forEach((f) =>
     assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f));
   assert.ok(fs.readFileSync(__dirname + "/../app/index.html", "utf8").indexOf("vendor/omafire/omafire-wall.js") > 0);
 });
@@ -33,4 +33,14 @@ test("living: decrypt keeps box lines and finishes real", () => {
   assert.strictEqual(L.scramble("│ abc │", 1), "│ abc │");
   const half = L.scramble("│ abcd │", 0.5, () => 0);
   assert.ok(half.startsWith("│ ab") && half.endsWith(" │") && half !== "│ abcd │");
+});
+
+test("OmaFire sound: his sound.js levels and night.js ambience load unchanged", () => {
+  global.window = global;
+  require(V + "sound.js"); require(V + "night.js");
+  const S = global.OmaFireSound, N = global.OmaFireNight;
+  assert.ok(S.crackleGain(0.68) > 0.5 && S.roarGain(0.2, 0) === 0 && S.embersGain(0) === 0);
+  const a = N.createAmbience(5919); let calls = 0;
+  for (let i = 0; i < 1200; i++) calls += N.advanceAmbience(a, 0.1).length;   // two minutes of night
+  assert.ok(calls > 3, "crickets and frogs: " + calls);
 });

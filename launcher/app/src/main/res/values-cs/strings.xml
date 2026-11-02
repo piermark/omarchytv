@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">spouštění</string>
     <string name="liftoff_exit">kód %1$s</string>
     <string name="living_waiting">čekám na PC s Omarchy…</string>
+    <string name="boot_sound">Zvuk při startu</string>
+    <string name="omafire_sound">Zvuk OmaFire</string>
 </resources>

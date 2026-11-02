@@ -452,4 +452,6 @@
     <string name="liftoff_stage_launch">indítás</string>
     <string name="liftoff_exit">kód %1$s</string>
     <string name="living_waiting">várakozás az Omarchy PC-re…</string>
+    <string name="boot_sound">Indítási hang</string>
+    <string name="omafire_sound">OmaFire hang</string>
 </resources>

@@ -16,7 +16,9 @@
     host.appendChild(cv);
     var ctx = cv.getContext("2d"), img = ctx.createImageData(F.W, F.H);
     var sim = F.createState(), fb = F.createFrame(), rects = F.createRects(), bg = null;
-    var mode = opts.mode === "embers" ? "embers" : "campfire", last = 0, timer = null, stopped = false, fed = 0;
+    var mode = opts.mode === "embers" ? "embers" : "campfire", last = 0, timer = null, stopped = false, fed = 0, n = 0;
+    // v2.14 OmaFire sound (his FireAudio: loops follow the heat, a log and a stoke, the night); off unless asked.
+    var audio = root.OmaFireAudio ? root.OmaFireAudio.create(opts.soundBase || "vendor/omafire/") : null, soundOn = !!opts.sound;
     var art = new Image();
     art.onload = function () {
       var c = doc.createElement("canvas");
@@ -28,18 +30,20 @@
     art.src = opts.art || "vendor/omafire/campsite-approved.webp";
     function feed(now) {
       var low = mode === "embers" ? 0.06 : 0.42;
-      if (sim.fuel < low && now - fed > 8000) { F.addLog(sim); fed = now; }
-      if (mode === "campfire" && Math.random() < 0.002) F.stoke(sim);
+      if (sim.fuel < low && now - fed > 8000) { F.addLog(sim); fed = now; if (audio) audio.playLog(); }
+      if (mode === "campfire" && Math.random() < 0.002 && F.stoke(sim) === "The coals come alive." && audio) audio.playStoke();
     }
     function frame() {
       if (stopped) return;
       timer = setTimeout(frame, 33);
+      if (audio) audio.setOn(soundOn && !doc.hidden);
       if (doc.hidden || !bg) return;
       var now = Date.now(), dt = last ? Math.min(0.25, (now - last) / 1000) : 1 / 30;
       last = now;
       feed(now);
       F.tick(sim, dt, true);
       F.render(fb, sim, bg, rects);
+      if (audio && soundOn && ++n % 6 === 0) audio.setFire(sim.heat, sim.boost);
       img.data.set(fb);
       ctx.putImageData(img, 0, 0);
     }
@@ -47,7 +51,8 @@
     frame();
     return {
       setMode: function (m) { mode = m === "embers" ? "embers" : "campfire"; },
-      destroy: function () { stopped = true; clearTimeout(timer); if (cv.parentNode) cv.parentNode.removeChild(cv); }
+      setSound: function (v) { soundOn = !!v; if (audio) audio.setOn(soundOn && !doc.hidden); },
+      destroy: function () { stopped = true; clearTimeout(timer); if (audio) audio.destroy(); if (cv.parentNode) cv.parentNode.removeChild(cv); }
     };
   }
   root.OmaFireWall = { mount: mount, MODES: ["campfire", "embers"] };
