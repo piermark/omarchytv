@@ -135,6 +135,23 @@ html, body {
   margin-right: 10px;
 }
 
+/* Center a modestly inset underline on the logo without changing its hit area. */
+.bar-btn.logo-btn.focused {
+  border-bottom-color: transparent;
+}
+
+.bar-btn.logo-btn.focused::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 8px;
+  bottom: -3px;
+  height: 3px;
+  color: var(--t-accent);
+  background: var(--t-focus, currentColor);
+  pointer-events: none;
+}
+
 #bar-clock {
   position: absolute;
   left: 50%;
