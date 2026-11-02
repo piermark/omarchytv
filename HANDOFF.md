@@ -338,7 +338,7 @@ LG/Samsung `startScreensaver()` leaves the tte iframe blank and mounts `OmarchyL
 page skips tte (`window.__otvLive`) and mounts the same, and `TteSaver` keeps the WebView even when the art is the
 native aquarium. `living.js`: `scene()` (pure, 112×32 grid: block clock `bigClock()`, `sky()` frames, notifications,
 X, GitHub, PC box with meters + `radar()`, ticker, status line) and `fullscreen()` (glass panels in ch/em units,
-half-resolution canvas: glyph rain + synthwave grid, refresh sweep, INCOMING banner with shake + `scramble()`,
+half-resolution canvas: glyph rain + synthwave grid, refresh sweep, INCOMING banner in the bottom band over the grid (never over the boxes) with shake + `scramble()`, per-column decrypt,
 DOM rewritten only when the text changes, pauses when hidden, adaptive lite mode after 40 slow frames, burn-in
 drift). PC stats: LG/Samsung from `/v1/status`, Android from `LinkServer.stats()`. Test: `living.test.js` (grid sizes,
 sky frames, waiting text, HTML escaping).

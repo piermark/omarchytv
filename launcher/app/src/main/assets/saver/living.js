@@ -374,10 +374,11 @@
       ".otv-live pre{position:relative;margin:0;white-space:pre;font:inherit;line-height:inherit;color:" + fg + ";text-shadow:0 0 .35em " + acc + "44}" +
       ".otv-live b{font-weight:normal}.otv-live .a{color:" + acc + "}.otv-live .a2{color:" + acc2 + "}.otv-live .d{opacity:.3}" +
       ".otv-live .c{color:" + acc + ";text-shadow:0 0 .5em " + acc + ",0 0 1.4em " + acc + "88}" +
-      ".otv-live .ban{position:absolute;left:0;right:0;top:34%;padding:2.4vh 4vw;background:rgba(0,0,0,.9);border-top:.5vh solid " + acc +
+      ".otv-live .ban{position:absolute;left:0;right:0;top:75.5vh;padding:1vh 4vw;background:rgba(0,0,0,.9);border-top:.5vh solid " + acc +
       ";border-bottom:.5vh solid " + acc + ";box-shadow:0 0 7vh " + acc + "99;display:none;white-space:pre-wrap;color:" + fg + ";font-family:" + font + "}" +
-      ".otv-live .ban .h{font-size:6.6vh;color:" + acc + ";letter-spacing:.25em;text-shadow:0 0 3vh " + acc + "}" +
-      ".otv-live .ban .t{font-size:3.8vh;margin-top:1.2vh}.otv-live .ban .m{font-size:3.2vh;margin-top:.8vh}";
+      ".otv-live .ban .h{font-size:4.2vh;color:" + acc + ";letter-spacing:.2em;text-shadow:0 0 3vh " + acc + ";white-space:nowrap;overflow:hidden}" +
+      ".otv-live .ban .t{letter-spacing:0;color:" + fg + ";margin-left:2vw;text-shadow:none}" +
+      ".otv-live .ban .m{font-size:3vh;margin-top:.4vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
     wrapEl.className = "otv-live"; term.className = "term"; sweep.className = "sw"; ban.className = "ban";
     // Dark glass under the two columns (in character units, so they match the boxes at any size).
     panL.style.cssText = "left:-.6ch;top:6.6em;width:" + (LW + 1.2) + "ch;height:" + (ROWS - 10.2) + "em";
@@ -449,8 +450,9 @@
       if (!banItem || ms > banUntil) { ban.style.display = "none"; wrapEl.style.transform = ""; return; }
       var p = Math.min(1, (ms - banStart) / 700);
       ban.style.display = "block";
-      ban.innerHTML = "<div class=\"h\">" + htmlLine(scramble(banItem.h, p)) + "</div><div class=\"t\">" + htmlLine(scramble(banItem.t, p)) +
-        "</div><div class=\"m\">" + htmlLine(scramble(banItem.m, Math.max(0, p * 1.4 - 0.4))) + "</div>";
+      // Over the grid at the bottom: it never covers the boxes, the notification stays readable in its box too.
+      ban.innerHTML = "<div class=\"h\">" + htmlLine(scramble(banItem.h, p)) + "<span class=\"t\">" + htmlLine(scramble(banItem.t, p)) +
+        "</span></div><div class=\"m\">" + htmlLine(scramble(banItem.m, Math.max(0, p * 1.4 - 0.4))) + "</div>";
       var k = ms - banStart < 600 ? 1 : 0;
       wrapEl.style.transform = k ? "translate(" + (Math.random() * 14 - 7) + "px," + (Math.random() * 10 - 5) + "px)" : "";
     }
@@ -461,17 +463,20 @@
       var now = new Date(), hh = now.getHours(), mm = now.getMinutes();
       var lines = scene(data, { cols: COLS, rows: ROWS, t: t, now: now.getTime(), labels: opts.labels, user: opts.user, host: opts.host,
         clock: (hh < 10 ? "0" : "") + hh + ":" + (mm < 10 ? "0" : "") + mm, date: opts.dateText ? opts.dateText(now) : now.toDateString() });
-      var ms = Date.now(), typed = Math.floor((ms - start) / 30), html = [];
+      var ms = Date.now(), typed = Math.floor((ms - start) / 30), html = [], seen = {};
       for (var i = 0; i < lines.length; i++) {
-        var key = same(lines[i]);
-        if (t > 4 && !prev[i + "|" + key] && i > 7 && i < lines.length - 2 && /[A-Za-zÀ-￿]{3}/.test(lines[i].replace(/[─-▟○◉·]/g, "")) && !born[i + "|" + key]) born[i + "|" + key] = ms;
-        var b = born[i + "|" + key], l = lines[i];
-        if (i > typed) l = "";
-        else if (b && ms - b < 900) l = scramble(l, (ms - b) / 900);
-        html.push(htmlLine(l, i >= 2 && i <= 6));
+        // Each column decrypts only for its own news (a new notification on the right leaves GitHub alone).
+        var whole = i < 2 || i >= lines.length - 2, parts = whole ? [lines[i]] : [lines[i].slice(0, LW + GAP), lines[i].slice(LW + GAP)], outl = "";
+        for (var k = 0; k < parts.length; k++) {
+          var part = parts[k], key = i + "|" + k + "|" + same(part);
+          seen[key] = true;
+          if (t > 4 && !whole && i > 7 && !prev[key] && !born[key] && /[A-Za-z\u00c0-\uffff]{3}/.test(same(part).replace(/[\u2500-\u257f]/g, ""))) born[key] = ms;
+          var b = born[key];
+          outl += b && ms - b < 900 ? scramble(part, (ms - b) / 900) : part;
+        }
+        html.push(htmlLine(i > typed ? "" : outl, i >= 2 && i <= 6));
       }
-      prev = {};
-      for (var j = 0; j < lines.length; j++) prev[j + "|" + same(lines[j])] = true;
+      prev = seen;
       var out = html.join("\n");
       if (out !== lastHtml) { pre.innerHTML = out; lastHtml = out; }   // no layout when nothing changed
       var m = Math.floor(ms / 60000) % 4;   // burn-in care: drift a few pixels every minute
