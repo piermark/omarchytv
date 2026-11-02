@@ -460,6 +460,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     promptUser: "user",
     promptHost: "omarchytv",
     pcHost: "",
+    pcRecent: [],         // up to 3 PCs that answered, newest first: { host, name }; offered in "Pair Omarchy Linux PC"
     pcSimulated: false,
     aiCredits: "percent",
     clockFormat: "auto",   // "auto" (12 h in English, 24 h otherwise), "12" or "24"
@@ -949,6 +950,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
   }
 
+  // Remember a PC that answered, so pairing again is one OK press instead of typing with the remote.
+  // Only addresses that answered get in, so a typo never lands in the list.
+  function rememberPc(host, name) {
+    host = String(host || "").replace(/\/+$/, "");
+    if (!host) return;
+    var list = cfg.pcRecent || [];
+    if (list[0] && list[0].host === host && list[0].name === (name || "")) return;   // polled every few seconds: save only on change
+    cfg.pcRecent = [{ host: host, name: name || "" }].concat(list.filter(function (p) { return p && p.host !== host; })).slice(0, 3);
+    saveCfg();
+  }
+
   function pollPcStatus() {
     if (cfg.pcSimulated) {
       state.pcStatus = { host: "omarchy-workstation", kernel: "Linux 6.14-arch", cpu: 14, ram: 38, gpu: "12%", claude: "24.80", openai: "51.20", xai: "110.00" };
@@ -965,6 +977,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return fetch(url).then(function (r) { return r.json(); }).then(function (j) {
       state.pcStatus = j;
       liftoffState(j && j.liftoff);
+      if (j) rememberPc(cfg.pcHost, j.host);
       if (j && j.theme && DATA.themes[j.theme] && cfg.syncPcTheme) {
         cfg.theme = j.theme;
         applyTheme();
@@ -3731,10 +3744,21 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         } else {
           // Typed address is used (issue #5, point 4): "Connect to …" appears as the first item once it looks valid.
           var pairTyped = "";
-          var pairItems = [
-            { label: "Use 192.168.1.100:8765", right: "LAN", act: function () { cfg.pcHost = "192.168.1.100"; saveCfg(); pollPcStatus(); closeModal(); } },
+          // PCs that answered before come first, so reconnecting is one OK press; the example only shows without them.
+          var recentItems = (cfg.pcRecent || []).map(function (p) {
+            return { label: "Connect to " + p.host + (p.name ? " · " + p.name : ""), right: p.host === cfg.pcHost && !cfg.pcSimulated ? "current" : "OK", act: function () {
+              cfg.pcHost = p.host; cfg.pcSimulated = false; saveCfg(); pollPcStatus(); closeModal();
+            } };
+          });
+          var pairItems = recentItems.concat(recentItems.length ? [] : [
+            { label: "Use 192.168.1.100:8765", right: "LAN", act: function () { cfg.pcHost = "192.168.1.100"; saveCfg(); pollPcStatus(); closeModal(); } }
+          ]).concat(cfg.pcHost ? [
+            // Forget the current PC but keep it in the recent list, so reconnecting stays one OK press.
+            { label: "Disconnect " + cfg.pcHost, right: "›", act: function () { cfg.pcHost = ""; saveCfg(); pollPcStatus(); closeModal(); } }
+          ] : []).concat([
             { label: "Toggle simulated PC link", right: cfg.pcSimulated ? "on" : "off", act: function () { cfg.pcSimulated = !cfg.pcSimulated; saveCfg(); pollPcStatus(); closeModal(); } }
-          ];
+          ]);
+          // With a recent PC to pick, don't pop the TV keyboard: ▲ from the first item still reaches the field.
           openModal("Pair Omarchy Linux PC", "Enter your Omarchy PC LAN IP (serves http://<ip>:8765/v1/status):", pairItems.slice(), "192.168.1.x", function (v) {
             pairTyped = (v || "").trim();
             var ok = /^(https?:\/\/)?[A-Za-z0-9.-]+(:\d{1,5})?\/?$/.test(pairTyped);
@@ -3742,7 +3766,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
               cfg.pcHost = pairTyped.replace(/\/+$/, ""); cfg.pcSimulated = false; saveCfg(); pollPcStatus(); closeModal();
             } }] : []).concat(pairItems);
             state.modalIdx = 0; renderModalList();
-          });
+          }, { noAutoFocus: recentItems.length > 0 });
         }
         e.preventDefault(); return;
       }
