@@ -49,6 +49,7 @@ final class BootScreenView extends View {
     private final Paint bold = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fill = new Paint();
     private final Paint scan = new Paint();
+    private boolean qr;
     private final int bg, fg, fgBright, fgDim, accent, accent2, green, red, yellow;
     private long start;
     private boolean fading, done;
@@ -163,6 +164,7 @@ final class BootScreenView extends View {
                 cfg.promptUser, cfg.promptHost, new TvState(a.getApplicationContext()));
         BootScreenView v = new BootScreenView(a, s, cfg.bootFx);
         if (cfg.bootSound) v.sound = new BootSound(0.5f);
+        v.qr = "boot".equals(cfg.shareQr);   // v2.14 QR code of OmarchyTV with the wordmark
         showing = v;
         root.addView(v, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
@@ -284,10 +286,14 @@ final class BootScreenView extends View {
         } else {
             canvas.drawColor(bg);
             if (!script.flickering(ms)) drawText(canvas, w, h, ms, real);
+            if (qr && ms >= script.fadeAt - BootScript.HOLD_MS && !fading) {   // small, bottom right, with the wordmark
+                float side = h * 0.16f;
+                BootQr.draw(canvas, w * 0.94f - side, h * 0.92f - side, side, fg, bg, 230, fill);
+            }
             if (fx) canvas.drawPaint(scan);
         }
 
-        if (ms >= script.fadeAt) fade();
+        if (ms >= script.fadeAt + (qr ? 3000 : 0)) fade();   // the QR holds the boot 3 s longer (any key still skips)
         if (!done) postInvalidateOnAnimation();
     }
 

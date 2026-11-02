@@ -456,4 +456,5 @@
     <string name="omafire_sound">OmaFire-ääni</string>
     <string name="arcade_sound">Pelihallin äänet</string>
     <string name="arcade_pc_theme">Pelihalli: RICE WARS vaihtaa myös PC:n teeman</string>
+    <string name="share_qr">OmarchyTV:n QR-koodi</string>
 </resources>

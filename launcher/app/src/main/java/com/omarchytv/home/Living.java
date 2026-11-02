@@ -85,6 +85,7 @@ final class Living {
                     .put("accent", String.format(Locale.ROOT, "#%06x", t.accent & 0xFFFFFF))
                     .put("accent2", String.format(Locale.ROOT, "#%06x", t.accent2 & 0xFFFFFF))
                     .put("bg", String.format(Locale.ROOT, "#%06x", t.bgDarker & 0xFFFFFF))
+                    .put("qr", "off".equals(cfg.shareQr) ? "" : BootQr.URL)
                     .put("user", cfg.promptUser).put("host", cfg.promptHost)
                     .put("lang", c.getResources().getConfiguration().locale.toLanguageTag()).toString();
         } catch (Exception e) {

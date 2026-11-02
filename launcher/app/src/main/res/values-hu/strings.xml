@@ -456,4 +456,5 @@
     <string name="omafire_sound">OmaFire hang</string>
     <string name="arcade_sound">Játékterem hangja</string>
     <string name="arcade_pc_theme">Játékterem: a RICE WARS a PC témáját is váltja</string>
+    <string name="share_qr">OmarchyTV QR-kód</string>
 </resources>

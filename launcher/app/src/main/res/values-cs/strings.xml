@@ -456,4 +456,5 @@
     <string name="omafire_sound">Zvuk OmaFire</string>
     <string name="arcade_sound">Zvuk herny</string>
     <string name="arcade_pc_theme">Herna: RICE WARS mění motiv i na PC</string>
+    <string name="share_qr">QR kód OmarchyTV</string>
 </resources>

@@ -456,4 +456,5 @@
     <string name="omafire_sound">صوت OmaFire</string>
     <string name="arcade_sound">صوت صالة الألعاب</string>
     <string name="arcade_pc_theme">صالة الألعاب: RICE WARS يغيّر سمة الحاسوب أيضًا</string>
+    <string name="share_qr">رمز QR لـ OmarchyTV</string>
 </resources>

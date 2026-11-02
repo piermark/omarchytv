@@ -1,7 +1,7 @@
 # HANDOFF — branch `feature/omarchytv-v214-pack`
 
 Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
-**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live**, **Q. OmaFire sound**, **R. Boot sound**, **S. OmarchyTV Arcade** (each built on the previous).
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live**, **Q. OmaFire sound**, **R. Boot sound**, **S. OmarchyTV Arcade**, **T. QR codes** (each built on the previous).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -449,3 +449,29 @@ every sound cue).
 - Gradle build and lint of `ArcadeActivity` (checked with javac against android-all-34 only).
 - Real TVs: speed on old webOS/Tizen and cheap Android boxes, the Back key reaching the page, audio after the first
   key, a Bluetooth gamepad, `/v1/theme/set` round trips during RICE WARS.
+
+# T. QR codes (record sharing, boot, Live)
+
+`webos/app/qr.js` (ours) on qrcode-generator 1.4.4 (Kazuhiko Arase, MIT, `webos/app/vendor/qrcode/qrcode.js`
+unchanged + LICENSE, copied to `assets/saver/` and `assets/games/`; NOTICE and `assets/licenses/`). Drawn once into a
+small canvas (no per-frame cost), in the theme's own colours (light foreground, dark background) so it fits the look
+and still scans; never on the OmaFire wallpaper.
+
+- **Game over** (always, when the score is above 0): GAME OVER on the left, the record as a QR on the right. It is
+  X's "write a post" link (`https://x.com/intent/post?text=…&url=<project>`) with the post in the TV's language
+  (`share_post` in `games/i18n.js`, e.g. "000804 a V-HOLD su #OmarchyTV. Riesci a battermi?"). The phone opens X,
+  the player decides whether to send it: the TV posts nothing, no API, no token. Above the scanline veil.
+- **Live screensaver** (setting "OmarchyTV QR code": Live by default): small, between the clock and the right column,
+  covering nothing, with "OmarchyTV" under it; the project's page (`OmarchyQR.PROJECT_URL`).
+- **Boot screen** (setting value "boot + Live", off by default): bottom right with the wordmark; the boot holds 3 s
+  longer only then (any key still skips). Android draws `BootQr.ROWS`, precomputed from qr.js (a test checks they
+  still match the URL).
+- Settings: `shareQr` "live" | "boot" | "off" (LauncherConfig, app.js DEFAULT_CFG), row in the launcher settings.
+
+Checked: the game-over, Live and boot screenshots decode with OpenCV's QR reader to the expected text.
+Tests: `webos/tests/qr.test.js` (copies identical, Android rows match, every language's post fits, colours, defaults).
+
+## NOT verified (T)
+
+- Phones reading the code off real TVs at couch distance (size, glare, the CRT plugin's curve on Android 13+).
+- X's intent page opening in the X app vs the browser on iOS/Android.

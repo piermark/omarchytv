@@ -82,7 +82,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_waiting: "waiting for the Omarchy PC…",
       boot_sound: "Boot sound",
       omafire_sound: "OmaFire sound",
-      arcade_sound: "Arcade sound", arcade_pc_theme: "Arcade: RICE WARS changes the PC theme too",
+      arcade_sound: "Arcade sound", arcade_pc_theme: "Arcade: RICE WARS changes the PC theme too", share_qr: "OmarchyTV QR code",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -157,7 +157,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_waiting: "in attesa del PC Omarchy…",
       boot_sound: "Suono all'avvio",
       omafire_sound: "Suono di OmaFire",
-      arcade_sound: "Suoni della sala giochi", arcade_pc_theme: "Sala giochi: RICE WARS cambia tema anche al PC",
+      arcade_sound: "Suoni della sala giochi", arcade_pc_theme: "Sala giochi: RICE WARS cambia tema anche al PC", share_qr: "QR code di OmarchyTV",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -232,7 +232,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_waiting: "warte auf den Omarchy-PC…",
       boot_sound: "Startton",
       omafire_sound: "OmaFire-Ton",
-      arcade_sound: "Spielhallen-Sound", arcade_pc_theme: "Spielhalle: RICE WARS ändert auch das PC-Theme",
+      arcade_sound: "Spielhallen-Sound", arcade_pc_theme: "Spielhalle: RICE WARS ändert auch das PC-Theme", share_qr: "OmarchyTV-QR-Code",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -288,6 +288,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     bootSound: true,        // v2.14 boot screen sound (synthesised: CRT power-on, POST beep, disk, keys, wordmark)
     omafireSound: false,    // v2.14 OmaFire wallpaper sound (Wes Grimes' fire loops, log/stoke, night ambience)
     arcadeSound: true,      // v2.14 OmarchyTV Arcade sound effects (synthesised; a game is opened on purpose)
+    shareQr: "live",        // v2.14 QR code of OmarchyTV: "off", "live" (small, in the Live screensaver), "boot" (boot screen too)
     arcadePcTheme: false,   // v2.14 RICE WARS re-themes the Omarchy PC per cleared level (its own theme comes back on exit)
     pluginRetroCrt: "off",  // v2.14 Retro CRT plugin: "off" | "light" | "strong" (scanlines, mask, vignette, theme bezel)
     pcPower: false,         // v2.14 LG: the PC suspends when the TV turns off (POST /v1/power; needs TV control approved)
@@ -1737,6 +1738,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("theme_to_pc"), right: cfg.themeToPc ? "on" : "off", act: function () {
         cfg.themeToPc = !cfg.themeToPc; saveCfg(); openAllSettingsModal(true);
       } },
+      { label: tr("share_qr"), right: cfg.shareQr === "boot" ? "boot + Live" : cfg.shareQr === "off" ? "off" : "Live", act: function () {
+        var m = ["live", "boot", "off"];
+        cfg.shareQr = m[(m.indexOf(cfg.shareQr || "live") + 1) % m.length]; saveCfg(); openAllSettingsModal(true);
+      } },
       { label: "🕹 " + tr("arcade_sound"), right: cfg.arcadeSound !== false ? "on" : "off", act: function () {
         cfg.arcadeSound = cfg.arcadeSound === false; saveCfg(); openAllSettingsModal(true);
       } },
@@ -2361,7 +2366,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     livingStop();
     if (!cfg.living || !window.OmarchyLiving) return;
     var t = (DATA.themes[cfg.theme] || {});
-    livingUi = window.OmarchyLiving.fullscreen(host, { labels: livingLabels(), color: t.foreground || "#c0caf5", accent: t.accent || "#7aa2f7",
+    livingUi = window.OmarchyLiving.fullscreen(host, { qr: cfg.shareQr !== "off" && window.OmarchyQR ? window.OmarchyQR.PROJECT_URL : "", labels: livingLabels(), color: t.foreground || "#c0caf5", accent: t.accent || "#7aa2f7",
       accent2: t.magenta || t.cyan, bg: t.background || "#000", user: cfg.promptUser || "user", host: cfg.promptHost || "omarchytv",
       dateText: function (d) { try { return d.toLocaleDateString(getLang(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return d.toDateString(); } } });
     livingData = { weather: livingWeather() };
@@ -3690,6 +3695,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       return {
         mode: cfg.bootScreen || "boot",
         sound: cfg.bootSound !== false,
+        qr: cfg.shareQr === "boot" && window.OmarchyQR ? window.OmarchyQR.PROJECT_URL : "",
         version: APP_VERSION,
         theme: cfg.theme,
         model: tvModel(),

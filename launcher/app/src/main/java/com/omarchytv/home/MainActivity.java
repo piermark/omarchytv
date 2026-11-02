@@ -2317,6 +2317,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("launcher", lToPc, j -> j.put("themeToPc", n));
             return true;
         });
+        String lQr = str(R.string.share_qr);
+        String[] qrModes = {"live", "boot", "off"};
+        p.add(lQr, "boot".equals(cfg.shareQr) ? "boot + Live" : "off".equals(cfg.shareQr) ? str(R.string.off) : "Live", r -> {
+            String n = next(qrModes, cfg.shareQr);
+            applyLive("launcher", lQr, j -> j.put("shareQr", n));
+            return true;
+        });
         String lArcSnd = "🕹 " + str(R.string.arcade_sound);
         p.add(lArcSnd, str(cfg.arcadeSound ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.arcadeSound;

@@ -388,6 +388,20 @@
     radarImg.style.cssText = "position:absolute;display:none;left:2ch;top:" + (9 * 1.18).toFixed(2) + "em;width:24ch;height:" + (8 * 1.18).toFixed(2) +
       "em;object-fit:cover;border-radius:.3em;box-shadow:0 0 .8em " + acc + "66;z-index:1";
     term.appendChild(panL); term.appendChild(panR); term.appendChild(pre); term.appendChild(radarImg);
+    // v2.14 "QR code of OmarchyTV" (setting, Live by default): small, in the theme's own colours, in the gap between
+    // the clock and the right column, so it covers nothing; a phone pointed at it opens the project's page.
+    if (opts.qr && root.OmarchyQR) {
+      var qrc = root.OmarchyQR.canvas(doc, opts.qr, 140, "M", { light: fg, dark: opts.bg || "#000" });
+      if (qrc) {
+        qrc.style.cssText = "position:absolute;left:37.3ch;top:2.4em;width:6.4ch;height:6.4ch;border-radius:.25em;opacity:.88;" +
+          "box-shadow:0 0 .8em " + acc + "55;image-rendering:pixelated";
+        var qrl = doc.createElement("div");
+        qrl.textContent = "OmarchyTV";
+        qrl.style.cssText = "position:absolute;left:37.3ch;width:6.4ch;top:calc(2.6em + 6.4ch);font-size:.5em;letter-spacing:.05em;text-align:center;opacity:.55;color:" + fg;
+        qrl.style.left = (37.3 * 2) + "ch"; qrl.style.width = (6.4 * 2) + "ch"; qrl.style.top = "calc(5.2em + 12.8ch)";
+        term.appendChild(qrc); term.appendChild(qrl);
+      }
+    }
     wrapEl.appendChild(st); wrapEl.appendChild(cv); wrapEl.appendChild(sweep); wrapEl.appendChild(term); wrapEl.appendChild(ban);
     host.appendChild(wrapEl);
 

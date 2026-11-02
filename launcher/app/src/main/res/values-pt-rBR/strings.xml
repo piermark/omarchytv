@@ -456,4 +456,5 @@
     <string name="omafire_sound">Som do OmaFire</string>
     <string name="arcade_sound">Som do fliperama</string>
     <string name="arcade_pc_theme">Fliperama: RICE WARS muda o tema do PC também</string>
+    <string name="share_qr">QR code do OmarchyTV</string>
 </resources>

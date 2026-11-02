@@ -130,6 +130,7 @@
         "omafire_sound": "Som do OmaFire",
         "arcade_sound": "Som da sala de jogos",
         "arcade_pc_theme": "Sala de jogos: RICE WARS muda também o tema do PC",
+        "share_qr": "Código QR do OmarchyTV",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -294,6 +295,7 @@
         "omafire_sound": "Som do OmaFire",
         "arcade_sound": "Som do fliperama",
         "arcade_pc_theme": "Fliperama: RICE WARS muda o tema do PC também",
+        "share_qr": "QR code do OmarchyTV",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -458,6 +460,7 @@
         "omafire_sound": "Sonido de OmaFire",
         "arcade_sound": "Sonido de la sala",
         "arcade_pc_theme": "Sala: RICE WARS cambia también el tema del PC",
+        "share_qr": "Código QR de OmarchyTV",
         "wmo": {
           "0": "despejado",
           "1": "mayormente despejado",
@@ -622,6 +625,7 @@
         "omafire_sound": "Son d'OmaFire",
         "arcade_sound": "Son de l'arcade",
         "arcade_pc_theme": "Arcade : RICE WARS change aussi le thème du PC",
+        "share_qr": "QR code d'OmarchyTV",
         "wmo": {
           "0": "dégagé",
           "1": "plutôt dégagé",
@@ -786,6 +790,7 @@
         "omafire_sound": "OmaFire-geluid",
         "arcade_sound": "Speelhalgeluid",
         "arcade_pc_theme": "Speelhal: RICE WARS wijzigt ook het pc-thema",
+        "share_qr": "OmarchyTV-QR-code",
         "wmo": {
           "0": "helder",
           "1": "overwegend helder",
@@ -950,6 +955,7 @@
         "omafire_sound": "Dźwięk OmaFire",
         "arcade_sound": "Dźwięk salonu gier",
         "arcade_pc_theme": "Salon gier: RICE WARS zmienia też motyw PC",
+        "share_qr": "Kod QR OmarchyTV",
         "wmo": {
           "0": "bezchmurnie",
           "1": "przeważnie bezchmurnie",
@@ -1114,6 +1120,7 @@
         "omafire_sound": "OmaFire-ljud",
         "arcade_sound": "Spelhallsljud",
         "arcade_pc_theme": "Spelhall: RICE WARS byter även tema på datorn",
+        "share_qr": "OmarchyTV-QR-kod",
         "wmo": {
           "0": "klart",
           "1": "mestadels klart",
@@ -1278,6 +1285,7 @@
         "omafire_sound": "OmaFire-lyd",
         "arcade_sound": "Spillehallyd",
         "arcade_pc_theme": "Spillehal: RICE WARS skifter også pc'ens tema",
+        "share_qr": "OmarchyTV-QR-kode",
         "wmo": {
           "0": "klart",
           "1": "overvejende klart",
@@ -1442,6 +1450,7 @@
         "omafire_sound": "Zvuk OmaFire",
         "arcade_sound": "Zvuk herny",
         "arcade_pc_theme": "Herna: RICE WARS mění motiv i na PC",
+        "share_qr": "QR kód OmarchyTV",
         "wmo": {
           "0": "jasno",
           "1": "skoro jasno",
@@ -1606,6 +1615,7 @@
         "omafire_sound": "Sunet OmaFire",
         "arcade_sound": "Sunetul sălii de jocuri",
         "arcade_pc_theme": "Sala de jocuri: RICE WARS schimbă și tema PC-ului",
+        "share_qr": "Cod QR OmarchyTV",
         "wmo": {
           "0": "senin",
           "1": "mai mult senin",
@@ -1770,6 +1780,7 @@
         "omafire_sound": "Ήχος OmaFire",
         "arcade_sound": "Ήχος αίθουσας",
         "arcade_pc_theme": "Αίθουσα: το RICE WARS αλλάζει και το θέμα του PC",
+        "share_qr": "Κωδικός QR του OmarchyTV",
         "wmo": {
           "0": "αίθριος",
           "1": "κυρίως αίθριος",
@@ -1934,6 +1945,7 @@
         "omafire_sound": "Звук OmaFire",
         "arcade_sound": "Звук игрового зала",
         "arcade_pc_theme": "Игровой зал: RICE WARS меняет и тему ПК",
+        "share_qr": "QR-код OmarchyTV",
         "wmo": {
           "0": "ясно",
           "1": "преимущественно ясно",
@@ -2098,6 +2110,7 @@
         "omafire_sound": "OmaFire 声音",
         "arcade_sound": "街机厅音效",
         "arcade_pc_theme": "街机厅: RICE WARS 也会切换电脑主题",
+        "share_qr": "OmarchyTV 二维码",
         "wmo": {
           "0": "晴",
           "1": "大致晴朗",
@@ -2262,6 +2275,7 @@
         "omafire_sound": "OmaFire のサウンド",
         "arcade_sound": "ゲームセンターの音",
         "arcade_pc_theme": "ゲームセンター: RICE WARS で PC のテーマも変更",
+        "share_qr": "OmarchyTV の QR コード",
         "wmo": {
           "0": "晴れ",
           "1": "おおむね晴れ",
@@ -2426,6 +2440,7 @@
         "omafire_sound": "صوت OmaFire",
         "arcade_sound": "صوت صالة الألعاب",
         "arcade_pc_theme": "صالة الألعاب: RICE WARS يغيّر سمة الحاسوب أيضًا",
+        "share_qr": "رمز QR لـ OmarchyTV",
         "wmo": {
           "0": "صافٍ",
           "1": "صافٍ غالبًا",
@@ -2590,6 +2605,7 @@
         "omafire_sound": "OmaFire sesi",
         "arcade_sound": "Oyun salonu sesi",
         "arcade_pc_theme": "Oyun salonu: RICE WARS PC temasını da değiştirir",
+        "share_qr": "OmarchyTV QR kodu",
         "wmo": {
           "0": "açık",
           "1": "çoğunlukla açık",
@@ -2754,6 +2770,7 @@
         "omafire_sound": "Звук OmaFire",
         "arcade_sound": "Звук ігрової зали",
         "arcade_pc_theme": "Ігрова зала: RICE WARS змінює і тему ПК",
+        "share_qr": "QR-код OmarchyTV",
         "wmo": {
           "0": "ясно",
           "1": "переважно ясно",
@@ -2918,6 +2935,7 @@
         "omafire_sound": "OmaFire hang",
         "arcade_sound": "Játékterem hangja",
         "arcade_pc_theme": "Játékterem: a RICE WARS a PC témáját is váltja",
+        "share_qr": "OmarchyTV QR-kód",
         "wmo": {
           "0": "derült",
           "1": "többnyire derült",
@@ -3082,6 +3100,7 @@
         "omafire_sound": "OmaFire-ääni",
         "arcade_sound": "Pelihallin äänet",
         "arcade_pc_theme": "Pelihalli: RICE WARS vaihtaa myös PC:n teeman",
+        "share_qr": "OmarchyTV:n QR-koodi",
         "wmo": {
           "0": "selkeää",
           "1": "enimmäkseen selkeää",
@@ -3246,6 +3265,7 @@
         "omafire_sound": "OmaFire-lyd",
         "arcade_sound": "Spillehallyd",
         "arcade_pc_theme": "Spillehall: RICE WARS bytter også PC-ens tema",
+        "share_qr": "OmarchyTV-QR-kode",
         "wmo": {
           "0": "klarvær",
           "1": "for det meste klart",

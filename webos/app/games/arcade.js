@@ -196,7 +196,7 @@
     function setPalette(th) { palette = th; style.textContent = css(id, th); }
     setPalette(home);
 
-    var layout = [0, H], fs = 16;
+    var layout = [0, H], fs = 16, charRatio = 0.6;
     function setLayout(y0, y1) {
       layout = [y0, y1];
       for (var i = 0; i < H; i++) { var p = i < y0 ? parts.head : i < y1 ? parts.pic : parts.foot; p.appendChild(rows[i]); last[i] = null; }
@@ -210,6 +210,7 @@
       probe.textContent = "MMMMMMMMMM";
       el.appendChild(probe);
       var ratio = (probe.offsetWidth || 600) / 1000;
+      charRatio = ratio;
       el.removeChild(probe);
       fs = Math.max(6, Math.min(w * 0.97 / (W * ratio), h * 0.97 / (H * 1.2)));
       tube.style.fontSize = fs.toFixed(2) + "px";
@@ -253,6 +254,7 @@
     }
     function go(m) { mode = m; modeT = 0; }
     function startGame() {
+      showQr(false);
       game = games[sel];
       setPalette(home);
       setLayout(0, H);
@@ -261,6 +263,7 @@
       play("start");
     }
     function toHall() {
+      showQr(false);
       inst = null; view = null; setPalette(home); setLayout(0, H); go("hall"); idle = 0;
       if (pcTouched) { pcTouched = false; try { opts.onPcTheme(null); } catch (e) {} }
     }
@@ -334,12 +337,55 @@
       g.bigCenter(8, "PAUSE", C.ACC);
       for (var i = 0; i < opt.length; i++) g.center(14 + i, (i === pauseIdx ? "▶ " : "  ") + opt[i] + (i === pauseIdx ? " ◀" : "  "), i === pauseIdx ? C.BRIGHT : C.DIM);
     }
+    // Game over: the score, and next to it the record as a QR code, always there when there are points: a phone
+    // pointed at it opens X with the post already written ("can you beat me?"); the player sends it, or not.
+    var qrEl = null;
+    function shareText() {
+      return t("share_post").replace("{score}", pad(finalScore, 6)).replace("{game}", game.title);
+    }
+    function showQr(on) {
+      if (qrEl && qrEl.parentNode) qrEl.parentNode.removeChild(qrEl);
+      qrEl = null;
+      if (!on || !root.OmarchyQR || finalScore <= 0) return;
+      var em = 13 * 1.2;   // 13 rows tall
+      qrEl = root.OmarchyQR.canvas(doc, root.OmarchyQR.shareUrl(shareText()), Math.round(em * fs * 2), "L", { light: palette.fg, dark: palette.bg });
+      if (!qrEl) return;
+      qrEl.style.position = "absolute";
+      qrEl.style.left = ((W - 4) * charRatio - em).toFixed(2) + "em";
+      qrEl.style.top = (2 * 1.2).toFixed(2) + "em";
+      qrEl.style.width = qrEl.style.height = em.toFixed(2) + "em";
+      qrEl.style.borderRadius = ".3em";
+      qrEl.style.zIndex = "2";   // above the scanline veil, so phones read clean modules
+      tube.appendChild(qrEl);
+    }
+    function wrap(text, width, x, y, c) {
+      var words = text.split(" "), line = "";
+      for (var i = 0; i < words.length; i++) {
+        if (line && textWidth(line + " " + words[i]) > width) { g.put(x, y++, line, c); line = words[i]; }
+        else line = line ? line + " " + words[i] : words[i];
+      }
+      if (line) g.put(x, y++, line, c);
+      return y;
+    }
     function drawOver() {
-      g.bigCenter(4, "GAME OVER", C.RED);
-      g.center(11, t("score") + "  " + pad(finalScore, 6), C.BRIGHT);
-      g.center(13, "HI  " + pad(hi(game.id), 6), C.YEL);
-      if (newRec && Math.floor(clock * 3) % 2) g.center(15, "★ " + t("new_record") + " ★", C.ACC);
-      g.center(19, "OK " + t("retry") + "  ·  " + t("back_key") + " " + t("arcade"), C.DIM);
+      if (finalScore <= 0 || !qrEl) {
+        g.bigCenter(4, "GAME OVER", C.RED);
+        g.center(11, t("score") + "  " + pad(finalScore, 6), C.BRIGHT);
+        g.center(13, "HI  " + pad(hi(game.id), 6), C.YEL);
+        g.center(19, "OK " + t("retry") + "  ·  " + t("back_key") + " " + t("arcade"), C.DIM);
+        return;
+      }
+      var qx = W - 4 - Math.ceil(13 * 1.2 / charRatio);   // first column under the QR
+      g.big(3, 2, "GAME", C.RED);
+      g.big(3, 8, "OVER", C.RED);
+      g.put(3, 15, game.title, game.color || C.ACC);
+      g.put(3, 16, t("score") + "  " + pad(finalScore, 6), C.BRIGHT);
+      g.put(3, 17, "HI     " + pad(hi(game.id), 6), C.YEL);
+      if (newRec && Math.floor(clock * 3) % 2) g.put(3, 19, "★ " + t("new_record") + " ★", C.ACC);
+      g.put(3, 22, "OK " + t("retry") + "  ·  " + t("back_key") + " " + t("arcade"), C.DIM);
+      var y = wrap(t("share_x"), W - 3 - qx, qx, 16, Math.floor(clock * 2) % 2 ? C.ACC : C.BRIGHT);
+      y = wrap(t("share_scan"), W - 3 - qx, qx, y + 1, C.FG);
+      wrap(t("share_done"), W - 3 - qx, qx, y, C.DIM);
     }
 
     // ---- loop ----
@@ -371,6 +417,7 @@
           newRec = addRecord(game.id, finalScore);
           view = null; setLayout(0, H); setPalette(home);
           go("over");
+          showQr(true);
           play(newRec ? "record" : "gameover");
         }
       }

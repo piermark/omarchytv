@@ -493,4 +493,5 @@
     <string name="omafire_sound">OmaFire sound</string>
     <string name="arcade_sound">Arcade sound</string>
     <string name="arcade_pc_theme">Arcade: RICE WARS changes the PC theme too</string>
+    <string name="share_qr">OmarchyTV QR code</string>
 </resources>

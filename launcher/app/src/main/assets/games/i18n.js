@@ -16,7 +16,10 @@
       fork_1: "Fork, fork, fork: lead your processes out before the OOM killer.",
       fork_2: "OK forks every process · arrows move them all together",
       fork_saved: "SAVED", fork_killed: "killed by OOM", fork_oom: "OUT OF MEMORY! the OOM killer is furious", fork_wake: "OOM killer wakes up in",
-      fork_move: "move all", fork_lost: "every process died · try again"
+      fork_move: "move all", fork_lost: "every process died · try again",
+      share_x: "share your record on X", share_scan: "Scan the code with your phone:",
+      share_done: "X opens with the post already written. You decide whether to send it.",
+      share_post: "{score} at {game} on #OmarchyTV. Can you beat me?"
     },
     it: {
       choose: "scegli", play: "gioca", exit: "esci", insert_coin: "INSERIRE GETTONE", press_ok: "PREMI OK", hi_scores: "RECORD",
@@ -31,7 +34,10 @@
       fork_1: "Fork, fork, fork: porta fuori i processi prima dell'OOM killer.",
       fork_2: "OK duplica ogni processo · le frecce li muovono tutti insieme",
       fork_saved: "SALVI", fork_killed: "ucciso dall'OOM", fork_oom: "MEMORIA ESAURITA! l'OOM killer è furioso", fork_wake: "L'OOM killer si sveglia tra",
-      fork_move: "muovi tutti", fork_lost: "tutti i processi sono morti · riprova"
+      fork_move: "muovi tutti", fork_lost: "tutti i processi sono morti · riprova",
+      share_x: "condividi il record su X", share_scan: "Inquadra il codice con il telefono:",
+      share_done: "Si apre X con il post già scritto. Decidi tu se pubblicarlo.",
+      share_post: "{score} a {game} su #OmarchyTV. Riesci a battermi?"
     },
     de: {
       choose: "wählen", play: "spielen", exit: "beenden", insert_coin: "MÜNZE EINWERFEN", press_ok: "OK DRÜCKEN", hi_scores: "BESTENLISTE",
@@ -46,7 +52,10 @@
       fork_1: "Fork, fork, fork: bring deine Prozesse raus, bevor der OOM-Killer kommt.",
       fork_2: "OK forkt jeden Prozess · Pfeile bewegen alle zusammen",
       fork_saved: "GERETTET", fork_killed: "vom OOM getötet", fork_oom: "SPEICHER VOLL! der OOM-Killer tobt", fork_wake: "OOM-Killer erwacht in",
-      fork_move: "alle bewegen", fork_lost: "alle Prozesse tot · nochmal"
+      fork_move: "alle bewegen", fork_lost: "alle Prozesse tot · nochmal",
+      share_x: "Rekord auf X teilen", share_scan: "Scanne den Code mit dem Handy:",
+      share_done: "X öffnet sich mit fertigem Post. Du entscheidest, ob du ihn sendest.",
+      share_post: "{score} bei {game} auf #OmarchyTV. Schlägst du mich?"
     },
     fr: {
       choose: "choisir", play: "jouer", exit: "quitter", insert_coin: "INSÉREZ UNE PIÈCE", press_ok: "APPUYEZ SUR OK", hi_scores: "MEILLEURS SCORES",
@@ -61,7 +70,10 @@
       fork_1: "Fork, fork, fork : fais sortir tes processus avant l'OOM killer.",
       fork_2: "OK duplique chaque processus · les flèches les bougent tous",
       fork_saved: "SAUVÉS", fork_killed: "tué par l'OOM", fork_oom: "PLUS DE MÉMOIRE ! l'OOM killer est furieux", fork_wake: "L'OOM killer se réveille dans",
-      fork_move: "tout bouger", fork_lost: "tous les processus sont morts · réessaie"
+      fork_move: "tout bouger", fork_lost: "tous les processus sont morts · réessaie",
+      share_x: "partager le record sur X", share_scan: "Scanne le code avec ton téléphone :",
+      share_done: "X s'ouvre avec le post déjà écrit. Tu décides de le publier.",
+      share_post: "{score} à {game} sur #OmarchyTV. Tu peux me battre ?"
     },
     es: {
       choose: "elegir", play: "jugar", exit: "salir", insert_coin: "INSERTA MONEDA", press_ok: "PULSA OK", hi_scores: "RÉCORDS",
@@ -76,7 +88,10 @@
       fork_1: "Fork, fork, fork: saca tus procesos antes de que llegue el OOM killer.",
       fork_2: "OK duplica cada proceso · las flechas los mueven a todos",
       fork_saved: "SALVADOS", fork_killed: "matado por OOM", fork_oom: "¡SIN MEMORIA! el OOM killer está furioso", fork_wake: "El OOM killer despierta en",
-      fork_move: "mover todos", fork_lost: "todos los procesos murieron · otra vez"
+      fork_move: "mover todos", fork_lost: "todos los procesos murieron · otra vez",
+      share_x: "compartir el récord en X", share_scan: "Escanea el código con el móvil:",
+      share_done: "X se abre con el post ya escrito. Tú decides si publicarlo.",
+      share_post: "{score} en {game} en #OmarchyTV. ¿Me superas?"
     },
     "pt-PT": {
       choose: "escolher", play: "jogar", exit: "sair", insert_coin: "INSIRA MOEDA", press_ok: "PRIMA OK", hi_scores: "RECORDES",
@@ -91,7 +106,10 @@
       fork_1: "Fork, fork, fork: tira os processos antes do OOM killer.",
       fork_2: "OK duplica cada processo · as setas movem todos juntos",
       fork_saved: "SALVOS", fork_killed: "morto pelo OOM", fork_oom: "SEM MEMÓRIA! o OOM killer está furioso", fork_wake: "O OOM killer acorda em",
-      fork_move: "mover todos", fork_lost: "todos os processos morreram · tenta outra vez"
+      fork_move: "mover todos", fork_lost: "todos os processos morreram · tenta outra vez",
+      share_x: "partilhar o recorde no X", share_scan: "Lê o código com o telemóvel:",
+      share_done: "O X abre com o post já escrito. Decides tu se o publicas.",
+      share_post: "{score} em {game} no #OmarchyTV. Consegues bater-me?"
     },
     "pt-BR": {
       choose: "escolher", play: "jogar", exit: "sair", insert_coin: "INSIRA FICHA", press_ok: "APERTE OK", hi_scores: "RECORDES",
@@ -106,7 +124,10 @@
       fork_1: "Fork, fork, fork: tire seus processos antes do OOM killer.",
       fork_2: "OK duplica cada processo · as setas movem todos juntos",
       fork_saved: "SALVOS", fork_killed: "morto pelo OOM", fork_oom: "SEM MEMÓRIA! o OOM killer está furioso", fork_wake: "O OOM killer acorda em",
-      fork_move: "mover todos", fork_lost: "todos os processos morreram · tente de novo"
+      fork_move: "mover todos", fork_lost: "todos os processos morreram · tente de novo",
+      share_x: "compartilhar o recorde no X", share_scan: "Escaneie o código com o celular:",
+      share_done: "O X abre com o post já escrito. Você decide se publica.",
+      share_post: "{score} em {game} no #OmarchyTV. Consegue me superar?"
     },
     nl: {
       choose: "kiezen", play: "spelen", exit: "stoppen", insert_coin: "WERP MUNT IN", press_ok: "DRUK OP OK", hi_scores: "TOPSCORES",
@@ -121,7 +142,10 @@
       fork_1: "Fork, fork, fork: breng je processen naar buiten vóór de OOM-killer.",
       fork_2: "OK forkt elk proces · pijlen bewegen ze allemaal samen",
       fork_saved: "GERED", fork_killed: "gedood door OOM", fork_oom: "GEHEUGEN VOL! de OOM-killer is woedend", fork_wake: "OOM-killer wordt wakker over",
-      fork_move: "alles bewegen", fork_lost: "alle processen dood · probeer opnieuw"
+      fork_move: "alles bewegen", fork_lost: "alle processen dood · probeer opnieuw",
+      share_x: "deel je record op X", share_scan: "Scan de code met je telefoon:",
+      share_done: "X opent met de post al geschreven. Jij beslist of je hem plaatst.",
+      share_post: "{score} bij {game} op #OmarchyTV. Kun jij me verslaan?"
     },
     pl: {
       choose: "wybierz", play: "graj", exit: "wyjdź", insert_coin: "WRZUĆ MONETĘ", press_ok: "NACIŚNIJ OK", hi_scores: "REKORDY",
@@ -136,7 +160,10 @@
       fork_1: "Fork, fork, fork: wyprowadź procesy, zanim dopadnie je OOM killer.",
       fork_2: "OK forkuje każdy proces · strzałki ruszają wszystkie naraz",
       fork_saved: "URATOWANE", fork_killed: "zabity przez OOM", fork_oom: "BRAK PAMIĘCI! OOM killer szaleje", fork_wake: "OOM killer budzi się za",
-      fork_move: "rusz wszystkie", fork_lost: "wszystkie procesy zginęły · spróbuj znowu"
+      fork_move: "rusz wszystkie", fork_lost: "wszystkie procesy zginęły · spróbuj znowu",
+      share_x: "udostępnij rekord na X", share_scan: "Zeskanuj kod telefonem:",
+      share_done: "X otworzy się z gotowym postem. Ty decydujesz, czy go wysłać.",
+      share_post: "{score} w {game} na #OmarchyTV. Pobijesz mnie?"
     },
     sv: {
       choose: "välj", play: "spela", exit: "avsluta", insert_coin: "SÄTT I MYNT", press_ok: "TRYCK OK", hi_scores: "TOPPLISTA",
@@ -151,7 +178,10 @@
       fork_1: "Fork, fork, fork: få ut dina processer innan OOM-killern kommer.",
       fork_2: "OK forkar varje process · pilarna flyttar alla samtidigt",
       fork_saved: "RÄDDADE", fork_killed: "dödad av OOM", fork_oom: "MINNET SLUT! OOM-killern rasar", fork_wake: "OOM-killern vaknar om",
-      fork_move: "flytta alla", fork_lost: "alla processer dog · försök igen"
+      fork_move: "flytta alla", fork_lost: "alla processer dog · försök igen",
+      share_x: "dela rekordet på X", share_scan: "Skanna koden med telefonen:",
+      share_done: "X öppnas med inlägget redan skrivet. Du bestämmer om det skickas.",
+      share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?"
     },
     da: {
       choose: "vælg", play: "spil", exit: "afslut", insert_coin: "INDSÆT MØNT", press_ok: "TRYK OK", hi_scores: "TOPSCORER",
@@ -166,7 +196,10 @@
       fork_1: "Fork, fork, fork: få dine processer ud før OOM-killeren.",
       fork_2: "OK forker hver proces · pilene flytter dem alle på én gang",
       fork_saved: "REDDET", fork_killed: "dræbt af OOM", fork_oom: "INTET HUKOMMELSE! OOM-killeren raser", fork_wake: "OOM-killeren vågner om",
-      fork_move: "flyt alle", fork_lost: "alle processer døde · prøv igen"
+      fork_move: "flyt alle", fork_lost: "alle processer døde · prøv igen",
+      share_x: "del rekorden på X", share_scan: "Scan koden med telefonen:",
+      share_done: "X åbner med opslaget skrevet. Du bestemmer, om det sendes.",
+      share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?"
     },
     cs: {
       choose: "vybrat", play: "hrát", exit: "konec", insert_coin: "VHOĎ MINCI", press_ok: "STISKNI OK", hi_scores: "REKORDY",
@@ -181,7 +214,10 @@
       fork_1: "Fork, fork, fork: dostaň procesy ven dřív, než přijde OOM killer.",
       fork_2: "OK forkne každý proces · šipky hýbou všemi najednou",
       fork_saved: "ZACHRÁNĚNO", fork_killed: "zabit OOM", fork_oom: "DOŠLA PAMĚŤ! OOM killer zuří", fork_wake: "OOM killer se probudí za",
-      fork_move: "pohnout všemi", fork_lost: "všechny procesy zemřely · zkus znovu"
+      fork_move: "pohnout všemi", fork_lost: "všechny procesy zemřely · zkus znovu",
+      share_x: "sdílet rekord na X", share_scan: "Naskenuj kód telefonem:",
+      share_done: "Otevře se X s hotovým příspěvkem. Ty rozhodneš, zda ho odeslat.",
+      share_post: "{score} ve hře {game} na #OmarchyTV. Překonáš mě?"
     },
     ro: {
       choose: "alege", play: "joacă", exit: "ieșire", insert_coin: "INTRODU O FISĂ", press_ok: "APASĂ OK", hi_scores: "RECORDURI",
@@ -196,7 +232,10 @@
       fork_1: "Fork, fork, fork: scoate procesele afară înainte de OOM killer.",
       fork_2: "OK duplică fiecare proces · săgețile le mută pe toate",
       fork_saved: "SALVATE", fork_killed: "ucis de OOM", fork_oom: "MEMORIE PLINĂ! OOM killer e furios", fork_wake: "OOM killer se trezește în",
-      fork_move: "mută toate", fork_lost: "toate procesele au murit · încearcă iar"
+      fork_move: "mută toate", fork_lost: "toate procesele au murit · încearcă iar",
+      share_x: "distribuie recordul pe X", share_scan: "Scanează codul cu telefonul:",
+      share_done: "X se deschide cu postarea scrisă. Tu decizi dacă o publici.",
+      share_post: "{score} la {game} pe #OmarchyTV. Mă poți întrece?"
     },
     el: {
       choose: "επιλογή", play: "παιχνίδι", exit: "έξοδος", insert_coin: "ΡΙΞΕ ΚΕΡΜΑ", press_ok: "ΠΑΤΑ OK", hi_scores: "ΡΕΚΟΡ",
@@ -211,7 +250,10 @@
       fork_1: "Fork, fork, fork: βγάλε τις διεργασίες πριν έρθει ο OOM killer.",
       fork_2: "Το OK διπλασιάζει κάθε διεργασία · τα βέλη τις κινούν όλες",
       fork_saved: "ΣΩΘΗΚΑΝ", fork_killed: "σκοτώθηκε από OOM", fork_oom: "ΤΕΛΕΙΩΣΕ Η ΜΝΗΜΗ! ο OOM killer λυσσάει", fork_wake: "Ο OOM killer ξυπνά σε",
-      fork_move: "κίνηση όλων", fork_lost: "όλες οι διεργασίες πέθαναν · ξανά"
+      fork_move: "κίνηση όλων", fork_lost: "όλες οι διεργασίες πέθαναν · ξανά",
+      share_x: "μοιράσου το ρεκόρ στο X", share_scan: "Σάρωσε τον κωδικό με το κινητό:",
+      share_done: "Το X ανοίγει με έτοιμη ανάρτηση. Εσύ αποφασίζεις αν θα τη στείλεις.",
+      share_post: "{score} στο {game} στο #OmarchyTV. Με νικάς;"
     },
     ru: {
       choose: "выбор", play: "играть", exit: "выход", insert_coin: "БРОСЬТЕ МОНЕТУ", press_ok: "НАЖМИТЕ OK", hi_scores: "РЕКОРДЫ",
@@ -226,7 +268,10 @@
       fork_1: "Fork, fork, fork: выведи процессы, пока не пришёл OOM killer.",
       fork_2: "OK форкает каждый процесс · стрелки двигают всех сразу",
       fork_saved: "СПАСЕНО", fork_killed: "убит OOM", fork_oom: "ПАМЯТЬ КОНЧИЛАСЬ! OOM killer в ярости", fork_wake: "OOM killer проснётся через",
-      fork_move: "двигать всех", fork_lost: "все процессы погибли · ещё раз"
+      fork_move: "двигать всех", fork_lost: "все процессы погибли · ещё раз",
+      share_x: "поделиться рекордом в X", share_scan: "Отсканируй код телефоном:",
+      share_done: "Откроется X с готовым постом. Публиковать или нет, решаешь ты.",
+      share_post: "{score} в {game} на #OmarchyTV. Побьёшь?"
     },
     uk: {
       choose: "вибір", play: "грати", exit: "вихід", insert_coin: "КИНЬТЕ МОНЕТУ", press_ok: "НАТИСНІТЬ OK", hi_scores: "РЕКОРДИ",
@@ -241,7 +286,10 @@
       fork_1: "Fork, fork, fork: виведи процеси, поки не прийшов OOM killer.",
       fork_2: "OK форкає кожен процес · стрілки рухають усіх разом",
       fork_saved: "ВРЯТОВАНО", fork_killed: "вбитий OOM", fork_oom: "ПАМ'ЯТЬ СКІНЧИЛАСЯ! OOM killer лютує", fork_wake: "OOM killer прокинеться за",
-      fork_move: "рухати всіх", fork_lost: "усі процеси загинули · ще раз"
+      fork_move: "рухати всіх", fork_lost: "усі процеси загинули · ще раз",
+      share_x: "поділитися рекордом в X", share_scan: "Відскануй код телефоном:",
+      share_done: "Відкриється X з готовим дописом. Публікувати чи ні, вирішуєш ти.",
+      share_post: "{score} у {game} на #OmarchyTV. Поб'єш?"
     },
     "zh-CN": {
       choose: "选择", play: "开始", exit: "退出", insert_coin: "请投币", press_ok: "按 OK", hi_scores: "最高分",
@@ -256,7 +304,10 @@
       fork_1: "Fork, fork, fork: 在 OOM killer 到来前把进程带出去。",
       fork_2: "OK 复制每个进程 · 方向键同时移动全部",
       fork_saved: "已救出", fork_killed: "被 OOM 杀死", fork_oom: "内存耗尽! OOM killer 暴怒", fork_wake: "OOM killer 苏醒倒计时",
-      fork_move: "全部移动", fork_lost: "进程全部阵亡 · 再试一次"
+      fork_move: "全部移动", fork_lost: "进程全部阵亡 · 再试一次",
+      share_x: "在 X 上分享纪录", share_scan: "用手机扫描二维码:",
+      share_done: "X 会打开并写好帖子,由你决定是否发布。",
+      share_post: "我在 #OmarchyTV 的 {game} 拿到 {score} 分,你能超过我吗?"
     },
     ja: {
       choose: "選ぶ", play: "プレイ", exit: "終了", insert_coin: "コインを入れてね", press_ok: "OK を押す", hi_scores: "ハイスコア",
@@ -271,7 +322,10 @@
       fork_1: "Fork, fork, fork: OOM killer が来る前にプロセスを脱出させろ。",
       fork_2: "OK で全プロセスを複製 · 矢印で全員を動かす",
       fork_saved: "救出", fork_killed: "OOM に倒された", fork_oom: "メモリ不足! OOM killer が激怒", fork_wake: "OOM killer 起動まで",
-      fork_move: "全員移動", fork_lost: "全プロセス終了 · もう一度"
+      fork_move: "全員移動", fork_lost: "全プロセス終了 · もう一度",
+      share_x: "記録を X でシェア", share_scan: "スマホでコードを読み取ってね:",
+      share_done: "投稿文入りで X が開きます。送るかどうかはあなた次第。",
+      share_post: "#OmarchyTV の {game} で {score} 点!勝てる?"
     },
     ar: {
       choose: "اختر", play: "العب", exit: "خروج", insert_coin: "أدخل عملة", press_ok: "اضغط OK", hi_scores: "أعلى النتائج",
@@ -286,7 +340,10 @@
       fork_1: "Fork, fork, fork: أخرج العمليات قبل وصول OOM killer.",
       fork_2: "OK ينسخ كل عملية · الأسهم تحركها كلها معًا",
       fork_saved: "تم إنقاذها", fork_killed: "قتله OOM", fork_oom: "نفدت الذاكرة! OOM killer غاضب", fork_wake: "يستيقظ OOM killer خلال",
-      fork_move: "حرّك الكل", fork_lost: "ماتت كل العمليات · حاول مجددًا"
+      fork_move: "حرّك الكل", fork_lost: "ماتت كل العمليات · حاول مجددًا",
+      share_x: "شارك رقمك القياسي على X", share_scan: "امسح الرمز بهاتفك:",
+      share_done: "يفتح X والمنشور مكتوب. أنت تقرر نشره.",
+      share_post: "{score} في {game} على #OmarchyTV. هل تتفوق علي؟"
     },
     tr: {
       choose: "seç", play: "oyna", exit: "çık", insert_coin: "JETON AT", press_ok: "OK'E BAS", hi_scores: "REKORLAR",
@@ -301,7 +358,10 @@
       fork_1: "Fork, fork, fork: OOM killer gelmeden süreçlerini dışarı çıkar.",
       fork_2: "OK her süreci çoğaltır · oklar hepsini birlikte taşır",
       fork_saved: "KURTARILAN", fork_killed: "OOM tarafından öldürüldü", fork_oom: "BELLEK BİTTİ! OOM killer öfkeli", fork_wake: "OOM killer uyanıyor:",
-      fork_move: "hepsini taşı", fork_lost: "tüm süreçler öldü · tekrar dene"
+      fork_move: "hepsini taşı", fork_lost: "tüm süreçler öldü · tekrar dene",
+      share_x: "rekoru X'te paylaş", share_scan: "Kodu telefonunla tara:",
+      share_done: "X, gönderi yazılı olarak açılır. Paylaşıp paylaşmamaya sen karar verirsin.",
+      share_post: "#OmarchyTV'de {game} oyununda {score}. Beni geçebilir misin?"
     },
     hu: {
       choose: "választ", play: "játék", exit: "kilépés", insert_coin: "DOBJ BE ÉRMÉT", press_ok: "NYOMD MEG AZ OK-T", hi_scores: "REKORDOK",
@@ -316,7 +376,10 @@
       fork_1: "Fork, fork, fork: vidd ki a folyamatokat, mielőtt jön az OOM killer.",
       fork_2: "Az OK minden folyamatot forkol · a nyilak mindet mozgatják",
       fork_saved: "MEGMENTVE", fork_killed: "megölte az OOM", fork_oom: "ELFOGYOTT A MEMÓRIA! az OOM killer tombol", fork_wake: "Az OOM killer ébredéséig:",
-      fork_move: "mind mozgat", fork_lost: "minden folyamat meghalt · újra"
+      fork_move: "mind mozgat", fork_lost: "minden folyamat meghalt · újra",
+      share_x: "rekord megosztása X-en", share_scan: "Olvasd be a kódot a telefonoddal:",
+      share_done: "Megnyílik az X a kész bejegyzéssel. Te döntöd el, elküldöd-e.",
+      share_post: "{score} a {game} játékban az #OmarchyTV-n. Megversz?"
     },
     fi: {
       choose: "valitse", play: "pelaa", exit: "lopeta", insert_coin: "SYÖTÄ KOLIKKO", press_ok: "PAINA OK", hi_scores: "ENNÄTYKSET",
@@ -331,7 +394,10 @@
       fork_1: "Fork, fork, fork: vie prosessit ulos ennen OOM killeriä.",
       fork_2: "OK forkkaa jokaisen prosessin · nuolet liikuttavat kaikkia",
       fork_saved: "PELASTETTU", fork_killed: "OOM tappoi", fork_oom: "MUISTI LOPPUI! OOM killer raivoaa", fork_wake: "OOM killer herää:",
-      fork_move: "liikuta kaikkia", fork_lost: "kaikki prosessit kuolivat · yritä uudelleen"
+      fork_move: "liikuta kaikkia", fork_lost: "kaikki prosessit kuolivat · yritä uudelleen",
+      share_x: "jaa ennätys X:ssä", share_scan: "Skannaa koodi puhelimella:",
+      share_done: "X avautuu valmiin julkaisun kanssa. Sinä päätät, lähetätkö sen.",
+      share_post: "{score} pelissä {game} #OmarchyTV:ssä. Voitatko minut?"
     },
     nb: {
       choose: "velg", play: "spill", exit: "avslutt", insert_coin: "SETT INN MYNT", press_ok: "TRYKK OK", hi_scores: "TOPPLISTE",
@@ -346,7 +412,10 @@
       fork_1: "Fork, fork, fork: få prosessene ut før OOM-killeren kommer.",
       fork_2: "OK forker hver prosess · pilene flytter alle samtidig",
       fork_saved: "REDDET", fork_killed: "drept av OOM", fork_oom: "TOMT FOR MINNE! OOM-killeren raser", fork_wake: "OOM-killeren våkner om",
-      fork_move: "flytt alle", fork_lost: "alle prosessene døde · prøv igjen"
+      fork_move: "flytt alle", fork_lost: "alle prosessene døde · prøv igjen",
+      share_x: "del rekorden på X", share_scan: "Skann koden med telefonen:",
+      share_done: "X åpnes med innlegget ferdig skrevet. Du bestemmer om det sendes.",
+      share_post: "{score} i {game} på #OmarchyTV. Klarer du å slå meg?"
     }
   };
 })(typeof window !== "undefined" ? window : this);

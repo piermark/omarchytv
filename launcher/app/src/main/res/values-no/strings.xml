@@ -456,4 +456,5 @@
     <string name="omafire_sound">OmaFire-lyd</string>
     <string name="arcade_sound">Spillehallyd</string>
     <string name="arcade_pc_theme">Spillehall: RICE WARS bytter også PC-ens tema</string>
+    <string name="share_qr">OmarchyTV-QR-kode</string>
 </resources>

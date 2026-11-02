@@ -9,6 +9,8 @@
 - **RICE WARS**: you only see the bugs of the theme you are ricing. OK re-themes the whole screen with a real Omarchy theme; every third level the BLOATWARE boss changes theme on you. Optional: a cleared level re-themes the Omarchy PC too (off by default; the PC's theme comes back when you leave).
 - **FORK BOMB**: OK forks every process, the arrows move them all together; lead them out before the OOM killer, which hunts faster the more of you there are.
 - Sound effects synthesised live (on by default, "Arcade sound"); every string in 23 languages.
+- **Share your record as a challenge**: at game over a QR code sits next to your score; point a phone at it and X opens with the post already written in the TV's language ("000804 at V-HOLD on #OmarchyTV. Can you beat me?"). You decide whether to send it; the TV never posts anything.
+- **OmarchyTV QR code** (setting): small and in the theme's colours in the Live screensaver (default), optionally on the boot screen too; it opens the project's page. Never on the OmaFire wallpaper.
 
 ### Sounds: OmaFire and the boot screen (draft)
 

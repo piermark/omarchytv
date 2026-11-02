@@ -456,4 +456,5 @@
     <string name="omafire_sound">Ήχος OmaFire</string>
     <string name="arcade_sound">Ήχος αίθουσας</string>
     <string name="arcade_pc_theme">Αίθουσα: το RICE WARS αλλάζει και το θέμα του PC</string>
+    <string name="share_qr">Κωδικός QR του OmarchyTV</string>
 </resources>

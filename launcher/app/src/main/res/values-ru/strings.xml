@@ -456,4 +456,5 @@
     <string name="omafire_sound">Звук OmaFire</string>
     <string name="arcade_sound">Звук игрового зала</string>
     <string name="arcade_pc_theme">Игровой зал: RICE WARS меняет и тему ПК</string>
+    <string name="share_qr">QR-код OmarchyTV</string>
 </resources>

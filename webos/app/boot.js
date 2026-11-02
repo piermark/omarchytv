@@ -329,6 +329,18 @@
         "background-image:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0,rgba(0,0,0,0) 2px,rgba(0,0,0,0.22) 2px,rgba(0,0,0,0.22) 3px)";
       el.appendChild(scan);
     }
+    // v2.14 QR code of OmarchyTV (setting "boot + Live", off by default): small, bottom right, with the wordmark; the
+    // boot then holds 3 s longer so a phone can read it (any key still skips).
+    var qrEl = null, qrHold = 0;
+    if (o.qr && root.OmarchyQR) {
+      qrEl = root.OmarchyQR.canvas(document, o.qr, Math.round(h * 0.16), "M", { light: t.fg, dark: t.bg });
+      if (qrEl) {
+        qrHold = 3000;
+        qrEl.style.cssText = "position:absolute;right:6%;bottom:8%;width:" + Math.round(h * 0.16) + "px;height:" + Math.round(h * 0.16) + "px;" +
+          "border-radius:6px;opacity:0;image-rendering:pixelated;-webkit-transition:opacity .4s;transition:opacity .4s";
+        screen.appendChild(qrEl);
+      }
+    }
     document.body.appendChild(el);
 
     var start = Date.now(), finished = false, fading = false, timer = null;
@@ -384,7 +396,8 @@
         setTransform(screen, "none");
         if (!fading) text.innerHTML = flickering(script, ms) ? "" : renderText(script, ms, real, t, fx);
       }
-      if (ms >= script.fadeAt) fade();
+      if (qrEl) qrEl.style.opacity = ms >= script.fadeAt - HOLD_MS && !fading ? "0.9" : "0";
+      if (ms >= script.fadeAt + qrHold) fade();
     }
     tick();
     timer = setInterval(tick, 33);   // setInterval, not rAF: some Tizen 2.x/webOS 3 engines throttle rAF at start
