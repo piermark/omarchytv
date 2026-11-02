@@ -571,6 +571,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     st.style.transform = "translate(" + x + "px," + y + "px) scale(" + k + ")";
     var el = document.getElementById("crt-overlay"), b = document.getElementById("crt-badge");
     if (el) { el.style.left = x + "px"; el.style.top = y + "px"; el.style.width = w + "px"; el.style.height = h + "px"; }
+    // The boot screen plays inside the set too (as on Android, where it is part of the scaled Home).
+    var bt = document.getElementById("otv-boot");
+    if (bt) { bt.style.left = x + "px"; bt.style.top = y + "px"; bt.style.width = w + "px"; bt.style.height = h + "px"; bt.style.right = "auto"; bt.style.bottom = "auto"; }
     if (b) b.style.top = (y + h + (window.innerHeight - y - h) * 0.32) + "px";
   }
   window.addEventListener("resize", fitStage);
@@ -3622,6 +3625,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     } catch (e) {}
     return window.tizen ? "Samsung Smart TV (Tizen)" : "LG Smart TV (webOS)";
   }
+  // Retro CRT: once the boot screen exists, fit it into the set (poll briefly; boot.js builds it on the next frames).
+  [50, 300, 800].forEach(function (ms) { setTimeout(function () { if (crtMode() !== "off") fitStage(); }, ms); });
   if (window.OmarchyBoot) {
     window.OmarchyBoot.install(function () {
       var bt = currentThemeObj();

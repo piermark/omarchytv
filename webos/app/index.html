@@ -703,7 +703,7 @@ html, body {
 }
 /* v2.14 Retro CRT plugin: the home shrinks into a CRT set. #crt-overlay sits exactly on the screen area (applyCrt):
    its huge box-shadow paints the bezel all around, the accent rim and LED follow the active theme. */
-#crt-overlay { position: fixed; z-index: 8000; pointer-events: none; display: none; border-radius: 2.2vh;
+#crt-overlay { position: fixed; z-index: 2147483001; pointer-events: none; display: none; border-radius: 2.2vh;
   background:
     linear-gradient(135deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 38%),
     repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.28) 2px, rgba(0,0,0,.28) 4px),
@@ -718,7 +718,7 @@ html, body {
     repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.42) 2px, rgba(0,0,0,.42) 4px),
     repeating-linear-gradient(to right, rgba(255,0,0,.09) 0, rgba(255,0,0,.09) 1px, rgba(0,255,0,.07) 1px, rgba(0,255,0,.07) 2px, rgba(0,0,255,.09) 2px, rgba(0,0,255,.09) 3px),
     radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,.72) 100%); }
-#crt-badge { position: fixed; z-index: 8001; pointer-events: none; display: none; left: 0; right: 0; text-align: center;
+#crt-badge { position: fixed; z-index: 2147483002; pointer-events: none; display: none; left: 0; right: 0; text-align: center;
   font: 1.6vh 'CaskaydiaMono Nerd Font', monospace; letter-spacing: .6em; color: var(--t-accent, #7aa2f7); opacity: .85;
   text-shadow: 0 0 1vh var(--t-accent, #7aa2f7); }
 #crt-badge.on { display: block; }
