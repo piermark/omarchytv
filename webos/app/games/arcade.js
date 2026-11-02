@@ -294,11 +294,19 @@
     }
     function drawHall() {
       drawMarquee();
-      var x0 = Math.floor((W - (games.length * 22 + (games.length - 1) * 3)) / 2);
-      for (var i = 0; i < games.length; i++) {
-        var lift = i === sel ? 0 : 1;
-        var dy = mode === "insert" && i === sel ? Math.min(6, Math.floor(modeT * 14)) : 0;
-        drawCart(x0 + i * 25, 9 + lift + dy, games[i], i === sel);
+      // a carousel: three cartridges in view, the chosen one in the middle; dots show where you are
+      var n = games.length, show = Math.min(3, n), x0 = Math.floor((W - (show * 22 + (show - 1) * 3)) / 2);
+      for (var k = 0; k < show; k++) {
+        var i = show < 3 ? k : (sel - 1 + k + n) % n, mid = show < 3 ? i === sel : k === 1;
+        var dy = mode === "insert" && mid ? Math.min(6, Math.floor(modeT * 14)) : 0;
+        drawCart(x0 + k * 25, 9 + (mid ? 0 : 1) + dy, games[i], mid);
+      }
+      if (n > 3) {
+        var blinkA = Math.floor(clock * 2) % 2;
+        g.put(x0 - 3, 13, "◀", blinkA ? C.ACC : C.DIM);
+        g.put(x0 + show * 25 - 1, 13, "▶", blinkA ? C.ACC : C.DIM);
+        var dots = ""; for (var d = 0; d < n; d++) dots += (d === sel ? "●" : "○") + (d < n - 1 ? " " : "");
+        if (mode === "hall") g.center(19, dots, C.DIM);
       }
       var gm = games[sel];
       if (gm && mode === "hall") {
@@ -312,13 +320,14 @@
     function drawScores() {
       drawMarquee();
       g.center(9, "★ " + t("hi_scores") + " ★", C.YEL);
-      var all = records(), x0 = Math.floor((W - (games.length * 22 + (games.length - 1) * 3)) / 2);
-      for (var i = 0; i < games.length; i++) {
-        var x = x0 + i * 25, l = all[games[i].id] || [];
-        g.box(x, 11, 22, 9, C.DIM, "round");
-        g.put(x + Math.floor((22 - games[i].title.length) / 2), 11, " " + games[i].title + " ", games[i].color || C.ACC);
-        if (!l.length) g.put(x + 2, 15, t("no_scores"), C.DIM);
-        for (var k = 0; k < l.length; k++) g.put(x + 2, 13 + k, (k + 1) + ". " + pad(l[k].s, 6) + "  " + l[k].d, k === 0 ? C.BRIGHT : C.FG);
+      var all = records(), n = games.length, bw = Math.min(22, Math.floor((W - 2 - (n - 1)) / n)), x0 = Math.floor((W - (n * bw + (n - 1))) / 2);
+      for (var i = 0; i < n; i++) {
+        var x = x0 + i * (bw + 1), l = all[games[i].id] || [];
+        g.box(x, 11, bw, 9, i === sel ? C.ACC : C.DIM, "round");
+        var title = games[i].title.substr(0, bw - 2);
+        g.put(x + Math.floor((bw - title.length) / 2), 11, title, games[i].color || C.ACC);
+        if (!l.length) g.put(x + 2, 15, "—", C.DIM);
+        for (var k = 0; k < l.length; k++) g.put(x + 2, 13 + k, (bw >= 20 ? (k + 1) + ". " : "") + pad(l[k].s, 6) + (bw >= 20 ? "  " + l[k].d : ""), k === 0 ? C.BRIGHT : C.FG);
       }
       g.center(24, t("back_key") + " / OK  ·  " + NAME, C.DIM);
     }
@@ -444,6 +453,10 @@
       if (roll) tf += "translateY(" + (-(roll - Math.floor(roll)) * 1.2).toFixed(3) + "em) ";
       if (v.skew) tf += "skewX(" + v.skew.toFixed(2) + "deg) ";
       if (typeof v.scaleY === "number" && v.scaleY < 1) tf += "scaleY(" + Math.max(0.02, v.scaleY).toFixed(3) + ") ";
+      if (v.rotX) tf = "perspective(60em) rotateX(" + v.rotX.toFixed(2) + "deg) " + tf;   // TILT: the board leans
+      if (v.rotate) tf += "rotate(" + v.rotate.toFixed(2) + "deg) ";
+      var ov = v.rotate || v.rotX ? "visible" : "hidden";
+      if (picWrap._ov !== ov) { picWrap.style.overflow = ov; picWrap._ov = ov; }
       if (parts.pic._tf !== tf) { parts.pic.style.transform = parts.pic.style.webkitTransform = tf; parts.pic._tf = tf; }
       var mono = !!v.mono;
       if (parts.pic._mono !== mono) { parts.pic.className = mono ? "ga-mono" : ""; parts.pic._mono = mono; }

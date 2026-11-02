@@ -2,12 +2,14 @@
 
 ## [Unreleased]
 
-### OmarchyTV Arcade: three games of our own (draft)
+### OmarchyTV Arcade: five games of our own (draft)
 
 - **OmarchyTV Arcade** on Android TV, LG and Samsung: a games room with a light-bulb marquee and cartridges (insert one and the channel changes), high scores, pause, in the active theme's colours and inside the Retro CRT set when that plugin is on. Arrows, OK and Back only, so nothing leaves the launcher. All text-mode and light, for old TVs too.
 - **V-HOLD**: run through a terminal while the old TV falls apart: the picture rolls, leans, loses its colour or collapses into a line. Turn the blinking knob with ◀ ▶ until it locks, slap the set with OK OK. The more is broken, the more each metre is worth.
 - **RICE WARS**: you only see the bugs of the theme you are ricing. OK re-themes the whole screen with a real Omarchy theme; every third level the BLOATWARE boss changes theme on you. Optional: a cleared level re-themes the Omarchy PC too (off by default; the PC's theme comes back when you leave).
 - **FORK BOMB**: OK forks every process, the arrows move them all together; lead them out before the OOM killer, which hunts faster the more of you there are. The first maze is the Omarchy logo itself.
+- **TILT**: the marble maze, but the TV tilts: the arrows really lean the whole picture and the ball rolls by gravity to the exit; the holes are /dev/null; the clock is your score.
+- **HYPRMAZE**: the maze is a Hyprland desktop: the gaps between the windows are the corridors, and every window that opens, closes or flips (SUPER+J) reshapes it under you. Glide to the window marked SUPER+Q and close it before twelve windows fill the workspace.
 - Sound effects synthesised live (on by default, "Arcade sound"); every string in 23 languages.
 - **Share your record as a challenge**: at game over a QR code sits next to your score; point a phone at it and X opens with the post already written in the TV's language ("000804 at V-HOLD on #OmarchyTV. Can you beat me?"). You decide whether to send it; the TV never posts anything.
 - **OmarchyTV QR code** (setting): small and in the theme's colours in the Live screensaver (default), optionally on the boot screen too; it opens the project's page. Never on the OmaFire wallpaper.

@@ -19,7 +19,9 @@
       fork_move: "move all", fork_lost: "every process died · try again",
       share_x: "share your record on X", share_scan: "Scan the code with your phone:",
       share_done: "X opens with the post already written. You decide whether to send it.",
-      share_post: "{score} at {game} on #OmarchyTV. Can you beat me?"
+      share_post: "{score} at {game} on #OmarchyTV. Can you beat me?",
+      tilt_1: "Tilt the whole TV and roll the ball to the exit. Holes are /dev/null.", tilt_2: "◀ ▲ ▼ ▶ tilt the TV · OK level it · the clock is your score", tilt_keys: "tilt", tilt_level: "level",
+      hypr_1: "The maze is a Hyprland desktop: the windows retile and the gaps move.", hypr_2: "glide along the gaps · OK closes the window marked SUPER+Q", hypr_keys: "glide", hypr_full: "WORKSPACE FULL!", hypr_wrong: "wrong window:"
     },
     it: {
       choose: "scegli", play: "gioca", exit: "esci", insert_coin: "INSERIRE GETTONE", press_ok: "PREMI OK", hi_scores: "RECORD",
@@ -37,7 +39,9 @@
       fork_move: "muovi tutti", fork_lost: "tutti i processi sono morti · riprova",
       share_x: "condividi il record su X", share_scan: "Inquadra il codice con il telefono:",
       share_done: "Si apre X con il post già scritto. Decidi tu se pubblicarlo.",
-      share_post: "{score} a {game} su #OmarchyTV. Riesci a battermi?"
+      share_post: "{score} a {game} su #OmarchyTV. Riesci a battermi?",
+      tilt_1: "Inclina tutta la TV e porta la pallina all'uscita. I buchi sono /dev/null.", tilt_2: "◀ ▲ ▼ ▶ inclina la TV · OK la raddrizza · il tempo è il punteggio", tilt_keys: "inclina", tilt_level: "raddrizza",
+      hypr_1: "Il labirinto è un desktop Hyprland: le finestre si ritassellano da sole.", hypr_2: "scivola nei varchi · OK chiude la finestra SUPER+Q", hypr_keys: "scivola", hypr_full: "WORKSPACE PIENO!", hypr_wrong: "finestra sbagliata:"
     },
     de: {
       choose: "wählen", play: "spielen", exit: "beenden", insert_coin: "MÜNZE EINWERFEN", press_ok: "OK DRÜCKEN", hi_scores: "BESTENLISTE",
@@ -55,7 +59,9 @@
       fork_move: "alle bewegen", fork_lost: "alle Prozesse tot · nochmal",
       share_x: "Rekord auf X teilen", share_scan: "Scanne den Code mit dem Handy:",
       share_done: "X öffnet sich mit fertigem Post. Du entscheidest, ob du ihn sendest.",
-      share_post: "{score} bei {game} auf #OmarchyTV. Schlägst du mich?"
+      share_post: "{score} bei {game} auf #OmarchyTV. Schlägst du mich?",
+      tilt_1: "Neig den ganzen Fernseher, roll die Kugel zum Ausgang. Löcher: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ TV neigen · OK gerade · die Zeit ist deine Wertung", tilt_keys: "neigen", tilt_level: "gerade",
+      hypr_1: "Das Labyrinth ist ein Hyprland-Desktop: die Fenster kacheln sich neu.", hypr_2: "gleite durch die Lücken · OK schließt das SUPER+Q-Fenster", hypr_keys: "gleiten", hypr_full: "WORKSPACE VOLL!", hypr_wrong: "falsches Fenster:"
     },
     fr: {
       choose: "choisir", play: "jouer", exit: "quitter", insert_coin: "INSÉREZ UNE PIÈCE", press_ok: "APPUYEZ SUR OK", hi_scores: "MEILLEURS SCORES",
@@ -73,7 +79,9 @@
       fork_move: "tout bouger", fork_lost: "tous les processus sont morts · réessaie",
       share_x: "partager le record sur X", share_scan: "Scanne le code avec ton téléphone :",
       share_done: "X s'ouvre avec le post déjà écrit. Tu décides de le publier.",
-      share_post: "{score} à {game} sur #OmarchyTV. Tu peux me battre ?"
+      share_post: "{score} à {game} sur #OmarchyTV. Tu peux me battre ?",
+      tilt_1: "Incline toute la télé, roule la bille vers la sortie. Trous : /dev/null.", tilt_2: "◀ ▲ ▼ ▶ incliner la télé · OK la redresser · le temps fait le score", tilt_keys: "incliner", tilt_level: "redresser",
+      hypr_1: "Le labyrinthe est un bureau Hyprland : les fenêtres se réorganisent.", hypr_2: "glisse dans les espaces · OK ferme la fenêtre SUPER+Q", hypr_keys: "glisser", hypr_full: "BUREAU PLEIN !", hypr_wrong: "mauvaise fenêtre :"
     },
     es: {
       choose: "elegir", play: "jugar", exit: "salir", insert_coin: "INSERTA MONEDA", press_ok: "PULSA OK", hi_scores: "RÉCORDS",
@@ -91,7 +99,9 @@
       fork_move: "mover todos", fork_lost: "todos los procesos murieron · otra vez",
       share_x: "compartir el récord en X", share_scan: "Escanea el código con el móvil:",
       share_done: "X se abre con el post ya escrito. Tú decides si publicarlo.",
-      share_post: "{score} en {game} en #OmarchyTV. ¿Me superas?"
+      share_post: "{score} en {game} en #OmarchyTV. ¿Me superas?",
+      tilt_1: "Inclina toda la tele y lleva la bola a la salida. Agujeros: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ inclinar la tele · OK nivelar · el tiempo es tu puntuación", tilt_keys: "inclinar", tilt_level: "nivelar",
+      hypr_1: "El laberinto es un escritorio Hyprland: las ventanas se reordenan.", hypr_2: "desliza por los huecos · OK cierra la ventana SUPER+Q", hypr_keys: "deslizar", hypr_full: "¡ESCRITORIO LLENO!", hypr_wrong: "ventana equivocada:"
     },
     "pt-PT": {
       choose: "escolher", play: "jogar", exit: "sair", insert_coin: "INSIRA MOEDA", press_ok: "PRIMA OK", hi_scores: "RECORDES",
@@ -109,7 +119,9 @@
       fork_move: "mover todos", fork_lost: "todos os processos morreram · tenta outra vez",
       share_x: "partilhar o recorde no X", share_scan: "Lê o código com o telemóvel:",
       share_done: "O X abre com o post já escrito. Decides tu se o publicas.",
-      share_post: "{score} em {game} no #OmarchyTV. Consegues bater-me?"
+      share_post: "{score} em {game} no #OmarchyTV. Consegues bater-me?",
+      tilt_1: "Inclina a TV toda e leva a bola à saída. Os buracos são /dev/null.", tilt_2: "◀ ▲ ▼ ▶ inclinar a TV · OK nivelar · o tempo é a pontuação", tilt_keys: "inclinar", tilt_level: "nivelar",
+      hypr_1: "O labirinto é um ambiente Hyprland: as janelas reorganizam-se.", hypr_2: "desliza pelos espaços · OK fecha a janela SUPER+Q", hypr_keys: "deslizar", hypr_full: "ÁREA CHEIA!", hypr_wrong: "janela errada:"
     },
     "pt-BR": {
       choose: "escolher", play: "jogar", exit: "sair", insert_coin: "INSIRA FICHA", press_ok: "APERTE OK", hi_scores: "RECORDES",
@@ -127,7 +139,9 @@
       fork_move: "mover todos", fork_lost: "todos os processos morreram · tente de novo",
       share_x: "compartilhar o recorde no X", share_scan: "Escaneie o código com o celular:",
       share_done: "O X abre com o post já escrito. Você decide se publica.",
-      share_post: "{score} em {game} no #OmarchyTV. Consegue me superar?"
+      share_post: "{score} em {game} no #OmarchyTV. Consegue me superar?",
+      tilt_1: "Incline a TV inteira e leve a bola até a saída. Os buracos são /dev/null.", tilt_2: "◀ ▲ ▼ ▶ incline a TV · OK nivela · o tempo é a pontuação", tilt_keys: "inclinar", tilt_level: "nivelar",
+      hypr_1: "O labirinto é uma área de trabalho Hyprland: as janelas se reorganizam.", hypr_2: "deslize pelos espaços · OK fecha a janela SUPER+Q", hypr_keys: "deslizar", hypr_full: "ÁREA CHEIA!", hypr_wrong: "janela errada:"
     },
     nl: {
       choose: "kiezen", play: "spelen", exit: "stoppen", insert_coin: "WERP MUNT IN", press_ok: "DRUK OP OK", hi_scores: "TOPSCORES",
@@ -145,7 +159,9 @@
       fork_move: "alles bewegen", fork_lost: "alle processen dood · probeer opnieuw",
       share_x: "deel je record op X", share_scan: "Scan de code met je telefoon:",
       share_done: "X opent met de post al geschreven. Jij beslist of je hem plaatst.",
-      share_post: "{score} bij {game} op #OmarchyTV. Kun jij me verslaan?"
+      share_post: "{score} bij {game} op #OmarchyTV. Kun jij me verslaan?",
+      tilt_1: "Kantel de hele tv en rol de bal naar de uitgang. Gaten zijn /dev/null.", tilt_2: "◀ ▲ ▼ ▶ tv kantelen · OK recht · de tijd is je score", tilt_keys: "kantelen", tilt_level: "recht",
+      hypr_1: "Het doolhof is een Hyprland-bureaublad: vensters herschikken zich.", hypr_2: "glijd door de kieren · OK sluit het SUPER+Q-venster", hypr_keys: "glijden", hypr_full: "WERKBLAD VOL!", hypr_wrong: "verkeerd venster:"
     },
     pl: {
       choose: "wybierz", play: "graj", exit: "wyjdź", insert_coin: "WRZUĆ MONETĘ", press_ok: "NACIŚNIJ OK", hi_scores: "REKORDY",
@@ -163,7 +179,9 @@
       fork_move: "rusz wszystkie", fork_lost: "wszystkie procesy zginęły · spróbuj znowu",
       share_x: "udostępnij rekord na X", share_scan: "Zeskanuj kod telefonem:",
       share_done: "X otworzy się z gotowym postem. Ty decydujesz, czy go wysłać.",
-      share_post: "{score} w {game} na #OmarchyTV. Pobijesz mnie?"
+      share_post: "{score} w {game} na #OmarchyTV. Pobijesz mnie?",
+      tilt_1: "Przechyl cały telewizor i doprowadź kulkę do wyjścia. Dziury to /dev/null.", tilt_2: "◀ ▲ ▼ ▶ przechyl TV · OK wypoziomuj · czas to twój wynik", tilt_keys: "przechyl", tilt_level: "poziom",
+      hypr_1: "Labirynt to pulpit Hyprland: okna się przestawiają, przejścia wędrują.", hypr_2: "sun szczelinami · OK zamyka okno SUPER+Q", hypr_keys: "sun", hypr_full: "PULPIT PEŁNY!", hypr_wrong: "złe okno:"
     },
     sv: {
       choose: "välj", play: "spela", exit: "avsluta", insert_coin: "SÄTT I MYNT", press_ok: "TRYCK OK", hi_scores: "TOPPLISTA",
@@ -181,7 +199,9 @@
       fork_move: "flytta alla", fork_lost: "alla processer dog · försök igen",
       share_x: "dela rekordet på X", share_scan: "Skanna koden med telefonen:",
       share_done: "X öppnas med inlägget redan skrivet. Du bestämmer om det skickas.",
-      share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?"
+      share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?",
+      tilt_1: "Luta hela tv:n och rulla kulan till utgången. Hålen är /dev/null.", tilt_2: "◀ ▲ ▼ ▶ luta tv:n · OK räta upp · tiden är din poäng", tilt_keys: "luta", tilt_level: "räta upp",
+      hypr_1: "Labyrinten är ett Hyprland-skrivbord: fönstren ordnar om sig.", hypr_2: "glid i springorna · OK stänger SUPER+Q-fönstret", hypr_keys: "glid", hypr_full: "SKRIVBORDET FULLT!", hypr_wrong: "fel fönster:"
     },
     da: {
       choose: "vælg", play: "spil", exit: "afslut", insert_coin: "INDSÆT MØNT", press_ok: "TRYK OK", hi_scores: "TOPSCORER",
@@ -199,7 +219,9 @@
       fork_move: "flyt alle", fork_lost: "alle processer døde · prøv igen",
       share_x: "del rekorden på X", share_scan: "Scan koden med telefonen:",
       share_done: "X åbner med opslaget skrevet. Du bestemmer, om det sendes.",
-      share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?"
+      share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?",
+      tilt_1: "Vip hele tv'et og rul kuglen til udgangen. Hullerne er /dev/null.", tilt_2: "◀ ▲ ▼ ▶ vip tv'et · OK ret op · tiden er din score", tilt_keys: "vip", tilt_level: "ret op",
+      hypr_1: "Labyrinten er et Hyprland-skrivebord: vinduerne omarrangerer sig.", hypr_2: "glid i mellemrummene · OK lukker SUPER+Q-vinduet", hypr_keys: "glid", hypr_full: "SKRIVEBORDET FULDT!", hypr_wrong: "forkert vindue:"
     },
     cs: {
       choose: "vybrat", play: "hrát", exit: "konec", insert_coin: "VHOĎ MINCI", press_ok: "STISKNI OK", hi_scores: "REKORDY",
@@ -217,7 +239,9 @@
       fork_move: "pohnout všemi", fork_lost: "všechny procesy zemřely · zkus znovu",
       share_x: "sdílet rekord na X", share_scan: "Naskenuj kód telefonem:",
       share_done: "Otevře se X s hotovým příspěvkem. Ty rozhodneš, zda ho odeslat.",
-      share_post: "{score} ve hře {game} na #OmarchyTV. Překonáš mě?"
+      share_post: "{score} ve hře {game} na #OmarchyTV. Překonáš mě?",
+      tilt_1: "Nakloň celou televizi a dokutálej kuličku k východu. Díry jsou /dev/null.", tilt_2: "◀ ▲ ▼ ▶ naklonit TV · OK vyrovnat · čas je tvé skóre", tilt_keys: "naklonit", tilt_level: "vyrovnat",
+      hypr_1: "Bludiště je plocha Hyprlandu: okna se přeskládávají, mezery se posouvají.", hypr_2: "klouzej mezerami · OK zavře okno SUPER+Q", hypr_keys: "klouzat", hypr_full: "PLOCHA PLNÁ!", hypr_wrong: "špatné okno:"
     },
     ro: {
       choose: "alege", play: "joacă", exit: "ieșire", insert_coin: "INTRODU O FISĂ", press_ok: "APASĂ OK", hi_scores: "RECORDURI",
@@ -235,7 +259,9 @@
       fork_move: "mută toate", fork_lost: "toate procesele au murit · încearcă iar",
       share_x: "distribuie recordul pe X", share_scan: "Scanează codul cu telefonul:",
       share_done: "X se deschide cu postarea scrisă. Tu decizi dacă o publici.",
-      share_post: "{score} la {game} pe #OmarchyTV. Mă poți întrece?"
+      share_post: "{score} la {game} pe #OmarchyTV. Mă poți întrece?",
+      tilt_1: "Înclină tot televizorul și du bila la ieșire. Găurile sunt /dev/null.", tilt_2: "◀ ▲ ▼ ▶ înclină TV-ul · OK îndreaptă · timpul e scorul", tilt_keys: "înclină", tilt_level: "îndreaptă",
+      hypr_1: "Labirintul e un desktop Hyprland: ferestrele se rearanjează.", hypr_2: "alunecă prin spații · OK închide fereastra SUPER+Q", hypr_keys: "alunecă", hypr_full: "DESKTOP PLIN!", hypr_wrong: "fereastră greșită:"
     },
     el: {
       choose: "επιλογή", play: "παιχνίδι", exit: "έξοδος", insert_coin: "ΡΙΞΕ ΚΕΡΜΑ", press_ok: "ΠΑΤΑ OK", hi_scores: "ΡΕΚΟΡ",
@@ -253,7 +279,9 @@
       fork_move: "κίνηση όλων", fork_lost: "όλες οι διεργασίες πέθαναν · ξανά",
       share_x: "μοιράσου το ρεκόρ στο X", share_scan: "Σάρωσε τον κωδικό με το κινητό:",
       share_done: "Το X ανοίγει με έτοιμη ανάρτηση. Εσύ αποφασίζεις αν θα τη στείλεις.",
-      share_post: "{score} στο {game} στο #OmarchyTV. Με νικάς;"
+      share_post: "{score} στο {game} στο #OmarchyTV. Με νικάς;",
+      tilt_1: "Γείρε όλη την TV, πήγαινε τη μπίλια στην έξοδο. Τρύπες: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ γείρε την TV · OK ίσιωμα · ο χρόνος είναι το σκορ", tilt_keys: "γείρε", tilt_level: "ίσιωμα",
+      hypr_1: "Ο λαβύρινθος είναι desktop Hyprland: τα παράθυρα ξαναστήνονται.", hypr_2: "γλίστρα στα κενά · OK κλείνει το παράθυρο SUPER+Q", hypr_keys: "γλίστρα", hypr_full: "ΓΕΜΑΤΟ WORKSPACE!", hypr_wrong: "λάθος παράθυρο:"
     },
     ru: {
       choose: "выбор", play: "играть", exit: "выход", insert_coin: "БРОСЬТЕ МОНЕТУ", press_ok: "НАЖМИТЕ OK", hi_scores: "РЕКОРДЫ",
@@ -271,7 +299,9 @@
       fork_move: "двигать всех", fork_lost: "все процессы погибли · ещё раз",
       share_x: "поделиться рекордом в X", share_scan: "Отсканируй код телефоном:",
       share_done: "Откроется X с готовым постом. Публиковать или нет, решаешь ты.",
-      share_post: "{score} в {game} на #OmarchyTV. Побьёшь?"
+      share_post: "{score} в {game} на #OmarchyTV. Побьёшь?",
+      tilt_1: "Наклони весь телевизор и докати шарик до выхода. Дыры — это /dev/null.", tilt_2: "◀ ▲ ▼ ▶ наклон ТВ · OK выровнять · время — это счёт", tilt_keys: "наклон", tilt_level: "выровнять",
+      hypr_1: "Лабиринт — рабочий стол Hyprland: окна перестраиваются, проходы сдвигаются.", hypr_2: "скользи по зазорам · OK закрывает окно SUPER+Q", hypr_keys: "скольжение", hypr_full: "РАБОЧИЙ СТОЛ ПОЛОН!", hypr_wrong: "не то окно:"
     },
     uk: {
       choose: "вибір", play: "грати", exit: "вихід", insert_coin: "КИНЬТЕ МОНЕТУ", press_ok: "НАТИСНІТЬ OK", hi_scores: "РЕКОРДИ",
@@ -289,7 +319,9 @@
       fork_move: "рухати всіх", fork_lost: "усі процеси загинули · ще раз",
       share_x: "поділитися рекордом в X", share_scan: "Відскануй код телефоном:",
       share_done: "Відкриється X з готовим дописом. Публікувати чи ні, вирішуєш ти.",
-      share_post: "{score} у {game} на #OmarchyTV. Поб'єш?"
+      share_post: "{score} у {game} на #OmarchyTV. Поб'єш?",
+      tilt_1: "Нахили весь телевізор і докоти кульку до виходу. Дірки — це /dev/null.", tilt_2: "◀ ▲ ▼ ▶ нахил ТВ · OK вирівняти · час — це рахунок", tilt_keys: "нахил", tilt_level: "вирівняти",
+      hypr_1: "Лабіринт — робочий стіл Hyprland: вікна перебудовуються, проходи зсуваються.", hypr_2: "ковзай проміжками · OK закриває вікно SUPER+Q", hypr_keys: "ковзання", hypr_full: "РОБОЧИЙ СТІЛ ПОВНИЙ!", hypr_wrong: "не те вікно:"
     },
     "zh-CN": {
       choose: "选择", play: "开始", exit: "退出", insert_coin: "请投币", press_ok: "按 OK", hi_scores: "最高分",
@@ -307,7 +339,9 @@
       fork_move: "全部移动", fork_lost: "进程全部阵亡 · 再试一次",
       share_x: "在 X 上分享纪录", share_scan: "用手机扫描二维码:",
       share_done: "X 会打开并写好帖子,由你决定是否发布。",
-      share_post: "我在 #OmarchyTV 的 {game} 拿到 {score} 分,你能超过我吗?"
+      share_post: "我在 #OmarchyTV 的 {game} 拿到 {score} 分,你能超过我吗?",
+      tilt_1: "倾斜整台电视,把小球滚到出口。洞就是 /dev/null。", tilt_2: "◀ ▲ ▼ ▶ 倾斜电视 · OK 放平 · 用时就是分数", tilt_keys: "倾斜", tilt_level: "放平",
+      hypr_1: "迷宫是 Hyprland 桌面:窗口会重新平铺,缝隙随之移动。", hypr_2: "沿缝隙滑行 · OK 关闭标着 SUPER+Q 的窗口", hypr_keys: "滑行", hypr_full: "工作区满了!", hypr_wrong: "关错窗口:"
     },
     ja: {
       choose: "選ぶ", play: "プレイ", exit: "終了", insert_coin: "コインを入れてね", press_ok: "OK を押す", hi_scores: "ハイスコア",
@@ -325,7 +359,9 @@
       fork_move: "全員移動", fork_lost: "全プロセス終了 · もう一度",
       share_x: "記録を X でシェア", share_scan: "スマホでコードを読み取ってね:",
       share_done: "投稿文入りで X が開きます。送るかどうかはあなた次第。",
-      share_post: "#OmarchyTV の {game} で {score} 点!勝てる?"
+      share_post: "#OmarchyTV の {game} で {score} 点!勝てる?",
+      tilt_1: "テレビごと傾けてボールを出口へ。穴は /dev/null。", tilt_2: "◀ ▲ ▼ ▶ テレビを傾ける · OK 水平に · タイムがスコア", tilt_keys: "傾ける", tilt_level: "水平",
+      hypr_1: "迷路は Hyprland のデスクトップ。ウィンドウが並び替わり、すき間が動く。", hypr_2: "すき間を滑る · OK で SUPER+Q のウィンドウを閉じる", hypr_keys: "滑る", hypr_full: "ワークスペース満杯!", hypr_wrong: "違うウィンドウ:"
     },
     ar: {
       choose: "اختر", play: "العب", exit: "خروج", insert_coin: "أدخل عملة", press_ok: "اضغط OK", hi_scores: "أعلى النتائج",
@@ -343,7 +379,9 @@
       fork_move: "حرّك الكل", fork_lost: "ماتت كل العمليات · حاول مجددًا",
       share_x: "شارك رقمك القياسي على X", share_scan: "امسح الرمز بهاتفك:",
       share_done: "يفتح X والمنشور مكتوب. أنت تقرر نشره.",
-      share_post: "{score} في {game} على #OmarchyTV. هل تتفوق علي؟"
+      share_post: "{score} في {game} على #OmarchyTV. هل تتفوق علي؟",
+      tilt_1: "أمِل التلفاز كله ودحرج الكرة إلى المخرج. الحفر هي /dev/null.", tilt_2: "◀ ▲ ▼ ▶ أمِل التلفاز · OK سوِّه · الوقت هو نتيجتك", tilt_keys: "أمِل", tilt_level: "سوِّ",
+      hypr_1: "المتاهة سطح مكتب Hyprland: النوافذ تعيد ترتيب نفسها والفجوات تتحرك.", hypr_2: "انزلق في الفجوات · OK يغلق نافذة SUPER+Q", hypr_keys: "انزلق", hypr_full: "مساحة العمل ممتلئة!", hypr_wrong: "نافذة خاطئة:"
     },
     tr: {
       choose: "seç", play: "oyna", exit: "çık", insert_coin: "JETON AT", press_ok: "OK'E BAS", hi_scores: "REKORLAR",
@@ -361,7 +399,9 @@
       fork_move: "hepsini taşı", fork_lost: "tüm süreçler öldü · tekrar dene",
       share_x: "rekoru X'te paylaş", share_scan: "Kodu telefonunla tara:",
       share_done: "X, gönderi yazılı olarak açılır. Paylaşıp paylaşmamaya sen karar verirsin.",
-      share_post: "#OmarchyTV'de {game} oyununda {score}. Beni geçebilir misin?"
+      share_post: "#OmarchyTV'de {game} oyununda {score}. Beni geçebilir misin?",
+      tilt_1: "Tüm televizyonu eğ ve topu çıkışa yuvarla. Delikler /dev/null.", tilt_2: "◀ ▲ ▼ ▶ TV'yi eğ · OK düzelt · süre senin puanın", tilt_keys: "eğ", tilt_level: "düzelt",
+      hypr_1: "Labirent bir Hyprland masaüstü: pencereler yeniden döşenir, boşluklar kayar.", hypr_2: "boşluklarda kay · OK SUPER+Q penceresini kapatır", hypr_keys: "kay", hypr_full: "ÇALIŞMA ALANI DOLU!", hypr_wrong: "yanlış pencere:"
     },
     hu: {
       choose: "választ", play: "játék", exit: "kilépés", insert_coin: "DOBJ BE ÉRMÉT", press_ok: "NYOMD MEG AZ OK-T", hi_scores: "REKORDOK",
@@ -379,7 +419,9 @@
       fork_move: "mind mozgat", fork_lost: "minden folyamat meghalt · újra",
       share_x: "rekord megosztása X-en", share_scan: "Olvasd be a kódot a telefonoddal:",
       share_done: "Megnyílik az X a kész bejegyzéssel. Te döntöd el, elküldöd-e.",
-      share_post: "{score} a {game} játékban az #OmarchyTV-n. Megversz?"
+      share_post: "{score} a {game} játékban az #OmarchyTV-n. Megversz?",
+      tilt_1: "Döntsd meg a tévét, gurítsd a golyót a kijárathoz. Lyukak: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ tévé döntése · OK vízszintbe · az idő a pontszám", tilt_keys: "döntés", tilt_level: "vízszint",
+      hypr_1: "A labirintus egy Hyprland asztal: az ablakok maguktól átrendeződnek.", hypr_2: "csússz a résekben · OK bezárja a SUPER+Q ablakot", hypr_keys: "csúszás", hypr_full: "TELE A MUNKATERÜLET!", hypr_wrong: "rossz ablak:"
     },
     fi: {
       choose: "valitse", play: "pelaa", exit: "lopeta", insert_coin: "SYÖTÄ KOLIKKO", press_ok: "PAINA OK", hi_scores: "ENNÄTYKSET",
@@ -397,7 +439,9 @@
       fork_move: "liikuta kaikkia", fork_lost: "kaikki prosessit kuolivat · yritä uudelleen",
       share_x: "jaa ennätys X:ssä", share_scan: "Skannaa koodi puhelimella:",
       share_done: "X avautuu valmiin julkaisun kanssa. Sinä päätät, lähetätkö sen.",
-      share_post: "{score} pelissä {game} #OmarchyTV:ssä. Voitatko minut?"
+      share_post: "{score} pelissä {game} #OmarchyTV:ssä. Voitatko minut?",
+      tilt_1: "Kallista koko televisiota ja vieritä kuula maaliin. Reiät ovat /dev/null.", tilt_2: "◀ ▲ ▼ ▶ kallista TV · OK suoraksi · aika on pisteesi", tilt_keys: "kallista", tilt_level: "suoraksi",
+      hypr_1: "Labyrintti on Hyprland-työpöytä: ikkunat järjestyvät uudelleen.", hypr_2: "liu'u rakoja pitkin · OK sulkee SUPER+Q-ikkunan", hypr_keys: "liu'u", hypr_full: "TYÖTILA TÄYNNÄ!", hypr_wrong: "väärä ikkuna:"
     },
     nb: {
       choose: "velg", play: "spill", exit: "avslutt", insert_coin: "SETT INN MYNT", press_ok: "TRYKK OK", hi_scores: "TOPPLISTE",
@@ -415,7 +459,9 @@
       fork_move: "flytt alle", fork_lost: "alle prosessene døde · prøv igjen",
       share_x: "del rekorden på X", share_scan: "Skann koden med telefonen:",
       share_done: "X åpnes med innlegget ferdig skrevet. Du bestemmer om det sendes.",
-      share_post: "{score} i {game} på #OmarchyTV. Klarer du å slå meg?"
+      share_post: "{score} i {game} på #OmarchyTV. Klarer du å slå meg?",
+      tilt_1: "Vipp hele TV-en og trill kulen til utgangen. Hullene er /dev/null.", tilt_2: "◀ ▲ ▼ ▶ vipp TV-en · OK rett opp · tiden er poengsummen", tilt_keys: "vipp", tilt_level: "rett opp",
+      hypr_1: "Labyrinten er et Hyprland-skrivebord: vinduene stokker seg om.", hypr_2: "gli i mellomrommene · OK lukker SUPER+Q-vinduet", hypr_keys: "gli", hypr_full: "ARBEIDSOMRÅDET FULLT!", hypr_wrong: "feil vindu:"
     }
   };
 })(typeof window !== "undefined" ? window : this);

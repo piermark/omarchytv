@@ -426,6 +426,19 @@ Open it from the Omarchy menu / system menu ("🕹 OmarchyTV Arcade") on LG/Sams
   one from level 4. **Level 1 is the Omarchy logo** (icon.txt, MIT, sampled to 20x19 cells, walls in the accent colour): start in the
   middle room, exit through the bottom gap, the killer starts by the exit. Later mazes are generated per level (seeded),
   always start → exit connected (test: 60 levels).
+- **TILT** (`tilt.js`): a marble maze where the TV tilts: arrows add tilt (±1, eases back when released, OK levels
+  it), the picture rows rotate (`view.rotate`, up to 6°) and lean (`view.rotX`, perspective rotateX), the ball rolls
+  with gravity and friction, sub-stepped against the wall cells. Perfect maze per level (depth-first, seeded) with
+  a few extra openings; holes (/dev/null) only in dead ends off the way; the exit in the farthest room; score =
+  time bonus + level.
+- **HYPRMAZE** (`hyprmaze.js`): a Hyprland desktop as the maze: a dwindle tree (the newest window that has room is
+  split, along its long side on screen), gaps 2 columns / 1 row plus an outer gap, so the gaps form one connected
+  maze (tested). Windows slide to their new rects; a window sliding over the cursor pushes it to the nearest gap.
+  The cursor glides (Pac-Man style, a queued turn waits for an opening). OK next to the window marked SUPER+Q closes
+  it (combo up to x5; the next target is never the window you stand next to; at least 3 windows stay open); the
+  wrong window opens one more. A new window every 2.2–6 s, SUPER+J flips a split every 8–14 s; 12 windows = full.
+- **Hall** with more than 3 games: a carousel (three cartridges in view, dots under them); high scores in one
+  column per game.
 - **Look**: an 80×25 text grid in the theme's colours (`dim` = fg/bg mix), rows of spans rewritten only when they
   change, at most ~30 frames/s, no canvas/images/CSS filters/CSS variables (old webOS). Scanline veil, block-font
   titles. Inside `#stage`, so with Retro CRT on it plays inside the set; on Android `CrtOverlay.attach` on the

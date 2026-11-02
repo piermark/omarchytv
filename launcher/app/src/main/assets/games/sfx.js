@@ -58,6 +58,10 @@
       fork: function (t) { tone("square", 400, t, 0.003, 0.06, 0.12, 1200); },
       save: function (t) { tone("square", 1046.5, t, 0.003, 0.07, 0.08); tone("square", 1568, t + 0.07, 0.003, 0.07, 0.2); },
       oom: function (t) { tone("sawtooth", 72, t, 0.03, 0.18, 0.55, 48); tone("sawtooth", 76, t, 0.03, 0.1, 0.55, 50); },
+      roll: function (t) { noise(t, 0.04, 0.05, 0.2, "lowpass", 260); },                       // TILT: the marble on the wood
+      clack: function (t) { noise(t, 0.001, 0.12, 0.03, "bandpass", 1800, 2); tone("sine", 320, t, 0.001, 0.05, 0.05, 200); },
+      plop: function (t) { tone("sine", 420, t, 0.005, 0.12, 0.35, 70); noise(t + 0.25, 0.01, 0.06, 0.25, "lowpass", 500); },
+      tile: function (t) { noise(t, 0.08, 0.06, 0.22, "bandpass", 700, 1.2, 3200); },             // HYPRMAZE: windows sliding
       die: function (t) { tone("square", 600, t, 0.003, 0.06, 0.25, 90); },
       switch: function (t, idx) {   // every theme has its own chord
         var r0 = ROOTS[(idx || 0) % ROOTS.length];
