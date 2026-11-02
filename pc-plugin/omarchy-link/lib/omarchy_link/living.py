@@ -31,6 +31,7 @@ X_MODES = ("off", "notify", "api")
 X_COST_POST = 0.005      # USD per post read (conservative: app-only bearer, not the cheaper own-account rate)
 X_COST_USER = 0.010      # USD per user returned (the author expansion)
 GH_EVERY_S = 300
+RADAR_EVERY_S = 90      # Omastorm snapshot for the Live screensaver's weather box
 BROWSERS = ("chromium", "chrome", "google-chrome", "firefox", "brave", "vivaldi", "zen", "librewolf", "edge")
 CTRL = re.compile(r"[\x00-\x08\x0b-\x1f\x7f]")
 TAG = re.compile(r"<[^>]{1,80}>")
@@ -45,7 +46,7 @@ def parse_prefs(d: object) -> dict:
     d = d if isinstance(d, dict) else {}
     x = d.get("x")
     return {"notes": d.get("notes") is True, "github": d.get("github", True) is not False,
-            "x": x if x in X_MODES else "off"}
+            "x": x if x in X_MODES else "off", "radar": d.get("radar") is True}
 
 
 # ------------------------------------------------------------------ notifications (D-Bus)
@@ -302,6 +303,8 @@ class Living:
         self.notes: deque = deque(maxlen=12)
         self.x: deque = deque(maxlen=8)
         self.github: list[dict] = []
+        self.radar: dict | None = None
+        self.last_radar = 0.0
         self.x_error = ""
         self.active_until = 0.0
         self.last_gh = 0.0
@@ -334,7 +337,7 @@ class Living:
 
     def wanted(self) -> bool:
         p = self.prefs
-        return self.cfg_get().get("livingToTv", True) is not False and (p["notes"] or p["github"] or p["x"] != "off")
+        return self.cfg_get().get("livingToTv", True) is not False and (p["notes"] or p["github"] or p["x"] != "off" or p["radar"])
 
     def ensure(self) -> None:
         if self.thread is None and self.wanted():
@@ -372,6 +375,16 @@ class Living:
                     self.github = github_items(cfg)
                 except Exception as e:   # noqa: BLE001 - a network hiccup must not stop the feed
                     self.log(f"living: github: {e}")
+            if p["radar"] and self.active() and now - self.last_radar > RADAR_EVERY_S:
+                self.last_radar = now
+                from . import omastorm   # noqa: PLC0415
+                img = omastorm.snapshot(cfg)
+                if img:
+                    import base64   # noqa: PLC0415
+                    self.radar = {"img": "data:image/jpeg;base64," + base64.b64encode(img).decode(),
+                                  "at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")}
+            elif not p["radar"]:
+                self.radar = None
             every = max(60, int(cfg.get("xPollMinutes", 3)) * 60)
             if p["x"] == "api" and cfg.get("xApi", True) is not False and self.active() and now - self.last_x > every:
                 self.last_x = now
@@ -386,6 +399,8 @@ class Living:
         with self.lock:
             out = {"github": self.github if p["github"] else [], "notes": list(self.notes) if p["notes"] else [],
                    "x": list(self.x) if p["x"] != "off" else [], "xMode": p["x"]}
+        if p["radar"] and self.radar:
+            out["radar"] = self.radar
         if self.x_error and p["x"] == "api":
             out["xError"] = self.x_error
         return out

@@ -54,7 +54,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_abort: "ABORT",
       liftoff_hint: "any key: hide",
       update_install: "Install",
-      living: "Living screensaver",
+      living: "Live screensaver",
       living_notes: "PC notifications on the screensaver",
       living_notes_note: "Every notification from the Omarchy PC will show on the TV while the screensaver runs",
       living_x: "X on the screensaver",
@@ -72,6 +72,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       plugin_retro_crt: "Retro CRT",
       crt_light: "light",
       crt_strong: "strong",
+      liftoff_title: "liftoff",
+      liftoff_stage_download: "downloading",
+      liftoff_stage_verify: "checking",
+      liftoff_stage_sign: "signing",
+      liftoff_stage_install: "installing",
+      liftoff_stage_launch: "starting",
+      liftoff_exit: "exit %s",
+      living_waiting: "waiting for the Omarchy PC…",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -118,7 +126,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_abort: "ANNULLATO",
       liftoff_hint: "un tasto qualsiasi: nascondi",
       update_install: "Installa",
-      living: "Salvaschermo Living",
+      living: "Salvaschermo Live",
       living_notes: "Notifiche del PC nel salvaschermo",
       living_notes_note: "Tutte le notifiche del PC Omarchy appariranno sulla TV mentre è attivo il salvaschermo",
       living_x: "X nel salvaschermo",
@@ -136,6 +144,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       plugin_retro_crt: "Retro CRT",
       crt_light: "leggero",
       crt_strong: "forte",
+      liftoff_title: "decollo",
+      liftoff_stage_download: "download",
+      liftoff_stage_verify: "verifica",
+      liftoff_stage_sign: "firma",
+      liftoff_stage_install: "installazione",
+      liftoff_stage_launch: "avvio",
+      liftoff_exit: "uscita %s",
+      living_waiting: "in attesa del PC Omarchy…",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -182,7 +198,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       liftoff_abort: "ABBRUCH",
       liftoff_hint: "beliebige Taste: ausblenden",
       update_install: "Installieren",
-      living: "Living-Bildschirmschoner",
+      living: "Live-Bildschirmschoner",
       living_notes: "PC-Benachrichtigungen im Bildschirmschoner",
       living_notes_note: "Alle Benachrichtigungen des Omarchy-PCs erscheinen auf dem TV, solange der Bildschirmschoner läuft",
       living_x: "X im Bildschirmschoner",
@@ -200,6 +216,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       plugin_retro_crt: "Retro CRT",
       crt_light: "leicht",
       crt_strong: "stark",
+      liftoff_title: "Start",
+      liftoff_stage_download: "Download",
+      liftoff_stage_verify: "Prüfung",
+      liftoff_stage_sign: "Signierung",
+      liftoff_stage_install: "Installation",
+      liftoff_stage_launch: "Start der App",
+      liftoff_exit: "Exit %s",
+      living_waiting: "warte auf den Omarchy-PC…",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -251,6 +275,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     livingNotes: false,     // ...with every notification from the Omarchy PC (POST /v1/living)
     livingX: "off",         // ..."off" | "notify" (X notifications shown on the PC, free) | "api" (X API on the PC, paid)
     livingGithub: true,
+    livingRadar: false,     // ...Omastorm's radar in the weather box (a snapshot of the PC's Omastorm window every 90 s)
     pluginRetroCrt: "off",  // v2.14 Retro CRT plugin: "off" | "light" | "strong" (scanlines, mask, vignette, theme bezel)
     pcPower: false,         // v2.14 LG: the PC suspends when the TV turns off (POST /v1/power; needs TV control approved)
     themeToPc: false,       // v2.14 reverse theme sync: a theme picked here also switches the PC (POST /v1/theme/set)
@@ -539,7 +564,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var H = window.OmarchyHooks, sc = window.screen || {};
     var s = H ? H.stageScale(window.innerWidth, window.innerHeight, window.OMARCHY_FIT_SCREEN === true, sc.width, sc.height, window.devicePixelRatio)
       : Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
-    st.style.transform = "scale(" + s + ")";
+    var crt = typeof crtMode === "function" && crtMode() !== "off";
+    if (!crt) { st.style.transform = "scale(" + s + ")"; return; }
+    // Retro CRT: the 1920x1080 stage, smaller and centred a little high; the overlay covers exactly that area.
+    var k = s * 0.88, w = 1920 * k, h = 1080 * k, x = (window.innerWidth - w) / 2, y = (window.innerHeight - h) / 2 - window.innerHeight * 0.012;
+    st.style.transform = "translate(" + x + "px," + y + "px) scale(" + k + ")";
+    var el = document.getElementById("crt-overlay"), b = document.getElementById("crt-badge");
+    if (el) { el.style.left = x + "px"; el.style.top = y + "px"; el.style.width = w + "px"; el.style.height = h + "px"; }
+    if (b) b.style.top = (y + h + (window.innerHeight - y - h) * 0.32) + "px";
   }
   window.addEventListener("resize", fitStage);
   // Some older engines (webOS 4.0) report the final window size only after load, without a resize event (#72).
@@ -1306,7 +1338,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var blink = Math.floor(now / 400) % 2 === 0;
     d.className = st + (st === "failed" && blink ? " blink" : "");
     function q(c) { return d.querySelector("." + c); }
-    q("title").textContent = "liftoff \u00b7 " + tr(s.kind === "update" ? "liftoff_update" : "liftoff_build") + " \u00b7 " + (s.name || "");
+    q("title").textContent = tr("liftoff_title") + " \u00b7 " + tr(s.kind === "update" ? "liftoff_update" : "liftoff_build") + " \u00b7 " + (s.name || "");
     var flame = st === "failed" ? [] : st === "ok" ? [LIFT.FLAME[1][Math.floor(now / 120) % 2], LIFT.FLAME[1][(Math.floor(now / 120) + 1) % 2]]
       : [LIFT.FLAME[0][Math.floor(now / 120) % 2]];
     var r = q("rocket");
@@ -1316,8 +1348,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var clock = q("clock");
     clock.textContent = st === "ok" ? tr("liftoff_ok") : st === "failed" ? tr("liftoff_abort") : LIFT.clock(s, since);
     clock.className = "clock" + (LIFT.finalCount(s, since) && !blink ? " dim" : "");
-    var stage = s.stage || "";
-    if (st === "failed" && typeof s.code === "number") stage = (stage ? stage + " \u00b7 " : "") + "exit " + s.code;
+    var stage = s.stage || "", sk = "liftoff_stage_" + stage;   // the update's stages in the TV's language
+    if (STRINGS.en[sk]) stage = tr(sk);
+    if (st === "failed" && typeof s.code === "number") stage = (stage ? stage + " \u00b7 " : "") + tr("liftoff_exit").replace("%s", s.code);
     q("stage").textContent = stage;
     q("bar").textContent = st === "failed" ? "" : LIFT.bar(LIFT.progress(s, since), 24);
     q("plus").textContent = st === "running" ? "T+" + LIFT.mmss(LIFT.elapsed(s, since)) : "";
@@ -1463,6 +1496,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } },
       { label: "  GitHub", right: cfg.livingGithub !== false ? "on" : "off", act: function () {
         cfg.livingGithub = cfg.livingGithub === false; saveCfg(); openSaverModal(true);
+      } },
+      { label: "  Omastorm radar", right: cfg.livingRadar ? "on" : "off", act: function () {
+        cfg.livingRadar = !cfg.livingRadar; saveCfg(); openSaverModal(true);
       } },
       { label: "Turn off", right: cfg.offMode === "tv" ? "TV" : "screen only", act: function () {
         cfg.offMode = cfg.offMode === "tv" ? "screen" : "tv";
@@ -1771,12 +1807,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   // Wallpaper picker: follow the theme (default), plain theme colours, or any theme's background.
   // Picking applies at once and keeps the menu open on that row, so you can compare a few.
-  // ---- v2.14 Retro CRT plugin: CSS overlay, bezel in the theme's colours (follows every theme change) ----
+  // ---- v2.14 Retro CRT plugin: the home shrinks into a CRT set (bezel, theme-coloured rim, LED, scanlines) ----
+  function crtMode() { return cfg.pluginRetroCrt === "light" || cfg.pluginRetroCrt === "strong" ? cfg.pluginRetroCrt : "off"; }
   function applyCrt() {
-    var el = document.getElementById("crt-overlay");
+    var el = document.getElementById("crt-overlay"), badge = document.getElementById("crt-badge");
     if (!el) { el = document.createElement("div"); el.id = "crt-overlay"; document.body.appendChild(el); }
-    var m = cfg.pluginRetroCrt === "light" || cfg.pluginRetroCrt === "strong" ? cfg.pluginRetroCrt : "off";
+    if (!badge) { badge = document.createElement("div"); badge.id = "crt-badge"; badge.innerHTML = "OMARCHY TV<i></i>"; document.body.appendChild(badge); }
+    var m = crtMode();
     el.className = m === "off" ? "" : "on" + (m === "strong" ? " strong" : "");
+    badge.className = m === "off" ? "" : "on";
+    document.body.className = document.body.className.replace(/\s*crt-strong/g, "") + (m === "strong" ? " crt-strong" : "");
+    fitStage();
   }
 
   // ---- v2.14 OmaFire animated wallpapers (vendor/omafire: Wes Grimes' campsite, MIT) ----
@@ -2236,7 +2277,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverStatusOverride = typeof statusText === "string" ? statusText : "";
     var ov = document.getElementById("saver-overlay");
     var fr = document.getElementById("saver-frame");
-    fr.src = "saver/index.html";
+    // v2.14 Live screensaver: a screen of its own (living.js fullscreen), no art under it.
+    fr.src = cfg.living && window.OmarchyLiving ? "about:blank" : "saver/index.html";
     ov.className = "active";
     livingStart(ov);
   }
@@ -2254,23 +2296,27 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   function livingLabels() {
     return { weather: tr("living_weather"), notes: tr("living_notes_title"), x: tr("living_x_title"), github: "github",
-      x_not_set_up: tr("living_x_not_set_up"), x_budget: tr("living_x_budget"), x_error: tr("living_x_error"), x_user: tr("living_x_error") };
+      waiting: tr("living_waiting"), x_not_set_up: tr("living_x_not_set_up"), x_budget: tr("living_x_budget"), x_error: tr("living_x_error"), x_user: tr("living_x_error") };
   }
   function livingStart(host) {
     livingStop();
     if (!cfg.living || !window.OmarchyLiving) return;
     var t = (DATA.themes[cfg.theme] || {});
-    livingUi = window.OmarchyLiving.mount(host, { labels: livingLabels(), color: t.foreground || "#c0caf5", accent: t.accent || "#7aa2f7" });
+    livingUi = window.OmarchyLiving.fullscreen(host, { labels: livingLabels(), color: t.foreground || "#c0caf5", accent: t.accent || "#7aa2f7",
+      accent2: t.magenta || t.cyan, bg: t.background || "#000", user: cfg.promptUser || "user", host: cfg.promptHost || "omarchytv",
+      dateText: function (d) { try { return d.toLocaleDateString(getLang(), { weekday: "short", day: "numeric", month: "short" }); } catch (e) { return d.toDateString(); } } });
     livingData = { weather: livingWeather() };
     livingUi.update(livingData);
     var tick = function () {
       if (!livingUi) return;
       livingData.weather = livingWeather();
       if (!pcReady()) { livingUi.update(livingData); return; }
-      pcPost("/v1/living", { notes: !!cfg.livingNotes, github: cfg.livingGithub !== false, x: cfg.livingX || "off" }).then(function (r) {
+      pcPost("/v1/living", { notes: !!cfg.livingNotes, github: cfg.livingGithub !== false, x: cfg.livingX || "off", radar: !!cfg.livingRadar }).then(function (r) {
         if (!livingUi || r.status !== 200) return;
         var j = r.j;
-        livingData = { weather: livingWeather(), notes: j.notes, github: j.github, x: j.x, xMode: j.xMode, xError: j.xError };
+        var ps = state.pcStatus;
+        livingData = { weather: livingWeather(), notes: j.notes, github: j.github, x: j.x, xMode: j.xMode, xError: j.xError, radar: j.radar,
+          pc: ps && typeof ps.cpu === "number" ? { cpu: ps.cpu, ram: ps.ram, host: ps.host } : null };
         livingUi.update(livingData);
       }, function () {});
     };

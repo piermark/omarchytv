@@ -419,7 +419,7 @@
     <string name="liftoff_abort">中止</string>
     <string name="liftoff_hint">任意のキー：非表示</string>
     <string name="liftoff_failed_toast">%1$s が失敗しました</string>
-    <string name="living">Living スクリーンセーバー</string>
+    <string name="living">Live スクリーンセーバー</string>
     <string name="living_notes">スクリーンセーバーに PC の通知</string>
     <string name="living_notes_note">スクリーンセーバー中は Omarchy PC のすべての通知がテレビに表示されます</string>
     <string name="living_x">スクリーンセーバーに X</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">PC に Omastorm がインストールされていません（omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable）</string>
     <string name="omastorm_failed">Omastorm を起動できませんでした：%1$s</string>
     <string name="omastorm_keys">◀▲▼▶ 移動 · OK 再生 · ⏩⏪ コマ · 1 2 3 スタイル · 4 最寄りのレーダー · 5 6 ズーム · 7 全レーダー · 8 現在地 · 9 航空 · 0 リセット · 戻る 閉じる</string>
+    <string name="liftoff_title">打ち上げ</string>
+    <string name="liftoff_stage_download">ダウンロード中</string>
+    <string name="liftoff_stage_verify">検証中</string>
+    <string name="liftoff_stage_sign">署名中</string>
+    <string name="liftoff_stage_install">インストール中</string>
+    <string name="liftoff_stage_launch">起動中</string>
+    <string name="liftoff_exit">終了コード %1$s</string>
+    <string name="living_waiting">Omarchy PC を待っています…</string>
 </resources>

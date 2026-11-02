@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Live screensaver, Retro CRT set, liftoff in every language (draft)
+
+- **Live screensaver** (Screensaver settings, off by default): a screensaver of its own, no art under it. Big glowing block clock, an animated ASCII sky (rain falls, the sun's rays turn, snow, storms), the PC's notifications, X mentions, GitHub, the PC's CPU/RAM bars and a turning ASCII radar, a ticker and a status line, on dark glass panels so everything stays readable. Behind them: theme-coloured glyph rain, a synthwave grid rolling in at the bottom and a refresh sweep. Every new notification or mention crashes in as a full-width INCOMING banner (shake + decrypt), then settles in its box. Light: half-resolution backdrop, redraws only what changed, pauses when hidden, drops the rain on slow TVs by itself; drifts a few pixels a minute against burn-in.
+- **Omastorm radar in the Live screensaver** (its own switch, off): every 90 s the PC takes a small snapshot of the real Omastorm window (it opens it if needed) and the TV shows it in the weather box.
+- **Retro CRT, now unmistakable:** Home shrinks into a CRT set: dark body, a glowing rim in the theme's accent, an OMARCHY TV badge with a power LED, deeper scanlines, phosphor mask, vignette and a glass highlight; "strong" adds phosphor bloom and colour fringing (and the curved tube on Android 13+).
+- **Liftoff in the TV's language:** title, the update's stages (downloading, checking, signing, installing, starting) and the exit code, in all 23 languages.
+
 ### Retro CRT, OmaFire wallpapers, Omastorm on the TV, livelier Living screensaver (draft)
 
 - **Retro CRT plugin** (Plugins: off / light / strong): scanlines, phosphor mask, vignette, a gentle flicker and a thin rounded bezel in the active theme's colours (it follows every theme change). "strong" on Android 13+ also curves the picture like a tube.

@@ -419,7 +419,7 @@
     <string name="liftoff_abort">PŘERUŠENO</string>
     <string name="liftoff_hint">libovolná klávesa: skrýt</string>
     <string name="liftoff_failed_toast">%1$s selhalo</string>
-    <string name="living">Spořič Living</string>
+    <string name="living">Spořič Live</string>
     <string name="living_notes">Oznámení z PC na spořiči</string>
     <string name="living_notes_note">Všechna oznámení z PC Omarchy se zobrazí na TV, dokud běží spořič</string>
     <string name="living_x">X na spořiči</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm není na PC nainstalován (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm se nespustil: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ posun · OK přehrát · ⏩⏪ snímky · 1 2 3 styl · 4 nejbližší radar · 5 6 zoom · 7 všechny radary · 8 moje poloha · 9 letectví · 0 reset · ZPĚT zavřít</string>
+    <string name="liftoff_title">start</string>
+    <string name="liftoff_stage_download">stahování</string>
+    <string name="liftoff_stage_verify">kontrola</string>
+    <string name="liftoff_stage_sign">podepisování</string>
+    <string name="liftoff_stage_install">instalace</string>
+    <string name="liftoff_stage_launch">spouštění</string>
+    <string name="liftoff_exit">kód %1$s</string>
+    <string name="living_waiting">čekám na PC s Omarchy…</string>
 </resources>

@@ -1,7 +1,7 @@
-# HANDOFF — branch `feature/crt-omafire-omastorm`
+# HANDOFF — branch `feature/omarchytv-v214-pack`
 
 Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
-**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation** (each built on the previous).
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live** (each built on the previous).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -329,4 +329,49 @@ random glyphs over 0.9 s (`scramble()`), then the panel glows in the accent colo
 - OmaFire in the Android WebView on a TV (30 fps, memory), and on webOS 3/4 (no `image-rendering: pixelated`: soft).
 - Omastorm with a real Omastorm install: window title/size, `hyprctl sendshortcut` reaching a Quickshell
   FloatingWindow, gpu-screen-recorder `-region` syntax on the installed version, latency.
+
+
+# M. Live screensaver (replaces the L overlay)
+
+With "Live screensaver" on (cfg/omarchytv.json `living.enabled`), the screensaver is the Live screen only:
+LG/Samsung `startScreensaver()` leaves the tte iframe blank and mounts `OmarchyLiving.fullscreen()`; Android's saver
+page skips tte (`window.__otvLive`) and mounts the same, and `TteSaver` keeps the WebView even when the art is the
+native aquarium. `living.js`: `scene()` (pure, 112×32 grid: block clock `bigClock()`, `sky()` frames, notifications,
+X, GitHub, PC box with meters + `radar()`, ticker, status line) and `fullscreen()` (glass panels in ch/em units,
+half-resolution canvas: glyph rain + synthwave grid, refresh sweep, INCOMING banner with shake + `scramble()`,
+DOM rewritten only when the text changes, pauses when hidden, adaptive lite mode after 40 slow frames, burn-in
+drift). PC stats: LG/Samsung from `/v1/status`, Android from `LinkServer.stats()`. Test: `living.test.js` (grid sizes,
+sky frames, waiting text, HTML escaping).
+
+# N. Retro CRT set
+
+LG/Samsung: `fitStage()` shrinks the 1920×1080 stage to 88 % and centres it; `#crt-overlay` covers exactly that area
+(its 100vmax box-shadow paints the bezel), `#crt-badge` shows OMARCHY TV + LED; "strong" adds `body.crt-strong`
+(saturation/contrast filter + red/blue text fringes). Android: `CrtOverlay` on the decor view, root scaled to 0.88 with
+the same pivot, even-odd path for the bezel, rim/glow/LED in `Theme.cur().accent`.
+
+# O. Liftoff translations
+
+`liftoff_title`, `liftoff_stage_{download,verify,sign,install,launch}`, `liftoff_exit` in 23 languages; LiftoffView
+`stageLabel()` and app.js map the PC's stage keys; a build's own stage text (its name) is shown as sent.
+
+# P. Omastorm radar in the Live screensaver
+
+Prefs `radar` (Live settings "Omastorm radar", off). PC: `living.Living` calls `omastorm.snapshot()` every 90 s while
+the screensaver runs: summons Omastorm if closed, `grim -g <window> -s 0.5 -t jpeg -q 70 -`, JPEG ≤ 300 KB, sent as
+`radar: {img: data URL, at}`; Android clips it in `LinkServer.living()` (JPEG data URL, base64 only, ≤ 420 KB).
+The TV puts it in the weather box in place of the ASCII sky. Test: `test_omastorm.Snapshot`.
+
+## Verified (M–P)
+
+- node 124, Tizen 29, verify-build PASS, omarchy-link run.sh, omarchy-tv tests, TranslationsTest, Android compile
+  (API 34) of every changed line.
+- Headless Chromium: Live screen with a fake PC (screenshots + video), INCOMING banner, radar image in the weather box,
+  CRT set on Tokyo Night and Gruvbox (screenshots).
+
+## NOT verified (to do)
+
+- Gradle build + lint. Live screen on a real Android TV saver WebView (font fit, 10 fps backdrop cost, lite switch).
+- CRT on Android: decor-view overlay + scaled root with AsciiMenu popups and dialogs (they are separate windows,
+  not scaled). Omastorm snapshot with a real Omastorm window and grim on Hyprland.
 

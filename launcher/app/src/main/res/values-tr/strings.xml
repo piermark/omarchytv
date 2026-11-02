@@ -419,7 +419,7 @@
     <string name="liftoff_abort">İPTAL</string>
     <string name="liftoff_hint">herhangi bir tuş: gizle</string>
     <string name="liftoff_failed_toast">%1$s başarısız oldu</string>
-    <string name="living">Living ekran koruyucu</string>
+    <string name="living">Live ekran koruyucu</string>
     <string name="living_notes">Ekran koruyucuda PC bildirimleri</string>
     <string name="living_notes_note">Ekran koruyucu çalışırken Omarchy PC\'nin tüm bildirimleri TV\'de görünür</string>
     <string name="living_x">Ekran koruyucuda X</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm PC\'de kurulu değil (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm başlatılamadı: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ kaydır · OK oynat · ⏩⏪ kareler · 1 2 3 stil · 4 en yakın radar · 5 6 yakınlaştır · 7 tüm radarlar · 8 konumum · 9 havacılık · 0 sıfırla · GERİ kapat</string>
+    <string name="liftoff_title">kalkış</string>
+    <string name="liftoff_stage_download">indiriliyor</string>
+    <string name="liftoff_stage_verify">denetleniyor</string>
+    <string name="liftoff_stage_sign">imzalanıyor</string>
+    <string name="liftoff_stage_install">kuruluyor</string>
+    <string name="liftoff_stage_launch">başlatılıyor</string>
+    <string name="liftoff_exit">çıkış %1$s</string>
+    <string name="living_waiting">Omarchy PC bekleniyor…</string>
 </resources>

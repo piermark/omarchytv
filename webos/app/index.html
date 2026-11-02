@@ -701,22 +701,33 @@ html, body {
   height: 100%;
   border: none;
 }
-/* v2.14 Retro CRT plugin: scanlines, phosphor mask, vignette, flicker, theme-coloured bezel (applyCrt) */
-#crt-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 8000; pointer-events: none; display: none;
+/* v2.14 Retro CRT plugin: the home shrinks into a CRT set. #crt-overlay sits exactly on the screen area (applyCrt):
+   its huge box-shadow paints the bezel all around, the accent rim and LED follow the active theme. */
+#crt-overlay { position: fixed; z-index: 8000; pointer-events: none; display: none; border-radius: 2.2vh;
   background:
-    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.19) 2px, rgba(0,0,0,.19) 3px),
-    repeating-linear-gradient(to right, rgba(255,0,0,.045) 0, rgba(255,0,0,.045) 1px, rgba(0,255,0,.03) 1px, rgba(0,255,0,.03) 2px, rgba(0,0,255,.045) 2px, rgba(0,0,255,.045) 3px),
-    radial-gradient(ellipse at center, rgba(0,0,0,0) 62%, rgba(0,0,0,.42) 100%);
-  border: 1.1vh solid var(--t-bg, #1a1b26); border-radius: 3.2vh; box-sizing: border-box;
-  box-shadow: inset 0 0 0 .25vh var(--t-accent, #7aa2f7), inset 0 0 4vh rgba(0,0,0,.65), inset 0 0 1.4vh var(--t-accent, #7aa2f7);
+    linear-gradient(135deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 38%),
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.28) 2px, rgba(0,0,0,.28) 4px),
+    repeating-linear-gradient(to right, rgba(255,0,0,.06) 0, rgba(255,0,0,.06) 1px, rgba(0,255,0,.045) 1px, rgba(0,255,0,.045) 2px, rgba(0,0,255,.06) 2px, rgba(0,0,255,.06) 3px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 58%, rgba(0,0,0,.55) 100%);
+  box-shadow: 0 0 0 .45vh var(--t-accent, #7aa2f7), 0 0 3vh .6vh var(--t-accent, #7aa2f7), 0 0 0 100vmax #0b0b0f,
+    inset 0 0 7vh rgba(0,0,0,.8), inset 0 0 2vh var(--t-accent, #7aa2f7);
   -webkit-animation: crt-flicker 3.2s infinite; animation: crt-flicker 3.2s infinite; }
 #crt-overlay.on { display: block; }
 #crt-overlay.strong { background:
-    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.33) 2px, rgba(0,0,0,.33) 3px),
-    repeating-linear-gradient(to right, rgba(255,0,0,.07) 0, rgba(255,0,0,.07) 1px, rgba(0,255,0,.05) 1px, rgba(0,255,0,.05) 2px, rgba(0,0,255,.07) 2px, rgba(0,0,255,.07) 3px),
-    radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.6) 100%); }
-@-webkit-keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .97; } 48% { opacity: 1; } 76% { opacity: .985; } }
-@keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .97; } 48% { opacity: 1; } 76% { opacity: .985; } }
+    linear-gradient(135deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,0) 40%),
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.42) 2px, rgba(0,0,0,.42) 4px),
+    repeating-linear-gradient(to right, rgba(255,0,0,.09) 0, rgba(255,0,0,.09) 1px, rgba(0,255,0,.07) 1px, rgba(0,255,0,.07) 2px, rgba(0,0,255,.09) 2px, rgba(0,0,255,.09) 3px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,.72) 100%); }
+#crt-badge { position: fixed; z-index: 8001; pointer-events: none; display: none; left: 0; right: 0; text-align: center;
+  font: 1.6vh 'CaskaydiaMono Nerd Font', monospace; letter-spacing: .6em; color: var(--t-accent, #7aa2f7); opacity: .85;
+  text-shadow: 0 0 1vh var(--t-accent, #7aa2f7); }
+#crt-badge.on { display: block; }
+#crt-badge i { display: inline-block; width: 1vh; height: 1vh; border-radius: 50%; margin-left: 2vh; vertical-align: middle;
+  background: var(--t-accent, #7aa2f7); box-shadow: 0 0 1.2vh var(--t-accent, #7aa2f7); }
+body.crt-strong #stage { filter: saturate(1.25) contrast(1.08) brightness(1.06); }
+body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rgba(40,160,255,.35); }
+@-webkit-keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .95; } 48% { opacity: 1; } 76% { opacity: .975; } }
+@keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .95; } 48% { opacity: 1; } 76% { opacity: .975; } }
 /* v2.14 liftoff: build/update countdown (liftoff.js) */
 #liftoff { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; background: rgba(0,0,0,.86); font-family: inherit; }
 #liftoff.failed.blink { background: rgba(120,0,0,.55); }

@@ -456,7 +456,7 @@
     <string name="liftoff_abort">ABORT</string>
     <string name="liftoff_hint">any key: hide</string>
     <string name="liftoff_failed_toast">%1$s failed</string>
-    <string name="living">Living screensaver</string>
+    <string name="living">Live screensaver</string>
     <string name="living_notes">PC notifications on the screensaver</string>
     <string name="living_notes_note">Every notification from the Omarchy PC will show on the TV while the screensaver runs</string>
     <string name="living_x">X on the screensaver</string>
@@ -481,4 +481,12 @@
     <string name="omastorm_not_installed">Omastorm is not installed on the PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm could not start: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ pan · OK play · ⏩⏪ frames · 1 2 3 style · 4 nearest · 5 6 zoom · 7 all radars · 8 my location · 9 aviation · 0 reset · BACK close</string>
+    <string name="liftoff_title">liftoff</string>
+    <string name="liftoff_stage_download">downloading</string>
+    <string name="liftoff_stage_verify">checking</string>
+    <string name="liftoff_stage_sign">signing</string>
+    <string name="liftoff_stage_install">installing</string>
+    <string name="liftoff_stage_launch">starting</string>
+    <string name="liftoff_exit">exit %1$s</string>
+    <string name="living_waiting">waiting for the Omarchy PC…</string>
 </resources>

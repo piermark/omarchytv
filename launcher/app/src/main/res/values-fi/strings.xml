@@ -419,7 +419,7 @@
     <string name="liftoff_abort">KESKEYTETTY</string>
     <string name="liftoff_hint">mikä tahansa näppäin: piilota</string>
     <string name="liftoff_failed_toast">%1$s epäonnistui</string>
-    <string name="living">Living-näytönsäästäjä</string>
+    <string name="living">Live-näytönsäästäjä</string>
     <string name="living_notes">PC:n ilmoitukset näytönsäästäjässä</string>
     <string name="living_notes_note">Kaikki Omarchy-PC:n ilmoitukset näkyvät TV:ssä näytönsäästäjän ollessa päällä</string>
     <string name="living_x">X näytönsäästäjässä</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastormia ei ole asennettu PC:lle (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm ei käynnistynyt: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ siirrä · OK toista · ⏩⏪ kuvat · 1 2 3 tyyli · 4 lähin tutka · 5 6 zoomaus · 7 kaikki tutkat · 8 sijaintini · 9 ilmailu · 0 nollaa · TAKAISIN sulje</string>
+    <string name="liftoff_title">laukaisu</string>
+    <string name="liftoff_stage_download">ladataan</string>
+    <string name="liftoff_stage_verify">tarkistetaan</string>
+    <string name="liftoff_stage_sign">allekirjoitetaan</string>
+    <string name="liftoff_stage_install">asennetaan</string>
+    <string name="liftoff_stage_launch">käynnistetään</string>
+    <string name="liftoff_exit">koodi %1$s</string>
+    <string name="living_waiting">odotetaan Omarchy-PC:tä…</string>
 </resources>

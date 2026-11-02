@@ -419,7 +419,7 @@
     <string name="liftoff_abort">ABORTADO</string>
     <string name="liftoff_hint">qualquer tecla: ocultar</string>
     <string name="liftoff_failed_toast">%1$s falhou</string>
-    <string name="living">Proteção de ecrã Living</string>
+    <string name="living">Proteção de ecrã Live</string>
     <string name="living_notes">Notificações do PC na proteção de ecrã</string>
     <string name="living_notes_note">Todas as notificações do PC Omarchy vão aparecer na TV enquanto a proteção de ecrã estiver ativa</string>
     <string name="living_x">X na proteção de ecrã</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">O Omastorm não está instalado no PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">O Omastorm não arrancou: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ mover · OK reproduzir · ⏩⏪ imagens · 1 2 3 estilo · 4 radar próximo · 5 6 zoom · 7 todos os radares · 8 a minha localização · 9 aviação · 0 repor · VOLTAR fechar</string>
+    <string name="liftoff_title">descolagem</string>
+    <string name="liftoff_stage_download">a transferir</string>
+    <string name="liftoff_stage_verify">a verificar</string>
+    <string name="liftoff_stage_sign">a assinar</string>
+    <string name="liftoff_stage_install">a instalar</string>
+    <string name="liftoff_stage_launch">a iniciar</string>
+    <string name="liftoff_exit">código %1$s</string>
+    <string name="living_waiting">à espera do PC Omarchy…</string>
 </resources>

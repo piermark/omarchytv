@@ -152,6 +152,18 @@ final class LiftoffView extends View {
         }, "liftoff-alarm").start();
     }
 
+    /** The update's stages in the TV's language; a build's own stage text stays as the PC sent it. */
+    private String stageLabel(String s) {
+        switch (s) {
+            case "download": return getContext().getString(R.string.liftoff_stage_download);
+            case "verify": return getContext().getString(R.string.liftoff_stage_verify);
+            case "sign": return getContext().getString(R.string.liftoff_stage_sign);
+            case "install": return getContext().getString(R.string.liftoff_stage_install);
+            case "launch": return getContext().getString(R.string.liftoff_stage_launch);
+            default: return s;
+        }
+    }
+
     // ---- drawing ----
 
     @Override
@@ -180,7 +192,7 @@ final class LiftoffView extends View {
 
         float small = hh / 34f;
         String kind = getContext().getString("update".equals(state.optString("kind")) ? R.string.liftoff_update : R.string.liftoff_build);
-        String title = " liftoff · " + kind + " · " + state.optString("name") + " ";
+        String title = " " + getContext().getString(R.string.liftoff_title) + " · " + kind + " · " + state.optString("name") + " ";
         paint.setTextSize(small);
         float tw = paint.measureText(title);
         fill.setColor(0xFF000000 | (bg & 0xFFFFFF));
@@ -217,8 +229,10 @@ final class LiftoffView extends View {
 
         paint.setTextSize(small * 1.1f);
         paint.setColor(fg);
-        String stage = state.optString("stage");
-        if (failed && state.has("code")) stage = (stage.isEmpty() ? "" : stage + " · ") + "exit " + state.optInt("code");
+        String stage = stageLabel(state.optString("stage"));
+        if (failed && state.has("code")) {
+            stage = (stage.isEmpty() ? "" : stage + " · ") + getContext().getString(R.string.liftoff_exit, String.valueOf(state.optInt("code")));
+        }
         if (!stage.isEmpty()) c.drawText(stage, cx, by + bh * 0.47f, paint);
         String bar = LiftoffScript.bar(LiftoffScript.progress(state, since), 24);
         if (!bar.isEmpty() && !failed) {

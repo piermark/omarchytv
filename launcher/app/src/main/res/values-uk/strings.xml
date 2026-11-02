@@ -419,7 +419,7 @@
     <string name="liftoff_abort">СКАСОВАНО</string>
     <string name="liftoff_hint">будь-яка кнопка: сховати</string>
     <string name="liftoff_failed_toast">%1$s: помилка</string>
-    <string name="living">Заставка Living</string>
+    <string name="living">Заставка Live</string>
     <string name="living_notes">Сповіщення ПК на заставці</string>
     <string name="living_notes_note">Усі сповіщення з ПК Omarchy показуватимуться на ТБ, поки працює заставка</string>
     <string name="living_x">X на заставці</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm не встановлено на ПК (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm не запустився: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ зсув · OK пуск · ⏩⏪ кадри · 1 2 3 стиль · 4 найближчий радар · 5 6 масштаб · 7 усі радари · 8 моє місце · 9 авіація · 0 скинути · НАЗАД закрити</string>
+    <string name="liftoff_title">зліт</string>
+    <string name="liftoff_stage_download">завантаження</string>
+    <string name="liftoff_stage_verify">перевірка</string>
+    <string name="liftoff_stage_sign">підпис</string>
+    <string name="liftoff_stage_install">встановлення</string>
+    <string name="liftoff_stage_launch">запуск</string>
+    <string name="liftoff_exit">код %1$s</string>
+    <string name="living_waiting">чекаю на ПК Omarchy…</string>
 </resources>

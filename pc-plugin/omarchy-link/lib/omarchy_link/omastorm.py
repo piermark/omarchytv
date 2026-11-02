@@ -64,6 +64,31 @@ def key_shortcut(name: str, address: str) -> str | None:
     return f"{k[0]}, {k[1]}, address:{address}"
 
 
+def snapshot(cfg: dict, open_window: bool = True) -> bytes | None:
+    """The Omastorm window as a small JPEG (grim, half size) for the TV's Live screensaver, or None. Opens Omastorm
+    on this PC first when it is closed and open_window is set (the Live screensaver's "Omastorm radar" switch)."""
+    if cfg.get("omastormFromTv", True) is False or not shutil.which("grim") or not shutil.which("hyprctl"):
+        return None
+    win = find_window()
+    if not win and open_window and shutil.which("omarchy"):
+        subprocess.Popen(["omarchy", "shell", "shell", "summon", PLUGIN_ID, "{}"], stdin=subprocess.DEVNULL,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        for _ in range(30):
+            time.sleep(0.2)
+            win = find_window()
+            if win:
+                break
+    if not win:
+        return None
+    try:
+        r = subprocess.run(["grim", "-g", region(win), "-s", "0.5", "-t", "jpeg", "-q", "70", "-"], capture_output=True,
+                           timeout=10, stdin=subprocess.DEVNULL)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    img = r.stdout if r.returncode == 0 else b""
+    return img if img[:3] == b"\xff\xd8\xff" and len(img) <= 300_000 else None
+
+
 class Session:
     """One Omastorm stream at a time (per omarchy-link process)."""
 

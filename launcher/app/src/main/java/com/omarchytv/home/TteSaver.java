@@ -233,7 +233,7 @@ final class TteSaver {
         }
         drawn = false;
         LauncherConfig cfg = LauncherConfig.get(ctx);
-        if ("native".equals(forceMode) || AsciiSaverView.isAquarium(cfg)) {
+        if (!cfg.living && ("native".equals(forceMode) || AsciiSaverView.isAquarium(cfg))) {   // v2.14 Live needs the page
             toNative("aquarium/nativo");
             return;
         }

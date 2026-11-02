@@ -2254,6 +2254,13 @@ public final class LinkServer {
         String xm = d.optString("xMode", "off");
         o.put("xMode", "notify".equals(xm) || "api".equals(xm) ? xm : "off");
         if (d.has("xError")) o.put("xError", printable(d.optString("xError", ""), 100));
+        // v2.14 Omastorm radar snapshot: a JPEG data URL only, at most ~300 KB of image.
+        JSONObject rad = d.optJSONObject("radar");
+        String img = rad != null ? rad.optString("img", "") : "";
+        if (img.startsWith("data:image/jpeg;base64,") && img.length() <= 420_000
+                && img.substring(23).matches("[A-Za-z0-9+/=]+")) {
+            o.put("radar", new JSONObject().put("img", img).put("at", printable(rad.optString("at", ""), 24)));
+        }
         return o;
     }
 

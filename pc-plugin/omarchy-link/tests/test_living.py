@@ -43,7 +43,8 @@ class Notes(unittest.TestCase):
         self.assertEqual((p["notes"][0]["title"], p["x"]), ("Ola", []))
 
     def test_prefs(self):
-        self.assertEqual(living.parse_prefs(None), {"notes": False, "github": True, "x": "off"})
+        self.assertEqual(living.parse_prefs(None), {"notes": False, "github": True, "x": "off", "radar": False})
+        self.assertTrue(living.parse_prefs({"radar": True})["radar"])
         self.assertEqual(living.parse_prefs({"notes": "yes", "x": "scrape"})["x"], "off")
 
 

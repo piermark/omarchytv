@@ -17,9 +17,10 @@ import android.view.View;
 import android.widget.FrameLayout;
 
 /**
- * v2.14 Retro CRT plugin (plugins.retroCrt: "off" | "light" | "strong"): scanlines, a faint RGB phosphor mask,
- * vignette, a gentle flicker and a rounded bezel in the active Omarchy theme (dark body, accent edge and glow), over
- * all of Home. "strong" on Android 13+ also bends the picture like a tube (AGSL barrel shader on the root view).
+ * v2.14 Retro CRT plugin (plugins.retroCrt: "off" | "light" | "strong"): Home shrinks to 88% inside a CRT set drawn
+ * on the window's decor view: dark body, a rim and glow in the active theme's accent, an OMARCHY TV badge with a power
+ * LED; on the screen, scanlines, an RGB phosphor mask, vignette, a glass highlight and a gentle flicker. "strong" on
+ * Android 13+ also bends the picture like a tube (AGSL barrel shader on the root view).
  * The bezel follows the theme: rebuilt whenever the activity is (theme changes recreate it).
  */
 final class CrtOverlay extends View {
@@ -32,7 +33,7 @@ final class CrtOverlay extends View {
             + "}";
 
     private final boolean strong;
-    private final Paint scan = new Paint(), mask = new Paint(), vignette = new Paint(), bezel = new Paint(Paint.ANTI_ALIAS_FLAG),
+    private final Paint scan = new Paint(), mask = new Paint(), vignette = new Paint(),
             edge = new Paint(Paint.ANTI_ALIAS_FLAG), glow = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final int dark, accent;
     private float flicker = 1f;
@@ -52,14 +53,13 @@ final class CrtOverlay extends View {
         dark = t.bgDarker | 0xFF000000;
         accent = t.accent | 0xFF000000;
         Bitmap b = Bitmap.createBitmap(1, 3, Bitmap.Config.ARGB_8888);
-        b.setPixel(0, 2, strong ? 0x55000000 : 0x30000000);
+        b.setPixel(0, 2, strong ? 0x6B000000 : 0x48000000);
         scan.setShader(new BitmapShader(b, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT));
         Bitmap m = Bitmap.createBitmap(3, 1, Bitmap.Config.ARGB_8888);
-        m.setPixel(0, 0, 0x0CFF0000);
-        m.setPixel(1, 0, 0x0800FF00);
-        m.setPixel(2, 0, 0x0C0000FF);
+        m.setPixel(0, 0, strong ? 0x17FF0000 : 0x0FFF0000);
+        m.setPixel(1, 0, strong ? 0x1200FF00 : 0x0B00FF00);
+        m.setPixel(2, 0, strong ? 0x170000FF : 0x0F0000FF);
         mask.setShader(new BitmapShader(m, Shader.TileMode.REPEAT, Shader.TileMode.REPEAT));
-        bezel.setStyle(Paint.Style.STROKE);
         edge.setStyle(Paint.Style.STROKE);
         glow.setStyle(Paint.Style.STROKE);
         setFocusable(false);
@@ -67,11 +67,22 @@ final class CrtOverlay extends View {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
     }
 
-    /** From MainActivity.onCreate (after BootScreenView): adds the overlay when the plugin is on. */
-    static void attach(FrameLayout root, String mode) {
+    static final float K = 0.88f;   // the home shrinks to 88% inside the set, like the LG/Samsung version
+
+    /** From MainActivity.onCreate: Home shrinks into a CRT set (overlay on the window's decor view) when on. */
+    static void attach(android.app.Activity a, FrameLayout root, String mode) {
         if (root == null || !("light".equals(mode) || "strong".equals(mode))) return;
-        CrtOverlay v = new CrtOverlay(root.getContext(), "strong".equals(mode));
-        root.addView(v, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT));
+        View decor = a.getWindow().getDecorView();
+        if (!(decor instanceof android.view.ViewGroup)) return;
+        root.setScaleX(K);
+        root.setScaleY(K);
+        root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
+            v.setPivotX((r - l) / 2f);
+            v.setPivotY((b - t) / 2f - (b - t) * 0.012f / (1 - K));
+        });
+        CrtOverlay v = new CrtOverlay(a, "strong".equals(mode));
+        ((android.view.ViewGroup) decor).addView(v, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
         v.post(v.tick);
         if (v.strong && Build.VERSION.SDK_INT >= 33) curve(root);
     }
@@ -88,35 +99,59 @@ final class CrtOverlay extends View {
         root.requestLayout();
     }
 
+    private final RectF screen = new RectF();
+    private final android.graphics.Path frame = new android.graphics.Path();
+    private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG), label = new Paint(Paint.ANTI_ALIAS_FLAG), glass = new Paint();
+
     @Override
     protected void onSizeChanged(int w, int h, int ow, int oh) {
         super.onSizeChanged(w, h, ow, oh);
-        float r = (float) Math.hypot(w / 2.0, h / 2.0);
-        vignette.setShader(new RadialGradient(w / 2f, h / 2f, r, new int[]{Color.TRANSPARENT, Color.TRANSPARENT,
-                strong ? 0x99000000 : 0x66000000}, new float[]{0f, 0.62f, 1f}, Shader.TileMode.CLAMP));
+        float sw = w * K, sh = h * K, x = (w - sw) / 2f, y = (h - sh) / 2f - h * 0.012f;
+        screen.set(x, y, x + sw, y + sh);
+        float rad = h * 0.022f;
+        frame.reset();
+        frame.setFillType(android.graphics.Path.FillType.EVEN_ODD);
+        frame.addRect(0, 0, w, h, android.graphics.Path.Direction.CW);
+        frame.addRoundRect(screen, rad, rad, android.graphics.Path.Direction.CW);
+        float r = (float) Math.hypot(sw / 2.0, sh / 2.0);
+        vignette.setShader(new RadialGradient(screen.centerX(), screen.centerY(), r, new int[]{Color.TRANSPARENT, Color.TRANSPARENT,
+                strong ? 0xB8000000 : 0x8C000000}, new float[]{0f, strong ? 0.5f : 0.58f, 1f}, Shader.TileMode.CLAMP));
+        glass.setShader(new android.graphics.LinearGradient(screen.left, screen.top, screen.centerX(), screen.centerY(),
+                0x17FFFFFF, 0x00FFFFFF, Shader.TileMode.CLAMP));
+        label.setTypeface(CastUi.font(getContext()));
+        label.setTextSize(h * 0.016f);
+        label.setLetterSpacing(0.6f);
+        label.setColor(accent);
+        label.setShadowLayer(h * 0.01f, 0, 0, accent);
     }
 
     @Override
     protected void onDraw(Canvas c) {
         int w = getWidth(), h = getHeight();
-        c.drawRect(0, 0, w, h, scan);
-        c.drawRect(0, 0, w, h, mask);
-        c.drawRect(0, 0, w, h, vignette);
-        float bw = h * 0.011f, rad = h * 0.032f;
-        RectF out = new RectF(bw / 2, bw / 2, w - bw / 2, h - bw / 2);
-        bezel.setStrokeWidth(bw);
-        bezel.setColor(dark);
-        c.drawRoundRect(out, rad, rad, bezel);
-        RectF in = new RectF(bw, bw, w - bw, h - bw);
-        glow.setStrokeWidth(bw * 0.9f);
-        glow.setColor((accent & 0xFFFFFF) | (int) (0x30 * flicker) << 24);
-        c.drawRoundRect(new RectF(in.left + bw * 0.45f, in.top + bw * 0.45f, in.right - bw * 0.45f, in.bottom - bw * 0.45f), rad, rad, glow);
-        edge.setStrokeWidth(Math.max(2f, h / 540f));
+        float rad = h * 0.022f;
+        // Inside the screen: scanlines, phosphor mask, vignette, glass highlight, flicker.
+        c.save();
+        c.clipRect(screen);
+        c.drawRect(screen, scan);
+        c.drawRect(screen, mask);
+        c.drawRect(screen, vignette);
+        c.drawRect(screen, glass);
+        if (flicker < 0.985f) c.drawColor((int) ((1f - flicker) * 255 * 0.8f) << 24);
+        c.restore();
+        // The set: dark body all around, accent rim with glow, the OMARCHY TV badge and a power LED.
+        fill.setColor(0xFF0B0B0F);
+        c.drawPath(frame, fill);
+        glow.setStrokeWidth(h * 0.012f);
+        glow.setColor((accent & 0xFFFFFF) | (int) (0x55 * flicker) << 24);
+        c.drawRoundRect(screen, rad, rad, glow);
+        edge.setStrokeWidth(Math.max(2f, h * 0.0045f));
         edge.setColor(accent);
-        c.drawRoundRect(in, rad * 0.8f, rad * 0.8f, edge);
-        if (flicker < 0.985f) {
-            c.drawColor((int) ((1f - flicker) * 255 * 0.6f) << 24);
-        }
+        c.drawRoundRect(screen, rad, rad, edge);
+        String badge = "OMARCHY TV";
+        float tw = label.measureText(badge), by = screen.bottom + (h - screen.bottom) * 0.62f;
+        c.drawText(badge, (w - tw) / 2f - h * 0.012f, by, label);
+        fill.setColor(accent);
+        c.drawCircle((w + tw) / 2f + h * 0.012f, by - h * 0.005f, h * 0.0055f, fill);
     }
 
     @Override

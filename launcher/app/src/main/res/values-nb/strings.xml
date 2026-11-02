@@ -419,7 +419,7 @@
     <string name="liftoff_abort">AVBRUTT</string>
     <string name="liftoff_hint">hvilken som helst tast: skjul</string>
     <string name="liftoff_failed_toast">%1$s mislyktes</string>
-    <string name="living">Living-skjermsparer</string>
+    <string name="living">Live-skjermsparer</string>
     <string name="living_notes">PC-varsler på skjermspareren</string>
     <string name="living_notes_note">Alle varsler fra Omarchy-PC-en vises på TV-en mens skjermspareren kjører</string>
     <string name="living_x">X på skjermspareren</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm er ikke installert på PC-en (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm kunne ikke starte: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ panorer · OK spill av · ⏩⏪ bilder · 1 2 3 stil · 4 nærmeste radar · 5 6 zoom · 7 alle radarer · 8 min posisjon · 9 luftfart · 0 tilbakestill · TILBAKE lukk</string>
+    <string name="liftoff_title">oppskyting</string>
+    <string name="liftoff_stage_download">laster ned</string>
+    <string name="liftoff_stage_verify">kontrollerer</string>
+    <string name="liftoff_stage_sign">signerer</string>
+    <string name="liftoff_stage_install">installerer</string>
+    <string name="liftoff_stage_launch">starter</string>
+    <string name="liftoff_exit">kode %1$s</string>
+    <string name="living_waiting">venter på Omarchy-PC-en…</string>
 </resources>

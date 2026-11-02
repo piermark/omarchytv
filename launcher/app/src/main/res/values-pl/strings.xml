@@ -419,7 +419,7 @@
     <string name="liftoff_abort">PRZERWANO</string>
     <string name="liftoff_hint">dowolny klawisz: ukryj</string>
     <string name="liftoff_failed_toast">%1$s: niepowodzenie</string>
-    <string name="living">Wygaszacz Living</string>
+    <string name="living">Wygaszacz Live</string>
     <string name="living_notes">Powiadomienia z PC na wygaszaczu</string>
     <string name="living_notes_note">Wszystkie powiadomienia z PC Omarchy pojawią się na TV, gdy działa wygaszacz</string>
     <string name="living_x">X na wygaszaczu</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm nie jest zainstalowany na PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Nie udało się uruchomić Omastorm: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ przesuń · OK odtwórz · ⏩⏪ klatki · 1 2 3 styl · 4 najbliższy radar · 5 6 zoom · 7 wszystkie radary · 8 moja lokalizacja · 9 lotnictwo · 0 reset · WSTECZ zamknij</string>
+    <string name="liftoff_title">start</string>
+    <string name="liftoff_stage_download">pobieranie</string>
+    <string name="liftoff_stage_verify">sprawdzanie</string>
+    <string name="liftoff_stage_sign">podpisywanie</string>
+    <string name="liftoff_stage_install">instalowanie</string>
+    <string name="liftoff_stage_launch">uruchamianie</string>
+    <string name="liftoff_exit">kod %1$s</string>
+    <string name="living_waiting">czekam na PC z Omarchy…</string>
 </resources>

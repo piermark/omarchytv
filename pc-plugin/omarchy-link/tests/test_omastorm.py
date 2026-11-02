@@ -32,6 +32,21 @@ class Window(unittest.TestCase):
             self.assertNotIn("-g", cast.screen_argv({}))   # junk region: the normal whole-screen path
 
 
+class Snapshot(unittest.TestCase):
+    def test_jpeg_of_the_window_only(self):
+        jpg = b"\xff\xd8\xff" + b"x" * 100
+        with mock.patch.object(omastorm.shutil, "which", return_value="/usr/bin/x"), \
+             mock.patch.object(omastorm, "find_window", return_value=WIN), \
+             mock.patch.object(omastorm.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=jpg)) as run:
+            self.assertEqual(omastorm.snapshot({}), jpg)
+            self.assertEqual(run.call_args[0][0][:3], ["grim", "-g", "320,180 1280x720"])
+        with mock.patch.object(omastorm.shutil, "which", return_value="/usr/bin/x"), \
+             mock.patch.object(omastorm, "find_window", return_value=WIN), \
+             mock.patch.object(omastorm.subprocess, "run", return_value=mock.Mock(returncode=0, stdout=b"<html>")):
+            self.assertIsNone(omastorm.snapshot({}))
+        self.assertIsNone(omastorm.snapshot({"omastormFromTv": False}))
+
+
 class SameKeysAsTheTv(unittest.TestCase):
     def test_every_tv_key_name_is_known_here(self):
         import re

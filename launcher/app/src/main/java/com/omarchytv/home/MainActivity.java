@@ -152,7 +152,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         Theme.apply(getWindow().getDecorView());
         BootScreenView.onCreate(this, findViewById(R.id.root));   // v2.14 boot screen (once per boot by default)
         current = new java.lang.ref.WeakReference<>(this);
-        CrtOverlay.attach(findViewById(R.id.root), LauncherConfig.get(this).pluginRetroCrt);   // v2.14 Retro CRT plugin
+        CrtOverlay.attach(this, findViewById(R.id.root), LauncherConfig.get(this).pluginRetroCrt);   // v2.14 Retro CRT plugin
         // Lights hub only while OmarchyTV is on screen; the snapshot ("Restore previous") is queued before the paint.
         com.omarchytv.home.lights.LightsPresence.install(this, new com.omarchytv.home.lights.LightsPresence.Painter() {
             @Override
@@ -3296,6 +3296,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             String n = next(xModes, cfg.livingX);
             applyLive("screensaver", "  " + lX, j -> living(j).put("x", n));
             if ("api".equals(n)) Toast.makeText(this, R.string.living_x_api_note, Toast.LENGTH_LONG).show();
+            OmarchyLink.livingPrefs();
+            return true;
+        });
+        p.add("  Omastorm radar", str(cfg.livingRadar ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.livingRadar;
+            applyLive("screensaver", "  Omastorm radar", j -> living(j).put("radar", n));
             OmarchyLink.livingPrefs();
             return true;
         });

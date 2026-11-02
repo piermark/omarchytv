@@ -419,7 +419,7 @@
     <string name="liftoff_abort">AVBRUTET</string>
     <string name="liftoff_hint">valfri knapp: dölj</string>
     <string name="liftoff_failed_toast">%1$s misslyckades</string>
-    <string name="living">Living-skärmsläckare</string>
+    <string name="living">Live-skärmsläckare</string>
     <string name="living_notes">Datorns aviseringar på skärmsläckaren</string>
     <string name="living_notes_note">Alla aviseringar från Omarchy-datorn visas på TV:n medan skärmsläckaren är igång</string>
     <string name="living_x">X på skärmsläckaren</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm är inte installerat på datorn (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm kunde inte starta: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ panorera · OK spela · ⏩⏪ bilder · 1 2 3 stil · 4 närmaste radar · 5 6 zoom · 7 alla radarer · 8 min plats · 9 flyg · 0 återställ · TILLBAKA stäng</string>
+    <string name="liftoff_title">uppskjutning</string>
+    <string name="liftoff_stage_download">laddar ner</string>
+    <string name="liftoff_stage_verify">kontrollerar</string>
+    <string name="liftoff_stage_sign">signerar</string>
+    <string name="liftoff_stage_install">installerar</string>
+    <string name="liftoff_stage_launch">startar</string>
+    <string name="liftoff_exit">kod %1$s</string>
+    <string name="living_waiting">väntar på Omarchy-datorn…</string>
 </resources>

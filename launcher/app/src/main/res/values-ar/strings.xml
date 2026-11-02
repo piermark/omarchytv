@@ -419,7 +419,7 @@
     <string name="liftoff_abort">إلغاء</string>
     <string name="liftoff_hint">أي زر: إخفاء</string>
     <string name="liftoff_failed_toast">فشل %1$s</string>
-    <string name="living">شاشة توقف Living</string>
+    <string name="living">شاشة توقف Live</string>
     <string name="living_notes">إشعارات الحاسوب على شاشة التوقف</string>
     <string name="living_notes_note">ستظهر كل إشعارات حاسوب Omarchy على التلفاز أثناء تشغيل شاشة التوقف</string>
     <string name="living_x">X على شاشة التوقف</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm غير مثبت على الحاسوب (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">تعذّر تشغيل Omastorm: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ تحريك · OK تشغيل · ⏩⏪ إطارات · 1 2 3 النمط · 4 أقرب رادار · 5 6 تكبير · 7 كل الرادارات · 8 موقعي · 9 الطيران · 0 إعادة ضبط · رجوع إغلاق</string>
+    <string name="liftoff_title">انطلاق</string>
+    <string name="liftoff_stage_download">جارٍ التنزيل</string>
+    <string name="liftoff_stage_verify">جارٍ التحقق</string>
+    <string name="liftoff_stage_sign">جارٍ التوقيع</string>
+    <string name="liftoff_stage_install">جارٍ التثبيت</string>
+    <string name="liftoff_stage_launch">جارٍ التشغيل</string>
+    <string name="liftoff_exit">الرمز %1$s</string>
+    <string name="living_waiting">في انتظار حاسوب Omarchy…</string>
 </resources>

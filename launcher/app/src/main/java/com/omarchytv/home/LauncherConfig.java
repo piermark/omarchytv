@@ -406,7 +406,7 @@ final class LauncherConfig {
     final boolean pluginOmastorm;
     /** v2.14 Living screensaver (default off): weather, GitHub, PC notifications (livingNotes, default off) and X
      *  (livingX "off" | "notify" | "api") in ASCII boxes next to the screensaver art. */
-    final boolean living, livingNotes, livingGithub;
+    final boolean living, livingNotes, livingGithub, livingRadar;
     final String livingX;
     /** v2.14 "TV and PC power together" (default false): TV on wakes the PC (Wake-on-LAN), TV off suspends it. */
     final boolean pcPower;
@@ -681,6 +681,7 @@ final class LauncherConfig {
         living = lv != null && lv.optBoolean("enabled", false);
         livingNotes = lv != null && lv.optBoolean("notes", false);
         livingGithub = lv == null || lv.optBoolean("github", true);
+        livingRadar = lv != null && lv.optBoolean("radar", false);
         String lx = lv != null ? lv.optString("x", "off") : "off";
         livingX = "notify".equals(lx) || "api".equals(lx) ? lx : "off";
         JSONObject lkWol = j != null && j.optJSONObject("link") != null ? j.optJSONObject("link").optJSONObject("pcWol") : null;

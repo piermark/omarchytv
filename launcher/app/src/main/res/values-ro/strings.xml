@@ -419,7 +419,7 @@
     <string name="liftoff_abort">ANULAT</string>
     <string name="liftoff_hint">orice tastă: ascunde</string>
     <string name="liftoff_failed_toast">%1$s a eșuat</string>
-    <string name="living">Screensaver Living</string>
+    <string name="living">Screensaver Live</string>
     <string name="living_notes">Notificările PC-ului pe screensaver</string>
     <string name="living_notes_note">Toate notificările de pe PC-ul Omarchy vor apărea pe TV cât timp rulează screensaverul</string>
     <string name="living_x">X pe screensaver</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm nu este instalat pe PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm nu a pornit: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ mută · OK redare · ⏩⏪ cadre · 1 2 3 stil · 4 cel mai apropiat radar · 5 6 zoom · 7 toate radarele · 8 locația mea · 9 aviație · 0 resetare · ÎNAPOI închide</string>
+    <string name="liftoff_title">decolare</string>
+    <string name="liftoff_stage_download">descărcare</string>
+    <string name="liftoff_stage_verify">verificare</string>
+    <string name="liftoff_stage_sign">semnare</string>
+    <string name="liftoff_stage_install">instalare</string>
+    <string name="liftoff_stage_launch">pornire</string>
+    <string name="liftoff_exit">cod %1$s</string>
+    <string name="living_waiting">aștept PC-ul Omarchy…</string>
 </resources>

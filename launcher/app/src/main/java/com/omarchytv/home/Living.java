@@ -26,7 +26,7 @@ final class Living {
     static JSONObject prefs(LauncherConfig c) {
         try {
             return new JSONObject().put("notes", c.living && c.livingNotes).put("github", c.living && c.livingGithub)
-                    .put("x", c.living ? c.livingX : "off");
+                    .put("x", c.living ? c.livingX : "off").put("radar", c.living && c.livingRadar);
         } catch (Exception e) {
             return new JSONObject();
         }
@@ -68,6 +68,10 @@ final class Living {
                 data.put("x", f.optJSONArray("x")).put("xMode", f.optString("xMode", cfg.livingX));
                 if (f.has("xError")) data.put("xError", f.optString("xError"));
             }
+            JSONObject rad = f.optJSONObject("radar");
+            if (pc && cfg.livingRadar && rad != null) data.put("radar", rad);
+            org.json.JSONObject st = com.omarchytv.home.link.LinkServer.stats();
+            if (pc && st != null) data.put("pc", new JSONObject().put("cpu", st.optInt("cpu")).put("ram", st.optInt("ram")));
             JSONObject w = weather(c, cfg);
             if (w != null) data.put("weather", w);
             Theme t = Theme.cur();
@@ -75,10 +79,14 @@ final class Living {
                     .put("notes", c.getString(R.string.living_notes_title)).put("x", c.getString(R.string.living_x_title))
                     .put("github", "github").put("x_not_set_up", c.getString(R.string.living_x_not_set_up))
                     .put("x_budget", c.getString(R.string.living_x_budget)).put("x_error", c.getString(R.string.living_x_error))
-                    .put("x_user", c.getString(R.string.living_x_error));
+                    .put("x_user", c.getString(R.string.living_x_error)).put("waiting", c.getString(R.string.living_waiting));
             return out.put("data", data).put("labels", labels)
                     .put("color", String.format(Locale.ROOT, "#%06x", t.fg & 0xFFFFFF))
-                    .put("accent", String.format(Locale.ROOT, "#%06x", t.accent & 0xFFFFFF)).toString();
+                    .put("accent", String.format(Locale.ROOT, "#%06x", t.accent & 0xFFFFFF))
+                    .put("accent2", String.format(Locale.ROOT, "#%06x", t.accent2 & 0xFFFFFF))
+                    .put("bg", String.format(Locale.ROOT, "#%06x", t.bgDarker & 0xFFFFFF))
+                    .put("user", cfg.promptUser).put("host", cfg.promptHost)
+                    .put("lang", c.getResources().getConfiguration().locale.toLanguageTag()).toString();
         } catch (Exception e) {
             return "{\"enabled\":false}";
         }

@@ -419,7 +419,7 @@
     <string name="liftoff_abort">中止</string>
     <string name="liftoff_hint">任意键：隐藏</string>
     <string name="liftoff_failed_toast">%1$s 失败</string>
-    <string name="living">Living 屏保</string>
+    <string name="living">Live 屏保</string>
     <string name="living_notes">在屏保上显示电脑通知</string>
     <string name="living_notes_note">屏保运行时，Omarchy 电脑的所有通知都会显示在电视上</string>
     <string name="living_x">屏保上的 X</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">电脑上未安装 Omastorm（omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable）</string>
     <string name="omastorm_failed">Omastorm 无法启动：%1$s</string>
     <string name="omastorm_keys">◀▲▼▶ 平移 · OK 播放 · ⏩⏪ 帧 · 1 2 3 样式 · 4 最近雷达 · 5 6 缩放 · 7 全部雷达 · 8 我的位置 · 9 航空 · 0 重置 · 返回 关闭</string>
+    <string name="liftoff_title">发射</string>
+    <string name="liftoff_stage_download">正在下载</string>
+    <string name="liftoff_stage_verify">正在校验</string>
+    <string name="liftoff_stage_sign">正在签名</string>
+    <string name="liftoff_stage_install">正在安装</string>
+    <string name="liftoff_stage_launch">正在启动</string>
+    <string name="liftoff_exit">退出码 %1$s</string>
+    <string name="living_waiting">正在等待 Omarchy 电脑…</string>
 </resources>

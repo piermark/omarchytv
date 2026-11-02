@@ -423,7 +423,7 @@
     <string name="liftoff_abort">ANNULLATO</string>
     <string name="liftoff_hint">un tasto qualsiasi: nascondi</string>
     <string name="liftoff_failed_toast">%1$s non riuscito</string>
-    <string name="living">Salvaschermo Living</string>
+    <string name="living">Salvaschermo Live</string>
     <string name="living_notes">Notifiche del PC nel salvaschermo</string>
     <string name="living_notes_note">Tutte le notifiche del PC Omarchy appariranno sulla TV mentre è attivo il salvaschermo</string>
     <string name="living_x">X nel salvaschermo</string>
@@ -448,4 +448,12 @@
     <string name="omastorm_not_installed">Omastorm non è installato sul PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm non si è avviato: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ sposta · OK play · ⏩⏪ fotogrammi · 1 2 3 stile · 4 radar vicino · 5 6 zoom · 7 tutti i radar · 8 la mia posizione · 9 aviazione · 0 reset · INDIETRO chiudi</string>
+    <string name="liftoff_title">decollo</string>
+    <string name="liftoff_stage_download">download</string>
+    <string name="liftoff_stage_verify">verifica</string>
+    <string name="liftoff_stage_sign">firma</string>
+    <string name="liftoff_stage_install">installazione</string>
+    <string name="liftoff_stage_launch">avvio</string>
+    <string name="liftoff_exit">uscita %1$s</string>
+    <string name="living_waiting">in attesa del PC Omarchy…</string>
 </resources>

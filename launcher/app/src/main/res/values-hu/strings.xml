@@ -419,7 +419,7 @@
     <string name="liftoff_abort">MEGSZAKÍTVA</string>
     <string name="liftoff_hint">bármely gomb: elrejtés</string>
     <string name="liftoff_failed_toast">%1$s sikertelen</string>
-    <string name="living">Living képernyővédő</string>
+    <string name="living">Live képernyővédő</string>
     <string name="living_notes">PC-értesítések a képernyővédőn</string>
     <string name="living_notes_note">Az Omarchy PC összes értesítése megjelenik a TV-n, amíg a képernyővédő fut</string>
     <string name="living_x">X a képernyővédőn</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Az Omastorm nincs telepítve a PC-n (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Az Omastorm nem indult el: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ mozgatás · OK lejátszás · ⏩⏪ képkockák · 1 2 3 stílus · 4 legközelebbi radar · 5 6 nagyítás · 7 összes radar · 8 helyzetem · 9 repülés · 0 alaphelyzet · VISSZA bezárás</string>
+    <string name="liftoff_title">kilövés</string>
+    <string name="liftoff_stage_download">letöltés</string>
+    <string name="liftoff_stage_verify">ellenőrzés</string>
+    <string name="liftoff_stage_sign">aláírás</string>
+    <string name="liftoff_stage_install">telepítés</string>
+    <string name="liftoff_stage_launch">indítás</string>
+    <string name="liftoff_exit">kód %1$s</string>
+    <string name="living_waiting">várakozás az Omarchy PC-re…</string>
 </resources>

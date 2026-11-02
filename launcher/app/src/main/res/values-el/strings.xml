@@ -419,7 +419,7 @@
     <string name="liftoff_abort">ΜΑΤΑΙΩΣΗ</string>
     <string name="liftoff_hint">οποιοδήποτε πλήκτρο: απόκρυψη</string>
     <string name="liftoff_failed_toast">%1$s: αποτυχία</string>
-    <string name="living">Προφύλαξη Living</string>
+    <string name="living">Προφύλαξη Live</string>
     <string name="living_notes">Ειδοποιήσεις PC στην προφύλαξη</string>
     <string name="living_notes_note">Όλες οι ειδοποιήσεις του PC Omarchy θα εμφανίζονται στην τηλεόραση όσο τρέχει η προφύλαξη οθόνης</string>
     <string name="living_x">X στην προφύλαξη</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Το Omastorm δεν είναι εγκατεστημένο στο PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Το Omastorm δεν ξεκίνησε: %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ μετακίνηση · OK αναπαραγωγή · ⏩⏪ καρέ · 1 2 3 στυλ · 4 κοντινότερο ραντάρ · 5 6 ζουμ · 7 όλα τα ραντάρ · 8 η θέση μου · 9 αεροπορία · 0 επαναφορά · ΠΙΣΩ κλείσιμο</string>
+    <string name="liftoff_title">εκτόξευση</string>
+    <string name="liftoff_stage_download">λήψη</string>
+    <string name="liftoff_stage_verify">έλεγχος</string>
+    <string name="liftoff_stage_sign">υπογραφή</string>
+    <string name="liftoff_stage_install">εγκατάσταση</string>
+    <string name="liftoff_stage_launch">εκκίνηση</string>
+    <string name="liftoff_exit">κωδικός %1$s</string>
+    <string name="living_waiting">αναμονή για το PC Omarchy…</string>
 </resources>

@@ -53,3 +53,22 @@ test("Android's saver copy is identical, both pages load it", () => {
   assert.ok(fs.readFileSync(__dirname + "/../app/index.html", "utf8").indexOf('src="living.js"') > 0);
   assert.ok(fs.readFileSync(__dirname + "/../../launcher/app/src/main/assets/saver/index.html", "utf8").indexOf('src="living.js"') > 0);
 });
+
+test("Live screen: fixed grid, block clock, animated sky, ticker", () => {
+  const n = new Date(NOW).toISOString();
+  const d = Object.assign({}, DATA, { weather: { t: 9, code: 61, desc: "pioggia", min: 6, max: 16, place: "Alessandria" } });
+  const a = L.scene(d, { cols: 112, rows: 34, t: 1, now: NOW, clock: "21:07", date: "lun 2 nov" });
+  const b = L.scene(d, { cols: 112, rows: 34, t: 2, now: NOW, clock: "21:07", date: "lun 2 nov" });
+  assert.strictEqual(a.length, 34);
+  a.forEach((l) => assert.strictEqual(l.length, 112, JSON.stringify(l)));
+  const txt = a.join("\n");
+  ["omarchy-live", "lun 2 nov", "██", "pioggia", "notifications · pc", "@ana", "github"].forEach((s) =>
+    assert.ok(txt.indexOf(s) >= 0, s));
+  assert.notDeepStrictEqual(a.slice(8, 18), b.slice(8, 18), "the rain moves");
+  assert.strictEqual(L.bigClock("21:07").length, 5);
+  for (let t = 0; t < 6; t++) [0, 2, 3, 45, 61, 71, 95].forEach((c) => L.sky(c, t).forEach((r) => assert.strictEqual(r.length, 24)));
+  const empty = L.scene({ xMode: "notify" }, { now: NOW, labels: { waiting: "in attesa del PC Omarchy…" } }).join("\n");
+  assert.ok(empty.indexOf("in attesa del PC Omarchy") > 0);
+  assert.ok(L.htmlLine("┌─ x · menzioni ─┐ @ana <b>").indexOf("<b class=\"a\">x · menzioni</b>") > 0);
+  assert.ok(L.htmlLine("<script>").indexOf("&lt;script&gt;") === 0);
+});

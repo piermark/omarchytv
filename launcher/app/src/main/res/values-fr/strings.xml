@@ -419,7 +419,7 @@
     <string name="liftoff_abort">ABANDON</string>
     <string name="liftoff_hint">n\'importe quelle touche : masquer</string>
     <string name="liftoff_failed_toast">%1$s a échoué</string>
-    <string name="living">Économiseur Living</string>
+    <string name="living">Économiseur Live</string>
     <string name="living_notes">Notifications du PC sur l\'économiseur</string>
     <string name="living_notes_note">Toutes les notifications du PC Omarchy s\'afficheront sur la TV pendant l\'économiseur d\'écran</string>
     <string name="living_x">X sur l\'économiseur</string>
@@ -444,4 +444,12 @@
     <string name="omastorm_not_installed">Omastorm n\'est pas installé sur le PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
     <string name="omastorm_failed">Omastorm n\'a pas pu démarrer : %1$s</string>
     <string name="omastorm_keys">◀▲▼▶ déplacer · OK lecture · ⏩⏪ images · 1 2 3 style · 4 radar proche · 5 6 zoom · 7 tous les radars · 8 ma position · 9 aviation · 0 réinitialiser · RETOUR fermer</string>
+    <string name="liftoff_title">décollage</string>
+    <string name="liftoff_stage_download">téléchargement</string>
+    <string name="liftoff_stage_verify">vérification</string>
+    <string name="liftoff_stage_sign">signature</string>
+    <string name="liftoff_stage_install">installation</string>
+    <string name="liftoff_stage_launch">démarrage</string>
+    <string name="liftoff_exit">code %1$s</string>
+    <string name="living_waiting">en attente du PC Omarchy…</string>
 </resources>
