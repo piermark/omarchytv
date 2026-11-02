@@ -330,6 +330,7 @@
     <string name="speed_normal">normaal</string>
     <string name="speed_fast">snel</string>
     <string name="wp_sync_pc">Pc-achtergrond synchroniseren</string>
+    <string name="theme_to_pc">Ook het pc-thema wijzigen</string>
     <string name="grok_bot_hub">Grok Bot &amp; AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">AI-webapps vastzetten op startscherm</string>

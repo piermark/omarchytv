@@ -117,6 +117,50 @@ class GrokbotBridgeTest(unittest.TestCase):
         self.assertEqual(self.post("/v1/nope", {}, tok)[0], 404)
 
 
+
+class FakeTheme:
+    def __init__(self):
+        self.asked = []
+
+    def set_theme(self, name):
+        self.asked.append(name)
+        return {"gruvbox": "ok", "nord": "same", "busy": "busy"}.get(name, "unknown")
+
+
+class ThemeSetBridgeTest(unittest.TestCase):
+    post = GrokbotBridgeTest.post   # reuse the server and helper, not the grokbot tests
+
+    def setUp(self):
+        GrokbotBridgeTest.setUp(self)
+        self.old_t, self.old_cfg = webos._link_theme, webos.link_cfg
+        self.th = FakeTheme()
+        self.cfg = {}
+        webos._link_theme = lambda: self.th
+        webos.link_cfg = lambda: self.cfg
+
+    def tearDown(self):
+        webos._link_theme, webos.link_cfg = self.old_t, self.old_cfg
+        GrokbotBridgeTest.tearDown(self)
+
+    def test_needs_the_code(self):
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"})[0], 401)
+        self.assertEqual(self.th.asked, [])
+
+    def test_results_map_to_status_codes(self):
+        tok = webos.bridge_token()
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"}, tok), (200, {"result": "ok"}))
+        self.assertEqual(self.post("/v1/theme/set", {"name": "nord"}, tok), (200, {"result": "same"}))
+        self.assertEqual(self.post("/v1/theme/set", {"name": "x"}, tok), (404, {"result": "unknown"}))
+        self.assertEqual(self.post("/v1/theme/set", {"name": "busy"}, tok)[0], 429)
+
+    def test_disabled_on_the_pc_and_not_installed(self):
+        tok = webos.bridge_token()
+        self.cfg["themeFromTv"] = False
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"}, tok)[0], 403)
+        self.assertEqual(self.th.asked, [])
+        webos._link_theme = lambda: None
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"}, tok)[0], 503)
+
 class FakeAssistantMod:
     class NoProvider(Exception): pass
     class RateLimited(Exception): pass

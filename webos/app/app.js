@@ -36,6 +36,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       root_keep: "Keep loaded in the background", root_keep_na: "not on this TV",
       root_missing: "Needs a rooted TV with Homebrew Channel (unrooted: see homewatch/ in the repo)", root_failed: "Could not change it: ",
       wx_min: "min ", wx_max: "max ",
+      theme_to_pc: "Also change the PC theme", theme_not_on_pc: "Not on the PC: only the TV changed",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -64,6 +65,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       root_keep: "Tieni caricata in background", root_keep_na: "non su questa TV",
       root_missing: "Serve una TV con root e Homebrew Channel (senza root: vedi homewatch/ nel repo)", root_failed: "Impossibile cambiarlo: ",
       wx_min: "min ", wx_max: "max ",
+      theme_to_pc: "Cambia anche il tema del PC", theme_not_on_pc: "Non presente sul PC: è cambiata solo la TV",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -92,6 +94,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       root_keep: "Im Hintergrund geladen lassen", root_keep_na: "nicht auf diesem TV",
       root_missing: "Benötigt einen gerooteten TV mit Homebrew Channel (ohne Root: siehe homewatch/ im Repo)", root_failed: "Konnte nicht geändert werden: ",
       wx_min: "Min ", wx_max: "Max ",
+      theme_to_pc: "Auch das PC-Theme ändern", theme_not_on_pc: "Nicht auf dem PC: nur der Fernseher wurde geändert",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -139,6 +142,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverShowClock: false,
     wallpaperIntro: true,
     wallpaperLoop: false,   // v2.14 "Always-animated wallpaper": loop the intro while Home is on screen
+    themeToPc: false,       // v2.14 reverse theme sync: a theme picked here also switches the PC (POST /v1/theme/set)
     bootScreen: "boot",     // v2.14 boot screen (boot.js): "boot" at app start, "wake" also after standby, "off"
     bootFx: true,           // v2.14 boot screen scanlines and glow
     antiBurnIn: true,
@@ -1060,6 +1064,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } },
       { label: tr("random_wallpaper"), right: cfg.randomWallpaper ? "on" : "off", act: function () {
         cfg.randomWallpaper = !cfg.randomWallpaper; saveCfg(); openThemesModal(true);
+      } },
+      { label: tr("theme_to_pc"), right: cfg.themeToPc ? "on" : "off", act: function () {
+        cfg.themeToPc = !cfg.themeToPc; saveCfg(); openThemesModal(true);
       } }
     ].concat(names.map(function (n) {
       return {
@@ -1070,13 +1077,25 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           cfg.randomTheme = false;
           cfg.wallpaperIdx = 0;
           saveCfg(); applyTheme(); renderAll(); closeModal();
+          themeToPc(n);
         }
       };
     }));
     var curIdx = names.indexOf(cfg.theme);
     openModal(tr("sys_themes") + " (" + names.length + ")", "Select a theme (MIT omarchy.webp + Liftoff Sunset)", items);
     if (keepFocus) { state.modalIdx = Math.min(focus, items.length - 1); renderModalList(); }
-    else if (curIdx >= 0) { state.modalIdx = curIdx + 2; renderModalList(); }
+    else if (curIdx >= 0) { state.modalIdx = curIdx + 3; renderModalList(); }
+  }
+
+  // v2.14 reverse theme sync: with "Also change the PC theme" on and a real PC paired, the theme just picked here
+  // goes to the PC bridge (omarchy-tv webos-serve), which runs omarchy-theme-set when it has that theme. The PC's
+  // status then reports the same theme, so nothing loops. A theme the PC doesn't have changes only the TV.
+  function themeToPc(name) {
+    if (!cfg.themeToPc || !cfg.pcHost || cfg.pcSimulated) return;
+    fetch(pcBase() + "/v1/theme/set", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode || "", "Content-Type": "text/plain" },
+      body: JSON.stringify({ name: name }) }).then(function (r) {
+      return r.json().then(function (j) { if (j && j.result === "unknown") showToast(tr("theme_not_on_pc")); });
+    }, function () {});
   }
 
   function openWeatherModal() {

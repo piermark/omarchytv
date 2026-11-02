@@ -330,6 +330,7 @@
     <string name="speed_normal">normálně</string>
     <string name="speed_fast">rychle</string>
     <string name="wp_sync_pc">Synchronizovat tapetu z PC</string>
+    <string name="theme_to_pc">Měnit i motiv PC</string>
     <string name="grok_bot_hub">Grok Bot a AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">Připnout AI aplikace na domovskou obrazovku</string>

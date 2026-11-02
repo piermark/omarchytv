@@ -16,6 +16,9 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
                                       in on the PC (Claude, Codex, Grok, Grok Bot, Hermes, Gemini, ollama, APIs),
                                       exactly the list Android's Grok Bot TUI gets over omarchy-link.
   POST /v1/ai/ask                  -> same token; {text, provider?, session?, lang?} -> {text, provider, model, session}
+  POST /v1/theme/set               -> same token; {name}: reverse theme sync, the TV picked a theme and the PC follows
+                                      (omarchy-theme-set, installed themes only, themeFromTv in omarchy-link's config)
+                                      -> {result: ok|same|unknown|busy|failed}
 """
 from __future__ import annotations
 
@@ -60,6 +63,14 @@ def bridge_token() -> str:
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(t + "\n")
     return t
+
+
+def _link_theme():
+    try:
+        from omarchy_link import theme   # noqa: PLC0415 (optional: omarchy-link may not be installed)
+        return theme
+    except Exception:
+        return None
 
 
 def _grokbot():
@@ -267,7 +278,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         global _last_ask
         path = self.path.split("?", 1)[0]
-        if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask"):
+        if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set"):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -290,6 +301,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
         if path.startswith("/v1/ai/"):
             self._ai(path, body)
             return
+        if path == "/v1/theme/set":
+            self._theme_set(body)
+            return
         g = _grokbot()
         if not g:
             self._send_json({"error": "not_installed", "message": "omarchy-link is not installed"}, 503)
@@ -310,6 +324,18 @@ class WebOSHandler(BaseHTTPRequestHandler):
                 self._send_json(g.ask(cfg, body.get("text"), str(bot) if bot else None))
         except g.GrokbotError as e:
             self._send_json({"error": e.code, "message": str(e)[:200]}, 400 if e.code in ("empty", "unknown_bot") else 502)
+
+    def _theme_set(self, body: dict) -> None:
+        th = _link_theme()
+        if not th:
+            self._send_json({"error": "not_installed", "message": "omarchy-link is not installed"}, 503)
+            return
+        if link_cfg().get("themeFromTv", True) is False:
+            self._send_json({"error": "disabled", "message": "themeFromTv is off on the PC"}, 403)
+            return
+        res = th.set_theme(body.get("name"))
+        code = {"ok": 200, "same": 200, "unknown": 404, "busy": 429}.get(res, 502)
+        self._send_json({"result": res}, code)
 
     def _ai(self, path: str, body: dict) -> None:
         a = _assistant()

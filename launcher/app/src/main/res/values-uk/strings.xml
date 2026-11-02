@@ -330,6 +330,7 @@
     <string name="speed_normal">звичайно</string>
     <string name="speed_fast">швидко</string>
     <string name="wp_sync_pc">Синхронізувати фон із ПК</string>
+    <string name="theme_to_pc">Змінювати й тему ПК</string>
     <string name="grok_bot_hub">Grok Bot і ШІ</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">Закріпити вебзастосунки ШІ на головному екрані</string>

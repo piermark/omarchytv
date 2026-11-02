@@ -330,6 +330,7 @@
     <string name="speed_normal">عادية</string>
     <string name="speed_fast">سريعة</string>
     <string name="wp_sync_pc">مزامنة خلفية الحاسوب</string>
+    <string name="theme_to_pc">تغيير سمة الحاسوب أيضًا</string>
     <string name="grok_bot_hub">Grok Bot والذكاء الاصطناعي</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">تثبيت تطبيقات الذكاء الاصطناعي على الشاشة الرئيسية</string>

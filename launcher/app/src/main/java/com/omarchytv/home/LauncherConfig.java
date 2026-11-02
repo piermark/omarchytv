@@ -396,6 +396,8 @@ final class LauncherConfig {
     final String wallpaper;          // "omarchy", "procedural", or an absolute image path
     /** Opt-in PC active wallpaper sync (default false: use bundled MIT theme wallpaper / Liftoff Sunset fallback). */
     final boolean syncPcWallpaper;
+    /** v2.14 reverse theme sync (default false): a theme picked on the TV also switches the paired PC. */
+    final boolean themeToPc;
     /** v2.13: play animated MP4 intro (e.g. cumulus, last-horizon) before settling on still wallpaper. */
     final boolean wallpaperIntro;
     /** v2.14 "Always-animated wallpaper" (default false): loop the theme's animated wallpaper while Home is on screen
@@ -659,6 +661,7 @@ final class LauncherConfig {
         String defWp = c != null ? c.getString(R.string.wallpaper).trim() : "omarchy";
         wallpaper = j != null ? j.optString("wallpaper", defWp).trim() : defWp;
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
+        themeToPc = j != null && j.optBoolean("themeToPc", false);
         wallpaperIntro = j == null || j.optBoolean("wallpaper_intro", j.optBoolean("wallpaperIntro", true));
         wallpaperLoop = j != null && j.optBoolean("wallpaperLoop", false);
         bootScreen = bootScreenMode(j != null ? j.optString("bootScreen", "boot") : "boot");

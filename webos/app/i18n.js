@@ -81,6 +81,8 @@
         "root_failed": "Não foi possível alterar: ",
         "wx_min": "mín ",
         "wx_max": "máx ",
+        "theme_to_pc": "Mudar também o tema do PC",
+        "theme_not_on_pc": "Não existe no PC: só o televisor mudou",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -196,6 +198,8 @@
         "root_failed": "Não foi possível alterar: ",
         "wx_min": "mín ",
         "wx_max": "máx ",
+        "theme_to_pc": "Mudar também o tema do PC",
+        "theme_not_on_pc": "Não existe no PC: só a TV mudou",
         "wmo": {
           "0": "limpo",
           "1": "quase limpo",
@@ -311,6 +315,8 @@
         "root_failed": "No se pudo cambiar: ",
         "wx_min": "mín ",
         "wx_max": "máx ",
+        "theme_to_pc": "Cambiar también el tema del PC",
+        "theme_not_on_pc": "No está en el PC: solo cambió el televisor",
         "wmo": {
           "0": "despejado",
           "1": "mayormente despejado",
@@ -426,6 +432,8 @@
         "root_failed": "Impossible de le modifier : ",
         "wx_min": "min ",
         "wx_max": "max ",
+        "theme_to_pc": "Changer aussi le thème du PC",
+        "theme_not_on_pc": "Absent du PC : seul le téléviseur a changé",
         "wmo": {
           "0": "dégagé",
           "1": "plutôt dégagé",
@@ -541,6 +549,8 @@
         "root_failed": "Kon het niet wijzigen: ",
         "wx_min": "min ",
         "wx_max": "max ",
+        "theme_to_pc": "Ook het pc-thema wijzigen",
+        "theme_not_on_pc": "Niet op de pc: alleen de tv is gewijzigd",
         "wmo": {
           "0": "helder",
           "1": "overwegend helder",
@@ -656,6 +666,8 @@
         "root_failed": "Nie udało się zmienić: ",
         "wx_min": "min ",
         "wx_max": "maks ",
+        "theme_to_pc": "Zmieniaj też motyw PC",
+        "theme_not_on_pc": "Brak na PC: zmienił się tylko telewizor",
         "wmo": {
           "0": "bezchmurnie",
           "1": "przeważnie bezchmurnie",
@@ -771,6 +783,8 @@
         "root_failed": "Kunde inte ändra det: ",
         "wx_min": "min ",
         "wx_max": "max ",
+        "theme_to_pc": "Byt även datorns tema",
+        "theme_not_on_pc": "Finns inte på datorn: bara tv:n ändrades",
         "wmo": {
           "0": "klart",
           "1": "mestadels klart",
@@ -886,6 +900,8 @@
         "root_failed": "Kunne ikke ændre det: ",
         "wx_min": "min ",
         "wx_max": "maks ",
+        "theme_to_pc": "Skift også pc'ens tema",
+        "theme_not_on_pc": "Findes ikke på pc'en: kun tv'et blev ændret",
         "wmo": {
           "0": "klart",
           "1": "overvejende klart",
@@ -1001,6 +1017,8 @@
         "root_failed": "Nepodařilo se změnit: ",
         "wx_min": "min ",
         "wx_max": "max ",
+        "theme_to_pc": "Měnit i motiv PC",
+        "theme_not_on_pc": "Na PC není: změnila se jen televize",
         "wmo": {
           "0": "jasno",
           "1": "skoro jasno",
@@ -1116,6 +1134,8 @@
         "root_failed": "Nu s-a putut schimba: ",
         "wx_min": "min ",
         "wx_max": "max ",
+        "theme_to_pc": "Schimbă și tema PC-ului",
+        "theme_not_on_pc": "Nu există pe PC: s-a schimbat doar televizorul",
         "wmo": {
           "0": "senin",
           "1": "mai mult senin",
@@ -1231,6 +1251,8 @@
         "root_failed": "Δεν ήταν δυνατή η αλλαγή: ",
         "wx_min": "ελάχ. ",
         "wx_max": "μέγ. ",
+        "theme_to_pc": "Αλλαγή και του θέματος του υπολογιστή",
+        "theme_not_on_pc": "Δεν υπάρχει στον υπολογιστή: άλλαξε μόνο η τηλεόραση",
         "wmo": {
           "0": "αίθριος",
           "1": "κυρίως αίθριος",
@@ -1346,6 +1368,8 @@
         "root_failed": "Не удалось изменить: ",
         "wx_min": "мин ",
         "wx_max": "макс ",
+        "theme_to_pc": "Менять и тему ПК",
+        "theme_not_on_pc": "Нет на ПК: изменился только телевизор",
         "wmo": {
           "0": "ясно",
           "1": "преимущественно ясно",
@@ -1461,6 +1485,8 @@
         "root_failed": "无法更改： ",
         "wx_min": "最低 ",
         "wx_max": "最高 ",
+        "theme_to_pc": "同时更改电脑主题",
+        "theme_not_on_pc": "电脑上没有此主题：只更改了电视",
         "wmo": {
           "0": "晴",
           "1": "大致晴朗",
@@ -1576,6 +1602,8 @@
         "root_failed": "変更できませんでした: ",
         "wx_min": "最低 ",
         "wx_max": "最高 ",
+        "theme_to_pc": "PC のテーマも変更",
+        "theme_not_on_pc": "PC にありません: テレビだけ変更しました",
         "wmo": {
           "0": "晴れ",
           "1": "おおむね晴れ",
@@ -1691,6 +1719,8 @@
         "root_failed": "تعذّر التغيير: ",
         "wx_min": "الدنيا ",
         "wx_max": "العليا ",
+        "theme_to_pc": "تغيير سمة الحاسوب أيضًا",
+        "theme_not_on_pc": "غير موجودة على الحاسوب: تغيّر التلفاز فقط",
         "wmo": {
           "0": "صافٍ",
           "1": "صافٍ غالبًا",
@@ -1806,6 +1836,8 @@
         "root_failed": "Değiştirilemedi: ",
         "wx_min": "en düşük ",
         "wx_max": "en yüksek ",
+        "theme_to_pc": "Bilgisayarın temasını da değiştir",
+        "theme_not_on_pc": "Bilgisayarda yok: yalnızca TV değişti",
         "wmo": {
           "0": "açık",
           "1": "çoğunlukla açık",
@@ -1921,6 +1953,8 @@
         "root_failed": "Не вдалося змінити: ",
         "wx_min": "мін ",
         "wx_max": "макс ",
+        "theme_to_pc": "Змінювати й тему ПК",
+        "theme_not_on_pc": "Немає на ПК: змінився лише телевізор",
         "wmo": {
           "0": "ясно",
           "1": "переважно ясно",
@@ -2036,6 +2070,8 @@
         "root_failed": "Nem sikerült módosítani: ",
         "wx_min": "min ",
         "wx_max": "max ",
+        "theme_to_pc": "A számítógép témájának módosítása is",
+        "theme_not_on_pc": "Nincs a számítógépen: csak a tévé változott",
         "wmo": {
           "0": "derült",
           "1": "többnyire derült",
@@ -2151,6 +2187,8 @@
         "root_failed": "Muutos epäonnistui: ",
         "wx_min": "min ",
         "wx_max": "max ",
+        "theme_to_pc": "Vaihda myös tietokoneen teema",
+        "theme_not_on_pc": "Ei tietokoneella: vain televisio vaihtui",
         "wmo": {
           "0": "selkeää",
           "1": "enimmäkseen selkeää",
@@ -2266,6 +2304,8 @@
         "root_failed": "Kunne ikke endre det: ",
         "wx_min": "min ",
         "wx_max": "maks ",
+        "theme_to_pc": "Bytt også PC-ens tema",
+        "theme_not_on_pc": "Finnes ikke på PC-en: bare TV-en ble endret",
         "wmo": {
           "0": "klarvær",
           "1": "for det meste klart",

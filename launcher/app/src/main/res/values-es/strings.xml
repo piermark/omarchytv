@@ -330,6 +330,7 @@
     <string name="speed_normal">normal</string>
     <string name="speed_fast">rápida</string>
     <string name="wp_sync_pc">Sincronizar fondo del PC</string>
+    <string name="theme_to_pc">Cambiar también el tema del PC</string>
     <string name="grok_bot_hub">Grok Bot e IA</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">Fijar WebApps de IA en inicio</string>

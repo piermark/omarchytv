@@ -330,6 +330,7 @@
     <string name="speed_normal">normal</string>
     <string name="speed_fast">hızlı</string>
     <string name="wp_sync_pc">Bilgisayar duvar kâğıdını eşitle</string>
+    <string name="theme_to_pc">Bilgisayarın temasını da değiştir</string>
     <string name="grok_bot_hub">Grok Bot ve AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">AI web uygulamalarını ana ekrana sabitle</string>

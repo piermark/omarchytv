@@ -330,6 +330,7 @@
     <string name="speed_normal">標準</string>
     <string name="speed_fast">速い</string>
     <string name="wp_sync_pc">PC の壁紙と同期</string>
+    <string name="theme_to_pc">PC のテーマも変更</string>
     <string name="grok_bot_hub">Grok Bot と AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">AI Web アプリをホームに固定</string>

@@ -330,6 +330,7 @@
     <string name="speed_normal">normală</string>
     <string name="speed_fast">rapidă</string>
     <string name="wp_sync_pc">Sincronizează fundalul PC-ului</string>
+    <string name="theme_to_pc">Schimbă și tema PC-ului</string>
     <string name="grok_bot_hub">Grok Bot și AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">Fixează aplicațiile web AI pe ecranul principal</string>

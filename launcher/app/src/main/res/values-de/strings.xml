@@ -334,6 +334,7 @@
     <string name="speed_normal">normal</string>
     <string name="speed_fast">schnell</string>
     <string name="wp_sync_pc">PC-Hintergrund synchronisieren</string>
+    <string name="theme_to_pc">Auch das PC-Theme ändern</string>
     <string name="grok_bot_hub">Grok Bot &amp; KI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">KI-WebApps auf Home anheften</string>

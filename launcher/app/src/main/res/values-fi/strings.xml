@@ -330,6 +330,7 @@
     <string name="speed_normal">normaali</string>
     <string name="speed_fast">nopea</string>
     <string name="wp_sync_pc">Synkronoi tietokoneen taustakuva</string>
+    <string name="theme_to_pc">Vaihda myös tietokoneen teema</string>
     <string name="grok_bot_hub">Grok Bot ja AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">Kiinnitä AI-verkkosovellukset aloitusnäyttöön</string>

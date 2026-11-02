@@ -330,6 +330,7 @@
     <string name="speed_normal">normál</string>
     <string name="speed_fast">gyors</string>
     <string name="wp_sync_pc">Számítógép háttérképének szinkronizálása</string>
+    <string name="theme_to_pc">A számítógép témájának módosítása is</string>
     <string name="grok_bot_hub">Grok Bot és AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">AI-webalkalmazások rögzítése a kezdőképernyőre</string>

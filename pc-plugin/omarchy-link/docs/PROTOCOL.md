@@ -247,6 +247,15 @@ mtime change, and today it reads `theme.accent/accent2` and an absolute
 `wallpaper` path. `colors` and `mode` are for later use (bar, tiles, screensaver
 palette).
 
+**Event `theme_set`** (TV → PC, `{"name": "gruvbox"}`): reverse theme sync. The user picked a theme on the TV
+with "Also change the PC theme" on (`themeToPc` in `omarchytv.json`, default off). The PC runs
+`omarchy-theme-set <name>` only when `config.json` `themeFromTv` is not `false` (default on) and the name is a theme
+installed in `~/.config/omarchy/themes` (`[a-z0-9][a-z0-9._-]{0,63}`). No shell; at most one switch every 2 s; the
+same theme as the current one does nothing. The normal PC → TV sync then pushes the new palette, so both match. A
+theme the PC doesn't have changes only the TV (logged on the PC). LG/Samsung use the bridge instead:
+`POST /v1/theme/set` on `omarchy-tv webos-serve`, header `X-Omarchy-Token`, body `{"name"}` →
+`{"result": "ok"|"same"}` 200, `"unknown"` 404, `"busy"` 429, 403 when `themeFromTv` is off, 503 without omarchy-link.
+
 ### Widgets (`PUT /v1/widgets`)
 
 ```json

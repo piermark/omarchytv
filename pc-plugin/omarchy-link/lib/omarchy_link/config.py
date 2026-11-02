@@ -33,6 +33,7 @@ OMARCHY_STATE = HOME / ".local/state/omarchy/current"
 DEFAULTS = {
     "themeSync": True,          # push colours on theme change
     "wallpaperSync": True,      # and the current background
+    "themeFromTv": True,        # the TV may switch the PC's theme ("theme_set"; the TV asks only when its own setting is on)
     "pcPane": True,             # push the "this PC" info pane every minute while connected
     "aiCredits": True,          # push ai.json providers (if the file exists)
     "aiRefreshMinutes": 15,

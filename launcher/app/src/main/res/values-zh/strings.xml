@@ -330,6 +330,7 @@
     <string name="speed_normal">正常</string>
     <string name="speed_fast">快</string>
     <string name="wp_sync_pc">同步电脑壁纸</string>
+    <string name="theme_to_pc">同时更改电脑主题</string>
     <string name="grok_bot_hub">Grok Bot 和 AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">将 AI 网页应用固定到主屏幕</string>

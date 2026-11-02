@@ -1,6 +1,7 @@
-# HANDOFF — branch `feature/boot-and-translations`
+# HANDOFF — branch `feature/theme-sync-reverse`
 
-Notes for whoever continues this branch. Two features: **A. Boot screen** and **B. Twenty new languages**.
+Notes for whoever continues this branch. Three features: **A. Boot screen**, **B. Twenty new languages** and
+**C. Theme sync both ways** (C is built on top of A + B).
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -122,3 +123,43 @@ Arabic is RTL text only (no supportsRtl, layout not mirrored); any Chinese local
   fallback fonts (Caskaydia has none); Arabic mixed with English words reads right-to-left inside a left-to-right
   layout, so a native speaker should look at it. Pick each language once in Launcher settings → Language.
 - Speech recognition: the TV needs the Google voice pack for that language, else it falls back.
+
+
+# C. Theme sync both ways (TV → PC)
+
+Pick a theme with the remote and the Omarchy PC switches too. TV switch **"Also change the PC theme"**, default
+**off**; PC side `themeFromTv`, default on (the TV switch is the opt-in). The PC → TV direction is unchanged: after
+`omarchy-theme-set` the existing sync pushes the palette back, and since it is the same theme nothing loops.
+
+## Files
+
+| File | Change |
+|---|---|
+| `pc-plugin/omarchy-link/lib/omarchy_link/theme.py` | `installed_themes()`, `set_theme(name)`: name must match `[a-z0-9][a-z0-9._-]{0,63}` and be a folder in `~/.config/omarchy/themes`; same theme → "same"; one switch every 2 s → "busy"; `Popen(["omarchy-theme-set", name])`, no shell, detached |
+| `pc-plugin/omarchy-link/lib/omarchy_link/config.py` | `DEFAULTS["themeFromTv"] = True` |
+| `pc-plugin/omarchy-link/lib/omarchy_link/session.py` | Event `theme_set` → `handle_theme_set()` (honours `themeFromTv`, logs refusals) |
+| `pc-plugin/omarchy-tv/lib/omarchy_tv/webos.py` | `POST /v1/theme/set` (LG/Samsung), behind the same `X-Omarchy-Token` code as Grok Bot; 200 ok/same, 404 unknown, 429 busy, 403 off, 503 no omarchy-link |
+| `launcher/.../link/LinkServer.java`, `OmarchyLink.java` | `themeSet(name)` broadcasts `theme_set` to the paired PC |
+| `launcher/.../LauncherConfig.java` | `themeToPc` (omarchytv.json, default false) |
+| `launcher/.../MainActivity.java` | Toggle row in Themes; `themeToPc(name)` after a pick in the launcher-page cycle, stock themes and ★ custom themes |
+| `launcher/.../res/values*/strings.xml` | `theme_to_pc` in all 23 languages |
+| `webos/app/app.js`, `webos/app/i18n.js` | `cfg.themeToPc` (default false), third toggle row in the Themes modal, POST on pick, toast `theme_not_on_pc` on "unknown"; strings in 23 languages |
+| `pc-plugin/omarchy-link/docs/PROTOCOL.md`, `README.md` | Event `theme_set`, bridge endpoint, `themeFromTv` |
+| `pc-plugin/omarchy-link/tests/test_theme_set.py` (new, in `run.sh`), `pc-plugin/omarchy-tv/tests/test_webos.py` | Unknown/unsafe names never run anything, no shell, same/busy/failed, `themeFromTv` off, bridge auth and status codes |
+
+## Verified
+
+- omarchy-link `tests/run.sh`: 115 tests OK. omarchy-tv `test_webos`: OK (`test_mcp`, `test_menu_entry`, `test_send`
+  fail the same way on `main` in this environment, unrelated).
+- `node --test webos/tests/*.test.js` (110) and `tizen/*.test.cjs` (29) pass; `tizen/verify-build.py` PASS.
+- LG/Samsung app in headless Chromium with a fake PC: the switch saves, a pick POSTs `{"name"}` with the code, the
+  "Not on the PC" toast shows on 404, no script errors.
+- Android: changed lines compile (javac against stubs); TranslationsTest passes with the new string.
+
+## NOT verified (to do)
+
+- Gradle build and a real TV + Omarchy PC: switch on, pick a theme, the PC changes within a second or two and the
+  TV keeps the same theme (no flip-flop when the palette comes back).
+- Theme names: TV theme names must match the PC folder names (stock Omarchy themes do). A ★ custom theme pushed
+  from the PC has its PC name, so it works; one made only on the TV gets "unknown" and changes only the TV.
+

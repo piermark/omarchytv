@@ -325,6 +325,18 @@ public final class OmarchyLink implements LinkServer.Host {
         });
     }
 
+    /** Reverse theme sync: tell the paired PC(s) the theme just picked on the TV. Fire and forget. */
+    static void themeSet(String name) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || name == null || name.isEmpty()) return;
+        bg.execute(() -> {
+            try {
+                r.server.themeSet(name);
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
     static void statusChanged() {
         OmarchyLink r = runtime;
         if (r != null) r.maybeBroadcastStatus();

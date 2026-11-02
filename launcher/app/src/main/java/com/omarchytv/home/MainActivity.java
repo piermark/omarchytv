@@ -2212,6 +2212,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 j.put("theme", t);
                 j.put("wallpaper_bg", 0);
             });
+            themeToPc(n);
             return true;
         });
         // v2.10: the old per-pane toggles (clock, ai, sysinfo, ...) drove the removed pane layer and did nothing on the
@@ -2949,6 +2950,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("themes", lSync, j -> j.put("syncPcWallpaper", n));
             return true;
         });
+        String lToPc = str(R.string.theme_to_pc);
+        p.add(lToPc, str(cfg.themeToPc ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.themeToPc;
+            applyLive("themes", lToPc, j -> j.put("themeToPc", n));
+            return true;
+        });
         for (String n : Theme.names(this)) {
             p.add(n, !cfg.randomTheme && n.equals(Theme.cur().name) ? str(R.string.mark_current) : (n.equals(Theme.cur().name) ? "●" : ""), r -> {
                 applyLive("themes", n, j -> {
@@ -2958,6 +2965,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                         j.put("wallpaper", "omarchy");
                     }
                 });
+                themeToPc(n);
                 return true;
             });
         }
@@ -2975,11 +2983,21 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                         j.put("random_theme", false);
                         j.put("random_wallpaper", false);
                     });
+                    themeToPc(n);
                     return true;
                 });
             }
         }
         return p;
+    }
+
+    /**
+     * v2.14 reverse theme sync: with "Also change the PC theme" on and a PC connected, the theme just picked here
+     * is sent to the PC, which switches with omarchy-theme-set when it has that theme (else only the TV changes).
+     * The PC's normal theme push then comes back with the same theme, so nothing loops.
+     */
+    private void themeToPc(String name) {
+        if (LauncherConfig.get(this).themeToPc && OmarchyLink.hasPc()) OmarchyLink.themeSet(name);
     }
 
     /** Same folder as OmarchyLink.wallpaperDir(): the link's files (custom themes live in themes/). */

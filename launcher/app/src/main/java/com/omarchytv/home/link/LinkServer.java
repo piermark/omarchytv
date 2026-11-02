@@ -2298,6 +2298,11 @@ public final class LinkServer {
         broadcast("shortcut", new JSONObject().put("command", command));
     }
 
+    /** Reverse theme sync: the TV picked a theme; the PC switches to it if installed there (omarchy-link theme_set). */
+    public void themeSet(String name) throws JSONException {
+        broadcast("theme_set", new JSONObject().put("name", name));
+    }
+
     /** Forget PC on the TV: send "unpaired", close its sockets, delete it. */
     public void forget(String pcId) {
         closeClients(pcId, true);

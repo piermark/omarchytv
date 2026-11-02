@@ -180,6 +180,8 @@ class Session:
             self.publish(apps=data.get("apps", []))
         elif kind == "shortcut":
             self.run_action(str(data.get("command", "")), confirmed=False)
+        elif kind == "theme_set":
+            self.handle_theme_set(data)
         elif kind == "screen_mirror":
             self.handle_screen_mirror(str(data.get("action", "")))
         elif kind == "unpaired":
@@ -450,6 +452,16 @@ class Session:
                                             stderr=subprocess.DEVNULL, start_new_session=True)
         except OSError:
             self.log("cannot start screen mirroring (omarchy-notification-send or omarchy-link missing)")
+
+    def handle_theme_set(self, data: dict) -> None:
+        """Reverse theme sync: the TV changed theme; follow it on the PC (themeFromTv, default on)."""
+        if self.cfg.get("themeFromTv", True) is False:
+            self.log("TV asked to change the PC theme; themeFromTv is off")
+            return
+        name = data.get("name")
+        res = theme.set_theme(name)
+        if res != "ok":
+            self.log(f"TV asked for theme {str(name)[:64]!r}: {res}")
 
     def run_action(self, action_id: str, confirmed: bool) -> None:
         actions = self.cfg.get("actions", {})

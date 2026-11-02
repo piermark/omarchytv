@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+### Theme sync both ways (draft, Android TV + LG webOS + Samsung Tizen + PC)
+
+- **Change the theme from the remote and the PC follows.** New switch in Themes: **"Also change the PC theme"** (off by default). With it on and a PC paired, picking a theme on the TV also runs `omarchy-theme-set` on the Omarchy PC; the PC then sends its palette back as usual, so TV and PC stay the same.
+- **Safe by design:** the PC only accepts names of themes installed in `~/.config/omarchy/themes` (no shell, no paths), at most one switch every 2 s. A theme the PC doesn't have changes only the TV (LG/Samsung show "Not on the PC: only the TV changed"). The PC can refuse it entirely with `"themeFromTv": false` in omarchy-link's `config.json`.
+- Android sends the new `theme_set` event over Omarchy Link; LG/Samsung call `POST /v1/theme/set` on `omarchy-tv webos-serve` with the same code as Grok Bot. Documented in PROTOCOL.md. Tests: `omarchy-link/tests/test_theme_set.py`, `omarchy-tv/tests/test_webos.py`.
+
 ### Twenty new languages (draft, Android TV + LG webOS + Samsung Tizen)
 
 - **OmarchyTV now speaks 23 languages.** New: French, Spanish, Portuguese (Portugal and Brazil), Dutch, Polish, Swedish, Danish, Norwegian (Bokmål), Finnish, Czech, Hungarian, Romanian, Greek, Turkish, Ukrainian, Russian, Arabic, Chinese (Simplified) and Japanese, on top of English, Italian and German. Every launcher string on Android TV (about 400) and on LG/Samsung (about 85, plus weather, days and months) is translated.
