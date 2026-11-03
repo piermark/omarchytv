@@ -423,6 +423,7 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         String[] urls = listUrls();
         String[] titles = getIntent().getStringArrayExtra(EXTRA_LIST_TITLES);
         if (urls == null || urls.length == 0 || player == null) return false;
+        saveResume();   // the one we leave keeps its place
         if (listIdx < 0) listIdx = getIntent().getIntExtra(EXTRA_LIST_INDEX, 0);
         int n = ((i % urls.length) + urls.length) % urls.length;
         if (n != listIdx) prevIdx = listIdx;
@@ -611,12 +612,25 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
     }
 
     private void release() {
+        saveResume();
         h.removeCallbacksAndMessages(null);
         if (pauseSaver != null) pauseSaver.stop();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (player != null) {
             player.release();
             player = null;
+        }
+    }
+
+    /** Where this video stopped, for Cinemarchy's progress bars and "resume at" (not for live streams). */
+    private void saveResume() {
+        if (player == null || live) return;
+        try {
+            String url = mediaUrl;
+            if (listIdx >= 0 && listUrls() != null && listIdx < listUrls().length) url = listUrls()[listIdx];
+            long dur = player.getDuration();
+            if (dur > 0) ResumeStore.put(this, url, player.getCurrentPosition() / 1000.0, dur / 1000.0, getIntent().getStringExtra(CastRouter.EXTRA_TITLE));
+        } catch (Exception ignored) {
         }
     }
 

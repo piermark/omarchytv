@@ -34,6 +34,7 @@ DEFAULTS = {
     "themeSync": True,          # push colours on theme change
     "wallpaperSync": True,      # and the current background
     "themeFromTv": True,
+    "mediaFromTv": True,        # Cinemarchy may browse and play this PC's media folders (XDG Videos, Music, Pictures, Download, ~/Movies)
     "powerFromTv": True,        # TV off -> suspend after powerGraceS; TV on -> it wakes this PC (TV side: off until enabled)
     "powerGraceS": 60,
     "updateFromTv": True,       # LG/Samsung "Update via PC" (omarchy-tv webos-serve) may install official releases

@@ -1,7 +1,7 @@
 # HANDOFF — branch `feature/omarchytv-v214-pack`
 
 Notes for whoever continues this branch. Features: **A. Boot screen**, **B. Twenty new languages**, **C. Theme sync both ways**,
-**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live**, **Q. OmaFire sound**, **R. Boot sound**, **S. OmarchyTV Arcade**, **T. QR codes** (each built on the previous).
+**D. TV and PC power together + settings switches**, **E. Update from the TV**, **F. Liftoff**, **G. Living screensaver**, **H. X app**, **I. Retro CRT**, **J. OmaFire wallpapers**, **K. Omastorm from the PC**, **L. Living animation**, **M. Live screensaver**, **N. Retro CRT set**, **O. Liftoff translations**, **P. Omastorm radar in Live**, **Q. OmaFire sound**, **R. Boot sound**, **S. OmarchyTV Arcade**, **T. QR codes**, **U. Cinemarchy, the new hub** (each built on the previous). User guide for all of it: `docs/OMARCHYTV-2.14-GUIDE.md`.
 Delete this file before merging to `main`.
 
 # A. Boot screen
@@ -490,3 +490,49 @@ Tests: `webos/tests/qr.test.js` (copies identical, Android rows match, every lan
 
 - Phones reading the code off real TVs at couch distance (size, glare, the CRT plugin's curve on Android 13+).
 - X's intent page opening in the X app vs the browser on iOS/Android.
+
+# U. Cinemarchy, the new hub (LG/Samsung rebuilt, Android cleaned up, the PC's folders)
+
+**LG/Samsung** (`webos/app/cinemarchy.js`, replaces the four-tab modal; every old entry point opens it): a full
+screen in `#stage` (so inside the Retro CRT set), three panes (sources · library · details), the active theme's
+colours, CaskaydiaMono, the block CINEMARCHY wordmark. Only the rows in view are drawn (rows computed from the pane
+height), so 20 000 IPTV channels are fine. Sources: 1 @dhh37 · 2 Omarchy PC · 3 Streaming apps (incl. X in the TV
+browser) · 4 TV & inputs (follows Tizen input updates) · 5 IPTV playlists (your M3U URLs, groups, favourites, last
+channel) · 6 Open movies (four Blender films, labelled as demo streams) · 7 Up next (queue) · 8 Player & tools.
+Keys: ▲▼ ◀▶ OK Back, 1-8 sources, red = Up next / remove, green = ★ favourite, yellow = group, blue = surprise
+channel; the URL field opens the TV keyboard and keeps its letters.
+Player: the TV's own HTML5 video (MP4/HLS/WebM as the TV supports) with an ASCII OSD; resume where you stopped
+(`omarchytv.cine.resume.v1`, newest 200; < 20 s or > 95 % forgotten); ▲▼ previous/next (zapping on IPTV);
+blue cycles normal → **VHS/CRT tape mode** (scanlines, rolling tracking bar, VCR counter; CSS only) → **ASCII mode**
+(frames drawn as theme-coloured ASCII, 120 columns, ~11 fps; needs CORS: it retries once with crossOrigin, else a
+toast and the normal picture); yellow = sleep timer 15/30/60/90 min; subtitles from the PC as WebVTT tracks; PC
+photos full screen. Settings in `cfg.cine` (iptv, queue, fav, lastChannel).
+
+**The PC's folders** (new): `omarchy-link/media.py` lists the XDG folders (Videos, Music, Pictures, Download from
+`~/.config/user-dirs.dirs`, so localised names work, plus ~/Movies; `OMARCHY_MEDIA_DIRS` overrides), read-only, no
+hidden files, no "..", no symlinks out, never $HOME itself, 2000 entries max, `mediaFromTv: false` turns it off.
+- LG/Samsung: the bridge (`omarchy-tv webos`) `GET /v1/media/list?path=` (ask code header) returns signed
+  `/v1/media/f/<sig>/<path>` URLs (HMAC of the path with the ask code), served with Range, CORS and `.srt → .vtt`.
+- Android: link events `media_list` (TV → PC → TV, sanitised by `LinkServer.mediaList`: relative paths, known
+  kinds, bounded) and `media_play` (the PC streams the file with the existing cast path, `via_link(serve_ok=True)`:
+  a one-time URL for that TV only).
+
+**Android Cinemarchy** (`CinemarchyActivity`): no made-up data any more (progress bars and "resume at" come from
+`ResumeStore`, written by `CastPlayerActivity` when a video stops or the list moves on; the demo films and Google
+sample clips are labelled as such; the simulated mpv handoff rows are now instructions; the inspector shows only
+true facts). New "📁 Browse the PC's folders" in omarchy-link://pc (Back goes up a folder). X in Streaming (the X web
+app with its remote keys). The list keeps a window of 60 rows and slides it at the edges (page up/down jump 20).
+Source names and the main strings in 23 languages (`cine_*`).
+
+Tests: `webos/tests/cinemarchy.test.js` (M3U, resume, keys, strings, no fake labels), `tizen-apps.test.js` (inputs
+through the new hub), `omarchy-link/tests/test_media.py`, `omarchy-tv/tests/test_media_bridge.py` (token, signatures,
+Range, 416, VTT, forged and outside paths), `link/MediaListTest.java`. Screens checked in Chromium with a real WebM:
+PC folder → play with subtitles → VHS → ASCII → back.
+
+## NOT verified (U)
+
+- Gradle build; ExoPlayer resume with a real PC file on Android (the cast path is the existing one).
+- Real TVs: which formats each TV's HTML5 video plays (MKV/HEVC vary by model), HLS on old webOS, the TV keyboard on
+  the URL field, colour keys on every remote, ASCII mode speed on old TVs (it is opt-in).
+- The bridge must run on the PC for LG/Samsung (`omarchy-tv webos`); large libraries over Wi-Fi.
+- XMLTV guide on LG/Samsung (Android only for now: .xml.gz needs gzip in the browser).

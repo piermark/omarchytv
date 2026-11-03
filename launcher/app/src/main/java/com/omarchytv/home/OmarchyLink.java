@@ -327,6 +327,29 @@ public final class OmarchyLink implements LinkServer.Host {
 
     /** Reverse theme sync: tell the paired PC(s) the theme just picked on the TV. Fire and forget. */
     /** v2.14 Omastorm from the PC: action "start" | "key" (with key) | "stop". */
+    /** Cinemarchy: ask the PC for a folder of its media ("" = its shared folders); the answer is a "media_list" event. */
+    static void mediaList(String path) {
+        mediaSend("media_list", path, -1);
+    }
+
+    /** Cinemarchy: play one of the PC's files here (the PC streams it once, to this TV only, like omarchy-tv send). */
+    static void mediaPlay(String path, double position) {
+        mediaSend("media_play", path, position);
+    }
+
+    private static void mediaSend(String type, String path, double position) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || r.server.connectedClients() == 0) return;
+        bg.execute(() -> {
+            try {
+                JSONObject o = new JSONObject().put("path", path == null ? "" : path);
+                if (position > 0) o.put("position", position);
+                r.server.broadcast(type, o);
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
     static void omastorm(String action, String key) {
         OmarchyLink r = runtime;
         if (r == null || !r.live() || r.server.connectedClients() == 0) return;

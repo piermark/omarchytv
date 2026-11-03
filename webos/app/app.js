@@ -83,6 +83,59 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       boot_sound: "Boot sound",
       omafire_sound: "OmaFire sound",
       arcade_sound: "Arcade sound", arcade_pc_theme: "Arcade: RICE WARS changes the PC theme too", share_qr: "OmarchyTV QR code",
+      cine_sources: "sources",
+      cine_library: "library",
+      cine_details: "details",
+      cine_src_dhh: "@dhh37 · Omarchy",
+      cine_src_stream: "Streaming apps",
+      cine_src_live: "TV & inputs",
+      cine_src_iptv: "IPTV playlists",
+      cine_src_demo: "Open movies",
+      cine_src_queue: "Up next",
+      cine_src_tools: "Player & tools",
+      cine_keys: "▲▼ move · ◀▶ panes · OK play · red: up next · green: ★ · yellow: group · blue: 🎲 · 1-8 sources · Back",
+      cine_refresh: "OK refreshes the channel feed",
+      cine_loading: "loading…",
+      cine_new: "NEW",
+      cine_none: "No apps found on this TV",
+      cine_add_playlist: "+ Add an M3U playlist (URL)",
+      cine_playlist_hint: "only streams you have the right to watch",
+      cine_remove_hint: "red removes it",
+      cine_group: "Group: %s",
+      cine_group_hint: "OK or yellow: next group (all, ★, …)",
+      cine_live: "LIVE",
+      cine_demo_note: "Blender open movie · CC BY · demo stream",
+      cine_queue_empty: "Up next is empty: press red on any video",
+      cine_queue_clear: "Clear Up next",
+      cine_embed: "Play @dhh37 inside Cinemarchy",
+      cine_saver_test: "Preview the pause screensaver",
+      cine_add_link: "+ Add a video link to Up next",
+      cine_bad_url: "That isn't an http(s) link",
+      cine_queued: "Added to Up next",
+      cine_resume: "Resumes at %s",
+      cine_play: "play",
+      cine_fav_hint: "green: ★ favourite",
+      cine_queue_hint: "red: add to Up next",
+      cine_reload: "reload",
+      cine_open: "open",
+      cine_back: "Back cancels",
+      cine_no_play: "This stream can't be played on this TV",
+      cine_player_keys: "OK pause · ◀▶ 10 s · ▲▼ prev/next · blue: VHS/ASCII · yellow: sleep · Back stop",
+      cine_fav_added: "★ Added to favourites",
+      cine_fav_removed: "Removed from favourites",
+      cine_ascii_blocked: "This stream doesn't allow ASCII mode",
+      cine_sleep: "Sleep in %s",
+      cine_sleep_off: "Sleep timer off",
+      cine_sleep_done: "Sleep timer: stopped",
+      cine_mode_normal: "Normal picture",
+      cine_roulette: "Surprise channel",
+      cine_roulette_hint: "a random channel from your playlists",
+      cine_src_pc: "Omarchy PC",
+      cine_pc_folders: "Browse the PC's folders",
+      cine_pc_opening: "Opening from the PC…",
+      cine_pc_need: "Pair the Omarchy PC first",
+      cine_up: "‹ back",
+      cine_pc_empty: "Nothing to play in this folder",
       wmo: { 0: "clear", 1: "mostly clear", 2: "partly cloudy", 3: "overcast", 45: "fog", 51: "drizzle", 61: "rain", 71: "snow", 80: "showers", 95: "thunderstorm" }
     },
     it: {
@@ -158,6 +211,59 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       boot_sound: "Suono all'avvio",
       omafire_sound: "Suono di OmaFire",
       arcade_sound: "Suoni della sala giochi", arcade_pc_theme: "Sala giochi: RICE WARS cambia tema anche al PC", share_qr: "QR code di OmarchyTV",
+      cine_sources: "sorgenti",
+      cine_library: "libreria",
+      cine_details: "dettagli",
+      cine_src_dhh: "@dhh37 · Omarchy",
+      cine_src_stream: "App di streaming",
+      cine_src_live: "TV e ingressi",
+      cine_src_iptv: "Playlist IPTV",
+      cine_src_demo: "Film aperti",
+      cine_src_queue: "Prossimi",
+      cine_src_tools: "Lettore e strumenti",
+      cine_keys: "▲▼ muovi · ◀▶ pannelli · OK guarda · rosso: prossimi · verde: ★ · giallo: gruppo · blu: 🎲 · 1-8 sorgenti · Indietro",
+      cine_refresh: "OK aggiorna il canale",
+      cine_loading: "caricamento…",
+      cine_new: "NUOVO",
+      cine_none: "Nessuna app trovata su questa TV",
+      cine_add_playlist: "+ Aggiungi una playlist M3U (URL)",
+      cine_playlist_hint: "solo flussi che hai il diritto di guardare",
+      cine_remove_hint: "il rosso la toglie",
+      cine_group: "Gruppo: %s",
+      cine_group_hint: "OK o giallo: gruppo successivo (tutti, ★, …)",
+      cine_live: "LIVE",
+      cine_demo_note: "Film aperto Blender · CC BY · flusso demo",
+      cine_queue_empty: "Prossimi è vuoto: premi rosso su un video",
+      cine_queue_clear: "Svuota Prossimi",
+      cine_embed: "Riproduci @dhh37 dentro Cinemarchy",
+      cine_saver_test: "Anteprima del salvaschermo di pausa",
+      cine_add_link: "+ Aggiungi un link video ai Prossimi",
+      cine_bad_url: "Non è un link http(s)",
+      cine_queued: "Aggiunto ai Prossimi",
+      cine_resume: "Riprende da %s",
+      cine_play: "guarda",
+      cine_fav_hint: "verde: ★ preferito",
+      cine_queue_hint: "rosso: aggiungi ai Prossimi",
+      cine_reload: "ricarica",
+      cine_open: "apri",
+      cine_back: "Indietro annulla",
+      cine_no_play: "Questo flusso non si riproduce su questa TV",
+      cine_player_keys: "OK pausa · ◀▶ 10 s · ▲▼ prec/succ · blu: VHS/ASCII · giallo: timer · Indietro stop",
+      cine_fav_added: "★ Aggiunto ai preferiti",
+      cine_fav_removed: "Tolto dai preferiti",
+      cine_ascii_blocked: "Questo flusso non permette la modalità ASCII",
+      cine_sleep: "Spegnimento tra %s",
+      cine_sleep_off: "Timer spento",
+      cine_sleep_done: "Timer: riproduzione fermata",
+      cine_mode_normal: "Immagine normale",
+      cine_roulette: "Canale a sorpresa",
+      cine_roulette_hint: "un canale a caso dalle tue playlist",
+      cine_src_pc: "PC Omarchy",
+      cine_pc_folders: "Sfoglia le cartelle del PC",
+      cine_pc_opening: "Apro dal PC…",
+      cine_pc_need: "Abbina prima il PC Omarchy",
+      cine_up: "‹ indietro",
+      cine_pc_empty: "Niente da riprodurre in questa cartella",
       wmo: { 0: "sereno", 1: "poco nuvoloso", 2: "parz. nuvoloso", 3: "coperto", 45: "nebbia", 51: "pioviggine", 61: "pioggia", 71: "neve", 80: "rovesci", 95: "temporale" }
     },
     de: {
@@ -233,6 +339,59 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       boot_sound: "Startton",
       omafire_sound: "OmaFire-Ton",
       arcade_sound: "Spielhallen-Sound", arcade_pc_theme: "Spielhalle: RICE WARS ändert auch das PC-Theme", share_qr: "OmarchyTV-QR-Code",
+      cine_sources: "Quellen",
+      cine_library: "Mediathek",
+      cine_details: "Details",
+      cine_src_dhh: "@dhh37 · Omarchy",
+      cine_src_stream: "Streaming-Apps",
+      cine_src_live: "TV & Eingänge",
+      cine_src_iptv: "IPTV-Playlists",
+      cine_src_demo: "Offene Filme",
+      cine_src_queue: "Als Nächstes",
+      cine_src_tools: "Player & Werkzeuge",
+      cine_keys: "▲▼ bewegen · ◀▶ Bereiche · OK abspielen · Rot: als Nächstes · Grün: ★ · Gelb: Gruppe · Blau: 🎲 · 1-8 Quellen · Zurück",
+      cine_refresh: "OK aktualisiert den Kanal",
+      cine_loading: "lädt…",
+      cine_new: "NEU",
+      cine_none: "Keine Apps auf diesem TV gefunden",
+      cine_add_playlist: "+ M3U-Playlist hinzufügen (URL)",
+      cine_playlist_hint: "nur Streams, die du sehen darfst",
+      cine_remove_hint: "Rot entfernt sie",
+      cine_group: "Gruppe: %s",
+      cine_group_hint: "OK oder Gelb: nächste Gruppe (alle, ★, …)",
+      cine_live: "LIVE",
+      cine_demo_note: "Blender Open Movie · CC BY · Demo-Stream",
+      cine_queue_empty: "Als Nächstes ist leer: Rot auf einem Video drücken",
+      cine_queue_clear: "Als Nächstes leeren",
+      cine_embed: "@dhh37 in Cinemarchy abspielen",
+      cine_saver_test: "Vorschau des Pausen-Bildschirmschoners",
+      cine_add_link: "+ Videolink zu Als Nächstes hinzufügen",
+      cine_bad_url: "Das ist kein http(s)-Link",
+      cine_queued: "Zu Als Nächstes hinzugefügt",
+      cine_resume: "Weiter bei %s",
+      cine_play: "abspielen",
+      cine_fav_hint: "Grün: ★ Favorit",
+      cine_queue_hint: "Rot: zu Als Nächstes",
+      cine_reload: "neu laden",
+      cine_open: "öffnen",
+      cine_back: "Zurück bricht ab",
+      cine_no_play: "Dieser Stream läuft auf diesem TV nicht",
+      cine_player_keys: "OK Pause · ◀▶ 10 s · ▲▼ zurück/weiter · Blau: VHS/ASCII · Gelb: Timer · Zurück Stopp",
+      cine_fav_added: "★ Zu Favoriten hinzugefügt",
+      cine_fav_removed: "Aus Favoriten entfernt",
+      cine_ascii_blocked: "Dieser Stream erlaubt keinen ASCII-Modus",
+      cine_sleep: "Ausschalten in %s",
+      cine_sleep_off: "Timer aus",
+      cine_sleep_done: "Timer: angehalten",
+      cine_mode_normal: "Normales Bild",
+      cine_roulette: "Überraschungskanal",
+      cine_roulette_hint: "ein zufälliger Kanal aus deinen Playlists",
+      cine_src_pc: "Omarchy-PC",
+      cine_pc_folders: "Ordner des PCs durchsuchen",
+      cine_pc_opening: "Wird vom PC geöffnet…",
+      cine_pc_need: "Koppele zuerst den Omarchy-PC",
+      cine_up: "‹ zurück",
+      cine_pc_empty: "Nichts Abspielbares in diesem Ordner",
       wmo: { 0: "klar", 1: "überwiegend klar", 2: "teilweise bewölkt", 3: "bedeckt", 45: "Nebel", 51: "Nieselregen", 61: "Regen", 71: "Schnee", 80: "Schauer", 95: "Gewitter" }
     }
   };
@@ -429,7 +588,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var cur = TV_INPUTS[state.ws2Idx], ids = inputs.map(function (p) { return p.id; });
     TV_INPUTS = inputs;
     state.ws2Idx = cur && ids.indexOf(cur.id) >= 0 ? ids.indexOf(cur.id) : Math.max(0, Math.min(state.ws2Idx, inputs.length - 1));
-    if (state.modalOpen && state.cineTab === 2) openCinemarchyModal(2, state.modalIdx);
+    if (cineUi) cineUi.refresh();   // Cinemarchy's TV & inputs follow the TV
     renderAll();
   }
   if (window.OMARCHY_PLATFORM === "tizen") {
@@ -2026,7 +2185,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (!wv || !L || !cfg.wallpaperLoop || wv.style.display !== "block") return;
     var play = L.shouldPlay({ loop: true, hidden: document.hidden,
       saver: document.getElementById("saver-overlay").className === "active",
-      cinemarchy: !!(state && state.modalOpen && state.cineTab >= 0) });
+      cinemarchy: !!cineUi });
     try { if (play && wv.paused) wv.play().catch(function () {}); else if (!play && !wv.paused) wv.pause(); } catch (e) {}
   }
   setInterval(wallpaperLoopTick, 1000);
@@ -2240,56 +2399,73 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     else { closeModal(); openYoutubeApp(v.id); }
   }
 
-  function openCinemarchyModal(tabIdx, focusIdx) {
-    pushLightsTheme(currentThemeObj(), true);
-    var tab = tabIdx || 0;
-    var tabs = ["[1] @dhh37", "[2] Streaming", "[3] Live TV", "[4] Player & tools"];
-    var items = [
-      { label: "Switch tab: " + tabs.join(" · "), right: tabs[tab], act: function () { openCinemarchyModal((tab + 1) % 4); } }
-    ];
-    var D = window.OmarchyDhh;
-    if (tab === 0 && D) {
-      if (!dhhState.videos && !dhhState.loading) loadDhh(false, function () { if (state.modalOpen && state.cineTab === 0) openCinemarchyModal(0); });
-      var seen = D.lastSeen(window.localStorage);
-      var vids = dhhState.videos || D.curated();
-      items.push({ label: dhhState.loading ? "Checking the @dhh37 channel feed…" : dhhState.error ? "Offline · showing the saved list (" + escHtml(dhhState.error) + ")" : "Feed updated " + agoText(dhhState.at) + " · OK refreshes",
-        right: "↻", act: function () { loadDhh(true, function () { openCinemarchyModal(0); }); openCinemarchyModal(0); } });
-      vids.forEach(function (v) {
-        var fresh = D.isNew(v, seen, Date.now());
-        items.push({ label: (fresh ? "★ " : "▶ ") + escHtml(v.title), right: fresh ? "NEW" : (cfg.embedPlayer ? "play ›" : "youtube ›"), act: function () { playDhh(v); } });
-      });
-      items.push({ label: "Omarchy manual (omarchy.org)", right: "docs", act: function () { closeModal(); showToast("Open on your TV browser or phone: omarchy.org"); } });
-    } else if (tab === 1) {
-      ["jellyfin", "plex", "netflix", "prime", "disney", "youtube", "raiplay"].forEach(function (id) {
-        var a = DEFAULT_APPS.filter(function (x) { return x.id === id; })[0];
-        if (a) items.push({ label: escHtml(a.name), right: a.appId, act: function () { closeModal(); launchApp(a); } });
-      });
-    } else if (tab === 2) {
-      TV_INPUTS.forEach(function (inp) {
-        var label = inp.tizenInput && inp.sub.indexOf(inp.name) === 0 ? inp.sub : inp.name + " · " + inp.sub;   // Tizen sub: "HDMI 1 · Connected"
-        items.push({ label: escHtml(label), right: "watch ›", act: function () { closeModal(); launchApp(inp); } });
-      });
-    } else {
-      items.push({ label: "Play @dhh37 inside Cinemarchy (official YouTube embed)", right: cfg.embedPlayer ? "on" : "off", act: function () {
-        cfg.embedPlayer = !cfg.embedPlayer; saveCfg(); openCinemarchyModal(3);
-      } });
-      items.push({ label: "⏸ Preview the pause screensaver (10 s)", right: "test", act: function () {
-        closeModal();
-        state.pauseTitle = "Preview · OK to resume";
-        startScreensaver("‖ PAUSED · " + state.pauseTitle);
-      } });
-    }
-    state.cineTab = tab;
-    openModal("CINEMARCHY · " + tabs[tab], "", items, false, null, { focusIdx: focusIdx });
-    state.modalDigit = function (n) { if (n >= 1 && n <= 4) openCinemarchyModal(n - 1); };
-    var subEl = document.getElementById("modal-sub");
-    if (subEl && DATA.cinemarchyLogo) {
-      subEl.style.display = "block";
-      subEl.innerHTML = '<div style="color:var(--t-accent);margin-bottom:10px;">' + blockArt(DATA.cinemarchyLogo, 6.3, 12) + '</div>' +
-        '<div style="margin-bottom:6px;"><span style="border:1px solid var(--t-accent);color:var(--t-accent);padding:0 5px;font-weight:bold;">ALPHA</span> Cinemarchy ' + CINEMARCHY_VERSION + ' (preview)</div>' +
-        '<div>Press 1-4 or OK on the top row to switch tabs</div>';
-    }
+  // Cinemarchy (cinemarchy.js): a full-screen hub in #stage (inside the Retro CRT set when that is on). The old
+  // four-tab menu is gone; every way in (C key, menus, the dock) lands here.
+  var cineUi = null;
+  function cineMix(a, b, k) {
+    function c(h, i) { return parseInt(h.substr(1 + i * 2, 2), 16) || 0; }
+    if (!/^#[0-9a-f]{6}$/i.test(a) || !/^#[0-9a-f]{6}$/i.test(b)) return a;
+    var o = "#"; for (var i = 0; i < 3; i++) { var v = Math.round(c(a, i) * (1 - k) + c(b, i) * k); o += (v < 16 ? "0" : "") + v.toString(16); }
+    return o;
   }
+  function openCinemarchy() {
+    if (cineUi || !window.OmarchyCinemarchy) return;
+    if (state.modalOpen) closeModal();
+    pushLightsTheme(currentThemeObj(), true);
+    var th = currentThemeObj(), D = window.OmarchyDhh;
+    if (D && !dhhState.videos && !dhhState.loading) loadDhh(false, function () { if (cineUi) cineUi.refresh(); });
+    var streamIds = ["jellyfin", "plex", "netflix", "prime", "disney", "youtube", "raiplay", "stremio"];
+    cineUi = window.OmarchyCinemarchy.open(document.getElementById("stage") || document.body, {
+      tr: tr, version: CINEMARCHY_VERSION, logoHtml: DATA.cinemarchyLogo ? blockArt(DATA.cinemarchyLogo, 1, 1, "width:auto;height:6.5vh") : "", cfg: cfg, save: saveCfg, store: window.localStorage,
+      theme: { bg: th.bg, fg: th.fg, bright: th.fgBright, dim: cineMix(th.fg, th.bg, 0.5), accent: th.accent, green: th.green, cyan: th.cyan },
+      apps: function () {   // read each time: the TV's app list and inputs can change while Cinemarchy is open
+        return streamIds.map(function (id) { return DEFAULT_APPS.filter(function (x) { return x.id === id; })[0]; }).filter(Boolean).map(function (a) {
+          return { id: a.appId || a.id, name: a.name, launch: function () { closeCinemarchy(); launchApp(a); } };
+        }).concat([{ id: "x.com", name: "X", sub: "x.com · videos", launch: function () { closeCinemarchy(); openUrlOnTv("https://x.com/home"); } }]);
+      },
+      inputs: function () {
+        return TV_INPUTS.map(function (inp) {
+          var label = inp.tizenInput && inp.sub.indexOf(inp.name) === 0 ? inp.sub : inp.name;   // Tizen sub: "HDMI 1 · Connected"
+          return { name: label, sub: label === inp.sub ? "" : inp.sub, launch: function () { closeCinemarchy(); launchApp(inp); } };
+        });
+      },
+      dhh: {
+        list: function () { return D ? dhhState.videos || D.curated() : []; },
+        isNew: function (v) { return D ? D.isNew(v, D.lastSeen(window.localStorage), Date.now()) : false; },
+        status: function () { return dhhState.loading ? "…" : dhhState.error ? "offline" : agoText(dhhState.at); },
+        load: function (force, then) { loadDhh(force, then); },
+        play: function (v) { if (D && dhhState.videos) D.markSeen(window.localStorage, dhhState.videos); closeCinemarchy(); playDhh(v); }
+      },
+      embed: { get: function () { return !!cfg.embedPlayer; }, set: function (on) { cfg.embedPlayer = !!on; saveCfg(); } },
+      saverPreview: function () { closeCinemarchy(); state.pauseTitle = "Preview · OK to resume"; startScreensaver("‖ PAUSED · " + state.pauseTitle); },
+      fetchText: function (url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); }); },
+      pc: {   // the Omarchy PC's media folders, through its bridge (omarchy-tv webos; read-only, the ask code)
+        available: function () { return pcReady(); },
+        base: function () { return pcBase(); },
+        list: function (path) {
+          return fetch(pcBase() + "/v1/media/list?path=" + encodeURIComponent(path || ""), { headers: { "X-Omarchy-Token": cfg.grokbotCode || "" } })
+            .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.message || j.error || ("HTTP " + r.status)); return j; }); });
+        }
+      },
+      onPlay: function (on) { cinePlaying = !!on; },
+      onExit: function () { cineUi = null; cinePlaying = false; renderAll(); }
+    });
+  }
+  var cinePlaying = false;
+  function closeCinemarchy() { if (cineUi) { var u = cineUi; cineUi = null; u.destroy(); cinePlaying = false; renderAll(); } }
+  function openCinemarchyModal() { openCinemarchy(); }
+  window.OMARCHY_OPEN_CINEMARCHY = openCinemarchy;
+  // While Cinemarchy is open its keys are its own (the TV keyboard still types into its URL field).
+  window.addEventListener("keydown", function (e) {
+    if (!cineUi) return;
+    if (lift.el && lift.el.style.display === "block") return;
+    var n = window.OmarchyCinemarchy.keyName(e);
+    if (n && cineUi.key(n, e)) {
+      e.preventDefault(); e.stopPropagation();
+      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    } else if (!(e.target && /INPUT/.test(e.target.tagName))) { e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation(); }
+  }, true);
+
 
   function openOmarchyMenu() {
     openModal("Omarchy Menu", "OmarchyTV " + APP_VERSION, [
@@ -2414,7 +2590,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   });
   document.addEventListener("visibilitychange", markInput);
   setInterval(function () {
-    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi) return;
+    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi || cineUi) return;
     if (document.getElementById("saver-overlay").className === "active") return;
     if (Date.now() - lastInput >= cfg.saverIdleMin * 60000) startScreensaver();
   }, 5000);

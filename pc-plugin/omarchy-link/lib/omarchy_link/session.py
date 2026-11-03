@@ -18,7 +18,7 @@ import threading
 import time
 
 from . import ai, assistant, client as link, config, grokbot, mdns, netcheck, panes, stats, sync, theme
-from . import liftoff, living, omastorm, power
+from . import liftoff, living, media, omastorm, power
 
 KEYS = {"home", "back", "up", "down", "left", "right", "select", "play_pause", "play", "pause",
         "stop", "next", "previous", "rewind", "fast_forward", "volume_up", "volume_down", "mute",
@@ -188,6 +188,10 @@ class Session:
             self.handle_theme_set(data)
         elif kind == "omastorm":   # v2.14 Omastorm radar window from this PC to the TV
             self.handle_omastorm(data)
+        elif kind == "media_list":   # Cinemarchy browses this PC's media folders (read-only)
+            self.handle_media_list(data)
+        elif kind == "media_play":   # ...and plays one of their files on the TV
+            self.handle_media_play(data)
         elif kind == "living_prefs":
             self._living().set_prefs(data)
             self.living_sig = None
@@ -488,6 +492,41 @@ class Session:
             st.key(str(data.get("key", "")))
         elif action == "stop":
             st.stop()
+
+    def handle_media_list(self, data: dict) -> None:
+        if not self.stream:
+            return
+        if self.cfg.get("mediaFromTv", True) is False:
+            self.stream.send("media_list", {"path": "", "dirs": [], "files": [], "error": "disabled"})
+            return
+        try:
+            res = media.listing(str(data.get("path", ""))[:1024])
+        except Exception as e:  # noqa: BLE001 - a broken folder must not stop the session
+            self.log(f"media list: {e}")
+            res = {"path": str(data.get("path", "")), "dirs": [], "files": [], "error": "unreadable"}
+        self.stream.send("media_list", res)
+
+    def handle_media_play(self, data: dict) -> None:
+        if self.cfg.get("mediaFromTv", True) is False or not self.client:
+            return
+        p = media.resolve(str(data.get("path", ""))[:1024])
+        if p is None or not p.is_file() or not media.kind_of(p.name):
+            if self.stream:
+                self.stream.send("media_list", {"path": str(data.get("path", "")), "dirs": [], "files": [], "error": "not_found"})
+            return
+        from . import cast   # noqa: PLC0415 - only when the TV asks for a file
+        client = self.client
+
+        def run():
+            try:
+                item = cast.classify(str(p), title=p.stem)
+                pos = data.get("position")
+                if isinstance(pos, (int, float)) and pos > 0:
+                    item["position"] = float(pos)
+                cast.via_link(client, item, serve_ok=True, wait=True, out=self.log)
+            except Exception as e:  # noqa: BLE001
+                self.log(f"media play {p.name}: {e}")
+        threading.Thread(target=run, daemon=True).start()
 
     def _living(self) -> living.Living:
         lv = getattr(self, "living", None)

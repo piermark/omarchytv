@@ -1348,6 +1348,37 @@ public final class LinkServer {
     }
 
     /** Printable text only (no control characters), trimmed, at most {@code max} code points. */
+    /** A PC media folder listing, bounded: relative paths (never absolute, never ".."), names, kinds, sizes. */
+    static JSONObject mediaList(JSONObject d) throws JSONException {
+        JSONObject out = new JSONObject().put("path", safeRel(d.optString("path", "")));
+        if (d.has("parent") && !d.isNull("parent")) out.put("parent", safeRel(d.optString("parent", "")));
+        if (d.has("error")) out.put("error", printable(d.optString("error", ""), 24));
+        JSONArray dirs = new JSONArray(), files = new JSONArray();
+        JSONArray in = d.optJSONArray("dirs");
+        for (int i = 0; in != null && i < in.length() && i < 2000; i++) {
+            JSONObject o = in.optJSONObject(i);
+            if (o == null) continue;
+            String p = safeRel(o.optString("path", ""));
+            if (!p.isEmpty()) dirs.put(new JSONObject().put("name", printable(o.optString("name", ""), 200)).put("path", p));
+        }
+        in = d.optJSONArray("files");
+        for (int i = 0; in != null && i < in.length() && i < 2000; i++) {
+            JSONObject o = in.optJSONObject(i);
+            if (o == null) continue;
+            String p = safeRel(o.optString("path", "")), k = o.optString("kind", "");
+            if (p.isEmpty() || !(k.equals("video") || k.equals("audio") || k.equals("image"))) continue;
+            files.put(new JSONObject().put("name", printable(o.optString("name", ""), 200)).put("path", p).put("kind", k)
+                    .put("size", Math.max(0, o.optLong("size", 0))));
+        }
+        return out.put("dirs", dirs).put("files", files);
+    }
+
+    static String safeRel(String p) {
+        if (p == null || p.length() > 1024 || p.startsWith("/") || p.contains("\\")) return "";
+        for (String part : p.split("/")) if (part.equals("..") || part.equals(".")) return "";
+        return printable(p, 1024);
+    }
+
     static String printable(String s, int max) {
         if (s == null) return "";
         StringBuilder b = new StringBuilder();
@@ -2205,6 +2236,9 @@ public final class LinkServer {
             }
             case "omastorm_state":   // v2.14 the PC could not open Omastorm (not_installed, disabled, ...)
                 host.onEvent(c.pcId, type, new JSONObject().put("state", printable(data.optString("state", ""), 24)));
+                break;
+            case "media_list":   // Cinemarchy: a folder of the PC's media (names and relative paths only)
+                host.onEvent(c.pcId, type, mediaList(data));
                 break;
             case "living":   // v2.14 Living screensaver feed (GitHub, PC notifications, X), memory only
                 host.onEvent(c.pcId, type, living(data));

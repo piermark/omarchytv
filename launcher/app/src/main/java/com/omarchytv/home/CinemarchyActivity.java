@@ -52,7 +52,7 @@ import java.util.Locale;
  *       {@code :ambilight cinema}, {@code :saver}).</li>
  * </ul>
  */
-public final class CinemarchyActivity extends Activity {
+public final class CinemarchyActivity extends Activity implements OmarchyLink.Listener {
     /** Cinemarchy has its own version, independent of the OmarchyTV launcher version. */
     public static final String CINEMARCHY_VERSION = "0.1.0-alpha";
 
@@ -90,6 +90,12 @@ public final class CinemarchyActivity extends Activity {
     private Typeface mono, monoBold;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private int reelIdx = 0;
+    // PC folders (omarchy-link media_list): null = not browsing; "" = the PC's shared folders
+    private String pcPath = null;
+    private JSONObject pcListing = null;
+    // only a window of rows exists at a time, so a playlist with thousands of channels stays fast
+    private static final int WINDOW = 60;
+    private int listOffset = 0;
 
     private final Runnable reelTicker = new Runnable() {
         @Override
@@ -187,6 +193,8 @@ public final class CinemarchyActivity extends Activity {
         for (int i = 0; i < rawNames.length; i++) {
             final int srcIdx = i;
             TextView sb = label(rawNames[i], 13, t.fg, true);
+            sb.setSingleLine(true);
+            sb.setEllipsize(TextUtils.TruncateAt.END);
             sb.setFocusable(true);
             sb.setPadding(dp(12), dp(9), dp(12), dp(9));
             LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -331,15 +339,81 @@ public final class CinemarchyActivity extends Activity {
         super.onResume();
         handler.removeCallbacks(reelTicker);
         handler.post(reelTicker);
+        OmarchyLink.addListener(this);
         loadDhh(false);
+        if (activeSource == SRC_PC_MEDIA || activeSource == SRC_DHH || activeSource == SRC_QUEUE) selectSource(activeSource, false);   // fresh progress bars
     }
 
     @Override
     protected void onPause() {
         handler.removeCallbacks(reelTicker);
         handler.removeCallbacks(dhhTicker);
+        OmarchyLink.removeListener(this);
         markDhhSeen();
         super.onPause();
+    }
+
+    @Override
+    public void onLinkEvent(String type, JSONObject data) {
+        if (!"media_list".equals(type) || pcPath == null) return;
+        String p = data.optString("path", "");
+        if (!p.equals(pcPath) && !data.has("error")) return;
+        pcListing = data;
+        if (activeSource == SRC_PC_MEDIA) selectSource(SRC_PC_MEDIA, true);
+    }
+
+    private void pcOpen(String path) {
+        if (!OmarchyLink.hasPc()) {
+            Toast.makeText(this, R.string.cine_pc_need, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        pcPath = path;
+        pcListing = null;
+        OmarchyLink.mediaList(path);
+        selectSource(SRC_PC_MEDIA, true);
+    }
+
+    private void pcUp() {
+        if (pcPath == null) return;
+        if (pcPath.isEmpty()) {
+            pcPath = null;
+            pcListing = null;
+            selectSource(SRC_PC_MEDIA, true);
+            return;
+        }
+        int at = pcPath.lastIndexOf('/');
+        pcOpen(at > 0 ? pcPath.substring(0, at) : "");
+    }
+
+    private List<MediaEntry> pcEntries() {
+        List<MediaEntry> out = new ArrayList<>();
+        out.add(new MediaEntry(str(R.string.cine_up), "/" + pcPath, "PC", "[..]", "", null, "pc_up", false, "", "", 0));
+        if (pcListing == null) {
+            out.add(new MediaEntry(str(R.string.cine_loading), "", "PC", "[…]", "", null, "noop", false, "", "", 0));
+            return out;
+        }
+        if (pcListing.has("error")) out.add(new MediaEntry(pcListing.optString("error"), "", "PC", "[!]", "", null, "noop", false, "", "", 0));
+        JSONArray dirs = pcListing.optJSONArray("dirs"), files = pcListing.optJSONArray("files");
+        for (int i = 0; dirs != null && i < dirs.length(); i++) {
+            JSONObject d = dirs.optJSONObject(i);
+            if (d != null) out.add(new MediaEntry(d.optString("name") + "/", "", "PC", "[DIR]", d.optString("path"), null, "pc_dir", false, "", "", 0));
+        }
+        for (int i = 0; files != null && i < files.length(); i++) {
+            JSONObject f = files.optJSONObject(i);
+            if (f == null) continue;
+            String k = f.optString("kind");
+            out.add(new MediaEntry(f.optString("name"), Math.round(f.optLong("size") / 1048576.0) + " MB · " + k, "PC",
+                    "video".equals(k) ? "[▶]" : "audio".equals(k) ? "[♪]" : "[IMG]", f.optString("path"), null, "pc_file", false, "",
+                    "omarchy-pc:/" + f.optString("path"), 0));
+        }
+        if ((dirs == null || dirs.length() == 0) && (files == null || files.length() == 0) && !pcListing.has("error")) {
+            out.add(new MediaEntry(str(R.string.cine_pc_empty), "", "PC", "[ ]", "", null, "noop", false, "", "", 0));
+        }
+        return out;
+    }
+
+    private String str(int id) {
+        return getString(id);
     }
 
     private void updateTopStatus() {
@@ -371,15 +445,29 @@ public final class CinemarchyActivity extends Activity {
         List<MediaEntry> items = entriesForSource(src);
         currentItems.clear();
         currentItems.addAll(items);
+        listOffset = 0;
         populateList(items);
         if (focusFirstRow && listContainer.getChildCount() > 0) {
             listContainer.getChildAt(0).requestFocus();
         }
     }
 
+    /** The source in the TV's language; mpv and snippets keep their Omarchy-style URI names. */
+    private String sourceName(int i, String raw) {
+        switch (i) {
+            case SRC_DHH: return str(R.string.cine_src_dhh);
+            case SRC_PC_MEDIA: return str(R.string.cine_src_pc);
+            case SRC_STREAMING: return str(R.string.cine_src_stream);
+            case SRC_LIVETV: return str(R.string.cine_src_live);
+            case SRC_IPTV: return str(R.string.cine_src_iptv);
+            case SRC_QUEUE: return str(R.string.cine_src_queue);
+            default: return raw;
+        }
+    }
+
     private void styleSourceButton(TextView b, boolean selected, boolean focused, String rawName) {
         Theme t = Theme.cur();
-        b.setText((selected ? "▸ " : "  ") + rawName);
+        b.setText((selected ? "▸ " : "  ") + sourceName(sourceButtons.indexOf(b), rawName));
         GradientDrawable gd = new GradientDrawable();
         gd.setColor(focused ? t.selection : (selected ? Theme.withAlpha(t.bgLight, 0.92f) : Theme.withAlpha(t.bgDarker, 0.65f)));
         gd.setStroke(dp(focused ? 2 : 1), focused ? t.activeBorder : (selected ? t.accent : t.inactiveBorder));
@@ -390,7 +478,8 @@ public final class CinemarchyActivity extends Activity {
     private void populateList(List<MediaEntry> items) {
         listContainer.removeAllViews();
         Theme t = Theme.cur();
-        for (int i = 0; i < items.size(); i++) {
+        int end = Math.min(items.size(), listOffset + WINDOW);
+        for (int i = listOffset; i < end; i++) {
             final MediaEntry item = items.get(i);
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
@@ -432,7 +521,7 @@ public final class CinemarchyActivity extends Activity {
             });
             row.setOnClickListener(v -> activateEntry(item));
             listContainer.addView(row, rlp);
-            if (i == 0) updateInspector(item);
+            if (i == listOffset) updateInspector(item);
         }
     }
 
@@ -449,18 +538,18 @@ public final class CinemarchyActivity extends Activity {
         detailBadge.setText(e.badge + "  ·  " + e.category + (e.progressBar.isEmpty() ? "" : "  ·  " + e.progressBar));
         detailTitle.setText(e.title);
         detailMeta.setText(e.subtitle);
-        String target = e.pkg != null && !e.pkg.isEmpty()
-                ? ("Native TV pkg: " + e.pkg + " (falls back to Omarchy WebApp)")
-                : (e.url != null && !e.url.isEmpty() ? ("Stream / URL: " + e.url) : "System TV Input Framework");
-        detailDesc.setText(target + "\n[OK/p] Play  ·  [H] Handoff to PC mpv  ·  [s] Aquarium Saver");
+        String host = e.url != null ? android.net.Uri.parse(e.url).getHost() : null;
+        String target = e.pkg != null && !e.pkg.isEmpty() && !"youtube".equals(e.kind) ? e.pkg
+                : host != null ? (e.live ? str(R.string.cine_live) + " · " : "") + host : "";
+        detailDesc.setText(target + (target.isEmpty() ? "" : "\n") + "[OK] " + str(R.string.cine_play) + "  ·  [Q] " + str(R.string.cine_queue_hint) + "  ·  [H] → PC mpv");
         tutorialPane.setVisibility(showTutorial ? View.VISIBLE : View.GONE);
         if (!e.tutorialCli.isEmpty()) {
             tutorialPane.setText(e.tutorialCli);
         } else {
-            tutorialPane.setText("─ nfo / playback telemetry ─\n"
-                    + "• codec: H.264 / HEVC / HLS hardware decode (Media3 ExoPlayer)\n"
-                    + "• ambilight: Follow-Video + Hue / Home Assistant / WLED sync\n"
-                    + "• burn-in guard: 8s pause -> Omarchy TUI / ST3 Aquarium");
+            double[] r = e.url != null && !e.live ? ResumeStore.get(this, e.url) : null;   // only what is true for this item
+            tutorialPane.setText(r != null ? "─ " + String.format(getString(R.string.cine_resume), CastUi.clock(r[0])) + " ─\n"
+                    + ResumeStore.bar(this, e.url) + "  " + CastUi.clock(r[0]) + " / " + CastUi.clock(r[1])
+                    : "─ " + e.category + " ─\n" + (e.live ? str(R.string.cine_live) : e.kind));
         }
     }
 
@@ -596,7 +685,7 @@ public final class CinemarchyActivity extends Activity {
 
     private void addToQueue(MediaEntry e) {
         if (e == null || e.url == null || e.url.isEmpty() || e.kind.startsWith("iptv_") || e.kind.startsWith("queue_")) {
-            Toast.makeText(this, "Select a playable stream first", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, R.string.cine_queue_hint, Toast.LENGTH_SHORT).show();
             return;
         }
         LauncherConfig.update(this, j -> {
@@ -608,15 +697,15 @@ public final class CinemarchyActivity extends Activity {
             q.put(new JSONObject().put("title", e.title).put("subtitle", e.subtitle)
                     .put("url", e.url).put("live", e.live).put("pos", e.resumeSec));
         });
-        Toast.makeText(this, "Queued: " + e.title + "  ([8] queue://up-next)", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, getString(R.string.cine_queued) + ": " + e.title, Toast.LENGTH_SHORT).show();
     }
 
     private List<MediaEntry> queueEntries(JSONObject cine) {
         List<MediaEntry> out = new ArrayList<>();
         JSONArray q = cine == null ? null : cine.optJSONArray("queue");
         if (q == null || q.length() == 0) {
-            out.add(new MediaEntry("Queue is empty — press Q or :queue on any stream",
-                    "Items queued from any source play back-to-back in CastPlayer",
+            out.add(new MediaEntry(getString(R.string.cine_queue_empty),
+                    "[Q] · :queue",
                     "Up-Next Queue", "[EMPTY]", "", null, "noop", false, "", "", 0));
             return out;
         }
@@ -626,11 +715,12 @@ public final class CinemarchyActivity extends Activity {
             MediaEntry qe = new MediaEntry(o.optString("title", "Stream"),
                     o.optString("subtitle", o.optString("url")) + (o.optString("subs", "").isEmpty() ? "" : " · CC"),
                     "Up-Next #" + (i + 1), "[#" + (i + 1) + "]", o.optString("url", ""), null, "queue_item",
-                    o.optBoolean("live"), "", "# [OK] play queue from here · [CH+/CH-] skip", o.optDouble("pos", 0));
+                    o.optBoolean("live"), ResumeStore.bar(this, o.optString("url", "")), "# [OK] play queue from here · [CH+/CH-] skip",
+                    resumeAt(o.optString("url", ""), o.optDouble("pos", 0)));
             qe.subs = o.optString("subs", "");
             out.add(qe);
         }
-        out.add(new MediaEntry("Clear queue (" + q.length() + " items)", "Remove all queued streams",
+        out.add(new MediaEntry(getString(R.string.cine_queue_clear) + " (" + q.length() + ")", "",
                 "Up-Next Queue", "[CLEAR]", "", null, "queue_clear", false, "", "", 0));
         return out;
     }
@@ -639,7 +729,7 @@ public final class CinemarchyActivity extends Activity {
         List<MediaEntry> out = new ArrayList<>();
         List<com.omarchytv.home.iptv.IptvStore.Playlist> pls = com.omarchytv.home.iptv.IptvStore.playlists(root);
         String epgUrl = com.omarchytv.home.iptv.IptvStore.epgUrl(root);
-        out.add(new MediaEntry("+ Add M3U / M3U8 playlist URL…",
+        out.add(new MediaEntry(getString(R.string.cine_add_playlist),
                 pls.isEmpty() ? "User-supplied playlists only · or push via: omarchy-tv iptv add <url>" : pls.size() + " playlist(s) configured",
                 "IPTV Setup", "[+M3U]", "", null, "iptv_add", false, "",
                 "$ omarchy-tv iptv add https://example.com/channels.m3u8 --name \"Home\"\n$ omarchy-tv iptv list", 0));
@@ -652,7 +742,7 @@ public final class CinemarchyActivity extends Activity {
         List<com.omarchytv.home.iptv.M3uParser.Channel> all = iptvChannels;
         java.util.Set<String> favs = com.omarchytv.home.iptv.IptvStore.favorites(this);
         List<String> groups = com.omarchytv.home.iptv.M3uParser.groups(all);
-        out.add(new MediaEntry("Group filter: " + iptvGroup + (iptvLoading ? " (loading…)" : " (" + all.size() + " ch)"),
+        out.add(new MediaEntry(String.format(getString(R.string.cine_group), iptvGroup) + (iptvLoading ? " · " + getString(R.string.cine_loading) : " · " + all.size() + " ch"),
                 "Press OK to cycle: ALL -> ★ FAV -> " + TextUtils.join(" -> ", groups),
                 "IPTV Groups", "[GRP]", "", null, "iptv_group", false, "", "", 0));
         String last = com.omarchytv.home.iptv.IptvStore.lastChannel(this);
@@ -783,6 +873,17 @@ public final class CinemarchyActivity extends Activity {
 
     private void activateEntry(MediaEntry e) {
         if (e == null || "noop".equals(e.kind)) return;
+        if ("x_app".equals(e.kind)) { WebAppActivity.open(this, LauncherConfig.X_WEBAPP); return; }
+        if ("pc_root".equals(e.kind)) { pcOpen(""); return; }
+        if ("pc_dir".equals(e.kind)) { pcOpen(e.url); return; }
+        if ("pc_up".equals(e.kind)) { pcUp(); return; }
+        if ("pc_file".equals(e.kind)) {   // the PC streams it once, to this TV only, like omarchy-tv send
+            if (!OmarchyLink.hasPc()) { Toast.makeText(this, R.string.cine_pc_need, Toast.LENGTH_SHORT).show(); return; }
+            AmbilightController.restoreFollowVideo(this);
+            OmarchyLink.mediaPlay(e.url, 0);
+            Toast.makeText(this, R.string.cine_pc_opening, Toast.LENGTH_SHORT).show();
+            return;
+        }
         if ("iptv_add".equals(e.kind)) { promptIptvUrl(false); return; }
         if ("iptv_epg".equals(e.kind)) { promptIptvUrl(true); return; }
         if ("iptv_group".equals(e.kind)) {
@@ -990,6 +1091,9 @@ public final class CinemarchyActivity extends Activity {
                             + "$ omarchy-tv pair             # Pair PC with OmarchyTV",
                     0));
         } else if (src == SRC_PC_MEDIA) {
+            if (pcPath != null) return pcEntries();
+            out.add(new MediaEntry("📁 " + getString(R.string.cine_pc_folders), "~/Videos · ~/Music · ~/Pictures · ~/Downloads",
+                    getString(R.string.cine_src_pc), "[DIR]", "", null, "pc_root", false, "", "", 0));
             JSONArray fromPc = cine != null ? cine.optJSONArray("fromPc") : null;
             for (int i = 0; fromPc != null && i < fromPc.length() && i < 10; i++) {
                 JSONObject o = fromPc.optJSONObject(i);
@@ -1002,7 +1106,7 @@ public final class CinemarchyActivity extends Activity {
                         replay ? "Sent from " + who + (o.has("subs") ? " · subtitles" : "")
                                : "Sent from " + who + " · streamed live, re-send with: omarchy-tv send",
                         "From PC", "[FROM PC]", replay ? url : "", null, replay ? "video" : "noop", false,
-                        "", "$ omarchy-tv send <file|url> [--sub file.srt] [--queue]", 0));
+                        replay ? ResumeStore.bar(this, url) : "", "$ omarchy-tv send <file|url> [--sub file.srt] [--queue]", replay ? resumeAt(url, 0) : 0));
             }
             JSONArray lib = cine != null ? cine.optJSONArray("library") : null;
             if (lib != null) {
@@ -1018,33 +1122,18 @@ public final class CinemarchyActivity extends Activity {
                             o.optString("category", "PC Library"),
                             o.optString("badge", "[PC]"),
                             url, null, o.optString("kind", "video"), o.optBoolean("live", false),
-                            o.optString("progress", "██░░░ 40%"), "", o.optDouble("position", 0)));
+                            ResumeStore.bar(this, url), "", resumeAt(url, o.optDouble("position", 0))));
                 }
             }
-            out.add(new MediaEntry(
-                    "Tears of Steel (Blender Sci-Fi Open Movie · 1080p)",
-                    "Cyberpunk live-action + VFX open film · Direct ExoPlayer",
-                    "Sci-Fi Open Cinema", "[SCI-FI]",
-                    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-                    null, "video", false, "███░░ 58%", "", 0));
-            out.add(new MediaEntry(
-                    "Sintel (Blender Fantasy Open Movie · 1080p)",
-                    "4K-mastered open animated film · Direct ExoPlayer",
-                    "Open Animation", "[ANIM]",
-                    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-                    null, "video", false, "██░░░ 35%", "", 0));
-            out.add(new MediaEntry(
-                    "Big Buck Bunny (Blender Open Movie · 1080p)",
-                    "Reference open cinema stream · Direct ExoPlayer",
-                    "Open Cinema", "[FILM]",
-                    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
-                    null, "video", false, "█████ 100%", "", 0));
-            out.add(new MediaEntry(
-                    "Elephants Dream (Blender Open Movie)",
-                    "Surrealist synth-machine open film · Direct ExoPlayer",
-                    "Experimental", "[OPEN]",
-                    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-                    null, "video", false, "█░░░░ 20%", "", 0));
+            // Four Blender open movies (CC BY), Google's public sample copies: labelled as demo streams, no made-up
+            // quality claims; the bar is where you really stopped.
+            String[][] demo = {{"Big Buck Bunny", "BigBuckBunny.mp4"}, {"Sintel", "Sintel.mp4"},
+                    {"Tears of Steel", "TearsOfSteel.mp4"}, {"Elephants Dream", "ElephantsDream.mp4"}};
+            for (String[] d : demo) {
+                String url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/" + d[1];
+                out.add(new MediaEntry(d[0], getString(R.string.cine_demo_note), getString(R.string.cine_src_demo), "[OPEN]",
+                        url, null, "video", false, ResumeStore.bar(this, url), "", resumeAt(url, 0)));
+            }
         } else if (src == SRC_MPV_HANDOFF) {
             JSONObject ho = cine != null ? cine.optJSONObject("lastHandoff") : null;
             if (ho != null && !ho.optString("url").isEmpty()) {
@@ -1053,39 +1142,31 @@ public final class CinemarchyActivity extends Activity {
                         "Resume: " + ho.optString("title", "PC mpv Stream"),
                         "Handed off @ " + CastUi.clock(pos) + " (" + ho.optString("direction", "pc_to_tv") + ")",
                         "mpv Handoff", "[RESUME]",
-                        ho.optString("url"), null, "video", false, "███░░ " + CastUi.clock(pos),
+                        ho.optString("url"), null, "video", false, "▶ " + CastUi.clock(pos),
                         "─ active mpv handoff state ─\n"
                                 + "Position: " + CastUi.clock(pos) + " (" + Math.round(pos) + "s)\n"
                                 + "Press [OK] to resume on TV or [H] to send back to PC mpv.",
                         pos));
             }
-            out.add(new MediaEntry(
-                    "Handoff Tears of Steel @ 02:15 -> TV ExoPlayer",
-                    "Simulates `omarchy-tv handoff --at 02:15` from PC mpv",
-                    "PC -> TV Handoff", "[PC→TV]",
-                    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-                    null, "video", false, "██░░░ 02:15",
+            // How the real handoff works (no simulated entries): from the PC with its keybind or the CLI, back with [H].
+            out.add(new MediaEntry("PC mpv → TV", "$ omarchy-tv handoff   ·   Super + Shift + Alt + T", "mpv Handoff", "[PC→TV]",
+                    "", null, "noop", false, "",
                     "─ pc -> tv mpv handoff ─\n"
                             + "Keybind: Super + Shift + Alt + T\n"
-                            + "CLI:     $ omarchy-tv handoff --at 02:15\n"
-                            + "Socket:  /tmp/mpv-socket (auto-paused on PC)",
-                    135));
-            out.add(new MediaEntry(
-                    "Send Active Stream Back to PC mpv (--start=+pos)",
-                    "Broadcasts `cinemarchy_handoff` over Omarchy Link WebSocket",
-                    "TV -> PC Handoff", "[TV→PC]",
-                    "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4",
-                    null, "handoff_to_pc", false, "──▶ mpv",
+                            + "CLI:     $ omarchy-tv handoff\n"
+                            + "The TV resumes where mpv was.", 0));
+            out.add(new MediaEntry("TV → PC mpv", "[H] " + getString(R.string.cine_play) + " · $ omarchy-tv handoff --back", "mpv Handoff", "[TV→PC]",
+                    "", null, "noop", false, "",
                     "─ tv -> pc mpv handoff ─\n"
-                            + "Press [H] during playback in CastPlayerActivity\n"
-                            + "or run `$ omarchy-tv handoff --back` on your PC.",
-                    135));
+                            + "Press [H] on any item here or during playback,\n"
+                            + "or run `$ omarchy-tv handoff --back` on your PC.", 0));
         } else if (src == SRC_STREAMING) {
             out.add(new MediaEntry("Jellyfin Media Server", "Self-hosted cinema & TV server (LAN / WebApp)", "Self-Hosted", "[JELLYFIN]", "https://jellyfin.org", "org.jellyfin.androidtv", "service", false, "", "", 0));
             out.add(new MediaEntry("Plex", "Personal media server & live channels", "Media Server", "[PLEX]", "https://app.plex.tv", "com.plexapp.android", "service", false, "", "", 0));
             out.add(new MediaEntry("Stremio", "Unified streaming hub & add-ons", "Media Center", "[STREMIO]", "https://web.stremio.com", "com.stremio.one", "service", false, "", "", 0));
             out.add(new MediaEntry("YouTube", "Native Android TV app or WebApp", "Streaming", "[YT]", "https://www.youtube.com/tv", "com.google.android.youtube.tv", "service", false, "", "", 0));
             out.add(new MediaEntry("Netflix", "Cinema & series streaming", "Streaming", "[NETFLIX]", "https://www.netflix.com", "com.netflix.ninja", "service", false, "", "", 0));
+            out.add(new MediaEntry("X", "x.com · videos, the remote mapped to X's keys", "Social", "[X]", "", null, "x_app", false, "", "", 0));
             out.add(new MediaEntry("Prime Video", "Amazon Prime cinema & live sports", "Streaming", "[PRIME]", "https://www.primevideo.com", "com.amazon.amazonvideo.livingroom", "service", false, "", "", 0));
             out.add(new MediaEntry("Disney+", "Disney, Pixar, Marvel, Star Wars", "Streaming", "[DISNEY+]", "https://www.disneyplus.com", "com.disney.disneyplus", "service", false, "", "", 0));
             out.add(new MediaEntry("Apple TV+", "Apple Original films & series", "Streaming", "[APPLETV]", "https://tv.apple.com", "com.apple.atve.androidtv.appletv", "service", false, "", "", 0));
@@ -1112,10 +1193,10 @@ public final class CinemarchyActivity extends Activity {
                             url, null, "video", false, "LOOP", "", 0));
                 }
             }
-            out.add(new MediaEntry("For Bigger Blazes (15s HDR/OLED Showcase)", "High-contrast neon & fire test snippet", "OLED Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", null, "video", false, "4K HDR", "", 0));
-            out.add(new MediaEntry("For Bigger Escapes (15s Nature & Motion)", "Panning mountain & sky motion test snippet", "Motion Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", null, "video", false, "60fps", "", 0));
-            out.add(new MediaEntry("For Bigger Joyrides (15s Night Roadster)", "Night city lights & reflections test snippet", "Night Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", null, "video", false, "OLED", "", 0));
-            out.add(new MediaEntry("For Bigger Fun (60s Vibrant Color Loop)", "Fast-cut color saturation test snippet", "Color Snippet", "[60s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", null, "video", false, "RGB", "", 0));
+            out.add(new MediaEntry("For Bigger Blazes (15 s)", "Google sample clip", "OLED Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", null, "video", false, "", "", 0));
+            out.add(new MediaEntry("For Bigger Escapes (15 s)", "Google sample clip", "Motion Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", null, "video", false, "", "", 0));
+            out.add(new MediaEntry("For Bigger Joyrides (15 s)", "Google sample clip", "Night Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", null, "video", false, "", "", 0));
+            out.add(new MediaEntry("For Bigger Fun (60 s)", "Google sample clip", "Color Snippet", "[60s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", null, "video", false, "", "", 0));
         } else if (src == SRC_IPTV) {
             return iptvEntries(root);
         } else if (src == SRC_QUEUE) {
@@ -1128,6 +1209,15 @@ public final class CinemarchyActivity extends Activity {
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (e.getAction() == KeyEvent.ACTION_DOWN && (cmdInput == null || !cmdInput.hasFocus())) {
             int kc = e.getKeyCode();
+            if ((kc == KeyEvent.KEYCODE_DPAD_DOWN || kc == KeyEvent.KEYCODE_DPAD_UP || kc == KeyEvent.KEYCODE_PAGE_DOWN || kc == KeyEvent.KEYCODE_PAGE_UP)
+                    && listContainer.hasFocus()) {
+                int d = kc == KeyEvent.KEYCODE_DPAD_DOWN ? 1 : kc == KeyEvent.KEYCODE_DPAD_UP ? -1 : kc == KeyEvent.KEYCODE_PAGE_DOWN ? 20 : -20;
+                if (Math.abs(d) > 1 ? jump(d) : slideWindow(d)) return true;
+            }
+            if (kc == KeyEvent.KEYCODE_BACK && activeSource == SRC_PC_MEDIA && pcPath != null) {   // back goes up a folder
+                pcUp();
+                return true;
+            }
             if (kc >= KeyEvent.KEYCODE_1 && kc <= KeyEvent.KEYCODE_8) {
                 selectSource(kc - KeyEvent.KEYCODE_1, true);
                 return true;
@@ -1159,7 +1249,7 @@ public final class CinemarchyActivity extends Activity {
                 case KeyEvent.KEYCODE_F:
                     if (selectedEntry != null && "iptv_channel".equals(selectedEntry.kind)) {
                         boolean on = com.omarchytv.home.iptv.IptvStore.toggleFavorite(this, selectedEntry.url);
-                        Toast.makeText(this, (on ? "★ Added: " : "Removed: ") + selectedEntry.title, Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, getString(on ? R.string.cine_fav_added : R.string.cine_fav_removed) + ": " + selectedEntry.title, Toast.LENGTH_SHORT).show();
                         selectSource(SRC_IPTV, false);
                     }
                     return true;
@@ -1188,6 +1278,40 @@ public final class CinemarchyActivity extends Activity {
             }
         }
         return super.dispatchKeyEvent(e);
+    }
+
+    /** Seconds to resume from: where this TV stopped it, else what the PC said. */
+    private double resumeAt(String url, double fallback) {
+        double[] r = ResumeStore.get(this, url);
+        return r != null ? r[0] : fallback;
+    }
+
+    /** The list shows WINDOW rows at a time: at its edges the window slides, keeping the focus on the same item. */
+    private boolean slideWindow(int delta) {
+        int count = listContainer.getChildCount(), cur = -1;
+        for (int i = 0; i < count; i++) if (listContainer.getChildAt(i).hasFocus()) { cur = i; break; }
+        if (cur < 0) return false;
+        int abs = listOffset + cur + delta;
+        if (abs < 0 || abs >= currentItems.size()) return false;
+        if (cur + delta >= 0 && cur + delta < count) return false;   // still inside: normal focus move
+        listOffset = Math.max(0, Math.min(Math.max(0, currentItems.size() - WINDOW), abs - WINDOW / 2));
+        populateList(currentItems);
+        View v = listContainer.getChildAt(abs - listOffset);
+        if (v != null) v.requestFocus();
+        return true;
+    }
+
+    /** Page up/down (and CH+/CH- style jumps) across the whole list. */
+    private boolean jump(int delta) {
+        int count = listContainer.getChildCount(), cur = 0;
+        for (int i = 0; i < count; i++) if (listContainer.getChildAt(i).hasFocus()) { cur = i; break; }
+        int abs = Math.max(0, Math.min(currentItems.size() - 1, listOffset + cur + delta));
+        if (abs >= listOffset && abs < listOffset + count) { listContainer.getChildAt(abs - listOffset).requestFocus(); return true; }
+        listOffset = Math.max(0, Math.min(Math.max(0, currentItems.size() - WINDOW), abs - WINDOW / 2));
+        populateList(currentItems);
+        View v = listContainer.getChildAt(abs - listOffset);
+        if (v != null) v.requestFocus();
+        return true;
     }
 
     private void moveListFocus(int delta) {
