@@ -1356,7 +1356,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       "": "M3 4h18v16H3z M7 9l3 3-3 3 M13 15h4",
       "󰚩": "M5 7h14v13H5z M12 3v4 M2 11v5 M22 11v5 M8 11h1 M15 11h1 M8 16h8",
       "󰖟": "M3 12h18 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 3c-5 5-5 13 0 18 M12 3c5 5 5 13 0 18",
-      "󰾆": "M4 19V9 M9 19V5 M14 19v-7 M19 19V3"
+      "󰾆": "M4 19V9 M9 19V5 M14 19v-7 M19 19V3",
+      "🎮": "M7 8h10a5 5 0 0 1 4.6 6.9l-1 2.6A2.5 2.5 0 0 1 16 18l-1.2-1.5H9.2L8 18a2.5 2.5 0 0 1-4.6-.5l-1-2.6A5 5 0 0 1 7 8z M8 11v3 M6.5 12.5h3 M15 11.5h.01 M17 13.5h.01"
     };
     return paths[icon] ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + paths[icon] + '"></path></svg>' : escHtml(icon);
   }
