@@ -788,18 +788,19 @@ public final class CinemarchyActivity extends Activity implements OmarchyLink.Li
     private void reloadIptv(JSONObject root) {
         List<com.omarchytv.home.iptv.IptvStore.Playlist> pls = com.omarchytv.home.iptv.IptvStore.playlists(root);
         String epgUrl = com.omarchytv.home.iptv.IptvStore.epgUrl(root);
+        final String ua = com.omarchytv.home.iptv.IptvStore.userAgent(root);   // #93: providers 403 the default agent
         iptvLoading = true;
         com.omarchytv.home.lights.Lights.run(() -> {
             List<com.omarchytv.home.iptv.M3uParser.Channel> merged = new ArrayList<>();
             for (com.omarchytv.home.iptv.IptvStore.Playlist p : pls) {
                 try {
                     byte[] raw = com.omarchytv.home.iptv.IptvStore.fetch(this, p.url,
-                            "m3u-" + com.omarchytv.home.iptv.IptvStore.key(p.url), 15 * 60_000L);
+                            "m3u-" + com.omarchytv.home.iptv.IptvStore.key(p.url), 15 * 60_000L, ua);
                     merged.addAll(com.omarchytv.home.iptv.M3uParser.parse(com.omarchytv.home.iptv.Xmltv.decode(raw)));
                 } catch (Throwable ignored) {
                 }
             }
-            com.omarchytv.home.iptv.IptvStore.loadEpg(this, epgUrl);
+            com.omarchytv.home.iptv.IptvStore.loadEpg(this, epgUrl, ua);
             iptvChannels = merged;
             iptvLoading = false;
             handler.post(() -> {

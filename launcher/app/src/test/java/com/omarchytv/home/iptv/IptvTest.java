@@ -68,4 +68,16 @@ public class IptvTest {
         assertEquals(1, pls.size());
         assertEquals("Home Renamed", pls.get(0).name);
     }
+
+    @Test
+    public void downloadsCarryAPlayerUserAgentAndAcceptAnOverride() throws Exception {
+        assertEquals("VLC/3.0.20 LibVLC/3.0.20", IptvStore.userAgent(new JSONObject()));
+        JSONObject iptv = new JSONObject().put("playlists", new org.json.JSONArray());
+        JSONObject custom = new JSONObject().put("cinemarchy", new JSONObject().put("iptv", iptv.put("userAgent", "  okhttp/4.9.0  ")));
+        assertEquals("okhttp/4.9.0", IptvStore.userAgent(custom));
+        // A value with a line break would make HttpURLConnection throw: it is flattened instead.
+        JSONObject broken = new JSONObject().put("cinemarchy", new JSONObject().put("iptv", new JSONObject().put("userAgent", "a\r\nb")));
+        assertEquals("a  b", IptvStore.userAgent(broken));
+        assertEquals("VLC/3.0.20 LibVLC/3.0.20", IptvStore.userAgent(new JSONObject().put("cinemarchy", new JSONObject().put("iptv", new JSONObject().put("userAgent", "   ")))));
+    }
 }

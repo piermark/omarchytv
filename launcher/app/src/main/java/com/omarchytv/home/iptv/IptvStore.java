@@ -63,6 +63,22 @@ public final class IptvStore {
         return c == null ? null : c.optJSONObject("iptv");
     }
 
+    /**
+     * Player-like User-Agent for the playlist and EPG downloads (#93). Providers such as Xtream Codes answer the
+     * default Java agent, and browser-like ones, with 403; an agent that names a player is accepted. A user can
+     * override it with {@code cinemarchy.iptv.userAgent}.
+     */
+    public static final String DEFAULT_USER_AGENT = "VLC/3.0.20 LibVLC/3.0.20";
+
+    public static String userAgent(JSONObject root) {
+        JSONObject iptv = iptv(root);
+        String ua = iptv == null ? "" : iptv.optString("userAgent", "").trim();
+        if (ua.isEmpty()) return DEFAULT_USER_AGENT;
+        // HttpURLConnection refuses a header value with a line break, and the error it throws says nothing useful
+        ua = ua.replace('\r', ' ').replace('\n', ' ').trim();
+        return ua.isEmpty() ? DEFAULT_USER_AGENT : ua;
+    }
+
     public static boolean validUrl(String u) {
         return u != null && u.matches("(?i)https?://[^\\s]{3,2000}");
     }
@@ -122,12 +138,17 @@ public final class IptvStore {
     // ---- downloads (blocking: call off the main thread) -----------------------------------------
 
     public static byte[] fetch(Context c, String url, String cacheName, long maxAgeMs) throws Exception {
+        return fetch(c, url, cacheName, maxAgeMs, null);
+    }
+
+    public static byte[] fetch(Context c, String url, String cacheName, long maxAgeMs, String userAgent) throws Exception {
         File f = new File(c.getCacheDir(), "iptv-" + cacheName);
         if (f.isFile() && System.currentTimeMillis() - f.lastModified() < maxAgeMs) return com.omarchytv.home.ApiCompat.readAllBytes(f);
         HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
         conn.setConnectTimeout(6000);
         conn.setReadTimeout(15000);
         conn.setInstanceFollowRedirects(true);
+        applyHeaders(conn, userAgent);
         try (InputStream in = conn.getInputStream(); FileOutputStream out = new FileOutputStream(f)) {
             byte[] buf = new byte[16384];
             int n;
@@ -146,6 +167,13 @@ public final class IptvStore {
         return com.omarchytv.home.ApiCompat.readAllBytes(f);
     }
 
+    /** The request headers every IPTV download carries; kept apart so a test can check them without a network. */
+    static HttpURLConnection applyHeaders(HttpURLConnection conn, String userAgent) {
+        String ua = userAgent == null ? "" : userAgent.replace('\r', ' ').replace('\n', ' ').trim();
+        conn.setRequestProperty("User-Agent", ua.isEmpty() ? DEFAULT_USER_AGENT : ua);
+        return conn;
+    }
+
     public static String key(String url) {
         return Integer.toHexString(url.hashCode());
     }
@@ -157,9 +185,13 @@ public final class IptvStore {
     }
 
     public static void loadEpg(Context c, String url) {
+        loadEpg(c, url, null);
+    }
+
+    public static void loadEpg(Context c, String url, String userAgent) {
         if (url.isEmpty()) return;
         try {
-            epg = Xmltv.parse(Xmltv.decode(fetch(c, url, "epg-" + key(url), 6L * 3600_000)));
+            epg = Xmltv.parse(Xmltv.decode(fetch(c, url, "epg-" + key(url), 6L * 3600_000, userAgent)));
         } catch (Throwable ignored) {
         }
     }
