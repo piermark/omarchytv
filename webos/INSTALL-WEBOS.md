@@ -197,3 +197,13 @@ OmarchyTV on LG webOS never modifies system files or disables any built-in TV pa
   ```bash
   ares-install --device lgtv --remove com.omarchytv.home
   ```
+
+## Optional iPhone Remote (rooted TVs)
+
+The optional iPhone Remote build adds **Workspace 5 → Remotes → iPhone Remote**.
+Choose **Enable**, scan the QR code in Apple Home, then select **OmarchyTV** in
+**Control Center → Apple TV Remote**. The Apple Home picker only selects inputs.
+It requires Homebrew Channel and Node 16+ on the TV; no LG agreement acceptance,
+PC or LG account is needed. Pairings survive updates. Settings include disable,
+pairing reset and removal. See [iPhone Remote](iphone-remote/README.md) for build
+instructions, installation lifecycle and feature limits.

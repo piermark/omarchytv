@@ -33,3 +33,6 @@ webos/app/saver/tte-js/
 webos/app/saver/screensaver-tv.txt
 *.ipk
 *.wgt
+
+webos/iphone-remote/node_modules/
+webos/app/rooted/iphone-remote/
