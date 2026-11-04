@@ -37,7 +37,8 @@ login while the theme is **campfire**; pick another theme and it stops, come bac
 - With sound (the fire crackling and the night around the lake): `extras/install-live --sound` · back to silent:
   `extras/install-live --mute`
 - Undo it all (the theme stays): `extras/install-live --remove`
-- It is a 1800×1010 H.264 video: light, but it plays all the time; check `btop` on an old PC.
+- It is a 1800×1010 H.264 video, decoded by the GPU where it can: about 4 % of one CPU core and ~220 MB of memory on
+  the PC it was tested on. It plays all the time, so check `btop` on an old PC.
 
 The loop is drawn by OmaFire's own fire code and his sounds (crackle, embers, roar, crickets, frogs), cut so the end
 flows into the start.

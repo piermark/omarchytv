@@ -612,6 +612,8 @@ Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in camp
   campfire, no restart; PartOf graphical-session.target), so it also comes back after Hyprland or the shell restarts
   and finds the live Wayland socket again. The hook and the XDG autostart entry only `systemctl --user restart|stop`
   it.
+  On Marco's PC (4.5 RC): active after install, back after the shell restart, started by itself after a reboot;
+  about 2.4 s CPU per minute (~4 % of one core, VA-API) and ~220 MB memory.
   Tested on Omarchy 4.5 RC. For older Omarchy the hook also reads the theme from `~/.config/omarchy/current/theme.name`
   or the `~/.config/omarchy/current/theme` link (not tested there). Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.
