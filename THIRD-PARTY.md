@@ -97,6 +97,13 @@ original OmarchyTV work (MIT). The VGA-style scroller uses the bundled Caskaydia
 `pc-plugin/omarchy-tv` and `pc-plugin/omarchy-link` are by [Marco Porro](https://www.marcoporro.it) ([x.com/MarcoPorro](https://x.com/MarcoPorro)), MIT (pc-plugin/LICENSE, pc-plugin/NOTICE). Python standard library only. Themes/colours read at runtime
 from the user's Omarchy install (not redistributed). If published, the plugin must carry this file's Omarchy credit.
 
+## 7b. Optional iPhone Remote (rooted webOS)
+| Item | Author | Source | Licence | Notes |
+|---|---|---|---|---|
+| iPhone Remote integration (`webos/iphone-remote/`, `webos/app/iphone-remote.js`) | [@mmdisbrow](https://github.com/mmdisbrow) | pull request to this repo | MIT (this repo) | Off unless built with `OMARCHY_IPHONE_REMOTE=1`; not in the normal IPK or the Android build. |
+| HAP-NodeJS 0.11.2 | Homebridge contributors | https://github.com/homebridge/HAP-NodeJS | Apache 2.0 | Installed on the build machine only, from `package-lock.json`; embedded in the optional backend archive with its licence. |
+| node-qrcode 1.5.4 | Ryan Day (soldair) | https://github.com/soldair/node-qrcode | MIT | Same: build-machine dependency of the optional backend, licence included in the archive. |
+
 ## 8. Trademarks
 Netflix, YouTube, Google, Android, Android TV, Google TV, Chromecast, Sony, BRAVIA, X, Prime Video, Disney+, Spotify and
 all other product names, logos and app icons that appear in the launcher or in screenshots are trademarks of their
