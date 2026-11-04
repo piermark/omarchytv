@@ -580,6 +580,8 @@ New stock theme **campfire** on Android TV, LG and Samsung, and the same theme a
   lossless) is under it, for TVs without a WebView and for the wallpaper list.
 - The random wallpaper (W) now brings the fire with the campfire theme when Random theme is on too.
 - `ThemeTest` accepts campfire after a rotation. NOTICE and THIRD-PARTY.md credit Wes Grimes for the art.
+- The PC video `extras/campfire-loop.mp4` is **not** in this repo (18 MB, the TVs never use it: they draw the fire
+  live): it is only in the theme repo; `.gitignore` keeps it out, `themes/README.md` says so.
 - **PC theme**: `themes/omarchy-campfire-theme/` (colors.toml, hyprland.conf border, btop.theme, icons.theme,
   backgrounds/01-campfire.png, preview.png, README, LICENSE with Wes Grimes' MIT notice). It is meant to be published
   as its own repo **piermark/omarchy-campfire-theme** (Marco creates it) so that
