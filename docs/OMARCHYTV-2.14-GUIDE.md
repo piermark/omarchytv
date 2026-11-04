@@ -1,7 +1,7 @@
 # OmarchyTV — what's new (user guide)
 
 This guide is for people who use OmarchyTV: what each new feature does, where to turn it on, which keys to press
-and what it cannot do yet. The technical notes for developers are in `HANDOFF.md` (sections A–U).
+and what it cannot do yet.
 
 Platforms: **Android TV** (the launcher APK), **LG webOS** and **Samsung Tizen** (the TV web app). The PC side is
 an **Omarchy Linux** PC with the `omarchy-link` plugin (Android TV) and the `omarchy-tv webos` bridge (LG/Samsung).
@@ -198,6 +198,35 @@ does not ship any channel list.
 - ASCII mode needs streams that allow it (CORS) and a reasonably fast TV; it is opt-in.
 - Large PC libraries over Wi-Fi may take a moment to list (2000 entries per folder max).
 
+## 15. Settings that now behave
+
+**Choosing a theme now keeps it.** The Theme row on the launcher page used to change the theme and leave
+**Random theme** on, so the next time you came back to Home the rotation could put another one back. Picking a theme
+there is a manual choice like picking one in the Themes list: it turns the rotation off and starts the new theme from
+its first background. Rotation stays on for anyone who never picks a theme by hand.
+
+**The screensaver Clock row works, with one limit.** **Screensaver → Clock** saves a real value now and the native
+screensaver draws the clock with it, below the artwork. It does nothing on the two savers that have no clock of their
+own: the Aquarium has its own HUD and never draws one, and the WebView effects never did.
+
+**OK is reachable with the D-pad in the text dialogs.** On some TV keyboards (the TCL one is the reported case) ▲ from
+the keyboard's top row never leaves the keyboard and its Enter key does not confirm, so in **Prompt name**,
+**Host name** and the weather **Search city** box you could not get to OK or Cancel once you had typed. Now the
+keyboard's Enter/OK presses OK, and ▼ from the field points at it, so the text is accepted without hiding the keyboard
+first.
+
+**"Screensaver from PC" lets the PC's text back in.** When your Omarchy PC pushes a `screensaver.txt` and you then
+pick a logo on the TV, the logo is what you see. The row **Screensaver from PC** (Screensaver settings) turns the PC's
+text back on, and it only appears when the PC has really pushed one, so on a TV without a paired PC you will not see
+it at all.
+
+### Running the link as a service (PC)
+
+The bar widget starts `omarchy-link session` itself, and that session ends when the widget's stdin closes, so under
+systemd it started and exited at once. `omarchy-link session --daemon` ignores the end of stdin and keeps the link up
+until it is stopped, which is what a service needs; the widget case is unchanged. The user unit to copy is in
+`pc-plugin/omarchy-link/README.md`, under "Run it as a service".
+
 ---
 
 ## Defaults at a glance
@@ -213,3 +242,4 @@ does not ship any channel list.
 | Arcade sound / RICE WARS changes PC theme | on / off |
 | OmarchyTV QR code | Live |
 | PC folders in Cinemarchy (`mediaFromTv`, PC) | on |
+| Screensaver from PC (when the PC pushes a text) | on |

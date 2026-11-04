@@ -33,9 +33,11 @@ OmarchyTV; see [Trademarks](#trademarks).*
 
 ---
 
-## Release Downloads & Checksums (`v2.13.0-beta`, pre-release)
+## Release Downloads & Checksums (`v2.14.0-beta`, pre-release)
 
 I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d`), so `adb install -r` upgrades over `2.12.0-beta` and keeps your settings. All checksums are also in `SHA256SUMS` on the release.
+
+The table below still points at the last published release; the `2.14.0-beta` artifacts and their SHA-256 replace it as soon as this release is published.
 
 | Artifact | Download | Platform | Version | Size | SHA-256 |
 |---|---|---|---|---|---|
@@ -100,6 +102,16 @@ omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme
 
 Run them from a terminal on the PC (not over SSH). `install-live --remove` undoes the live fire; the theme stays.
 With omarchy-link paired, TV and PC switch to campfire together.
+
+### Fixes in `2.14.0-beta`
+
+- A theme picked from the launcher page's Theme row now stays picked: it turns Random theme off instead of being rotated away again ([#92](https://github.com/piermark/omarchytv/issues/92)).
+- **Screensaver → Clock** now reaches the native screensaver; the Aquarium has its own HUD and no clock, and the WebView effects never drew one ([#83](https://github.com/piermark/omarchytv/issues/83)).
+- In the prompt, host name and city search dialogs the D-pad reaches OK and the keyboard's Enter confirms, instead of being trapped in some TV keyboards ([#86](https://github.com/piermark/omarchytv/issues/86)).
+- A logo picked on the TV wins over the `screensaver.txt` your PC pushes; the new **Screensaver from PC** row (on by default, shown only when the PC has pushed a text) hands it back ([#84](https://github.com/piermark/omarchytv/issues/84)).
+- The MCP port (47800) and the tool names in `docs/AI-ASSISTED-SETUP.md` are right again ([#76](https://github.com/piermark/omarchytv/issues/76)), and `CONTRIBUTING.md` is OmarchyTV's own guide instead of another project's ([#77](https://github.com/piermark/omarchytv/issues/77)).
+- `omarchy-link session --daemon` keeps the link running as a service, with a systemd user unit to copy in `pc-plugin/omarchy-link/README.md` ([#79](https://github.com/piermark/omarchytv/issues/79)).
+- The Waybar widget measures the label it paints and stops running into the neighbouring module (checked with `qmllint`; not yet verified on a running bar) ([#81](https://github.com/piermark/omarchytv/issues/81)).
 
 ## What's New in `2.13.11` (LG webOS & Samsung Tizen)
 
@@ -454,6 +466,7 @@ omarchy-tv adb-lock --tv 192.168.1.9:5555                                 # clos
 | Samsung UN65CU7000FXZA (2023) | Tizen 9.0 | — | 2.13.0-beta (Tizen .wgt) | ok (community) | installs and launches on a retail Samsung, signed with a Samsung certificate; tested by Wes (@wesleygrimes) ([#60](https://github.com/piermark/omarchytv/issues/60)) |
 | LG 55QNED80T6A | webOS 25 (10.3.2-33) | — | 2.13.9 (webOS) | ok (community) | first webOS 25 report: installs and runs; tested by @Imacx-maria ([#95](https://github.com/piermark/omarchytv/issues/95)) |
 | Samsung UN65AU7000 (AU7000, 65", 2021) | Tizen 6 | — | 2.13.6-testing (Tizen web app) | ok (community) | working; reported as "UN65AU67000FXZX" (likely UN65AU7000FXZA); community report via X |
+| TCL 40S5400A (MT9221, 1 GB RAM, 1280x720) | 11 | ? | 2.13.8 | ok (community) | first TCL report: installs and runs, and works as Home once the stock launcher is disabled (`pm disable-user`), because the Home preference is not kept otherwise; TclAppBoot needs `APP_AUTO_START` to bring the launcher back after boot; its keyboard trapped D-pad focus in text dialogs (see [#86](https://github.com/piermark/omarchytv/issues/86)); reported by GrantCharge ([#75](https://github.com/piermark/omarchytv/issues/75)) |
 | Amazon Fire TV Stick HD AFTSS | 9 (Fire OS 7.7.1.3) | 138 (Amazon WebView) | 2.13.0-beta | works (community) | installs and launches; HomeOverride works but has Fire OS quirks (double Home events, accessibility reset on reboot); tested by @podzpau ([#58](https://github.com/piermark/omarchytv/issues/58)) |
 
 Tested yours? Open an issue with the "TV report" template.
