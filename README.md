@@ -103,6 +103,7 @@ With omarchy-link paired, TV and PC switch to campfire together.
 
 ### Fixes in `2.14.0-beta`
 
+- The **Live screensaver** fits every TV: it sized its text, banner and sweep in `vw`/`vh`, which measure the window while the page is a fixed 1920×1080 stage scaled to the panel, so on a 1080p set it drew oversized and off its glass panels. Sizes now come from the host box and are recomputed when it changes.
 - A theme picked from the launcher page's Theme row now stays picked: it turns Random theme off instead of being rotated away again ([#92](https://github.com/piermark/omarchytv/issues/92)).
 - **Screensaver → Clock** now reaches the native screensaver; the Aquarium has its own HUD and no clock, and the WebView effects never drew one ([#83](https://github.com/piermark/omarchytv/issues/83)).
 - In the prompt, host name and city search dialogs the D-pad reaches OK and the keyboard's Enter confirms, instead of being trapped in some TV keyboards ([#86](https://github.com/piermark/omarchytv/issues/86)).
