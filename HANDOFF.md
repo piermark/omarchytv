@@ -592,11 +592,13 @@ New stock theme **campfire** on Android TV, LG and Samsung, and the same theme a
   hook in `~/.config/omarchy/hooks/theme-set.d/`, like omarchy-link's; with no argument reads
   `~/.local/state/omarchy/current/theme.name`; starts mpvpaper 2 s later so it is over Omarchy's still) and
   `extras/install-live` (mpvpaper via yay, the hook, an `exec-once` line in `~/.config/hypr/autostart.conf`,
-  `--sound`, `--mute`, `--remove`). Tested in a fake HOME with a fake mpvpaper (start, sound, idempotent, stop on
+  `--sound`, `--mute`, `--remove`). The hook finds the Wayland session by itself (`WAYLAND_DISPLAY`, `HYPRLAND_INSTANCE_SIGNATURE` from `$XDG_RUNTIME_DIR`) so it also works from SSH or omarchy-link, and logs mpvpaper to `~/.cache/campfire-live.log`. Tested in a fake HOME with a fake mpvpaper (start, sound, idempotent, stop on
   another theme, remove).
 Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in campfire), all tests.
 ## NOT verified (X)
 - Marco's PC: `omarchy-theme-set campfire` works (a first version with comments in colors.toml broke Omarchy's jq
-  step: no comments there). Not yet: mpvpaper over Omarchy's still, the hook firing on a theme change, the login
-  start, CPU use. Also on a real Omarchy PC: (templates, hyprland.conf override,
+  step: no comments there). mpvpaper plays the loop over Omarchy's still with sound (VA-API
+  hardware decoding, PipeWire), started over SSH with the session's WAYLAND_DISPLAY / HYPRLAND_INSTANCE_SIGNATURE
+  (on Omarchy `ls` is eza: scripts are fine, typed commands need `command ls`). Not yet: the hook firing on a theme
+  change, the login start. Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.

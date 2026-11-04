@@ -8,12 +8,20 @@ video="$HOME/.config/omarchy/themes/campfire/extras/campfire-loop.mp4"
 conf="$HOME/.config/omarchy/campfire-live.conf"   # SOUND=1 plays the fire and the night (volume VOLUME, default 40)
 SOUND=0; VOLUME=40
 [[ -f $conf ]] && . "$conf"
+# From SSH, a service or the TV (omarchy-link) there may be no Wayland session in the environment: find Hyprland's.
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+[[ -n $WAYLAND_DISPLAY ]] || WAYLAND_DISPLAY="$(ls "$XDG_RUNTIME_DIR" 2>/dev/null | grep -m1 -E '^wayland-[0-9]+$')"
+[[ -n $HYPRLAND_INSTANCE_SIGNATURE ]] || HYPRLAND_INSTANCE_SIGNATURE="$(ls -t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -1)"
+export WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE
+log="${XDG_CACHE_HOME:-$HOME/.cache}/campfire-live.log"
+mkdir -p "$(dirname "$log")"
 pkill -x mpvpaper 2>/dev/null
 [[ $theme == campfire && -f $video ]] || exit 0
-command -v mpvpaper >/dev/null || exit 0
+command -v mpvpaper >/dev/null || { echo "campfire-live: mpvpaper is not installed (extras/install-live)" >&2; exit 0; }
 opts="loop no-audio"
 [[ $SOUND == 1 ]] && opts="loop volume=$VOLUME"
 # Start after Omarchy has put its still background up, so the fire is drawn over it.
-( sleep 2; exec mpvpaper -o "$opts" '*' "$video" ) >/dev/null 2>&1 < /dev/null &
+[[ -n $WAYLAND_DISPLAY ]] || { echo "campfire-live: no Wayland session found (run it on the PC)" | tee -a "$log" >&2; exit 0; }
+( sleep 2; exec mpvpaper -o "$opts" '*' "$video" ) >>"$log" 2>&1 < /dev/null &
 disown 2>/dev/null
 exit 0
