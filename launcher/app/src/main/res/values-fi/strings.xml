@@ -147,6 +147,9 @@
     <string name="web_remove">Poista verkkosovellus</string>
     <string name="web_remove_short">poista</string>
     <string name="web_name_hint">Nimi (esim. X)</string>
+    <string name="remote_panes">Etäpaneelit</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">Käytä https:// tai http:// lähiverkon IP-osoitteeseen</string>
     <string name="web_cursor">Osoitintila</string>
     <string name="web_cursor_on">osoitin: päällä  (OK = napsauta)</string>
     <string name="web_cursor_off">osoitin: pois</string>

@@ -90,6 +90,13 @@ A dependency update, not a behaviour change: the TV side works exactly as before
 - **The name follows his:** Settings → Plugins, the companion dialog, the chat panel and the credits now say Agent Desktop. `omarchy-tv plugins grokbot "<message>"` and the `grokbot` alias still work.
 - **`omarchy-link` is built against his v0.2.0 tag** (commit `b6933e5`). v0.1.0 checkouts are still accepted and relayed with the same contract, and `OMARCHY_GROKBOT_DESKTOP_REF` can pin either tag.
 
+### Android TV
+
+- **Remote panes URL from the TV.** Logo menu → Widgets → "Remote panes" sets `remotePanes.url` without editing
+  `omarchytv.json`. On some boxes (Android 14, Homatics Box R 4K Plus) the app's external files dir is 0700 and
+  adb can't read or write it, so the menu was the only way in. Empty turns the panes off; a URL `RemotePanes.urlAllowed`
+  refuses is not saved. Saving fetches the panes right away instead of after `refreshSec`.
+
 
 ### LG webOS / Samsung Tizen 2.13.11 (draft, not released)
 

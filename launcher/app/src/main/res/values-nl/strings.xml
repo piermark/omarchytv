@@ -147,6 +147,9 @@
     <string name="web_remove">Web-app verwijderen</string>
     <string name="web_remove_short">verwijderen</string>
     <string name="web_name_hint">Naam (bijv. X)</string>
+    <string name="remote_panes">Externe panelen</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">Gebruik https://, of http:// naar een LAN-IP-adres</string>
     <string name="web_cursor">Cursormodus</string>
     <string name="web_cursor_on">cursor: aan  (OK = klik)</string>
     <string name="web_cursor_off">cursor: uit</string>

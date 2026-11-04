@@ -147,6 +147,9 @@
     <string name="web_remove">Ta bort webbapp</string>
     <string name="web_remove_short">ta bort</string>
     <string name="web_name_hint">Namn (t.ex. X)</string>
+    <string name="remote_panes">Fjärrpaneler</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">Använd https://, eller http:// till en IP-adress i LAN</string>
     <string name="web_cursor">Markörläge</string>
     <string name="web_cursor_on">markör: på  (OK = klicka)</string>
     <string name="web_cursor_off">markör: av</string>

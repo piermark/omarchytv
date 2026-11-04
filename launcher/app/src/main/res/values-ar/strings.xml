@@ -147,6 +147,9 @@
     <string name="web_remove">إزالة تطبيق ويب</string>
     <string name="web_remove_short">إزالة</string>
     <string name="web_name_hint">الاسم (مثل X)</string>
+    <string name="remote_panes">لوحات بعيدة</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">استخدم https:// أو http:// إلى عنوان IP في الشبكة المحلية</string>
     <string name="web_cursor">وضع المؤشر</string>
     <string name="web_cursor_on">المؤشر: تشغيل  (OK = نقر)</string>
     <string name="web_cursor_off">المؤشر: إيقاف</string>

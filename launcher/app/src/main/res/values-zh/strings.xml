@@ -147,6 +147,9 @@
     <string name="web_remove">删除网页应用</string>
     <string name="web_remove_short">删除</string>
     <string name="web_name_hint">名称（例如 X）</string>
+    <string name="remote_panes">远程面板</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">请使用 https://，或对局域网 IP 地址使用 http://</string>
     <string name="web_cursor">光标模式</string>
     <string name="web_cursor_on">光标：开  （OK = 点击）</string>
     <string name="web_cursor_off">光标：关</string>
