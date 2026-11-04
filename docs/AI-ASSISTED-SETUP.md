@@ -99,9 +99,9 @@ A shareable Grok Bot template for OmarchyTV setup will be published later.
 
 In addition to ADB setup, OmarchyTV `2.12.0-beta` includes two built-in ways to use **Grok Bot** directly with your TV:
 1. **On-TV Grok Bot WebApp & `> ask` Prompt:** Open **Grok Bot** directly from the Home screen shelf, the **Grok Bot & AI** hub (Main Menu, Workspace 4 `PC`, or Workspace 5 `System`), or Walker search (`> grok bot` / `> ask`). You only need to sign in once on the TV (persistent cookies/DOM storage in the sandboxed `:web` process, with D-pad spatial navigation and long-press Back virtual cursor), or pair your PC via `omarchy-link` to answer `> grok bot` / `> ask` prompts from the PC without logging in on the TV.
-2. **MCP Server (`/mcp` on TV + `omarchy-tv mcp` on PC):**
-   - **Direct TV MCP endpoint:** `POST http://<TV-IP>:8999/mcp` (or `/v1/mcp`) using `Authorization: Bearer <link-token>` or `OTV1` HMAC signing.
-   - **PC MCP Bridge (`omarchy-tv mcp`):** Run `omarchy-tv mcp --stdio` for local MCP clients (Claude Desktop, Cursor, Hermes) or `omarchy-tv mcp --http --port 8990` (authenticated via `~/.config/omarchy-tv/mcp-token`) to expose the TV tools (`tv_get_status`, `tv_list_themes`, `tv_set_theme`, `tv_send_key`, `tv_launch_app`, `tv_cast_media`, `tv_show_notification`, `tv_open_ai_webapp`) to your remote Grok Bot agent.
+2. **MCP Server (`/mcp` on TV + `omarchy-tv mcp` on PC):** two separate servers, each with its own tools.
+   - **Direct TV MCP endpoint:** `POST http://<TV-IP>:47800/mcp` (or `/v1/mcp`) using `Authorization: Bearer <link-token>` or `OTV1` HMAC signing. Its tools are `tv_status`, `tv_list_themes`, `tv_set_theme`, `tv_send_key`, `tv_list_apps`, `tv_launch_app`, `tv_screensaver`, `tv_ai_status` and `tv_cinemarchy`.
+   - **PC MCP Bridge (`omarchy-tv mcp`):** Run `omarchy-tv mcp --stdio` for local MCP clients (Claude Desktop, Cursor, Hermes) or `omarchy-tv mcp --http --port 8990` (authenticated via `~/.config/omarchy-tv/mcp-token`) to expose its tools to your remote Grok Bot agent: `tv_status`, `tv_list_themes`, `tv_set_theme`, `tv_push_theme`, `tv_send_key`, `tv_list_apps`, `tv_launch_app`, `tv_screensaver`.
 
 ## How to verify (whatever assistant you used)
 
