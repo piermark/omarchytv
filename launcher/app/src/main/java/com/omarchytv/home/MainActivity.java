@@ -2299,16 +2299,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return true;
         });
         // Theme = an Omarchy stock theme (bundled palettes); the PC's Omarchy Link sync overrides it with the live one.
+        // #92: picking one here is a manual choice, so it locks the random rotation (as the themes page does).
         String[] themes = Theme.names(this);
         p.add(lAcc, Theme.cur().name, r -> {
             String n = next(themes, Theme.cur().name);
-            applyLive("launcher", lAcc, j -> {
-                org.json.JSONObject t = new org.json.JSONObject();
-                t.put("name", n);
-                t.put("source", "tv");
-                j.put("theme", t);
-                j.put("wallpaper_bg", 0);
-            });
+            applyLive("launcher", lAcc, j -> LauncherConfig.pickTheme(j, n));
             themeToPc(n);
             return true;
         });

@@ -947,6 +947,16 @@ final class LauncherConfig {
         j.put("random_theme", false);
     }
 
+    /**
+     * #92: a theme picked from the launcher page's Theme row is a manual choice like the themes page, so it
+     * locks the rotation (random_theme = false) and resets the background to the new theme's first one.
+     * Rotation stays on for anyone who never picked a theme.
+     */
+    static void pickTheme(JSONObject j, String themeName) throws org.json.JSONException {
+        lockTheme(j, themeName);
+        j.put("wallpaper_bg", 0);
+    }
+
     static void lockWallpaper(JSONObject j, String wallpaper, int bgIdx) throws org.json.JSONException {
         j.put("wallpaper", wallpaper);
         j.put("wallpaper_bg", bgIdx);

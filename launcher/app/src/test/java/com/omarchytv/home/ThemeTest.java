@@ -1,6 +1,7 @@
 package com.omarchytv.home;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -104,6 +105,33 @@ public class ThemeTest {
             assertEquals("tokyo-night", j.getJSONObject("theme").getString("name"));
             assertEquals("omarchy", j.getString("wallpaper"));
             assertEquals(2, j.getInt("wallpaper_bg"));
+        } finally {
+            Theme.resolve(null, new JSONObject().put("name", "tokyo-night"));
+        }
+    }
+
+    /** #92: a theme picked from the launcher page's Theme row locks the rotation, like the themes page does. */
+    @Test
+    public void pickingAThemeFromTheLauncherPageLocksTheRotation() throws Exception {
+        try {
+            // Anyone who never touched a theme keeps the rotation (the default is unchanged).
+            JSONObject untouched = new JSONObject();
+            assertTrue(new LauncherConfig(null, untouched, 0L).randomTheme);
+            assertTrue(LauncherConfig.applyRandomRotation(untouched, new java.util.Random(3L)));
+
+            // Picking one writes the same lock the themes page writes, and resets the background to the new theme's first.
+            LauncherConfig.pickTheme(untouched, "jade-horse");
+            LauncherConfig picked = new LauncherConfig(null, untouched, 1L);
+            assertEquals("jade-horse", picked.theme.name);
+            assertFalse(picked.randomTheme);
+            assertEquals(0, untouched.getInt("wallpaper_bg"));
+            LauncherConfig.applyRandomRotation(untouched, new java.util.Random(11L));   // random_wallpaper is still on
+            assertEquals("jade-horse", untouched.getJSONObject("theme").getString("name"));
+
+            // The launcher page row goes through it: a plain theme write there is what #92 reported.
+            String main = new String(Files.readAllBytes(
+                    Paths.get("src/main/java/com/omarchytv/home/MainActivity.java")), StandardCharsets.UTF_8);
+            assertTrue("launcher Theme row must lock the theme", main.contains("applyLive(\"launcher\", lAcc, j -> LauncherConfig.pickTheme(j, n))"));
         } finally {
             Theme.resolve(null, new JSONObject().put("name", "tokyo-night"));
         }
