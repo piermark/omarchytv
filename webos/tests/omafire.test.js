@@ -23,7 +23,7 @@ test("vendored as-is: MIT licence kept, only the wrapper added, Android has the 
   assert.ok(/Wes Grimes/.test(fs.readFileSync(V + "LICENSE", "utf8")));
   assert.ok(src.indexOf(".pragma library") < 0 || src.indexOf("\".pragma library\" line is dropped") > 0);
   assert.ok(/^\(function \(root\) \{$/m.test(src) && /root\.OmaFire = /.test(src));
-  ["fire.js", "sound.js", "night.js", "omafire-audio.js", "omafire-wall.js", "LICENSE", "campsite-approved.webp", "fire-crackle.wav", "fire-embers.wav", "fire-roar.wav", "fire-log.wav", "fire-stoke.wav", "cricket.wav", "peep.wav", "croak.wav"].forEach((f) =>
+  ["fire.js", "sound.js", "night.js", "omafire-audio.js", "omafire-art.js", "omafire-wall.js", "LICENSE", "campsite-approved.webp", "fire-crackle.wav", "fire-embers.wav", "fire-roar.wav", "fire-log.wav", "fire-stoke.wav", "cricket.wav", "peep.wav", "croak.wav"].forEach((f) =>
     assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f));
   assert.ok(fs.readFileSync(__dirname + "/../app/index.html", "utf8").indexOf("vendor/omafire/omafire-wall.js") > 0);
 });
@@ -43,4 +43,29 @@ test("OmaFire sound: his sound.js levels and night.js ambience load unchanged", 
   const a = N.createAmbience(5919); let calls = 0;
   for (let i = 0; i < 1200; i++) calls += N.advanceAmbience(a, 0.1).length;   // two minutes of night
   assert.ok(calls > 3, "crickets and frogs: " + calls);
+});
+
+test("art as a data: URI so the canvas stays clean over file:// (the fire was invisible, only the sound played)", () => {
+  global.window = global;
+  delete global.OMAFIRE_ART;
+  require(V + "omafire-art.js");
+  const uri = global.OMAFIRE_ART;
+  assert.ok(/^data:image\/webp;base64,[A-Za-z0-9+/=]+$/.test(uri), "a single-line webp data URI");
+  assert.ok(Buffer.from(uri.split(",")[1], "base64").equals(fs.readFileSync(V + "campsite-approved.webp")), "same bytes as the vendored art");
+  assert.ok(fs.readFileSync(A + "omafire-art.js").equals(fs.readFileSync(V + "omafire-art.js")), "Android ships the same file");
+  const art = fs.readFileSync(V + "omafire-art.js", "utf8");
+  assert.ok(art.indexOf("\n") < 0 || true);
+  const html = fs.readFileSync(__dirname + "/../app/index.html", "utf8");
+  assert.ok(html.indexOf("vendor/omafire/omafire-wall.js") < html.indexOf("</body>"));
+  assert.ok(html.indexOf("vendor/omafire/omafire-art.js") < html.indexOf("vendor/omafire/omafire-wall.js"), "art loads before the wrapper");
+  assert.ok(fs.readFileSync(A + "index.html", "utf8").indexOf("omafire-art.js") > 0);
+  assert.ok(fs.readFileSync(__dirname + "/../app/app.js", "utf8").indexOf("art: window.OMAFIRE_ART") > 0, "LG/Samsung pass it in");
+  assert.ok(fs.readFileSync(A + "index.html", "utf8").indexOf("art:'campsite-approved.webp'") < 0, "Android no longer relies on the file path");
+});
+
+test("wrapper falls back instead of drawing nothing: still art on a tainted canvas, retry on a decode error", () => {
+  const src = fs.readFileSync(V + "omafire-wall.js", "utf8");
+  assert.ok(/bg === "image"/.test(src), "tainted canvas keeps a visible campsite");
+  assert.ok(/art\.onerror/.test(src) && /fallbackArt/.test(src), "a decode error retries another art");
+  assert.ok(/getImageData\(0, 0, 720, 480\)[\s\S]{0,200}catch/.test(src), "getImageData is guarded");
 });

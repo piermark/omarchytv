@@ -2109,7 +2109,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (omafireUi && omafireMode === m[1]) { omafireUi.setSound(!!cfg.omafireSound); return; }
     if (omafireUi) omafireUi.destroy();
     layer.style.position = layer.style.position || "absolute";
-    omafireUi = window.OmaFireWall.mount(layer, { mode: m[1], sound: !!cfg.omafireSound });
+    omafireUi = window.OmaFireWall.mount(layer, { mode: m[1], sound: !!cfg.omafireSound, art: window.OMAFIRE_ART });
     omafireMode = m[1];
   }
 
