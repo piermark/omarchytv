@@ -4,8 +4,8 @@
 
 A night by the lake: moonlight, pines and the fire. The palette is sampled from the scene of
 [OmaFire](https://github.com/wesleygrimes/omafire) by Wes Grimes, and the wallpaper is a frame of his fire
-burning in that scene. Made by [OmarchyTV](https://github.com/piermark/omarchytv), where the same theme
-runs on the TV (Android TV, LG webOS, Samsung Tizen) with OmaFire as the live wallpaper.
+burning in that scene. Made by [OmarchyTV](https://github.com/piermark/omarchytv); the same theme on the TV (Android TV, LG webOS,
+Samsung Tizen), with OmaFire as the live wallpaper, is coming in the next OmarchyTV version.
 
 ## Install on your Omarchy PC
 
@@ -54,7 +54,7 @@ On the TV, OmarchyTV shows the campfire as the live wallpaper of this theme; tur
 **Wallpaper → OmaFire sound** for the crackle and the night. OmaFire itself, the interactive campfire by
 Wes Grimes for Omarchy, is here: https://github.com/wesleygrimes/omafire
 
-## With OmarchyTV
+## With OmarchyTV (next version, coming soon)
 
 With omarchy-link paired, the TV and the PC follow each other: pick **campfire** on the PC and the TV switches
 (and the other way round, with the TV switch "Also change the PC theme"). The TV's random wallpaper sometimes
