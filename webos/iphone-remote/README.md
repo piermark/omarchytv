@@ -9,8 +9,8 @@ Apple may label the accessory uncertified and require “Add Anyway”.
 The service runs entirely on the TV. No PC, cloud service, LG account, LG
 AirPlay or LG agreement acceptance is involved. It does not change LG consent
 settings. Homebrew Channel, root access and Node 16+ are required. The backend
-has been exercised on an LG OLED77C5AUA running webOS 10.3.1-3007. Other firmware
-and ordinary app identities require their own hardware validation.
+has been exercised on an LG OLED77C5AUA running webOS 10.3.1-3007. The ordinary IPK lifecycle was validated using isolated state on that TV;
+other firmware requires its own hardware validation.
 
 ## Building
 
