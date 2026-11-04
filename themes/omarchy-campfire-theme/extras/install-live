@@ -1,6 +1,6 @@
 #!/bin/bash
-# Makes the campfire theme burn on the Omarchy PC: installs mpvpaper, the theme-set hook and the login start.
-# (c) 2026 Marco Porro (x.com/MarcoPorro), MIT.
+# Makes the campfire theme burn on the Omarchy PC: installs mpvpaper, a user unit, the theme-set hook and the
+# login start. (c) 2026 Marco Porro (x.com/MarcoPorro), MIT. Tested on Omarchy 4.5 RC.
 #   install-live            set it up (silent fire)
 #   install-live --sound    set it up with sound (the fire and the night, volume 40)
 #   install-live --mute     keep it, without sound
@@ -9,19 +9,26 @@ set -e
 here="$(cd "$(dirname "$0")" && pwd)"
 hook_dir="$HOME/.config/omarchy/hooks/theme-set.d"
 hook="$hook_dir/campfire-live"
+unit_dir="$HOME/.config/systemd/user"
+unit="$unit_dir/campfire-live.service"
 autostart="$HOME/.config/hypr/autostart.conf"   # older install-live used it: cleaned up
-desktop="$HOME/.config/autostart/campfire-live.desktop"   # XDG autostart: started by uwsm at every login
+desktop="$HOME/.config/autostart/campfire-live.desktop"   # XDG autostart: started at every login
 conf="$HOME/.config/omarchy/campfire-live.conf"
+log="${XDG_CACHE_HOME:-$HOME/.cache}/campfire-live.log"
+
+cleanup_old() { [[ -f $autostart ]] && sed -i -e "\|$hook|d" -e '/^# Campfire theme: the live fire/d' "$autostart"; true; }
 
 case "${1:-}" in
   --remove)
+    systemctl --user stop campfire-live.service 2>/dev/null || true
     pkill -x mpvpaper 2>/dev/null || true
-    rm -f "$hook" "$conf" "$desktop"
-    [[ -f $autostart ]] && sed -i -e "\|$hook|d" -e '/^# Campfire theme: the live fire/d' "$autostart"
+    rm -f "$hook" "$conf" "$desktop" "$unit" "$log"
+    systemctl --user daemon-reload 2>/dev/null || true
+    cleanup_old
     echo "Campfire live wallpaper removed (mpvpaper is still installed: yay -R mpvpaper to remove it)."
     exit 0 ;;
-  --sound) echo "SOUND=1" > "$conf" ;;
-  --mute) echo "SOUND=0" > "$conf" ;;
+  --sound) mkdir -p "$(dirname "$conf")"; echo "SOUND=1" > "$conf" ;;
+  --mute) mkdir -p "$(dirname "$conf")"; echo "SOUND=0" > "$conf" ;;
   "") ;;
   *) echo "usage: install-live [--sound|--mute|--remove]"; exit 1 ;;
 esac
@@ -31,10 +38,24 @@ if ! command -v mpvpaper >/dev/null; then
   if command -v yay >/dev/null; then yay -S --needed --noconfirm mpvpaper
   else echo "Install mpvpaper (AUR) first, then run this again."; exit 1; fi
 fi
-mkdir -p "$hook_dir"
+mkdir -p "$hook_dir" "$unit_dir" "$(dirname "$desktop")" "$(dirname "$log")"
 install -m 755 "$here/campfire-live" "$hook"
-[[ -f $autostart ]] && sed -i -e "\|$hook|d" -e '/^# Campfire theme: the live fire/d' "$autostart"
-mkdir -p "$(dirname "$desktop")"
+cat > "$unit" <<EOF
+[Unit]
+Description=Campfire live wallpaper (Omarchy campfire theme)
+PartOf=graphical-session.target
+After=graphical-session.target
+StartLimitIntervalSec=0
+
+[Service]
+ExecStart=$hook --run
+Restart=always
+RestartSec=3
+RestartPreventExitStatus=77
+SuccessExitStatus=77
+StandardOutput=append:$log
+StandardError=append:$log
+EOF
 cat > "$desktop" <<EOF
 [Desktop Entry]
 Type=Application
@@ -45,6 +66,9 @@ Terminal=false
 NoDisplay=true
 X-GNOME-Autostart-enabled=true
 EOF
+cleanup_old
+systemctl --user daemon-reload
 "$hook"
-echo "Done: with the campfire theme the fire burns behind your desktop, from every login."
-[[ -f $conf ]] && grep -q "SOUND=1" "$conf" && echo "Sound on (install-live --mute to turn it off)." || echo "Silent (install-live --sound for the fire and the night)."
+echo "Done: with the campfire theme the fire burns behind your windows, from every login."
+if [[ -f $conf ]] && grep -q "SOUND=1" "$conf"; then echo "Sound on (install-live --mute to turn it off)."
+else echo "Silent (install-live --sound for the fire and the night)."; fi

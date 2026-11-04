@@ -606,6 +606,12 @@ Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in camp
   did not survive omarchy-theme-set): the hook now starts mpvpaper as its own user unit (`systemd-run --user
   --unit=campfire-live`, fallback setsid), and stops that unit first. Re-tested on Marco's PC: tokyo-night stops it,
   campfire starts it again; window border gradient and the orange Yaru icons show.
+  Restarting the shell on 4.5 put its still wallpaper over the fire (mpvpaper still running): mpvpaper now runs on
+  the `bottom` layer (`-l bottom`: above any background, below the windows) inside a user unit
+  `~/.config/systemd/user/campfire-live.service` (`campfire-live --run`, Restart=always, RestartSec=3, exit 77 = not
+  campfire, no restart; PartOf graphical-session.target), so it also comes back after Hyprland or the shell restarts
+  and finds the live Wayland socket again. The hook and the XDG autostart entry only `systemctl --user restart|stop`
+  it.
   Tested on Omarchy 4.5 RC. For older Omarchy the hook also reads the theme from `~/.config/omarchy/current/theme.name`
   or the `~/.config/omarchy/current/theme` link (not tested there). Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.
