@@ -694,7 +694,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var activeWp = "";
     omafireWall(wl);
     applyCrt();
-    if (/^omafire:/.test(cfg.wallpaper || "")) {
+    if (omafireModeNow()) {
       wl.style.backgroundImage = "none";   // v2.14 OmaFire draws into the layer itself
     } else if (picked) {
       activeWp = picked;
@@ -1365,7 +1365,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var pick = ANIMATED_INTROS[Math.floor(Math.random() * ANIMATED_INTROS.length)];
     if (pick.fire && cfg.randomWallpaper) {
       if (pick.fire === cfg.wallpaper) pick = { fire: pick.fire === "omafire:campfire" ? "omafire:embers" : "omafire:campfire" };
-      if (cfg.randomTheme) cfg.theme = Math.random() < 0.5 ? "last-horizon" : "cumulus";
+      if (cfg.randomTheme) cfg.theme = "campfire";   // the fire comes with its own theme
       cfg.wallpaper = pick.fire;
       cfg.wallpaperIdx = 0;
     } else if (pick.fire) {   // random theme only: the fires are wallpapers, so just the theme changes
@@ -2051,8 +2051,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   // ---- v2.14 OmaFire animated wallpapers (vendor/omafire: Wes Grimes' campsite, MIT) ----
   var omafireUi = null, omafireMode = "";
-  function omafireWall(layer) {
+  /** The OmaFire mode to show: an OmaFire wallpaper, or the campfire theme with the wallpaper following the theme. */
+  function omafireModeNow() {
     var m = /^omafire:(campfire|embers)$/.exec(cfg.wallpaper || "");
+    if (m) return m[1];
+    return cfg.theme === "campfire" && !cfg.wallpaper && !cfg.proceduralBg ? "campfire" : "";
+  }
+  function omafireWall(layer) {
+    var mode = omafireModeNow(), m = mode ? [mode, mode] : null;
     if (!m || !window.OmaFireWall) {
       if (omafireUi) { omafireUi.destroy(); omafireUi = null; omafireMode = ""; }
       return;

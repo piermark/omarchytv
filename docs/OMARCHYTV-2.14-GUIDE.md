@@ -85,6 +85,24 @@ With **Random wallpaper** on (the default) it also shows up by itself now and th
 Pick a wallpaper by hand to keep one, or turn Random wallpaper off on a slow TV.
 **OmaFire sound** (off): the fire's own crackle and night ambience; starts on the first key press (TV rules).
 
+### Campfire, the OmaFire theme (TV and PC)
+
+**Themes → campfire**: colours taken from the OmaFire scene (night lake blue, moonlight text, fire orange, embers),
+made to let the fire stand out. With the wallpaper following the theme, the campfire burns as the wallpaper; turn on
+**OmaFire sound** for the crackle. When the random wallpaper picks a fire and Random theme is on, it comes with campfire.
+
+The same theme exists for the **Omarchy PC**, so TV and PC match:
+
+1. On the PC, in a terminal:
+   ```
+   omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme
+   ```
+   (by hand: copy the theme folder to `~/.config/omarchy/themes/campfire/`, then `omarchy-theme-set campfire`).
+2. With omarchy-link paired, pick **campfire** on the PC and the TV follows; with **Also change the PC theme** on,
+   picking it on the TV switches the PC too.
+3. The PC theme sets colours, the window border and a still wallpaper (a frame of the fire). For the burning fire
+   with its sound on the PC, install Wes Grimes' OmaFire: https://github.com/wesleygrimes/omafire
+
 ## 11. Omastorm from the PC (Android TV)
 
 **Plugins → Omastorm**, then **Open Omastorm** (Plugins page or Walker): the PC opens Omastorm and casts its window

@@ -568,3 +568,26 @@ rotations: fires and intros alternate, the fire canvas mounts and goes away, no 
 ## NOT verified (W)
 - Gradle `ThemeTest`; OmaFire's cost on slow TVs now that it can show up without being picked (it already pauses
   with the home hidden; a slow-TV opt-out would be "Random wallpaper" off).
+
+# X. Campfire, a theme made for OmaFire (TV + Omarchy PC)
+New stock theme **campfire** on Android TV, LG and Samsung, and the same theme as a real Omarchy PC theme.
+- Palette sampled from the OmaFire scene (night lake `#0b1a2e`, moonlight `#e6dcc8`, fire `#f5822a`, embers
+  `#f6c75a` as accent2, pines `#7fa874`, water `#8fb3d9`). Added to `omarchy_themes.json` (both copies, identical)
+  and `webos/app/data.js` (themes + wallpapers).
+- Its own wallpaper is the fire: with the wallpaper following the theme ("omarchy" on Android, "" on LG/Samsung)
+  the campfire burns (`OmaFireLayer.mode(LauncherConfig)`, `omafireModeNow()` in app.js). The still
+  `assets/wallpapers/campfire/01-campfire.webp` (a frame of OmaFire's fire.js over his scene, 16:9, ×10 nearest,
+  lossless) is under it, for TVs without a WebView and for the wallpaper list.
+- The random wallpaper (W) now brings the fire with the campfire theme when Random theme is on too.
+- `ThemeTest` accepts campfire after a rotation. NOTICE and THIRD-PARTY.md credit Wes Grimes for the art.
+- **PC theme**: `themes/omarchy-campfire-theme/` (colors.toml, hyprland.conf border, btop.theme, icons.theme,
+  backgrounds/01-campfire.png, preview.png, README, LICENSE with Wes Grimes' MIT notice). It is meant to be published
+  as its own repo **piermark/omarchy-campfire-theme** (Marco creates it) so that
+  `omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme` works; by hand: copy the folder to
+  `~/.config/omarchy/themes/campfire/` and `omarchy-theme-set campfire`. Same name on both sides, so the theme sync
+  (C) works both ways. colors.toml resolves (omarchy-link `resolve_palette`) to the TV palette.
+- Sound on the PC: a theme can't play sound; the README points to Wes Grimes' OmaFire for the live fire with sound.
+Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in campfire), all tests.
+## NOT verified (X)
+- `omarchy-theme-install` / `omarchy-theme-set campfire` on a real Omarchy PC (templates, hyprland.conf override,
+  icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.

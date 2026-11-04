@@ -459,6 +459,8 @@ final class LauncherConfig {
     };
     /** v2.14: OmaFire (Wes Grimes) joins the random wallpaper pool: one draw in the pool of intros + fires. */
     static final String[] RANDOM_FIRES = {"omafire:campfire", "omafire:embers"};
+    /** v2.14: the theme made for OmaFire (palette from Wes Grimes' scene); with the theme's own wallpaper it shows the campfire. */
+    static final String CAMPFIRE_THEME = "campfire";
 
     /** A fire for this rotation, or null for an intro: each of the intros and fires is equally likely, never the same fire twice. */
     static String randomFire(java.util.Random rng, String curWp) {
@@ -867,10 +869,9 @@ final class LauncherConfig {
             String curWp = j.optString("wallpaper", "omarchy");
             String fire = rw ? randomFire(rng, curWp) : null;
             if (fire != null) {
-                if (rt) {   // a random theme under the fire, as the intros bring their own theme
-                    String nextTheme = ANIMATED_THEMES[rng.nextInt(ANIMATED_THEMES.length)];
+                if (rt) {   // the fire comes with its own theme, as the intros bring theirs
                     JSONObject t = curThemeObj != null ? new JSONObject(curThemeObj.toString()) : new JSONObject();
-                    t.put("name", nextTheme);
+                    t.put("name", CAMPFIRE_THEME);
                     t.put("source", "tv");
                     j.put("theme", t);
                 }

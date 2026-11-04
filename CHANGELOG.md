@@ -5,6 +5,7 @@
 ### Cinemarchy, the new hub (draft)
 
 - **LG and Samsung get the real Cinemarchy**: three panes in Omarchy style, in your theme's colours, with a built-in player (resume where you stopped), your IPTV playlists with groups and favourites, an Up-next queue, @dhh37, the streaming apps, X, the TV inputs and four open movies. Fast with huge playlists, light on old TVs.
+- **Campfire, a theme made for OmaFire**: night lake, moonlight and fire colours, with the campfire burning as its wallpaper; also as an Omarchy PC theme (`omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme`), so TV and PC match.
 - **OmaFire joins the random wallpapers** on every TV: with "Random wallpaper" on, the campfire or the embers show up now and then.
 - **The Arcade in the top bar**, next to the Cinemarchy icon, on every TV.
 - **A remote key for Cinemarchy or the Arcade** (Android TV): the remote buttons page now offers both, and key remappers or adb can open them too (#94).

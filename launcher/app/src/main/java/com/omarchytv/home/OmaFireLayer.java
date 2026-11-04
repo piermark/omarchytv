@@ -33,10 +33,17 @@ final class OmaFireLayer {
         return null;
     }
 
+    /** The mode for this config: an OmaFire wallpaper, or the campfire theme with its own wallpaper ("omarchy"). */
+    static String mode(LauncherConfig cfg) {
+        String m = mode(cfg.wallpaper);
+        if (m != null) return m;
+        return "omarchy".equals(cfg.wallpaper) && cfg.theme != null && LauncherConfig.CAMPFIRE_THEME.equals(cfg.theme.name) ? "campfire" : null;
+    }
+
     /** From onResume: show it when the wallpaper is an OmaFire one (wall = the still WallpaperView). */
     @SuppressLint("SetJavaScriptEnabled")
     static void onResume(Activity a, View wall) {
-        String m = mode(LauncherConfig.get(a).wallpaper);
+        String m = mode(LauncherConfig.get(a));
         if (m == null || wall == null || !(wall.getParent() instanceof ViewGroup)) {
             onPause();
             return;

@@ -81,7 +81,7 @@ public class ThemeTest {
             JSONObject j = new JSONObject();
             assertTrue(LauncherConfig.applyRandomRotation(j, new java.util.Random(42L)));
             String rotTheme = j.getJSONObject("theme").getString("name");
-            assertTrue("last-horizon".equals(rotTheme) || "cumulus".equals(rotTheme));
+            assertTrue(rotTheme, "last-horizon".equals(rotTheme) || "cumulus".equals(rotTheme) || "campfire".equals(rotTheme));   // v2.14: a fire comes with campfire
 
             // Lock theme manually -> random_theme becomes false and stays locked across rotations
             LauncherConfig.lockTheme(j, "tokyo-night");
