@@ -1,4 +1,5 @@
 import json, os, sys, threading, unittest, urllib.error, urllib.request
+from unittest import mock
 from http.server import HTTPServer
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 from omarchy_tv import webos
@@ -116,6 +117,131 @@ class GrokbotBridgeTest(unittest.TestCase):
         webos._last_ask = 0.0
         self.assertEqual(self.post("/v1/nope", {}, tok)[0], 404)
 
+
+
+class FakeTheme:
+    def __init__(self):
+        self.asked = []
+
+    def set_theme(self, name):
+        self.asked.append(name)
+        return {"gruvbox": "ok", "nord": "same", "busy": "busy"}.get(name, "unknown")
+
+
+class ThemeSetBridgeTest(unittest.TestCase):
+    post = GrokbotBridgeTest.post   # reuse the server and helper, not the grokbot tests
+
+    def setUp(self):
+        GrokbotBridgeTest.setUp(self)
+        self.old_t, self.old_cfg = webos._link_theme, webos.link_cfg
+        self.th = FakeTheme()
+        self.cfg = {}
+        webos._link_theme = lambda: self.th
+        webos.link_cfg = lambda: self.cfg
+
+    def tearDown(self):
+        webos._link_theme, webos.link_cfg = self.old_t, self.old_cfg
+        GrokbotBridgeTest.tearDown(self)
+
+    def test_needs_the_code(self):
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"})[0], 401)
+        self.assertEqual(self.th.asked, [])
+
+    def test_results_map_to_status_codes(self):
+        tok = webos.bridge_token()
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"}, tok), (200, {"result": "ok"}))
+        self.assertEqual(self.post("/v1/theme/set", {"name": "nord"}, tok), (200, {"result": "same"}))
+        self.assertEqual(self.post("/v1/theme/set", {"name": "x"}, tok), (404, {"result": "unknown"}))
+        self.assertEqual(self.post("/v1/theme/set", {"name": "busy"}, tok)[0], 429)
+
+    def test_disabled_on_the_pc_and_not_installed(self):
+        tok = webos.bridge_token()
+        self.cfg["themeFromTv"] = False
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"}, tok)[0], 403)
+        self.assertEqual(self.th.asked, [])
+        webos._link_theme = lambda: None
+        self.assertEqual(self.post("/v1/theme/set", {"name": "gruvbox"}, tok)[0], 503)
+
+
+class UpdatePowerBridgeTest(unittest.TestCase):
+    post = GrokbotBridgeTest.post
+
+    def setUp(self):
+        GrokbotBridgeTest.setUp(self)
+        self.old_cfg, self.old_mod = webos.link_cfg, webos._link_mod
+        self.cfg = {}
+        webos.link_cfg = lambda: self.cfg
+        self.power_calls = []
+        outer = self
+
+        class P:
+            @staticmethod
+            def tv_power(state, cfg, log):
+                outer.power_calls.append(state)
+                return "scheduled"
+        webos._link_mod = lambda n: P if n == "power" else None
+
+    def tearDown(self):
+        webos.link_cfg, webos._link_mod = self.old_cfg, self.old_mod
+        GrokbotBridgeTest.tearDown(self)
+
+    def test_power_needs_the_code_and_reaches_omarchy_link(self):
+        self.assertEqual(self.post("/v1/power", {"state": "standby"})[0], 401)
+        tok = webos.bridge_token()
+        self.assertEqual(self.post("/v1/power", {"state": "standby"}, tok), (200, {"result": "scheduled"}))
+        self.assertEqual(self.power_calls, ["standby"])
+        webos._link_mod = lambda n: None
+        self.assertEqual(self.post("/v1/power", {"state": "on"}, tok)[0], 503)
+
+    def test_update_check_install_and_off(self):
+        from omarchy_tv import tvupdate
+        tok = webos.bridge_token()
+        self.assertEqual(self.post("/v1/update/tv", {"action": "check", "platform": "webos"})[0], 401)
+        with mock.patch.object(tvupdate, "check", return_value={"current": "2.13.11", "latest": "2.13.12", "name": "x"}):
+            st, d = self.post("/v1/update/tv", {"action": "check", "platform": "webos", "version": "2.13.11"}, tok)
+        self.assertEqual((st, d["latest"]), (200, "2.13.12"))
+        with mock.patch.object(tvupdate, "start", return_value="started") as stt:
+            st, d = self.post("/v1/update/tv", {"action": "install", "platform": "tizen", "version": "2.13.11",
+                                                "want": "2.13.12"}, tok)
+        self.assertEqual((st, d), (200, {"result": "started"}))
+        self.assertEqual(stt.call_args[0][:4], ("tizen", "2.13.11", "2.13.12", "127.0.0.1"))
+        with mock.patch.object(tvupdate, "check", side_effect=tvupdate.UpdateError("bad_platform")):
+            self.assertEqual(self.post("/v1/update/tv", {"platform": "x"}, tok)[0], 400)
+        self.cfg["updateFromTv"] = False
+        self.assertEqual(self.post("/v1/update/tv", {"action": "install"}, tok)[0], 403)
+
+    def test_living_needs_the_code_and_returns_the_feed(self):
+        class FakeLiving:
+            def __init__(self, *a):
+                self.prefs = None
+                self.touched = False
+
+            def set_prefs(self, p):
+                self.prefs = p
+
+            def touch(self):
+                self.touched = True
+
+            def payload(self):
+                return {"github": [], "notes": [{"app": "Slack", "title": "Ola", "body": "ciao"}], "x": [], "xMode": "off"}
+
+        class Mod:
+            Living = FakeLiving
+        webos._living_obj = None
+        webos._link_mod = lambda n: Mod if n == "living" else None
+        self.assertEqual(self.post("/v1/living", {"notes": True})[0], 401)
+        tok = webos.bridge_token()
+        st, d = self.post("/v1/living", {"notes": True, "x": "notify"}, tok)
+        self.assertEqual((st, d["notes"][0]["title"]), (200, "Ola"))
+        self.assertEqual(webos._living_obj.prefs, {"notes": True, "x": "notify"})
+        self.assertTrue(webos._living_obj.touched)
+        self.cfg["livingToTv"] = False
+        self.assertEqual(self.post("/v1/living", {}, tok)[0], 403)
+        webos._living_obj = None
+
+    def test_status_has_liftoff(self):
+        with urllib.request.urlopen(self.base + "/v1/status", timeout=5) as r:
+            self.assertIn("liftoff", json.loads(r.read()))
 
 class FakeAssistantMod:
     class NoProvider(Exception): pass

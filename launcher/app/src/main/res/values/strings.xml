@@ -85,6 +85,26 @@
     <string name="lang_en" translatable="false">English</string>
     <string name="lang_it" translatable="false">Italiano</string>
     <string name="lang_de" translatable="false">Deutsch</string>
+    <string name="lang_fr" translatable="false">Français</string>
+    <string name="lang_es" translatable="false">Español</string>
+    <string name="lang_pt_pt" translatable="false">Português (Portugal)</string>
+    <string name="lang_pt_br" translatable="false">Português (Brasil)</string>
+    <string name="lang_nl" translatable="false">Nederlands</string>
+    <string name="lang_pl" translatable="false">Polski</string>
+    <string name="lang_sv" translatable="false">Svenska</string>
+    <string name="lang_da" translatable="false">Dansk</string>
+    <string name="lang_cs" translatable="false">Čeština</string>
+    <string name="lang_ro" translatable="false">Română</string>
+    <string name="lang_el" translatable="false">Ελληνικά</string>
+    <string name="lang_ru" translatable="false">Русский</string>
+    <string name="lang_uk" translatable="false">Українська</string>
+    <string name="lang_tr" translatable="false">Türkçe</string>
+    <string name="lang_hu" translatable="false">Magyar</string>
+    <string name="lang_fi" translatable="false">Suomi</string>
+    <string name="lang_nb" translatable="false">Norsk bokmål</string>
+    <string name="lang_ar" translatable="false">العربية</string>
+    <string name="lang_zh_cn" translatable="false">简体中文</string>
+    <string name="lang_ja" translatable="false">日本語</string>
     <string name="logo_omarchy_tv" translatable="false">OMARCHY TV</string>
     <string name="logo_omarchy" translatable="false">Omarchy</string>
     <string name="mark_current" translatable="false">✓</string>
@@ -347,6 +367,7 @@
     <string name="speed_normal">normal</string>
     <string name="speed_fast">fast</string>
     <string name="wp_sync_pc">Sync PC wallpaper</string>
+    <string name="theme_to_pc">Also change the PC theme</string>
     <string name="grok_bot_hub">Grok Bot &amp; AI</string>
     <string name="grok_bot_open">Grok Bot (WebApp)</string>
     <string name="grok_bot_pin_all">Pin AI WebApps to Home</string>
@@ -415,4 +436,115 @@
     <string name="keys_none">No supported remote connected.</string>
     <string name="keys_default">Unbound: %1$s</string>
     <string name="wp_loop">Always-animated wallpaper</string>
+    <string name="set_boot_screen">Boot screen</string>
+    <string name="boot_mode_boot">at start</string>
+    <string name="boot_mode_wake">start and wake</string>
+    <string name="set_pc_power">TV and PC power together</string>
+    <string name="pc_power_no_mac">The TV learns the PC\'s address the next time Omarchy Link connects</string>
+    <string name="set_update">Update OmarchyTV</string>
+    <string name="update_checking">Checking for updates…</string>
+    <string name="update_none">OmarchyTV %1$s is the latest version</string>
+    <string name="update_available_title">OmarchyTV %1$s is available</string>
+    <string name="update_available_msg">You have %1$s. Download and install it? Android will ask you to confirm.</string>
+    <string name="update_install">Install</string>
+    <string name="update_failed">Update failed: %1$s</string>
+    <string name="update_allow_unknown">Allow OmarchyTV to install apps, then press Update again</string>
+    <string name="update_bad_apk">the download is not an OmarchyTV release signed like this one</string>
+    <string name="liftoff_build">build</string>
+    <string name="liftoff_update">update</string>
+    <string name="liftoff_ok">LIFTOFF</string>
+    <string name="liftoff_abort">ABORT</string>
+    <string name="liftoff_hint">any key: hide</string>
+    <string name="liftoff_failed_toast">%1$s failed</string>
+    <string name="living">Live screensaver</string>
+    <string name="living_notes">PC notifications on the screensaver</string>
+    <string name="living_notes_note">Every notification from the Omarchy PC will show on the TV while the screensaver runs</string>
+    <string name="living_x">X on the screensaver</string>
+    <string name="living_x_notify">PC notifications</string>
+    <string name="living_x_api">X API</string>
+    <string name="living_x_api_note">Mentions via the X API (X charges per use): set it up on the PC with omarchy-link x setup</string>
+    <string name="living_weather">weather</string>
+    <string name="living_notes_title">notifications · pc</string>
+    <string name="living_x_title">x · mentions</string>
+    <string name="living_x_not_set_up">X API not set up: omarchy-link x setup on the PC</string>
+    <string name="living_x_budget">X API monthly limit reached (xMonthlyUsd)</string>
+    <string name="living_x_error">X API not reachable right now</string>
+    <string name="x_keys_hint">X · ▲▼ posts · OK open · 1 like · 2 reply · 3 repost · 4 post · 5 search · 0 home · 9 notifications · 8 messages</string>
+    <string name="omafire_campfire">campfire</string>
+    <string name="omafire_embers">embers</string>
+    <string name="plugin_retro_crt">Retro CRT</string>
+    <string name="crt_light">light</string>
+    <string name="crt_strong">strong</string>
+    <string name="omastorm_open">Open Omastorm (radar)</string>
+    <string name="omastorm_need_pc">Omastorm runs on the Omarchy PC: pair the PC first</string>
+    <string name="omastorm_opening">Opening Omastorm on the PC…</string>
+    <string name="omastorm_not_installed">Omastorm is not installed on the PC (omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable)</string>
+    <string name="omastorm_failed">Omastorm could not start: %1$s</string>
+    <string name="omastorm_keys">◀▲▼▶ pan · OK play · ⏩⏪ frames · 1 2 3 style · 4 nearest · 5 6 zoom · 7 all radars · 8 my location · 9 aviation · 0 reset · BACK close</string>
+    <string name="liftoff_title">liftoff</string>
+    <string name="liftoff_stage_download">downloading</string>
+    <string name="liftoff_stage_verify">checking</string>
+    <string name="liftoff_stage_sign">signing</string>
+    <string name="liftoff_stage_install">installing</string>
+    <string name="liftoff_stage_launch">starting</string>
+    <string name="liftoff_exit">exit %1$s</string>
+    <string name="living_waiting">waiting for the Omarchy PC…</string>
+    <string name="boot_sound">Boot sound</string>
+    <string name="omafire_sound">OmaFire sound</string>
+    <string name="arcade_sound">Arcade sound</string>
+    <string name="arcade_pc_theme">Arcade: RICE WARS changes the PC theme too</string>
+    <string name="share_qr">OmarchyTV QR code</string>
+    <string name="cine_sources">sources</string>
+    <string name="cine_library">library</string>
+    <string name="cine_details">details</string>
+    <string name="cine_src_dhh">\@dhh37 · Omarchy</string>
+    <string name="cine_src_stream">Streaming apps</string>
+    <string name="cine_src_live">TV &amp; inputs</string>
+    <string name="cine_src_iptv">IPTV playlists</string>
+    <string name="cine_src_demo">Open movies</string>
+    <string name="cine_src_queue">Up next</string>
+    <string name="cine_src_tools">Player &amp; tools</string>
+    <string name="cine_keys">▲▼ move · ◀▶ panes · OK play · red: up next · green: ★ · yellow: group · blue: 🎲 · 1-8 sources · Back</string>
+    <string name="cine_refresh">OK refreshes the channel feed</string>
+    <string name="cine_loading">loading…</string>
+    <string name="cine_new">NEW</string>
+    <string name="cine_none">No apps found on this TV</string>
+    <string name="cine_add_playlist">+ Add an M3U playlist (URL)</string>
+    <string name="cine_playlist_hint">only streams you have the right to watch</string>
+    <string name="cine_remove_hint">red removes it</string>
+    <string name="cine_group">Group: %s</string>
+    <string name="cine_group_hint">OK or yellow: next group (all, ★, …)</string>
+    <string name="cine_live">LIVE</string>
+    <string name="cine_demo_note">Blender open movie · CC BY · demo stream</string>
+    <string name="cine_queue_empty">Up next is empty: press red on any video</string>
+    <string name="cine_queue_clear">Clear Up next</string>
+    <string name="cine_embed">Play @dhh37 inside Cinemarchy</string>
+    <string name="cine_saver_test">Preview the pause screensaver</string>
+    <string name="cine_add_link">+ Add a video link to Up next</string>
+    <string name="cine_bad_url">That isn\'t an http(s) link</string>
+    <string name="cine_queued">Added to Up next</string>
+    <string name="cine_resume">Resumes at %s</string>
+    <string name="cine_play">play</string>
+    <string name="cine_fav_hint">green: ★ favourite</string>
+    <string name="cine_queue_hint">red: add to Up next</string>
+    <string name="cine_reload">reload</string>
+    <string name="cine_open">open</string>
+    <string name="cine_back">Back cancels</string>
+    <string name="cine_no_play">This stream can\'t be played on this TV</string>
+    <string name="cine_player_keys">OK pause · ◀▶ 10 s · ▲▼ prev/next · blue: VHS/ASCII · yellow: sleep · Back stop</string>
+    <string name="cine_fav_added">★ Added to favourites</string>
+    <string name="cine_fav_removed">Removed from favourites</string>
+    <string name="cine_ascii_blocked">This stream doesn\'t allow ASCII mode</string>
+    <string name="cine_sleep">Sleep in %s</string>
+    <string name="cine_sleep_off">Sleep timer off</string>
+    <string name="cine_sleep_done">Sleep timer: stopped</string>
+    <string name="cine_mode_normal">Normal picture</string>
+    <string name="cine_roulette">Surprise channel</string>
+    <string name="cine_roulette_hint">a random channel from your playlists</string>
+    <string name="cine_src_pc">Omarchy PC</string>
+    <string name="cine_pc_folders">Browse the PC\'s folders</string>
+    <string name="cine_pc_opening">Opening from the PC…</string>
+    <string name="cine_pc_need">Pair the Omarchy PC first</string>
+    <string name="cine_up">‹ back</string>
+    <string name="cine_pc_empty">Nothing to play in this folder</string>
 </resources>

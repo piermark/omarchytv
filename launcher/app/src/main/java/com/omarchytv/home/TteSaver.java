@@ -91,6 +91,8 @@ final class TteSaver {
             @JavascriptInterface public String forceEffect() { return forceEffect; }
             @JavascriptInterface public String forceMode() { return forceMode; }
             @JavascriptInterface public void log(String m) { Log.i(TAG, "salvaschermo: " + m); }
+            /** v2.14 Living screensaver: weather + the PC's feed, as JSON (Living.forSaver). */
+            @JavascriptInterface public String living() { return Living.forSaver(c.getApplicationContext()); }
             @JavascriptInterface public void drawn(String mode, int count, String effect) {
                 drawn = true;
                 h.post(() -> revealWeb());
@@ -231,7 +233,7 @@ final class TteSaver {
         }
         drawn = false;
         LauncherConfig cfg = LauncherConfig.get(ctx);
-        if ("native".equals(forceMode) || AsciiSaverView.isAquarium(cfg)) {
+        if (!cfg.living && ("native".equals(forceMode) || AsciiSaverView.isAquarium(cfg))) {   // v2.14 Live needs the page
             toNative("aquarium/nativo");
             return;
         }

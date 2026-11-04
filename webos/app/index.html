@@ -701,6 +701,57 @@ html, body {
   height: 100%;
   border: none;
 }
+/* v2.14 Retro CRT plugin: the home shrinks into a CRT set. #crt-overlay sits exactly on the screen area (applyCrt):
+   its huge box-shadow paints the bezel all around, the accent rim and LED follow the active theme. */
+#crt-overlay { position: fixed; z-index: 2147483001; pointer-events: none; display: none; border-radius: 2.2vh;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 38%),
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.28) 2px, rgba(0,0,0,.28) 4px),
+    repeating-linear-gradient(to right, rgba(255,0,0,.06) 0, rgba(255,0,0,.06) 1px, rgba(0,255,0,.045) 1px, rgba(0,255,0,.045) 2px, rgba(0,0,255,.06) 2px, rgba(0,0,255,.06) 3px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 58%, rgba(0,0,0,.55) 100%);
+  box-shadow: 0 0 0 .45vh var(--t-accent, #7aa2f7), 0 0 3vh .6vh var(--t-accent, #7aa2f7), 0 0 0 100vmax #0b0b0f,
+    inset 0 0 7vh rgba(0,0,0,.8), inset 0 0 2vh var(--t-accent, #7aa2f7);
+  -webkit-animation: crt-flicker 3.2s infinite; animation: crt-flicker 3.2s infinite; }
+#crt-overlay.on { display: block; }
+#crt-overlay.strong { background:
+    linear-gradient(135deg, rgba(255,255,255,.09) 0%, rgba(255,255,255,0) 40%),
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0) 0, rgba(0,0,0,0) 2px, rgba(0,0,0,.42) 2px, rgba(0,0,0,.42) 4px),
+    repeating-linear-gradient(to right, rgba(255,0,0,.09) 0, rgba(255,0,0,.09) 1px, rgba(0,255,0,.07) 1px, rgba(0,255,0,.07) 2px, rgba(0,0,255,.09) 2px, rgba(0,0,255,.09) 3px),
+    radial-gradient(ellipse at center, rgba(0,0,0,0) 50%, rgba(0,0,0,.72) 100%); }
+#crt-badge { position: fixed; z-index: 2147483002; pointer-events: none; display: none; left: 0; right: 0; text-align: center;
+  font: 1.6vh 'CaskaydiaMono Nerd Font', monospace; letter-spacing: .6em; color: var(--t-accent, #7aa2f7); opacity: .85;
+  text-shadow: 0 0 1vh var(--t-accent, #7aa2f7); }
+#crt-badge.on { display: block; }
+#crt-badge i { display: inline-block; width: 1vh; height: 1vh; border-radius: 50%; margin-left: 2vh; vertical-align: middle;
+  background: var(--t-accent, #7aa2f7); box-shadow: 0 0 1.2vh var(--t-accent, #7aa2f7); }
+body.crt-strong #stage { filter: saturate(1.25) contrast(1.08) brightness(1.06); }
+body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rgba(40,160,255,.35); }
+@-webkit-keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .95; } 48% { opacity: 1; } 76% { opacity: .975; } }
+@keyframes crt-flicker { 0%, 100% { opacity: 1; } 47% { opacity: .95; } 48% { opacity: 1; } 76% { opacity: .975; } }
+/* v2.14 liftoff: build/update countdown (liftoff.js) */
+#liftoff { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 9000; display: none; background: rgba(0,0,0,.86); font-family: inherit; }
+#liftoff.failed.blink { background: rgba(120,0,0,.55); }
+#liftoff .box { position: absolute; left: 13%; top: 15%; width: 74%; height: 70%; border: 3px solid var(--t-accent, #e68e0d); box-sizing: border-box; }
+#liftoff.failed .box { border-color: var(--t-red, #e06c75); }
+#liftoff.ok .box { border-color: var(--t-green, #98c379); }
+#liftoff .title { position: absolute; left: 32px; top: -18px; padding: 0 10px; background: #000; color: var(--t-accent, #e68e0d); font-size: 26px; white-space: nowrap; }
+#liftoff.failed .title { color: var(--t-red, #e06c75); }
+#liftoff pre { margin: 0; font-family: inherit; }
+#liftoff .rocket { position: absolute; left: 7%; top: 16%; font-size: 40px; line-height: 1.15; color: var(--t-fg, #ddd); transition: transform 3s cubic-bezier(.6,0,1,1); }
+#liftoff.failed .rocket { color: var(--t-red, #e06c75); }
+#liftoff.ok .rocket { transform: translateY(-900px); }
+#liftoff .flame { color: var(--t-accent, #e68e0d); }
+#liftoff.ok .flame { color: var(--t-yellow, #e5c07b); }
+#liftoff .right { position: absolute; left: 38%; top: 14%; right: 4%; }
+#liftoff .clock { font-size: 120px; font-weight: bold; color: var(--t-accent, #e68e0d); line-height: 1.1; }
+#liftoff .clock.dim { opacity: .35; }
+#liftoff.ok .clock { color: var(--t-green, #98c379); }
+#liftoff.failed .clock { color: var(--t-red, #e06c75); }
+#liftoff .stage, #liftoff .bar, #liftoff .plus { font-size: 34px; color: var(--t-fg, #ddd); margin-top: 18px; white-space: nowrap; }
+#liftoff .bar { color: var(--t-accent, #e68e0d); }
+#liftoff .plus { font-size: 28px; opacity: .6; }
+#liftoff .tail { position: absolute; left: 7%; right: 4%; bottom: 14%; font-size: 26px; color: var(--t-fg, #ddd); white-space: pre; overflow: hidden; }
+#liftoff .hint { position: absolute; right: 24px; bottom: 14px; font-size: 22px; opacity: .55; color: var(--t-fg, #ddd); }
 </style>
 <style>
 /* v2.13: official YouTube embed overlay + companion idle bob */
@@ -778,8 +829,18 @@ html, body {
           <polygon points="10 9 15 12 10 15 10 9"/>
         </svg>
       </div>
+      <!-- OmarchyTV Arcade (v2.14): next to Cinemarchy -->
+      <div class="bar-icon-btn" data-bar-idx="7" data-action="arcade" title="OmarchyTV Arcade">
+        <svg viewBox="0 0 24 24">
+          <rect x="3" y="7" width="18" height="11"/>
+          <line x1="7" y1="10" x2="7" y2="15"/>
+          <line x1="4.5" y1="12.5" x2="9.5" y2="12.5"/>
+          <circle cx="16" cy="11.5" r="1.1"/>
+          <circle cx="18.5" cy="14.5" r="1.1"/>
+        </svg>
+      </div>
       <!-- Wi-Fi -->
-      <div class="bar-icon-btn" data-bar-idx="7" data-action="wifi">
+      <div class="bar-icon-btn" data-bar-idx="8" data-action="wifi">
         <svg viewBox="0 0 24 24">
           <path d="M2 8.5a15 15 0 0 1 20 0"/>
           <path d="M5.5 12.5a10 10 0 0 1 13 0"/>
@@ -788,13 +849,13 @@ html, body {
         </svg>
       </div>
       <!-- Bluetooth -->
-      <div class="bar-icon-btn" data-bar-idx="8" data-action="bt">
+      <div class="bar-icon-btn" data-bar-idx="9" data-action="bt">
         <svg viewBox="0 0 24 24">
           <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/>
         </svg>
       </div>
       <!-- Audio / Volume -->
-      <div class="bar-icon-btn" data-bar-idx="9" data-action="vol">
+      <div class="bar-icon-btn" data-bar-idx="10" data-action="vol">
         <svg viewBox="0 0 24 24">
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
           <path d="M15.5 8.5a5 5 0 0 1 0 7"/>
@@ -802,14 +863,14 @@ html, body {
         </svg>
       </div>
       <!-- Inputs (TV / HDMI) -->
-      <div class="bar-icon-btn" data-bar-idx="10" data-action="inputs">
+      <div class="bar-icon-btn" data-bar-idx="11" data-action="inputs">
         <svg viewBox="0 0 24 24">
           <path d="M4 7h16l-2 10H6L4 7z"/>
           <line x1="8" y1="11" x2="16" y2="11"/>
         </svg>
       </div>
       <!-- Screensaver -->
-      <div class="bar-icon-btn" data-bar-idx="11" data-action="saver">
+      <div class="bar-icon-btn" data-bar-idx="12" data-action="saver">
         <svg viewBox="0 0 24 24">
           <rect x="2" y="3" width="20" height="14"/>
           <line x1="8" y1="21" x2="16" y2="21"/>
@@ -983,6 +1044,28 @@ html, body {
 <script src="grokdirect.js"></script>
 <script src="tvapps.js"></script>
 <script src="tui.js"></script>
+<script src="boot-sound.js"></script>
+<script src="boot.js"></script>
+<script src="liftoff.js"></script>
+<script src="vendor/qrcode/qrcode.js"></script>
+<script src="qr.js"></script>
+<script src="living.js"></script>
+<script src="cinemarchy.js"></script>
+<script src="games/arcade.js"></script>
+<script src="games/sfx.js"></script>
+<script src="games/i18n.js"></script>
+<script src="games/vhold.js"></script>
+<script src="games/ricewars.js"></script>
+<script src="games/forkbomb.js"></script>
+<script src="games/tilt.js"></script>
+<script src="games/hyprmaze.js"></script>
+<script src="vendor/omafire/fire.js"></script>
+<script src="vendor/omafire/sound.js"></script>
+<script src="vendor/omafire/night.js"></script>
+<script src="vendor/omafire/omafire-audio.js"></script>
+<script src="vendor/omafire/omafire-wall.js"></script>
+<script src="lang.js"></script>
+<script src="i18n.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

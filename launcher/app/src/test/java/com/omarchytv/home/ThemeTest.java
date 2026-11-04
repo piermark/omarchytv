@@ -81,7 +81,7 @@ public class ThemeTest {
             JSONObject j = new JSONObject();
             assertTrue(LauncherConfig.applyRandomRotation(j, new java.util.Random(42L)));
             String rotTheme = j.getJSONObject("theme").getString("name");
-            assertTrue("last-horizon".equals(rotTheme) || "cumulus".equals(rotTheme));
+            assertTrue(rotTheme, "last-horizon".equals(rotTheme) || "cumulus".equals(rotTheme) || "campfire".equals(rotTheme));   // v2.14: a fire comes with campfire
 
             // Lock theme manually -> random_theme becomes false and stays locked across rotations
             LauncherConfig.lockTheme(j, "tokyo-night");
@@ -92,7 +92,8 @@ public class ThemeTest {
 
             assertTrue(LauncherConfig.applyRandomRotation(j, new java.util.Random(7L)));
             assertEquals("tokyo-night", j.getJSONObject("theme").getString("name"));
-            assertTrue(j.getString("wallpaper").startsWith("wallpapers/"));
+            String wp = j.getString("wallpaper");   // v2.14: an intro or an OmaFire wallpaper
+            assertTrue(wp, wp.startsWith("wallpapers/") || wp.startsWith("omafire:") || "omarchy".equals(wp));
 
             // Lock wallpaper manually -> both random_theme and random_wallpaper are false, rotation is a no-op
             LauncherConfig.lockWallpaper(j, "omarchy", 2);

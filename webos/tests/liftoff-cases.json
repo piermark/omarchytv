@@ -1,0 +1,11 @@
+[
+  {"s": {"state": "running", "elapsedS": 10, "expectedS": 52}, "since": 0, "clock": "T-00:42", "progress": 19, "final": false},
+  {"s": {"state": "running", "elapsedS": 40, "expectedS": 52}, "since": 5, "clock": "T-00:07", "progress": 86, "final": true},
+  {"s": {"state": "running", "elapsedS": 70, "expectedS": 52}, "since": 2, "clock": "T+01:12", "progress": 99, "final": false},
+  {"s": {"state": "running", "elapsedS": 3}, "since": 1, "clock": "T+00:04", "progress": -1, "final": false},
+  {"s": {"state": "running", "elapsedS": 3, "pct": 40, "expectedS": 90}, "since": 0, "clock": "T-01:27", "progress": 40, "final": false},
+  {"s": {"state": "running", "elapsedS": 3, "pct": 100}, "since": 0, "clock": "T+00:03", "progress": 99, "final": false},
+  {"s": {"state": "ok", "elapsedS": 61, "expectedS": 52}, "since": 30, "clock": "T+01:01", "progress": 100, "final": false},
+  {"s": {"state": "failed", "elapsedS": 12, "expectedS": 52, "code": 2}, "since": 3, "clock": "ABORT", "progress": 23, "final": false},
+  {"s": {"state": "running", "elapsedS": 3700}, "since": 0, "clock": "T+1:01:40", "progress": -1, "final": false}
+]

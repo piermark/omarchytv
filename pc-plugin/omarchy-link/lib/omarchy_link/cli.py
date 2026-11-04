@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -647,6 +648,47 @@ def cmd_prompt(a, cfg):
     return 0
 
 
+def cmd_liftoff(a, cfg):
+    from . import liftoff   # noqa: PLC0415
+    argv = list(a.command)
+    if argv[:1] == ["--"]:
+        argv = argv[1:]
+    if not argv:
+        print("usage: omarchy-link liftoff [--name NAME] -- <command> [args…]", file=sys.stderr)
+        return 2
+    return liftoff.run(argv, a.name)
+
+
+def cmd_x(a, cfg):
+    """X API for the Living screensaver: setup (bearer token + username, stored 0600), status, forget."""
+    from . import living   # noqa: PLC0415
+    if a.action == "setup":
+        import getpass   # noqa: PLC0415
+        user = (a.username or input("X username (without @): ")).strip().lstrip("@")
+        if not re.match(r"^[A-Za-z0-9_]{1,15}$", user):
+            print("not an X username", file=sys.stderr)
+            return 2
+        token = getpass.getpass("X API bearer token (developer.x.com, not shown): ").strip()
+        if not token:
+            return 2
+        living.x_save({"bearer": token, "username": user})
+        print(f"Saved in {living.X_FILE} (mode 0600). The TV uses it only with Living screensaver > X: API, "
+              f"while the screensaver runs, up to about {cfg.get('xMonthlyUsd', 1.0)} USD a month (xMonthlyUsd).")
+        return 0
+    if a.action == "forget":
+        try:
+            living.X_FILE.unlink()
+        except OSError:
+            pass
+        print("X API token removed.")
+        return 0
+    d = living.x_load()
+    print(json.dumps({"configured": bool(d.get("bearer")), "username": d.get("username"),
+                      "spentThisMonthUsd": living.x_spent(d), "limitUsd": cfg.get("xMonthlyUsd", 1.0),
+                      "enabled": cfg.get("xApi", True) is not False}, indent=2))
+    return 0
+
+
 def cmd_session(a, cfg):
     return Session().run()
 
@@ -753,6 +795,15 @@ def main(argv=None) -> int:
     s.add_argument("host", nargs="?")
     s.add_argument("--now", action="store_true", help="send the theme now")
     s.set_defaults(fn=cmd_prompt)
+    s = sub.add_parser("x", help="X API for the TV's Living screensaver (mentions): setup | status | forget")
+    s.add_argument("action", choices=["setup", "status", "forget"])
+    s.add_argument("--username")
+    s.set_defaults(fn=cmd_x)
+    s = sub.add_parser("liftoff", help="run a build with a rocket countdown on the TV (alarm if it fails)",
+                       description="omarchy-link liftoff -- make release   (no shell; exit code passed through)")
+    s.add_argument("--name", help="what the TV shows (default: the command)")
+    s.add_argument("command", nargs=argparse.REMAINDER)
+    s.set_defaults(fn=cmd_liftoff)
     s = sub.add_parser("desktop", help="install \"Send to TV\" launcher / Open-with entries")
     s.add_argument("--remove", action="store_true")
     s.set_defaults(fn=cmd_desktop)

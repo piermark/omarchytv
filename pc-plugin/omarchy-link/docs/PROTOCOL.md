@@ -247,6 +247,65 @@ mtime change, and today it reads `theme.accent/accent2` and an absolute
 `wallpaper` path. `colors` and `mode` are for later use (bar, tiles, screensaver
 palette).
 
+**Event `theme_set`** (TV → PC, `{"name": "gruvbox"}`): reverse theme sync. The user picked a theme on the TV
+with "Also change the PC theme" on (`themeToPc` in `omarchytv.json`, default off). The PC runs
+`omarchy-theme-set <name>` only when `config.json` `themeFromTv` is not `false` (default on) and the name is a theme
+installed in `~/.config/omarchy/themes` (`[a-z0-9][a-z0-9._-]{0,63}`). No shell; at most one switch every 2 s; the
+same theme as the current one does nothing. The normal PC → TV sync then pushes the new palette, so both match. A
+theme the PC doesn't have changes only the TV (logged on the PC). LG/Samsung use the bridge instead:
+`POST /v1/theme/set` on `omarchy-tv webos-serve`, header `X-Omarchy-Token`, body `{"name"}` →
+`{"result": "ok"|"same"}` 200, `"unknown"` 404, `"busy"` 429, 403 when `themeFromTv` is off, 503 without omarchy-link.
+
+### Power together and liftoff (v2.14)
+
+**Event `pc_wol`** (PC → TV, `{"mac": "aa:bb:cc:dd:ee:ff", "broadcast": "192.168.1.255"}`), sent after each connect
+while `powerFromTv` is not `false`: the MAC and subnet broadcast of the interface the PC uses to reach the TV. The TV
+keeps them in `omarchytv.json` `link.pcWol` (rewritten only when they change).
+
+**Event `tv_power`** (TV → PC, `{"state": "standby"|"on"}`), only while the TV setting "TV and PC power together"
+(`pcPower`, default off) is on. On screen off the TV sends `standby`; the PC suspends after `powerGraceS` (default 60 s,
+10…3600) with `systemctl suspend` (`pmset sleepnow` on macOS), unless `powerFromTv` is `false`, a liftoff is running, or
+`on` arrives first. On screen on (and when the launcher starts) the TV sends a Wake-on-LAN magic packet to that MAC
+(255.255.255.255 and the subnet broadcast, UDP 9 and 7, three times) and `on`. Waking needs Wake-on-LAN enabled on the
+PC (BIOS + `ethtool -s <dev> wol g`); most PCs only wake over Ethernet. LG uses the bridge (`POST /v1/power`, same
+body, needs "TV control" approved so the app can tell a real power-off from another app in front); LG/Samsung web
+apps cannot send Wake-on-LAN.
+
+**Event `liftoff`** (PC → TV): a build run with `omarchy-link liftoff -- <command>` or an update via the PC.
+`{"id", "kind": "build"|"update", "name", "state": "running"|"ok"|"failed", "stage", "elapsedS", "expectedS"?,
+"pct"?, "code"?, "tail": [last lines, failures only]}`. Sent on every change and every 5 s while it runs; a finished
+one stays available for 90 s. `expectedS` is the last duration of the same name (T-minus countdown; T-plus without
+it). The TV clips every field and draws it over Home; LG/Samsung read the same object from `GET /v1/status`
+`"liftoff"`. Nothing is sent unless `liftoffToTv` is not `false`.
+
+### Living screensaver (v2.14)
+
+**Event `living_prefs`** (TV → PC, `{"notes": bool, "github": bool, "x": "off"|"notify"|"api"}`): what the TV's
+Living screensaver wants, sent on connect and on every change (all off while the Living screensaver is off).
+
+**Event `living`** (PC → TV, on every change while something is wanted): `{"github": [{repo, what, who, text, at}] (≤6),
+"notes": [{app, title, body, at}] (≤12), "x": [{kind: mention|notify, user, text, at}] (≤8), "xMode", "xError"?}`.
+- `notes`: every desktop notification (D-Bus `org.freedesktop.Notifications.Notify`, read with `dbus-monitor`), only
+  while the TV asked; kept in memory, never written to disk.
+- `x` with `notify`: browser notifications from X on the PC (free). With `api`: `GET /2/users/:id/mentions` with the
+  user's bearer token (`omarchy-link x setup`, `~/.config/omarchy-link/x.json`, 0600), only while the TV screensaver
+  runs, every `xPollMinutes` (3), only new posts (`since_id`), stopped at `xMonthlyUsd` (estimated, default 1 USD);
+  `xError`: `x_not_set_up`, `x_budget`, `x_user`, `x_error: …`.
+- `github`: `gh api users/<login>/events` (or the public API) and `repos/<r>/events` for `githubRepos`, every 5 min.
+The TV clips every field. LG/Samsung: `POST /v1/living` on `omarchy-tv webos-serve` with the prefs as body and the ask
+code, every 3 s while the screensaver runs → the same object. The PC refuses all of it with `livingToTv: false`.
+
+### Omastorm on the TV (v2.14)
+
+**Event `omastorm`** (TV → PC): `{"action": "start"}` | `{"action": "key", "key": <name>}` | `{"action": "stop"}`, only
+with the TV's Omastorm plugin on. `start`: the PC summons Omastorm (`omarchy shell shell summon com.omastorm.radar '{}'`),
+resizes the window to 1280×720 and casts just that rectangle (`OMARCHY_LINK_SCREEN_REGION`, gpu-screen-recorder
+`-w region` or wf-recorder `-g`) as a live cast titled `Omastorm`. `key` names (`left right up down play next prev
+oldest newest zoom_in zoom_out reset pixels glyphs stipple nearest mosaic locate aviation focus weak help close`) become
+Omastorm's own default bindings via `hyprctl dispatch sendshortcut … address:<that window>`. `stop` ends the stream and
+closes the window. `omastormFromTv: false` refuses.
+**Event `omastorm_state`** (PC → TV, `{"state"}`): why it did not start (`disabled`, `no_omarchy`, `not_installed`, `failed`).
+
 ### Widgets (`PUT /v1/widgets`)
 
 ```json

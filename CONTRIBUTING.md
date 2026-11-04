@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping more TVs lose their ads. Four kinds of contributions are especially welcome.
+Thanks for helping more TVs lose their ads. Five kinds of contributions are especially welcome.
 
 ## 1. Add your TV model
 
@@ -63,6 +63,21 @@ it knows. Adding one is a data change in `launcher/app/src/main/assets/remotes.j
 4. Run `./gradlew :app:testReleaseUnitTest` in `launcher/`; it checks the file.
 
 `launcher/REMOTES.md` has the commands for each step.
+
+## 5. Fix a translation
+
+OmarchyTV speaks 23 languages. English, Italian and German were written by hand; the other 20 (French, Spanish,
+Portuguese for Portugal and Brazil, Dutch, Polish, Swedish, Danish, Norwegian, Finnish, Czech, Hungarian, Romanian,
+Greek, Turkish, Ukrainian, Russian, Arabic, Simplified Chinese, Japanese) were machine-translated from English and
+are waiting for native speakers. If a label reads wrong in your language:
+
+1. Android TV: edit `launcher/app/src/main/res/values-<lang>/strings.xml` (Portugal is `values-pt`, Brazil
+   `values-pt-rBR`, Chinese `values-zh`, Norwegian `values-nb` and its copy `values-no`). Keep every `%1$s` / `%1$d` placeholder, write apostrophes as `\'`.
+2. LG webOS / Samsung Tizen: make the same change in `webos/app/i18n.js` under your language.
+3. Keep product and Linux words as they are: OmarchyTV, Omarchy Linux, Walker, Hyprland, Cinemarchy, Grok Bot,
+   `> search`, `> ask`.
+4. Run `./gradlew :app:testReleaseUnitTest` in `launcher/` and `node --test webos/tests/` (they check that every
+   language has every string with the same placeholders), and add a screenshot from your TV if you can.
 
 ## Pull requests
 

@@ -33,6 +33,32 @@ window.OMARCHY_DATA = {
       "selection_foreground": "#283545",
       "yellow": "#4b5e76"
     },
+    "campfire": {
+      "accent": "#f5822a",
+      "background": "#0b1a2e",
+      "blue": "#6f93c4",
+      "bright_cyan": "#b5d3f0",
+      "bright_foreground": "#fff4de",
+      "bright_magenta": "#f6c75a",
+      "bright_yellow": "#f6d270",
+      "cyan": "#8fb3d9",
+      "dark_background": "#08121f",
+      "dark_foreground": "#7f8ea3",
+      "darker_background": "#050b14",
+      "foreground": "#e6dcc8",
+      "green": "#7fa874",
+      "hyprland_active_border": "rgba(f5822aee) rgba(f6c75aee) 45deg",
+      "hyprland_inactive_border": "rgba(4a5b74aa)",
+      "light_foreground": "#f0e6d2",
+      "lighter_background": "#14263d",
+      "magenta": "#d98f6a",
+      "mode": "dark",
+      "muted": "#4a5b74",
+      "orange": "#f07a2a",
+      "red": "#d9532c",
+      "selection": "#1f3a5c",
+      "yellow": "#f2b544"
+    },
     "catppuccin": {
       "accent": "#89b4fa",
       "background": "#1e1e2e",
@@ -822,6 +848,9 @@ window.OMARCHY_DATA = {
     "blue-mosaic": [
       "wallpapers/blue-mosaic/01-blue-mosaic-wordmark.webp",
       "wallpapers/blue-mosaic/02-blue-mosaic-logo.webp"
+    ],
+    "campfire": [
+      "wallpapers/campfire/01-campfire.webp"
     ],
     "catppuccin": [
       "wallpapers/catppuccin/04-omarchy.webp"

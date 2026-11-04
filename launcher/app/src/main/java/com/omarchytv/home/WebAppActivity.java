@@ -52,6 +52,7 @@ public class WebAppActivity extends Activity {
     private int repeat;
     private String id, ua;
     private String mobileUa;
+    private boolean xHintShown;
 
     static void open(Context c, LauncherConfig.WebApp w) {
         AmbilightController.restoreFollowVideo(c);
@@ -142,6 +143,8 @@ public class WebAppActivity extends Activity {
         s.setAllowContentAccess(false);
         mobileUa = s.getUserAgentString();
         applyUa();
+        final boolean xApp = XKeys.isX(id, url);
+        if (xApp) s.setMediaPlaybackRequiresUserGesture(true);   // v2.14 X: no autoplaying video, lighter on old TVs
         web.setWebViewClient(new WebViewClient() {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
@@ -167,6 +170,16 @@ public class WebAppActivity extends Activity {
             @Override
             public void onPageStarted(WebView view, String u, Bitmap favicon) {
                 flash("… " + Uri.parse(u).getHost());
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String u) {
+                if (!xApp) return;
+                view.evaluateJavascript(XKeys.JS, null);   // remote -> X keyboard shortcuts
+                if (!xHintShown) {
+                    xHintShown = true;
+                    flash(getString(R.string.x_keys_hint));
+                }
             }
         });
         web.setWebChromeClient(new android.webkit.WebChromeClient());   // fullscreen video, alerts
