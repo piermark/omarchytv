@@ -1167,8 +1167,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
     var tip = document.getElementById("bar-tip");
     if (state.zone === "bar" && state.barIdx >= 6) {
-      var tipKeys = ["tip_cinemarchy", "tip_wifi", "tip_bt", "tip_vol", "tip_inputs", "tip_saver"];
-      tip.textContent = tr(tipKeys[state.barIdx - 6] || "tip_saver");
+      var tipKeys = ["tip_cinemarchy", "", "tip_wifi", "tip_bt", "tip_vol", "tip_inputs", "tip_saver"];
+      tip.textContent = state.barIdx === 7 ? "OmarchyTV Arcade" : tr(tipKeys[state.barIdx - 6] || "tip_saver");   // a product name, the same in every language
       tip.style.display = "block";
     } else {
       tip.style.display = "none";
@@ -3538,8 +3538,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (idx === 0) openOmarchyMenu();
     else if (idx >= 1 && idx <= 5) switchWorkspace(idx - 1);
     else if (idx === 6) openCinemarchyModal(0);
-    else if (idx === 10) switchWorkspace(1);
-    else if (idx === 11) startScreensaver();
+    else if (idx === 7) openArcade();   // v2.14: the Arcade icon next to Cinemarchy
+    else if (idx === 11) switchWorkspace(1);
+    else if (idx === 12) startScreensaver();
     else launchApp({ name: "LG Settings", appId: "com.palm.app.settings" });
   }
 
@@ -3630,7 +3631,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
 
     if (state.zone === "bar") {
-      if (k === "ArrowRight") { state.barIdx = Math.min(11, state.barIdx + 1); renderAll(); e.preventDefault(); return; }
+      if (k === "ArrowRight") { state.barIdx = Math.min(12, state.barIdx + 1); renderAll(); e.preventDefault(); return; }
       if (k === "ArrowLeft") { state.barIdx = Math.max(0, state.barIdx - 1); renderAll(); e.preventDefault(); return; }
       if (k === "ArrowDown") {
         if (state.ws === 0) state.zone = enterWidgets() ? "widgets" : "dock";

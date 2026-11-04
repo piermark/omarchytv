@@ -544,5 +544,13 @@ outside tool can start them through the already exported `MainActivity` with the
 `com.omarchytv.home.extra.ACTION`; `CinemarchyActivity` stays `exported="false"`. Labels are the product names
 (same in every language). Docs: `launcher/OMARCHYTV.md` (action list + adb example). `KeyBindingsTest.everyActionIdIsAccepted`
 covers the new ids. Not done: a `sys:cinemarchy` dock tile (needs a new tile type and icon; later).
+**Arcade icon in the top bar**, right after the Cinemarchy film icon (Marco's choice instead of a tile):
+- Android (`HomeV29`): `ln_arcade.xml` (new line icon, game pad) as `barIcons[1]` → `host.sys("arcade")` →
+  `MainActivity.sysAction` case `arcade`; the later icons moved up one index (listeners, tip labels, volume tip).
+- LG/Samsung (`index.html`, `app.js`): `data-bar-idx="7"` with the same game pad SVG, `activateBarItem(7)` →
+  `openArcade()`; Wi-Fi … screensaver are now 8–12 (`activateBarItem`, `Math.min(12, …)`, tip list). Tip text
+  "OmarchyTV Arcade" (product name, every language).
+Checked in Chromium: ▶ along the bar stops on the icon, the tip shows, OK opens the Arcade hall.
 ## NOT verified (V)
-- Gradle build; a key bound to `cinemarchy` on a real TV; the adb command from the docs.
+- Gradle build; a key bound to `cinemarchy` on a real TV; the adb command from the docs; the new bar icon on
+  Android (focus order ◀ ▶, tint with the theme).

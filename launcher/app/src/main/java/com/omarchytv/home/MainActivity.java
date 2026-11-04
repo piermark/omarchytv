@@ -612,6 +612,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "cinemarchy":
                 open(new Intent(this, CinemarchyActivity.class));
                 break;
+            case "arcade":   // v2.14: top-bar icon next to Cinemarchy
+                ArcadeActivity.open(this);
+                break;
             case "grok-bot":
                 showMenu("grok-bot", null);
                 break;

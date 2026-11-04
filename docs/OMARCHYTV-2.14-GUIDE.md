@@ -91,7 +91,8 @@ to the TV; the remote drives it. Back/stop closes it. LG/Samsung: not yet.
 ## 12. OmarchyTV Arcade
 
 Five games of our own, made for the remote: **only arrows, OK and Back** (they never leave the launcher).
-Open: LG/Samsung **Omarchy menu → 🕹 OmarchyTV Arcade**; Android **Plugins** or Walker.
+Open: the **game pad icon in the top bar** (right, next to the Cinemarchy film icon) on every TV; also LG/Samsung
+**Omarchy menu → 🕹 OmarchyTV Arcade**, Android **Plugins** or Walker, or a remote button bound to it (Android).
 
 - **Hall**: ◀ ▶ choose a cartridge, OK plays, ▼ (or 25 s idle) shows the high scores. **Back** in a game = pause
   (resume / restart / hall).
