@@ -20,6 +20,7 @@ tar required), then package it together with the normal launcher:
 
 ```sh
 OMARCHY_IPHONE_REMOTE=1 ./webos/build-ipk.sh /path/to/output
+npm ci --prefix webos/iphone-remote --omit=dev --ignore-scripts
 node --test webos/tests/*.test.js
 ```
 
