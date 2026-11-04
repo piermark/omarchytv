@@ -147,6 +147,9 @@
     <string name="web_remove">Web アプリを削除</string>
     <string name="web_remove_short">削除</string>
     <string name="web_name_hint">名前（例: X）</string>
+    <string name="remote_panes">リモートパネル</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">https://、または LAN の IP アドレスには http:// を使用</string>
     <string name="web_cursor">カーソルモード</string>
     <string name="web_cursor_on">カーソル: オン  (OK = クリック)</string>
     <string name="web_cursor_off">カーソル: オフ</string>

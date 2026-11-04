@@ -147,6 +147,9 @@
     <string name="web_remove">Видалити вебзастосунок</string>
     <string name="web_remove_short">видалити</string>
     <string name="web_name_hint">Назва (наприклад, X)</string>
+    <string name="remote_panes">Віддалені панелі</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">Використайте https:// або http:// до IP-адреси в LAN</string>
     <string name="web_cursor">Режим курсора</string>
     <string name="web_cursor_on">курсор: увімк.  (OK = клік)</string>
     <string name="web_cursor_off">курсор: вимк.</string>

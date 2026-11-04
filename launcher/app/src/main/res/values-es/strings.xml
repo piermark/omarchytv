@@ -147,6 +147,9 @@
     <string name="web_remove">Quitar app web</string>
     <string name="web_remove_short">quitar</string>
     <string name="web_name_hint">Nombre (p. ej. X)</string>
+    <string name="remote_panes">Paneles remotos</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">Usa https://, o http:// hacia una dirección IP de la LAN</string>
     <string name="web_cursor">Modo cursor</string>
     <string name="web_cursor_on">cursor: sí  (OK = clic)</string>
     <string name="web_cursor_off">cursor: no</string>

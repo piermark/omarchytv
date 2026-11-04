@@ -147,6 +147,9 @@
     <string name="web_remove">Αφαίρεση εφαρμογής web</string>
     <string name="web_remove_short">αφαίρεση</string>
     <string name="web_name_hint">Όνομα (π.χ. X)</string>
+    <string name="remote_panes">Απομακρυσμένα πάνελ</string>
+    <string name="remote_panes_hint">http://192.168.1.20:1880/panes.json (empty = off)</string>
+    <string name="remote_panes_bad">Χρήση https:// ή http:// προς διεύθυνση IP του LAN</string>
     <string name="web_cursor">Λειτουργία κέρσορα</string>
     <string name="web_cursor_on">κέρσορας: ενεργός  (OK = κλικ)</string>
     <string name="web_cursor_off">κέρσορας: ανενεργός</string>
