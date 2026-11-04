@@ -4671,7 +4671,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
      * last channel watched. Falls back to any Live TV handler (TvContract.Channels content). Null when the
      * TV has neither (e.g. an emulator or a box without a tuner).
      */
-    /** Detects the installed Live TV package from config.xml (Sony, Sharp AQUOS, Philips TP Vision, Google TV, etc.). */
+    /** Detects the installed Live TV package from config.xml (Sony, Sharp AQUOS, Philips TP Vision, Google TV, Fire OS, etc.). */
     static String liveTvPackage(Context c) {
         PackageManager pm = c.getPackageManager();
         List<String> candidates = new ArrayList<>();
@@ -4681,8 +4681,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             pkg = pkg.trim();
             if (!pkg.isEmpty() && !candidates.contains(pkg)) candidates.add(pkg);
         }
-        // Prefer an installed candidate with a direct Leanback or standard launch intent.
-        for (String pkg : candidates) {
+        // Fire OS ships com.amazon.tv.livetv (the Live TV guide). It is always a candidate so a
+        // Fire Stick can open the guide instead of falling through to a dead generic intent.
+        for (String pkg : LiveTv.candidates(candidates)) {
+            // Prefer an installed candidate with a direct Leanback or standard launch intent.
             if (pm.getLeanbackLaunchIntentForPackage(pkg) != null || pm.getLaunchIntentForPackage(pkg) != null) {
                 return pkg;
             }
@@ -4705,7 +4707,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             pkg = pkg.trim();
             if (!pkg.isEmpty() && !pkgs.contains(pkg)) pkgs.add(pkg);
         }
-        for (String pkg : pkgs) {
+        for (String pkg : LiveTv.candidates(pkgs)) {
+            // Fire OS: the real launcher is permission-gated (SHOW_EPG / TUNE_CHANNEL), so it must
+            // be entered through the unguarded wrapper activity. See LiveTv.
+            String entry = LiveTv.entryActivity(pkg);
+            if (entry != null) {
+                Intent wrapped = new Intent(Intent.ACTION_MAIN).setComponent(ComponentName.unflattenFromString(entry));
+                if (wrapped.resolveActivity(pm) != null) return wrapped;
+            }
             Intent i = pm.getLeanbackLaunchIntentForPackage(pkg);
             if (i == null) i = pm.getLaunchIntentForPackage(pkg);
             if (i == null) {
