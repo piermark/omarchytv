@@ -36,3 +36,5 @@ webos/app/saver/screensaver-tv.txt
 
 # The campfire PC video lives only in github.com/piermark/omarchy-campfire-theme
 themes/omarchy-campfire-theme/extras/campfire-loop.mp4
+webos/iphone-remote/node_modules/
+webos/app/rooted/iphone-remote/

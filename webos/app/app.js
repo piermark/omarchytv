@@ -1246,6 +1246,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var transPct = Math.round((1 - cfg.opacity) * 100) + "%";
     var idleStr = cfg.saverIdleMin === 0 ? "never" : (cfg.saverIdleMin + " min");
     return [
+      window.OmarchyRemote && OmarchyRemote.supported() ? { label: "Remotes", val: "›", act: function () { OmarchyRemote.settings(); } } : null,
       { label: "🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", val: "C ›", act: function () { openCinemarchyModal(0); } },
       { label: "🕹 OmarchyTV Arcade", val: "›", act: openArcade },
       { label: "🧩 " + tr("sys_plugins"), val: ((cfg.pluginSpacexTv ? 1 : 0) + (cfg.pluginGrokbot ? 1 : 0)) + " enabled ›", act: openPluginsModal },
@@ -1275,7 +1276,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("sys_text_tiles"), val: cfg.textTiles ? "on" : "off", act: function () { cfg.textTiles = !cfg.textTiles; saveCfg(); renderAll(); } },
       { label: tr("sys_all"), val: "›", act: openAllSettingsModal },
       { label: tr("sys_about"), val: APP_VERSION + " ›", act: openAboutModal }
-    ];
+    ].filter(function (row) { return !!row; });
   }
 
   function openModal(title, sub, items, withInput, onInput, opts) {
@@ -3848,6 +3849,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     setSimulatedPc: function (v) { cfg.pcSimulated = v; saveCfg(); pollPcStatus(); renderAll(); },
     connectPc: function (host) { cfg.pcSimulated = false; cfg.pcHost = host; saveCfg(); return pollPcStatus().then(function (s) { renderAll(); return s; }); }
   };
+
+  // Optional remote setup uses this same modal, focus and theme system.
+  if (window.OmarchyRemote) OmarchyRemote.attach({state:state,modal:openModal,close:closeModal,toast:showToast});
 
   // Boot
   fitStage();
