@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-### Cinemarchy, the new hub (draft)
+### Cinemarchy, the new hub
 
 - **LG and Samsung get the real Cinemarchy**: three panes in Omarchy style, in your theme's colours, with a built-in player (resume where you stopped), your IPTV playlists with groups and favourites, an Up-next queue, @dhh37, the streaming apps, X, the TV inputs and four open movies. Fast with huge playlists, light on old TVs.
 - **Campfire, a theme made for OmaFire**: night lake, moonlight and fire colours, with the campfire burning as its wallpaper; also as an Omarchy PC theme (`omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme`), so TV and PC match.
@@ -13,7 +13,7 @@
 - **Things no other TV hub has**: ASCII mode (the film as live, theme-coloured ASCII), VHS/CRT tape mode, a surprise channel with a channel-change burst, an Omarchy-style sleep timer.
 - **Android Cinemarchy, honest and faster**: real progress bars and resume points instead of made-up ones, demo films labelled as demo, a list that stays fast with thousands of channels, the PC's folders, X, and its words in 23 languages.
 
-### OmarchyTV Arcade: five games of our own (draft)
+### OmarchyTV Arcade: five games of our own
 
 - **OmarchyTV Arcade** on Android TV, LG and Samsung: a games room with a light-bulb marquee and cartridges (insert one and the channel changes), high scores, pause, in the active theme's colours and inside the Retro CRT set when that plugin is on. Arrows, OK and Back only, so nothing leaves the launcher. All text-mode and light, for old TVs too.
 - **V-HOLD**: run through a terminal while the old TV falls apart: the picture rolls, leans, loses its colour or collapses into a line. Turn the blinking knob with ◀ ▶ until it locks, slap the set with OK OK. The more is broken, the more each metre is worth.
@@ -25,19 +25,19 @@
 - **Share your record as a challenge**: at game over a QR code sits next to your score; point a phone at it and X opens with the post already written in the TV's language ("000804 at V-HOLD on #OmarchyTV. Can you beat me?"). You decide whether to send it; the TV never posts anything.
 - **OmarchyTV QR code** (setting): small and in the theme's colours in the Live screensaver (default), optionally on the boot screen too; it opens the project's page. Never on the OmaFire wallpaper.
 
-### Sounds: OmaFire and the boot screen (draft)
+### Sounds: OmaFire and the boot screen
 
 - **OmaFire sound** (Wallpaper settings, off by default: with it off you get only the animated wallpaper): Wes Grimes' own sounds and mixing, as in his plugin: the embers, crackle and roar loops follow the fire's heat, a log and a stoke land when the fire is fed, and crickets and frogs call across the lake. Only while Home is on screen.
 - **Boot sound** (Launcher settings, on by default, quiet): the CRT's power-on thump and degauss hum, the POST beep, the memory count, a disk seek per systemd line, keystrokes as `omarchy-tv` is typed, and a whoosh with a soft chord when the wordmark appears. Synthesised live, no audio files; the same cues on Android TV, LG and Samsung.
 
-### Live screensaver, Retro CRT set, liftoff in every language (draft)
+### Live screensaver, Retro CRT set, liftoff in every language
 
 - **Live screensaver** (Screensaver settings, off by default): a screensaver of its own, no art under it. Big glowing block clock, an animated ASCII sky (rain falls, the sun's rays turn, snow, storms), the PC's notifications, X mentions, GitHub, the PC's CPU/RAM bars and a turning ASCII radar, a ticker and a status line, on dark glass panels so everything stays readable. Behind them: theme-coloured glyph rain, a synthwave grid rolling in at the bottom and a refresh sweep. Every new notification or mention crashes in as an INCOMING banner across the bottom (shake + decrypt, never over the boxes), then settles in its box. Light: half-resolution backdrop, redraws only what changed, pauses when hidden, drops the rain on slow TVs by itself; drifts a few pixels a minute against burn-in.
 - **Omastorm radar in the Live screensaver** (its own switch, off): every 90 s the PC takes a small snapshot of the real Omastorm window (it opens it if needed) and the TV shows it in the weather box.
 - **Retro CRT, now unmistakable:** Home shrinks into a CRT set: dark body, a glowing rim in the theme's accent, an OMARCHY TV badge with a power LED, deeper scanlines, phosphor mask, vignette and a glass highlight; "strong" adds phosphor bloom and colour fringing (and the curved tube on Android 13+).
 - **Liftoff in the TV's language:** title, the update's stages (downloading, checking, signing, installing, starting) and the exit code, in all 23 languages.
 
-### Retro CRT, OmaFire wallpapers, Omastorm on the TV, livelier Living screensaver (draft)
+### Retro CRT, OmaFire wallpapers, Omastorm on the TV, livelier Living screensaver
 
 - **Retro CRT plugin** (Plugins: off / light / strong): scanlines, phosphor mask, vignette, a gentle flicker and a thin rounded bezel in the active theme's colours (it follows every theme change). "strong" on Android 13+ also curves the picture like a tube.
 - **OmaFire animated wallpapers** (Wallpaper: "OmaFire · campfire" / "OmaFire · embers"): Wes Grimes' OmaFire campsite (MIT) exactly as in his Omarchy bar plugin, the fire and the moonlit lake, full screen; kept burning (campfire) or low (embers). Runs only while Home is on screen.

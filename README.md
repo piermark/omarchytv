@@ -75,7 +75,7 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ## Coming in the next version (in testing)
 
-Everything below is in testing on the `feature/omarchytv-v214` branch: new features are off by default unless noted.
+Everything below is now on `main`, coming in 2.14.0-beta (not released yet): new features are off by default unless noted.
 Full user guide: [docs/OMARCHYTV-2.14-GUIDE.md](docs/OMARCHYTV-2.14-GUIDE.md).
 
 - **Boot screen**: CRT power-on, BIOS, systemd as Arch prints it, the OMARCHY TV wordmark, with sound (on by default; any key skips).
