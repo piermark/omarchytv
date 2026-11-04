@@ -68,6 +68,33 @@ connected / screensaver / offline / unpaired) for custom bar modules. Exit code 
 Widget keyboard shortcuts while its panel is open: `H` home, `B` back, `P` play/pause, `+`/`-` volume,
 `M` mute, `A` apps, `T` sync theme, `R` rescan.
 
+### Run it as a service
+
+The bar widget starts `omarchy-link session` itself and the session ends when that process's stdin closes. Under
+systemd there is no widget, so pass `--daemon`: the session then ignores stdin EOF and runs until SIGTERM, while
+still reading JSON lines from stdin and writing state on stdout.
+
+```ini
+# ~/.config/systemd/user/omarchy-link.service
+[Unit]
+Description=Omarchy Link session (OmarchyTV)
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/omarchy-link session --daemon
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
+```
+
+```bash
+systemctl --user daemon-reload && systemctl --user enable --now omarchy-link.service
+journalctl --user -u omarchy-link.service -f     # the same JSON lines the widget consumes
+```
+
 ## Configure (all optional)
 
 Files live in `~/.config/omarchy-link/`. See `examples/`.

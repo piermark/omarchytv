@@ -690,7 +690,7 @@ def cmd_x(a, cfg):
 
 
 def cmd_session(a, cfg):
-    return Session().run()
+    return Session().run(daemon=getattr(a, "daemon", False))
 
 
 def main(argv=None) -> int:
@@ -760,7 +760,13 @@ def main(argv=None) -> int:
     s.add_argument("id")
     s.add_argument("--confirmed", action="store_true")
     s.set_defaults(fn=cmd_action)
-    sub.add_parser("session", help="JSON-lines session for the bar widget").set_defaults(fn=cmd_session)
+    s = sub.add_parser("session", help="JSON-lines session for the bar widget (also runs as a service)",
+                       description="Read JSON lines on stdin, write state on stdout. The bar widget's process "
+                                   "owns stdin: when it closes the session ends. For a service (systemd, "
+                                   "/dev/null) use --daemon, which ignores EOF and keeps the session up.")
+    s.add_argument("--daemon", action="store_true",
+                   help="ignore stdin EOF: run until SIGTERM (for systemd, or stdin from /dev/null)")
+    s.set_defaults(fn=cmd_session)
     s = sub.add_parser("cast", help="send a link, file, clipboard, text or the screen to the TV",
                        description="Send to the TV. Routes: Google Cast via catt (any Cast TV) first, the OmarchyTV "
                                    "Link channel for text, screen and as fallback. See docs/CAST.md.")
