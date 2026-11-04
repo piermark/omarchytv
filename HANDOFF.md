@@ -602,5 +602,8 @@ Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in camp
   (on Omarchy `ls` is eza: scripts are fine, typed commands need `command ls`). After a reboot it starts by itself through XDG autostart
   (`app-campfire\x2dlive@autostart.service` active, mpvpaper running). That Omarchy uses a Lua Hyprland config
   (`~/.config/hypr/hyprland.lua`, `autostart.lua`, ...), so check the theme's `hyprland.conf` border there.
-  Not yet: the hook firing on a theme change. Also on a real Omarchy PC: (templates, hyprland.conf override,
+  Theme change: switching away stopped it, but switching back did not start it (a background child of the hook
+  did not survive omarchy-theme-set): the hook now starts mpvpaper as its own user unit (`systemd-run --user
+  --unit=campfire-live`, fallback setsid), and stops that unit first. Re-tested on Marco's PC: tokyo-night stops it,
+  campfire starts it again; window border gradient and the orange Yaru icons show. Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.

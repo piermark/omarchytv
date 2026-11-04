@@ -18,6 +18,7 @@ export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
 export WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE
 log="${XDG_CACHE_HOME:-$HOME/.cache}/campfire-live.log"
 mkdir -p "$(dirname "$log")"
+systemctl --user stop campfire-live.service 2>/dev/null
 pkill -x mpvpaper 2>/dev/null
 [[ $theme == campfire && -f $video ]] || exit 0
 command -v mpvpaper >/dev/null || { echo "campfire-live: mpvpaper is not installed (extras/install-live)" >&2; exit 0; }
@@ -30,6 +31,14 @@ if (( login )); then   # the desktop is still coming up: let Omarchy put its sti
   sleep 4
   exec mpvpaper -o "$opts" '*' "$video" >>"$log" 2>&1 < /dev/null
 fi
-( sleep 2; exec mpvpaper -o "$opts" '*' "$video" ) >>"$log" 2>&1 < /dev/null &
+# From a theme change: run it as its own user unit, so it outlives omarchy-theme-set and whatever ran the hook.
+if command -v systemd-run >/dev/null && systemctl --user show-environment >/dev/null 2>&1; then
+  systemd-run --user --quiet --collect --unit=campfire-live \
+    --setenv=XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" --setenv=WAYLAND_DISPLAY="$WAYLAND_DISPLAY" \
+    --setenv=HYPRLAND_INSTANCE_SIGNATURE="$HYPRLAND_INSTANCE_SIGNATURE" \
+    -p StandardOutput="append:$log" -p StandardError="append:$log" \
+    /bin/bash -c 'sleep 2; exec mpvpaper -o "$0" "*" "$1"' "$opts" "$video" && exit 0
+fi
+( sleep 2; exec setsid mpvpaper -o "$opts" '*' "$video" ) >>"$log" 2>&1 < /dev/null &
 disown 2>/dev/null
 exit 0
