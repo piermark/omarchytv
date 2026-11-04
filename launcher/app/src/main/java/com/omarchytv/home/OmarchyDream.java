@@ -18,7 +18,7 @@ public class OmarchyDream extends DreamService {
         super.onAttachedToWindow();
         setInteractive(false);   // any key wakes the TV back to where it was
         setFullscreen(true);
-        view = new TteSaver(this);   // v2.9: identical to omarchy-screensaver (tte.js, 37 effects), black, no clock
+        view = new TteSaver(this);   // v2.9: identical to omarchy-screensaver (tte.js, 37 effects), black
         view.window = getWindow();
         setContentView(view.view());
     }

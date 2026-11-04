@@ -283,7 +283,7 @@ final class TteSaver {
 
     private AsciiSaverView newNative() {
         AsciiSaverView v = new AsciiSaverView(ctx, null);
-        v.setShowClock(false);
+        v.setShowClock(LauncherConfig.get(ctx).screensaverClock);   // #83: the Screensaver > Clock row does something
         v.setWidthFraction(0.65f);
         return v;
     }
