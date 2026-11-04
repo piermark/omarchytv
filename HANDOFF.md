@@ -583,8 +583,8 @@ New stock theme **campfire** on Android TV, LG and Samsung, and the same theme a
 - The PC video `extras/campfire-loop.mp4` is **not** in this repo (18 MB, the TVs never use it: they draw the fire
   live): it is only in the theme repo; `.gitignore` keeps it out, `themes/README.md` says so.
 - **PC theme**: `themes/omarchy-campfire-theme/` (colors.toml, hyprland.conf border, btop.theme, icons.theme,
-  backgrounds/01-campfire.png, preview.png, README, LICENSE with Wes Grimes' MIT notice). It is meant to be published
-  as its own repo **piermark/omarchy-campfire-theme** (Marco creates it) so that
+  backgrounds/01-campfire.png, preview.png, README, LICENSE with Wes Grimes' MIT notice). It is published on its own
+  as **piermark/omarchy-campfire-theme** (separately from this package, with the video) so that
   `omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme` works; by hand: copy the folder to
   `~/.config/omarchy/themes/campfire/` and `omarchy-theme-set campfire`. Same name on both sides, so the theme sync
   (C) works both ways. colors.toml resolves (omarchy-link `resolve_palette`) to the TV palette.
