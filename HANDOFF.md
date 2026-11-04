@@ -591,7 +591,7 @@ New stock theme **campfire** on Android TV, LG and Samsung, and the same theme a
   first; audio = his loops with sound.js gains × 0.5, stokes, night.js calls), `extras/campfire-live` (theme-set
   hook in `~/.config/omarchy/hooks/theme-set.d/`, like omarchy-link's; with no argument reads
   `~/.local/state/omarchy/current/theme.name`; starts mpvpaper 2 s later so it is over Omarchy's still) and
-  `extras/install-live` (mpvpaper via yay, the hook, an `exec-once` line in `~/.config/hypr/autostart.conf`,
+  `extras/install-live` (mpvpaper via yay, the hook, an XDG autostart entry `~/.config/autostart/campfire-live.desktop` (`campfire-live --login`: waits 4 s, then mpvpaper in the foreground of that unit; uwsm starts it at every login. On Marco's PC `~/.config/hypr/hyprland.conf` does not exist, so an `exec-once` in `~/.config/hypr/autostart.conf` never ran; install-live now removes that old line),
   `--sound`, `--mute`, `--remove`). The hook finds the Wayland session by itself (`WAYLAND_DISPLAY`, `HYPRLAND_INSTANCE_SIGNATURE` from `$XDG_RUNTIME_DIR`) so it also works from SSH or omarchy-link, and logs mpvpaper to `~/.cache/campfire-live.log`. Tested in a fake HOME with a fake mpvpaper (start, sound, idempotent, stop on
   another theme, remove).
 Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in campfire), all tests.
@@ -600,5 +600,5 @@ Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in camp
   step: no comments there). mpvpaper plays the loop over Omarchy's still with sound (VA-API
   hardware decoding, PipeWire), started over SSH with the session's WAYLAND_DISPLAY / HYPRLAND_INSTANCE_SIGNATURE
   (on Omarchy `ls` is eza: scripts are fine, typed commands need `command ls`). Not yet: the hook firing on a theme
-  change, the login start. Also on a real Omarchy PC: (templates, hyprland.conf override,
+  change, the login start through XDG autostart. Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.

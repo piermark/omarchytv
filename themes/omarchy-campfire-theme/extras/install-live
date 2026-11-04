@@ -9,15 +9,15 @@ set -e
 here="$(cd "$(dirname "$0")" && pwd)"
 hook_dir="$HOME/.config/omarchy/hooks/theme-set.d"
 hook="$hook_dir/campfire-live"
-autostart="$HOME/.config/hypr/autostart.conf"
-line="exec-once = $hook"
+autostart="$HOME/.config/hypr/autostart.conf"   # older install-live used it: cleaned up
+desktop="$HOME/.config/autostart/campfire-live.desktop"   # XDG autostart: started by uwsm at every login
 conf="$HOME/.config/omarchy/campfire-live.conf"
 
 case "${1:-}" in
   --remove)
     pkill -x mpvpaper 2>/dev/null || true
-    rm -f "$hook" "$conf"
-    [[ -f $autostart ]] && sed -i "\|$hook|d" "$autostart"
+    rm -f "$hook" "$conf" "$desktop"
+    [[ -f $autostart ]] && sed -i -e "\|$hook|d" -e '/^# Campfire theme: the live fire/d' "$autostart"
     echo "Campfire live wallpaper removed (mpvpaper is still installed: yay -R mpvpaper to remove it)."
     exit 0 ;;
   --sound) echo "SOUND=1" > "$conf" ;;
@@ -33,8 +33,18 @@ if ! command -v mpvpaper >/dev/null; then
 fi
 mkdir -p "$hook_dir"
 install -m 755 "$here/campfire-live" "$hook"
-mkdir -p "$(dirname "$autostart")"; touch "$autostart"
-grep -qF "$hook" "$autostart" || printf '\n# Campfire theme: the live fire (extras/install-live --remove to undo)\n%s\n' "$line" >> "$autostart"
+[[ -f $autostart ]] && sed -i -e "\|$hook|d" -e '/^# Campfire theme: the live fire/d' "$autostart"
+mkdir -p "$(dirname "$desktop")"
+cat > "$desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Campfire live wallpaper
+Comment=The campfire theme's fire behind the desktop (extras/install-live --remove to undo)
+Exec=$hook --login
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+EOF
 "$hook"
 echo "Done: with the campfire theme the fire burns behind your desktop, from every login."
 [[ -f $conf ]] && grep -q "SOUND=1" "$conf" && echo "Sound on (install-live --mute to turn it off)." || echo "Silent (install-live --sound for the fire and the night)."
