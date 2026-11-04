@@ -586,8 +586,17 @@ New stock theme **campfire** on Android TV, LG and Samsung, and the same theme a
   `omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme` works; by hand: copy the folder to
   `~/.config/omarchy/themes/campfire/` and `omarchy-theme-set campfire`. Same name on both sides, so the theme sync
   (C) works both ways. colors.toml resolves (omarchy-link `resolve_palette`) to the TV palette.
-- Sound on the PC: a theme can't play sound; the README points to Wes Grimes' OmaFire for the live fire with sound.
+- Live fire on the PC: Omarchy backgrounds are stills, so the theme ships `extras/campfire-loop.mp4` (60 s, rendered
+  in node with OmaFire's fire.js in campfire mode, deterministic, 360x202 ×5 nearest, last second cross-faded into the
+  first; audio = his loops with sound.js gains × 0.5, stokes, night.js calls), `extras/campfire-live` (theme-set
+  hook in `~/.config/omarchy/hooks/theme-set.d/`, like omarchy-link's; with no argument reads
+  `~/.local/state/omarchy/current/theme.name`; starts mpvpaper 2 s later so it is over Omarchy's still) and
+  `extras/install-live` (mpvpaper via yay, the hook, an `exec-once` line in `~/.config/hypr/autostart.conf`,
+  `--sound`, `--mute`, `--remove`). Tested in a fake HOME with a fake mpvpaper (start, sound, idempotent, stop on
+  another theme, remove).
 Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in campfire), all tests.
 ## NOT verified (X)
-- `omarchy-theme-install` / `omarchy-theme-set campfire` on a real Omarchy PC (templates, hyprland.conf override,
+- Marco's PC: `omarchy-theme-set campfire` works (a first version with comments in colors.toml broke Omarchy's jq
+  step: no comments there). Not yet: mpvpaper over Omarchy's still, the hook firing on a theme change, the login
+  start, CPU use. Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.

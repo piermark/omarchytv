@@ -1,0 +1,40 @@
+#!/bin/bash
+# Makes the campfire theme burn on the Omarchy PC: installs mpvpaper, the theme-set hook and the login start.
+# (c) 2026 Marco Porro (x.com/MarcoPorro), MIT.
+#   install-live            set it up (silent fire)
+#   install-live --sound    set it up with sound (the fire and the night, volume 40)
+#   install-live --mute     keep it, without sound
+#   install-live --remove   undo everything (the theme itself stays)
+set -e
+here="$(cd "$(dirname "$0")" && pwd)"
+hook_dir="$HOME/.config/omarchy/hooks/theme-set.d"
+hook="$hook_dir/campfire-live"
+autostart="$HOME/.config/hypr/autostart.conf"
+line="exec-once = $hook"
+conf="$HOME/.config/omarchy/campfire-live.conf"
+
+case "${1:-}" in
+  --remove)
+    pkill -x mpvpaper 2>/dev/null || true
+    rm -f "$hook" "$conf"
+    [[ -f $autostart ]] && sed -i "\|$hook|d" "$autostart"
+    echo "Campfire live wallpaper removed (mpvpaper is still installed: yay -R mpvpaper to remove it)."
+    exit 0 ;;
+  --sound) echo "SOUND=1" > "$conf" ;;
+  --mute) echo "SOUND=0" > "$conf" ;;
+  "") ;;
+  *) echo "usage: install-live [--sound|--mute|--remove]"; exit 1 ;;
+esac
+
+if ! command -v mpvpaper >/dev/null; then
+  echo "Installing mpvpaper..."
+  if command -v yay >/dev/null; then yay -S --needed --noconfirm mpvpaper
+  else echo "Install mpvpaper (AUR) first, then run this again."; exit 1; fi
+fi
+mkdir -p "$hook_dir"
+install -m 755 "$here/campfire-live" "$hook"
+mkdir -p "$(dirname "$autostart")"; touch "$autostart"
+grep -qF "$hook" "$autostart" || printf '\n# Campfire theme: the live fire (extras/install-live --remove to undo)\n%s\n' "$line" >> "$autostart"
+"$hook"
+echo "Done: with the campfire theme the fire burns behind your desktop, from every login."
+[[ -f $conf ]] && grep -q "SOUND=1" "$conf" && echo "Sound on (install-live --mute to turn it off)." || echo "Silent (install-live --sound for the fire and the night)."

@@ -100,8 +100,14 @@ The same theme exists for the **Omarchy PC**, so TV and PC match:
    (by hand: copy the theme folder to `~/.config/omarchy/themes/campfire/`, then `omarchy-theme-set campfire`).
 2. With omarchy-link paired, pick **campfire** on the PC and the TV follows; with **Also change the PC theme** on,
    picking it on the TV switches the PC too.
-3. The PC theme sets colours, the window border and a still wallpaper (a frame of the fire). For the burning fire
-   with its sound on the PC, install Wes Grimes' OmaFire: https://github.com/wesleygrimes/omafire
+3. Omarchy wallpapers are still images, so for the **fire burning on the PC** run once:
+   ```
+   ~/.config/omarchy/themes/campfire/extras/install-live
+   ```
+   It installs `mpvpaper` and plays a 60-second loop of the fire behind the windows, at every login, while the theme
+   is campfire (another theme stops it). `--sound` adds the crackle and the night, `--mute` takes it away,
+   `--remove` undoes it all.
+   Run it from a terminal on the PC itself, not over SSH (Hyprland is not reachable from an SSH session).
 
 ## 11. Omastorm from the PC (Android TV)
 
