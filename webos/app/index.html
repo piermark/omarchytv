@@ -135,6 +135,23 @@ html, body {
   margin-right: 10px;
 }
 
+/* Center a modestly inset underline on the logo without changing its hit area. */
+.bar-btn.logo-btn.focused {
+  border-bottom-color: transparent;
+}
+
+.bar-btn.logo-btn.focused::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 8px;
+  bottom: -3px;
+  height: 3px;
+  color: var(--t-accent);
+  background: var(--t-focus, currentColor);
+  pointer-events: none;
+}
+
 #bar-clock {
   position: absolute;
   top: 50%;
@@ -596,10 +613,11 @@ html, body {
 }
 
 #modal-box {
-  width: 760px;
-  max-height: 860px;
+  width: 560px;
+  max-height: 840px;
   background: var(--popup-bg);
-  padding: 26px 30px;
+  border: 2px solid var(--t-accent);
+  padding: 18px;
   display: flex;
   flex-direction: column;
 }
@@ -608,14 +626,18 @@ html, body {
   font-size: calc(24px * var(--ts, 1));
   font-weight: 700;
   color: var(--t-accent);
+  padding: 8px 12px 16px;
+  border-bottom: 1px solid var(--t-muted);
   margin-bottom: 12px;
 }
 
 #modal-sub {
   font-size: calc(18px * var(--ts, 1));
   color: var(--t-fg-dim);
-  margin-bottom: 14px;
+  margin: 0 12px 14px;
   white-space: pre-line;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
 }
 
 #modal-input-wrap {
@@ -638,24 +660,44 @@ html, body {
   display: flex;
   flex-direction: column;
   overflow-y: auto;
-  max-height: 620px;
+  max-height: 600px;
 }
 
+/* The same launcher rows frame settings and submenus, not just the root menu. */
 .modal-item {
   display: flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: space-between;
-  padding: 11px 16px;
-  font-size: calc(21px * var(--ts, 1));
+  min-height: 52px;
+  padding: 10px 12px;
+  margin-bottom: 4px;
+  font-size: calc(22px * var(--ts, 1));
   color: var(--t-fg);
   border-left: 4px solid transparent;
   cursor: pointer;
 }
 
+.modal-item .mi-label {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+}
+
+.modal-item .mi-icon {
+  display: inline-block;
+  width: 34px;
+  flex-shrink: 0;
+  color: var(--t-accent);
+}
+
 .modal-item .mi-right {
-  color: var(--t-cyan);
-  font-size: calc(19px * var(--ts, 1));
+  color: var(--t-fg-dim);
+  font-size: calc(18px * var(--ts, 1));
+  margin-left: 18px;
+  max-width: 42%;
+  text-align: right;
+  word-wrap: break-word;
 }
 
 .modal-item.focused {
@@ -695,6 +737,13 @@ html, body {
 #saver-overlay.active {
   display: block;
 }
+
+/* Keep menu overrides in this sheet for the legacy webOS CSS fallback. */
+#modal-list .modal-item { border-left:0; }
+#modal-list .modal-item.focused { background:var(--t-selection-bg, var(--t-accent)); color:var(--t-selection-fg, var(--t-bg)); }
+#modal-list .focused .mi-right, #modal-list .focused .mi-icon { color:inherit; }
+#modal-hint { padding:14px 12px 4px; color:var(--t-fg-dim); font-size:calc(16px * var(--ts, 1)); border-top:1px solid var(--t-muted); margin-top:10px; }
+#modal-box.wide { width:880px; }
 
 #saver-frame {
   width: 100%;
@@ -1019,7 +1068,8 @@ body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rg
       <div id="modal-input-wrap">
         <input id="modal-input" type="text" autocomplete="off" spellcheck="false" />
       </div>
-      <div id="modal-list"></div>
+      <div id="modal-list" role="listbox" aria-label="Menu"></div>
+      <div id="modal-hint">↑↓ select   OK open   Back close</div>
     </div>
   </div>
 

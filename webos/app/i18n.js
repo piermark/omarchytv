@@ -6,6 +6,7 @@
     "pt-PT": {
       "name": "Português (Portugal)",
       "strings": {
+        "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Configuração", "menu_terminal": "Terminal", "menu_hint": "↑↓ selecionar   OK abrir   Retroceder fechar",
         "tip_cinemarchy": "Cinemarchy (Multimédia e TV)",
         "tip_wifi": "Wi-Fi e rede",
         "tip_bt": "Bluetooth",
@@ -224,6 +225,7 @@
     "pt-BR": {
       "name": "Português (Brasil)",
       "strings": {
+        "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Configuração", "menu_terminal": "Terminal", "menu_hint": "↑↓ selecionar   OK abrir   Voltar fechar",
         "tip_cinemarchy": "Cinemarchy (Mídia e TV)",
         "tip_wifi": "Wi-Fi e rede",
         "tip_bt": "Bluetooth",
@@ -442,6 +444,7 @@
     "es": {
       "name": "Español",
       "strings": {
+        "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Ajustes", "menu_terminal": "Terminal", "menu_hint": "↑↓ seleccionar   OK abrir   Atrás cerrar",
         "tip_cinemarchy": "Cinemarchy (Multimedia y TV)",
         "tip_wifi": "Wi-Fi y red",
         "tip_bt": "Bluetooth",
@@ -660,6 +663,7 @@
     "fr": {
       "name": "Français",
       "strings": {
+        "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Réglages", "menu_terminal": "Terminal", "menu_hint": "↑↓ sélectionner   OK ouvrir   Retour fermer",
         "tip_cinemarchy": "Cinemarchy (Médias & TV)",
         "tip_wifi": "Wi-Fi & réseau",
         "tip_bt": "Bluetooth",
@@ -878,6 +882,7 @@
     "nl": {
       "name": "Nederlands",
       "strings": {
+        "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Instellingen", "menu_terminal": "Terminal", "menu_hint": "↑↓ selecteren   OK openen   Terug sluiten",
         "tip_cinemarchy": "Cinemarchy (media & tv)",
         "tip_wifi": "Wi-Fi & netwerk",
         "tip_bt": "Bluetooth",
@@ -1096,6 +1101,7 @@
     "pl": {
       "name": "Polski",
       "strings": {
+        "menu_plugins": "Wtyczki", "menu_apps": "Aplikacje", "menu_setup": "Ustawienia", "menu_terminal": "Terminal", "menu_hint": "↑↓ wybierz   OK otwórz   Wstecz zamknij",
         "tip_cinemarchy": "Cinemarchy (multimedia i TV)",
         "tip_wifi": "Wi-Fi i sieć",
         "tip_bt": "Bluetooth",
@@ -1314,6 +1320,7 @@
     "sv": {
       "name": "Svenska",
       "strings": {
+        "menu_plugins": "Plugin", "menu_apps": "Appar", "menu_setup": "Inställningar", "menu_terminal": "Terminal", "menu_hint": "↑↓ välj   OK öppna   Bakåt stäng",
         "tip_cinemarchy": "Cinemarchy (media & tv)",
         "tip_wifi": "Wi-Fi & nätverk",
         "tip_bt": "Bluetooth",
@@ -1532,6 +1539,7 @@
     "da": {
       "name": "Dansk",
       "strings": {
+        "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Opsætning", "menu_terminal": "Terminal", "menu_hint": "↑↓ vælg   OK åbn   Tilbage luk",
         "tip_cinemarchy": "Cinemarchy (medier & tv)",
         "tip_wifi": "Wi-Fi & netværk",
         "tip_bt": "Bluetooth",
@@ -1750,6 +1758,7 @@
     "cs": {
       "name": "Čeština",
       "strings": {
+        "menu_plugins": "Pluginy", "menu_apps": "Aplikace", "menu_setup": "Nastavení", "menu_terminal": "Terminál", "menu_hint": "↑↓ vybrat   OK otevřít   Zpět zavřít",
         "tip_cinemarchy": "Cinemarchy (média a TV)",
         "tip_wifi": "Wi-Fi a síť",
         "tip_bt": "Bluetooth",
@@ -1968,6 +1977,7 @@
     "ro": {
       "name": "Română",
       "strings": {
+        "menu_plugins": "Module", "menu_apps": "Aplicații", "menu_setup": "Setări", "menu_terminal": "Terminal", "menu_hint": "↑↓ selectează   OK deschide   Înapoi închide",
         "tip_cinemarchy": "Cinemarchy (media și TV)",
         "tip_wifi": "Wi-Fi și rețea",
         "tip_bt": "Bluetooth",
@@ -2186,6 +2196,7 @@
     "el": {
       "name": "Ελληνικά",
       "strings": {
+        "menu_plugins": "Πρόσθετα", "menu_apps": "Εφαρμογές", "menu_setup": "Ρυθμίσεις", "menu_terminal": "Τερματικό", "menu_hint": "↑↓ επιλογή   OK άνοιγμα   Πίσω κλείσιμο",
         "tip_cinemarchy": "Cinemarchy (πολυμέσα & TV)",
         "tip_wifi": "Wi-Fi & δίκτυο",
         "tip_bt": "Bluetooth",
@@ -2404,6 +2415,7 @@
     "ru": {
       "name": "Русский",
       "strings": {
+        "menu_plugins": "Плагины", "menu_apps": "Приложения", "menu_setup": "Настройки", "menu_terminal": "Терминал", "menu_hint": "↑↓ выбор   OK открыть   Назад закрыть",
         "tip_cinemarchy": "Cinemarchy (медиа и ТВ)",
         "tip_wifi": "Wi-Fi и сеть",
         "tip_bt": "Bluetooth",
@@ -2622,6 +2634,7 @@
     "zh-CN": {
       "name": "简体中文",
       "strings": {
+        "menu_plugins": "插件", "menu_apps": "应用", "menu_setup": "设置", "menu_terminal": "终端", "menu_hint": "↑↓ 选择   OK 打开   返回 关闭",
         "tip_cinemarchy": "Cinemarchy（媒体和电视）",
         "tip_wifi": "Wi-Fi 和网络",
         "tip_bt": "蓝牙",
@@ -2840,6 +2853,7 @@
     "ja": {
       "name": "日本語",
       "strings": {
+        "menu_plugins": "プラグイン", "menu_apps": "アプリ", "menu_setup": "設定", "menu_terminal": "ターミナル", "menu_hint": "↑↓ 選択   OK 開く   戻る 閉じる",
         "tip_cinemarchy": "Cinemarchy（メディアとテレビ）",
         "tip_wifi": "Wi-Fi とネットワーク",
         "tip_bt": "Bluetooth",
@@ -3058,6 +3072,7 @@
     "ar": {
       "name": "العربية",
       "strings": {
+        "menu_plugins": "الإضافات", "menu_apps": "التطبيقات", "menu_setup": "الإعداد", "menu_terminal": "الطرفية", "menu_hint": "↑↓ اختيار   OK فتح   رجوع إغلاق",
         "tip_cinemarchy": "Cinemarchy (الوسائط والتلفاز)",
         "tip_wifi": "Wi-Fi والشبكة",
         "tip_bt": "Bluetooth",
@@ -3276,6 +3291,7 @@
     "tr": {
       "name": "Türkçe",
       "strings": {
+        "menu_plugins": "Eklentiler", "menu_apps": "Uygulamalar", "menu_setup": "Kurulum", "menu_terminal": "Terminal", "menu_hint": "↑↓ seç   OK aç   Geri kapat",
         "tip_cinemarchy": "Cinemarchy (Medya ve TV)",
         "tip_wifi": "Wi-Fi ve ağ",
         "tip_bt": "Bluetooth",
@@ -3494,6 +3510,7 @@
     "uk": {
       "name": "Українська",
       "strings": {
+        "menu_plugins": "Плагіни", "menu_apps": "Застосунки", "menu_setup": "Налаштування", "menu_terminal": "Термінал", "menu_hint": "↑↓ вибір   OK відкрити   Назад закрити",
         "tip_cinemarchy": "Cinemarchy (медіа і ТБ)",
         "tip_wifi": "Wi-Fi і мережа",
         "tip_bt": "Bluetooth",
@@ -3712,6 +3729,7 @@
     "hu": {
       "name": "Magyar",
       "strings": {
+        "menu_plugins": "Bővítmények", "menu_apps": "Alkalmazások", "menu_setup": "Beállítások", "menu_terminal": "Terminál", "menu_hint": "↑↓ választás   OK megnyitás   Vissza bezárás",
         "tip_cinemarchy": "Cinemarchy (média és tévé)",
         "tip_wifi": "Wi-Fi és hálózat",
         "tip_bt": "Bluetooth",
@@ -3930,6 +3948,7 @@
     "fi": {
       "name": "Suomi",
       "strings": {
+        "menu_plugins": "Liitännäiset", "menu_apps": "Sovellukset", "menu_setup": "Asetukset", "menu_terminal": "Pääte", "menu_hint": "↑↓ valitse   OK avaa   Takaisin sulje",
         "tip_cinemarchy": "Cinemarchy (media ja tv)",
         "tip_wifi": "Wi-Fi ja verkko",
         "tip_bt": "Bluetooth",
@@ -4148,6 +4167,7 @@
     "nb": {
       "name": "Norsk bokmål",
       "strings": {
+        "menu_plugins": "Tillegg", "menu_apps": "Apper", "menu_setup": "Oppsett", "menu_terminal": "Terminal", "menu_hint": "↑↓ velg   OK åpne   Tilbake lukk",
         "tip_cinemarchy": "Cinemarchy (medier og TV)",
         "tip_wifi": "Wi-Fi og nettverk",
         "tip_bt": "Bluetooth",
