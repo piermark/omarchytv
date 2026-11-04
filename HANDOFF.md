@@ -599,6 +599,8 @@ Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in camp
 - Marco's PC: `omarchy-theme-set campfire` works (a first version with comments in colors.toml broke Omarchy's jq
   step: no comments there). mpvpaper plays the loop over Omarchy's still with sound (VA-API
   hardware decoding, PipeWire), started over SSH with the session's WAYLAND_DISPLAY / HYPRLAND_INSTANCE_SIGNATURE
-  (on Omarchy `ls` is eza: scripts are fine, typed commands need `command ls`). Not yet: the hook firing on a theme
-  change, the login start through XDG autostart. Also on a real Omarchy PC: (templates, hyprland.conf override,
+  (on Omarchy `ls` is eza: scripts are fine, typed commands need `command ls`). After a reboot it starts by itself through XDG autostart
+  (`app-campfire\x2dlive@autostart.service` active, mpvpaper running). That Omarchy uses a Lua Hyprland config
+  (`~/.config/hypr/hyprland.lua`, `autostart.lua`, ...), so check the theme's `hyprland.conf` border there.
+  Not yet: the hook firing on a theme change. Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.

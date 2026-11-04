@@ -21,8 +21,9 @@ mkdir -p "$(dirname "$log")"
 pkill -x mpvpaper 2>/dev/null
 [[ $theme == campfire && -f $video ]] || exit 0
 command -v mpvpaper >/dev/null || { echo "campfire-live: mpvpaper is not installed (extras/install-live)" >&2; exit 0; }
-opts="loop no-audio"
-[[ $SOUND == 1 ]] && opts="loop volume=$VOLUME"
+opts="loop no-audio really-quiet"   # really-quiet: no status line every frame in the log
+[[ $SOUND == 1 ]] && opts="loop volume=$VOLUME really-quiet"
+: > "$log"   # one run per log
 # Start after Omarchy has put its still background up, so the fire is drawn over it.
 [[ -n $WAYLAND_DISPLAY ]] || { echo "campfire-live: no Wayland session found (run it on the PC)" | tee -a "$log" >&2; exit 0; }
 if (( login )); then   # the desktop is still coming up: let Omarchy put its still background up first
