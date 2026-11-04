@@ -1,9 +1,9 @@
 # Validation — 2026-11-03
 
 Hardware: LG OLED77C5AUA, webOS 10.3.1-3007, Node 16.20.2.
-Backend 1.1.1, Home integration release `2.13.11-remotes3`.
+Backend 1.1.2, Home integration release `2.13.11-remotes3`.
 
-- 106 upstream webOS tests passed (`node --test webos/tests/*.test.js`).
+- 108 upstream webOS tests passed (`node --test webos/tests/*.test.js`).
 - 21 existing system Home integration tests passed separately.
 - Optional webOS IPK built successfully with a bundled, checksummed backend.
 - Locked dependency audit: zero known advisories at validation time.
@@ -26,6 +26,17 @@ Backend 1.1.1, Home integration release `2.13.11-remotes3`.
 - Production identity and setup-code hash remained unchanged after deployment;
   the authenticated system Home adapter reports ready, running and paired.
 - Existing device-specific button behavior was retained outside the packaged code.
+
+Additional recovery validation:
+
+- Suspend gaps, network changes and advertiser errors trigger re-advertisement
+  without changing pairing identity; an explicitly disabled service stays disabled.
+- The supervisor recovers after more than five consecutive exits, retains its
+  singleton lock and stops its child on shutdown. Retry delay is capped at 30 seconds.
+- Recovery code was deployed on the production C5. The service reported ready,
+  running and paired; its HomeKit advertisement resolved from another Wi-Fi device.
+- The owner confirmed iPhone power-on works and power-off leaves the TV off.
+  The exact standby depth was not measured, so this is not deep-standby qualification.
 
 Not tested: deep-standby wake, physical AC removal, all playback applications,
 all audio/CEC routes, older webOS versions, or installation on an otherwise clean

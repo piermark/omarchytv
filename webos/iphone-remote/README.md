@@ -46,7 +46,10 @@ Failed startup restores the previous code. The first standalone 1.0 installation
 is migrated without replacing its identity or pairing store.
 
 Boot hook: `/var/lib/webosbrew/init.d/66-omarchytv-remote`. The supervisor has a
-single-instance lock, bounded retries and bounded logs. OmarchyTV's own system
+single-instance lock, continuous crash recovery with a retry delay capped at 30
+seconds, and bounded logs. The service re-advertises HomeKit after a suspend gap
+or network-address change and retries advertisement failures automatically.
+Recovery preserves identity and pairing; disabled services stay disabled. OmarchyTV's own system
 Home helper is not needed. Home/Exit targets the installed launcher identity.
 
 - **Turn off:** unpublishes the accessory and keeps pairing for re-enable.
@@ -76,7 +79,9 @@ where the TV supports it. Individual apps and audio routes determine support.
 
 This is a HomeKit Television accessory, not Apple TV protocol emulation. It does
 not provide Apple TV keyboard sessions, Now Playing artwork, Siri, or touch
-coordinates beyond the directional commands iOS sends. A TV-hosted process
+coordinates beyond the directional commands iOS sends. The owner confirmed
+iPhone power-on and power-off on the test C5; this does not qualify every standby
+mode. A TV-hosted process
 cannot wake the TV from a state where its CPU/network are powered down.
 
 Tests cover command mapping, queue recovery, setup UI lifecycle, explicit enable,
