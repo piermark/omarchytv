@@ -9,6 +9,8 @@ runs on the TV (Android TV, LG webOS, Samsung Tizen) with OmaFire as the live wa
 
 ## Install on your Omarchy PC
 
+Tested on Omarchy 4.5 RC.
+
 ```
 omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme
 ```

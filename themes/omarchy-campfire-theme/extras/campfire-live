@@ -6,7 +6,14 @@
 # theme), or with --login from ~/.config/autostart (the current theme; mpvpaper stays in the foreground of that unit).
 login=0
 [[ ${1:-} == --login ]] && { login=1; shift; }
-theme="${1:-$(cat "$HOME/.local/state/omarchy/current/theme.name" 2>/dev/null)}"
+current_theme() {   # Omarchy 4.x writes the name here; older versions keep a link to the theme folder
+  local f="$HOME/.local/state/omarchy/current/theme.name" old="$HOME/.config/omarchy/current/theme"
+  if [[ -s $f ]]; then cat "$f"
+  elif [[ -s $HOME/.config/omarchy/current/theme.name ]]; then cat "$HOME/.config/omarchy/current/theme.name"
+  elif [[ -L $old ]]; then basename "$(readlink -f "$old")"
+  fi
+}
+theme="${1:-$(current_theme)}"
 video="$HOME/.config/omarchy/themes/campfire/extras/campfire-loop.mp4"
 conf="$HOME/.config/omarchy/campfire-live.conf"   # SOUND=1 plays the fire and the night (volume VOLUME, default 40)
 SOUND=0; VOLUME=40

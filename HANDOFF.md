@@ -605,5 +605,7 @@ Checked: TV screenshots (home with the fire, Cinemarchy, Arcade, top bar in camp
   Theme change: switching away stopped it, but switching back did not start it (a background child of the hook
   did not survive omarchy-theme-set): the hook now starts mpvpaper as its own user unit (`systemd-run --user
   --unit=campfire-live`, fallback setsid), and stops that unit first. Re-tested on Marco's PC: tokyo-night stops it,
-  campfire starts it again; window border gradient and the orange Yaru icons show. Also on a real Omarchy PC: (templates, hyprland.conf override,
+  campfire starts it again; window border gradient and the orange Yaru icons show.
+  Tested on Omarchy 4.5 RC. For older Omarchy the hook also reads the theme from `~/.config/omarchy/current/theme.name`
+  or the `~/.config/omarchy/current/theme` link (not tested there). Also on a real Omarchy PC: (templates, hyprland.conf override,
   icons "Yaru" installed), and the TV ↔ PC sync with it. Gradle `ThemeTest`.

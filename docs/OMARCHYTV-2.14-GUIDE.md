@@ -91,7 +91,7 @@ Pick a wallpaper by hand to keep one, or turn Random wallpaper off on a slow TV.
 made to let the fire stand out. With the wallpaper following the theme, the campfire burns as the wallpaper; turn on
 **OmaFire sound** for the crackle. When the random wallpaper picks a fire and Random theme is on, it comes with campfire.
 
-The same theme exists for the **Omarchy PC**, so TV and PC match:
+The same theme exists for the **Omarchy PC** (tested on Omarchy 4.5 RC), so TV and PC match:
 
 1. On the PC, in a terminal:
    ```
