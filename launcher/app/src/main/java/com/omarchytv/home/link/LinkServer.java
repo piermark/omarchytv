@@ -2180,7 +2180,11 @@ public final class LinkServer {
                 if (!fin) continue;
                 String text = new String(msg.toByteArray(), StandardCharsets.UTF_8);
                 msg.reset();
-                if (!incoming(c, text)) break;
+                try {
+                    if (!incoming(c, text)) break;
+                } catch (JSONException e) {
+                    continue;   // a frame we cannot rebuild is dropped, the link stays up
+                }
             }
         } catch (SocketException e) {
             // closed
@@ -2191,7 +2195,7 @@ public final class LinkServer {
     }
 
     /** One sealed frame from the PC; false = protocol violation (bad MAC or seq), close. */
-    private boolean incoming(WsClient c, String text) throws IOException {
+    private boolean incoming(WsClient c, String text) throws IOException, JSONException {
         String payload = LinkCrypto.open(c.ks, text);
         if (payload == null) return false;
         JSONObject m;
