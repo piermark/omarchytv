@@ -457,6 +457,18 @@ final class LauncherConfig {
             {"cumulus", "2", "wallpapers/cumulus/03-airship.webp"},
             {"cumulus", "3", "wallpapers/cumulus/04-lighthouse.webp"}
     };
+    /** v2.14: OmaFire (Wes Grimes) joins the random wallpaper pool: one draw in the pool of intros + fires. */
+    static final String[] RANDOM_FIRES = {"omafire:campfire", "omafire:embers"};
+
+    /** A fire for this rotation, or null for an intro: each of the intros and fires is equally likely, never the same fire twice. */
+    static String randomFire(java.util.Random rng, String curWp) {
+        int n = ANIMATED_INTROS.length + RANDOM_FIRES.length;
+        int pick = rng.nextInt(n) - ANIMATED_INTROS.length;
+        if (pick < 0) return null;
+        String fire = RANDOM_FIRES[pick];
+        if (fire.equals(curWp)) fire = RANDOM_FIRES[(pick + 1) % RANDOM_FIRES.length];
+        return fire;
+    }
     /** v2.13: OLED anti-burn-in pixel shift / periodic subtle drift. */
     final boolean antiBurnIn;
     /** v2.13: Ambient lighting / Ambilight mode: "off" (default), "theme", "hybrid", "video". */
@@ -853,6 +865,19 @@ final class LauncherConfig {
             String curTheme = curThemeObj != null ? curThemeObj.optString("name", "last-horizon") : j.optString("theme", "last-horizon");
             int curBg = j.optInt("wallpaper_bg", 0);
             String curWp = j.optString("wallpaper", "omarchy");
+            String fire = rw ? randomFire(rng, curWp) : null;
+            if (fire != null) {
+                if (rt) {   // a random theme under the fire, as the intros bring their own theme
+                    String nextTheme = ANIMATED_THEMES[rng.nextInt(ANIMATED_THEMES.length)];
+                    JSONObject t = curThemeObj != null ? new JSONObject(curThemeObj.toString()) : new JSONObject();
+                    t.put("name", nextTheme);
+                    t.put("source", "tv");
+                    j.put("theme", t);
+                }
+                j.put("wallpaper", fire);
+                j.put("wallpaper_bg", 0);
+                return true;
+            }
             if (rt && rw) {
                 int curIdx = -1;
                 for (int i = 0; i < ANIMATED_INTROS.length; i++) {

@@ -554,3 +554,17 @@ Checked in Chromium: ▶ along the bar stops on the icon, the tip shows, OK open
 ## NOT verified (V)
 - Gradle build; a key bound to `cinemarchy` on a real TV; the adb command from the docs; the new bar icon on
   Android (focus order ◀ ▶, tint with the theme).
+
+# W. OmaFire in the random wallpapers
+With "Random wallpaper / intro" on (the default), OmaFire campfire and embers are now in the draw next to the five
+animated intros: each of the 7 is equally likely (so about 2 in 7 rotations are a fire), never the same fire twice
+in a row. With "Random theme" on too, the fire gets a random theme of the intros (last-horizon / cumulus).
+Picking a wallpaper by hand still locks it, as before. OmaFire's sound stays off unless "OmaFire sound" is on.
+- Android: `LauncherConfig.RANDOM_FIRES`, `randomFire()`, used at the top of `applyRandomRotation()`.
+  `ThemeTest` now also accepts an `omafire:` wallpaper after a rotation.
+- LG/Samsung: two `{fire}` entries in `ANIMATED_INTROS` (app.js) and a branch in `rotateRandomIfEnabled()`.
+Checked: the Java rotation run 7000 times outside Android (2/7 fires, never twice the same fire); Chromium with 60
+rotations: fires and intros alternate, the fire canvas mounts and goes away, no errors.
+## NOT verified (W)
+- Gradle `ThemeTest`; OmaFire's cost on slow TVs now that it can show up without being picked (it already pauses
+  with the home hidden; a slow-TV opt-out would be "Random wallpaper" off).

@@ -1354,13 +1354,23 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     { theme: "cumulus", idx: 0, wp: "wallpapers/cumulus/01-cloud-town-path.webp" },
     { theme: "cumulus", idx: 1, wp: "wallpapers/cumulus/02-cottage.webp" },
     { theme: "cumulus", idx: 2, wp: "wallpapers/cumulus/03-airship.webp" },
-    { theme: "cumulus", idx: 3, wp: "wallpapers/cumulus/04-lighthouse.webp" }
+    { theme: "cumulus", idx: 3, wp: "wallpapers/cumulus/04-lighthouse.webp" },
+    // v2.14: OmaFire (Wes Grimes) in the random pool; with a random theme too, any of the intros' themes
+    { fire: "omafire:campfire" },
+    { fire: "omafire:embers" }
   ];
 
   function rotateRandomIfEnabled() {
     if (!cfg.randomTheme && !cfg.randomWallpaper) return false;
     var pick = ANIMATED_INTROS[Math.floor(Math.random() * ANIMATED_INTROS.length)];
-    if (cfg.randomTheme && cfg.randomWallpaper) {
+    if (pick.fire && cfg.randomWallpaper) {
+      if (pick.fire === cfg.wallpaper) pick = { fire: pick.fire === "omafire:campfire" ? "omafire:embers" : "omafire:campfire" };
+      if (cfg.randomTheme) cfg.theme = Math.random() < 0.5 ? "last-horizon" : "cumulus";
+      cfg.wallpaper = pick.fire;
+      cfg.wallpaperIdx = 0;
+    } else if (pick.fire) {   // random theme only: the fires are wallpapers, so just the theme changes
+      cfg.theme = cfg.theme === "last-horizon" ? "cumulus" : "last-horizon";
+    } else if (cfg.randomTheme && cfg.randomWallpaper) {
       cfg.theme = pick.theme;
       cfg.wallpaper = "";
       cfg.wallpaperIdx = pick.idx;

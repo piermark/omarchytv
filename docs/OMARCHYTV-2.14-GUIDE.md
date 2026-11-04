@@ -81,6 +81,8 @@ Android 13+, a curved screen. Games and Cinemarchy play inside the set too.
 ## 10. OmaFire wallpapers and sound
 
 **Wallpaper → OmaFire campfire / embers**: Wes Grimes' OmaFire (MIT) as a live wallpaper at 30 fps.
+With **Random wallpaper** on (the default) it also shows up by itself now and then, next to the animated intros.
+Pick a wallpaper by hand to keep one, or turn Random wallpaper off on a slow TV.
 **OmaFire sound** (off): the fire's own crackle and night ambience; starts on the first key press (TV rules).
 
 ## 11. Omastorm from the PC (Android TV)

@@ -92,7 +92,8 @@ public class ThemeTest {
 
             assertTrue(LauncherConfig.applyRandomRotation(j, new java.util.Random(7L)));
             assertEquals("tokyo-night", j.getJSONObject("theme").getString("name"));
-            assertTrue(j.getString("wallpaper").startsWith("wallpapers/"));
+            String wp = j.getString("wallpaper");   // v2.14: an intro or an OmaFire wallpaper
+            assertTrue(wp, wp.startsWith("wallpapers/") || wp.startsWith("omafire:") || "omarchy".equals(wp));
 
             // Lock wallpaper manually -> both random_theme and random_wallpaper are false, rotation is a no-op
             LauncherConfig.lockWallpaper(j, "omarchy", 2);
