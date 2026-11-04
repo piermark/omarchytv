@@ -41,3 +41,23 @@ webos/app/saver/screensaver-tv.txt
 themes/omarchy-campfire-theme/extras/campfire-loop.mp4
 webos/iphone-remote/node_modules/
 webos/app/rooted/iphone-remote/
+
+# secrets and local dumps that must never be committed
+.env
+.env.*
+!.env.example
+*.p12
+*.pem
+*.key
+*.bks
+password*.txt
+*secret*
+*.log
+logcat*
+*.orig
+*.rej
+*.bak
+# pairing key and data written by homewatch next to the watcher
+homewatch/data/
+# a launcher config copied out of a TV
+omarchytv.json
