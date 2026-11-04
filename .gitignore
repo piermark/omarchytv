@@ -7,6 +7,9 @@ launcher/app/build/
 launcher/local.properties
 # your own TV's dumps (serial, android_id, device names) stay local
 backup/
+# adb screencap files that land next to the code
+launcher/Screenshot_*.png
+Screenshot_*.png
 .DS_Store
 keystore/
 *.jks
