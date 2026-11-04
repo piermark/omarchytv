@@ -33,6 +33,7 @@ final class RemotePanes {
     static final int MAX_BYTES = 64 * 1024;
     private static volatile boolean fetching;
     private static volatile long lastAttemptMs;
+    private static volatile boolean forced;
 
     private RemotePanes() {
     }
@@ -79,13 +80,20 @@ final class RemotePanes {
         return at > 0 ? at : cache.optLong("fetchedAt", 0L) / 1000L;
     }
 
+    /** The URL was saved from the menu: fetch on the next resume, even when the cache is still fresh. */
+    static void forget() {
+        forced = true;
+    }
+
     static void refreshIfStale(Context ctx, String url, int refreshSec, Runnable onDone) {
         if (url == null || url.isEmpty() || fetching) return;
         long now = System.currentTimeMillis();
-        if (now - lastAttemptMs < refreshSec * 1000L) return;
+        boolean force = forced;
+        forced = false;
+        if (!force && now - lastAttemptMs < refreshSec * 1000L) return;
         final Context c = ctx.getApplicationContext();
         JSONObject old = cached(c, url);
-        if (lastAttemptMs == 0 && old != null && now - old.optLong("fetchedAt", 0L) < refreshSec * 1000L) {
+        if (!force && lastAttemptMs == 0 && old != null && now - old.optLong("fetchedAt", 0L) < refreshSec * 1000L) {
             lastAttemptMs = old.optLong("fetchedAt", 0L);   // fresh from before a restart: don't fetch again yet
             return;
         }

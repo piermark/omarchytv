@@ -3193,6 +3193,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 return true;
             });
         }
+        String rpHost = cfg.remotePanesUrl.isEmpty() ? null : android.net.Uri.parse(cfg.remotePanesUrl).getHost();
+        p.add(str(R.string.remote_panes), rpHost == null ? str(R.string.off) : rpHost, r -> {
+            handler.post(this::remotePanesDialog);
+            return false;
+        });
         p.add(lSc, cfg.shortcuts.isEmpty() ? "—" : str(cfg.shortcutsOn ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.shortcutsOn;
             applyLive("widgets", lSc, j -> pcWidgets(j).put("shortcuts", n));
@@ -4588,6 +4593,48 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                             a.put(new org.json.JSONObject().put("name", fn).put("url", fu).put("ua", "mobile"));
                         } catch (org.json.JSONException ignored) {
                         }
+                    });
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
+    /**
+     * omarchytv.json "remotePanes".url from the TV, for a server with no PC to push panes (RemotePanes). Empty turns
+     * them off; a URL RemotePanes would refuse (http:// to a host name or a public address) is not saved.
+     */
+    private void remotePanesDialog() {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int) (16 * density);
+        box.setPadding(pad, pad, pad, 0);
+        android.widget.EditText url = new android.widget.EditText(this);
+        String cur = LauncherConfig.get(this).remotePanesUrl;
+        url.setHint(R.string.remote_panes_hint);
+        url.setText(cur.isEmpty() ? "http://" : cur);
+        url.setSingleLine(true);
+        url.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        box.addView(url);
+        new android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.remote_panes)
+                .setView(box)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String u = url.getText().toString().trim();
+                    if (u.equals("http://") || u.equals("https://")) u = "";
+                    if (!u.isEmpty() && !RemotePanes.urlAllowed(u)) {
+                        Toast.makeText(this, R.string.remote_panes_bad, Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    final String fu = u;
+                    RemotePanes.forget();
+                    applyLive("widgets", str(R.string.remote_panes), j -> {
+                        if (fu.isEmpty()) {
+                            j.remove("remotePanes");
+                            return;
+                        }
+                        org.json.JSONObject rp = j.optJSONObject("remotePanes");
+                        if (rp == null) j.put("remotePanes", rp = new org.json.JSONObject());
+                        rp.put("url", fu);
                     });
                 })
                 .setNegativeButton(android.R.string.cancel, null)

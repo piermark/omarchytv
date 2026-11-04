@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Android TV
+
+- **Remote panes URL from the TV.** Logo menu → Widgets → "Remote panes" sets `remotePanes.url` without editing
+  `omarchytv.json`. On some boxes (Android 14, Homatics Box R 4K Plus) the app's external files dir is 0700 and
+  adb can't read or write it, so the menu was the only way in. Empty turns the panes off; a URL `RemotePanes.urlAllowed`
+  refuses is not saved. Saving fetches the panes right away instead of after `refreshSec`.
+
 ### LG webOS / Samsung Tizen 2.13.11 (draft, not released)
 
 LG and Samsung only. Android TV is unchanged in this build: Android users stay on the current Android release (2.13.8); Android work resumes separately.
