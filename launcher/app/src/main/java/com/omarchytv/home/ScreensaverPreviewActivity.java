@@ -26,6 +26,13 @@ public class ScreensaverPreviewActivity extends Activity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         saver = new TteSaver(this);
         saver.window = getWindow();
+        // v2.14: the WebView renderer died (low-RAM TV): close the screensaver, the Home screen is underneath.
+        saver.onDead = () -> {
+            if (!isFinishing()) {
+                finish();
+                overridePendingTransition(0, 0);
+            }
+        };
         if (getIntent() != null) {
             String fe = getIntent().getStringExtra("omarchytv.effect"), fm = getIntent().getStringExtra("omarchytv.mode");
             if (fe != null) saver.forceEffect = fe;

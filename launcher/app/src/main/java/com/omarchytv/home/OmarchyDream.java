@@ -20,6 +20,7 @@ public class OmarchyDream extends DreamService {
         setFullscreen(true);
         view = new TteSaver(this);   // v2.9: identical to omarchy-screensaver (tte.js, 37 effects), black
         view.window = getWindow();
+        view.onDead = this::finish;   // v2.14: the WebView renderer died: end the dream, back to the Home screen
         setContentView(view.view());
     }
 

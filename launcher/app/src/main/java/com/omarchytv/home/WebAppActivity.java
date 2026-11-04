@@ -211,8 +211,8 @@ public class WebAppActivity extends Activity {
 
     /**
      * The WebView renderer crashed, or the TV killed it for memory (OOM on 1-2 GB sets): Android closes the whole
-     * process unless onRenderProcessGone says it was handled. Drop the dead WebView and leave a plain message; Back
-     * closes the web app and the home screen is already there underneath (:web is its own process).
+     * process unless onRenderProcessGone says it was handled. Drop the dead WebView, show a toast and close the web
+     * app: the Home screen is right underneath (:web is its own process).
      *
      * Deliberately not fallBackToBrowser(): the page just proved too heavy for this TV, so throwing the same URL at a
      * browser would crash it the same way, on top of yanking the viewer out of the launcher after a scare.
@@ -232,6 +232,8 @@ public class WebAppActivity extends Activity {
         status.setVisibility(View.GONE);
         dead.setText(getString(R.string.web_crashed));
         dead.setVisibility(View.VISIBLE);
+        Toast.makeText(this, R.string.web_crashed, Toast.LENGTH_LONG).show();
+        finish();   // v2.14: close the web app; the Home screen is already underneath
     }
 
     /** Desktop UA: Chrome on Linux (like Omarchy's Chromium web apps); mobile: the WebView default. */

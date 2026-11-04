@@ -63,7 +63,7 @@ On the PC: `omarchy-link liftoff --name myapp -- <command>`. The TV shows an ASC
 **Screensaver → Live screensaver** (off by default). A full-screen "control room": big clock, weather sky,
 notifications from the PC, GitHub, X, PC meters, ticker. Options: **PC notifications** (off), **X on the
 screensaver** (off / PC notifications / X API with your own token: `omarchy-link x setup`), **GitHub** (on),
-**Omastorm radar** (off: a snapshot of Omastorm's radar every 90 s in the weather box).
+**Omastorm radar** (off: a snapshot of Omastorm's radar every 90 s in the weather box; needs Omastorm installed on the Omarchy PC, see section 11).
 New items arrive with an INCOMING banner and a decrypt effect. It slows itself down on weak TVs.
 
 ## 8. X app
@@ -111,8 +111,29 @@ The same theme exists for the **Omarchy PC** (tested on Omarchy 4.5 RC), so TV a
 
 ## 11. Omastorm from the PC (Android TV)
 
-**Plugins → Omastorm**, then **Open Omastorm** (Plugins page or Walker): the PC opens Omastorm and casts its window
-to the TV; the remote drives it. Back/stop closes it. LG/Samsung: not yet.
+Omastorm is Wes Grimes' weather radar for Omarchy. It runs on the **PC**, not on the TV: OmarchyTV shows the PC's own
+Omastorm window on the big screen and passes the remote's keys to it. So it needs, on the Omarchy PC:
+
+1. **Omastorm installed** as an Omarchy plugin:
+
+   ```
+   omarchy plugin add https://github.com/wesleygrimes/omastorm.git --enable
+   ```
+
+   Check it opens on the PC (`omarchy shell shell summon com.omastorm.radar '{}'`, or Omarchy's plugin menu) before
+   trying the TV: if it does not open on the PC, the TV has nothing to show.
+2. **Hyprland**, and `omarchy-link` paired with the TV.
+3. A screen recorder for the cast: `gpu-screen-recorder` or `wf-recorder`, plus `grim` for the screensaver radar
+   snapshot.
+
+Without Omastorm on the PC, **Plugins → Omastorm → Open Omastorm** comes back with a "not available" state and nothing
+appears on the TV; nothing is installed by the TV side.
+
+Then, on the TV: **Plugins → Omastorm**, then **Open Omastorm** (Plugins page or Walker): the PC opens Omastorm and
+casts its window to the TV; the remote drives it (pan, frames, play, Pixels/Glyphs/Stipple, mosaic, aviation, help).
+Back/stop closes both the stream and the window on the PC. **Plugins → Omastorm** also has the switch that lets the TV
+ask for it; turned off, the PC refuses.
+LG/Samsung: not yet.
 
 ## 12. OmarchyTV Arcade
 

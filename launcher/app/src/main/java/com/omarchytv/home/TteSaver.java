@@ -29,8 +29,8 @@ import java.util.Locale;
  * Three levels, never black: (1) the official tte.js package (assets/saver/tte-js, ES modules, 37 effects) served
  * from https://appassets.androidplatform.net by a tiny shouldInterceptRequest handler (ES modules are blocked on
  * file://); (2) the bundled single-file build (assets/saver/tte-bundle.js); (3) the native {@link AsciiSaverView}
- * when the page reports no engine, has not drawn within 3 s, the TV has no usable WebView, or its renderer process
- * dies (onRenderProcessGone).
+ * when the page reports no engine, has not drawn within 3 s, or the TV has no usable WebView. If the renderer process
+ * dies (onRenderProcessGone) the screensaver closes and the Home screen comes back, through {@link #onDead}.
  * Console messages and JS errors go to logcat with tag "OmarchyTV".
  */
 final class TteSaver {
@@ -44,6 +44,8 @@ final class TteSaver {
     private final Handler h = new Handler(Looper.getMainLooper());
     private WebView web;
     private AsciiSaverView fallback;
+    /** What to do when the WebView renderer dies: the owner closes the screensaver and returns to Home. */
+    Runnable onDead;
     private volatile boolean drawn, stopped;
     /** Test hook (screensaver window intent extras, not exported): one fixed effect, or "bundle"/"native" level. */
     String forceEffect = "", forceMode = "";
@@ -309,18 +311,30 @@ final class TteSaver {
     }
 
     /**
-     * The WebView renderer crashed or was killed for memory. This arrives on the UI thread, as every other call in
-     * this class: drop the dead WebView and keep the screensaver alive with the native logo/ASCII view.
+     * The WebView renderer crashed or was killed for memory (low-RAM TVs). On the UI thread, as every call here:
+     * drop the dead WebView, stop the clocks, and run {@link #onDead} so the owner closes the screensaver and the Home
+     * screen comes back. Where nobody can close it (a Dream the system runs) the native view takes over instead.
      */
     private void rendererGone(WebView w) {
-        Log.w(TAG, "salvaschermo: renderer WebView morto, modalita nativo");
         if (w != null && w.getParent() instanceof ViewGroup) ((ViewGroup) w.getParent()).removeView(w);
         if (w != null && w == web) web = null;
         try {
             if (w != null) w.destroy();
         } catch (Throwable ignored) {
         }
-        toNative("renderer WebView morto");
+        if (onDead != null && !stopped) {   // v2.14: close this screensaver, the Home screen is right there
+            Log.w(TAG, "salvaschermo: renderer WebView morto, chiudo e torno alla Home");
+            stopped = true;
+            h.removeCallbacksAndMessages(null);
+            if (fallback != null) fallback.stop();
+            if (placeholder != null) {
+                placeholder.stop();
+                placeholder = null;
+            }
+            onDead.run();
+            return;
+        }
+        toNative("renderer WebView morto");   // nobody to close it (a dream the system owns): keep the native one
     }
 
     private void toNative(String why) {

@@ -22,7 +22,10 @@ import java.io.InputStream;
  */
 final class OmaFireLayer {
     private static final String HOST = "appassets.androidplatform.net";
+    /** Renderer deaths in a row: after this many the layer stays off until the launcher restarts, never a loop. */
+    private static final int MAX_DEATHS = 2;
     private static WebView web;
+    private static int deaths;
 
     private OmaFireLayer() {
     }
@@ -50,6 +53,7 @@ final class OmaFireLayer {
             return;
         }
         if (web != null) return;
+        if (deaths >= MAX_DEATHS) return;   // this TV cannot hold the animated one: the still wallpaper stays
         ViewGroup parent = (ViewGroup) wall.getParent();
         WebView w;
         try {
@@ -93,7 +97,9 @@ final class OmaFireLayer {
             @android.annotation.TargetApi(26)
             @Override
             public boolean onRenderProcessGone(WebView view, android.webkit.RenderProcessGoneDetail d) {
-                drop(view);   // the still wallpaper underneath is the fallback: nothing else to do, never a crash
+                // The still wallpaper underneath is the fallback. Not rebuilt here: one retry at the next onResume
+                // at most, and after MAX_DEATHS the layer stays off until the launcher restarts (no crash loop).
+                drop(view);
                 return true;
             }
         });
@@ -122,6 +128,9 @@ final class OmaFireLayer {
      */
     private static void drop(WebView w) {
         if (w == null) return;
+        deaths++;
+        android.util.Log.w("OmarchyTV", "omafire: renderer WebView morto (" + deaths + "/" + MAX_DEATHS
+                + "), resta lo sfondo fisso" + (deaths >= MAX_DEATHS ? ", animazione spenta fino al riavvio" : ""));
         if (web == w) web = null;
         try {
             if (w.getParent() instanceof ViewGroup) ((ViewGroup) w.getParent()).removeView(w);
