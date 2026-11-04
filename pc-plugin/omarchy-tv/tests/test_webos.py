@@ -19,7 +19,7 @@ class WebOSBridgeTest(unittest.TestCase):
                 self.assertIn("cpu", st)
                 self.assertIn("ram", st)
                 self.assertIn("host", st)
-                self.assertEqual(st.get("version"), "2.11.0-testing")
+                self.assertEqual(st.get("version"), webos.VERSION)   # the bridge reports the package it ships in
                 self.assertIsInstance(st.get("ai"), list)
 
             with urllib.request.urlopen(f"http://127.0.0.1:{port}/v1/themes", timeout=5) as r:

@@ -53,7 +53,7 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer, ThreadingHTTPServer
 from pathlib import Path
 
-from . import themes, ui
+from . import VERSION, themes, ui
 
 OMARCHY_CURRENT = Path.home() / ".config/omarchy/current"
 AI_CFG = Path.home() / ".config/omarchy-link/ai.json"
@@ -288,7 +288,7 @@ def build_status_payload() -> dict:
     ai = read_ai_credits()
     wp = current_wallpaper_path()
     return {
-        "version": "2.11.0-testing",
+        "version": VERSION,
         "host": socket.gethostname(),
         "kernel": f"Linux {platform.release()}",
         "cpu": cpu_percent(),
