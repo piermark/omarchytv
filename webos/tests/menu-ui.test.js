@@ -82,7 +82,7 @@ function boot({ tizen, apps, cfg, inputs, switchInput, webOS, palmServiceBridge 
     inputTiles: () => byId["ws2-grid"].children,
     inputTitle: () => byId["ws2-title"].textContent,
     // A short remote press: keydown then keyup, through the app's own key handlers.
-    press: (key) => ["keydown", "keyup"].forEach((t) => (listeners[t] || []).forEach((f) => f({ type: t, key, keyCode: key === "Enter" ? 13 : 0, preventDefault() {} }))),
+    press: (key) => ["keydown", "keyup"].forEach((t) => (listeners[t] || []).forEach((f) => f({ type: t, key, keyCode: key === "Enter" ? 13 : 0, preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {} }))),
     grid: () => byId["ws3-grid"].children,
     emit: (detail) => (listeners["omarchy-tizen-apps"] || []).forEach((f) => f({ type: "omarchy-tizen-apps", detail })),
     emitInputs: (detail) => (listeners["omarchy-tizen-inputs"] || []).forEach((f) => f({ type: "omarchy-tizen-inputs", detail }))
@@ -135,4 +135,37 @@ test("compact labels and remote hints retain Italian and German localization", (
     assert.ok(t.byId["modal-list"].children[8].innerHTML.includes(setup));
     assert.ok(t.byId["modal-hint"].textContent.includes(hint));
   }
+});
+
+function bootWithCinemarchy() {
+  const t = boot();
+  const seen = { opened: 0, arcade: 0 };
+  t.ctx.OmarchyCinemarchy = {
+    open: () => { seen.opened++; return { refresh() {}, destroy() {}, key() { return false; } }; },
+    keyName: () => null
+  };
+  t.ctx.OmarchyArcade = { open: () => { seen.arcade++; return { destroy() {} }; } };
+  return { t, seen };
+}
+
+test("the Cinemarchy row opens the full-screen hub, never the old four-tab menu", () => {
+  const { t, seen } = bootWithCinemarchy();
+  t.ctx.OmarchyTestAPI.openOmarchyMenu();
+  t.byId["modal-list"].children[0].onclick();
+  assert.strictEqual(seen.opened, 1);
+  assert.strictEqual(t.ctx.__OMARCHY_STATE.modalOpen, false, "the menu closes behind the hub");
+});
+
+test("C on the remote opens the same full-screen hub", () => {
+  const { t, seen } = bootWithCinemarchy();
+  t.press("c");
+  assert.strictEqual(seen.opened, 1);
+});
+
+test("main's Arcade row still starts the arcade from the compact menu", () => {
+  const { t, seen } = bootWithCinemarchy();
+  t.ctx.OmarchyTestAPI.openOmarchyMenu();
+  t.byId["modal-list"].children[1].onclick();
+  assert.strictEqual(seen.arcade, 1);
+  assert.strictEqual(t.ctx.__OMARCHY_STATE.modalOpen, false);
 });
