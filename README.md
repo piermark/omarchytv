@@ -6,7 +6,7 @@ Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](http
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **2 November 2026 (latest release: LG webOS & Samsung Tizen 2.13.11)** · Version **2.13.8** (`versionCode 25` — Android TV) / **2.13.11** (LG webOS) & **2.13.11** (Samsung Tizen), experimental · PC/Mac Plugin & Mobile Companion downloads **2.13.0-beta** (latest published) · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **2 November 2026 (latest published release: LG webOS & Samsung Tizen 2.13.11)** · In preparation: **2.14.0-beta** (`versionCode 26` — Android TV, LG webOS & Samsung Tizen 2.14.0) · PC/Mac Plugin & Mobile Companion downloads **2.13.0-beta** (latest published) · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 > [!WARNING]
 > **Beta software.** Tested on Sony BRAVIA (Android 9), Google TV Streamer (Android 14), Sharp AQUOS, Noblex/Hisense (Android 11), LG webOS and the Android TV emulator. Some features may be missing on some TVs. It never roots or uninstalls anything, and you can always switch back to your stock home screen (see [INSTALL](launcher/docs/INSTALL.md)).
@@ -73,9 +73,9 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ---
 
-## Coming in the next version (in testing)
+## What's New in `2.14.0-beta` (`versionCode 26`, pre-release)
 
-Everything below is now on `main`, coming in 2.14.0-beta (not released yet): new features are off by default unless noted.
+Everything below is on `main` and built as `2.14.0-beta` for Android TV, LG webOS and Samsung Tizen (Android `26`, webOS/Tizen `2.14.0`); the download links appear here when the release is published, after a last check on real TVs. New features are off by default unless noted.
 Full user guide: [docs/OMARCHYTV-2.14-GUIDE.md](docs/OMARCHYTV-2.14-GUIDE.md).
 
 - **Boot screen**: CRT power-on, BIOS, systemd as Arch prints it, the OMARCHY TV wordmark, with sound (on by default; any key skips).
