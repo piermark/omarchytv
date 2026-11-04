@@ -84,15 +84,34 @@ BarWidget {
     else if (k === "q") close()
   }
 
-  implicitWidth: button.implicitWidth
-  implicitHeight: button.implicitHeight
+  // #81: BarIconButton is an icon slot (fixedWidth = Style.bar.iconSlot, 27 by default) and paints its text centred
+  // in that slot, so a label like the app on screen was drawn past the slot and over the next widget. The widget
+  // reported `button.implicitWidth`, which is the slot and says nothing about the label. Measure the label here,
+  // with the font and size the button draws with, and report the width it needs. A vertical bar has no room for a
+  // horizontal label, so the label is only shown on a horizontal one, as in the shell's ActiveWindow widget.
+  readonly property string buttonText: root.vertical ? "󰔂"
+    : root.showLabel && root.connected && !root.sleeping && root.appLabel ? "󰔂 " + root.appLabel
+    : root.sleeping ? "󰔂 󰒲" : "󰔂"
+  // The side margin the button leaves around its own label, so the text does not touch the neighbouring widget.
+  readonly property real labelMargin: button.scaledHorizontalMargin
+
+  implicitWidth: root.vertical ? root.barSize
+    : Math.max(root.barSize, Math.ceil(textMetrics.implicitWidth + 2 * root.labelMargin))
+  implicitHeight: root.barSize
+
+  Text {
+    id: textMetrics
+    visible: false
+    text: root.buttonText
+    font.family: root.fontFamily
+    font.pixelSize: button.fontSize
+  }
 
   BarIconButton {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: root.showLabel && root.connected && !root.sleeping && root.appLabel
-      ? "󰔂 " + root.appLabel : (root.sleeping ? "󰔂 󰒲" : "󰔂")
+    text: root.buttonText
     opacity: root.connected ? 1 : 0.55
     active: root.popupOpen
     tooltipText: root.tvName + " · " + root.statusText.toLowerCase()

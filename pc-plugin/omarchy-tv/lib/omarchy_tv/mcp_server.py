@@ -13,6 +13,8 @@ Security:
 
 from __future__ import annotations
 
+from . import VERSION
+
 import hmac
 import json
 import os
@@ -124,7 +126,7 @@ def handle_rpc(req: dict, tv_client) -> dict | None:
             "result": {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "omarchy-tv-mcp", "version": "2.12.0"},
+                "serverInfo": {"name": "omarchy-tv-mcp", "version": VERSION},
             },
         }
     if method == "ping":

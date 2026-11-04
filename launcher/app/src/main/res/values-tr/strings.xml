@@ -48,6 +48,7 @@
     <string name="ss_preview">Önizleme</string>
     <string name="ss_system">Sistem ekran koruyucu ayarları</string>
     <string name="ss_clock">Logonun altında saat</string>
+    <string name="ss_from_pc">Bilgisayardan ekran koruyucu</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">taşı: ←↑↓→ OK=bitti GERİ=iptal</string>
     <string name="move_saved">Sıra kaydedildi</string>
@@ -159,6 +160,7 @@
     <string name="web_reload">Yeniden yükle</string>
     <string name="web_exit">Çık</string>
     <string name="web_old">Android System WebView %1$s eski: modern siteler için Play Store\'dan güncelleyin</string>
+    <string name="web_crashed">Sayfa çalışmayı durdurdu · Geri başlatıcıya döner</string>
     <string name="web_http_lan_only">http:// yalnızca yerel ağ adreslerinde çalışır (ör. http://192.168.1.20:8123); web siteleri için https:// kullanın</string>
     <string name="link_paired_n">eşleştirilmiş: %1$d</string>
     <string name="link_forget_short">unut</string>
@@ -459,6 +461,7 @@
     <string name="omafire_sound">OmaFire sesi</string>
     <string name="arcade_sound">Oyun salonu sesi</string>
     <string name="arcade_pc_theme">Oyun salonu: RICE WARS PC temasını da değiştirir</string>
+    <string name="arcade_crashed">Oyun salonu çalışmayı durdurdu</string>
     <string name="share_qr">OmarchyTV QR kodu</string>
     <string name="cine_sources">kaynaklar</string>
     <string name="cine_library">kitaplık</string>

@@ -737,7 +737,12 @@ class Session:
         self.publish(paired=True, pairing=False, tv=self._tv_public())
         self.wake.set()
 
-    def stdin_loop(self) -> None:
+    def stdin_loop(self, wait_for_eof: bool = True) -> None:
+        """Handle JSON lines from stdin until it is closed.
+
+        A closed stdin normally means the widget that spawned us is gone, so the session ends. With ``--daemon``
+        (systemd, /dev/null) EOF is ignored and the session keeps running, which is what #79 asked for.
+        """
         for line in sys.stdin:
             line = line.strip()
             if not line:
@@ -747,13 +752,19 @@ class Session:
             except ValueError:
                 req = {"op": "key", "key": line}  # plain "home", "back"... like the TV remote plugins
             threading.Thread(target=self.handle_op, args=(req,), daemon=True).start()
-        self.stop.set()
-        self.wake.set()
+        if wait_for_eof:
+            self.stop.set()
+            self.wake.set()
+            return
+        # #79 --daemon: stdin belongs to a service, not to a widget, so its EOF says nothing: stay up.
+        self.log("stdin chiuso: la sessione resta attiva (SIGTERM o Ctrl-C per fermarla)")
+        while not self.stop.wait(3600):
+            pass   # the other loops do the work; this thread just keeps the process alive
 
-    def run(self) -> int:
+    def run(self, daemon: bool = False) -> int:
         self.publish()
         threading.Thread(target=self.connection_loop, daemon=True).start()
         threading.Thread(target=self.ticker, daemon=True).start()
         threading.Thread(target=self.agent_loop, daemon=True).start()
-        self.stdin_loop()
+        self.stdin_loop(wait_for_eof=not daemon)
         return 0

@@ -48,6 +48,7 @@
     <string name="ss_preview">Previzualizare</string>
     <string name="ss_system">Setările economizorului de sistem</string>
     <string name="ss_clock">Ceas sub logo</string>
+    <string name="ss_from_pc">Screensaver de pe PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">mută: ←↑↓→ OK=gata ÎNAPOI=anulează</string>
     <string name="move_saved">Ordinea a fost salvată</string>
@@ -159,6 +160,7 @@
     <string name="web_reload">Reîncarcă</string>
     <string name="web_exit">Ieșire</string>
     <string name="web_old">Android System WebView %1$s este vechi: actualizează-l din Magazin Play pentru site-urile moderne</string>
+    <string name="web_crashed">Pagina s-a oprit · Înapoi revine la launcher</string>
     <string name="web_http_lan_only">http:// funcționează doar pentru adrese din rețeaua locală (de ex. http://192.168.1.20:8123); folosește https:// pentru site-uri</string>
     <string name="link_paired_n">asociate: %1$d</string>
     <string name="link_forget_short">uită</string>
@@ -459,6 +461,7 @@
     <string name="omafire_sound">Sunet OmaFire</string>
     <string name="arcade_sound">Sunetul sălii de jocuri</string>
     <string name="arcade_pc_theme">Sala de jocuri: RICE WARS schimbă și tema PC-ului</string>
+    <string name="arcade_crashed">Sala de jocuri s-a oprit</string>
     <string name="share_qr">Cod QR OmarchyTV</string>
     <string name="cine_sources">surse</string>
     <string name="cine_library">bibliotecă</string>

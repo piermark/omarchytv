@@ -34,6 +34,8 @@ import android.widget.Toast;
  * long-press on OK) opens the web menu: cursor mode, desktop/mobile site, reload, exit. In cursor mode
  * the arrows move a pointer (it accelerates), OK clicks, and the page scrolls at the edges.
  * BACK = page history back, then exit. Text fields open the TV keyboard, whose mic does voice dictation.
+ * If the WebView renderer dies (crash or OOM, common on 1-2 GB TVs) the page is replaced by a short message and
+ * Back returns to the launcher: the process used to be killed with it.
  */
 public class WebAppActivity extends Activity {
 
@@ -47,6 +49,8 @@ public class WebAppActivity extends Activity {
     private WebView web;
     private View pointer;
     private TextView status;
+    /** Shown instead of the page when its WebView renderer died: the page is gone, Back goes to the launcher. */
+    private TextView dead;
     private boolean cursorMode;
     private float px, py;
     private int repeat;
@@ -126,6 +130,15 @@ public class WebAppActivity extends Activity {
                 Gravity.TOP | Gravity.END);
         slp.setMargins(0, (int) (16 * d), (int) (16 * d), 0);
         root.addView(status, slp);
+
+        dead = new TextView(this);
+        dead.setTextColor(Theme.m(0xFFC0CAF5));
+        dead.setTextSize(17);
+        dead.setGravity(Gravity.CENTER);
+        dead.setBackgroundColor(Theme.m(0xFF1A1B26));
+        dead.setTypeface(CastUi.font(this));
+        dead.setVisibility(View.GONE);
+        root.addView(dead, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         setContentView(root);
 
         CookieManager cm = CookieManager.getInstance();
@@ -172,6 +185,13 @@ public class WebAppActivity extends Activity {
                 flash("… " + Uri.parse(u).getHost());
             }
 
+            @android.annotation.TargetApi(26)
+            @Override
+            public boolean onRenderProcessGone(WebView view, android.webkit.RenderProcessGoneDetail d) {
+                rendererGone(view);
+                return true;
+            }
+
             @Override
             public void onPageFinished(WebView view, String u) {
                 if (!xApp) return;
@@ -187,6 +207,33 @@ public class WebAppActivity extends Activity {
         if (savedInstanceState != null) web.restoreState(savedInstanceState);
         else web.loadUrl(url);
         checkWebViewVersion();
+    }
+
+    /**
+     * The WebView renderer crashed, or the TV killed it for memory (OOM on 1-2 GB sets): Android closes the whole
+     * process unless onRenderProcessGone says it was handled. Drop the dead WebView, show a toast and close the web
+     * app: the Home screen is right underneath (:web is its own process).
+     *
+     * Deliberately not fallBackToBrowser(): the page just proved too heavy for this TV, so throwing the same URL at a
+     * browser would crash it the same way, on top of yanking the viewer out of the launcher after a scare.
+     */
+    private void rendererGone(WebView v) {
+        if (web == v) web = null;   // dispatchKeyEvent: Back now leaves instead of driving a dead view
+        try {
+            CookieManager.getInstance().flush();   // keep the logins the renderer was holding
+        } catch (Throwable ignored) {
+        }
+        if (v.getParent() instanceof ViewGroup) ((ViewGroup) v.getParent()).removeView(v);
+        try {
+            v.destroy();
+        } catch (Throwable ignored) {
+        }
+        pointer.setVisibility(View.GONE);
+        status.setVisibility(View.GONE);
+        dead.setText(getString(R.string.web_crashed));
+        dead.setVisibility(View.VISIBLE);
+        Toast.makeText(this, R.string.web_crashed, Toast.LENGTH_LONG).show();
+        finish();   // v2.14: close the web app; the Home screen is already underneath
     }
 
     /** Desktop UA: Chrome on Linux (like Omarchy's Chromium web apps); mobile: the WebView default. */
@@ -306,7 +353,15 @@ public class WebAppActivity extends Activity {
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
-        if (web == null) return super.dispatchKeyEvent(e);
+        if (web == null) {
+            // The page is gone after a renderer crash: Back closes the web app instead of doing nothing.
+            if (e.getKeyCode() == KeyEvent.KEYCODE_BACK && e.getAction() == KeyEvent.ACTION_DOWN
+                    && dead != null && dead.getVisibility() == View.VISIBLE) {
+                finish();
+                return true;
+            }
+            return super.dispatchKeyEvent(e);
+        }
         int k = e.getKeyCode();
         boolean down = e.getAction() == KeyEvent.ACTION_DOWN;
         if (k == KeyEvent.KEYCODE_MENU) {

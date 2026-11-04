@@ -1,6 +1,6 @@
 """Omarchy Link: pairs an Omarchy PC with the OmarchyTV launcher over the home LAN."""
 
-VERSION = "0.1.0"
+VERSION = "2.14.0-beta"
 PROTOCOL = 1
 PLUGIN_ID = "com.omarchytv.link"
 DEFAULT_PORT = 47800

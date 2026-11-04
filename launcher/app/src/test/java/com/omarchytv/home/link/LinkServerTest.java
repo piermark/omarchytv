@@ -504,6 +504,8 @@ public class LinkServerTest {
         Resp init = http("POST", "/mcp", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\"}".getBytes(StandardCharsets.UTF_8), bearerH);
         assertEquals(200, init.status);
         assertEquals("omarchytv-mcp", init.json().getJSONObject("result").getJSONObject("serverInfo").getString("name"));
+        // The TV advertises its own launcher version, never a hard-coded one (it said 2.12.0 until 2.14.0-beta).
+        assertEquals("2.14.0", init.json().getJSONObject("result").getJSONObject("serverInfo").getString("version"));
 
         // 3. tools/list via Bearer
         Resp list = http("POST", "/mcp", "{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}".getBytes(StandardCharsets.UTF_8), bearerH);

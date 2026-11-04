@@ -53,7 +53,7 @@ class FakeHost implements LinkServer.Host {
             if (back) caps.put("key:back");
             JSONObject link = readConfig().optJSONObject("link");
             if (link != null && link.optJSONArray("aiProviders") != null && link.optJSONArray("aiProviders").length() > 0) caps.put("ai-ask");
-            return new JSONObject().put("tvId", server.store().tvId()).put("name", tvName()).put("protocol", 1).put("launcherVersion", "harness")
+            return new JSONObject().put("tvId", server.store().tvId()).put("name", tvName()).put("protocol", 1).put("launcherVersion", "2.14.0")
                     .put("foreground", new JSONObject().put("package", fgPackage).put("label", fgLabel).put("source", "launcher"))
                     .put("homeVisible", homeVisible).put("screensaver", screensaver).put("screenOn", true)
                     .put("time", System.currentTimeMillis() / 1000).put("capabilities", caps);

@@ -48,6 +48,7 @@
     <string name="ss_preview">Förhandsgranska</string>
     <string name="ss_system">Systemets skärmsläckarinställningar</string>
     <string name="ss_clock">Klocka under logotypen</string>
+    <string name="ss_from_pc">Skärmsläckare från datorn</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">flytta: ←↑↓→ OK=klar BAKÅT=avbryt</string>
     <string name="move_saved">Ordningen sparad</string>
@@ -159,6 +160,7 @@
     <string name="web_reload">Ladda om</string>
     <string name="web_exit">Avsluta</string>
     <string name="web_old">Android System WebView %1$s är gammal: uppdatera den i Play Butik för moderna webbplatser</string>
+    <string name="web_crashed">Sidan slutade fungera · Bakåt går tillbaka till launchern</string>
     <string name="web_http_lan_only">http:// fungerar bara för lokala adresser (t.ex. http://192.168.1.20:8123); använd https:// för webbplatser</string>
     <string name="link_paired_n">parkopplade: %1$d</string>
     <string name="link_forget_short">glöm</string>
@@ -459,6 +461,7 @@
     <string name="omafire_sound">OmaFire-ljud</string>
     <string name="arcade_sound">Spelhallsljud</string>
     <string name="arcade_pc_theme">Spelhall: RICE WARS byter även tema på datorn</string>
+    <string name="arcade_crashed">Spelhallen slutade fungera</string>
     <string name="share_qr">OmarchyTV-QR-kod</string>
     <string name="cine_sources">källor</string>
     <string name="cine_library">bibliotek</string>

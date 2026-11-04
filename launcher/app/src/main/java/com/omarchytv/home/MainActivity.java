@@ -719,9 +719,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     private void cityDialog() {
         android.widget.EditText q = new android.widget.EditText(this);
-        q.setSingleLine(true);
-        new android.app.AlertDialog.Builder(this).setTitle(R.string.v29_wx_search).setView(q)
-                .setPositiveButton(android.R.string.ok, (d, w) -> {
+        android.app.AlertDialog d = new android.app.AlertDialog.Builder(this).setTitle(R.string.v29_wx_search).setView(q)
+                .setPositiveButton(android.R.string.ok, (dlg, w) -> {
                     String name = q.getText().toString();
                     String lang = getResources().getConfiguration().getLocales().get(0).getLanguage();
                     new Thread(() -> {
@@ -729,7 +728,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                         runOnUiThread(() -> cityResults(res));
                     }, "omarchytv-geocode").start();
                 })
-                .setNegativeButton(android.R.string.cancel, null).show();
+                .setNegativeButton(android.R.string.cancel, null).create();
+        DialogInput.wire(q, d);   // #86: DONE on the TV keyboard, or ▼ from the field, presses OK
+        d.show();
     }
 
     private void cityResults(List<org.json.JSONObject> res) {
@@ -2214,17 +2215,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     private void promptDialog(boolean host) {
         LauncherConfig cfg = LauncherConfig.get(this);
         android.widget.EditText e = new android.widget.EditText(this);
-        e.setSingleLine(true);
         e.setText(host ? cfg.promptHost : cfg.promptUser);
         e.setSelection(e.getText().length());
         e.setHint(host ? "omarchytv" : "user");
         e.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         e.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(16)});
         String row = str(host ? R.string.set_prompt_host : R.string.set_prompt_name);
-        new android.app.AlertDialog.Builder(this)
+        android.app.AlertDialog d = new android.app.AlertDialog.Builder(this)
                 .setTitle(row)
                 .setView(e)
-                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                .setPositiveButton(android.R.string.ok, (dlg, w) -> {
                     String v = LauncherConfig.promptPart(e.getText().toString(), host ? "omarchytv" : "user");
                     applyLive("launcher", row, j -> {
                         org.json.JSONObject p = j.optJSONObject("prompt");
@@ -2233,7 +2233,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                     });
                 })
                 .setNegativeButton(android.R.string.cancel, null)
-                .show();
+                .create();
+        DialogInput.wire(e, d);   // #86: DONE on the TV keyboard, or ▼ from the field, presses OK
+        d.show();
     }
 
     private static org.json.JSONObject living(org.json.JSONObject j) throws org.json.JSONException {
@@ -2299,16 +2301,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return true;
         });
         // Theme = an Omarchy stock theme (bundled palettes); the PC's Omarchy Link sync overrides it with the live one.
+        // #92: picking one here is a manual choice, so it locks the random rotation (as the themes page does).
         String[] themes = Theme.names(this);
         p.add(lAcc, Theme.cur().name, r -> {
             String n = next(themes, Theme.cur().name);
-            applyLive("launcher", lAcc, j -> {
-                org.json.JSONObject t = new org.json.JSONObject();
-                t.put("name", n);
-                t.put("source", "tv");
-                j.put("theme", t);
-                j.put("wallpaper_bg", 0);
-            });
+            applyLive("launcher", lAcc, j -> LauncherConfig.pickTheme(j, n));
             themeToPc(n);
             return true;
         });
@@ -3308,9 +3305,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         });
         p.add(lLogo, logoLabel(cfg.screensaverArt), r -> {
             String n = next(logos, cfg.screensaverArt);
-            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", n.startsWith("aquarium") ? "aquarium" : "logo"));
+            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", n.startsWith("aquarium") ? "aquarium" : "logo")
+                    .put("pcText", false));   // #84: a logo chosen here wins over a screensaver.txt pushed by the PC
             return true;
         });
+        if (!cfg.screensaverText.isEmpty()) {   // #84: only when the PC really pushed a text
+            String lFromPc = str(R.string.ss_from_pc);
+            p.add(lFromPc, str(cfg.screensaverFromPc ? R.string.on : R.string.off), r -> {
+                boolean n = !cfg.screensaverFromPc;
+                applyLive("screensaver", lFromPc, j -> screensaver(j).put("pcText", n));
+                return true;
+            });
+        }
         p.add(lSize, sizeLabel(cfg.screensaverSize), r -> {
             String n = next(sizes, cfg.screensaverSize);
             applyLive("screensaver", lSize, j -> screensaver(j).put("size", n));

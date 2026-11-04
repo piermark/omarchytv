@@ -48,6 +48,7 @@
     <string name="ss_preview">预览</string>
     <string name="ss_system">系统屏幕保护设置</string>
     <string name="ss_clock">徽标下方显示时钟</string>
+    <string name="ss_from_pc">来自电脑的屏保</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">移动：←↑↓→ OK=完成 返回=取消</string>
     <string name="move_saved">顺序已保存</string>
@@ -159,6 +160,7 @@
     <string name="web_reload">重新加载</string>
     <string name="web_exit">退出</string>
     <string name="web_old">Android System WebView %1$s 版本过旧：请在 Play 商店更新以支持现代网站</string>
+    <string name="web_crashed">页面已停止运行 · 按返回回到启动器</string>
     <string name="web_http_lan_only">http:// 仅适用于局域网地址（例如 http://192.168.1.20:8123）；网站请使用 https://</string>
     <string name="link_paired_n">已配对：%1$d</string>
     <string name="link_forget_short">忘记</string>
@@ -459,6 +461,7 @@
     <string name="omafire_sound">OmaFire 声音</string>
     <string name="arcade_sound">街机厅音效</string>
     <string name="arcade_pc_theme">街机厅: RICE WARS 也会切换电脑主题</string>
+    <string name="arcade_crashed">街机已停止运行</string>
     <string name="share_qr">OmarchyTV 二维码</string>
     <string name="cine_sources">来源</string>
     <string name="cine_library">片库</string>

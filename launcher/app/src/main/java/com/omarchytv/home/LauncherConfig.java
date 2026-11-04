@@ -496,6 +496,12 @@ final class LauncherConfig {
     final boolean saverSound;
     /** v2.9: screensaver.txt pushed by the PC (link.screensaver, PUT /v1/screensaver); "" = OMARCHY TV logo. */
     final String screensaverText;
+    /**
+     * #84: whether the PC's screensaver.txt is what the saver shows ("screensaver.pcText", true by default). It stays
+     * true for anyone who never touched the Logo row, so a PC that pushes a text keeps being seen; picking an art on
+     * the TV turns it off, and the "Screensaver from PC" row turns it back on.
+     */
+    final boolean screensaverFromPc;
     /** Logo width as a share of the screen: "small" 45%, "medium" 56%, "large" 68% (default). */
     final String screensaverSize;
     /** Effect animation speed: "slow", "normal" (default), "fast". */
@@ -780,6 +786,7 @@ final class LauncherConfig {
         screensaverMode = ssMode;
         boolean defSsClock = c != null && c.getResources().getBoolean(R.bool.screensaver_clock);
         screensaverClock = ss != null ? ss.optBoolean("clock", defSsClock) : defSsClock;
+        screensaverFromPc = ss == null || ss.optBoolean("pcText", true);
         saverSound = ss == null || ss.optBoolean("sound", j != null ? j.optBoolean("saverSound", true) : true);
         uiSize = j != null ? j.optString("uiSize", "medium").trim() : "medium";
         JSONObject geo = j != null ? j.optJSONObject("geometry") : null;
@@ -945,6 +952,16 @@ final class LauncherConfig {
         t.put("source", "tv");
         j.put("theme", t);
         j.put("random_theme", false);
+    }
+
+    /**
+     * #92: a theme picked from the launcher page's Theme row is a manual choice like the themes page, so it
+     * locks the rotation (random_theme = false) and resets the background to the new theme's first one.
+     * Rotation stays on for anyone who never picked a theme.
+     */
+    static void pickTheme(JSONObject j, String themeName) throws org.json.JSONException {
+        lockTheme(j, themeName);
+        j.put("wallpaper_bg", 0);
     }
 
     static void lockWallpaper(JSONObject j, String wallpaper, int bgIdx) throws org.json.JSONException {

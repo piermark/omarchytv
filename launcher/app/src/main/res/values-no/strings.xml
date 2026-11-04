@@ -48,6 +48,7 @@
     <string name="ss_preview">Forhåndsvis</string>
     <string name="ss_system">Innstillinger for systemets skjermsparer</string>
     <string name="ss_clock">Klokke under logoen</string>
+    <string name="ss_from_pc">Skjermsparer fra PC-en</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">flytt: ←↑↓→ OK=ferdig TILBAKE=avbryt</string>
     <string name="move_saved">Rekkefølgen er lagret</string>
@@ -159,6 +160,7 @@
     <string name="web_reload">Last inn på nytt</string>
     <string name="web_exit">Avslutt</string>
     <string name="web_old">Android System WebView %1$s er utdatert: oppdater den i Play Butikk for moderne nettsteder</string>
+    <string name="web_crashed">Siden fungerer ikke lenger · Tilbake går til launcheren</string>
     <string name="web_http_lan_only">http:// fungerer bare for lokale adresser (f.eks. http://192.168.1.20:8123); bruk https:// for nettsteder</string>
     <string name="link_paired_n">sammenkoblet: %1$d</string>
     <string name="link_forget_short">glem</string>
@@ -459,6 +461,7 @@
     <string name="omafire_sound">OmaFire-lyd</string>
     <string name="arcade_sound">Spillehallyd</string>
     <string name="arcade_pc_theme">Spillehall: RICE WARS bytter også PC-ens tema</string>
+    <string name="arcade_crashed">Spillehallen fungerer ikke lenger</string>
     <string name="share_qr">OmarchyTV-QR-kode</string>
     <string name="cine_sources">kilder</string>
     <string name="cine_library">bibliotek</string>

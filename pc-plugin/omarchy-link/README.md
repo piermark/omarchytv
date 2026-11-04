@@ -68,13 +68,40 @@ connected / screensaver / offline / unpaired) for custom bar modules. Exit code 
 Widget keyboard shortcuts while its panel is open: `H` home, `B` back, `P` play/pause, `+`/`-` volume,
 `M` mute, `A` apps, `T` sync theme, `R` rescan.
 
+### Run it as a service
+
+The bar widget starts `omarchy-link session` itself and the session ends when that process's stdin closes. Under
+systemd there is no widget, so pass `--daemon`: the session then ignores stdin EOF and runs until SIGTERM, while
+still reading JSON lines from stdin and writing state on stdout.
+
+```ini
+# ~/.config/systemd/user/omarchy-link.service
+[Unit]
+Description=Omarchy Link session (OmarchyTV)
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/omarchy-link session --daemon
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target
+```
+
+```bash
+systemctl --user daemon-reload && systemctl --user enable --now omarchy-link.service
+journalctl --user -u omarchy-link.service -f     # the same JSON lines the widget consumes
+```
+
 ## Configure (all optional)
 
 Files live in `~/.config/omarchy-link/`. See `examples/`.
 
 | File | What |
 |---|---|
-| `config.json` | `themeSync`, `themeFromTv` (TV may switch the PC theme, default on; the TV side is off until enabled there), `powerFromTv` / `powerGraceS` (TV off → PC suspends after 60 s; TV on wakes it), `updateFromTv` (LG/Samsung "Update via PC"), `liftoffToTv`, `livingToTv` / `githubUser` / `githubRepos` / `xApi` / `xPollMinutes` / `xMonthlyUsd` (Living screensaver), `tizenProfile` / `webosDevice` (where the TV update installs), `wallpaperSync`, `pcPane`, `aiCredits`, `aiRefreshMinutes`, `aiSourcesFromTv`, `agentMonitor`, `agentControlFromTv`, `agentConfirm`, `agentToolApprovalFromTv`, `prompt`, `castPrefer` (`cast`\|`link`), `castDevice`, `castServe`, `screenCommand`, `assistant`, `allowOtherSubnets`, `actions` (PC commands a TV shortcut may run: `{"lock": {"label": "Lock PC", "exec": ["omarchy-system-lock"], "confirm": true}}`) |
+| `config.json` | `themeSync`, `screensaverSync` (push `~/.config/omarchy/branding/screensaver.txt` to the TV screensaver, default on), `themeFromTv` (TV may switch the PC theme, default on; the TV side is off until enabled there), `powerFromTv` / `powerGraceS` (TV off → PC suspends after 60 s; TV on wakes it), `updateFromTv` (LG/Samsung "Update via PC"), `liftoffToTv`, `livingToTv` / `githubUser` / `githubRepos` / `xApi` / `xPollMinutes` / `xMonthlyUsd` (Living screensaver), `tizenProfile` / `webosDevice` (where the TV update installs), `wallpaperSync`, `pcPane`, `aiCredits`, `aiRefreshMinutes`, `aiSourcesFromTv`, `agentMonitor`, `agentControlFromTv`, `agentConfirm`, `agentToolApprovalFromTv`, `prompt`, `castPrefer` (`cast`\|`link`), `castDevice`, `castServe`, `screenCommand`, `assistant`, `allowOtherSubnets`, `actions` (PC commands a TV shortcut may run: `{"lock": {"label": "Lock PC", "exec": ["omarchy-system-lock"], "confirm": true}}`) |
 | `widgets.json` | extra panes and shortcuts for the TV |
 | `ai.json` | AI credits: which bar widget to mirror (`omarchy-link ai setup`), manual entries, API fallbacks, auto-detection. See [docs/AI-CREDITS.md](docs/AI-CREDITS.md). |
 | `assistant.json` | voice assistant providers, default, memory, API fallbacks. See [docs/ASSISTANT.md](docs/ASSISTANT.md). |

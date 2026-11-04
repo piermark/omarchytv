@@ -1007,6 +1007,16 @@ public final class LinkServer {
         }
     }
 
+    /** The launcher's own versionName, as reported by the Host status; "0" only if the host has none. */
+    private String launcherVersion() {
+        try {
+            String v = host.status().optString("launcherVersion", "");
+            return v.matches("\\d{1,3}(\\.\\d{1,3}){1,2}(-[A-Za-z0-9.]+)?") ? v : "0";
+        } catch (Exception e) {
+            return "0";
+        }
+    }
+
     /**
      * Native Model Context Protocol (MCP) JSON-RPC 2.0 endpoint (/mcp and /v1/mcp) for Grok Bot, Claude,
      * Hermes, and desktop MCP clients. Authenticated via OTV1 HMAC or Authorization: Bearer <paired-token>.
@@ -1022,7 +1032,7 @@ public final class LinkServer {
                 JSONObject r = new JSONObject()
                         .put("protocolVersion", "2024-11-05")
                         .put("capabilities", new JSONObject().put("tools", new JSONObject()))
-                        .put("serverInfo", new JSONObject().put("name", "omarchytv-mcp").put("version", "2.12.0"));
+                        .put("serverInfo", new JSONObject().put("name", "omarchytv-mcp").put("version", launcherVersion()));
                 return new Response(200, res.put("result", r));
             }
             case "notifications/initialized":

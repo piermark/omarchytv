@@ -47,6 +47,7 @@
     <string name="ss_preview">Anteprima</string>
     <string name="ss_system">Impostazioni salvaschermo di sistema</string>
     <string name="ss_clock">Orologio sotto il logo</string>
+    <string name="ss_from_pc">Salvaschermo dal PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">sposta: ←↑↓→ OK=fatto INDIETRO=annulla</string>
     <string name="move_saved">Ordine salvato</string>
@@ -158,6 +159,7 @@
     <string name="web_reload">Ricarica</string>
     <string name="web_exit">Esci</string>
     <string name="web_old">Android System WebView %1$s è vecchio: aggiornalo dal Play Store per i siti moderni</string>
+    <string name="web_crashed">La pagina si è bloccata · Indietro torna al launcher</string>
     <string name="web_http_lan_only">http:// funziona solo per indirizzi della rete locale (es. http://192.168.1.20:8123); per i siti usa https://</string>
     <string name="link_paired_n">abbinati: %1$d</string>
     <string name="link_forget_short">dimentica</string>
@@ -463,6 +465,7 @@
     <string name="omafire_sound">Suono di OmaFire</string>
     <string name="arcade_sound">Suoni della sala giochi</string>
     <string name="arcade_pc_theme">Sala giochi: RICE WARS cambia tema anche al PC</string>
+    <string name="arcade_crashed">La sala giochi si è fermata</string>
     <string name="share_qr">QR code di OmarchyTV</string>
     <string name="cine_sources">sorgenti</string>
     <string name="cine_library">libreria</string>

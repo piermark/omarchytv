@@ -48,6 +48,7 @@
     <string name="ss_preview">Voorbeeld</string>
     <string name="ss_system">Instellingen systeemschermbeveiliging</string>
     <string name="ss_clock">Klok onder het logo</string>
+    <string name="ss_from_pc">Schermbeveiliging van de PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">verplaatsen: ←↑↓→ OK=klaar TERUG=annuleren</string>
     <string name="move_saved">Volgorde opgeslagen</string>
@@ -159,6 +160,7 @@
     <string name="web_reload">Herladen</string>
     <string name="web_exit">Sluiten</string>
     <string name="web_old">Android System WebView %1$s is verouderd: werk het bij in de Play Store voor moderne sites</string>
+    <string name="web_crashed">De pagina werkt niet meer · Terug gaat naar het beginscherm</string>
     <string name="web_http_lan_only">http:// werkt alleen voor lokale adressen (bijv. http://192.168.1.20:8123); gebruik https:// voor websites</string>
     <string name="link_paired_n">gekoppeld: %1$d</string>
     <string name="link_forget_short">vergeten</string>
@@ -459,6 +461,7 @@
     <string name="omafire_sound">OmaFire-geluid</string>
     <string name="arcade_sound">Speelhalgeluid</string>
     <string name="arcade_pc_theme">Speelhal: RICE WARS wijzigt ook het pc-thema</string>
+    <string name="arcade_crashed">De speelhal werkt niet meer</string>
     <string name="share_qr">OmarchyTV-QR-code</string>
     <string name="cine_sources">bronnen</string>
     <string name="cine_library">bibliotheek</string>

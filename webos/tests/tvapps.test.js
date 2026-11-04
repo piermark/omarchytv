@@ -58,5 +58,5 @@ test("icon urls are restricted", () => {
   assert.strictEqual(iconUrl("https://evil.example/resources/x.png"), undefined);
   assert.strictEqual(iconUrl('https://127.0.0.1:3001/resources/a".png'), undefined);
   assert.strictEqual(iconUrl("/a/../b.png"), undefined);
-  assert.strictEqual(iconUrl("http://192.168.68.53:3000/resources/a.png"), "http://192.168.68.53:3000/resources/a.png");
+  assert.strictEqual(iconUrl("http://192.168.1.50:3000/resources/a.png"), "http://192.168.1.50:3000/resources/a.png");
 });
