@@ -33,3 +33,8 @@ TV. Reset/removal paths were tested with isolated fixtures and an isolated live
 TV instance; the user's production pairing was not reset. The original
 Control Center implementation and the integrated migration were both confirmed
 working by the owner.
+
+Connected settings captured from the ordinary webOS app on the test TV (modal
+region only, without dashboard or pairing data):
+
+![Connected iPhone Remote settings](screenshots/connected.png)
