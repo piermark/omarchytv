@@ -3,7 +3,7 @@
 
 Usage: python3 webos/tools/vendor-grokbot.py /path/to/omarchy-plugin-grokbot-desktop
 
-Copies qml/shapes.js, qml/palette.js and qml/face.js of his MIT plugin (v0.1.0) unchanged apart from
+Copies qml/shapes.js, qml/palette.js and qml/face.js of his MIT Agent Desktop plugin (v0.2.0) unchanged apart from
 dropping the QML-only ".pragma library" line, and wraps each in a function scope that exports its names as
 window.GrokbotShapes, window.GrokbotPalette and window.GrokbotFace. Output:
 webos/app/vendor/grokbot/grokbot-avatar.js (with his MIT licence in the header).

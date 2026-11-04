@@ -197,7 +197,7 @@ class Client:
         return self.request("PUT", "/v1/screensaver", {"text": text})
 
     def put_grokbot(self, bot: dict | None):
-        """The Grok Bot Desktop Companion's current bot for the TV tile (None = not installed)."""
+        """Agent Desktop's (the Grok Bot Desktop Companion) current bot for the TV tile (None = not installed)."""
         return self.request("PUT", "/v1/plugins/grokbot", {"bot": bot, "from": "pc"})
 
     def put_ai(self, ai: dict):

@@ -384,7 +384,7 @@ class Session:
             except (link.LinkError, OSError, ValueError, RuntimeError, subprocess.SubprocessError) as e:
                 self.log(f"AI push after source change: {e}")
 
-    # ------------------------------------------------------------ Grok Bot Desktop Companion (experimental)
+    # ------------------------------------------------------------ Agent Desktop companion (experimental)
     def handle_grokbot_ask(self, stream, data: dict) -> None:
         """TV -> PC "grokbot_ask" {id, text, bot?}: forwarded to @tcballard's companion (grokbot.py).
         Replies "grokbot_answer" {id, bot, text, mode} or "grokbot_error" {id, error, message}."""

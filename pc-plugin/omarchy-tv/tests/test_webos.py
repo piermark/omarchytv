@@ -32,7 +32,7 @@ class WebOSBridgeTest(unittest.TestCase):
 
 
 class FakeGrokbot:
-    UPSTREAM, UPSTREAM_REF = "https://github.com/tcballard/omarchy-plugin-grokbot-desktop", "v0.1.0"
+    UPSTREAM, UPSTREAM_REF = "https://github.com/tcballard/omarchy-plugin-grokbot-desktop", "v0.2.0"
     PALETTE = {"orange": "#FF6700"}
 
     class GrokbotError(Exception):
@@ -53,7 +53,7 @@ class FakeGrokbot:
 
     def current(self, cfg):
         return {"id": "b1", "name": "Bob", "shortName": "Bob", "avatarShape": "teardrop", "fill": "#FF6700",
-                "dispatch": "webhook", "version": "0.1.0"}
+                "dispatch": "webhook", "version": "0.2.0"}
 
     def roster(self, cfg):
         return [{"id": "b1", "name": "Bob", "avatarShape": "drop", "avatarColor": "orange"}]

@@ -1776,7 +1776,7 @@ public final class LinkServer {
             r.put("plugins", new JSONArray()
                     .put(new JSONObject().put("id", "com.sighmon.spacex-tv").put("name", "SpaceX TV")
                             .put("author", "sighmon").put("license", "MIT").put("enabled", r.optBoolean("spacexTv", true)))
-                    .put(new JSONObject().put("id", "io.github.tcballard.grokbot-desktop").put("name", "Grok Bot Desktop Companion")
+                    .put(new JSONObject().put("id", "io.github.tcballard.grokbot-desktop").put("name", "Agent Desktop")
                             .put("author", "tcballard").put("license", "MIT").put("enabled", r.optBoolean("grokbot", true))));
         }
         return r;
@@ -1831,7 +1831,7 @@ public final class LinkServer {
         return new JSONObject().put("ok", true).put("message", msg[0]).put("bot", bot[0]);
     }
 
-    /** Shapes/colours @tcballard's Grok Bot Desktop Companion uses (names only; the TV draws its own primitives). */
+    /** Shapes/colours @tcballard's Agent Desktop uses (names only; the TV draws its own primitives). */
     static final java.util.Set<String> GROKBOT_SHAPES = new java.util.HashSet<>(java.util.Arrays.asList(
             "circle", "square", "triangle", "diamond", "pentagon", "hexagon", "octagon", "heptagon", "pill", "cloud",
             "heart", "crescent", "star", "spark", "burst", "flower", "clover", "sprout", "drop", "bean", "peanut",
@@ -1857,7 +1857,7 @@ public final class LinkServer {
                 .put("color", GROKBOT_COLORS.contains(color) ? color : "orange")
                 .put("fill", fill.matches("#[0-9A-Fa-f]{6}") ? fill.toUpperCase(java.util.Locale.ROOT) : JSONObject.NULL)
                 .put("mode", "relay".equals(mode) || "ipc".equals(mode) ? mode : "offline")
-                // v0.1.0 = the companion release the bridge targets; the branch may report none.
+                // v0.2.0 = the companion release the bridge targets; the branch may report none.
                 .put("version", version.matches("v?\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}") ? version.replaceFirst("^v", "") : JSONObject.NULL)
                 .put("compat", GROKBOT_COMPAT.contains(compat) ? compat : "branch");
     }

@@ -7,7 +7,7 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
   GET /v1/themes                   -> JSON {"themes": [...]}
   GET /v1/wallpaper                -> active desktop wallpaper image (webp/png/jpg)
   GET /v1/grokbot                  -> JSON {available, bot, roster, dispatch, version}: @tcballard's Grok Bot
-                                      Desktop Companion v0.1.0 as omarchy-link's bridge sees it (no secrets)
+                                      Desktop (Agent Desktop) v0.2.0 as omarchy-link's bridge sees it (no secrets)
   POST /v1/grokbot/ask             -> {text, bot?} with header X-Omarchy-Token: the ask code printed when the
                                       bridge starts (~/.config/omarchy-tv/webos-bridge.token, mode 0600).
                                       Answers like omarchy-link's grokbot_answer {bot, text, mode, links, note?}.
@@ -180,7 +180,7 @@ def build_grokbot_payload() -> dict:
     cfg = link_cfg()
     cur = g.current(cfg)
     if not cur:
-        return {"available": False, "reason": "the Grok Bot Desktop Companion is not installed on this PC"}
+        return {"available": False, "reason": "Agent Desktop (Grok Bot Desktop Companion) is not installed on this PC"}
     roster = []
     for b in g.roster(cfg)[:40]:
         c = g.color_name(b.get("avatarColor"))

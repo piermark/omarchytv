@@ -18,7 +18,7 @@ import android.widget.TextView;
  * v2.14: Tom Ballard's own avatar (his 14 shapes, palette, eyes, poses through {@link GrokbotAvatar}), with the
  * webOS/Tizen behaviour: blinks (sometimes twice), glances around, falls asleep after two idle minutes (any key
  * wakes it), a slow burn-in drift, an unread dot, and Settings for shape, colour, size, badge and animation.
- * Built for @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT); my own code.
+ * Built for @tcballard's Agent Desktop v0.2.0 (MIT); my own code.
  */
 final class CompanionOverlay extends LinearLayout {
     private final GrokbotMark mark;

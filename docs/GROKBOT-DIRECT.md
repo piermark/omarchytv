@@ -7,7 +7,7 @@ run one action: play a video, open an app, or search YouTube.
 
 It's an addition. Nothing else changes:
 
-- When a PC companion is linked, questions still go to Tom Ballard's Grok Bot Desktop Companion on the PC, as before.
+- When a PC companion is linked, questions still go to Tom Ballard's Agent Desktop (formerly Grok Bot Desktop Companion) on the PC, as before.
 - "open Netflix" / "apri YouTube" still opens the installed app locally first, with no network call.
 - OmarchyTV Ask and its agents (Claude, Codex, Hermes and the others) are untouched. If you pick Ask as the companion agent, Ask still wins.
 
@@ -149,7 +149,7 @@ to your Grok Bot routine over HTTPS, and the TV never sends your key anywhere el
 
 ### PC mode and Direct mode
 
-- **PC mode**: Grok Bot Desktop Companion by Tom Ballard ([@tcballard](https://x.com/tcballard)), running on the Omarchy PC through omarchy-link. The TV sends the question to the PC, and the PC answers. This needs the PC turned on and linked. All the PC mode code and behaviour are Tom's, and I haven't changed them.
+- **PC mode**: Agent Desktop (formerly Grok Bot Desktop Companion) by Tom Ballard ([@tcballard](https://x.com/tcballard)), running on the Omarchy PC through omarchy-link. The TV sends the question to the PC, and the PC answers. This needs the PC turned on and linked. All the PC mode code and behaviour are Tom's, and I haven't changed them.
 - **Direct mode (Grok Bot diretto)**: the TV calls your own Grok Bot webhook routine and reads the reply from ntfy.sh. It works with the PC off. You turn it on in Grok Bot settings with your own webhook URL and key (placeholders here: `https://<your-webhook-url>`, `<your-key>`).
 
 How the choice is made:

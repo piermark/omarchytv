@@ -1,4 +1,5 @@
-"""Bridge to @tcballard's Grok Bot Desktop Companion with a mocked IPC: a fake `omarchy-shell` on PATH
+"""Bridge to @tcballard's Agent Desktop (the companion formerly called Grok Bot Desktop Companion)
+with a mocked IPC: a fake `omarchy-shell` on PATH
 logs every call, and a fake checkout (manifest.json + bin/grokbot-ask + data/bots.json) answers on stdout."""
 import json
 import os
@@ -78,7 +79,7 @@ class Base(unittest.TestCase):
         write(BIN / "omarchy-shell", FAKE_SHELL, 0o755)
 
     def checkout(self):
-        write(CHECKOUT / "manifest.json", json.dumps({"id": grokbot.COMPANION_ID, "version": "0.1.0"}))
+        write(CHECKOUT / "manifest.json", json.dumps({"id": grokbot.COMPANION_ID, "version": "0.2.0"}))
         write(CHECKOUT / "bin/grokbot-ask", FAKE_HELPER, 0o755)
         write(CHECKOUT / "data/bots.json", json.dumps(BOTS))
 
@@ -102,7 +103,7 @@ class Detect(Base):
         cur = grokbot.current({})
         self.assertEqual((cur["name"], cur["shape"], cur["color"], cur["fill"]), ("Bob", "drop", "orange", "#FF6700"))
         self.assertEqual(cur["mode"], "offline")
-        self.assertIn("v0.1.0", cur["label"])
+        self.assertIn("v0.2.0", cur["label"])
 
     def test_bot_from_roster_and_custom_appearance(self):
         self.checkout()
@@ -249,15 +250,15 @@ class V010(Base):
 
 
 class Version(Base):
-    """The bridge targets his v0.1.0 release and still accepts older checkouts."""
+    """The bridge targets his v0.2.0 release and still accepts an older v0.1.0 checkout."""
 
     def test_reads_manifest_then_version_file(self):
         self.checkout()
-        self.assertEqual(grokbot.detect({})["version"], "0.1.0")
+        self.assertEqual(grokbot.detect({})["version"], "0.2.0")
         self.assertEqual(grokbot.detect({})["compat"], "target")
         write(CHECKOUT / "manifest.json", json.dumps({"id": grokbot.COMPANION_ID}))
-        write(CHECKOUT / "VERSION", "0.1.0\n")
-        self.assertEqual(grokbot.companion_version(CHECKOUT), "0.1.0")
+        write(CHECKOUT / "VERSION", "0.2.0\n")
+        self.assertEqual(grokbot.companion_version(CHECKOUT), "0.2.0")
         (CHECKOUT / "VERSION").unlink()
         info = grokbot.detect({})
         self.assertIsNone(info["version"])
@@ -266,13 +267,14 @@ class Version(Base):
 
     def test_compatibility_levels(self):
         c = grokbot.compatibility
-        self.assertEqual(c("0.1.0"), "target")
-        self.assertEqual(c("v0.1.3"), "target")
+        self.assertEqual(c("0.2.0"), "target")
+        self.assertEqual(c("v0.2.3"), "target")
+        self.assertEqual(c("0.1.0"), "branch")          # his first release: same contract, still relayed
         self.assertEqual(c("0.0.9"), "branch")
-        self.assertEqual(c("0.2.0"), "newer")
+        self.assertEqual(c("0.3.0"), "newer")
         self.assertEqual(c("1.0.0"), "unsupported")
-        self.assertEqual(grokbot.UPSTREAM_TAG, "v0.1.0")
-        self.assertEqual(grokbot.UPSTREAM_REF, "v0.1.0")
+        self.assertEqual(grokbot.UPSTREAM_TAG, "v0.2.0")
+        self.assertEqual(grokbot.UPSTREAM_REF, "v0.2.0")
 
     def test_new_major_disables_the_helper_relay(self):
         self.checkout()

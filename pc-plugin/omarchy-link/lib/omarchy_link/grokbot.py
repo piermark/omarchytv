@@ -1,14 +1,15 @@
-"""Bridge to @tcballard's Grok Bot Desktop Companion (experimental).
+"""Bridge to @tcballard's Agent Desktop, the companion formerly called Grok Bot Desktop Companion
+(experimental).
 
-Built against his v0.1.0 release (tag v0.1.0, commit a2efb00) of
+Built against his v0.2.0 release (tag v0.2.0, commit b6933e5) of
 https://github.com/tcballard/omarchy-plugin-grokbot-desktop (MIT, (c) 2026 Tom Ballard).
 The palette values below come from his qml/palette.js. None of his QML or Python is
 copied here. I only use what his README documents:
 
 * the IPC target ``omarchy-shell io.github.tcballard.grokbot-desktop <method> [args]``
   (``ping``, ``bot <name>``, ``ask <text>``, ``say <title> <text>``);
-* his settings entry in ``~/.config/omarchy/shell.json`` (``plugins[]`` with his id:
-  ``botId``, ``syncAppearance``, ``shape``, ``color``);
+* his settings entry in ``~/.config/omarchy/shell.json`` (``plugins[]`` with his id, unchanged in
+  v0.2.0 so an update keeps the settings: ``botId``, ``syncAppearance``, ``shape``, ``color``);
 * his bot roster ``~/.config/omarchy/grokbot-bots.json``, else the ``data/bots.json`` of the checkout;
 * his ask helper ``bin/grokbot-ask`` (one JSON object on stdin, the reply on stdout; exit 10 means
   a webhook routine took the question and answers later through his ``reply`` command);
@@ -34,13 +35,14 @@ from pathlib import Path
 
 COMPANION_ID = "io.github.tcballard.grokbot-desktop"
 UPSTREAM = "https://github.com/tcballard/omarchy-plugin-grokbot-desktop"
-LABEL = "@tcballard's Grok Bot Desktop Companion v0.1.0"
+LABEL = "@tcballard's Agent Desktop v0.2.0"
 
-# The bridge targets his v0.1.0 release (manifest.json "version" / VERSION file). A later 0.x is still
-# tried with the same contract; OMARCHY_GROKBOT_DESKTOP_REF can point the reference elsewhere.
-TARGET_VERSION = "0.1.0"
+# The bridge targets his v0.2.0 release (manifest.json "version" / VERSION file). An older 0.x checkout
+# (v0.1.0, the first release the bridge was written against) and a later one are still tried with the
+# same contract; OMARCHY_GROKBOT_DESKTOP_REF can point the reference elsewhere.
+TARGET_VERSION = "0.2.0"
 UPSTREAM_TAG = "v" + TARGET_VERSION
-UPSTREAM_COMMIT = "a2efb00d31b6ac698f9ba7578f4d298faa6434be"
+UPSTREAM_COMMIT = "b6933e5424327f5133e5e66a169061b0b8d28a34"
 UPSTREAM_REF = os.environ.get("OMARCHY_GROKBOT_DESKTOP_REF") or UPSTREAM_TAG
 EXIT_SENT = 10            # his grokbot-ask: the webhook accepted the question, the answer follows via `reply`
 VERSION_RE = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$")
@@ -49,14 +51,14 @@ VERSION_RE = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$")
 DEFAULT_BOT = {"id": "e0195a7d-f804-4688-9191-e2cf3574a6d1", "name": "Bob", "shortName": "Bob",
                "avatarShape": "teardrop", "avatarColor": "orange", "isPrimary": True}
 
-# Fill colours of his palette names (v0.1.0 qml/palette.js, MIT, Tom Ballard: Grok Bot's own values).
+# Fill colours of his palette names (v0.2.0 qml/palette.js, unchanged since v0.1.0, MIT, Tom Ballard).
 # Black is drawn white on a dark surface there, and the TV is always dark. "omarchy" means "the active
 # theme accent" over there; the TV gets None and uses its own accent.
 PALETTE = {"black": "#FFFFFF", "brown": "#936439", "red": "#FF263C", "orange": "#FF6700",
            "yellow": "#FF9800", "green": "#00C972", "cyan": "#00BCA6", "blue": "#1084FE",
            "violet": "#9159FE", "magenta": "#FF309B", "gray": "#777777", "omarchy": None}
 COLOR_ALIASES = {"purple": "violet", "grey": "gray", "teal": "cyan", "pink": "magenta", "amber": "yellow"}
-# His 14 v0.1.0 shape names (Grok Bot's avatar picker, qml/shapes.js), sent to the TV as "avatarShape"
+# His 14 v0.2.0 shape names (the avatar picker, qml/shapes.js, unchanged since v0.1.0), sent as "avatarShape"
 # so a TV that vendors his shapes draws the exact outline; "shape" stays the older contour family.
 AVATAR_SHAPES = ("blob", "cloud", "squircle", "sparkle", "clover", "heart", "flower", "teardrop", "tablet",
                  "wedge", "gem", "burst", "hex", "pebble")
@@ -161,7 +163,7 @@ def checkout_dir(cfg: dict) -> Path | None:
 
 
 def companion_version(d: Path | None) -> str | None:
-    """His version: manifest.json "version", else the VERSION file (both say 0.1.0 on the branch)."""
+    """His version: manifest.json "version", else the VERSION file (v0.2.0 says 0.2.0 in both)."""
     if not d:
         return None
     m = _read_json(d / "manifest.json", 64 * 1024)
@@ -178,9 +180,10 @@ def companion_version(d: Path | None) -> str | None:
 
 
 def compatibility(version: str | None) -> str:
-    """"target" = v0.1.0 (the release or the branch reporting it); "branch" = no/older version
+    """"target" = v0.2.0 (the release or the branch reporting it); "branch" = no/older version
     (the in-development branch before VERSION existed); "newer" = a later 0.x, still tried with
-    the v0.1.0 contract; "unsupported" = a new major, where the documented IPC may have changed."""
+    the v0.2.0 contract (v0.1.0 included); "unsupported" = a new major, where the documented IPC may
+    have changed."""
     if not version:
         return "branch"
     want = tuple(int(x) for x in VERSION_RE.match(TARGET_VERSION).groups())
@@ -224,7 +227,7 @@ def color_name(value) -> str:
 
 
 def avatar_shape(value) -> str:
-    """His canonical v0.1.0 shape name (aliases resolved as qml/shapes.js does; unknown -> blob)."""
+    """His canonical shape name (aliases resolved as qml/shapes.js does; unknown -> blob)."""
     v = str(value or "").strip().lower()
     v = AVATAR_ALIASES.get(v, v)
     return v if v in AVATAR_SHAPES else "blob"
@@ -381,7 +384,7 @@ def ask(cfg: dict, text, bot_query=None) -> dict:
         raise GrokbotError("empty", "empty question")
     info = detect(cfg)
     if not info["installed"]:
-        raise GrokbotError("not_installed", "the Grok Bot Desktop Companion is not installed on this PC")
+        raise GrokbotError("not_installed", "Agent Desktop (Grok Bot Desktop Companion) is not installed on this PC")
     bot = find_bot(cfg, bot_query) if bot_query else None
     if bot_query and not bot:
         raise GrokbotError("unknown_bot", "unknown bot")
@@ -417,7 +420,7 @@ def ask(cfg: dict, text, bot_query=None) -> dict:
         found = links(reply)
         if info["ipc"]:
             try:
-                if found:   # his v0.1.0 sayLink: the bubble gets a button for the first link
+                if found:   # his sayLink (v0.1.0 and v0.2.0): the bubble gets a button for the first link
                     ipc("sayLink", who, reply[:SAY_LIMIT], found[0]["label"], found[0]["url"])
                 else:
                     ipc("say", who, reply[:SAY_LIMIT])

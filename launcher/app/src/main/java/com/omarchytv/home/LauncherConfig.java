@@ -432,11 +432,11 @@ final class LauncherConfig {
     final boolean randomTheme;
     /** v2.13: rotate among animated wallpapers/intros on Home resume/boot (default true; locked false on manual pick). */
     final boolean randomWallpaper;
-    /** v2.13 Plugins Engine: SpaceX TV (com.sighmon.spacex-tv) & Grok Bot Companion (io.github.tcballard.grokbot-desktop). */
+    /** v2.13 Plugins Engine: SpaceX TV (com.sighmon.spacex-tv) & Agent Desktop (io.github.tcballard.grokbot-desktop). */
     final boolean pluginSpacexTv;
     final boolean pluginGrokbot;
     final String grokbotMessage;
-    /** Experimental: the bot @tcballard's Grok Bot Desktop Companion shows on the PC, pushed by omarchy-link
+    /** Experimental: the bot @tcballard's Agent Desktop companion shows on the PC, pushed by omarchy-link
      *  ("" = not mirrored). Shape/colour names from his bots.json; fill 0 = use the theme accent. */
     final String grokbotBotName, grokbotBotShape, grokbotBotMode, grokbotBotVersion;
     final int grokbotBotFill;
