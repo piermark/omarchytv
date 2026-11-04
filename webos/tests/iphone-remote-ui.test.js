@@ -2,13 +2,13 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),vm=require('vm');
 const source=fs.readFileSync(require.resolve('../app/iphone-remote.js'),'utf8');
 function harness(platform){
- const calls=[],nodes={};function element(){return {textContent:'',style:{},children:[],appendChild(e){this.children.push(e);}};}
+ const calls=[],nodes={},listeners={},timers=new Map(),errors={};let timerId=0;function element(){return {textContent:'',style:{},children:[],appendChild(e){this.children.push(e);}};}
  let status={installed:false,enabled:false,running:false,paired:false};
- const document={hidden:false,getElementById(id){return nodes[id]||(nodes[id]=element());},createElement:element};
+ const document={addEventListener(name,fn){listeners[name]=fn;},hidden:false,getElementById(id){return nodes[id]||(nodes[id]=element());},createElement:element};
  const h={state:{modalOpen:false},modal(title,sub,rows){this.state.modalOpen=true;this.rows=rows;document.getElementById('modal-title').textContent=title;document.getElementById('modal-sub').textContent=sub;},close(){h.state.modalOpen=false;}};
- function Bridge(){this.cancel=()=>{};this.call=(uri,payload)=>{const c=JSON.parse(payload).command;calls.push(c);const action=c.match(/manage\.js' '([^']+)'/)[1];queueMicrotask(()=>{if(action==='enable')status={installed:true,enabled:true,running:true,paired:false,qr:'data:image/png;base64,test',pincode:'000-00-000'};if(action==='disable')status.enabled=false;this.onservicecallback(JSON.stringify({returnValue:true,stdoutString:JSON.stringify(status)}));});};}
- const context={window:null,PalmServiceBridge:Bridge,OMARCHY_PLATFORM:platform,document,location:{pathname:'/media/developer/apps/usr/palm/applications/com.omarchytv.home/index.html'},Promise,Error,JSON,decodeURIComponent,setTimeout:()=>1,clearTimeout:()=>{}};context.window=context;vm.runInNewContext(source,context);context.OmarchyRemote.attach(h);
- return {api:context.OmarchyRemote,h,calls,document,setStatus:s=>status=s};
+ function Bridge(){this.cancel=()=>{};this.call=(uri,payload)=>{const c=JSON.parse(payload).command;calls.push(c);const action=c.match(/manage\.js' '([^']+)'/)[1];queueMicrotask(()=>{if(errors[action]){this.onservicecallback(JSON.stringify({returnValue:false,errorText:'Command failed: internal shell command must not be displayed',stdoutString:JSON.stringify({error:errors[action]})}));return;}if(action==='enable')status={installed:true,enabled:true,running:true,paired:false,qr:'data:image/png;base64,test',pincode:'000-00-000'};if(action==='disable')status.enabled=false;this.onservicecallback(JSON.stringify({returnValue:true,stdoutString:JSON.stringify(status)}));});};}
+ const context={window:null,PalmServiceBridge:Bridge,OMARCHY_PLATFORM:platform,document,location:{pathname:'/media/developer/apps/usr/palm/applications/com.omarchytv.home/index.html'},Promise,Error,JSON,decodeURIComponent,setTimeout:(fn,ms)=>{timers.set(++timerId,{fn,ms});return timerId;},clearTimeout:id=>timers.delete(id)};context.window=context;vm.runInNewContext(source,context);context.OmarchyRemote.attach(h);
+ return {api:context.OmarchyRemote,h,calls,document,errors,timers,setStatus:s=>status=s,visibility:hidden=>{document.hidden=hidden;listeners.visibilitychange();},runPoll:()=>{for(const [id,t] of timers){if(t.ms===3000){timers.delete(id);t.fn();return;}}}};
 }
 const tick=()=>new Promise(r=>setImmediate(r));
 test('opening settings does not enable remote; reset and removal require confirmation',async()=>{
@@ -23,4 +23,19 @@ test('system Home can provide a narrow management transport',async()=>{
  const x=harness();await tick();const calls=[];
  x.api.attach({state:x.h.state,modal:x.h.modal.bind(x.h),close:x.h.close,remoteRequest:action=>{calls.push(action);return Promise.resolve({installed:true,enabled:true,running:true,paired:true});}});
  x.api.open();await tick();assert.ok(calls.includes('status'));assert.match(x.document.getElementById('modal-sub').textContent,/Control Center/);
+});
+
+test('failed synchronization retains controls for the installed healthy service',async()=>{
+ const x=harness();await tick();x.setStatus({installed:true,enabled:true,running:true,paired:true});x.errors.sync='Damaged remote bundle';x.api.open();await tick();
+ assert.ok(x.h.rows.some(r=>r.label==='Turn off iPhone Remote'));assert.ok(x.h.rows.some(r=>r.label==='Remove remote service…'));
+ assert.match(x.document.getElementById('modal-sub').textContent,/Damaged remote bundle/);assert.doesNotMatch(x.document.getElementById('modal-sub').textContent,/Command failed|internal shell/);
+ assert.ok(x.calls.some(c=>c.includes("'status'")));
+ assert.ok(x.calls.every(c=>c.includes('/var/lib/omarchytv-remote/app/manage.js')),'installed controller remains a fallback if regular IPK removes the payload');
+});
+test('pairing status resumes after hidden polling and ignores other menus',async()=>{
+ const x=harness();await tick();x.setStatus({installed:true,enabled:true,running:true,paired:false});x.api.open();await tick();
+ x.document.hidden=true;x.runPoll();await tick();const before=x.calls.length;
+ x.setStatus({installed:true,enabled:true,running:true,paired:true});x.visibility(false);await tick();
+ assert.ok(x.calls.length>before);assert.match(x.document.getElementById('modal-sub').textContent,/Connected/);
+ x.api.settings();const count=x.calls.length;x.visibility(true);x.visibility(false);await tick();assert.equal(x.calls.length,count);
 });
