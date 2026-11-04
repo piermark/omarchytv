@@ -7,5 +7,14 @@
       {"key": "BUTTON_12", "name": "Netflix button", "default": "Opens Netflix (NVIDIA)"}
     ],
     "notes": "Verified on SHIELD TV Pro 2019, Android 11, SHIELD Experience 9.2.4: NVIDIA's com.nvidia.shieldtech.hooks (NvNetflix) handles BUTTON_12 at interceptKeyBeforeDispatching, after the accessibility filter, so KeyMapService can take it over. The mic key (ASSIST) is handled earlier and cannot be taken this way."
+  },
+  {
+    "id": "onn-4k-pro",
+    "name": "onn. 4K Pro remote",
+    "match": [{"vendor": "0957", "product": "0031"}],
+    "buttons": [
+      {"key": "HOME", "name": "Home button", "default": "Opens the Google TV home screen"}
+    ],
+    "notes": "Verified on onn. 4K Pro (Google TV), Android 14, build UR04.260304.011.B1: KeyMapService gets HOME before Google TV's launcherx does, so Home can open OmarchyTV even when the Google TV home screen is already showing."
   }
 ]

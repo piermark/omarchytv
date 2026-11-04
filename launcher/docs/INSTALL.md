@@ -62,6 +62,9 @@ Su Google TV (Google TV Streamer, alcuni Philips con Android 14) nemmeno questo 
 `setupwraith/.RecoveryActivity`, che non va mai disattivato. Lascia il launcher originale attivo e accendi invece
 **Il tasto Home apre OmarchyTV** (menu → Impostazioni launcher → *Il tasto Home apre OmarchyTV*, che apre Accessibilità:
 attiva *Tasto Home OmarchyTV*).
+Se il tuo telecomando è supportato (per esempio onn. 4K Pro), il tasto Home può aprire OmarchyTV sempre, anche quando la
+home originale è già sullo schermo: menu → Impostazioni launcher → *Tasti del telecomando* → attiva il *Servizio di
+accessibilità* (*OmarchyTV tasti telecomando*), poi *Home button* → *Pressione singola* → *Azione OmarchyTV* → *Home*.
 
 ### 6. Debloat (facoltativo, a tuo rischio)
 - Usa **solo** `adb shell pm disable-user --user 0 <pacchetto>`; è reversibile con `adb shell pm enable <pacchetto>`.
@@ -129,6 +132,9 @@ changes, and disabling the stock launcher makes Home open `setupwraith/.Recovery
 breaks Wi-Fi). Keep the stock launcher enabled and turn on **Home button opens OmarchyTV** instead (menu → Launcher
 settings → *Home button opens OmarchyTV*, which opens Accessibility: turn on *OmarchyTV home button*). Home briefly
 shows the stock home and OmarchyTV opens over it. It only sees which home screen opened and reads nothing on screen.
+If your remote is supported (for example the onn. 4K Pro), Home can always open OmarchyTV, even when the stock home is
+already on screen: menu → Launcher settings → *Remote buttons* → turn on the *Accessibility service* (*OmarchyTV remote
+buttons*), then *Home button* → *Single press* → *OmarchyTV action* → *Home*.
 Over adb:
 `adb shell settings put secure enabled_accessibility_services com.omarchytv.home/.HomeOverride` (this replaces the list:
 add `:com.omarchytv.home/.OmarchyRemote` if you use the remote too) and `adb shell settings put secure accessibility_enabled 1`.
