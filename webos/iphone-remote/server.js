@@ -1,4 +1,5 @@
 'use strict';
+const os=require('os');
 const fs=require('fs'),path=require('path'),crypto=require('crypto'),http=require('http');
 const {createPlatform}=require('./platform');
 function createRemoteServer(options={}) {
@@ -74,7 +75,7 @@ async function start(){
   } finally {
     clearTimeout(timer);current.removeListener('advertised',advertised);current.removeListener('error',onError);
   }
-  current.on('error',e=>{published=false;initialization='failed';startupError=e.message||'HomeKit failed';});
+  current.on('error',e=>{if(accessory!==current||closing)return;published=false;initialization='failed';startupError=e.message||'HomeKit failed';});
   qr=await timed(QR.toDataURL(current.setupURI(),{width:320,margin:3,errorCorrectionLevel:'M'}),startupTimeout,'Pairing QR code');
   published=true;
   refresh().catch(()=>{});
@@ -97,6 +98,7 @@ function transition(action){
         if(action==='disable'){cfg.enabled=false;save(cfg);}
         initialization='disabled';
       }else{
+        if(action==='reconnect')await stop();
         if(action==='reset'){
           await stop();Accessory.cleanupAccessoryData(cfg.username);cfg.pincode=newPin();save(cfg);
         }
@@ -129,13 +131,30 @@ const server=http.createServer(async(req,res)=>{
 });
 const boot=transition('boot');boot.catch(e=>console.error('Remote startup failed:',e.message));
 server.listen(port,'127.0.0.1');
-const refreshTimer=setInterval(()=>refresh().catch(()=>{}),5000);refreshTimer.unref();
+// Suspend pauses JS timers; network changes can invalidate the mDNS advertisement.
+const now=options.now||Date.now;
+const networkFingerprint=options.networkFingerprint||(()=>JSON.stringify(Object.entries(os.networkInterfaces()).sort().map(([name,items])=>[name,items.filter(i=>!i.internal).map(i=>i.address).sort()])));
+let lastTick=now(),network=networkFingerprint(),rediscover=false,nextRecovery=0,recoveryDelay=1000;
+async function maintenance(){
+  const time=now(),nextNetwork=networkFingerprint();
+  if(time-lastTick>15000||nextNetwork!==network)rediscover=true;
+  lastTick=time;network=nextNetwork;
+  if(closing||pending||!cfg.enabled)return;
+  if((rediscover||initialization==='failed')&&time>=nextRecovery){
+    rediscover=false;
+    try{await transition('reconnect');recoveryDelay=1000;nextRecovery=0;}
+    catch(e){nextRecovery=now()+recoveryDelay;recoveryDelay=Math.min(recoveryDelay*2,30000);}
+    return;
+  }
+  await refresh();
+}
+const refreshTimer=setInterval(()=>maintenance().catch(()=>{}),5000);refreshTimer.unref();
 async function close(){
   closing=true;clearInterval(refreshTimer);
   await transition('shutdown');
   await new Promise(resolve=>server.close(resolve));
 }
-return {server,status,transition,boot,close};
+return {server,status,transition,boot,close,maintenance};
 }
 if(require.main===module){
   const app=createRemoteServer();

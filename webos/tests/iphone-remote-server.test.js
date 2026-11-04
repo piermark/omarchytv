@@ -19,7 +19,7 @@ function fixture(enabled=true,options={}){
  const hap={Accessory,Service:{},Characteristic:new Proxy({},{get:(_,n)=>({name:n,RELATIVE:1,ALWAYS_DISCOVERABLE:1})}),Categories:{TELEVISION:31},uuid:{generate:s=>s},HAPStorage:{setCustomStoragePath(){}},HapStatusError:Error,HAPStatus:{}};
  const catalog=options.catalog||Promise.resolve({launchPoints:[]});
  const platform={call:uri=>uri.endsWith('listLaunchPoints')?catalog:Promise.resolve({devices:[]}),key:async()=>{},remote:async()=>{},launch:async()=>{}};
- const app=createRemoteServer({root,hap,platform,qr:{toDataURL:async()=>'test'},port:0,startupTimeoutMs:options.timeout||1000});
+ const app=createRemoteServer({root,hap,platform,qr:{toDataURL:async()=>'test'},port:0,startupTimeoutMs:options.timeout||1000,now:options.now,networkFingerprint:options.networkFingerprint});
  async function request(action,token='test-token'){
   if(!app.server.listening)await new Promise(r=>app.server.once('listening',r));
   return new Promise((resolve,reject)=>{const q=http.request({host:'127.0.0.1',port:app.server.address().port,path:'/'+action,method:action==='status'?'GET':'POST',headers:{'X-Omarchy-Token':token}},r=>{let b='';r.on('data',d=>b+=d);r.on('end',()=>resolve({code:r.statusCode,body:JSON.parse(b)}));});q.on('error',reject);q.end();});
@@ -56,4 +56,19 @@ test('shutdown drains startup and rejects queued reset without publishing a repl
  const closed=f.app.close();catalog.resolve({launchPoints:[]});
  await Promise.all([closed,rejected]);assert.equal(f.resets,0);assert.equal(f.app.status().running,false);
  fs.rmSync(f.root,{recursive:true,force:true});
+});
+
+test('resume and network changes re-advertise without resetting pairing',async()=>{
+ let time=1000,network='wifi-a';const f=fixture(true,{autoAdvertise:true,now:()=>time,networkFingerprint:()=>network});
+ try{await f.app.boot;await tick();const config=fs.readFileSync(f.root+'/config.json','utf8');
+ await f.app.maintenance();assert.equal(f.instances.length,1);
+ time+=20000;await f.app.maintenance();assert.equal(f.instances.length,2);assert.equal(f.instances[0].stopped,true);
+ network='wifi-b';await f.app.maintenance();assert.equal(f.instances.length,3);assert.equal(f.app.status().paired,true);assert.equal(f.resets,0);assert.equal(fs.readFileSync(f.root+'/config.json','utf8'),config);
+ await f.app.maintenance();assert.equal(f.instances.length,3);
+ }finally{await f.cleanup();}
+});
+test('advertiser failure recovers automatically but disabled service stays disabled',async()=>{
+ const f=fixture(true,{autoAdvertise:true});try{await f.app.boot;await tick();f.instances[0].emit('error',Error('network lost'));assert.equal(f.app.status().initialization,'failed');await f.app.maintenance();assert.equal(f.app.status().running,true);assert.equal(f.instances.length,2);
+ await f.app.transition('disable');await f.app.maintenance();assert.equal(f.instances.length,2);assert.equal(f.app.status().running,false);
+ }finally{await f.cleanup();}
 });

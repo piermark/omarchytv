@@ -6,11 +6,19 @@ exec 8>"$ROOT/service.lock"
 flock -n 8 || exit 0
 echo $$ > "$ROOT/supervisor.pid"
 trap 'kill "$child" 2>/dev/null; exit 0' TERM INT HUP
-for attempt in 1 2 3 4 5; do
+retry_delay=3
+while :; do
   [ "$(wc -c < "$ROOT/service.log" 2>/dev/null || echo 0)" -lt 65536 ] || mv "$ROOT/service.log" "$ROOT/service.log.old"
+  started=$(date +%s)
   /usr/bin/node "$ROOT/app/server.js" >>"$ROOT/service.log" 2>&1 &
   child=$!
   echo "$child" > "$ROOT/service.pid"
   wait "$child"
-  sleep 3
+  elapsed=$(( $(date +%s) - started ))
+  [ "$elapsed" -lt 60 ] || retry_delay=3
+  sleep "$retry_delay" &
+  child=$!
+  wait "$child"
+  retry_delay=$((retry_delay * 2))
+  [ "$retry_delay" -le 30 ] || retry_delay=30
 done
