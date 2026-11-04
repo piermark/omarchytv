@@ -1,6 +1,6 @@
 // Grok Bot companion for the shared webOS/Tizen app: the pure parts (avatar SVG, links, local app
 // launching, per-bot history). The avatar draws Tom Ballard's MIT shapes, palette and eye geometry
-// (vendor/grokbot/grokbot-avatar.js, from his Grok Bot Desktop Companion v0.1.0); the rest is mine.
+// (vendor/grokbot/grokbot-avatar.js, from his Agent Desktop v0.2.0); the rest is mine.
 // ES5 for webOS 3 (Chrome 38). Works in the browser (window.OmarchyCompanion) and in node (require).
 (function (root, factory) {
   var lib = factory(root);

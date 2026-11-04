@@ -45,7 +45,7 @@ import java.util.Map;
  * in Settings › Grok Bot e AI. Local app commands ("apri Netflix") run first, as in the PC companion chat; the
  * rest goes to the user's own Grok Bot routine (GrokbotDirect), and the reply comes back through ntfy.sh on a
  * random topic. The reply is shown, spoken (TextToSpeech, toggle in Settings) and its action run. A separate
- * screen: @tcballard's Grok Bot Desktop Companion integration (CompanionChatActivity) is not changed.
+ * screen: @tcballard's Agent Desktop companion integration (CompanionChatActivity) is not changed.
  */
 public class GrokbotDirectActivity extends Activity {
     private static final int REQ_VOICE = 43;

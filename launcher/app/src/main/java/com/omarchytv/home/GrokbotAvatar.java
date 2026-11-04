@@ -3,7 +3,7 @@ package com.omarchytv.home;
 /**
  * Tom Ballard's Grok Bot avatar on Android TV: his 14 shapes, 11-colour palette, eyes and poses, from
  * {@link GrokbotAvatarData} (generated from the vendored MIT copy of his qml/shapes.js, palette.js and face.js,
- * v0.1.0, commit a2efb00; (c) 2026 Tom Ballard). The math below is a line-by-line Java port of his face.js
+ * v0.2.0, commit b6933e5; (c) 2026 Tom Ballard). The math below is a line-by-line Java port of his face.js
  * {@code eye}, {@code rotation}, {@code look}, {@code fitAt}, {@code centroid} and {@code rotatePoints}, so the TV
  * draws what webOS/Tizen (and his desktop companion) draw. Pure Java, no Android types, so it can be unit-tested.
  */

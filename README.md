@@ -61,7 +61,7 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 <video src="https://raw.githubusercontent.com/piermark/omarchytv/main/docs/media/aquarium-homage-demo.mp4" controls width="720"></video>
 
-| Android TV · Home | Android TV · Cinemarchy 0.1.0-alpha | Android TV · Grok Bot Companion |
+| Android TV · Home | Android TV · Cinemarchy 0.1.0-alpha | Android TV · Agent Desktop companion |
 |---|---|---|
 | ![Android TV home](docs/media/android-home.jpg) | ![Cinemarchy on Android TV](docs/media/android-cinemarchy.jpg) | ![Companion chat on Android TV](docs/media/android-companion-chat.jpg) |
 | **LG webOS · Home** | **LG webOS · Cinemarchy** | **LG webOS · Plugins** |
@@ -102,7 +102,7 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
   > **A personal homage:** I made the ASCII Aquarium as my personal homage to the 1990s demoscene and to Future Crew's *Second Reality* (1993). All of the code, graphics and audio are original. Nothing was taken from their demo. The fish-tank idea is inspired by [asciiquarium](https://robobunny.com/projects/asciiquarium/) by Kirk Baucom (GPL); no code or art from it was copied, every sprite was drawn from scratch. — Marco Porro
 
 - **Default `last-horizon` ("Eyes Wide") Animated Intro + Random Theme/Wallpaper Toggles:** Starts on **`last-horizon`** (`01-eyes-wide.webp` + `01-eyes-wide.mp4`, artwork by **Erik Johansson** `@erikrjohansson`, used with permission) and rotates across the 5 animated intros (`last-horizon` `01-eyes-wide` and `cumulus` `01..04`) on Home resume while **Random theme** / **Random wallpaper / intro** are enabled; picking any theme or wallpaper manually locks your choice.
-- **Sandboxed Plugin Engine (`SpaceX TV` by `@sighmon` & `Grok Bot Companion` by `@tcballard`):** Manage declarative JSON plugins from `Settings → Plugins` or `omarchy-tv plugins`, featuring the **SpaceX TV** top-bar launch pill (based on `@sighmon`'s MIT Omarchy plugin `omarchy-spacex-tv`) and the Grok Bot companion named after **Tom Ballard's** (`@tcballard`) MIT `omarchy-plugin-grokbot-desktop` with blinking capsule eyes (`[ ◉ ◉ ]`).
+- **Sandboxed Plugin Engine (`SpaceX TV` by `@sighmon` & `Agent Desktop` by `@tcballard`):** Manage declarative JSON plugins from `Settings → Plugins` or `omarchy-tv plugins`, featuring the **SpaceX TV** top-bar launch pill (based on `@sighmon`'s MIT Omarchy plugin `omarchy-spacex-tv`) and the companion named after **Tom Ballard's** (`@tcballard`) MIT `omarchy-plugin-grokbot-desktop` (Agent Desktop, formerly Grok Bot Desktop Companion) with blinking capsule eyes (`[ ◉ ◉ ]`).
   - `omarchy-tv plugins catalog [QUERY]` browses the official Omarchy desktop registry ([plugins.omarchy.org/catalog.json](https://plugins.omarchy.org/catalog.json)). By default only TV-relevant entries are shown (media and visual tags such as themes, wallpapers, screensavers, ambience, or a TV manifest); desktop-only bar/shell/quickshell plugins are hidden (`--all` shows them). It is browse-only: each entry shows its repo and PC install command; only plugins that also have an OmarchyTV TV manifest are installable on the TV (`TV ✓`).
 - **Queue with subtitles:** `omarchy-tv send URL --queue --sub subs.srt` (local .srt/.vtt sent inline, or a subtitle URL).
 - **Wireless debugging pairing (Android 11+):** `omarchy-tv adb-pair 192.168.1.9:37000 123456 --connect 192.168.1.9:5555` (wraps `adb pair`).
@@ -117,14 +117,14 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 
 - **@dhh37:** I read DHH's public uploads feed every 6 h (and on open), cache it, merge it with a curated list and mark new videos `NEW`. Only links and metadata; nothing is downloaded.
 - **Play inside Cinemarchy (off by default):** the official YouTube IFrame embed with chapter jumps. If YouTube refuses the embed, I open the YouTube app.
-- **Grok Bot, the default assistant (built on Tom Ballard's [Grok Bot Desktop Companion](https://github.com/tcballard/omarchy-plugin-grokbot-desktop) v0.1.0, MIT, thank you Tom!):** a floating bot in a corner of the home screen.
+- **Grok Bot, the default assistant (built on Tom Ballard's [Agent Desktop](https://github.com/tcballard/omarchy-plugin-grokbot-desktop), formerly Grok Bot Desktop Companion, v0.2.0, MIT, thank you Tom!):** a floating bot in a corner of the home screen.
   - **webOS/Tizen:** it draws Tom's 14 shapes, palette and eyes. It bobs, blinks, looks around, sleeps and drifts to avoid burn-in. Blue opens the chat, holding Blue opens it by voice, and on Tizen the voice/Search key does too when the TV allows it.
   - **Android:** it now draws Tom's 14 shapes, 11 colours and eyes too, with the same bob, blink, glance, sleep and drift, an unread dot, and the same Settings → Grok Bot options (shape, colour, size, name badge, animation, agent). The Blue key opens the chat (thanks, @andersonleite, #65), the mic/Search key opens it by voice, and long-press Menu, then OK, also works.
   - **Answers:** they come from the Grok Bot on your PC: through omarchy-link on Android, and through `omarchy-tv webos serve` with its ask code on webOS/Tizen. Otherwise, Android uses Ask with your chosen AI provider and webOS/Tizen uses grok.com.
   - **Also:** "open Netflix" / "apri YouTube" opens apps on the TV. Links in a reply become OK-to-play buttons.
   - **Grok Bot · Omarchy TUI on LG/Samsung (new in `2.13.9`):** the Android TUI window now runs on webOS and Tizen too: Menu > ⌨ Grok Bot (Omarchy TUI). It switches themes, wallpapers, screensavers and their speed, opens apps and web apps (grok.com, ChatGPT, Claude, Hermes), and asks the same agents as Android: Grok Bot, the AIs signed in on your PC (Claude, Codex, Grok, Hermes, Gemini, ollama…) or Grok Bot diretto. Also new: Menu > Grok Bot & AI, Menu > Web apps, companion offset, and LG app icons now stay after a theme change. Details in [INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md).
   - **What the platforms allow:** the webOS Magic Remote mic always goes to webOS. On Android, Google Assistant stays one setting away (`"voiceKey": "assistant"`).
-- Config keys: `cinemarchy.embedPlayer`, `cinemarchy.dhhLastSeen`, `plugins.companionOverlay`, `plugins.companionCorner` (`bottom-right`, `bottom-left`, `top-right`, `top-left`), `plugins.companionOffsetX/Y` (dp, max 240). PC side: `grokbotBridge`, `grokbotDesktopDir`, `grokbotTimeoutS`, and `OMARCHY_GROKBOT_DESKTOP_REF` (defaults to his `v0.1.0` tag). Android, webOS and Tizen: `companionShape`, `companionColor`, `companionSize`, `companionBadge`, `companionAnim`, `companionAgent`. webOS/Tizen: `grokbotCode`. Android: `voiceKey` = `companion` (default) | `launcher` | `assistant`.
+- Config keys: `cinemarchy.embedPlayer`, `cinemarchy.dhhLastSeen`, `plugins.companionOverlay`, `plugins.companionCorner` (`bottom-right`, `bottom-left`, `top-right`, `top-left`), `plugins.companionOffsetX/Y` (dp, max 240). PC side: `grokbotBridge`, `grokbotDesktopDir`, `grokbotTimeoutS`, and `OMARCHY_GROKBOT_DESKTOP_REF` (defaults to his `v0.2.0` tag). Android, webOS and Tizen: `companionShape`, `companionColor`, `companionSize`, `companionBadge`, `companionAnim`, `companionAgent`. webOS/Tizen: `grokbotCode`. Android: `voiceKey` = `companion` (default) | `launcher` | `assistant`.
 
 ## What's New in `2.12.0-beta` (`versionCode 20`)
 
@@ -349,7 +349,7 @@ omarchy-tv screen start [--audio]        # mirror instead of extend ("Schermo PC
 - **Tested on real hardware:** on Oct 31, 2026 I tested this on a Sony BRAVIA 4K GB (Android TV 9) running 2.13.7-testing. OmarchyTV found the Philips Hue hub (bridge) on the LAN automatically and connected to it, and the lights synced to the active theme's colour. They show the theme colour while the launcher is on screen and turn off when you leave OmarchyTV (the `When leaving the launcher` → `Turn off` setting, in Italian `Quando esco dal launcher`). I haven't tested other TV models yet.
 
 #### Plugin Engine and the plugins.omarchy.org catalog
-- **On the TV:** `Settings → Plugins (SpaceX TV · Grok Bot)` turns each plugin on or off and opens it (SpaceX TV launches & streams, Grok Bot Companion).
+- **On the TV:** `Settings → Plugins (SpaceX TV · Grok Bot)` turns each plugin on or off and opens it (SpaceX TV launches & streams, Agent Desktop companion).
 - **From the PC:**
 ```bash
 omarchy-tv plugins list                  # installed plugins, on/off
@@ -381,7 +381,7 @@ Subtitles can be a local `.srt`/`.vtt`/`.ass` or a URL; a subtitle file with the
 #### Grok Bot companion on the TV (experimental)
 - **Android TV:** long-press **Menu** on the remote to select the floating bot, then **OK** opens the chat with keyboard and voice input. In `Settings → Grok Bot & AI` pick `Companion corner` (bottom-right, bottom-left, top-right, top-left), or switch `Floating companion on the home screen` off: the Grok Bot logo then disappears.
 - **LG webOS / Samsung Tizen:** the **Blue** key opens the chat; the on-screen keyboard opens only when you select the text field.
-- If Tom Ballard's ([@tcballard](https://github.com/tcballard)) MIT [Grok Bot Desktop Companion](https://github.com/tcballard/omarchy-plugin-grokbot-desktop) runs on the PC, I route the questions to it through `omarchy-link` (also `omarchy-tv plugins grokbot "<message>"` from the PC). Without it, answers come from Ask (Android) or grok.com in the TV browser (webOS/Tizen).
+- If Tom Ballard's ([@tcballard](https://github.com/tcballard)) MIT [Agent Desktop](https://github.com/tcballard/omarchy-plugin-grokbot-desktop) (formerly Grok Bot Desktop Companion) runs on the PC, I route the questions to it through `omarchy-link` (also `omarchy-tv plugins grokbot "<message>"` from the PC). Without it, answers come from Ask (Android) or grok.com in the TV browser (webOS/Tizen).
 
 #### Random theme and wallpaper rotation
 In the Themes list (and in the Wallpaper list) you find **Random theme** and **Random wallpaper / intro**, both on by default. While on, I rotate through the animated intros (`last-horizon` Eyes Wide and `cumulus`) when you come back to Home. Picking a theme or a wallpaper by hand turns rotation off and keeps your choice.
@@ -478,7 +478,7 @@ Cinemarchy has its own version (0.1.0-alpha), separate from OmarchyTV. It's an e
 
 Press **Blue** to chat with Grok Bot, or hold it to talk. On webOS and Tizen, holding Blue for about 0.65 s starts voice. On Android TV the mic key also works when OmarchyTV is the Assistant. Samsung voice/search keys work when the TV lets apps have them.
 
-- **PC mode**: Tom Ballard's ([@tcballard](https://x.com/tcballard)) Grok Bot Desktop Companion on the Omarchy PC. It needs the PC on.
+- **PC mode**: Tom Ballard's ([@tcballard](https://x.com/tcballard)) Agent Desktop (formerly Grok Bot Desktop Companion) on the Omarchy PC. It needs the PC on.
 - **Direct mode**: your own Grok Bot webhook routine. It works with the PC off and is used when no PC is linked or the PC can't be reached.
 - **Grok voice (optional)**: replies spoken with xAI's TTS (paid API key, off by default).
 

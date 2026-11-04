@@ -11,8 +11,8 @@ import android.graphics.RectF;
 import android.view.View;
 
 /**
- * The home tile's mirror of the Grok Bot that @tcballard's Grok Bot Desktop Companion shows on the PC
- * (built for his v0.1.0; shape and colour names come from his MIT bots.json).
+ * The home tile's mirror of the Grok Bot that @tcballard's Agent Desktop companion shows on the PC
+ * (built for his v0.2.0; shape and colour names come from his MIT bots.json).
  * The contours here are my own simple primitives, not his: a handful of families (round, polygon, pill,
  * drop, star, heart, shield) cover his 25 shape names well enough at tile size. Two capsule eyes, closed
  * when {@link #blink} says so.

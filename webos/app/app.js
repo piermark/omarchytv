@@ -2109,7 +2109,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
 
   // Grok Bot companion avatar, webOS/Tizen: Tom Ballard's shapes, palette and eyes (MIT, vendored from
-  // his Grok Bot Desktop Companion v0.1.0, see vendor/grokbot/) drawn by companion.js. The motion follows
+  // his Agent Desktop v0.2.0, see vendor/grokbot/) drawn by companion.js. The motion follows
   // his Main.qml: an idle bob, a blink every 2.8-5.2 s (a third of them double), a look around now and
   // then, and sleep after two idle minutes (any key wakes it). "Animation" off keeps it still.
   var GBC = window.OmarchyCompanion || null;
@@ -2190,7 +2190,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.pluginSpacexTv = !cfg.pluginSpacexTv; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
       { label: "🚀 Open SpaceX TV Launches & Live Streams", right: "4 streams ›", act: openSpacexModal },
-      { label: "🤖 Omarchy Grok Bot Desktop Companion (@tcballard · MIT)", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
+      { label: "🤖 Omarchy Agent Desktop (@tcballard · MIT)", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
         cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
       { label: "🤖 Open Grok Bot companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } },
@@ -2232,7 +2232,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   // Grok Bot companion chat, webOS/Tizen. The chosen agent answers:
-  //  - "grokbot": @tcballard's Grok Bot Desktop Companion on the PC, through the omarchy-tv bridge
+  //  - "grokbot": @tcballard's Agent Desktop companion on the PC, through the omarchy-tv bridge
   //    (POST /v1/grokbot/ask with the ask code the bridge prints; it runs omarchy-link's grokbot ask);
   //  - "grok-web": grok.com in the TV browser (also the fallback when no PC is paired).
   // "open Netflix" / "apri YouTube" opens a matching app on the TV first, without asking anyone.
@@ -2724,7 +2724,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         return '<div class="gb-msg ' + (m.role === "user" ? "gb-me" : "gb-bot") + '">' + escHtml(m.text.length > 400 ? m.text.slice(0, 397) + "…" : m.text) + "</div>";
       }).join("");
       subEl.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px;"><span class="gb-mark">' + gbAvatar(48) + "</span><div>" +
-        (rows || "Hi! Ask me anything, or tell me which app to open.") + '<div class="gb-credit">Avatar from @tcballard\'s Grok Bot Desktop Companion v0.1.0 (MIT)</div></div></div>';
+        (rows || "Hi! Ask me anything, or tell me which app to open.") + '<div class="gb-credit">Avatar from @tcballard\'s Agent Desktop v0.2.0 (MIT)</div></div></div>';
       subEl.style.display = "block";
     }
     if (voice && speechCtor()) listen(function (t) { askCompanion(t, true); });
@@ -2769,7 +2769,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "Sync bot, shape and colour from the PC", right: pcBase() ? "OK ›" : "pair the PC first", act: function () {
         if (!pcBase()) { showToast("Pair the PC in Workspace 4 first"); return; }
         showToast("Syncing with the PC…");
-        syncGrokbotFromPc(true).then(function (j) { showToast(j ? "Synced · " + ((j.roster || []).length) + " bots" : "The PC has no Grok Bot Desktop Companion, or the bridge is off"); if (state.modalOpen) openGrokbotCompanionModal(10); });
+        syncGrokbotFromPc(true).then(function (j) { showToast(j ? "Synced · " + ((j.roster || []).length) + " bots" : "The PC has no Agent Desktop companion, or the bridge is off"); if (state.modalOpen) openGrokbotCompanionModal(10); });
       } },
       { label: "Clear all companion chats", right: "", act: function () { if (GBC) GBC.clear(window.localStorage); gbFace.bubble = ""; renderPluginsUI(); showToast("Chats cleared"); } }
     ];
@@ -2814,7 +2814,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cfg.companionOffsetX = nx; cfg.companionOffsetY = nx / 2; saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(offIdx);
     } });
     items.push({ label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui });   // last, so the indices above stay
-    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT) · Blue: chat · hold Blue: voice · " +
+    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.2.0 (MIT) · Blue: chat · hold Blue: voice · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
   }

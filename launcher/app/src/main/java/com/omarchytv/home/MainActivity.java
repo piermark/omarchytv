@@ -2030,14 +2030,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         final boolean bridge = cfg.grokbotBotName != null && !cfg.grokbotBotName.isEmpty() && OmarchyLink.hasPc();
         String who = bridge ? cfg.grokbotBotName : "Grok Bot";
         e.setHint(bridge ? "Ask " + who + " on the PC companion…" : "Ask Grok Bot…");
-        String state = bridge ? "Mirroring " + who + " from @tcballard's Grok Bot Desktop Companion on the PC ("
+        String state = bridge ? "Mirroring " + who + " from @tcballard's Agent Desktop on the PC ("
                 + ("relay".equals(cfg.grokbotBotMode) ? "replies come back here" : "replies stay in the desktop bubble") + ")."
                 : "Not linked to the desktop companion: questions open the Ask screen. Install omarchy-link and "
                 + "@tcballard's companion on the PC to mirror the bot here.";
         String msg = (cfg.grokbotMessage != null && !cfg.grokbotMessage.isEmpty() ? "Last: " + cfg.grokbotMessage + "\n\n" : "")
-                + state + "\n\nBuilt for @tcballard's Grok Bot Desktop Companion v0.1.0 (MIT)"
+                + state + "\n\nBuilt for @tcballard's Agent Desktop v0.2.0 (MIT)"
                 + (bridge && cfg.grokbotBotVersion != null && !cfg.grokbotBotVersion.isEmpty()
-                ? " · companion v" + cfg.grokbotBotVersion : "") + " · built for v0.1.0.";
+                ? " · companion v" + cfg.grokbotBotVersion : "") + " · built for v0.2.0.";
         new android.app.AlertDialog.Builder(this)
                 .setTitle("Grok Bot Companion (TV)")
                 .setMessage(msg)

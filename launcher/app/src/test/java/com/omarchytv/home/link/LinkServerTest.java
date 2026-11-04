@@ -536,7 +536,7 @@ public class LinkServerTest {
                 .put("grokbot", true)
                 .put("plugins", new org.json.JSONArray()
                         .put(new JSONObject().put("id", "com.sighmon.spacex-tv").put("name", "SpaceX TV").put("author", "sighmon").put("license", "MIT").put("enabled", false))
-                        .put(new JSONObject().put("id", "io.github.tcballard.grokbot-desktop").put("name", "Grok Bot Desktop Companion").put("author", "tcballard").put("license", "MIT").put("enabled", true)));
+                        .put(new JSONObject().put("id", "io.github.tcballard.grokbot-desktop").put("name", "Agent Desktop").put("author", "tcballard").put("license", "MIT").put("enabled", true)));
         Resp putR = signed("PUT", "/v1/plugins", putBody.toString());
         assertEquals(200, putR.status);
         assertFalse(putR.json().getBoolean("spacexTv"));

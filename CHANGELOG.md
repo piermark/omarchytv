@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Agent Desktop (formerly Grok Bot Desktop Companion) v0.2.0
+
+A dependency update, not a behaviour change: the TV side works exactly as before.
+
+- **Tom Ballard's companion is now [Agent Desktop](https://github.com/tcballard/omarchy-plugin-grokbot-desktop) v0.2.0.** He renamed the project in that release; the plugin id (`io.github.tcballard.grokbot-desktop`) and its settings paths stay the same, so an update keeps your bot, replies and appearance. The 14 avatar shapes, the 11-colour palette and the eye geometry the TV draws are unchanged in v0.2.0, so the vendored copy only moved its version header.
+- **The name follows his:** Settings → Plugins, the companion dialog, the chat panel and the credits now say Agent Desktop. `omarchy-tv plugins grokbot "<message>"` and the `grokbot` alias still work.
+- **`omarchy-link` is built against his v0.2.0 tag** (commit `b6933e5`). v0.1.0 checkouts are still accepted and relayed with the same contract, and `OMARCHY_GROKBOT_DESKTOP_REF` can pin either tag.
+
 ### LG webOS / Samsung Tizen 2.13.11 (draft, not released)
 
 LG and Samsung only. Android TV is unchanged in this build: Android users stay on the current Android release (2.13.8); Android work resumes separately.

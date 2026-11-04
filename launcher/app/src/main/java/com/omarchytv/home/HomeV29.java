@@ -341,7 +341,7 @@ final class HomeV29 extends FrameLayout {
         rl.topMargin = px(16);
         appWin.addView(row, rl);
 
-        // ---- v2.13 Grok Bot Desktop Companion (io.github.tcballard.grokbot-desktop, MIT) ----
+        // ---- v2.13 Agent Desktop companion (io.github.tcballard.grokbot-desktop, MIT) ----
         grokbotBox = new BoxView(a, s, tf);
         grokbotBox.setLegend("grokbot", px(10), px(14));
         grokbotBox.setFocusable(true);
