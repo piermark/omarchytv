@@ -48,6 +48,7 @@
     <string name="ss_preview">معاينة</string>
     <string name="ss_system">إعدادات شاشة التوقف في النظام</string>
     <string name="ss_clock">الساعة أسفل الشعار</string>
+    <string name="ss_from_pc">شاشة التوقف من الكمبيوتر</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">نقل: ←↑↓→ OK=تم رجوع=إلغاء</string>
     <string name="move_saved">تم حفظ الترتيب</string>

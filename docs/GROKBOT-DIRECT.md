@@ -128,6 +128,18 @@ Pick **Test Grok Bot diretto**. Within a few seconds you should see and hear a o
 - **It still goes to the PC**: a linked PC companion always wins. Turn the PC link off (or the PC) to use the direct mode.
 - **Nothing is spoken**: turn on "Leggi risposte ad alta voce". On Android, install or enable a TTS engine. Some webOS/Tizen browsers have no `speechSynthesis`.
 
+## The PC's screensaver text and the Logo choice (Android and the plugin)
+
+`omarchy-link` pushes `~/.config/omarchy/branding/screensaver.txt` to the TV (`PUT /v1/screensaver`, turned on and off
+by `"screensaverSync"` in `~/.config/omarchy-link/config.json`), and the TV keeps it as `link.screensaver` in
+`omarchytv.json`.
+
+Until now that text always won over the Logo picked on the TV. From this version the choice is explicit:
+**Screensaver → Logo** locks the art on the TV and the PC text is ignored from then on; the row **Screensaver from
+PC**, which appears only once the PC has pushed a text, hands the saver back to it. The stored key is
+`"screensaver": {"pcText": false}` in `omarchytv.json`, and it defaults to `true`, so a TV that has never touched the
+Logo row keeps showing the PC's text as before.
+
 ## Privacy
 
 Replies travel through the public [ntfy.sh](https://ntfy.sh) service. The topic is `otv-` plus 32 random characters,

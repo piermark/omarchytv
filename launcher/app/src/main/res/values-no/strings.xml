@@ -48,6 +48,7 @@
     <string name="ss_preview">Forhåndsvis</string>
     <string name="ss_system">Innstillinger for systemets skjermsparer</string>
     <string name="ss_clock">Klokke under logoen</string>
+    <string name="ss_from_pc">Skjermsparer fra PC-en</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">flytt: ←↑↓→ OK=ferdig TILBAKE=avbryt</string>
     <string name="move_saved">Rekkefølgen er lagret</string>

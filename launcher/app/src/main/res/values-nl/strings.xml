@@ -48,6 +48,7 @@
     <string name="ss_preview">Voorbeeld</string>
     <string name="ss_system">Instellingen systeemschermbeveiliging</string>
     <string name="ss_clock">Klok onder het logo</string>
+    <string name="ss_from_pc">Schermbeveiliging van de PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">verplaatsen: ←↑↓→ OK=klaar TERUG=annuleren</string>
     <string name="move_saved">Volgorde opgeslagen</string>

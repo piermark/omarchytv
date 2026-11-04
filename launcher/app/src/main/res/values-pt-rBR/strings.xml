@@ -48,6 +48,7 @@
     <string name="ss_preview">Visualizar</string>
     <string name="ss_system">Configurações do protetor de tela do sistema</string>
     <string name="ss_clock">Relógio embaixo do logo</string>
+    <string name="ss_from_pc">Protetor de tela do PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">mover: ←↑↓→ OK=concluir VOLTAR=cancelar</string>
     <string name="move_saved">Ordem salva</string>

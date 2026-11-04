@@ -47,6 +47,7 @@
     <string name="ss_preview">Anteprima</string>
     <string name="ss_system">Impostazioni salvaschermo di sistema</string>
     <string name="ss_clock">Orologio sotto il logo</string>
+    <string name="ss_from_pc">Salvaschermo dal PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">sposta: ←↑↓→ OK=fatto INDIETRO=annulla</string>
     <string name="move_saved">Ordine salvato</string>

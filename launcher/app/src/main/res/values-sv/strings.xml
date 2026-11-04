@@ -48,6 +48,7 @@
     <string name="ss_preview">Förhandsgranska</string>
     <string name="ss_system">Systemets skärmsläckarinställningar</string>
     <string name="ss_clock">Klocka under logotypen</string>
+    <string name="ss_from_pc">Skärmsläckare från datorn</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">flytta: ←↑↓→ OK=klar BAKÅT=avbryt</string>
     <string name="move_saved">Ordningen sparad</string>

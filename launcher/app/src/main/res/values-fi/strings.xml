@@ -48,6 +48,7 @@
     <string name="ss_preview">Esikatselu</string>
     <string name="ss_system">Järjestelmän näytönsäästäjän asetukset</string>
     <string name="ss_clock">Kello logon alla</string>
+    <string name="ss_from_pc">Näytönsäästäjä tietokoneelta</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">siirrä: ←↑↓→ OK=valmis TAKAISIN=peru</string>
     <string name="move_saved">Järjestys tallennettu</string>

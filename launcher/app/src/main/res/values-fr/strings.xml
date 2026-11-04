@@ -48,6 +48,7 @@
     <string name="ss_preview">Aperçu</string>
     <string name="ss_system">Réglages de l\'économiseur système</string>
     <string name="ss_clock">Horloge sous le logo</string>
+    <string name="ss_from_pc">Écran de veille du PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">déplacer : ←↑↓→ OK=terminé RETOUR=annuler</string>
     <string name="move_saved">Ordre enregistré</string>

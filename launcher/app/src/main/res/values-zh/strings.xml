@@ -48,6 +48,7 @@
     <string name="ss_preview">预览</string>
     <string name="ss_system">系统屏幕保护设置</string>
     <string name="ss_clock">徽标下方显示时钟</string>
+    <string name="ss_from_pc">来自电脑的屏保</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">移动：←↑↓→ OK=完成 返回=取消</string>
     <string name="move_saved">顺序已保存</string>

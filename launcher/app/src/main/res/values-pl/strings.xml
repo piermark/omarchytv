@@ -48,6 +48,7 @@
     <string name="ss_preview">Podgląd</string>
     <string name="ss_system">Ustawienia systemowego wygaszacza</string>
     <string name="ss_clock">Zegar pod logo</string>
+    <string name="ss_from_pc">Wygaszacz z komputera</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">przenieś: ←↑↓→ OK=gotowe WSTECZ=anuluj</string>
     <string name="move_saved">Zapisano kolejność</string>

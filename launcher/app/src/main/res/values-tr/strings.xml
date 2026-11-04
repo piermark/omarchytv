@@ -48,6 +48,7 @@
     <string name="ss_preview">Önizleme</string>
     <string name="ss_system">Sistem ekran koruyucu ayarları</string>
     <string name="ss_clock">Logonun altında saat</string>
+    <string name="ss_from_pc">Bilgisayardan ekran koruyucu</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">taşı: ←↑↓→ OK=bitti GERİ=iptal</string>
     <string name="move_saved">Sıra kaydedildi</string>

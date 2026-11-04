@@ -149,7 +149,7 @@ final class TteSaver {
 
     static String text(Context c) {
         LauncherConfig cfg = LauncherConfig.get(c);
-        String t = cfg.screensaverText;
+        String t = cfg.screensaverFromPc ? cfg.screensaverText : "";   // #84: an art picked on the TV wins
         if (t != null && !t.trim().isEmpty()) return t;
         if ("cinemarchy".equals(cfg.screensaverArt)) return Art.load(c, "cinemarchy");
         if ("omarchy".equals(cfg.screensaverArt)) return Art.load(c, "omarchy");

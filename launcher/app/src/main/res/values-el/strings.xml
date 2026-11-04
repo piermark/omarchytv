@@ -48,6 +48,7 @@
     <string name="ss_preview">Προεπισκόπηση</string>
     <string name="ss_system">Ρυθμίσεις προφύλαξης συστήματος</string>
     <string name="ss_clock">Ρολόι κάτω από το λογότυπο</string>
+    <string name="ss_from_pc">Προφύλαξη οθόνης από τον υπολογιστή</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">μετακίνηση: ←↑↓→ OK=τέλος ΠΙΣΩ=ακύρωση</string>
     <string name="move_saved">Η σειρά αποθηκεύτηκε</string>

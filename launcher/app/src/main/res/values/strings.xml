@@ -50,6 +50,7 @@
     <string name="ss_preview">Preview</string>
     <string name="ss_system">System screensaver settings</string>
     <string name="ss_clock">Clock under logo</string>
+    <string name="ss_from_pc">Screensaver from PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">move: ←↑↓→ OK=done BACK=cancel</string>
     <string name="move_saved">Order saved</string>

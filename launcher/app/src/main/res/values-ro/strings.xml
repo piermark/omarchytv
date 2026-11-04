@@ -48,6 +48,7 @@
     <string name="ss_preview">Previzualizare</string>
     <string name="ss_system">Setările economizorului de sistem</string>
     <string name="ss_clock">Ceas sub logo</string>
+    <string name="ss_from_pc">Screensaver de pe PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">mută: ←↑↓→ OK=gata ÎNAPOI=anulează</string>
     <string name="move_saved">Ordinea a fost salvată</string>

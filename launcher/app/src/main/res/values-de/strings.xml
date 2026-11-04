@@ -47,6 +47,7 @@
     <string name="ss_preview">Vorschau</string>
     <string name="ss_system">System-Bildschirmschoner</string>
     <string name="ss_clock">Uhr unter dem Logo</string>
+    <string name="ss_from_pc">Bildschirmschoner vom PC</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">verschieben: ←↑↓→ OK=fertig ZURÜCK=abbrechen</string>
     <string name="move_saved">Reihenfolge gespeichert</string>

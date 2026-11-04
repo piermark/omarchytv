@@ -3305,9 +3305,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         });
         p.add(lLogo, logoLabel(cfg.screensaverArt), r -> {
             String n = next(logos, cfg.screensaverArt);
-            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", n.startsWith("aquarium") ? "aquarium" : "logo"));
+            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", n.startsWith("aquarium") ? "aquarium" : "logo")
+                    .put("pcText", false));   // #84: a logo chosen here wins over a screensaver.txt pushed by the PC
             return true;
         });
+        if (!cfg.screensaverText.isEmpty()) {   // #84: only when the PC really pushed a text
+            String lFromPc = str(R.string.ss_from_pc);
+            p.add(lFromPc, str(cfg.screensaverFromPc ? R.string.on : R.string.off), r -> {
+                boolean n = !cfg.screensaverFromPc;
+                applyLive("screensaver", lFromPc, j -> screensaver(j).put("pcText", n));
+                return true;
+            });
+        }
         p.add(lSize, sizeLabel(cfg.screensaverSize), r -> {
             String n = next(sizes, cfg.screensaverSize);
             applyLive("screensaver", lSize, j -> screensaver(j).put("size", n));

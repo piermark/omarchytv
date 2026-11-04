@@ -48,6 +48,7 @@
     <string name="ss_preview">Forhåndsvis</string>
     <string name="ss_system">Systemets pauseskærmindstillinger</string>
     <string name="ss_clock">Ur under logoet</string>
+    <string name="ss_from_pc">Pauseskærm fra computeren</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">flyt: ←↑↓→ OK=færdig TILBAGE=annuller</string>
     <string name="move_saved">Rækkefølgen er gemt</string>

@@ -48,6 +48,7 @@
     <string name="ss_preview">Előnézet</string>
     <string name="ss_system">Rendszer-képernyővédő beállításai</string>
     <string name="ss_clock">Óra a logó alatt</string>
+    <string name="ss_from_pc">Képernyővédő a PC-ről</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">mozgatás: ←↑↓→ OK=kész VISSZA=mégse</string>
     <string name="move_saved">Sorrend mentve</string>

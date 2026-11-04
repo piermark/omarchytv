@@ -48,6 +48,7 @@
     <string name="ss_preview">プレビュー</string>
     <string name="ss_system">システムのスクリーンセーバー設定</string>
     <string name="ss_clock">ロゴの下に時計</string>
+    <string name="ss_from_pc">PCのスクリーンセーバー</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">移動: ←↑↓→ OK=完了 戻る=キャンセル</string>
     <string name="move_saved">順序を保存しました</string>

@@ -48,6 +48,7 @@
     <string name="ss_preview">Предпросмотр</string>
     <string name="ss_system">Настройки системной заставки</string>
     <string name="ss_clock">Часы под логотипом</string>
+    <string name="ss_from_pc">Заставка с ПК</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">перемещение: ←↑↓→ OK=готово НАЗАД=отмена</string>
     <string name="move_saved">Порядок сохранён</string>

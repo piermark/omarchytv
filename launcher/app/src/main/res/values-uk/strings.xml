@@ -48,6 +48,7 @@
     <string name="ss_preview">Попередній перегляд</string>
     <string name="ss_system">Налаштування системної заставки</string>
     <string name="ss_clock">Годинник під логотипом</string>
+    <string name="ss_from_pc">Заставка від ПК</string>
     <string name="about_version">OmarchyTV %1$s</string>
     <string name="move_hint">переміщення: ←↑↓→ OK=готово НАЗАД=скасувати</string>
     <string name="move_saved">Порядок збережено</string>
