@@ -82,6 +82,13 @@
 - **Settings:** `bootScreen` = `"boot"` (default: once per TV boot on Android, at app start on webOS/Tizen), `"wake"` (also when the TV comes back from standby) or `"off"`; `bootFx` = scanlines and glow (default on). Android: omarchytv.json; webOS/Tizen: saved settings `cfg.bootScreen` / `cfg.bootFx` (no menu entry yet).
 - One script on all platforms: `launcher/.../BootScript.java` and `webos/app/boot.js` (Tizen packs the same file). Tests: `BootScriptTest`, `webos/tests/boot.test.js` (also checks both platforms say the same lines with the same timings, and that the block font matches `BlockFont.java`).
 
+### Android TV
+
+- **Remote panes URL from the TV.** Logo menu → Widgets → "Remote panes" sets `remotePanes.url` without editing
+  `omarchytv.json`. On some boxes (Android 14, Homatics Box R 4K Plus) the app's external files dir is 0700 and
+  adb can't read or write it, so the menu was the only way in. Empty turns the panes off; a URL `RemotePanes.urlAllowed`
+  refuses is not saved. Saving fetches the panes right away instead of after `refreshSec`.
+
 ### LG webOS / Samsung Tizen 2.13.11 (draft, not released)
 
 LG and Samsung only. Android TV is unchanged in this build: Android users stay on the current Android release (2.13.8); Android work resumes separately.
