@@ -140,9 +140,12 @@
     var pre = doc.createElement("pre");
     pre.className = "otv-living";
     var s = pre.style;
-    s.position = "absolute"; s.right = "2.5vw"; s.top = "4vh"; s.margin = "0"; s.zIndex = "5";
+    // Sized from the host's own box, never from vw/vh: on webOS the whole UI is a 1920x1080 stage scaled with
+    // transform, so viewport units come out at the wrong scale (the widget looked huge and misplaced on the TV).
+    var hw = host.clientWidth || 1920, hh = host.clientHeight || 1080;
+    s.position = "absolute"; s.right = Math.round(hw * 0.025) + "px"; s.top = Math.round(hh * 0.04) + "px"; s.margin = "0"; s.zIndex = "5";
     s.fontFamily = opts.font || "'CaskaydiaMono Nerd Font', 'Caskaydia Mono', monospace";
-    s.fontSize = opts.fontSize || "1.25vw"; s.lineHeight = "1.22"; s.whiteSpace = "pre";
+    s.fontSize = opts.fontSize || Math.max(10, Math.round(hw * 0.0125)) + "px"; s.lineHeight = "1.22"; s.whiteSpace = "pre";
     s.color = opts.color || "#c0caf5"; s.background = "rgba(0,0,0,.55)"; s.padding = ".6em .8em";
     s.textShadow = "0 0 6px " + (opts.accent || "#7aa2f7");
     s.transition = "color .4s";
@@ -361,25 +364,34 @@
     opts = opts || {};
     var doc = host.ownerDocument || document;
     var COLS = 112, ROWS = 32, LW = 42, GAP = 3, acc = opts.accent || "#7aa2f7", acc2 = opts.accent2 || acc, fg = opts.color || "#c0caf5";
-    var fsW = (95 / COLS / 0.6).toFixed(3) + "vw", fs = "min(" + fsW + "," + (92 / ROWS / 1.18).toFixed(3) + "vh)";
+    var fs = "24px";
     var font = opts.font || "'CaskaydiaMono Nerd Font','Caskaydia Mono',monospace";
     var wrapEl = doc.createElement("div"), term = doc.createElement("div"), pre = doc.createElement("pre"), st = doc.createElement("style");
     var cv = doc.createElement("canvas"), sweep = doc.createElement("div"), ban = doc.createElement("div");
     var panL = doc.createElement("i"), panR = doc.createElement("i");
     st.textContent = ".otv-live{position:absolute;left:0;top:0;right:0;bottom:0;background:" + (opts.bg || "#000") + ";overflow:hidden;z-index:6}" +
       ".otv-live canvas{position:absolute;left:0;top:0;width:100%;height:100%}" +
-      ".otv-live .sw{position:absolute;left:0;right:0;height:12vh;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.03),rgba(255,255,255,0));pointer-events:none}" +
-      ".otv-live .term{position:absolute;left:2.4vw;top:3vh;font-family:" + font + ";font-size:" + fsW + ";font-size:" + fs + ";line-height:1.18;transition:transform 2s}" +
+      ".otv-live .sw{position:absolute;left:0;right:0;height:12%;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.03),rgba(255,255,255,0));pointer-events:none}" +
+      ".otv-live .term{position:absolute;left:2.4%;top:3%;font-family:" + font + ";font-size:" + fs + ";line-height:1.18;transition:transform 2s}" +
       ".otv-live .term i{position:absolute;display:block;background:rgba(0,0,0,.74);border-radius:.6em;box-shadow:0 0 2.2em rgba(0,0,0,.9)}" +
       ".otv-live pre{position:relative;margin:0;white-space:pre;font:inherit;line-height:inherit;color:" + fg + ";text-shadow:0 0 .35em " + acc + "44}" +
       ".otv-live b{font-weight:normal}.otv-live .a{color:" + acc + "}.otv-live .a2{color:" + acc2 + "}.otv-live .d{opacity:.3}" +
       ".otv-live .c{color:" + acc + ";text-shadow:0 0 .5em " + acc + ",0 0 1.4em " + acc + "88}" +
-      ".otv-live .ban{position:absolute;left:0;right:0;top:75.5vh;padding:1vh 4vw;background:rgba(0,0,0,.9);border-top:.5vh solid " + acc +
-      ";border-bottom:.5vh solid " + acc + ";box-shadow:0 0 7vh " + acc + "99;display:none;white-space:pre-wrap;color:" + fg + ";font-family:" + font + "}" +
-      ".otv-live .ban .h{font-size:4.2vh;color:" + acc + ";letter-spacing:.2em;text-shadow:0 0 3vh " + acc + ";white-space:nowrap;overflow:hidden}" +
-      ".otv-live .ban .t{letter-spacing:0;color:" + fg + ";margin-left:2vw;text-shadow:none}" +
-      ".otv-live .ban .m{font-size:3vh;margin-top:.4vh;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
+      ".otv-live .ban{position:absolute;left:0;right:0;top:75.5%;padding:.4em 2.8em;background:rgba(0,0,0,.9);border-top:.19em solid " + acc +
+      ";border-bottom:.19em solid " + acc + ";box-shadow:0 0 2.6em " + acc + "99;display:none;white-space:pre-wrap;color:" + fg + ";font-family:" + font + ";font-size:" + fs + "}" +
+      ".otv-live .ban .h{font-size:1.66em;color:" + acc + ";letter-spacing:.2em;text-shadow:0 0 1.1em " + acc + ";white-space:nowrap;overflow:hidden}" +
+      ".otv-live .ban .t{letter-spacing:0;color:" + fg + ";margin-left:1.2em;text-shadow:none}" +
+      ".otv-live .ban .m{font-size:1.2em;margin-top:.15em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
     wrapEl.className = "otv-live"; term.className = "term"; sweep.className = "sw"; ban.className = "ban";
+    // The font size comes from the host's own box (not the window): 112 columns must fit 95% of the width and 32
+    // rows 92% of the height, so the grid lands in the same place on a scaled 1920x1080 stage and on any panel.
+    function fitFont() {
+      var w = wrapEl.clientWidth || host.clientWidth || 1920, h = wrapEl.clientHeight || host.clientHeight || 1080;
+      var f = Math.min(95 / COLS / 0.6 * w / 100, 92 / ROWS / 1.18 * h / 100);
+      if (!(f > 0)) return;
+      term.style.fontSize = f.toFixed(2) + "px";
+      ban.style.fontSize = f.toFixed(2) + "px";
+    }
     // Dark glass under the two columns (in character units, so they match the boxes at any size).
     panL.style.cssText = "left:-.6ch;top:6.6em;width:" + (LW + 1.2) + "ch;height:" + (ROWS - 10.2) + "em";
     panR.style.cssText = "left:" + (LW + GAP - 0.6) + "ch;top:1.6em;width:" + (COLS - LW - GAP + 1.2) + "ch;height:" + (ROWS - 5.2) + "em";
@@ -404,6 +416,13 @@
     }
     wrapEl.appendChild(st); wrapEl.appendChild(cv); wrapEl.appendChild(sweep); wrapEl.appendChild(term); wrapEl.appendChild(ban);
     host.appendChild(wrapEl);
+    fitFont();
+    if (typeof root.addEventListener === "function") {
+      root.addEventListener("resize", fitFont);
+      if (typeof root.ResizeObserver === "function") {
+        try { new root.ResizeObserver(fitFont).observe(wrapEl); } catch (e) {}
+      }
+    }
 
     // Behind the glass: glyph rain everywhere, a synthwave grid rolling in at the bottom. 12 fps, small cost.
     var ctx = cv.getContext && cv.getContext("2d"), ncol = 0, drops = [], GL = "▓▒░/\\|<>*+#=01", gt = 0;
@@ -495,7 +514,7 @@
       if (out !== lastHtml) { pre.innerHTML = out; lastHtml = out; }   // no layout when nothing changed
       var m = Math.floor(ms / 60000) % 4;   // burn-in care: drift a few pixels every minute
       term.style.transform = "translate(" + [0, 6, 6, 0][m] + "px," + [0, 0, 6, 6][m] + "px)";
-      sweep.style.top = (((ms / 40) % 130) - 15) + "vh";
+      sweep.style.top = (((ms / 40) % 130) - 15) + "%";
     }
     // Light on old TVs: if drawing the backdrop is slow, drop the rain and keep the rest (checked over 40 frames).
     var lite = !!opts.lite, slow = 0, frames = 0, vis = function () { return !doc.hidden; };

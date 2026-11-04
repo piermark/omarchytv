@@ -72,3 +72,25 @@ test("Live screen: fixed grid, block clock, animated sky, ticker", () => {
   assert.ok(L.htmlLine("┌─ x · menzioni ─┐ @ana <b>").indexOf("<b class=\"a\">x · menzioni</b>") > 0);
   assert.ok(L.htmlLine("<script>").indexOf("&lt;script&gt;") === 0);
 });
+
+test("Live and the widget scale with the host box, never with vw/vh", () => {
+  // The webOS page is a fixed 1920x1080 #stage scaled with transform: scale(), so viewport units come out at the
+  // wrong scale on the TV (the Live screen was drawn oversized and off the glass panels). Both the fullscreen Live
+  // screen and the small widget must take their sizes from the host element instead.
+  const src = fs.readFileSync(__dirname + "/../app/living.js", "utf8");
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  assert.strictEqual(/\d(vw|vh)\b/.test(code), false, "no vw/vh left in living.js");
+  assert.ok(code.indexOf('st.textContent = ".otv-live{') > 0);
+  assert.ok(code.indexOf("function fitFont()") > 0);
+  assert.ok(/wrapEl\.clientWidth|host\.clientWidth/.test(code), "the font comes from the host box");
+  assert.ok(/addEventListener\("resize", fitFont\)/.test(code), "and is recomputed when the box changes");
+  assert.ok(/ResizeObserver/.test(code));
+  // Banner and sweep are relative to the screen, the text is in the fitted font size.
+  assert.ok(code.indexOf('top:75.5%') > 0);
+  assert.ok(code.indexOf('height:12%') > 0);
+  assert.ok(code.indexOf('sweep.style.top = (((ms / 40) % 130) - 15) + "%"') > 0);
+  assert.ok(code.indexOf('";font-size:" + fs + "}"') > 0);
+  // The small Android/widget widget: same rule, px from the host.
+  assert.ok(code.indexOf("Math.round(hw * 0.0125)") > 0);
+  assert.ok(code.indexOf("Math.round(hw * 0.025)") > 0);
+});
