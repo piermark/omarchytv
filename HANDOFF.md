@@ -536,3 +536,13 @@ PC folder → play with subtitles → VHS → ASCII → back.
   the URL field, colour keys on every remote, ASCII mode speed on old TVs (it is opt-in).
 - The bridge must run on the PC for LG/Samsung (`omarchy-tv webos`); large libraries over Wi-Fi.
 - XMLTV guide on LG/Samsung (Android only for now: .xml.gz needs gzip in the browser).
+
+# V. Open Cinemarchy or the Arcade from a key (issue #94)
+New action ids `cinemarchy` and `arcade` in `LauncherConfig.KEY_ACTIONS` and `MainActivity.runKeyAction()` (closes
+Walker and the menu, then opens the activity as the menu does). So the remote buttons page can bind them, and an
+outside tool can start them through the already exported `MainActivity` with the extra
+`com.omarchytv.home.extra.ACTION`; `CinemarchyActivity` stays `exported="false"`. Labels are the product names
+(same in every language). Docs: `launcher/OMARCHYTV.md` (action list + adb example). `KeyBindingsTest.everyActionIdIsAccepted`
+covers the new ids. Not done: a `sys:cinemarchy` dock tile (needs a new tile type and icon; later).
+## NOT verified (V)
+- Gradle build; a key bound to `cinemarchy` on a real TV; the adb command from the docs.

@@ -846,6 +846,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 if (next != null) applyLive(null, null, AskActivity.themeEdit(next));
                 break;
             }
+            case "cinemarchy":   // issue #94: a remote key or an external tool opens Cinemarchy (it stays unexported)
+                if (walker != null) walker.close();
+                if (menu != null && menu.isShowing()) menu.dismiss();
+                open(new Intent(this, CinemarchyActivity.class));
+                break;
+            case "arcade":
+                if (walker != null) walker.close();
+                if (menu != null && menu.isShowing()) menu.dismiss();
+                ArcadeActivity.open(this);
+                break;
             default:
                 break;
         }
@@ -1634,6 +1644,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "menu": return str(R.string.keys_action_menu);
             case "screensaver": return str(R.string.keys_action_screensaver);
             case "next-theme": return str(R.string.keys_action_next_theme);
+            case "cinemarchy": return "🎬 Cinemarchy";   // product names: the same in every language
+            case "arcade": return "🕹 OmarchyTV Arcade";
             default: return id;
         }
     }

@@ -155,6 +155,11 @@ wordmark. It is light: only the visible rows are drawn, so even 20 000 IPTV chan
 - Turn it off on the PC with `mediaFromTv: false`. Choose other folders with `OMARCHY_MEDIA_DIRS=/path/a:/path/b`.
 - Hidden files, the home folder itself and links pointing outside the shared folders are never shown.
 
+### Open it with one key (Android TV)
+
+**Launcher settings → Remote buttons**: bind a button to **🎬 Cinemarchy** (or **🕹 OmarchyTV Arcade**). Other
+apps or adb can open it too: `adb shell am start -n com.omarchytv.home/.MainActivity --es com.omarchytv.home.extra.ACTION cinemarchy`.
+
 ### Legal sources only
 
 Cinemarchy plays what you own, free/open content and playlists you add. It has no torrent or pirate add-ons and

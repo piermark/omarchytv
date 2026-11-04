@@ -5,6 +5,7 @@
 ### Cinemarchy, the new hub (draft)
 
 - **LG and Samsung get the real Cinemarchy**: three panes in Omarchy style, in your theme's colours, with a built-in player (resume where you stopped), your IPTV playlists with groups and favourites, an Up-next queue, @dhh37, the streaming apps, X, the TV inputs and four open movies. Fast with huge playlists, light on old TVs.
+- **A remote key for Cinemarchy or the Arcade** (Android TV): the remote buttons page now offers both, and key remappers or adb can open them too (#94).
 - **Your Omarchy PC's folders on the TV**: browse Videos, Music, Pictures and Downloads (their real, even localised, names) and play them on the TV with seeking and subtitles; read-only, shared only with your paired TV (`mediaFromTv` turns it off).
 - **Things no other TV hub has**: ASCII mode (the film as live, theme-coloured ASCII), VHS/CRT tape mode, a surprise channel with a channel-change burst, an Omarchy-style sleep timer.
 - **Android Cinemarchy, honest and faster**: real progress bars and resume points instead of made-up ones, demo films labelled as demo, a list that stays fast with thousands of channels, the PC's folders, X, and its words in 23 languages.
