@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [2.14.0-beta] — 2026-11-04 (pre-release, `versionCode 26`; webOS 2.14.0, Tizen 2.14.0)
 
 ### Cinemarchy, the new hub
 
