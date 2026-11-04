@@ -46,8 +46,17 @@ for f in "$APP"/wallpapers/*/*.webp; do
   fi
 done
 
+# Rooted-only backend is optional and brings no runtime dependency to the ordinary launcher.
+if [ "${OMARCHY_IPHONE_REMOTE:-0}" = 1 ]; then
+  npm ci --prefix "$SCRIPT_DIR/iphone-remote" --omit=dev --ignore-scripts
+  node "$SCRIPT_DIR/iphone-remote/build.js"
+else
+  rm -rf "$APP/rooted/iphone-remote"
+fi
 OUT_DIR="${1:-$SCRIPT_DIR}"
 mkdir -p "$OUT_DIR"
 ares-package "$APP" -o "$OUT_DIR"
-mv -f "$OUT_DIR/com.omarchytv.home_${VERSION}_all.ipk" "$OUT_DIR/omarchytv-webos-${VERSION}-testing.ipk"
-sha256sum "$OUT_DIR/omarchytv-webos-${VERSION}-testing.ipk"
+SUFFIX=testing
+[ "${OMARCHY_IPHONE_REMOTE:-0}" = 1 ] && SUFFIX=iphone-remote-testing
+mv -f "$OUT_DIR/com.omarchytv.home_${VERSION}_all.ipk" "$OUT_DIR/omarchytv-webos-${VERSION}-${SUFFIX}.ipk"
+sha256sum "$OUT_DIR/omarchytv-webos-${VERSION}-${SUFFIX}.ipk"

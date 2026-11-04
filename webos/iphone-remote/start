@@ -1,0 +1,24 @@
+#!/bin/sh
+ROOT=${OMARCHY_REMOTE_ROOT:-/var/lib/omarchytv-remote}
+mkdir -p "$ROOT"
+chmod 700 "$ROOT"
+exec 8>"$ROOT/service.lock"
+flock -n 8 || exit 0
+echo $$ > "$ROOT/supervisor.pid"
+trap 'kill "$child" 2>/dev/null; exit 0' TERM INT HUP
+retry_delay=3
+while :; do
+  [ "$(wc -c < "$ROOT/service.log" 2>/dev/null || echo 0)" -lt 65536 ] || mv "$ROOT/service.log" "$ROOT/service.log.old"
+  started=$(date +%s)
+  /usr/bin/node "$ROOT/app/server.js" >>"$ROOT/service.log" 2>&1 &
+  child=$!
+  echo "$child" > "$ROOT/service.pid"
+  wait "$child"
+  elapsed=$(( $(date +%s) - started ))
+  [ "$elapsed" -lt 60 ] || retry_delay=3
+  sleep "$retry_delay" &
+  child=$!
+  wait "$child"
+  retry_delay=$((retry_delay * 2))
+  [ "$retry_delay" -le 30 ] || retry_delay=30
+done
