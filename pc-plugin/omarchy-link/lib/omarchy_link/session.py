@@ -18,6 +18,7 @@ import threading
 import time
 
 from . import ai, assistant, client as link, config, grokbot, mdns, netcheck, panes, stats, sync, theme
+from . import liftoff, living, media, omastorm, power
 
 KEYS = {"home", "back", "up", "down", "left", "right", "select", "play_pause", "play", "pause",
         "stop", "next", "previous", "rewind", "fast_forward", "volume_up", "volume_down", "mute",
@@ -169,6 +170,9 @@ class Session:
             self.push_home(c)
             self.grokbot_sig = None
             self.push_grokbot(c)
+            self.liftoff_sig = None
+            self.living_sig = None
+            self.send_wol_info()
         except (link.LinkError, OSError, ValueError, RuntimeError, subprocess.SubprocessError) as e:
             self.log(f"initial push: {e}")
 
@@ -180,6 +184,19 @@ class Session:
             self.publish(apps=data.get("apps", []))
         elif kind == "shortcut":
             self.run_action(str(data.get("command", "")), confirmed=False)
+        elif kind == "theme_set":
+            self.handle_theme_set(data)
+        elif kind == "omastorm":   # v2.14 Omastorm radar window from this PC to the TV
+            self.handle_omastorm(data)
+        elif kind == "media_list":   # Cinemarchy browses this PC's media folders (read-only)
+            self.handle_media_list(data)
+        elif kind == "media_play":   # ...and plays one of their files on the TV
+            self.handle_media_play(data)
+        elif kind == "living_prefs":
+            self._living().set_prefs(data)
+            self.living_sig = None
+        elif kind == "tv_power":
+            power.tv_power(data.get("state"), self.cfg, self.log)
         elif kind == "screen_mirror":
             self.handle_screen_mirror(str(data.get("action", "")))
         elif kind == "unpaired":
@@ -451,6 +468,106 @@ class Session:
         except OSError:
             self.log("cannot start screen mirroring (omarchy-notification-send or omarchy-link missing)")
 
+    def send_wol_info(self) -> None:
+        """Tell the TV this PC's MAC, so "TV and PC power together" can wake it (Wake-on-LAN from the TV)."""
+        tv = self.pairing.tv or {}
+        info = power.wol_info(tv.get("address"))
+        if info and self.stream and self.cfg.get("powerFromTv", True) is not False:
+            if info.get("wifi"):
+                self.log("Wake-on-LAN: this PC reaches the TV over Wi-Fi; most PCs only wake over Ethernet")
+            self.stream.send("pc_wol", {"mac": info["mac"], "broadcast": info.get("broadcast")})
+
+    def handle_omastorm(self, data: dict) -> None:
+        st = getattr(self, "omastorm", None)
+        if st is None:
+            st = self.omastorm = omastorm.Session(self.log)
+        action = data.get("action")
+        if action == "start":
+            res = st.start(self.cfg)
+            if res not in ("ok", "running"):
+                self.log(f"Omastorm on the TV: {res}")
+                if self.stream:
+                    self.stream.send("omastorm_state", {"state": res})
+        elif action == "key":
+            st.key(str(data.get("key", "")))
+        elif action == "stop":
+            st.stop()
+
+    def handle_media_list(self, data: dict) -> None:
+        if not self.stream:
+            return
+        if self.cfg.get("mediaFromTv", True) is False:
+            self.stream.send("media_list", {"path": "", "dirs": [], "files": [], "error": "disabled"})
+            return
+        try:
+            res = media.listing(str(data.get("path", ""))[:1024])
+        except Exception as e:  # noqa: BLE001 - a broken folder must not stop the session
+            self.log(f"media list: {e}")
+            res = {"path": str(data.get("path", "")), "dirs": [], "files": [], "error": "unreadable"}
+        self.stream.send("media_list", res)
+
+    def handle_media_play(self, data: dict) -> None:
+        if self.cfg.get("mediaFromTv", True) is False or not self.client:
+            return
+        p = media.resolve(str(data.get("path", ""))[:1024])
+        if p is None or not p.is_file() or not media.kind_of(p.name):
+            if self.stream:
+                self.stream.send("media_list", {"path": str(data.get("path", "")), "dirs": [], "files": [], "error": "not_found"})
+            return
+        from . import cast   # noqa: PLC0415 - only when the TV asks for a file
+        client = self.client
+
+        def run():
+            try:
+                item = cast.classify(str(p), title=p.stem)
+                pos = data.get("position")
+                if isinstance(pos, (int, float)) and pos > 0:
+                    item["position"] = float(pos)
+                cast.via_link(client, item, serve_ok=True, wait=True, out=self.log)
+            except Exception as e:  # noqa: BLE001
+                self.log(f"media play {p.name}: {e}")
+        threading.Thread(target=run, daemon=True).start()
+
+    def _living(self) -> living.Living:
+        lv = getattr(self, "living", None)
+        if lv is None:
+            lv = self.living = living.Living(lambda: self.cfg, self.log)
+        return lv
+
+    def push_living(self) -> None:
+        """Living screensaver feed (notifications, GitHub, X) for the TV, on every change, only once it asked."""
+        lv = getattr(self, "living", None)
+        if lv is None or not self.stream or not lv.wanted():
+            return
+        lv.set_active(bool(self.state.get("screensaver")))
+        pub = lv.payload()
+        sig = json.dumps(pub, sort_keys=True)
+        if sig != getattr(self, "living_sig", None):
+            self.living_sig = sig
+            self.stream.send("living", pub)
+
+    def push_liftoff(self) -> None:
+        """A build/update countdown for the TV: on every change, and every 5 s while it runs."""
+        if not self.stream or self.cfg.get("liftoffToTv", True) is False:
+            return
+        pub = liftoff.public(liftoff.read_state())
+        sig = None if pub is None else (pub["id"], pub["state"], pub["stage"], pub["pct"], pub["elapsedS"] // 5)
+        if sig == getattr(self, "liftoff_sig", None):
+            return
+        self.liftoff_sig = sig
+        if pub is not None:
+            self.stream.send("liftoff", pub)
+
+    def handle_theme_set(self, data: dict) -> None:
+        """Reverse theme sync: the TV changed theme; follow it on the PC (themeFromTv, default on)."""
+        if self.cfg.get("themeFromTv", True) is False:
+            self.log("TV asked to change the PC theme; themeFromTv is off")
+            return
+        name = data.get("name")
+        res = theme.set_theme(name)
+        if res != "ok":
+            self.log(f"TV asked for theme {str(name)[:64]!r}: {res}")
+
     def run_action(self, action_id: str, confirmed: bool) -> None:
         actions = self.cfg.get("actions", {})
         act = actions.get(action_id)
@@ -516,6 +633,11 @@ class Session:
             tick += 1
             if not self.state["connected"]:
                 continue
+            try:
+                self.push_liftoff()
+                self.push_living()
+            except (OSError, ValueError) as e:
+                self.log(f"liftoff/living push failed: {e}")
             if tick % 3:
                 c = self._client()
                 try:

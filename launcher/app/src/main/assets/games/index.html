@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- v2.14 OmarchyTV Arcade on Android TV (ArcadeActivity). The game files are identical copies of webos/app/games. -->
+<style>
+@font-face { font-family: 'CaskaydiaMono'; src: url('/assets/fonts/CaskaydiaMonoNerdFontMono-Regular.ttf') format('truetype'); }
+html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #000; }
+#host { position: absolute; left: 0; top: 0; right: 0; bottom: 0; }
+</style>
+<script src="qrcode.js"></script>
+<script src="qr.js"></script>
+<script src="arcade.js"></script>
+<script src="sfx.js"></script>
+<script src="i18n.js"></script>
+<script src="vhold.js"></script>
+<script src="ricewars.js"></script>
+<script src="forkbomb.js"></script>
+<script src="tilt.js"></script>
+<script src="hyprmaze.js"></script>
+</head><body><div id="host"></div>
+<script>
+(function () {
+  "use strict";
+  var p = {};
+  try { p = JSON.parse(decodeURIComponent(location.hash.slice(1))) || {}; } catch (e) {}
+  var A = window.OmarchyAndroid, ui = null;
+  function start(themes) {
+    var th = p.theme || {};
+    ui = OmarchyArcade.open(document.getElementById("host"), {
+      lang: p.lang, theme: th, themeName: th.name, themes: themes, sound: p.sound !== false, pcTheme: !!p.pc,
+      onPcTheme: function (name) { if (A) A.pcTheme(name || ""); },
+      onExit: function () { ui = null; if (A) A.exit(); }
+    });
+  }
+  window.OmarchyArcadeHost = {
+    key: function (k) { if (!ui) return false; ui.key(k); return true; },
+    pause: function () { if (ui) ui.pause(); }
+  };
+  var x = new XMLHttpRequest();   // Omarchy's themes, for RICE WARS
+  x.open("GET", "/assets/omarchy_themes.json", true);
+  x.onload = function () { var t = {}; try { t = JSON.parse(x.responseText).themes || {}; } catch (e) {} start(t); };
+  x.onerror = function () { start({}); };
+  x.send();
+})();
+</script>
+</body></html>

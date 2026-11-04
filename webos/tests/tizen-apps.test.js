@@ -398,16 +398,25 @@ test("input names are escaped and huge lists are bounded", () => {
   assert.ok(t.inputTiles().length <= 16);
 });
 
-test("Cinemarchy Live TV tab lists the actual Tizen inputs and follows updates", () => {
+// Cinemarchy (cinemarchy.js) reads the inputs through its host API each time it draws; a stand-in records that API.
+function fakeCinemarchy(t) {
+  const hub = { api: null, refreshed: 0 };
+  t.ctx.OmarchyCinemarchy = { keyName: () => "", open: (el, api) => { hub.api = api; return { key: () => true, destroy() {}, refresh() { hub.refreshed++; } }; } };
+  return hub;
+}
+
+test("Cinemarchy's TV & inputs list the actual Tizen inputs and follow updates", () => {
   const calls = [];
   const t = boot({ tizen: fakeTizen(), inputs: INPUTS, switchInput: (id) => calls.push(id) });
+  const hub = fakeCinemarchy(t);
   t.ctx.OmarchyTestAPI.openCinemarchyModal(2);
-  const labels = () => t.ctx.__OMARCHY_STATE.modalItems.map((i) => i.label).join("|");
+  const labels = () => hub.api.inputs().map((i) => i.name).join("|");
   assert.match(labels(), /HDMI 1 · Connected/);
   assert.doesNotMatch(labels(), /HDMI 3|HDMI 4|HDMI 1 · HDMI 1/);
   t.emitInputs([INPUTS[0], INPUTS[2]]);
-  assert.doesNotMatch(labels(), /HDMI 1/, "open Live TV tab refreshed");
-  t.ctx.__OMARCHY_STATE.modalItems.find((i) => /HDMI 2/.test(i.label)).act();
+  assert.doesNotMatch(labels(), /HDMI 1/, "the open hub reads the new inputs");
+  assert.ok(hub.refreshed >= 1, "and redraws");
+  hub.api.inputs().find((i) => /HDMI 2/.test(i.name)).launch();
   assert.deepStrictEqual(calls, ["hdmi2"]);
 });
 
@@ -433,10 +442,11 @@ test("an empty input update clears stale sources and accepts a later hardware ca
   assert.strictEqual(t.inputTiles().length, 0);
   assert.strictEqual(t.ctx.__OMARCHY_STATE.ws2Idx, 0);
   assert.strictEqual(t.inputTitle(), "No inputs available");
+  const hub = fakeCinemarchy(t);
   t.ctx.OmarchyTestAPI.openCinemarchyModal(2);
-  assert.strictEqual(t.ctx.__OMARCHY_STATE.modalItems.length, 1, "only the tab selector remains");
+  assert.strictEqual(hub.api.inputs().length, 0, "no invented source in Cinemarchy");
   t.emitInputs(INPUTS);
-  assert.strictEqual(t.ctx.__OMARCHY_STATE.modalItems.length, 4);
+  assert.strictEqual(hub.api.inputs().length, 3);
 });
 
 test("webOS app launches preserve the upstream service API path", () => {

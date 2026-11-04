@@ -204,21 +204,22 @@ final class HomeV29 extends FrameLayout {
         right.addView(barWx, bwl);
         barWx.setVisibility(GONE);
         // v2.10: no gear (the menu is the Omarchy logo on the left).
-        int[] icons = {R.drawable.ln_cinemarchy, R.drawable.ln_wifi, R.drawable.ln_bt, R.drawable.ln_vol, R.drawable.ln_input, R.drawable.ln_monitor};
+        int[] icons = {R.drawable.ln_cinemarchy, R.drawable.ln_arcade, R.drawable.ln_wifi, R.drawable.ln_bt, R.drawable.ln_vol, R.drawable.ln_input, R.drawable.ln_monitor};
         for (int ic : icons) {
             View b = iconButton(ic, 24 + 26, 24);
             right.addView(b);
             barIcons.add(b);
         }
         barIcons.get(0).setOnClickListener(v -> host.sys("cinemarchy"));
-        barIcons.get(1).setOnClickListener(v -> host.wifiClick());
-        barIcons.get(2).setOnClickListener(v -> host.openBluetooth());
-        barIcons.get(3).setOnClickListener(v -> {
+        barIcons.get(1).setOnClickListener(v -> host.sys("arcade"));   // v2.14: the Arcade next to Cinemarchy
+        barIcons.get(2).setOnClickListener(v -> host.wifiClick());
+        barIcons.get(3).setOnClickListener(v -> host.openBluetooth());
+        barIcons.get(4).setOnClickListener(v -> {
             android.media.AudioManager am = act.getSystemService(android.media.AudioManager.class);
             if (am != null) am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_SAME, android.media.AudioManager.FLAG_SHOW_UI);
         });
-        barIcons.get(4).setOnClickListener(host::showInputs);
-        barIcons.get(5).setOnClickListener(host::screenPc);
+        barIcons.get(5).setOnClickListener(host::showInputs);
+        barIcons.get(6).setOnClickListener(host::screenPc);
         tip = text("", 19, false);
         tip.setVisibility(GONE);
         tip.setPadding(px(14), px(8), px(14), px(8));
@@ -861,11 +862,11 @@ final class HomeV29 extends FrameLayout {
             tip.setVisibility(GONE);
             return;
         }
-        String[] labels = {"cinemarchy", host.wifiName(), "bluetooth", act.getString(R.string.v29_volume), act.getString(R.string.inputs),
+        String[] labels = {"cinemarchy", "arcade", host.wifiName(), "bluetooth", act.getString(R.string.v29_volume), act.getString(R.string.inputs),
                 act.getString(R.string.v29_screen_pc)};
-        if (k == 3) {
+        if (k == 4) {
             android.media.AudioManager am = act.getSystemService(android.media.AudioManager.class);
-            if (am != null) labels[3] += " " + Math.round(100f * am.getStreamVolume(3) / Math.max(1, am.getStreamMaxVolume(3))) + "%";
+            if (am != null) labels[4] += " " + Math.round(100f * am.getStreamVolume(3) / Math.max(1, am.getStreamMaxVolume(3))) + "%";
         }
         tip.setText(labels[k]);
         tip.setVisibility(VISIBLE);

@@ -73,6 +73,34 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ---
 
+## Coming in the next version (in testing)
+
+Everything below is now on `main`, coming in 2.14.0-beta (not released yet): new features are off by default unless noted.
+Full user guide: [docs/OMARCHYTV-2.14-GUIDE.md](docs/OMARCHYTV-2.14-GUIDE.md).
+
+- **Boot screen**: CRT power-on, BIOS, systemd as Arch prints it, the OMARCHY TV wordmark, with sound (on by default; any key skips).
+- **23 languages** on every TV.
+- **Theme sync both ways**: pick a theme on the TV and the Omarchy PC follows (opt-in).
+- **TV and PC power together** (Android TV), **update from the TV**, **Liftoff**: builds and updates counting down on the big screen.
+- **Live screensaver**: clock, weather, PC notifications, GitHub, X, PC meters and the Omastorm radar.
+- **X app** with the remote mapped to X's shortcuts (Android TV), **Retro CRT** set, **OmaFire** animated wallpapers with sound.
+- **OmarchyTV Arcade**: five games of our own made for the remote (V-HOLD, RICE WARS, FORK BOMB, TILT, HYPRMAZE), records and a QR to share them on X; game pad icon in the top bar.
+- **Cinemarchy, rebuilt**: Omarchy-style media hub on Android TV, LG and Samsung: IPTV playlists, your Omarchy PC's folders on the TV, resume, Up next, VHS and ASCII modes, sleep timer. Legal sources only.
+- **Campfire theme**: made for OmaFire, on the TV and on the Omarchy PC.
+
+### Campfire on your Omarchy PC
+
+Tested on Omarchy 4.5 RC.
+
+```
+omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme
+~/.config/omarchy/themes/campfire/extras/install-live          # the fire burning behind your desktop, at every login
+~/.config/omarchy/themes/campfire/extras/install-live --sound  # with the crackle and the night
+```
+
+Run them from a terminal on the PC (not over SSH). `install-live --remove` undoes the live fire; the theme stays.
+With omarchy-link paired, TV and PC switch to campfire together.
+
 ## What's New in `2.13.11` (LG webOS & Samsung Tizen)
 
 Bug-fix release for LG and Samsung, from the same shared web app. **Android TV is unchanged:** keep using [2.13.8](https://github.com/piermark/omarchytv/releases/tag/v2.13.8). Release: [GitHub](https://github.com/piermark/omarchytv/releases/tag/v2.13.11) · [GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.11).
@@ -178,7 +206,7 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 
 ---
 
-## All 32 Bundled MIT Themes & Repositories
+## All 33 Bundled MIT Themes & Repositories
 
 Every theme bundled in OmarchyTV `2.13.0-beta` is **100% MIT-licensed** and ships inside the APK with its palette (`assets/omarchy_themes.json`) and verified 4K WebP wallpapers (`assets/wallpapers/<theme>/`). Full file-by-file provenance is documented in **[THIRD-PARTY.md](THIRD-PARTY.md)**, **[NOTICE](NOTICE)**, and **[launcher/WALLPAPER-PROVENANCE.csv](launcher/WALLPAPER-PROVENANCE.csv)**.
 
@@ -216,6 +244,7 @@ Every theme bundled in OmarchyTV `2.13.0-beta` is **100% MIT-licensed** and ship
 | 30 | **`norrsken`** | theme palette | `01-horisont` (aurora planet edge) | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-norrsken-theme](https://github.com/erikrjohansson/omarchy-norrsken-theme) (MIT) |
 | 31 | **`green-mosaic`** | theme palette | `01-green-mosaic-wordmark`, `02-green-mosaic-logo` | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-green-mosaic-theme](https://github.com/erikrjohansson/omarchy-green-mosaic-theme) (MIT) |
 | 32 | **`blue-mosaic`** | theme palette | `01-blue-mosaic-wordmark`, `02-blue-mosaic-logo` | Erik Johansson ([@erikrjohansson](https://github.com/erikrjohansson)) | [erikrjohansson/omarchy-blue-mosaic-theme](https://github.com/erikrjohansson/omarchy-blue-mosaic-theme) (MIT) |
+| 33 | **`campfire`** *(new, made for OmaFire)* | theme palette | the live fire, over `01-campfire.webp` | OmarchyTV (Marco Porro), palette and art from [OmaFire](https://github.com/wesleygrimes/omafire) by Wes Grimes (MIT) | [piermark/omarchy-campfire-theme](https://github.com/piermark/omarchy-campfire-theme) (MIT) |
 
 ---
 
@@ -454,6 +483,8 @@ of them.
 - **"Liftoff Sunset"** (default Tokyo Night wallpaper) by **Tom Ballard** ([@tcballard](https://x.com/tcballard)), from
   [omarchy-theme-tokyo-liftoff](https://github.com/tcballard/omarchy-theme-tokyo-liftoff); original photograph SpaceX
   (public domain per author); included with the author's permission granted on X on Oct 22, 2026. Thank you, Tom!
+- **OmaFire** by Wes Grimes ([@ncfrontiersman](https://x.com/ncfrontiersman), [wesleygrimes/omafire](https://github.com/wesleygrimes/omafire), MIT): `fire.js`, `sound.js`, `night.js`, the campsite image and the eight sound files, vendored unchanged (the scripts only wrapped) for the OmaFire animated wallpapers and their sound; the `campfire` theme's palette is sampled from his scene and its still wallpaper is a frame of his fire. The `campfire` theme for the Omarchy PC is in [piermark/omarchy-campfire-theme](https://github.com/piermark/omarchy-campfire-theme).
+- **qrcode-generator 1.4.4** by Kazuhiko Arase ([kazuhikoarase/qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator), MIT): `qrcode.js`, vendored unchanged, for the OmarchyTV QR codes (record sharing, boot, Live screensaver). "QR Code" is a registered trademark of DENSO WAVE INCORPORATED.
 - **tte.js** by Flavio Copes, **TerminalTextEffects** by ChrisBuilds, **ttfx** by 37signals/omacom (MIT).
 - **Free My TV** contributors (MIT): on-device adb client port.
 - **Cascadia Code / CaskaydiaMono** (Microsoft, SIL OFL 1.1) with Nerd Fonts patches (MIT).

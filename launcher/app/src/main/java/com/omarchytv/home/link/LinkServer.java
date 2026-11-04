@@ -1348,6 +1348,37 @@ public final class LinkServer {
     }
 
     /** Printable text only (no control characters), trimmed, at most {@code max} code points. */
+    /** A PC media folder listing, bounded: relative paths (never absolute, never ".."), names, kinds, sizes. */
+    static JSONObject mediaList(JSONObject d) throws JSONException {
+        JSONObject out = new JSONObject().put("path", safeRel(d.optString("path", "")));
+        if (d.has("parent") && !d.isNull("parent")) out.put("parent", safeRel(d.optString("parent", "")));
+        if (d.has("error")) out.put("error", printable(d.optString("error", ""), 24));
+        JSONArray dirs = new JSONArray(), files = new JSONArray();
+        JSONArray in = d.optJSONArray("dirs");
+        for (int i = 0; in != null && i < in.length() && i < 2000; i++) {
+            JSONObject o = in.optJSONObject(i);
+            if (o == null) continue;
+            String p = safeRel(o.optString("path", ""));
+            if (!p.isEmpty()) dirs.put(new JSONObject().put("name", printable(o.optString("name", ""), 200)).put("path", p));
+        }
+        in = d.optJSONArray("files");
+        for (int i = 0; in != null && i < in.length() && i < 2000; i++) {
+            JSONObject o = in.optJSONObject(i);
+            if (o == null) continue;
+            String p = safeRel(o.optString("path", "")), k = o.optString("kind", "");
+            if (p.isEmpty() || !(k.equals("video") || k.equals("audio") || k.equals("image"))) continue;
+            files.put(new JSONObject().put("name", printable(o.optString("name", ""), 200)).put("path", p).put("kind", k)
+                    .put("size", Math.max(0, o.optLong("size", 0))));
+        }
+        return out.put("dirs", dirs).put("files", files);
+    }
+
+    static String safeRel(String p) {
+        if (p == null || p.length() > 1024 || p.startsWith("/") || p.contains("\\")) return "";
+        for (String part : p.split("/")) if (part.equals("..") || part.equals(".")) return "";
+        return printable(p, 1024);
+    }
+
     static String printable(String s, int max) {
         if (s == null) return "";
         StringBuilder b = new StringBuilder();
@@ -2149,7 +2180,11 @@ public final class LinkServer {
                 if (!fin) continue;
                 String text = new String(msg.toByteArray(), StandardCharsets.UTF_8);
                 msg.reset();
-                if (!incoming(c, text)) break;
+                try {
+                    if (!incoming(c, text)) break;
+                } catch (JSONException e) {
+                    continue;   // a frame we cannot rebuild is dropped, the link stays up
+                }
             }
         } catch (SocketException e) {
             // closed
@@ -2160,7 +2195,7 @@ public final class LinkServer {
     }
 
     /** One sealed frame from the PC; false = protocol violation (bad MAC or seq), close. */
-    private boolean incoming(WsClient c, String text) throws IOException {
+    private boolean incoming(WsClient c, String text) throws IOException, JSONException {
         String payload = LinkCrypto.open(c.ks, text);
         if (payload == null) return false;
         JSONObject m;
@@ -2194,6 +2229,27 @@ public final class LinkServer {
             case "grokbot_error":
                 host.onEvent(c.pcId, type, grokbotReply(type, data));
                 break;
+            case "pc_wol": {   // v2.14 the PC's MAC for Wake-on-LAN ("TV and PC power together")
+                String mac = data.optString("mac", "").toLowerCase(Locale.ROOT);
+                String bc = data.optString("broadcast", "");
+                if (!mac.matches("^([0-9a-f]{2}:){5}[0-9a-f]{2}$")) break;
+                JSONObject wol = new JSONObject().put("mac", mac);
+                if (bc.matches("^\\d{1,3}(\\.\\d{1,3}){3}$")) wol.put("broadcast", bc);
+                host.onEvent(c.pcId, "pc_wol", wol);
+                break;
+            }
+            case "omastorm_state":   // v2.14 the PC could not open Omastorm (not_installed, disabled, ...)
+                host.onEvent(c.pcId, type, new JSONObject().put("state", printable(data.optString("state", ""), 24)));
+                break;
+            case "media_list":   // Cinemarchy: a folder of the PC's media (names and relative paths only)
+                host.onEvent(c.pcId, type, mediaList(data));
+                break;
+            case "living":   // v2.14 Living screensaver feed (GitHub, PC notifications, X), memory only
+                host.onEvent(c.pcId, type, living(data));
+                break;
+            case "liftoff":   // v2.14 a build/update on the PC: rocket countdown on Home (LiftoffView)
+                host.onEvent(c.pcId, type, liftoff(data));
+                break;
             default:
                 break;   // ping/pong (keep-alive only; the TV uses WebSocket ping frames) and unknown types
         }
@@ -2208,6 +2264,61 @@ public final class LinkServer {
                 c.close();
             }
         }
+    }
+
+    /** v2.14 "living" from the PC, re-built with known fields only, every string clipped and printable. */
+    static JSONObject living(JSONObject d) throws JSONException {
+        JSONObject o = new JSONObject();
+        String[][] spec = {
+                {"github", "6", "repo:60", "what:24", "who:39", "text:90", "at:24"},
+                {"notes", "12", "app:32", "title:80", "body:200", "at:24"},
+                {"x", "8", "kind:10", "user:80", "text:240", "at:24"},
+        };
+        for (String[] s : spec) {
+            JSONArray in = d.optJSONArray(s[0]), out = new JSONArray();
+            int max = Integer.parseInt(s[1]);
+            for (int i = 0; in != null && i < in.length() && out.length() < max; i++) {
+                JSONObject x = in.optJSONObject(i);
+                if (x == null) continue;
+                JSONObject y = new JSONObject();
+                for (int k = 2; k < s.length; k++) {
+                    String[] f = s[k].split(":");
+                    y.put(f[0], printable(x.optString(f[0], ""), Integer.parseInt(f[1])));
+                }
+                out.put(y);
+            }
+            o.put(s[0], out);
+        }
+        String xm = d.optString("xMode", "off");
+        o.put("xMode", "notify".equals(xm) || "api".equals(xm) ? xm : "off");
+        if (d.has("xError")) o.put("xError", printable(d.optString("xError", ""), 100));
+        // v2.14 Omastorm radar snapshot: a JPEG data URL only, at most ~300 KB of image.
+        JSONObject rad = d.optJSONObject("radar");
+        String img = rad != null ? rad.optString("img", "") : "";
+        if (img.startsWith("data:image/jpeg;base64,") && img.length() <= 420_000
+                && img.substring(23).matches("[A-Za-z0-9+/=]+")) {
+            o.put("radar", new JSONObject().put("img", img).put("at", printable(rad.optString("at", ""), 24)));
+        }
+        return o;
+    }
+
+    static final Set<String> LIFTOFF_KINDS = new HashSet<>(Arrays.asList("build", "update"));
+    static final Set<String> LIFTOFF_STATES = new HashSet<>(Arrays.asList("running", "ok", "failed"));
+
+    /** v2.14 "liftoff" from the PC, re-built with only known fields, clipped; state "invalid" if unusable. */
+    static JSONObject liftoff(JSONObject d) throws JSONException {
+        String kind = d.optString("kind", ""), st = d.optString("state", "");
+        if (!LIFTOFF_KINDS.contains(kind) || !LIFTOFF_STATES.contains(st)) return new JSONObject().put("state", "invalid");
+        JSONObject o = new JSONObject().put("id", printable(d.optString("id", ""), 32)).put("kind", kind).put("state", st)
+                .put("name", printable(d.optString("name", ""), 40)).put("stage", printable(d.optString("stage", ""), 40))
+                .put("elapsedS", Math.max(0, Math.min(864_000, d.optInt("elapsedS", 0))));
+        int exp = d.optInt("expectedS", 0);
+        if (exp > 0 && exp < 86_400) o.put("expectedS", exp);
+        if (d.has("pct") && !d.isNull("pct")) o.put("pct", Math.max(0, Math.min(100, d.optInt("pct"))));
+        if (d.has("code") && !d.isNull("code")) o.put("code", d.optInt("code"));
+        JSONArray tail = d.optJSONArray("tail"), t = new JSONArray();
+        if (tail != null) for (int i = Math.max(0, tail.length() - 6); i < tail.length(); i++) t.put(printable(tail.optString(i, ""), 120));
+        return o.put("tail", t);
     }
 
     /** Sends an event to every connected PC. */
@@ -2296,6 +2407,16 @@ public final class LinkServer {
 
     public void shortcut(String command) throws JSONException {
         broadcast("shortcut", new JSONObject().put("command", command));
+    }
+
+    /** Reverse theme sync: the TV picked a theme; the PC switches to it if installed there (omarchy-link theme_set). */
+    /** v2.14 what the Living screensaver wants from the PC ({notes, github, x}). */
+    public void livingPrefs(JSONObject prefs) {
+        broadcast("living_prefs", prefs);
+    }
+
+    public void themeSet(String name) throws JSONException {
+        broadcast("theme_set", new JSONObject().put("name", name));
     }
 
     /** Forget PC on the TV: send "unpaired", close its sockets, delete it. */

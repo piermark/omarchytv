@@ -1,0 +1,56 @@
+#!/bin/bash
+# Campfire live wallpaper for Omarchy: the OmaFire campfire (Wes Grimes, MIT) burning in a loop behind the windows
+# while the campfire theme is on; stopped for any other theme.
+# (c) 2026 Marco Porro (x.com/MarcoPorro), MIT. Needs mpvpaper. Installed by extras/install-live.
+#
+#   campfire-live [theme]   theme-set hook ($1 = the new theme) or by hand: starts or stops the user unit
+#   campfire-live --login   from ~/.config/autostart at every login: the same, for the current theme
+#   campfire-live --run     what the unit runs: mpvpaper in the foreground (the unit restarts it when Hyprland or
+#                           the shell restarts and takes it down)
+# Sound: ~/.config/omarchy/campfire-live.conf with SOUND=1 (VOLUME=40), written by install-live --sound / --mute.
+unit=campfire-live.service
+current_theme() {   # Omarchy 4.x writes the name here; older versions keep a link to the theme folder
+  local f="$HOME/.local/state/omarchy/current/theme.name" old="$HOME/.config/omarchy/current/theme"
+  if [[ -s $f ]]; then cat "$f"
+  elif [[ -s $HOME/.config/omarchy/current/theme.name ]]; then cat "$HOME/.config/omarchy/current/theme.name"
+  elif [[ -L $old ]]; then basename "$(readlink -f "$old")"
+  fi
+}
+mode=hook
+[[ ${1:-} == --login ]] && { mode=login; shift; }
+[[ ${1:-} == --run ]] && { mode=run; shift; }
+theme="${1:-$(current_theme)}"
+video="$HOME/.config/omarchy/themes/campfire/extras/campfire-loop.mp4"
+
+if [[ $mode != run ]]; then
+  if [[ $theme == campfire && -f $video ]]; then
+    systemctl --user restart "$unit"
+  else
+    systemctl --user stop "$unit" 2>/dev/null
+  fi
+  exit 0
+fi
+
+# --run: find the live Wayland session (from SSH, after a Hyprland restart, or with a stale value in the unit's env).
+export XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}"
+if [[ -z $WAYLAND_DISPLAY || ! -S $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY ]]; then
+  WAYLAND_DISPLAY="$(command ls "$XDG_RUNTIME_DIR" 2>/dev/null | grep -m1 -E '^wayland-[0-9]+$')"
+fi
+if [[ -z $HYPRLAND_INSTANCE_SIGNATURE || ! -d $XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE ]]; then
+  HYPRLAND_INSTANCE_SIGNATURE="$(command ls -t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -1)"
+fi
+export WAYLAND_DISPLAY HYPRLAND_INSTANCE_SIGNATURE
+# exit 77 = nothing to do (the unit does not restart for it); anything else and the unit starts it again
+[[ $theme == campfire && -f $video ]] || exit 77
+command -v mpvpaper >/dev/null || { echo "campfire-live: mpvpaper is not installed (extras/install-live)" >&2; exit 77; }
+[[ -n $WAYLAND_DISPLAY ]] || { echo "campfire-live: no Wayland session yet" >&2; exit 1; }   # the unit tries again
+SOUND=0; VOLUME=40
+conf="$HOME/.config/omarchy/campfire-live.conf"
+[[ -f $conf ]] && . "$conf"
+opts="loop no-audio really-quiet"
+[[ $SOUND == 1 ]] && opts="loop volume=$VOLUME really-quiet"
+pkill -x mpvpaper 2>/dev/null
+sleep 2   # let the desktop put its still background up first
+# -l bottom: one layer above the background, so a wallpaper the shell draws (again, after a restart) stays under it;
+# still below every window.
+exec mpvpaper -l bottom -o "$opts" '*' "$video"

@@ -30,7 +30,7 @@ The remote's `Home` button still opens LG Home. If you have an always-on machine
 **Rooted TVs (Homebrew Channel):** no other machine is needed. In OmarchyTV open **Workspace 5 › All OmarchyTV settings** and turn on:
 
 - **Open when the TV starts**: OmarchyTV opens once the TV has booted.
-- **Home button opens OmarchyTV**: when LG Home comes up, OmarchyTV opens instead. Press `Home` while you are already in OmarchyTV to reach LG Home and its menus.
+- **Home button opens OmarchyTV**: when LG Home comes up, OmarchyTV opens instead. Press `Home` while you are already in OmarchyTV to reach LG Home and its menus. On webOS 3.x, `Home` shows LG's app bar over the current app, so the bar appears for a moment before OmarchyTV opens.
 - **Keep loaded in the background**: webOS stops closing OmarchyTV when another app needs memory, so going back to it (Home, Quick Access) doesn't restart it. It adds OmarchyTV to the `KeepAlive` list in `/home/root/memorymanager-conf.json`, the writable override of LG's memory-manager settings, and restarts the memory manager.
 
 Both run on the TV through Homebrew Channel's start-up scripts ([`app/rooted/omarchytv-home.sh`](app/rooted/omarchytv-home.sh)); turning both off removes the start-up hook. On unrooted TVs the two settings show "rooted TV only".
@@ -122,6 +122,66 @@ To update, install the new `.ipk` the same way. To uninstall (it ends on its own
 
 ```bash
 ssh -t root@192.168.1.50 'luna-send-pub -i luna://com.webos.appInstallService/dev/remove "{\"id\":\"com.omarchytv.home\",\"subscribe\":true}"'
+```
+
+If you turned on **Open when the TV starts** or **Home button opens OmarchyTV**, turn them off before uninstalling. Otherwise remove what they left behind:
+
+```bash
+ssh root@192.168.1.50 'rm -f /var/lib/webosbrew/init.d/omarchytv; rm -rf /var/lib/omarchytv'
+```
+
+### 3. webOS 3.x and older firmware
+
+Tested on an LG TV with webOS 3.9.3, rooted with Homebrew Channel.
+
+**Launching.** The application manager is only reachable as `com.webos.applicationManager` there; `com.webos.service.applicationmanager` returns `Service does not exist`. Launch with:
+
+```bash
+ssh -t root@192.168.1.50 'luna-send -n 1 luna://com.webos.applicationManager/launch "{\"id\":\"com.omarchytv.home\"}"'
+```
+
+**Uninstalling.** The remove can end with `"state":"remove failed"` (`FAILED_REMOVE`, at the `removing ipk` step) even though the app is gone. Check that `/media/developer/apps/usr/palm/applications/com.omarchytv.home` no longer exists before trying again.
+
+**Root only starts after you open Homebrew Channel.** If, after a reboot, SSH refuses connections and OmarchyTV doesn't open by itself (and the Home button isn't redirected) until you open Homebrew Channel, your firmware doesn't run Homebrew Channel's boot hook. Newer webOS 3.x firmware only runs `start-devmode.sh` when it carries LG's signature, so the rooted startup only happens when Homebrew Channel is opened. This is [webos-homebrew-channel#245](https://github.com/webosbrew/webos-homebrew-channel/issues/245).
+
+Homebrew Channel fixed it in [PR #230](https://github.com/webosbrew/webos-homebrew-channel/pull/230) (a boot activity that works on webOS < 4.0), but the fix is newer than the latest release (v0.7.3). Until a release includes it, either open Homebrew Channel once after every boot, or install a development build:
+
+1. Open the latest successful **Lint & Build** run on `main` in [Homebrew Channel's Actions](https://github.com/webosbrew/webos-homebrew-channel/actions) and download the `hbchannel-ipk` and `hbchannel-manifest` artifacts (you need to be signed in to GitHub). The `.ipk` is still named `0.7.3`. Check that its SHA-256 matches `ipkHash` in the manifest:
+
+   ```bash
+   sha256sum org.webosbrew.hbchannel_0.7.3_all.ipk
+   ```
+
+2. Open Homebrew Channel so SSH is up, then install the build and give its service root again. The install replaces the service's permissions, and `elevate-service` restores them; keep the SSH session open until it finishes. (Homebrew Channel's own self-update stalled on this TV, so install it directly.)
+
+   ```bash
+   scp org.webosbrew.hbchannel_0.7.3_all.ipk root@192.168.1.50:/tmp/hbchannel.ipk
+   ssh -t root@192.168.1.50 'luna-send-pub -i luna://com.webos.appInstallService/dev/install "{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/hbchannel.ipk\",\"subscribe\":true}"'
+   # wait for "state":"installed", then Ctrl+C
+   ssh root@192.168.1.50 'NODE_PATH=/usr/lib/nodejs:/usr/lib/node_modules /media/developer/apps/usr/palm/services/org.webosbrew.hbchannel.service/elevate-service org.webosbrew.hbchannel.service'
+   ssh -t root@192.168.1.50 'luna-send -n 1 luna://org.webosbrew.hbchannel.service/checkRoot "{}"'
+   ```
+
+3. Register the boot activity. It should answer with an `activityId`:
+
+   ```bash
+   ssh -t root@192.168.1.50 'luna-send -n 1 luna://org.webosbrew.hbchannel.service/registerActivity "{}"'
+   ```
+
+4. Reboot without opening Homebrew Channel. SSH and OmarchyTV should come up on their own. The activity (`org.webosbrew.hbchannel.service.autostart`) shows as `paused` between boots; that's how the fix keeps it from firing in a loop.
+
+When a Homebrew Channel release includes the fix, update to it from Homebrew Channel as usual. To go back to v0.7.3, install its `.ipk` from [Homebrew Channel's releases](https://github.com/webosbrew/webos-homebrew-channel/releases) the same way and run `elevate-service` again.
+
+**Low memory (optional).** TVs with 1–1.5 GB of RAM keep apps such as Netflix, YouTube, Amazon and Live TV preloaded in the background, and webOS reopens them when you close them. That memory is then missing for OmarchyTV, and its screensaver stalls more. The preload list comes from `configd`, which reads a writable override layer at `/var/luna/preferences/configd/layers/overlay`. To stop all preloading, copy the TV's current list into that layer with every app disabled:
+
+```bash
+ssh root@192.168.1.50 'mkdir -p /var/luna/preferences/configd/layers/overlay && luna-send -n 1 luna://com.webos.service.config/getConfigs "{\"configNames\":[\"com.webos.service.preloadmanager.supportAppList\"]}" </dev/null | sed -e "s/.*supportAppList\":/{\"maxPreloadApp\":0,\"supportAppList\":/" -e "s/},\"returnValue\".*/}/" -e "s/\"isEnabled\":true/\"isEnabled\":false/g" -e "s/\"isPinUp\":true,//g" > /var/luna/preferences/configd/layers/overlay/com.webos.service.preloadmanager.json && luna-send -n 1 luna://com.webos.service.config/reconfigure "{}" && restart webos-preload-manager'
+```
+
+The apps open a little slower the first time after that. To undo, delete the file and reboot:
+
+```bash
+ssh root@192.168.1.50 'rm /var/luna/preferences/configd/layers/overlay/com.webos.service.preloadmanager.json && reboot'
 ```
 
 ---

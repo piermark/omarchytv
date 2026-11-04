@@ -122,6 +122,7 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         int p = CastUi.dp(this, 14);
         overlay.setPadding(p + CastUi.dp(this, 4), p, p + CastUi.dp(this, 4), p);
         TextView name = nameView = CastUi.label(this, title == null || title.isEmpty() ? getString(audio ? R.string.cast_audio : R.string.cast_video) : title, 20, t.fgBright);
+        if (omastorm()) android.widget.Toast.makeText(this, R.string.omastorm_keys, android.widget.Toast.LENGTH_LONG).show();
         name.setSingleLine(true);
         name.setEllipsize(android.text.TextUtils.TruncateAt.END);
         overlay.addView(name);
@@ -422,6 +423,7 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         String[] urls = listUrls();
         String[] titles = getIntent().getStringArrayExtra(EXTRA_LIST_TITLES);
         if (urls == null || urls.length == 0 || player == null) return false;
+        saveResume();   // the one we leave keeps its place
         if (listIdx < 0) listIdx = getIntent().getIntExtra(EXTRA_LIST_INDEX, 0);
         int n = ((i % urls.length) + urls.length) % urls.length;
         if (n != listIdx) prevIdx = listIdx;
@@ -450,8 +452,25 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         return listIdx >= 0 ? listIdx : getIntent().getIntExtra(EXTRA_LIST_INDEX, 0);
     }
 
+    /** v2.14 Omastorm from the PC: this cast is its window, so the remote drives Omastorm (OmastormKeys). */
+    private boolean omastorm() {
+        return "Omastorm".equals(getIntent().getStringExtra(CastRouter.EXTRA_TITLE)) && LauncherConfig.get(this).pluginOmastorm;
+    }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
+        if (omastorm()) {
+            int kc = e.getKeyCode();
+            if (kc == KeyEvent.KEYCODE_BACK) {
+                if (e.getAction() == KeyEvent.ACTION_UP) OmarchyLink.omastorm("stop", null);
+                return super.dispatchKeyEvent(e);
+            }
+            String k = OmastormKeys.of(kc);
+            if (k != null) {
+                if (e.getAction() == KeyEvent.ACTION_DOWN) OmarchyLink.omastorm("key", k);
+                return true;
+            }
+        }
         if (e.getAction() != KeyEvent.ACTION_DOWN) return super.dispatchKeyEvent(e);
         if (listUrls() != null) {
             int kc = e.getKeyCode();
@@ -593,12 +612,25 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
     }
 
     private void release() {
+        saveResume();
         h.removeCallbacksAndMessages(null);
         if (pauseSaver != null) pauseSaver.stop();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (player != null) {
             player.release();
             player = null;
+        }
+    }
+
+    /** Where this video stopped, for Cinemarchy's progress bars and "resume at" (not for live streams). */
+    private void saveResume() {
+        if (player == null || live) return;
+        try {
+            String url = mediaUrl;
+            if (listIdx >= 0 && listUrls() != null && listIdx < listUrls().length) url = listUrls()[listIdx];
+            long dur = player.getDuration();
+            if (dur > 0) ResumeStore.put(this, url, player.getCurrentPosition() / 1000.0, dur / 1000.0, getIntent().getStringExtra(CastRouter.EXTRA_TITLE));
+        } catch (Exception ignored) {
         }
     }
 

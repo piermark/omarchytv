@@ -28,7 +28,7 @@ final class LauncherConfig {
     /** Saved order of the non-dock apps (package names), written by move mode. */
     final List<String> order;
     final List<String> hidden;
-    /** "auto" (follow the TV), "en", "it", "de". */
+    /** "auto" (follow the TV) or one of {@link #LANGUAGES}. */
     final String language;
     /** Info panes shown top right: "clock", "sysinfo", "weather". */
     final List<String> panes;
@@ -58,6 +58,7 @@ final class LauncherConfig {
     static final int LONG_PRESS = 3;
     /** OmarchyTV actions a key can run (see MainActivity.runKeyAction). */
     static final String[] KEY_ACTIONS = {"walker", "voice", "home", "ask", "menu", "screensaver", "next-theme",
+            "cinemarchy", "arcade",
             "workspace-1", "workspace-2", "workspace-3", "workspace-4", "workspace-5"};
 
     /** Maps a key name without the KEYCODE_ prefix to an Android keycode; 0 or less = unknown. */
@@ -131,6 +132,9 @@ final class LauncherConfig {
     }
 
     /** Built-in AI & Grok Bot WebApps (like Omarchy desktop webapps, zero API cost, persistent login in :web). */
+    /** v2.14 the X app: x.com with the remote mapped to X's shortcuts (XKeys). */
+    static final WebApp X_WEBAPP = new WebApp("x", "X", "https://x.com/home", "X", "desktop");
+
     static final WebApp[] BUILTIN_AI_WEBAPPS = new WebApp[]{
             new WebApp("grok-bot", "Grok Bot", "https://grok.com", "G", "desktop"),
             new WebApp("grok", "Grok (X)", "https://x.com/i/grok", "X", "desktop"),
@@ -396,11 +400,34 @@ final class LauncherConfig {
     final String wallpaper;          // "omarchy", "procedural", or an absolute image path
     /** Opt-in PC active wallpaper sync (default false: use bundled MIT theme wallpaper / Liftoff Sunset fallback). */
     final boolean syncPcWallpaper;
+    /** v2.14 reverse theme sync (default false): a theme picked on the TV also switches the paired PC. */
+    final boolean themeToPc;
+    /** v2.14 plugins: Retro CRT ("off" | "light" | "strong") and Omastorm (radar from the PC), both off by default. */
+    final String pluginRetroCrt;
+    final boolean pluginOmastorm;
+    /** v2.14 Living screensaver (default off): weather, GitHub, PC notifications (livingNotes, default off) and X
+     *  (livingX "off" | "notify" | "api") in ASCII boxes next to the screensaver art. */
+    final boolean living, livingNotes, livingGithub, livingRadar;
+    final String livingX;
+    /** v2.14 "TV and PC power together" (default false): TV on wakes the PC (Wake-on-LAN), TV off suspends it. */
+    final boolean pcPower;
+    /** The paired PC's MAC / subnet broadcast for Wake-on-LAN, from omarchy-link's "pc_wol" ("" until it sent them). */
+    final String pcMac, pcBroadcast;
     /** v2.13: play animated MP4 intro (e.g. cumulus, last-horizon) before settling on still wallpaper. */
     final boolean wallpaperIntro;
     /** v2.14 "Always-animated wallpaper" (default false): loop the theme's animated wallpaper while Home is on screen
      *  instead of playing it once and settling on the still. Video, Cinemarchy and the screensaver pause it (onPause). */
     final boolean wallpaperLoop;
+    /** v2.14 boot screen (BootScreenView): "boot" (default, once per TV boot), "wake" (also when the screen turns on), "off". */
+    final String bootScreen;
+    /** v2.14 boot screen scanlines and text glow (default true). */
+    final boolean bootFx;
+    /** v2.14 boot screen sound (default true) and OmaFire wallpaper sound (default false). */
+    final boolean bootSound, omafireSound;
+    /** v2.14 OmarchyTV Arcade: sound effects (default true) and RICE WARS re-theming the Omarchy PC (default false). */
+    final boolean arcadeSound, arcadePcTheme;
+    /** v2.14 QR code of OmarchyTV: "off", "live" (default: small, in the Live screensaver), "boot" (boot screen too). */
+    final String shareQr;
     /** v2.13: rotate among animated themes on Home resume/boot (default true; locked false on manual pick). */
     final boolean randomTheme;
     /** v2.13: rotate among animated wallpapers/intros on Home resume/boot (default true; locked false on manual pick). */
@@ -430,6 +457,20 @@ final class LauncherConfig {
             {"cumulus", "2", "wallpapers/cumulus/03-airship.webp"},
             {"cumulus", "3", "wallpapers/cumulus/04-lighthouse.webp"}
     };
+    /** v2.14: OmaFire (Wes Grimes) joins the random wallpaper pool: one draw in the pool of intros + fires. */
+    static final String[] RANDOM_FIRES = {"omafire:campfire", "omafire:embers"};
+    /** v2.14: the theme made for OmaFire (palette from Wes Grimes' scene); with the theme's own wallpaper it shows the campfire. */
+    static final String CAMPFIRE_THEME = "campfire";
+
+    /** A fire for this rotation, or null for an intro: each of the intros and fires is equally likely, never the same fire twice. */
+    static String randomFire(java.util.Random rng, String curWp) {
+        int n = ANIMATED_INTROS.length + RANDOM_FIRES.length;
+        int pick = rng.nextInt(n) - ANIMATED_INTROS.length;
+        if (pick < 0) return null;
+        String fire = RANDOM_FIRES[pick];
+        if (fire.equals(curWp)) fire = RANDOM_FIRES[(pick + 1) % RANDOM_FIRES.length];
+        return fire;
+    }
     /** v2.13: OLED anti-burn-in pixel shift / periodic subtle drift. */
     final boolean antiBurnIn;
     /** v2.13: Ambient lighting / Ambilight mode: "off" (default), "theme", "hybrid", "video". */
@@ -655,13 +696,36 @@ final class LauncherConfig {
         String defWp = c != null ? c.getString(R.string.wallpaper).trim() : "omarchy";
         wallpaper = j != null ? j.optString("wallpaper", defWp).trim() : defWp;
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
+        themeToPc = j != null && j.optBoolean("themeToPc", false);
+        pcPower = j != null && j.optBoolean("pcPower", false);
+        JSONObject lv = j != null ? j.optJSONObject("living") : null;
+        living = lv != null && lv.optBoolean("enabled", false);
+        livingNotes = lv != null && lv.optBoolean("notes", false);
+        livingGithub = lv == null || lv.optBoolean("github", true);
+        livingRadar = lv != null && lv.optBoolean("radar", false);
+        String lx = lv != null ? lv.optString("x", "off") : "off";
+        livingX = "notify".equals(lx) || "api".equals(lx) ? lx : "off";
+        JSONObject lkWol = j != null && j.optJSONObject("link") != null ? j.optJSONObject("link").optJSONObject("pcWol") : null;
+        pcMac = lkWol != null && WakeOnLan.mac(lkWol.optString("mac", "")) != null ? lkWol.optString("mac") : "";
+        pcBroadcast = lkWol != null && WakeOnLan.ipv4(lkWol.optString("broadcast", "")) ? lkWol.optString("broadcast") : "";
         wallpaperIntro = j == null || j.optBoolean("wallpaper_intro", j.optBoolean("wallpaperIntro", true));
         wallpaperLoop = j != null && j.optBoolean("wallpaperLoop", false);
+        bootScreen = bootScreenMode(j != null ? j.optString("bootScreen", "boot") : "boot");
+        bootFx = j == null || j.optBoolean("bootFx", true);
+        bootSound = j == null || j.optBoolean("bootSound", true);
+        omafireSound = j != null && j.optBoolean("omafireSound", false);
+        arcadeSound = j == null || j.optBoolean("arcadeSound", true);
+        arcadePcTheme = j != null && j.optBoolean("arcadePcTheme", false);
+        String sq = j != null ? j.optString("shareQr", "live") : "live";
+        shareQr = "off".equals(sq) || "boot".equals(sq) ? sq : "live";
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
         randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
         pluginSpacexTv = plObj == null || plObj.optBoolean("spacexTv", true);
         pluginGrokbot = plObj == null || plObj.optBoolean("grokbot", true);
+        String crt = plObj != null ? plObj.optString("retroCrt", "off") : "off";
+        pluginRetroCrt = "light".equals(crt) || "strong".equals(crt) ? crt : "off";
+        pluginOmastorm = plObj != null && plObj.optBoolean("omastorm", false);
         grokbotMessage = plObj != null ? plObj.optString("grokbotMessage", "") : "";
         JSONObject gbBot = plObj != null ? plObj.optJSONObject("grokbotBot") : null;
         grokbotBotName = gbBot != null ? gbBot.optString("shortName", gbBot.optString("name", "")) : "";
@@ -803,6 +867,18 @@ final class LauncherConfig {
             String curTheme = curThemeObj != null ? curThemeObj.optString("name", "last-horizon") : j.optString("theme", "last-horizon");
             int curBg = j.optInt("wallpaper_bg", 0);
             String curWp = j.optString("wallpaper", "omarchy");
+            String fire = rw ? randomFire(rng, curWp) : null;
+            if (fire != null) {
+                if (rt) {   // the fire comes with its own theme, as the intros bring theirs
+                    JSONObject t = curThemeObj != null ? new JSONObject(curThemeObj.toString()) : new JSONObject();
+                    t.put("name", CAMPFIRE_THEME);
+                    t.put("source", "tv");
+                    j.put("theme", t);
+                }
+                j.put("wallpaper", fire);
+                j.put("wallpaper_bg", 0);
+                return true;
+            }
             if (rt && rw) {
                 int curIdx = -1;
                 for (int i = 0; i < ANIMATED_INTROS.length; i++) {
@@ -888,6 +964,53 @@ final class LauncherConfig {
     }
 
     /**
+     * Launcher languages, in menu order after "auto". Each has res/values-xx/strings.xml (pt-PT is values-pt,
+     * pt-BR values-pt-rBR, zh-CN values-zh, nb also values-no) and a native name in {@code lang_*}
+     * (values/strings.xml). Arabic is right-to-left text only: the layout is not mirrored (no supportsRtl).
+     */
+    static final String[] LANGUAGES = {"en", "it", "de", "fr", "es", "pt-PT", "pt-BR", "nl", "pl", "sv", "da",
+            "nb", "fi", "cs", "hu", "ro", "el", "tr", "uk", "ru", "ar", "zh-CN", "ja"};
+
+    /** Speech recognition / text-to-speech tag for a locale: its language with the usual country ("it" → it-IT). */
+    static String speechTag(java.util.Locale l) {
+        String lang = l == null ? "en" : l.getLanguage();
+        switch (lang) {
+            case "it": return "it-IT";
+            case "de": return "de-DE";
+            case "fr": return "fr-FR";
+            case "es": return "es-ES";
+            case "pt": return "BR".equals(l.getCountry()) ? "pt-BR" : "pt-PT";
+            case "nl": return "nl-NL";
+            case "pl": return "pl-PL";
+            case "sv": return "sv-SE";
+            case "da": return "da-DK";
+            case "cs": return "cs-CZ";
+            case "ro": return "ro-RO";
+            case "el": return "el-GR";
+            case "ru": return "ru-RU";
+            case "uk": return "uk-UA";
+            case "tr": return "tr-TR";
+            case "hu": return "hu-HU";
+            case "fi": return "fi-FI";
+            case "nb":
+            case "no": return "nb-NO";
+            case "ar": return "ar-SA";
+            case "zh": return "zh-CN";
+            case "ja": return "ja-JP";
+            default: return "en-US";
+        }
+    }
+
+    /** Next value in the language menu cycle: auto → en → it → … → ja → auto. */
+    static String nextLanguage(String cur) {
+        if (cur == null || "auto".equals(cur)) return LANGUAGES[0];
+        for (int i = 0; i < LANGUAGES.length; i++) {
+            if (LANGUAGES[i].equalsIgnoreCase(cur)) return i + 1 < LANGUAGES.length ? LANGUAGES[i + 1] : "auto";
+        }
+        return "auto";
+    }
+
+    /**
      * Wraps a base context with the configured language, UI scale and text scale. The UI scale is
      * computed from the real screen: layouts are designed for a 960dp-wide screen (a 1920x1080 surface
      * at density 320), so any TV gets the same proportions, times 0.9 / 1.0 / 1.12 for small / medium / large.
@@ -903,7 +1026,7 @@ final class LauncherConfig {
             if (dpi >= 120 && dpi <= 960) conf.densityDpi = dpi;
             conf.fontScale = conf.fontScale * cfg.fontScale;
             if (!"auto".equals(cfg.language) && !cfg.language.isEmpty()) {
-                java.util.Locale loc = new java.util.Locale(cfg.language);
+                java.util.Locale loc = java.util.Locale.forLanguageTag(cfg.language);   // "pt-BR" needs the tag form
                 java.util.Locale.setDefault(loc);
                 conf.setLocale(loc);
                 conf.setLayoutDirection(loc);
@@ -1099,5 +1222,11 @@ final class LauncherConfig {
             if ((ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '.' || ch == '_' || ch == '-') b.append(ch);
         }
         return b.length() == 0 ? def : b.toString();
+    }
+
+    /** omarchytv.json "bootScreen": "boot", "wake" or "off"; anything else is "boot". */
+    static String bootScreenMode(String v) {
+        String m = v == null ? "" : v.trim().toLowerCase(java.util.Locale.ROOT);
+        return "wake".equals(m) || "off".equals(m) ? m : "boot";
     }
 }

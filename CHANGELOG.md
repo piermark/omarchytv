@@ -2,6 +2,86 @@
 
 ## [Unreleased]
 
+### Cinemarchy, the new hub
+
+- **LG and Samsung get the real Cinemarchy**: three panes in Omarchy style, in your theme's colours, with a built-in player (resume where you stopped), your IPTV playlists with groups and favourites, an Up-next queue, @dhh37, the streaming apps, X, the TV inputs and four open movies. Fast with huge playlists, light on old TVs.
+- **Campfire, a theme made for OmaFire**: night lake, moonlight and fire colours, with the campfire burning as its wallpaper; also as an Omarchy PC theme (`omarchy-theme-install https://github.com/piermark/omarchy-campfire-theme`), so TV and PC match.
+- **OmaFire joins the random wallpapers** on every TV: with "Random wallpaper" on, the campfire or the embers show up now and then.
+- **The Arcade in the top bar**, next to the Cinemarchy icon, on every TV.
+- **A remote key for Cinemarchy or the Arcade** (Android TV): the remote buttons page now offers both, and key remappers or adb can open them too (#94).
+- **Your Omarchy PC's folders on the TV**: browse Videos, Music, Pictures and Downloads (their real, even localised, names) and play them on the TV with seeking and subtitles; read-only, shared only with your paired TV (`mediaFromTv` turns it off).
+- **Things no other TV hub has**: ASCII mode (the film as live, theme-coloured ASCII), VHS/CRT tape mode, a surprise channel with a channel-change burst, an Omarchy-style sleep timer.
+- **Android Cinemarchy, honest and faster**: real progress bars and resume points instead of made-up ones, demo films labelled as demo, a list that stays fast with thousands of channels, the PC's folders, X, and its words in 23 languages.
+
+### OmarchyTV Arcade: five games of our own
+
+- **OmarchyTV Arcade** on Android TV, LG and Samsung: a games room with a light-bulb marquee and cartridges (insert one and the channel changes), high scores, pause, in the active theme's colours and inside the Retro CRT set when that plugin is on. Arrows, OK and Back only, so nothing leaves the launcher. All text-mode and light, for old TVs too.
+- **V-HOLD**: run through a terminal while the old TV falls apart: the picture rolls, leans, loses its colour or collapses into a line. Turn the blinking knob with ◀ ▶ until it locks, slap the set with OK OK. The more is broken, the more each metre is worth.
+- **RICE WARS**: you only see the bugs of the theme you are ricing. OK re-themes the whole screen with a real Omarchy theme; every third level the BLOATWARE boss changes theme on you. Optional: a cleared level re-themes the Omarchy PC too (off by default; the PC's theme comes back when you leave).
+- **FORK BOMB**: OK forks every process, the arrows move them all together; lead them out before the OOM killer, which hunts faster the more of you there are. The first maze is the Omarchy logo itself.
+- **TILT**: the marble maze, but the TV tilts: the arrows really lean the whole picture and the ball rolls by gravity to the exit; the holes are /dev/null; the clock is your score.
+- **HYPRMAZE**: the maze is a Hyprland desktop: the gaps between the windows are the corridors, and every window that opens, closes or flips (SUPER+J) reshapes it under you. Glide to the window marked SUPER+Q and close it before twelve windows fill the workspace.
+- Sound effects synthesised live (on by default, "Arcade sound"); every string in 23 languages.
+- **Share your record as a challenge**: at game over a QR code sits next to your score; point a phone at it and X opens with the post already written in the TV's language ("000804 at V-HOLD on #OmarchyTV. Can you beat me?"). You decide whether to send it; the TV never posts anything.
+- **OmarchyTV QR code** (setting): small and in the theme's colours in the Live screensaver (default), optionally on the boot screen too; it opens the project's page. Never on the OmaFire wallpaper.
+
+### Sounds: OmaFire and the boot screen
+
+- **OmaFire sound** (Wallpaper settings, off by default: with it off you get only the animated wallpaper): Wes Grimes' own sounds and mixing, as in his plugin: the embers, crackle and roar loops follow the fire's heat, a log and a stoke land when the fire is fed, and crickets and frogs call across the lake. Only while Home is on screen.
+- **Boot sound** (Launcher settings, on by default, quiet): the CRT's power-on thump and degauss hum, the POST beep, the memory count, a disk seek per systemd line, keystrokes as `omarchy-tv` is typed, and a whoosh with a soft chord when the wordmark appears. Synthesised live, no audio files; the same cues on Android TV, LG and Samsung.
+
+### Live screensaver, Retro CRT set, liftoff in every language
+
+- **Live screensaver** (Screensaver settings, off by default): a screensaver of its own, no art under it. Big glowing block clock, an animated ASCII sky (rain falls, the sun's rays turn, snow, storms), the PC's notifications, X mentions, GitHub, the PC's CPU/RAM bars and a turning ASCII radar, a ticker and a status line, on dark glass panels so everything stays readable. Behind them: theme-coloured glyph rain, a synthwave grid rolling in at the bottom and a refresh sweep. Every new notification or mention crashes in as an INCOMING banner across the bottom (shake + decrypt, never over the boxes), then settles in its box. Light: half-resolution backdrop, redraws only what changed, pauses when hidden, drops the rain on slow TVs by itself; drifts a few pixels a minute against burn-in.
+- **Omastorm radar in the Live screensaver** (its own switch, off): every 90 s the PC takes a small snapshot of the real Omastorm window (it opens it if needed) and the TV shows it in the weather box.
+- **Retro CRT, now unmistakable:** Home shrinks into a CRT set: dark body, a glowing rim in the theme's accent, an OMARCHY TV badge with a power LED, deeper scanlines, phosphor mask, vignette and a glass highlight; "strong" adds phosphor bloom and colour fringing (and the curved tube on Android 13+).
+- **Liftoff in the TV's language:** title, the update's stages (downloading, checking, signing, installing, starting) and the exit code, in all 23 languages.
+
+### Retro CRT, OmaFire wallpapers, Omastorm on the TV, livelier Living screensaver
+
+- **Retro CRT plugin** (Plugins: off / light / strong): scanlines, phosphor mask, vignette, a gentle flicker and a thin rounded bezel in the active theme's colours (it follows every theme change). "strong" on Android 13+ also curves the picture like a tube.
+- **OmaFire animated wallpapers** (Wallpaper: "OmaFire · campfire" / "OmaFire · embers"): Wes Grimes' OmaFire campsite (MIT) exactly as in his Omarchy bar plugin, the fire and the moonlit lake, full screen; kept burning (campfire) or low (embers). Runs only while Home is on screen.
+- **Omastorm on the TV** (Plugins, Android TV, off by default): the real Omastorm radar window from your Omarchy PC (Wes Grimes, MIT), unchanged, streamed to the TV and driven by the remote (pan, frames, play, Pixels/Glyphs/Stipple, mosaic, aviation…). Needs Omastorm installed on the PC. LG/Samsung: next step (native view).
+- **Living screensaver:** the boxes are typed in line by line and every new line decrypts in like the tte effects, then glows; colours from the active theme.
+
+### Living screensaver and the X app (draft, Android TV + LG webOS + Samsung Tizen + PC)
+
+- **Living screensaver** (Screensaver settings, off by default): next to the screensaver art, Omarchy-style ASCII boxes with the weather (ASCII sky), your GitHub activity (pushes, PRs, stars and forks on your repos), **every notification from the Omarchy PC** (its own switch, off by default) and **X mentions**, live while the screensaver runs. The newest item blinks when it arrives.
+- **X on the screensaver:** off / "PC notifications" (free: X notifications your browser shows on the PC) / "X API" (opt-in, X charges per use: `omarchy-link x setup` stores your token on the PC only, polled only while the screensaver runs, only new mentions, stops at `xMonthlyUsd`, 1 USD a month by default).
+- **X app:** x.com in OmarchyTV's own web view (nothing extra, so it stays light) with the remote mapped to X's shortcuts on Android TV: ▲▼ posts, OK opens, 1 like, 2 reply, 3 repost, 4 new post, 5 search, 0 home, 9 notifications, 8 messages (never while typing); videos wait for OK. In Walker as "X (x.com)"; on LG/Samsung first in Web apps (TV browser).
+- Protocol: `living_prefs`, `living`, bridge `POST /v1/living`. Tests: `test_living.py` (incl. the D-Bus notification parser), `test_webos.py`, `webos/tests/living.test.js` (Android's copy of living.js must be identical).
+
+### TV and PC together, updates from the TV, liftoff (draft, Android TV + LG webOS + Samsung Tizen + PC)
+
+- **TV and PC power together** (Launcher settings, off by default). Android TV: turning the TV on wakes the Omarchy PC (Wake-on-LAN; the PC tells the TV its address over Omarchy Link), turning it off suspends the PC after 60 s, unless the TV comes back on or a build is running. LG: the PC follows the TV into sleep (needs "TV control" approved); waking from LG/Samsung is not possible, TV web apps can't send Wake-on-LAN. Samsung: not available. PC side: `powerFromTv`, `powerGraceS`.
+- **Settings on/off:** Boot screen (at start / start and wake / off), "Also change the PC theme" and the power switch are now in Launcher settings (Android) and All OmarchyTV settings (LG/Samsung).
+- **Update OmarchyTV (Android TV):** checks the official GitHub releases, and when a newer `omarchytv-release-<version>.apk` exists asks, downloads it, checks the release checksum, the package and that it is signed with the same key as the installed launcher, then hands it to Android's installer (Android asks to confirm; the first time it asks to allow installs from OmarchyTV).
+- **Update via PC (LG/Samsung):** the TV asks the PC (`omarchy-tv webos-serve`); the PC downloads the newest official `.ipk` / `.wgt`, checks it and installs it: `ares-install` on LG, signed with your own Samsung certificate profile (`tizenProfile`) and `tizen install` on Samsung. PC side: `updateFromTv`.
+- **Liftoff on the big screen:** `omarchy-link liftoff -- <build command>` and every update show an Omarchy-style rocket countdown on the TV: T-minus from the last run of the same build, stage and progress, LIFTOFF when it worked, a red blinking ABORT with the last lines and an alarm when it fails. Any key hides it.
+- Protocol: events `pc_wol`, `tv_power`, `liftoff`; bridge `POST /v1/update/tv`, `POST /v1/power`, `liftoff` in `/v1/status` (PROTOCOL.md). Tests: `test_liftoff_power.py`, `test_tvupdate.py`, `test_webos.py`, `LiftoffScriptTest`, `webos/tests/liftoff.test.js` (Android and LG/Samsung checked against the same cases).
+
+### Theme sync both ways (draft, Android TV + LG webOS + Samsung Tizen + PC)
+
+- **Change the theme from the remote and the PC follows.** New switch in Themes: **"Also change the PC theme"** (off by default). With it on and a PC paired, picking a theme on the TV also runs `omarchy-theme-set` on the Omarchy PC; the PC then sends its palette back as usual, so TV and PC stay the same.
+- **Safe by design:** the PC only accepts names of themes installed in `~/.config/omarchy/themes` (no shell, no paths), at most one switch every 2 s. A theme the PC doesn't have changes only the TV (LG/Samsung show "Not on the PC: only the TV changed"). The PC can refuse it entirely with `"themeFromTv": false` in omarchy-link's `config.json`.
+- Android sends the new `theme_set` event over Omarchy Link; LG/Samsung call `POST /v1/theme/set` on `omarchy-tv webos-serve` with the same code as Grok Bot. Documented in PROTOCOL.md. Tests: `omarchy-link/tests/test_theme_set.py`, `omarchy-tv/tests/test_webos.py`.
+
+### Twenty new languages (draft, Android TV + LG webOS + Samsung Tizen)
+
+- **OmarchyTV now speaks 23 languages.** New: French, Spanish, Portuguese (Portugal and Brazil), Dutch, Polish, Swedish, Danish, Norwegian (Bokmål), Finnish, Czech, Hungarian, Romanian, Greek, Turkish, Ukrainian, Russian, Arabic, Chinese (Simplified) and Japanese, on top of English, Italian and German. Every launcher string on Android TV (about 400) and on LG/Samsung (about 85, plus weather, days and months) is translated.
+- **Language menu:** Launcher settings → Language cycles Auto → English → Italiano → … → 日本語, each shown in its own name. "Auto" follows the TV's language (Brazilian vs European Portuguese, any Chinese → Simplified, "no" → Bokmål).
+- **Dates:** Chinese and Japanese show "11月2日 周一"; Hungarian, Chinese and Japanese use their own date order on Android.
+- **Arabic** is right-to-left text in the same terminal layout (the screens are not mirrored).
+- **Voice and Grok Bot follow the language:** speech recognition and spoken replies use the matching voice (fr-FR, pt-BR, ja-JP …). On LG/Samsung, "Auto" now also follows the TV for voice (before it always used English unless a language was picked).
+- The new languages are machine-translated from English: corrections from native speakers are very welcome (see CONTRIBUTING.md). Tests check that every language has every string with the same placeholders (`TranslationsTest`, `webos/tests/i18n.test.js`).
+
+### Boot screen (draft, Android TV + LG webOS + Samsung Tizen)
+
+- **Omarchy TV boot screen.** When OmarchyTV starts, the screen powers on like a CRT (a bright line that opens to full screen), runs a 90s BIOS POST with an OTV block badge top right, then systemd lines as Arch prints them, auto-logs in, types `omarchy-tv`, draws the OMARCHY TV block wordmark row by row (as on Home) and fades to Home. About 7 s; any key skips it and no key reaches Home while it plays. Theme colours, Caskaydia font, light scanlines and glow.
+- **Real data from your TV:** launcher version, TV model, RAM (counting up), display mode, active theme, number of apps. The network and omarchy-link lines really wait for the TV while their `[ *** ]` spinner turns (up to 2.5 s): `Connected to Wi-Fi "<name>", <ip>.` / `Connected via Ethernet, <ip>.` and `omarchy-link: connected to <PC name>.`; if the answer doesn't come in time the line shows `[ WARN ]` with what is known. On webOS/Tizen the network line says online/offline (the web app can't read the Wi-Fi name or IP) and the model is the real one when the TV exposes it. The ads and Couch lines are jokes.
+- **Settings:** `bootScreen` = `"boot"` (default: once per TV boot on Android, at app start on webOS/Tizen), `"wake"` (also when the TV comes back from standby) or `"off"`; `bootFx` = scanlines and glow (default on). Android: omarchytv.json; webOS/Tizen: saved settings `cfg.bootScreen` / `cfg.bootFx` (no menu entry yet).
+- One script on all platforms: `launcher/.../BootScript.java` and `webos/app/boot.js` (Tizen packs the same file). Tests: `BootScriptTest`, `webos/tests/boot.test.js` (also checks both platforms say the same lines with the same timings, and that the block font matches `BlockFont.java`).
+
 ### Agent Desktop (formerly Grok Bot Desktop Companion) v0.2.0
 
 A dependency update, not a behaviour change: the TV side works exactly as before.
@@ -9,6 +89,7 @@ A dependency update, not a behaviour change: the TV side works exactly as before
 - **Tom Ballard's companion is now [Agent Desktop](https://github.com/tcballard/omarchy-plugin-grokbot-desktop) v0.2.0.** He renamed the project in that release; the plugin id (`io.github.tcballard.grokbot-desktop`) and its settings paths stay the same, so an update keeps your bot, replies and appearance. The 14 avatar shapes, the 11-colour palette and the eye geometry the TV draws are unchanged in v0.2.0, so the vendored copy only moved its version header.
 - **The name follows his:** Settings → Plugins, the companion dialog, the chat panel and the credits now say Agent Desktop. `omarchy-tv plugins grokbot "<message>"` and the `grokbot` alias still work.
 - **`omarchy-link` is built against his v0.2.0 tag** (commit `b6933e5`). v0.1.0 checkouts are still accepted and relayed with the same contract, and `OMARCHY_GROKBOT_DESKTOP_REF` can pin either tag.
+
 
 ### LG webOS / Samsung Tizen 2.13.11 (draft, not released)
 
