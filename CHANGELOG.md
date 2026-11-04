@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.14.0-beta] — 2026-11-04 (pre-release, `versionCode 26`; webOS 2.14.0, Tizen 2.14.0)
+## [2.14.0-beta] — 2026-11-05 (pre-release, `versionCode 26`; webOS 2.14.0, Tizen 2.14.0)
 
 ### Cinemarchy, the new hub
 
@@ -98,6 +98,8 @@ A dependency update, not a behaviour change: the TV side works exactly as before
   refuses is not saved. Saving fetches the panes right away instead of after `refreshSec`.
 
 ### Fixes
+
+- **OmaFire's fire is visible on LG and Samsung again.** The app runs from `file://` on webOS and Tizen, so the campsite image loaded from disk tainted the canvas: `getImageData()` threw and the wallpaper kept a blank frame while the sound played. The art now travels as a `data:` URI (`vendor/omafire/omafire-art.js`, generated from `campsite-approved.webp`) and keeps the canvas clean on every platform; if a TV still refuses to read the pixels, the wrapper paints the still campsite instead of nothing, and retries another art if the image fails to decode. Wes Grimes' `fire.js`, `sound.js` and `night.js` are untouched.
 
 - **A theme picked from the launcher page stays picked.** The Theme row on the launcher page changed the theme but left Random theme on, so the next return to Home could rotate it away again. Picking a theme there is now a manual choice like the Themes page: it turns the rotation off and resets the background to the new theme's first one ([#92](https://github.com/piermark/omarchytv/issues/92)).
 - **The screensaver Clock row does something.** LauncherConfig read `screensaver.clock` and the row wrote it, but the native saver passed a hardcoded `false`, so the row saved a value nothing on screen used. The native logo (the "never black" placeholder and the fallback when the WebView fails) now takes the value, and OmarchyDream inherits it. On the aquarium screensaver the toggle still does nothing: that saver draws its own HUD and no clock, and the WebView path never drew one either ([#83](https://github.com/piermark/omarchytv/issues/83)).

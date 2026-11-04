@@ -6,7 +6,7 @@ Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](http
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **2 November 2026 (latest published release: LG webOS & Samsung Tizen 2.13.11)** · In preparation: **2.14.0-beta** (`versionCode 26` — Android TV, LG webOS & Samsung Tizen 2.14.0) · PC/Mac Plugin & Mobile Companion downloads **2.13.0-beta** (latest published) · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **5 November 2026 (latest published release: 2.14.0-beta — Android TV, LG webOS & Samsung Tizen)** (`versionCode 26`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 > [!WARNING]
 > **Beta software.** Tested on Sony BRAVIA (Android 9), Google TV Streamer (Android 14), Sharp AQUOS, Noblex/Hisense (Android 11), LG webOS and the Android TV emulator. Some features may be missing on some TVs. It never roots or uninstalls anything, and you can always switch back to your stock home screen (see [INSTALL](launcher/docs/INSTALL.md)).
@@ -37,19 +37,17 @@ OmarchyTV; see [Trademarks](#trademarks).*
 
 I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d`), so `adb install -r` upgrades over `2.12.0-beta` and keeps your settings. All checksums are also in `SHA256SUMS` on the release.
 
-The table below still points at the last published release; the `2.14.0-beta` artifacts and their SHA-256 replace it as soon as this release is published.
-
 | Artifact | Download | Platform | Version | Size | SHA-256 |
 |---|---|---|---|---|---|
-| **`omarchytv-release-2.13.8.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.8/omarchytv-release-2.13.8.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.8)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.13.8` (`versionCode 25`) | `8.3 MB` | `7511649fba969b2f8127d45dcf00ceb1011812340780842b11892a733dec1bc2` |
-| **`omarchytv-webos-2.13.11-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.11/omarchytv-webos-2.13.11-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.11)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.13.11` | `6.2 MB` | `b8f5d9eb263ffe35ad2ce35d03f6c6662ed02a1bd738b7569c3a01b60cab13e9` |
-| **`OmarchyTV-tizen-2.13.11-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.11/OmarchyTV-tizen-2.13.11-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.11)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.13.11` | `6.2 MB` | `5916dd07d8e20ec1fa78dd8f927dc63283d2899257a27c0eca4a91c79a391174` |
+| **`omarchytv-release-2.14.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchytv-release-2.14.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.14.0-beta` (`versionCode 26`) | `10.6 MB` | `a7fbc6eff0e00d19dd6a833d7ffca167f32c8d35df5524f6eaaef3d25795ff56` |
+| **`omarchytv-webos-2.14.0-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchytv-webos-2.14.0-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.14.0` | `8.2 MB` | `e9ed7d458230daeef07684da40feeca393bc061593641bea74419c871d9eaaf2` |
+| **`OmarchyTV-tizen-2.14.0-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/OmarchyTV-tizen-2.14.0-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.14.0` | `8.3 MB` | `948d10b0e78117df2a54f3ce131773a67f0db4729cd72aea85549c1e21877ea8` |
 | **`omarchytv-mobile-2.13.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchytv-mobile-2.13.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Android phone installer & companion (`com.omarchytv.mobile`, `minSdk 26`) | `2.13.0-beta` (`versionCode 21300`) | `177 KB` | `e45a5c0f7ccd662279d34e80ffbf4e9581061603012e8814e5941e8909b67f79` |
-| **`omarchy-tv-pc-plugin-2.13.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchy-tv-pc-plugin-2.13.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.13.0-beta` | `221 KB` | `968c5ffb79f5b88254df6ff922888027c1776c49bcf154980f1427c3338521bf` |
-| **`omarchy-tv-2.13.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchy-tv-2.13.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | PC plugin `omarchy-tv` only | `2.13.0-beta` | `53 KB` | `620641f5f6c2448b4288f472cac2f09a3b870b8a08f8a7fec22344802fe99271` |
-| **`omarchy-link-2.13.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchy-link-2.13.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | PC plugin `omarchy-link` only | `2.13.0-beta` | `168 KB` | `e788142beb048c66d103fd013a688b4c5b590cdda7b917aac2b5514c0af0eb5a` |
+| **`omarchy-tv-pc-plugin-2.14.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchy-tv-pc-plugin-2.14.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.14.0-beta` | `270 KB` | `4e1379d630f2b4f947548c2cf412b600a28bbbedcb408dbabc7730dfba453630` |
+| **`omarchy-tv-2.14.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchy-tv-2.14.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | PC plugin `omarchy-tv` only | `2.14.0-beta` | `65 KB` | `9b3334793e0d783ead3659ade57544f3a2234cba0ad9faa4c04fd2625b61176b` |
+| **`omarchy-link-2.14.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchy-link-2.14.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | PC plugin `omarchy-link` only | `2.14.0-beta` | `196 KB` | `e786ce48ef9368a3aaaccaac8fc0b34c9b23b74969f2d5b6305af1c993fb6099` |
 
-All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.12.0-beta](https://github.com/piermark/omarchytv/releases/tag/v2.12.0-beta).
+All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.13.11](https://github.com/piermark/omarchytv/releases/tag/v2.13.11).
 
 ---
 
@@ -77,7 +75,7 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ## What's New in `2.14.0-beta` (`versionCode 26`, pre-release)
 
-Everything below is on `main` and built as `2.14.0-beta` for Android TV, LG webOS and Samsung Tizen (Android `26`, webOS/Tizen `2.14.0`); the download links appear here when the release is published, after a last check on real TVs. New features are off by default unless noted.
+Everything below is on `main` and built as `2.14.0-beta` for Android TV, LG webOS and Samsung Tizen (Android `26`, webOS/Tizen `2.14.0`); the download links are above. New features are off by default unless noted.
 Full user guide: [docs/OMARCHYTV-2.14-GUIDE.md](docs/OMARCHYTV-2.14-GUIDE.md).
 
 - **Boot screen**: CRT power-on, BIOS, systemd as Arch prints it, the OMARCHY TV wordmark, with sound (on by default; any key skips).
