@@ -3,8 +3,12 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'remote-installer-test-'));
 process.env.OMARCHY_REMOTE_ROOT=root+'/state';process.env.OMARCHY_REMOTE_HOOK=root+'/hooks/66-remote';
 fs.mkdirSync(root+'/hooks');const {run,readiness}=require('../iphone-remote/manage');
-const hap=require('../iphone-remote/node_modules/hap-nodejs');
-const {AccessoryInfo}=require('../iphone-remote/node_modules/hap-nodejs/dist/lib/model/AccessoryInfo');
+// The backend's dependencies are installed by `npm ci --prefix webos/iphone-remote`; without them these two
+// tests are skipped, so a plain `node --test webos/tests/*.test.js` passes on a fresh checkout.
+let hap,AccessoryInfo;
+try{hap=require('../iphone-remote/node_modules/hap-nodejs');({AccessoryInfo}=require('../iphone-remote/node_modules/hap-nodejs/dist/lib/model/AccessoryInfo'));}
+catch(e){hap=null;}
+const noDeps=hap?false:'run npm ci --prefix webos/iphone-remote first';
 function bundle(version,fail){
  const dir=root+'/bundle-'+version,stage=root+'/stage-'+version;fs.mkdirSync(dir);fs.mkdirSync(stage);
  fs.writeFileSync(stage+'/server.js',`const fs=require('fs'),http=require('http'),root=process.env.OMARCHY_REMOTE_ROOT;http.createServer((q,r)=>{const c=JSON.parse(fs.readFileSync(root+'/config.json'));if(q.url==='/enable')c.enabled=true;if(q.url==='/disable')c.enabled=false;fs.writeFileSync(root+'/config.json',JSON.stringify(c));r.end(JSON.stringify({installed:true,running:${!fail}&&c.enabled,ready:${!fail},initialization:${fail?"'failed'":"c.enabled?'ready':'disabled'"},startupError:${JSON.stringify(fail?'TV service unavailable':'')},paired:true,enabled:c.enabled,version:${JSON.stringify(version)}}));}).listen(18767,'127.0.0.1');process.on('SIGTERM',()=>process.exit(0));`);
@@ -12,7 +16,7 @@ function bundle(version,fail){
  cp.execFileSync('tar',['-czf',dir+'/bundle.tar.gz','-C',stage,'.']);
  fs.writeFileSync(dir+'/manifest.json',JSON.stringify({version,sha256:crypto.createHash('sha256').update(fs.readFileSync(dir+'/bundle.tar.gz')).digest('hex')}));return dir;
 }
-test('installer preserves HAP pairing through updates, failed initialization, disable and removal',async()=>{
+test('installer preserves HAP pairing through updates, failed initialization, disable and removal',{skip:noDeps},async()=>{
  const state=process.env.OMARCHY_REMOTE_ROOT,hook=process.env.OMARCHY_REMOTE_HOOK;
  try{
   assert.equal((await run('status')).installed,false);

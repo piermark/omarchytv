@@ -57,5 +57,7 @@
   }
   function remotes(){epoch++;clearTimeout(timer);h.modal('Remotes','Control OmarchyTV from your phone',[{label:'iPhone Remote',right:last?(last.paired&&last.running?'Connected':last.enabled?'Enabled':'Off'):'›',act:open},{label:'Close',act:close}]);}
   function sync(){if(!supported()||checking)return;checking=true;execute('sync').then(function(s){last=s;},function(){}).then(function(){checking=false;});}
-  root.OmarchyRemote={attach:function(bindings){h=bindings;if(!visibilityBound){document.addEventListener('visibilitychange',visibility);visibilityBound=true;}sync();},supported:supported,open:open,settings:remotes};
+  // Nothing runs until the user opens the screen: an ordinary LG TV has PalmServiceBridge too, so an eager call
+  // would reach Homebrew Channel on every launch even when this build carries no backend.
+  root.OmarchyRemote={attach:function(bindings){h=bindings;if(!visibilityBound){document.addEventListener('visibilitychange',visibility);visibilityBound=true;}},supported:supported,open:open,settings:remotes,sync:sync};
 })(window);

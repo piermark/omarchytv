@@ -17,6 +17,12 @@ test('opening settings does not enable remote; reset and removal require confirm
  x.h.rows.find(r=>r.label==='Reset pairing…').act();await tick();assert.ok(!x.calls.some(c=>c.includes("'reset'")));assert.equal(x.document.getElementById('modal-title').textContent,'Reset pairing');
  x.h.rows.find(r=>r.label==='Cancel').act();await tick();x.h.rows.find(r=>r.label==='Remove remote service…').act();assert.ok(!x.calls.some(c=>c.includes("'remove'")));
 });
+test('a build without the backend stays silent until the screen is opened',async()=>{
+ const x=harness();await tick();
+ assert.equal(x.calls.length,0,'attach alone never shells out to Homebrew Channel');
+ x.api.settings();await tick();
+ assert.equal(x.calls.length,0,'the Remotes menu only lists the entry');
+});
 test('unsupported platforms never invoke Homebrew Channel',async()=>{const x=harness('tizen');await tick();assert.equal(x.api.supported(),false);assert.equal(x.calls.length,0);});
 test('late status cannot reopen a closed menu',async()=>{const x=harness();await tick();x.api.open();x.h.rows[0].act();await tick();assert.equal(x.document.getElementById('modal-title').textContent,'Remotes');});
 test('system Home can provide a narrow management transport',async()=>{
