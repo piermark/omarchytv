@@ -160,6 +160,7 @@
     <string name="web_reload">إعادة التحميل</string>
     <string name="web_exit">خروج</string>
     <string name="web_old">إصدار Android System WebView %1$s قديم: حدّثه من متجر Play لتصفح المواقع الحديثة</string>
+    <string name="web_crashed">توقفت الصفحة عن العمل · رجوع يعود إلى المشغّل</string>
     <string name="web_http_lan_only">يعمل http:// مع عناوين الشبكة المحلية فقط (مثل http://192.168.1.20:8123)؛ استخدم https:// للمواقع</string>
     <string name="link_paired_n">مقترنة: %1$d</string>
     <string name="link_forget_short">نسيان</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">صوت OmaFire</string>
     <string name="arcade_sound">صوت صالة الألعاب</string>
     <string name="arcade_pc_theme">صالة الألعاب: RICE WARS يغيّر سمة الحاسوب أيضًا</string>
+    <string name="arcade_crashed">توقفت صالة الألعاب عن العمل</string>
     <string name="share_qr">رمز QR لـ OmarchyTV</string>
     <string name="cine_sources">المصادر</string>
     <string name="cine_library">المكتبة</string>

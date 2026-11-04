@@ -160,6 +160,7 @@
     <string name="web_reload">Recharger</string>
     <string name="web_exit">Quitter</string>
     <string name="web_old">Android System WebView %1$s est ancien : mettez-le à jour dans le Play Store pour les sites récents</string>
+    <string name="web_crashed">La page a cessé de fonctionner · Retour revient au lanceur</string>
     <string name="web_http_lan_only">http:// ne fonctionne que pour les adresses du réseau local (ex. http://192.168.1.20:8123) ; utilisez https:// pour les sites web</string>
     <string name="link_paired_n">appairés : %1$d</string>
     <string name="link_forget_short">oublier</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">Son d\'OmaFire</string>
     <string name="arcade_sound">Son de l\'arcade</string>
     <string name="arcade_pc_theme">Arcade : RICE WARS change aussi le thème du PC</string>
+    <string name="arcade_crashed">L\'arcade a cessé de fonctionner</string>
     <string name="share_qr">QR code d\'OmarchyTV</string>
     <string name="cine_sources">sources</string>
     <string name="cine_library">bibliothèque</string>

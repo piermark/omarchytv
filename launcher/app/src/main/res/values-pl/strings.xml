@@ -160,6 +160,7 @@
     <string name="web_reload">Odśwież</string>
     <string name="web_exit">Wyjdź</string>
     <string name="web_old">Android System WebView %1$s jest przestarzały: zaktualizuj go w Sklepie Play, aby obsługiwać nowoczesne strony</string>
+    <string name="web_crashed">Strona przestała działać · Wstecz wraca do launchera</string>
     <string name="web_http_lan_only">http:// działa tylko dla adresów w sieci lokalnej (np. http://192.168.1.20:8123); dla stron WWW użyj https://</string>
     <string name="link_paired_n">sparowane: %1$d</string>
     <string name="link_forget_short">zapomnij</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">Dźwięk OmaFire</string>
     <string name="arcade_sound">Dźwięk salonu gier</string>
     <string name="arcade_pc_theme">Salon gier: RICE WARS zmienia też motyw PC</string>
+    <string name="arcade_crashed">Salon gier przestał działać</string>
     <string name="share_qr">Kod QR OmarchyTV</string>
     <string name="cine_sources">źródła</string>
     <string name="cine_library">biblioteka</string>

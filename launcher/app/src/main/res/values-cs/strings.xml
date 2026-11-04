@@ -160,6 +160,7 @@
     <string name="web_reload">Znovu načíst</string>
     <string name="web_exit">Ukončit</string>
     <string name="web_old">Android System WebView %1$s je zastaralý: aktualizujte jej v Obchodě Play kvůli moderním webům</string>
+    <string name="web_crashed">Stránka přestala fungovat · Zpět se vrátí do launcheru</string>
     <string name="web_http_lan_only">http:// funguje jen pro adresy v místní síti (např. http://192.168.1.20:8123); pro weby použijte https://</string>
     <string name="link_paired_n">spárováno: %1$d</string>
     <string name="link_forget_short">zapomenout</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">Zvuk OmaFire</string>
     <string name="arcade_sound">Zvuk herny</string>
     <string name="arcade_pc_theme">Herna: RICE WARS mění motiv i na PC</string>
+    <string name="arcade_crashed">Herna přestala fungovat</string>
     <string name="share_qr">QR kód OmarchyTV</string>
     <string name="cine_sources">zdroje</string>
     <string name="cine_library">knihovna</string>

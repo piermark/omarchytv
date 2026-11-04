@@ -160,6 +160,7 @@
     <string name="web_reload">Újratöltés</string>
     <string name="web_exit">Kilépés</string>
     <string name="web_old">Az Android System WebView %1$s elavult: frissítse a Play Áruházban a modern webhelyekhez</string>
+    <string name="web_crashed">Az oldal leállt · Vissza a launcherbe</string>
     <string name="web_http_lan_only">a http:// csak helyi hálózati címekkel működik (pl. http://192.168.1.20:8123); webhelyekhez használja a https:// előtagot</string>
     <string name="link_paired_n">párosítva: %1$d</string>
     <string name="link_forget_short">elfelejtés</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">OmaFire hang</string>
     <string name="arcade_sound">Játékterem hangja</string>
     <string name="arcade_pc_theme">Játékterem: a RICE WARS a PC témáját is váltja</string>
+    <string name="arcade_crashed">A játékterem leállt</string>
     <string name="share_qr">OmarchyTV QR-kód</string>
     <string name="cine_sources">források</string>
     <string name="cine_library">könyvtár</string>

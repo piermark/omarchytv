@@ -160,6 +160,7 @@
     <string name="web_reload">Обновить</string>
     <string name="web_exit">Выйти</string>
     <string name="web_old">Android System WebView %1$s устарел: обновите его в Play Маркете для современных сайтов</string>
+    <string name="web_crashed">Страница перестала работать · Назад возвращает в лаунчер</string>
     <string name="web_http_lan_only">http:// работает только для адресов локальной сети (например, http://192.168.1.20:8123); для сайтов используйте https://</string>
     <string name="link_paired_n">сопряжено: %1$d</string>
     <string name="link_forget_short">забыть</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">Звук OmaFire</string>
     <string name="arcade_sound">Звук игрового зала</string>
     <string name="arcade_pc_theme">Игровой зал: RICE WARS меняет и тему ПК</string>
+    <string name="arcade_crashed">Игровой зал перестал работать</string>
     <string name="share_qr">QR-код OmarchyTV</string>
     <string name="cine_sources">источники</string>
     <string name="cine_library">библиотека</string>

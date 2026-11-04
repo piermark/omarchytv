@@ -160,6 +160,7 @@
     <string name="web_reload">Recarregar</string>
     <string name="web_exit">Sair</string>
     <string name="web_old">O Android System WebView %1$s está desatualizado: atualize-o na Play Store para sites modernos</string>
+    <string name="web_crashed">A página parou de funcionar · Voltar retorna ao launcher</string>
     <string name="web_http_lan_only">http:// só funciona com endereços da rede local (p. ex. http://192.168.1.20:8123); use https:// para sites</string>
     <string name="link_paired_n">pareados: %1$d</string>
     <string name="link_forget_short">esquecer</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">Som do OmaFire</string>
     <string name="arcade_sound">Som do fliperama</string>
     <string name="arcade_pc_theme">Fliperama: RICE WARS muda o tema do PC também</string>
+    <string name="arcade_crashed">O fliperama parou de funcionar</string>
     <string name="share_qr">QR code do OmarchyTV</string>
     <string name="cine_sources">fontes</string>
     <string name="cine_library">biblioteca</string>

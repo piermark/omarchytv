@@ -17,7 +17,8 @@ import java.io.InputStream;
 /**
  * v2.14 OmaFire animated wallpaper (Wes Grimes' campsite from the OmaFire Omarchy plugin, MIT, assets/omafire):
  * fire.js unchanged in a small WebView right above the still wallpaper, only while Home is on screen (added on resume,
- * removed on pause), 360x240 scaled up, 30 fps. Only assets/omafire/ loads; no network.
+ * removed on pause), 360x240 scaled up, 30 fps. Only assets/omafire/ loads; no network. If the WebView renderer
+ * dies the layer is dropped and the still wallpaper underneath stays: the animation is a decoration, never a crash.
  */
 final class OmaFireLayer {
     private static final String HOST = "appassets.androidplatform.net";
@@ -88,6 +89,13 @@ final class OmaFireLayer {
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 return true;
             }
+
+            @android.annotation.TargetApi(26)
+            @Override
+            public boolean onRenderProcessGone(WebView view, android.webkit.RenderProcessGoneDetail d) {
+                drop(view);   // the still wallpaper underneath is the fallback: nothing else to do, never a crash
+                return true;
+            }
         });
         parent.addView(w, parent.indexOfChild(wall) + 1, new ViewGroup.LayoutParams(wall.getLayoutParams()));
         w.loadUrl("https://" + HOST + "/assets/omafire/index.html#" + m + (LauncherConfig.get(a).omafireSound ? "&sound" : ""));
@@ -101,6 +109,22 @@ final class OmaFireLayer {
         if (w == null) return;
         if (w.getParent() instanceof ViewGroup) ((ViewGroup) w.getParent()).removeView(w);
         try {
+            w.destroy();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * v2.14: the renderer of the animated wallpaper died (or the TV killed it for memory). The layer lives inside
+     * MainActivity, so an unhandled death would take the launcher down from the Home screen: take this WebView off
+     * the parent, free it, and leave the still wallpaper that is already underneath. On the UI thread, as the
+     * callback is.
+     */
+    private static void drop(WebView w) {
+        if (w == null) return;
+        if (web == w) web = null;
+        try {
+            if (w.getParent() instanceof ViewGroup) ((ViewGroup) w.getParent()).removeView(w);
             w.destroy();
         } catch (Throwable ignored) {
         }

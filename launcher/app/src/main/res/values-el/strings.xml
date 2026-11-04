@@ -160,6 +160,7 @@
     <string name="web_reload">Ανανέωση</string>
     <string name="web_exit">Έξοδος</string>
     <string name="web_old">Το Android System WebView %1$s είναι παλιό: ενημερώστε το από το Play Store για σύγχρονους ιστότοπους</string>
+    <string name="web_crashed">Η σελίδα σταμάτησε · Πίσω επιστρέφει στο launcher</string>
     <string name="web_http_lan_only">το http:// λειτουργεί μόνο για τοπικές διευθύνσεις (π.χ. http://192.168.1.20:8123)· χρησιμοποιήστε https:// για ιστότοπους</string>
     <string name="link_paired_n">σε σύζευξη: %1$d</string>
     <string name="link_forget_short">διαγραφή</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">Ήχος OmaFire</string>
     <string name="arcade_sound">Ήχος αίθουσας</string>
     <string name="arcade_pc_theme">Αίθουσα: το RICE WARS αλλάζει και το θέμα του PC</string>
+    <string name="arcade_crashed">Η αίθουσα παιχνιδιών σταμάτησε να λειτουργεί</string>
     <string name="share_qr">Κωδικός QR του OmarchyTV</string>
     <string name="cine_sources">πηγές</string>
     <string name="cine_library">βιβλιοθήκη</string>

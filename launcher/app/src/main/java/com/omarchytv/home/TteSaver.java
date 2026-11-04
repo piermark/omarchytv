@@ -29,7 +29,8 @@ import java.util.Locale;
  * Three levels, never black: (1) the official tte.js package (assets/saver/tte-js, ES modules, 37 effects) served
  * from https://appassets.androidplatform.net by a tiny shouldInterceptRequest handler (ES modules are blocked on
  * file://); (2) the bundled single-file build (assets/saver/tte-bundle.js); (3) the native {@link AsciiSaverView}
- * when the page reports no engine, has not drawn within 3 s, or the TV has no usable WebView.
+ * when the page reports no engine, has not drawn within 3 s, the TV has no usable WebView, or its renderer process
+ * dies (onRenderProcessGone).
  * Console messages and JS errors go to logcat with tag "OmarchyTV".
  */
 final class TteSaver {
@@ -121,6 +122,15 @@ final class TteSaver {
             @Override
             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 return true;   // the saver never navigates
+            }
+
+            @android.annotation.TargetApi(26)
+            @Override
+            public boolean onRenderProcessGone(WebView view, android.webkit.RenderProcessGoneDetail d) {
+                // v2.14: the renderer died (old TVs, 1-2 GB of RAM). The screensaver runs inside the dream/preview
+                // process: unhandled, it would take that down. Same fallback as a page that draws nothing: native.
+                rendererGone(view);
+                return true;
             }
         });
         return w;
@@ -296,6 +306,21 @@ final class TteSaver {
             root.removeView(placeholder);
             placeholder = null;
         }
+    }
+
+    /**
+     * The WebView renderer crashed or was killed for memory. This arrives on the UI thread, as every other call in
+     * this class: drop the dead WebView and keep the screensaver alive with the native logo/ASCII view.
+     */
+    private void rendererGone(WebView w) {
+        Log.w(TAG, "salvaschermo: renderer WebView morto, modalita nativo");
+        if (w != null && w.getParent() instanceof ViewGroup) ((ViewGroup) w.getParent()).removeView(w);
+        if (w != null && w == web) web = null;
+        try {
+            if (w != null) w.destroy();
+        } catch (Throwable ignored) {
+        }
+        toNative("renderer WebView morto");
     }
 
     private void toNative(String why) {

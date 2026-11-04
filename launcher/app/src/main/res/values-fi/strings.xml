@@ -160,6 +160,7 @@
     <string name="web_reload">Lataa uudelleen</string>
     <string name="web_exit">Poistu</string>
     <string name="web_old">Android System WebView %1$s on vanha: päivitä se Play Kaupasta nykyaikaisia sivustoja varten</string>
+    <string name="web_crashed">Sivu lakkasi toimimasta · Takaisin palaa käynnistimeen</string>
     <string name="web_http_lan_only">http:// toimii vain lähiverkon osoitteille (esim. http://192.168.1.20:8123); käytä sivustoille https://</string>
     <string name="link_paired_n">pariliitetty: %1$d</string>
     <string name="link_forget_short">unohda</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">OmaFire-ääni</string>
     <string name="arcade_sound">Pelihallin äänet</string>
     <string name="arcade_pc_theme">Pelihalli: RICE WARS vaihtaa myös PC:n teeman</string>
+    <string name="arcade_crashed">Pelihalli lakkasi toimimasta</string>
     <string name="share_qr">OmarchyTV:n QR-koodi</string>
     <string name="cine_sources">lähteet</string>
     <string name="cine_library">kirjasto</string>

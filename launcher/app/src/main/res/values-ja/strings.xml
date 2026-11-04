@@ -160,6 +160,7 @@
     <string name="web_reload">再読み込み</string>
     <string name="web_exit">終了</string>
     <string name="web_old">Android System WebView %1$s は古いバージョンです: 最新のサイトを表示するには Play ストアで更新してください</string>
+    <string name="web_crashed">ページが停止しました · 戻るでランチャーへ</string>
     <string name="web_http_lan_only">http:// は LAN 内のアドレス（例: http://192.168.1.20:8123）でのみ使えます。Web サイトには https:// を使ってください</string>
     <string name="link_paired_n">ペアリング済み: %1$d</string>
     <string name="link_forget_short">解除</string>
@@ -460,6 +461,7 @@
     <string name="omafire_sound">OmaFire のサウンド</string>
     <string name="arcade_sound">ゲームセンターの音</string>
     <string name="arcade_pc_theme">ゲームセンター: RICE WARS で PC のテーマも変更</string>
+    <string name="arcade_crashed">ゲームセンターが停止しました</string>
     <string name="share_qr">OmarchyTV の QR コード</string>
     <string name="cine_sources">ソース</string>
     <string name="cine_library">ライブラリ</string>
