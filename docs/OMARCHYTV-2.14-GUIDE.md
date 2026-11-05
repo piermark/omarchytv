@@ -180,12 +180,12 @@ wordmark. It is light: only the visible rows are drawn, so even 20 000 IPTV chan
 7. **Up next** — your queue.
 8. **Player & tools** — modes, sleep timer, info.
 
-### Keys
+### Keys (LG/Samsung)
 
 - ▲▼ ◀▶ move, OK opens/plays, Back goes back (up a folder on the PC).
 - **Red**: add to / remove from Up next. **Green**: ★ favourite. **Yellow**: next IPTV group. **Blue**: surprise channel.
 
-### Player
+### Player (LG/Samsung)
 
 - The TV's own video player (MP4, HLS, WebM: what your TV supports; MKV/HEVC depend on the model).
 - **Resume**: it remembers where you stopped (also on Android).
@@ -194,6 +194,8 @@ wordmark. It is light: only the visible rows are drawn, so even 20 000 IPTV chan
   as coloured text; only for streams that allow it, otherwise a message) → normal.
 - **Yellow**: sleep timer 15/30/60/90 min.
 - PC photos open full screen.
+
+On **Android TV** Cinemarchy plays with its own player (ExoPlayer): IPTV playlists, favourites, Up next and resume work there too; VHS and ASCII modes, the sleep timer and the surprise channel are LG/Samsung only for now.
 
 ### From the PC
 
@@ -216,6 +218,7 @@ does not ship any channel list.
 ### Limits (for now)
 
 - XMLTV programme guide only on Android.
+- VHS and ASCII modes, sleep timer and surprise channel: LG/Samsung only (Android TV: planned).
 - ASCII mode needs streams that allow it (CORS) and a reasonably fast TV; it is opt-in.
 - Large PC libraries over Wi-Fi may take a moment to list (2000 entries per folder max).
 

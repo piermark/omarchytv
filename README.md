@@ -87,7 +87,7 @@ Full user guide: [docs/OMARCHYTV-2.14-GUIDE.md](docs/OMARCHYTV-2.14-GUIDE.md).
 - **Live screensaver**: clock, weather, PC notifications, GitHub, X, PC meters and the Omastorm radar.
 - **X app** with the remote mapped to X's shortcuts (Android TV), **Retro CRT** set, **OmaFire** animated wallpapers with sound.
 - **OmarchyTV Arcade**: five games of our own made for the remote (V-HOLD, RICE WARS, FORK BOMB, TILT, HYPRMAZE), records and a QR to share them on X; game pad icon in the top bar.
-- **Cinemarchy, rebuilt**: Omarchy-style media hub on Android TV, LG and Samsung: IPTV playlists, your Omarchy PC's folders on the TV, resume, Up next, VHS and ASCII modes, sleep timer. Legal sources only.
+- **Cinemarchy, rebuilt**: Omarchy-style media hub on Android TV, LG and Samsung: IPTV playlists, your Omarchy PC's folders on the TV, resume, Up next; on LG/Samsung also VHS and ASCII modes and a sleep timer. Legal sources only.
 - **Campfire theme**: made for OmaFire, on the TV and on the Omarchy PC.
 
 ### Campfire on your Omarchy PC
