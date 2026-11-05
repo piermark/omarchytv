@@ -94,3 +94,20 @@ test("Live and the widget scale with the host box, never with vw/vh", () => {
   assert.ok(code.indexOf("Math.round(hw * 0.0125)") > 0);
   assert.ok(code.indexOf("Math.round(hw * 0.025)") > 0);
 });
+
+test("Live keeps clear of a TV's overscan, which crops the outer edge of the picture", () => {
+  // A 32" LG cuts 3-5% of the picture on every side, so a layout fitted to the full panel lost the top of the clock
+  // and the prompt. The fullscreen Live screen now fits 112 columns and 32 rows into the inner safe box and sits
+  // inside it; the margins must be at least 4% and must move the text, not only shrink it.
+  const src = fs.readFileSync(__dirname + "/../app/living.js", "utf8");
+  const code = src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+  const m = code.match(/var SAFE_X = ([\d.]+), SAFE_Y = ([\d.]+);/);
+  assert.ok(m, "the Live screen declares its safe area");
+  const sx = parseFloat(m[1]), sy = parseFloat(m[2]);
+  assert.ok(sx >= 0.04 && sy >= 0.04, "safe area is at least 4% on each axis (got " + sx + ", " + sy + ")");
+  assert.ok(sx <= 0.08 && sy <= 0.08, "and not so large that the scene shrinks away");
+  assert.ok(code.indexOf("w * (1 - 2 * SAFE_X)") > 0, "the font fits the inner box, not the whole panel");
+  assert.ok(code.indexOf("h * (1 - 2 * SAFE_Y)") > 0);
+  assert.ok(code.indexOf('term.style.left = (SAFE_X * 100).toFixed(2) + "%"') > 0, "the text starts inside it");
+  assert.ok(code.indexOf('term.style.top = (SAFE_Y * 100).toFixed(2) + "%"') > 0);
+});

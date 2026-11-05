@@ -372,7 +372,7 @@
     st.textContent = ".otv-live{position:absolute;left:0;top:0;right:0;bottom:0;background:" + (opts.bg || "#000") + ";overflow:hidden;z-index:6}" +
       ".otv-live canvas{position:absolute;left:0;top:0;width:100%;height:100%}" +
       ".otv-live .sw{position:absolute;left:0;right:0;height:12%;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.03),rgba(255,255,255,0));pointer-events:none}" +
-      ".otv-live .term{position:absolute;left:2.4%;top:3%;font-family:" + font + ";font-size:" + fs + ";line-height:1.18;transition:transform 2s}" +
+      ".otv-live .term{position:absolute;left:5%;top:5.5%;font-family:" + font + ";font-size:" + fs + ";line-height:1.18;transition:transform 2s}" +
       ".otv-live .term i{position:absolute;display:block;background:rgba(0,0,0,.74);border-radius:.6em;box-shadow:0 0 2.2em rgba(0,0,0,.9)}" +
       ".otv-live pre{position:relative;margin:0;white-space:pre;font:inherit;line-height:inherit;color:" + fg + ";text-shadow:0 0 .35em " + acc + "44}" +
       ".otv-live b{font-weight:normal}.otv-live .a{color:" + acc + "}.otv-live .a2{color:" + acc2 + "}.otv-live .d{opacity:.3}" +
@@ -383,13 +383,19 @@
       ".otv-live .ban .t{letter-spacing:0;color:" + fg + ";margin-left:1.2em;text-shadow:none}" +
       ".otv-live .ban .m{font-size:1.2em;margin-top:.15em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}";
     wrapEl.className = "otv-live"; term.className = "term"; sweep.className = "sw"; ban.className = "ban";
-    // The font size comes from the host's own box (not the window): 112 columns must fit 95% of the width and 32
-    // rows 92% of the height, so the grid lands in the same place on a scaled 1920x1080 stage and on any panel.
+    // The font size comes from the host's own box (not the window): 112 columns must fit 95% of the usable width and
+    // 32 rows 92% of the usable height, so the scene lands in the same place on a scaled 1920x1080 stage and on any
+    // panel. "Usable" leaves SAFE_X/SAFE_Y of the panel free on every side: a TV with overscan (the 32" LG cuts the
+    // outer edge of the picture) then clips only empty margin, never a column of the clock or a box border.
+    var SAFE_X = 0.05, SAFE_Y = 0.055;
     function fitFont() {
       var w = wrapEl.clientWidth || host.clientWidth || 1920, h = wrapEl.clientHeight || host.clientHeight || 1080;
-      var f = Math.min(95 / COLS / 0.6 * w / 100, 92 / ROWS / 1.18 * h / 100);
+      var iw = w * (1 - 2 * SAFE_X), ih = h * (1 - 2 * SAFE_Y);
+      var f = Math.min(95 / COLS / 0.6 * iw / 100, 92 / ROWS / 1.18 * ih / 100);
       if (!(f > 0)) return;
       term.style.fontSize = f.toFixed(2) + "px";
+      term.style.left = (SAFE_X * 100).toFixed(2) + "%";
+      term.style.top = (SAFE_Y * 100).toFixed(2) + "%";
       ban.style.fontSize = f.toFixed(2) + "px";
     }
     // Dark glass under the two columns (in character units, so they match the boxes at any size).
