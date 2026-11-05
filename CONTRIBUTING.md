@@ -11,7 +11,7 @@ font, sound or code you bring from somewhere else is credited (see the last sect
 OmarchyTV is an Android TV launcher that makes a TV look and behave like an Omarchy Linux desktop: Omarchy stock
 themes, tiling-friendly workspaces, Walker, the `user@host:~$` prompt, an ASCII screensaver. Around the launcher there
 are two ports of the same interface (LG webOS and Samsung Tizen, in JavaScript) and PC-side plugins that talk to the
-TV over the LAN. The TV is the server and the PC the client, nothing is published to a store, and the launcher touches
+TV over the LAN. The TV is the server and the PC the client; nothing is published to a store, and the launcher touches
 the network only for the features you turn on.
 
 ## Layout
