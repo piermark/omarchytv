@@ -68,8 +68,10 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 | ![webOS home](docs/media/webos-home.jpg) | ![Cinemarchy on webOS](docs/media/webos-cinemarchy.jpg) | ![Plugins on webOS](docs/media/webos-plugins.jpg) |
 | **Aquarium (homage, default)** | **Aquarium Classic** | **Samsung Tizen · Companion** |
 | ![Aquarium homage](docs/media/webos-aquarium-homage.jpg) | ![Aquarium Classic](docs/media/webos-aquarium-classic.jpg) | ![Companion on Tizen](docs/media/tizen-companion-chat.jpg) |
+| **OmarchyTV Arcade** | **OmaFire as a wallpaper** | **Live screensaver** |
+| ![OmarchyTV Arcade game select](docs/media/webos-arcade.jpg) | ![OmaFire campfire wallpaper](docs/media/webos-omafire.jpg) | ![Live screensaver](docs/media/webos-live.jpg) |
 
-*Android screenshots come from the Android TV emulator (API 28, 1920×1080). webOS and Tizen screenshots come from the web app in headless Chrome with a Tizen shim, not from a real TV.*
+*Android screenshots come from the Android TV emulator (API 28, 1920×1080). webOS and Tizen screenshots come from the web app in headless Chrome with a Tizen shim, not from a real TV. The Arcade, OmaFire and Live shots are rendered at 1920×1080 from the shipped app assets, which is the same code that runs on Android TV, LG and Samsung.*
 
 ---
 
