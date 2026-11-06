@@ -6,7 +6,9 @@ html,body{margin:0;height:100%;background:#000;overflow:hidden;cursor:none}
 body{display:flex;align-items:center;justify-content:center}
 /* v2.10: visible base colour (was #000 on #000: a failed effect left the screen black). */
 pre{margin:0;font-family:mono,monospace;line-height:1.15;color:#7aa2f7;white-space:pre}
-</style></head><body><pre id="art"></pre>
+/* Screensaver > Clock (#83): small clock under the effects; it drifts a little each minute against burn-in. */
+#clk{position:fixed;font-family:mono,monospace;font-size:5vh;opacity:.55;display:none}
+</style></head><body><pre id="art"></pre><div id="clk"></div>
 <script>
 // omarchy-screensaver on the TV: loop `ttfx --random-effect` over screensaver.txt, black, centred, ~65% width.
 // v2.10 levels: official tte.js (ES modules, tte-js/src, 37 effects) -> bundled tte-bundle.js -> native logo (Android).
@@ -98,6 +100,25 @@ if(!window.ResizeObserver)window.ResizeObserver=function(){this.observe=function
   }
   if(!text){fetch('screensaver-tv.txt').then(function(r){return r.text()}).then(function(t){text=t;boot()}).catch(function(){text='OMARCHY TV';boot()})}
   else boot();
+})();
+</script>
+<script>
+/* Screensaver > Clock (#83). Before this, only the native fallback and the Aquarium read the setting. */
+(function(){
+  var S=window.OmarchySaver,on=false;
+  try{on=!!(S&&S.clock&&S.clock())}catch(x){}
+  if(!on||window.__otvLive)return;   // the Live screen has its own big clock
+  var el=document.getElementById('clk');
+  try{el.style.color=(S&&S.color&&S.color())||'#7aa2f7'}catch(x){el.style.color='#7aa2f7'}
+  el.style.display='block';
+  var lastMin=-1;
+  function tick(){
+    var d=new Date(),h=d.getHours(),m=d.getMinutes();
+    el.textContent=(h<10?'0':'')+h+':'+(m<10?'0':'')+m;
+    if(m!==lastMin){lastMin=m;   // move a few percent each minute so the digits never sit still
+      el.style.right=(3+Math.random()*4)+'vw';el.style.bottom=(3+Math.random()*4)+'vh';}
+  }
+  tick();setInterval(tick,5000);
 })();
 </script>
 <script src="qrcode.js"></script>
