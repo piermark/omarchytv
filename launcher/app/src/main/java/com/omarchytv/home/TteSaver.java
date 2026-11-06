@@ -96,6 +96,8 @@ final class TteSaver {
             @JavascriptInterface public void log(String m) { Log.i(TAG, "salvaschermo: " + m); }
             /** v2.14 Living screensaver: weather + the PC's feed, as JSON (Living.forSaver). */
             @JavascriptInterface public String living() { return Living.forSaver(c.getApplicationContext()); }
+            /** Screensaver > Clock (#83): the web saver draws its own clock when this is on. */
+            @JavascriptInterface public boolean clock() { return LauncherConfig.get(c.getApplicationContext()).screensaverClock; }
             @JavascriptInterface public void drawn(String mode, int count, String effect) {
                 drawn = true;
                 h.post(() -> revealWeb());
