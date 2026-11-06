@@ -413,11 +413,37 @@ public class AsciiSaverView extends View {
         driftY = (float) Math.sin(ang);
     }
 
+    private final Paint cornerClock = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private int cornerMinute = -1;
+    private float cornerDx, cornerDy;
+
+    /** Screensaver > Clock over the Aquarium: small HH:MM bottom right, nudged each minute against burn-in. */
+    private void drawCornerClock(Canvas canvas) {
+        if (!showClock || statusOverride != null || getWidth() == 0) return;
+        Date now = new Date();
+        int minute = (int) (now.getTime() / 60000L);
+        if (minute != cornerMinute) {
+            cornerMinute = minute;
+            cornerDx = random.nextFloat();
+            cornerDy = random.nextFloat();
+        }
+        float size = getHeight() * 0.05f;
+        cornerClock.setTypeface(clock.getTypeface());
+        cornerClock.setTextAlign(Paint.Align.RIGHT);
+        cornerClock.setTextSize(size);
+        cornerClock.setColor(clock.getColor());
+        cornerClock.setAlpha(150);
+        float x = getWidth() * (0.97f - 0.04f * cornerDx);
+        float y = getHeight() * (0.97f - 0.04f * cornerDy);
+        canvas.drawText(timeFormat.format(now), x, y, cornerClock);
+    }
+
     @Override
     protected void onDraw(Canvas canvas) {
         if (aquariumMode) {
             if (classicAquarium) drawAquarium(canvas);
             else drawHomage(canvas);
+            drawCornerClock(canvas);   // #83: the Aquarium returned before the clock, so Clock = on did nothing here
             return;
         }
         canvas.drawColor(Color.BLACK);
