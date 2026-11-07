@@ -120,6 +120,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 home.refresh();
                 LauncherConfig c = LauncherConfig.get(MainActivity.this);
                 Weather.refreshAuto(MainActivity.this, c, home::refresh);
+                if (c.wRacing || c.barRacing) Racing.refreshIfStale(MainActivity.this, home::refresh);
                 RemotePanes.refreshIfStale(MainActivity.this, c.remotePanesUrl, c.remotePanesRefreshSec, home::refresh);
             }
             handler.postDelayed(this, untilNextMinute());
@@ -1059,6 +1060,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (home != null) {
             home.bind(cfg, adapter);
             Weather.refreshAuto(this, cfg, home::refresh);
+            if (cfg.wRacing || cfg.barRacing) Racing.refreshIfStale(this, home::refresh);
             RemotePanes.refreshIfStale(this, cfg.remotePanesUrl, cfg.remotePanesRefreshSec, home::refresh);
         }
         // Stock launcher back as home after a reboot? Ask once per boot, gently; never change it ourselves.
@@ -3538,8 +3540,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 lOff = str(R.string.ai_offline_row);
         // v2.10: each home widget can be switched off ("No" really hides it); the clock widget is gone (bar only).
         String[][] hw = {{"term", str(R.string.v210_w_term)}, {"weather", str(R.string.v210_w_weather)}, {"pc", str(R.string.v210_w_pc)},
-                {"ai", str(R.string.v210_w_ai)}, {"deploys", str(R.string.v210_w_deploys)}};
-        boolean[] hwOn = {cfg.wTerm, cfg.wWeather, cfg.wPc, cfg.wAi, cfg.wDeploys};
+                {"ai", str(R.string.v210_w_ai)}, {"deploys", str(R.string.v210_w_deploys)}, {"racing", str(R.string.w_racing)}};
+        boolean[] hwOn = {cfg.wTerm, cfg.wWeather, cfg.wPc, cfg.wAi, cfg.wDeploys, cfg.wRacing};
         for (int i = 0; i < hw.length; i++) {
             final String id = hw[i][0], label = hw[i][1];
             final boolean on = hwOn[i];
@@ -3552,6 +3554,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 return true;
             });
         }
+        String lBarRace = str(R.string.w_racing_bar);
+        p.add(lBarRace, str(cfg.barRacing ? R.string.on : R.string.off), r -> {
+            boolean n = !cfg.barRacing;
+            applyLive("widgets", lBarRace, j -> {
+                org.json.JSONObject o = j.optJSONObject("racing");
+                if (o == null) j.put("racing", o = new org.json.JSONObject());
+                o.put("bar", n);
+            });
+            return true;
+        });
         String rpHost = cfg.remotePanesUrl.isEmpty() ? null : android.net.Uri.parse(cfg.remotePanesUrl).getHost();
         p.add(str(R.string.remote_panes), rpHost == null ? str(R.string.off) : rpHost, r -> {
             handler.post(this::remotePanesDialog);
