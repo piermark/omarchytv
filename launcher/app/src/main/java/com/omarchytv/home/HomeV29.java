@@ -107,6 +107,11 @@ final class HomeV29 extends FrameLayout {
     // widgets
     private final LinearLayout widgets;
     private final BoxView wxBox, pcBox, depBox;
+    /** "racing": the remaining 2026 F1 and MotoGP weekends (Racing), the top row's first column, left of weather. */
+    private final BoxView raceBox;
+    private final LinearLayout raceBody;
+    /** Bar countdown to the next F1 / MotoGP session, ticking every second while Home is attached. */
+    private final TextView barRace;
     private final LinearLayout pcBody, aiBody, depBody;
     /** Up to 3 panes the TV fetches itself (RemotePanes), in their own row under the widgets. */
     private final LinearLayout remoteRow;
@@ -175,6 +180,13 @@ final class HomeV29 extends FrameLayout {
             ws[i] = w;
             left.addView(w, new LinearLayout.LayoutParams(-2, -1));
         }
+        barRace = text("", 20, false);
+        barRace.setSingleLine(true);
+        barRace.setGravity(Gravity.CENTER_VERTICAL);
+        barRace.setVisibility(GONE);   // read-only: not focusable, the D-pad path along the bar stays as it was
+        LinearLayout.LayoutParams brl = new LinearLayout.LayoutParams(-2, -1);
+        brl.leftMargin = px(24);
+        left.addView(barRace, brl);
         clock = text("", 22, false);
         bar.addView(clock, new LayoutParams(-2, -2, Gravity.CENTER));
         LinearLayout right = hbox();
@@ -269,12 +281,17 @@ final class HomeV29 extends FrameLayout {
         LinearLayout.LayoutParams r2l = new LinearLayout.LayoutParams(-1, -2);
         r2l.topMargin = px(16);
         widgets.addView(r2, r2l);
-        wxBox = widget(r1, act.getString(R.string.v29_weather), 0);
+        // "racing" is an extra first column: while it is on, the widget area grows one column + gap to the left
+        // (setWidgetsWidth), so weather, pc and ai credits keep their places and racing sits left of weather.
+        raceBox = widget(r1, "racing", 0);
+        raceBody = vbox();
+        raceBox.addView(raceBody, new LinearLayout.LayoutParams(-1, -2));
+        wxBox = widget(r1, act.getString(R.string.v29_weather), 16);
         pcBox = widget(r1, "omarchy · pc", 16);
         BoxView ai = widget(r1, "ai credits · pc", 16);
         // Keep each top-row panel one column wide, (1120 - 2 x 16) / 3, even when its siblings are switched off.
         // With weight 1 a lone panel (e.g. only the weather widget on) stretched across the whole 1120 px row.
-        for (View col : new View[]{wxBox, pcBox, ai}) {
+        for (View col : new View[]{raceBox, wxBox, pcBox, ai}) {
             LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
             cl.width = px((1120 - 32) / 3f);
             cl.weight = 0f;
@@ -572,7 +589,7 @@ final class HomeV29 extends FrameLayout {
         for (View b : barIcons) tint(b, t.fgBright);
         tip.setBackgroundColor(Theme.withAlpha(t.bg, 0.98f));
         tip.setTextColor(t.fgBright);
-        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, t.accent, t.cyan);
+        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, t.accent, t.cyan);
         barSpacex.setTextColor(t.accent2);
         barSpacex.setVisibility(c.pluginSpacexTv ? VISIBLE : GONE);
         grokbotEyes.setTextColor(t.accent);
@@ -591,6 +608,14 @@ final class HomeV29 extends FrameLayout {
         wxBox.setVisibility(c.wWeather ? VISIBLE : GONE);
         pcBox.setVisibility(c.wPc ? VISIBLE : GONE);
         aiBoxRef.setVisibility(c.wAi ? VISIBLE : GONE);
+        raceBox.setVisibility(c.wRacing ? VISIBLE : GONE);
+        // weather is the row's first panel when racing is off: no gap in front of it then
+        LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
+        wxl.leftMargin = c.wRacing ? px(16) : 0;
+        wxBox.setLayoutParams(wxl);
+        LayoutParams wl = (LayoutParams) widgets.getLayoutParams();
+        wl.width = px(1120 + (c.wRacing ? 16 + (1120 - 32) / 3f : 0));
+        widgets.setLayoutParams(wl);
         term.setVisibility(activeWs == 1 && c.wTerm ? VISIBLE : GONE);
         if (editPanel == null) post(() -> applyPanelPos(c));
         gridName.setTextColor(t.accent);
@@ -655,6 +680,7 @@ final class HomeV29 extends FrameLayout {
         updateWeather();
         updatePc(pcBody, depBody, depBox, cfg.wDeploys);
         updateAi(aiBody);
+        updateRacing();
         updateRemote();
         if (activeWs == 4) buildWorkspace();
     }
@@ -701,7 +727,7 @@ final class HomeV29 extends FrameLayout {
         // With the widgets above switched off, the row moves up to the top (aligned with the fastfetch box).
         View row2 = (View) depBox.getParent();
         row2.setVisibility(depBox.getVisibility());
-        boolean above = wxBox.getVisibility() == VISIBLE || pcBox.getVisibility() == VISIBLE
+        boolean above = raceBox.getVisibility() == VISIBLE || wxBox.getVisibility() == VISIBLE || pcBox.getVisibility() == VISIBLE
                 || aiBoxRef.getVisibility() == VISIBLE || depBox.getVisibility() == VISIBLE;
         LinearLayout.LayoutParams rl = (LinearLayout.LayoutParams) remoteRow.getLayoutParams();
         int top = above ? px(16) : 0;
@@ -713,6 +739,126 @@ final class HomeV29 extends FrameLayout {
 
     /** Fetched panes are read from across the room: larger than the 19 px widget text. */
     private static final float REMOTE_TEXT = 24;
+
+    // ---- racing: remaining 2026 F1 / MotoGP weekends (widget) and a countdown to the next session (bar) ----
+
+    /** What the bar counts down to; recomputed on refresh() and when the session it shows is over. */
+    private Racing.Next nextRace;
+
+    private final Runnable raceTick = new Runnable() {
+        @Override
+        public void run() {
+            tickRaceBar();
+            postDelayed(this, 1000 - System.currentTimeMillis() % 1000 + 5);   // on the second, like a clock
+        }
+    };
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        removeCallbacks(raceTick);
+        post(raceTick);
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        removeCallbacks(raceTick);
+        super.onDetachedFromWindow();
+    }
+
+    private static String raceZoneLabel(java.util.TimeZone tz) {
+        return Racing.DEFAULT_ZONE.equals(tz.getID()) ? "thai time" : Racing.zoneLabel(tz);
+    }
+
+    private static String shortName(Racing.Meeting m) {
+        return m.name.endsWith(" GP") ? m.name.substring(0, m.name.length() - 3) : m.name;
+    }
+
+    private void updateRacing() {
+        long now = System.currentTimeMillis();
+        List<Racing.Meeting> f1 = Racing.meetings(act, Racing.F1), mgp = Racing.meetings(act, Racing.MOTOGP);
+        nextRace = Racing.soonest(f1, mgp, now);
+        tickRaceBar();
+        raceBody.removeAllViews();
+        if (!cfg.wRacing) return;
+        java.util.TimeZone tz = Racing.zone(cfg.racingTz);
+        raceBox.setLegend("racing · " + raceZoneLabel(tz), px(14), px(18));
+        raceSeries("f1", Racing.upcoming(f1, now), now, tz, 0);
+        raceSeries("motogp", Racing.upcoming(mgp, now), now, tz, 14);
+    }
+
+    /** "f1  4 left", then one row per remaining weekend: name … race day and time; this weekend also its next session. */
+    private void raceSeries(String label, List<Racing.Meeting> left, long now, java.util.TimeZone tz, int top) {
+        SpannableStringBuilder h = new SpannableStringBuilder();
+        span(h, label, t.accent);
+        span(h, left.isEmpty() ? "" : "  " + left.size() + " left", t.fg);
+        TextView head = line("");
+        head.setText(h);
+        head.setTypeface(tfBold);
+        ((LinearLayout.LayoutParams) head.getLayoutParams()).topMargin = px(top);
+        raceBody.addView(head);
+        if (left.isEmpty()) {
+            TextView v = line(Racing.YEAR + " season complete");
+            v.setTextColor(t.fg);
+            raceBody.addView(v);
+            return;
+        }
+        for (int i = 0; i < left.size(); i++) {
+            Racing.Meeting m = left.get(i);
+            int col = i == 0 ? t.fgBright : t.fg;
+            raceBody.addView(raceRow(shortName(m), Racing.when(Racing.race(m).start, tz, Locale.ENGLISH), col, col));
+            if (i > 0) continue;
+            Racing.Session s = Racing.current(m, now);
+            if (s == null || s == Racing.race(m) && !s.live(now)) continue;
+            boolean live = s.live(now);
+            raceBody.addView(raceRow("  " + (live ? "● live " : "▸ ") + s.code.toLowerCase(Locale.ROOT),
+                    live ? "until " + Racing.when(s.endOrDefault(), tz, Locale.ENGLISH).replaceAll(".* ", "")
+                            : Racing.when(s.start, tz, Locale.ENGLISH),
+                    live ? t.green : t.accent2, live ? t.green : t.fg));
+        }
+    }
+
+    private View raceRow(String name, String when, int nameCol, int whenCol) {
+        LinearLayout r = hbox();
+        LinearLayout.LayoutParams l = new LinearLayout.LayoutParams(-1, -2);
+        l.topMargin = px(6);
+        r.setLayoutParams(l);
+        TextView n = text(name, 19, false);
+        n.setTextColor(nameCol);
+        n.setSingleLine(true);
+        n.setEllipsize(TextUtils.TruncateAt.END);
+        r.addView(n, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView w = text(when, 19, false);
+        w.setTextColor(whenCol);
+        w.setSingleLine(true);
+        LinearLayout.LayoutParams wl = new LinearLayout.LayoutParams(-2, -2);
+        wl.leftMargin = px(10);
+        r.addView(w, wl);
+        return r;
+    }
+
+    /** Bar: "F1 fp3 · São Paulo  02:14:09", or "● live" while it runs. Every second, from raceTick. */
+    private void tickRaceBar() {
+        if (cfg == null || !cfg.barRacing) {
+            barRace.setVisibility(GONE);
+            return;
+        }
+        long now = System.currentTimeMillis();
+        Racing.Next n = nextRace;
+        if (n != null && now >= n.session.endOrDefault())
+            n = nextRace = Racing.soonest(Racing.meetings(act, Racing.F1), Racing.meetings(act, Racing.MOTOGP), now);
+        if (n == null) {
+            barRace.setVisibility(GONE);
+            return;
+        }
+        SpannableStringBuilder b = new SpannableStringBuilder();
+        span(b, Racing.F1.equals(n.series) ? "F1 " : "MotoGP ", t.accent);
+        span(b, n.session.code.toLowerCase(Locale.ROOT) + " · " + shortName(n.meeting) + "  ", t.fg);
+        if (n.session.live(now)) span(b, "● live", t.green);
+        else span(b, Racing.clock(n.session.start - now), t.fgBright);
+        barRace.setText(b);
+        barRace.setVisibility(VISIBLE);
+    }
 
     private void updateWeather() {
         wxTemp.setTextColor(t.accent);
@@ -1192,7 +1338,7 @@ final class HomeV29 extends FrameLayout {
 
     // ---- v2.10 "Disponi riquadri": move home panels on a 12x8 grid (fractions of the screen: same at 1080p and 4K) ----
     static final int GRID_X = 12, GRID_Y = 8;
-    static final String[] PANEL_IDS = {"term", "weather", "pc", "ai", "deploys"};
+    static final String[] PANEL_IDS = {"term", "weather", "pc", "ai", "deploys", "racing"};
     private View editPanel;
     private String editId;
     private int editCx, editCy, editOldCx, editOldCy;
@@ -1204,6 +1350,7 @@ final class HomeV29 extends FrameLayout {
             case "pc": return pcBox;
             case "ai": return aiBoxRef;
             case "deploys": return depBox;
+            case "racing": return raceBox;
             default: return null;
         }
     }
