@@ -91,6 +91,25 @@ else from the fetch), so a dead source never shows old numbers as current. No ur
 status icons (same data and location as the weather widget). Combine with `"homeWidgets": {"weather": false}`
 to keep only the bar version.
 
+### Racing: F1 and MotoGP 2026
+
+`"homeWidgets": {"racing": true}` (default off; also Settings → Widgets) adds a `racing` panel as the first column of
+the top widget row, left of weather. It lists the 2026 F1 and MotoGP weekends that are not over yet, each with its race
+day and time, plus the next (or running) session of the current weekend. The bar then shows a countdown to the next
+session of either series, ticking every second (`"racing": {"bar": false}` hides it; Settings → Widgets too).
+
+```json
+"homeWidgets": { "racing": true },
+"racing": { "timezone": "Asia/Bangkok", "bar": true }
+```
+
+Times are 24 h in `racing.timezone` (any tz id, default `Asia/Bangkok`). Sources, both official and keyless: MotoGP from
+`api.motogp.pulselive.com` (the API behind motogp.com; MotoGP class only, no warm-up, cancelled sessions hidden), F1
+from the formula1.com page of the next meeting (formula1.com has no public season feed). `assets/racing_2026.json`
+is a snapshot of both calendars, so the panel works offline; refresh it with `python3 tools/racing_calendar.py`.
+Live data is fetched on a background thread every 6 h, hourly when a session starts within 48 h. After the last 2026
+session the panel says the season is complete and the bar countdown goes away.
+
 ## Screensaver
 
 `OmarchyDream` re-creates Omarchy's screensaver (`bin/omarchy-screensaver` loops

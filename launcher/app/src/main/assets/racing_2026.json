@@ -1,0 +1,2196 @@
+{
+ "year": 2026,
+ "generated": "2026-11-07T12:20:49Z",
+ "sources": {
+  "f1": "https://www.formula1.com/en/racing/2026",
+  "motogp": "https://www.motogp.com/en/calendar (api.motogp.pulselive.com)"
+ },
+ "f1": [
+  {
+   "slug": "australia",
+   "name": "Australian GP",
+   "official": "FORMULA 1 QATAR AIRWAYS AUSTRALIAN GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-03-06T01:30:00Z",
+     "end": "2026-03-06T02:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-03-06T05:00:00Z",
+     "end": "2026-03-06T06:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-03-07T01:30:00Z",
+     "end": "2026-03-07T02:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-03-07T05:00:00Z",
+     "end": "2026-03-07T06:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-03-08T04:00:00Z",
+     "end": "2026-03-08T06:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "china",
+   "name": "Chinese GP",
+   "official": "FORMULA 1 HEINEKEN CHINESE GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-03-13T03:30:00Z",
+     "end": "2026-03-13T04:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SQ",
+     "name": "Sprint Qualifying",
+     "start": "2026-03-13T07:30:00Z",
+     "end": "2026-03-13T08:14:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SPR",
+     "name": "Sprint",
+     "start": "2026-03-14T03:00:00Z",
+     "end": "2026-03-14T04:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-03-14T07:00:00Z",
+     "end": "2026-03-14T08:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-03-15T07:00:00Z",
+     "end": "2026-03-15T09:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "japan",
+   "name": "Japanese GP",
+   "official": "FORMULA 1 ARAMCO JAPANESE GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-03-27T02:30:00Z",
+     "end": "2026-03-27T03:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-03-27T06:00:00Z",
+     "end": "2026-03-27T07:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-03-28T02:30:00Z",
+     "end": "2026-03-28T03:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-03-28T06:00:00Z",
+     "end": "2026-03-28T07:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-03-29T05:00:00Z",
+     "end": "2026-03-29T07:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "miami",
+   "name": "Miami GP",
+   "official": "FORMULA 1 CRYPTO.COM MIAMI GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-05-01T16:00:00Z",
+     "end": "2026-05-01T17:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SQ",
+     "name": "Sprint Qualifying",
+     "start": "2026-05-01T20:30:00Z",
+     "end": "2026-05-01T21:14:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SPR",
+     "name": "Sprint",
+     "start": "2026-05-02T16:00:00Z",
+     "end": "2026-05-02T17:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-05-02T20:00:00Z",
+     "end": "2026-05-02T21:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-05-03T17:00:00Z",
+     "end": "2026-05-03T19:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "canada",
+   "name": "Canadian GP",
+   "official": "FORMULA 1 LENOVO GRAND PRIX DU CANADA 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-05-22T16:30:00Z",
+     "end": "2026-05-22T17:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SQ",
+     "name": "Sprint Qualifying",
+     "start": "2026-05-22T20:30:00Z",
+     "end": "2026-05-22T21:14:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SPR",
+     "name": "Sprint",
+     "start": "2026-05-23T16:00:00Z",
+     "end": "2026-05-23T17:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-05-23T20:00:00Z",
+     "end": "2026-05-23T21:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-05-24T20:00:00Z",
+     "end": "2026-05-24T22:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "monaco",
+   "name": "Monaco GP",
+   "official": "FORMULA 1 LOUIS VUITTON GRAND PRIX DE MONACO 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-06-05T11:30:00Z",
+     "end": "2026-06-05T12:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-06-05T15:00:00Z",
+     "end": "2026-06-05T16:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-06-06T10:30:00Z",
+     "end": "2026-06-06T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-06-06T14:00:00Z",
+     "end": "2026-06-06T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-06-07T13:00:00Z",
+     "end": "2026-06-07T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "barcelona-catalunya",
+   "name": "Barcelona GP",
+   "official": "FORMULA 1 MSC CRUISES GRAN PREMIO DE BARCELONA-CATALUNYA 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-06-12T11:30:00Z",
+     "end": "2026-06-12T12:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-06-12T15:00:00Z",
+     "end": "2026-06-12T16:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-06-13T10:30:00Z",
+     "end": "2026-06-13T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-06-13T14:00:00Z",
+     "end": "2026-06-13T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-06-14T13:00:00Z",
+     "end": "2026-06-14T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "austria",
+   "name": "Austrian GP",
+   "official": "FORMULA 1 LENOVO AUSTRIAN GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-06-26T11:30:00Z",
+     "end": "2026-06-26T12:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-06-26T15:00:00Z",
+     "end": "2026-06-26T16:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-06-27T10:30:00Z",
+     "end": "2026-06-27T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-06-27T14:00:00Z",
+     "end": "2026-06-27T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-06-28T13:00:00Z",
+     "end": "2026-06-28T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "great-britain",
+   "name": "British GP",
+   "official": "FORMULA 1 PIRELLI BRITISH GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-07-03T11:30:00Z",
+     "end": "2026-07-03T12:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SQ",
+     "name": "Sprint Qualifying",
+     "start": "2026-07-03T15:30:00Z",
+     "end": "2026-07-03T16:14:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SPR",
+     "name": "Sprint",
+     "start": "2026-07-04T11:00:00Z",
+     "end": "2026-07-04T12:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-07-04T15:00:00Z",
+     "end": "2026-07-04T16:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-07-05T14:00:00Z",
+     "end": "2026-07-05T16:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "belgium",
+   "name": "Belgian GP",
+   "official": "FORMULA 1 MOËT \\u0026 CHANDON BELGIAN GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-07-17T11:30:00Z",
+     "end": "2026-07-17T12:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-07-17T15:00:00Z",
+     "end": "2026-07-17T16:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-07-18T10:30:00Z",
+     "end": "2026-07-18T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-07-18T14:00:00Z",
+     "end": "2026-07-18T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-07-19T13:00:00Z",
+     "end": "2026-07-19T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "hungary",
+   "name": "Hungarian GP",
+   "official": "FORMULA 1 AWS HUNGARIAN GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-07-24T11:30:00Z",
+     "end": "2026-07-24T12:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-07-24T15:00:00Z",
+     "end": "2026-07-24T16:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-07-25T10:30:00Z",
+     "end": "2026-07-25T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-07-25T14:00:00Z",
+     "end": "2026-07-25T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-07-26T13:00:00Z",
+     "end": "2026-07-26T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "netherlands",
+   "name": "Dutch GP",
+   "official": "FORMULA 1 HEINEKEN DUTCH GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-08-21T10:30:00Z",
+     "end": "2026-08-21T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SQ",
+     "name": "Sprint Qualifying",
+     "start": "2026-08-21T14:30:00Z",
+     "end": "2026-08-21T15:14:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SPR",
+     "name": "Sprint",
+     "start": "2026-08-22T10:00:00Z",
+     "end": "2026-08-22T11:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-08-22T14:00:00Z",
+     "end": "2026-08-22T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-08-23T13:00:00Z",
+     "end": "2026-08-23T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "italy",
+   "name": "Italian GP",
+   "official": "FORMULA 1 PIRELLI GRAN PREMIO D’ITALIA 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-09-04T10:30:00Z",
+     "end": "2026-09-04T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-09-04T14:00:00Z",
+     "end": "2026-09-04T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-09-05T10:30:00Z",
+     "end": "2026-09-05T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-09-05T14:00:00Z",
+     "end": "2026-09-05T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-09-06T13:00:00Z",
+     "end": "2026-09-06T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "spain",
+   "name": "Spanish GP",
+   "official": "FORMULA 1 TAG HEUER GRAN PREMIO DE ESPAÑA 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-09-11T11:30:00Z",
+     "end": "2026-09-11T12:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-09-11T15:00:00Z",
+     "end": "2026-09-11T16:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-09-12T10:30:00Z",
+     "end": "2026-09-12T11:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-09-12T14:00:00Z",
+     "end": "2026-09-12T15:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-09-13T13:00:00Z",
+     "end": "2026-09-13T15:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "azerbaijan",
+   "name": "Azerbaijan GP",
+   "official": "FORMULA 1 QATAR AIRWAYS AZERBAIJAN GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-09-24T08:30:00Z",
+     "end": "2026-09-24T09:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-09-24T12:00:00Z",
+     "end": "2026-09-24T13:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-09-25T08:30:00Z",
+     "end": "2026-09-25T09:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-09-25T12:00:00Z",
+     "end": "2026-09-25T13:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-09-26T11:00:00Z",
+     "end": "2026-09-26T13:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "bahrain",
+   "name": "Bahrain GP",
+   "official": "FORMULA 1 GULF AIR BAHRAIN GRAND PRIX IN MALAYSIA 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-10-02T04:30:00Z",
+     "end": "2026-10-02T05:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-10-02T08:00:00Z",
+     "end": "2026-10-02T09:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-10-03T04:30:00Z",
+     "end": "2026-10-03T05:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-10-03T08:00:00Z",
+     "end": "2026-10-03T09:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-10-04T07:00:00Z",
+     "end": "2026-10-04T09:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "singapore",
+   "name": "Singapore GP",
+   "official": "FORMULA 1 SINGAPORE AIRLINES SINGAPORE GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-10-09T08:30:00Z",
+     "end": "2026-10-09T09:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SQ",
+     "name": "Sprint Qualifying",
+     "start": "2026-10-09T12:30:00Z",
+     "end": "2026-10-09T13:14:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "SPR",
+     "name": "Sprint",
+     "start": "2026-10-10T09:00:00Z",
+     "end": "2026-10-10T09:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-10-10T13:00:00Z",
+     "end": "2026-10-10T14:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-10-11T12:00:00Z",
+     "end": "2026-10-11T14:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "united-states",
+   "name": "United States GP",
+   "official": "FORMULA 1 MSC CRUISES UNITED STATES GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-10-23T17:30:00Z",
+     "end": "2026-10-23T18:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-10-23T21:00:00Z",
+     "end": "2026-10-23T22:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-10-24T17:30:00Z",
+     "end": "2026-10-24T18:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-10-24T21:00:00Z",
+     "end": "2026-10-24T22:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-10-25T20:00:00Z",
+     "end": "2026-10-25T22:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "mexico",
+   "name": "Mexico City GP",
+   "official": "FORMULA 1 GRAN PREMIO DE LA CIUDAD DE MÉXICO 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-10-30T18:30:00Z",
+     "end": "2026-10-30T19:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-10-30T22:00:00Z",
+     "end": "2026-10-30T23:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-10-31T17:30:00Z",
+     "end": "2026-10-31T18:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-10-31T21:00:00Z",
+     "end": "2026-10-31T22:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-11-01T20:00:00Z",
+     "end": "2026-11-01T22:00:00Z",
+     "state": "completed"
+    }
+   ]
+  },
+  {
+   "slug": "brazil",
+   "name": "São Paulo GP",
+   "official": "FORMULA 1 MSC CRUISES GRANDE PRÊMIO DE SÃO PAULO 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-11-06T15:30:00Z",
+     "end": "2026-11-06T16:30:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-11-06T19:00:00Z",
+     "end": "2026-11-06T20:00:00Z",
+     "state": "completed"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-11-07T14:30:00Z",
+     "end": "2026-11-07T15:30:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-11-07T18:00:00Z",
+     "end": "2026-11-07T19:00:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-11-08T17:00:00Z",
+     "end": "2026-11-08T19:00:00Z",
+     "state": "upcoming"
+    }
+   ]
+  },
+  {
+   "slug": "las-vegas",
+   "name": "Las Vegas GP",
+   "official": "FORMULA 1 HEINEKEN LAS VEGAS GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-11-20T00:30:00Z",
+     "end": "2026-11-20T01:30:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-11-20T04:00:00Z",
+     "end": "2026-11-20T05:00:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-11-21T00:30:00Z",
+     "end": "2026-11-21T01:30:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-11-21T04:00:00Z",
+     "end": "2026-11-21T05:00:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-11-22T04:00:00Z",
+     "end": "2026-11-22T06:00:00Z",
+     "state": "upcoming"
+    }
+   ]
+  },
+  {
+   "slug": "qatar",
+   "name": "Qatar GP",
+   "official": "FORMULA 1 QATAR AIRWAYS QATAR GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-11-27T13:30:00Z",
+     "end": "2026-11-27T14:30:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-11-27T17:00:00Z",
+     "end": "2026-11-27T18:00:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-11-28T14:30:00Z",
+     "end": "2026-11-28T15:30:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-11-28T18:00:00Z",
+     "end": "2026-11-28T19:00:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-11-29T16:00:00Z",
+     "end": "2026-11-29T18:00:00Z",
+     "state": "upcoming"
+    }
+   ]
+  },
+  {
+   "slug": "united-arab-emirates",
+   "name": "Abu Dhabi GP",
+   "official": "FORMULA 1 ETIHAD AIRWAYS ABU DHABI GRAND PRIX 2026",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Practice 1",
+     "start": "2026-12-04T09:30:00Z",
+     "end": "2026-12-04T10:30:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "FP2",
+     "name": "Practice 2",
+     "start": "2026-12-04T13:00:00Z",
+     "end": "2026-12-04T14:00:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "FP3",
+     "name": "Practice 3",
+     "start": "2026-12-05T10:30:00Z",
+     "end": "2026-12-05T11:30:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "QUALI",
+     "name": "Qualifying",
+     "start": "2026-12-05T14:00:00Z",
+     "end": "2026-12-05T15:00:00Z",
+     "state": "upcoming"
+    },
+    {
+     "code": "RACE",
+     "name": "Race",
+     "start": "2026-12-06T13:00:00Z",
+     "end": "2026-12-06T15:00:00Z",
+     "state": "upcoming"
+    }
+   ]
+  }
+ ],
+ "motogp": [
+  {
+   "slug": "364a0bd9-d3c2-4ab3-a4cd-211ff469953e",
+   "name": "Thailand GP",
+   "official": "PT GRAND PRIX OF THAILAND",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-02-27T03:45:00Z",
+     "end": "2026-02-27T04:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-02-27T08:00:00Z",
+     "end": "2026-02-27T09:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-02-28T03:10:00Z",
+     "end": "2026-02-28T03:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-02-28T03:50:00Z",
+     "end": "2026-02-28T04:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-02-28T04:15:00Z",
+     "end": "2026-02-28T04:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-02-28T08:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-03-01T08:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "11588b5a-f76c-4c8e-ae06-acba82ff1303",
+   "name": "Brazil GP",
+   "official": "ESTRELLA GALICIA 0,0 GRAND PRIX OF BRAZIL",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-03-20T15:05:00Z",
+     "end": "2026-03-20T16:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-03-20T19:00:00Z",
+     "end": "2026-03-20T20:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-03-21T13:10:00Z",
+     "end": "2026-03-21T13:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-03-21T13:50:00Z",
+     "end": "2026-03-21T14:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-03-21T14:15:00Z",
+     "end": "2026-03-21T14:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-03-21T19:20:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-03-22T18:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "8c83648e-8ec9-40f1-9ba0-b0f19883e7d7",
+   "name": "United States GP",
+   "official": "RED BULL GRAND PRIX OF THE UNITED STATES",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-03-27T15:45:00Z",
+     "end": "2026-03-27T16:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-03-27T20:00:00Z",
+     "end": "2026-03-27T21:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-03-28T15:10:00Z",
+     "end": "2026-03-28T15:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-03-28T15:50:00Z",
+     "end": "2026-03-28T16:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-03-28T16:15:00Z",
+     "end": "2026-03-28T16:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-03-28T20:10:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-03-29T20:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "a24be69b-8472-4aa4-9e83-d3610e0f1d98",
+   "name": "Spain GP",
+   "official": "ESTRELLA GALICIA 0,0 GRAND PRIX OF SPAIN",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-04-24T08:45:00Z",
+     "end": "2026-04-24T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-04-24T13:00:00Z",
+     "end": "2026-04-24T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-04-25T08:10:00Z",
+     "end": "2026-04-25T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-04-25T08:50:00Z",
+     "end": "2026-04-25T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-04-25T09:15:00Z",
+     "end": "2026-04-25T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-04-25T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-04-26T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "4237f175-c6a4-4d1e-b658-82962baf3fa3",
+   "name": "France GP",
+   "official": "MICHELIN® GRAND PRIX OF FRANCE",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-05-08T08:45:00Z",
+     "end": "2026-05-08T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-05-08T13:00:00Z",
+     "end": "2026-05-08T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-05-09T08:10:00Z",
+     "end": "2026-05-09T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-05-09T08:50:00Z",
+     "end": "2026-05-09T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-05-09T09:15:00Z",
+     "end": "2026-05-09T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-05-09T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-05-10T12:00:00Z",
+     "end": "2026-05-10T13:15:00Z",
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "200bf59d-3db2-4e17-a903-4be204fa3496",
+   "name": "Catalunya GP",
+   "official": "MONSTER ENERGY GRAND PRIX OF CATALUNYA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-05-15T08:45:00Z",
+     "end": "2026-05-15T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-05-15T13:00:00Z",
+     "end": "2026-05-15T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-05-16T08:10:00Z",
+     "end": "2026-05-16T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-05-16T08:50:00Z",
+     "end": "2026-05-16T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-05-16T09:15:00Z",
+     "end": "2026-05-16T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-05-16T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "bf2104f9-f5cc-4a99-a993-cb5d01bccd24",
+   "name": "Italy GP",
+   "official": "BREMBO GRAND PRIX OF ITALY",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-05-29T08:45:00Z",
+     "end": "2026-05-29T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-05-29T13:00:00Z",
+     "end": "2026-05-29T14:09:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-05-30T08:10:00Z",
+     "end": "2026-05-30T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-05-30T08:50:00Z",
+     "end": "2026-05-30T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-05-30T09:15:00Z",
+     "end": "2026-05-30T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-05-30T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-05-31T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "a37708ab-914c-433f-83d4-e55d1b95ccc3",
+   "name": "Hungary GP",
+   "official": "GRAND PRIX OF HUNGARY",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-06-05T08:45:00Z",
+     "end": "2026-06-05T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-06-05T13:00:00Z",
+     "end": "2026-06-05T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-06-06T08:10:00Z",
+     "end": "2026-06-06T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-06-06T08:50:00Z",
+     "end": "2026-06-06T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-06-06T09:15:00Z",
+     "end": "2026-06-06T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-06-06T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-06-07T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "c2018c5e-fb82-4058-b359-1b7d9769e703",
+   "name": "Czechia GP",
+   "official": "MONSTER ENERGY GRAND PRIX OF CZECHIA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-06-19T08:45:00Z",
+     "end": "2026-06-19T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-06-19T13:00:00Z",
+     "end": "2026-06-19T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-06-20T08:10:00Z",
+     "end": "2026-06-20T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-06-20T08:50:00Z",
+     "end": "2026-06-20T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-06-20T09:15:00Z",
+     "end": "2026-06-20T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-06-20T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-06-21T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "47c25c37-d307-4d45-b1ed-b1cb5e811975",
+   "name": "Netherlands GP",
+   "official": "TISSOT GRAND PRIX OF THE NETHERLANDS",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-06-26T08:45:00Z",
+     "end": "2026-06-26T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-06-26T13:00:00Z",
+     "end": "2026-06-26T14:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-06-27T08:10:00Z",
+     "end": "2026-06-27T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-06-27T08:50:00Z",
+     "end": "2026-06-27T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-06-27T09:15:00Z",
+     "end": "2026-06-27T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-06-27T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-06-28T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "259be6f4-c23c-4dc2-bc42-7664842f6409",
+   "name": "Germany GP",
+   "official": "LIQUI MOLY GRAND PRIX OF GERMANY",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-07-10T08:45:00Z",
+     "end": "2026-07-10T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-07-10T13:00:00Z",
+     "end": "2026-07-10T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-07-11T08:10:00Z",
+     "end": "2026-07-11T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-07-11T08:50:00Z",
+     "end": "2026-07-11T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-07-11T09:15:00Z",
+     "end": "2026-07-11T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-07-11T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-07-12T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "41aa319a-8ec5-49d6-aa99-4e2059c88098",
+   "name": "Great Britain GP",
+   "official": "QATAR AIRWAYS GRAND PRIX OF GREAT BRITAIN",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-08-07T10:45:00Z",
+     "end": "2026-08-07T11:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-08-07T15:00:00Z",
+     "end": "2026-08-07T16:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-08-08T10:10:00Z",
+     "end": "2026-08-08T10:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-08-08T10:50:00Z",
+     "end": "2026-08-08T11:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-08-08T11:15:00Z",
+     "end": "2026-08-08T11:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-08-08T15:05:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-08-09T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "86abdbde-5e3d-45b1-a1f0-f74044a90eb3",
+   "name": "Aragon GP",
+   "official": "MICHELIN® GRAND PRIX OF ARAGON",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-08-28T08:45:00Z",
+     "end": "2026-08-28T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-08-28T13:00:00Z",
+     "end": "2026-08-28T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-08-29T08:10:00Z",
+     "end": "2026-08-29T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-08-29T08:50:00Z",
+     "end": "2026-08-29T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-08-29T09:15:00Z",
+     "end": "2026-08-29T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-08-29T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-08-30T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "537f71f7-25ea-4cb2-a259-70b0da576cc6",
+   "name": "San Marino And The Rimini Riviera GP",
+   "official": "RED BULL GRAND PRIX OF SAN MARINO AND THE RIMINI RIVIERA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-09-11T08:45:00Z",
+     "end": "2026-09-11T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-09-11T13:00:00Z",
+     "end": "2026-09-11T14:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-09-12T08:10:00Z",
+     "end": "2026-09-12T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-09-12T08:50:00Z",
+     "end": "2026-09-12T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-09-12T09:15:00Z",
+     "end": "2026-09-12T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-09-12T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-09-13T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "1d659e29-247a-402c-ba1e-33fa14670cbe",
+   "name": "Austria GP",
+   "official": "QATAR AIRWAYS GRAND PRIX OF AUSTRIA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-09-18T08:45:00Z",
+     "end": "2026-09-18T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-09-18T13:00:00Z",
+     "end": "2026-09-18T14:07:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-09-19T08:10:00Z",
+     "end": "2026-09-19T08:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-09-19T08:50:00Z",
+     "end": "2026-09-19T09:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-09-19T09:15:00Z",
+     "end": "2026-09-19T09:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-09-19T13:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-09-20T12:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "a87453f0-3ed0-4469-993a-1486af92d879",
+   "name": "Japan GP",
+   "official": "MOTUL GRAND PRIX OF JAPAN",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-10-02T01:45:00Z",
+     "end": "2026-10-02T02:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-10-02T06:00:00Z",
+     "end": "2026-10-02T07:15:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-10-03T01:10:00Z",
+     "end": "2026-10-03T01:50:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-10-03T01:58:00Z",
+     "end": "2026-10-03T02:13:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-10-03T02:23:00Z",
+     "end": "2026-10-03T02:38:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-10-03T06:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-10-04T05:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "877c27e8-70e0-4847-bacf-2290d7cc903c",
+   "name": "Indonesia GP",
+   "official": "PERTAMINA GRAND PRIX OF INDONESIA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-10-09T02:45:00Z",
+     "end": "2026-10-09T03:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-10-09T07:35:00Z",
+     "end": "2026-10-09T08:35:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-10-10T02:10:00Z",
+     "end": "2026-10-10T02:43:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-10-10T02:55:00Z",
+     "end": "2026-10-10T03:10:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-10-10T03:20:00Z",
+     "end": "2026-10-10T03:35:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-10-10T07:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-10-11T07:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "66961f05-2454-4455-9d65-f99c49d25b17",
+   "name": "Australia GP",
+   "official": "RED BULL GRAND PRIX OF AUSTRALIA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-10-22T23:45:00Z",
+     "end": "2026-10-23T00:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-10-23T04:00:00Z",
+     "end": "2026-10-23T05:10:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-10-23T23:10:00Z",
+     "end": "2026-10-23T23:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-10-23T23:50:00Z",
+     "end": "2026-10-24T00:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-10-24T00:15:00Z",
+     "end": "2026-10-24T00:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-10-24T04:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "d1aedfce-d7c8-4d4a-9532-99c82547baad",
+   "name": "Malaysia GP",
+   "official": "PETRONAS GRAND PRIX OF MALAYSIA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-10-30T02:45:00Z",
+     "end": "2026-10-30T03:35:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-10-30T07:00:00Z",
+     "end": "2026-10-30T08:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-10-31T02:10:00Z",
+     "end": "2026-10-31T02:40:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-10-31T02:50:00Z",
+     "end": "2026-10-31T03:05:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-10-31T03:15:00Z",
+     "end": "2026-10-31T03:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-10-31T07:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-11-01T07:00:00Z",
+     "end": null,
+     "state": "FINISHED"
+    }
+   ]
+  },
+  {
+   "slug": "3f3d3f5e-851c-42d2-887a-8ce8b41fa908",
+   "name": "Qatar GP",
+   "official": "QATAR AIRWAYS GRAND PRIX OF QATAR",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-11-06T11:45:00Z",
+     "end": "2026-11-06T12:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-11-06T16:00:00Z",
+     "end": "2026-11-06T17:00:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-11-07T11:00:00Z",
+     "end": "2026-11-07T11:30:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-11-07T11:40:00Z",
+     "end": "2026-11-07T11:55:00Z",
+     "state": "FINISHED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-11-07T12:05:00Z",
+     "end": "2026-11-07T12:20:00Z",
+     "state": "CURRENT"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-11-07T16:00:00Z",
+     "end": null,
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-11-08T16:00:00Z",
+     "end": null,
+     "state": "NOT-STARTED"
+    }
+   ]
+  },
+  {
+   "slug": "c7f7626b-807f-4a6f-813e-7ad2c68302a3",
+   "name": "Portugal GP",
+   "official": "REPSOL GRAND PRIX OF PORTUGAL",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-11-20T10:45:00Z",
+     "end": "2026-11-20T11:30:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-11-20T15:00:00Z",
+     "end": "2026-11-20T16:00:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-11-21T10:10:00Z",
+     "end": "2026-11-21T10:40:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-11-21T10:50:00Z",
+     "end": "2026-11-21T11:05:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-11-21T11:15:00Z",
+     "end": "2026-11-21T11:30:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-11-21T15:00:00Z",
+     "end": null,
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-11-22T13:00:00Z",
+     "end": null,
+     "state": "NOT-STARTED"
+    }
+   ]
+  },
+  {
+   "slug": "6ad2859f-51c4-459e-9714-338814e7537f",
+   "name": "Valencia GP",
+   "official": "MOTUL GRAND PRIX OF VALENCIA",
+   "sessions": [
+    {
+     "code": "FP1",
+     "name": "Free Practice Nr. 1",
+     "start": "2026-11-27T09:45:00Z",
+     "end": "2026-11-27T10:30:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "PR",
+     "name": "Practice",
+     "start": "2026-11-27T14:00:00Z",
+     "end": "2026-11-27T15:00:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "FP2",
+     "name": "Free Practice Nr. 2",
+     "start": "2026-11-28T09:10:00Z",
+     "end": "2026-11-28T09:40:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "Q1",
+     "name": "Qualifying Nr. 1",
+     "start": "2026-11-28T09:50:00Z",
+     "end": "2026-11-28T10:05:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "Q2",
+     "name": "Qualifying Nr. 2",
+     "start": "2026-11-28T10:15:00Z",
+     "end": "2026-11-28T10:30:00Z",
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "SPR",
+     "name": "Tissot Sprint",
+     "start": "2026-11-28T14:00:00Z",
+     "end": null,
+     "state": "NOT-STARTED"
+    },
+    {
+     "code": "RACE",
+     "name": "Grand Prix",
+     "start": "2026-11-29T13:00:00Z",
+     "end": null,
+     "state": "NOT-STARTED"
+    }
+   ]
+  }
+ ]
+}

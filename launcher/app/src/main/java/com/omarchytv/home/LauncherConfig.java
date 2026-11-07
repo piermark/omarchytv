@@ -532,6 +532,11 @@ final class LauncherConfig {
     final boolean textTiles;
     /** v2.10: home widgets on/off: weather, pc, ai, deploys (default all on). */
     final boolean wWeather, wPc, wAi, wDeploys, wTerm;
+    /** "racing" home widget (remaining 2026 F1 + MotoGP weekends, homeWidgets.racing, default off) and its
+     *  countdown in the bar (racing.bar, default: same as the widget). */
+    final boolean wRacing, barRacing;
+    /** omarchytv.json racing.timezone: the zone session times are shown in (default Asia/Bangkok). */
+    final String racingTz;
     /** v2.10 "Disponi riquadri": panel id -> {cellX, cellY} offset on a 12x8 screen grid (empty = default layout). */
     final java.util.Map<String, int[]> panelPos;
     /** v2.10: Send to TV (cast) is off until switched on (omarchytv.json "cast": {"enabled": true}). */
@@ -817,6 +822,10 @@ final class LauncherConfig {
         wAi = hw == null || hw.optBoolean("ai", true);
         wDeploys = hw == null || hw.optBoolean("deploys", true);
         wTerm = hw == null || hw.optBoolean("term", true);
+        wRacing = hw != null && hw.optBoolean("racing", false);   // opt-in: a new widget never appears unasked
+        JSONObject rc = j != null ? j.optJSONObject("racing") : null;
+        barRacing = rc != null && rc.has("bar") ? rc.optBoolean("bar") : wRacing;   // follows the widget unless set
+        racingTz = rc != null && !rc.optString("timezone", "").trim().isEmpty() ? rc.optString("timezone").trim() : Racing.DEFAULT_ZONE;
         java.util.Map<String, int[]> ppos = new java.util.HashMap<>();
         JSONObject pj = j != null ? j.optJSONObject("panelPos") : null;
         if (pj != null) for (java.util.Iterator<String> it = pj.keys(); it.hasNext(); ) {
