@@ -333,6 +333,30 @@ public final class LinkServer {
         } catch (IOException | RuntimeException e) {
             // peer went away, timeout, or malformed input
         } finally {
+            lingerClose(sock);
+        }
+    }
+
+    /**
+     * Close after an answer without losing it. A refused request (403 not_lan, 413 too_large, ...) is answered
+     * before its body is read; closing a socket with unread input makes the kernel send RST instead of FIN, and the
+     * RST can destroy the answer before the client reads it ("Connection reset" instead of the 403/413). So: FIN
+     * first, then read and drop what the client still sends (at most 256 KiB, at most 1 s), then close.
+     */
+    static void lingerClose(Socket sock) {
+        try {
+            if (!sock.isClosed() && sock.isConnected() && !sock.isOutputShutdown()) {
+                sock.shutdownOutput();
+                sock.setSoTimeout(250);
+                InputStream in = sock.getInputStream();
+                byte[] buf = new byte[8192];
+                long until = System.currentTimeMillis() + 1000;
+                int total = 0, n;
+                while (total < 256 * 1024 && System.currentTimeMillis() < until && (n = in.read(buf)) >= 0) total += n;
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // timeout or the peer already closed: nothing left to save
+        } finally {
             closeQuietly(sock);
         }
     }
