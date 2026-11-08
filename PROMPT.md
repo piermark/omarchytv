@@ -40,7 +40,7 @@ Debloat
   still unclear.
 - Before touching streaming apps, voice assistant, Chromecast, Miracast or the update service, ask me
   which ones I use with a checklist question and disable only what I don't tick.
-- Run `pm` commands one per shell call, chained commands may silently stop after the first.
+- Run `pm` commands one per shell call; chained commands may silently stop after the first.
 
 Launcher
 - Don't install a third-party launcher that charges for basics like wallpapers. Build a small native
