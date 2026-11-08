@@ -53,7 +53,7 @@ adb shell cmd package install-existing <package>        # only if the app was re
 while read p; do adb shell pm enable "$p"; done < disabled-by-me.txt   # undo everything you did
 ```
 
-Compare with `adb shell pm list packages -d` against `disabled-before.txt`. A factory reset also re-enables every
+Compare `adb shell pm list packages -d` against `disabled-before.txt`. A factory reset also re-enables every
 system app.
 
 ## 4. Package table
