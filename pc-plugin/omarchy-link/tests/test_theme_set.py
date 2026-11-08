@@ -12,9 +12,17 @@ class SetTheme(unittest.TestCase):
         self.dir = config.HOME / ".config/omarchy/themes"
         for n in ("tokyo-night", "gruvbox", "Bad Name"):
             (self.dir / n).mkdir(parents=True, exist_ok=True)
+        self.stock = self.dir.parent / "stock-themes"
+        self.stock.mkdir(parents=True, exist_ok=True)
+        for child in self.stock.iterdir():
+            if child.is_dir():
+                child.rmdir()
         self.p = mock.patch.object(theme, "THEMES_DIR", self.dir)
+        self.p2 = mock.patch.object(theme, "STOCK_THEMES", self.stock)
         self.p.start()
+        self.p2.start()
         self.addCleanup(self.p.stop)
+        self.addCleanup(self.p2.stop)
 
     def test_installed_themes_skips_bad_names(self):
         self.assertIn("gruvbox", theme.installed_themes())
@@ -25,6 +33,15 @@ class SetTheme(unittest.TestCase):
             for n in ("nord", "../etc", "gruvbox; rm -rf ~", "", None, 42, "Bad Name", "a" * 80):
                 self.assertEqual(theme.set_theme(n, now=100.0), "unknown", n)
             po.assert_not_called()
+
+    def test_stock_theme_and_display_name(self):
+        (self.stock / "nord").mkdir()
+        with mock.patch.object(theme, "theme_name", lambda: "gruvbox"), \
+             mock.patch.object(theme.subprocess, "Popen") as po:
+            self.assertEqual(theme.set_theme("nord", now=100.0), "ok")
+            self.assertEqual(theme.set_theme("Tokyo Night", now=110.0), "ok")
+            self.assertEqual(po.call_args_list[0][0][0], ["omarchy-theme-set", "nord"])
+            self.assertEqual(po.call_args_list[1][0][0], ["omarchy-theme-set", "tokyo-night"])
 
     def test_ok_runs_omarchy_theme_set_without_a_shell(self):
         with mock.patch.object(theme, "theme_name", lambda: "tokyo-night"), \

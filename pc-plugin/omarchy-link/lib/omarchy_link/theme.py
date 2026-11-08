@@ -30,6 +30,8 @@ PALETTE_KEYS = [
 
 
 THEMES_DIR = config.HOME / ".config/omarchy/themes"
+# omarchy-theme-set also accepts the packaged themes. User themes stay under THEMES_DIR.
+STOCK_THEMES = Path(os.environ.get("OMARCHY_PATH") or "/usr/share/omarchy") / "themes"
 THEME_NAME = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 SET_GAP_S = 2.0          # the TV may ask at most once every 2 s (a held remote key must not queue ten theme switches)
 _set_lock = threading.Lock()
@@ -37,11 +39,19 @@ _last_set = 0.0
 
 
 def installed_themes() -> list[str]:
-    """Theme names omarchy-theme-set accepts: the folders (or links) in ~/.config/omarchy/themes."""
-    try:
-        return sorted(p.name for p in THEMES_DIR.iterdir() if p.is_dir() and THEME_NAME.match(p.name))
-    except OSError:
-        return []
+    """Names omarchy-theme-set accepts: user themes and the stock Omarchy themes."""
+    names: set[str] = set()
+    for root in (THEMES_DIR, STOCK_THEMES):
+        try:
+            names.update(p.name for p in root.iterdir() if p.is_dir() and THEME_NAME.match(p.name))
+        except OSError:
+            continue
+    return sorted(names)
+
+
+def theme_slug(name: str) -> str:
+    """Fold a name the way omarchy-theme-set does before it looks up a directory."""
+    return re.sub(r"<[^>]+>", "", name).strip().lower().replace(" ", "-")
 
 
 def set_theme(name: object, now: float | None = None) -> str:
@@ -51,9 +61,10 @@ def set_theme(name: object, now: float | None = None) -> str:
     "failed". The normal PC -> TV sync then sends the new palette back, so both stay in step.
     """
     global _last_set
-    if not isinstance(name, str) or not THEME_NAME.match(name) or name not in installed_themes():
+    slug = theme_slug(name) if isinstance(name, str) else ""
+    if not THEME_NAME.match(slug) or slug not in installed_themes():
         return "unknown"
-    if name == theme_name():
+    if slug == theme_name():
         return "same"
     with _set_lock:
         t = time.monotonic() if now is None else now
@@ -61,7 +72,7 @@ def set_theme(name: object, now: float | None = None) -> str:
             return "busy"
         _last_set = t
     try:
-        subprocess.Popen(["omarchy-theme-set", name], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+        subprocess.Popen(["omarchy-theme-set", slug], stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                          stderr=subprocess.DEVNULL, start_new_session=True)
     except OSError:
         return "failed"

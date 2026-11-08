@@ -6,13 +6,18 @@ import os, re, shutil, subprocess
 from .i18n import t
 from pathlib import Path
 
-THEME = Path.home() / ".config/omarchy/current/theme/colors.toml"
+def _colors_file() -> Path:
+    """Live Omarchy writes the palette under the state dir. The config path is the older location."""
+    home = Path.home()
+    state = home / ".local/state/omarchy/current/theme/colors.toml"
+    legacy = home / ".config/omarchy/current/theme/colors.toml"
+    return state if state.is_file() else legacy
 
 
 def colors() -> dict:
     out = {"accent": "#7aa2f7", "foreground": "#c0caf5", "background": "#1a1b26"}
     try:
-        for line in THEME.read_text().splitlines():
+        for line in _colors_file().read_text().splitlines():
             m = re.match(r'\s*([a-z_0-9]+)\s*=\s*"(#[0-9a-fA-F]{6})"', line)
             if m:
                 out[m.group(1)] = m.group(2)
