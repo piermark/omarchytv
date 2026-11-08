@@ -57,7 +57,6 @@ from pathlib import Path
 
 from . import VERSION, themes, ui
 
-OMARCHY_CURRENT = Path.home() / ".config/omarchy/current"
 AI_CFG = Path.home() / ".config/omarchy-link/ai.json"
 LINK_CFG = Path.home() / ".config/omarchy-link/config.json"
 
@@ -223,26 +222,37 @@ def uptime_seconds() -> int:
         return 0
 
 
+def _current_dirs() -> list[Path]:
+    """omarchy-theme-set writes the live theme under the state dir. The config path is the older location."""
+    home = Path.home()
+    return [
+        home / ".local/state/omarchy/current",
+        home / ".config/omarchy/current",
+    ]
+
+
 def current_theme_name() -> str:
-    for p in (OMARCHY_CURRENT / "theme.name", OMARCHY_CURRENT / "theme"):
-        try:
-            if p.is_symlink():
-                return Path(os.readlink(p)).name
-            if p.is_file():
-                return p.read_text().strip() or "tokyo-night"
-        except OSError:
-            pass
+    for root in _current_dirs():
+        for p in (root / "theme.name", root / "theme"):
+            try:
+                if p.is_symlink():
+                    return Path(os.readlink(p)).name
+                if p.is_file():
+                    return p.read_text().strip() or "tokyo-night"
+            except OSError:
+                pass
     return "tokyo-night"
 
 
 def current_wallpaper_path() -> Path | None:
-    bg = OMARCHY_CURRENT / "background"
-    try:
-        real = Path(os.path.realpath(bg))
-        if real.is_file():
-            return real
-    except OSError:
-        pass
+    for root in _current_dirs():
+        bg = root / "background"
+        try:
+            real = Path(os.path.realpath(bg))
+            if real.is_file():
+                return real
+        except OSError:
+            pass
     return None
 
 
