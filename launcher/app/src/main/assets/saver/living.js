@@ -400,6 +400,16 @@
       if (!(pw > 0 && ph > 0 && boxW > 0)) return;
       var r = Math.min(boxW / pw, boxH / ph);
       if (r < 0.995) { fitK *= r; fitFont(); }
+      centre();
+    }
+    // v2.15: the scene sits in the middle of the screen (it hugged the left edge once the font had shrunk to fit),
+    // never closer to an edge than the safe margins.
+    function centre() {
+      var w = wrapEl.clientWidth || host.clientWidth || 1920, h = wrapEl.clientHeight || host.clientHeight || 1080;
+      var pw = pre.scrollWidth, ph = pre.scrollHeight;
+      if (!(pw > 0 && ph > 0)) return;
+      term.style.left = Math.max(SAFE_X * w, (w - pw) / 2).toFixed(1) + "px";
+      term.style.top = Math.max(SAFE_Y * h, (h - ph) / 2).toFixed(1) + "px";
     }
     function fitFont() {
       var w = wrapEl.clientWidth || host.clientWidth || 1920, h = wrapEl.clientHeight || host.clientHeight || 1080;
@@ -436,7 +446,7 @@
         qrl.style.cssText = "position:absolute;left:37.3ch;width:6.4ch;top:calc(2.6em + 6.4ch);text-align:center;opacity:.55;color:" + fg;
         var qrlT = doc.createElement("span");
         qrlT.textContent = "OmarchyTV";
-        qrlT.style.cssText = "font-size:.5em;letter-spacing:.05em";
+        qrlT.style.cssText = "font-size:.62em;letter-spacing:.04em";   // v2.15: readable at 720p too
         qrl.appendChild(qrlT);
         term.appendChild(qrc); term.appendChild(qrl);
       }
