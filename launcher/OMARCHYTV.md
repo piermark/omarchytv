@@ -80,6 +80,16 @@ are shown in a row under the home widgets.
                "lines": [ { "label": "BTC", "value": "$80,148  +0.3%", "tone": "up" } ] } ] }
 ```
 
+A pane may show a picture instead of its lines (2.15, #115): `"image"` is the URL of a PNG or JPEG, under the same
+rule as `remotePanes.url` (https, or http only to a LAN address; no redirects), at most 512 KiB, e.g. a graph your
+server draws. The TV fetches it with the panes, keeps it next to them (so it survives a restart and goes stale with
+the pane's `ttl`), and shows it under the pane's title, scaled to the pane's width; a picture about 720 × 400 px fits
+well. If it can't be fetched the last one stays; if there never was one, the lines show.
+
+```json
+{ "panes": [ { "id": "power24h", "title": "power · 24h", "ttl": 600, "image": "http://192.168.1.20:2310/tv/power24h.png" } ] }
+```
+
 Rules: `https://` only, no redirects, at most 64 KiB, fetched on a background thread at most every
 `refreshSec` (300–86400, default 300: the PLUGINS.md minimum) and only while the home screen is resumed. The last good answer is
 cached in the app's files dir; a pane dims after `ttl` and hides after 2 × `ttl` (counted from its `at`,

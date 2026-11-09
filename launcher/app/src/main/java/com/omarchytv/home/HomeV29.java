@@ -735,6 +735,30 @@ final class HomeV29 extends FrameLayout {
         if (activeWs == 4) buildWorkspace();
     }
 
+    /** v2.15 (#115): a fetched pane's picture, decoded down to the pane's width; false when it can't be read. */
+    private boolean remoteImage(LinearLayout body, java.io.File f) {
+        if (!f.isFile() || f.length() > RemotePanes.MAX_IMAGE) return false;
+        try {
+            android.graphics.BitmapFactory.Options o = new android.graphics.BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            android.graphics.BitmapFactory.decodeFile(f.getPath(), o);
+            int want = px(360), s = 1;
+            while (o.outWidth / (s * 2) >= want) s *= 2;
+            o = new android.graphics.BitmapFactory.Options();
+            o.inSampleSize = s;
+            android.graphics.Bitmap bm = android.graphics.BitmapFactory.decodeFile(f.getPath(), o);
+            if (bm == null) return false;
+            ImageView iv = new ImageView(act);
+            iv.setImageBitmap(bm);
+            iv.setAdjustViewBounds(true);
+            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            body.addView(iv, new LinearLayout.LayoutParams(-1, -2));
+            return true;
+        } catch (Throwable e) {   // a broken or huge picture never takes Home down
+            return false;
+        }
+    }
+
     /** Fetched panes (RemotePanes): "label … value" rows, value green/red by tone; dim after ttl, gone after 2 x ttl. */
     private void updateRemote() {
         JSONObject cache = RemotePanes.cached(act, cfg.remotePanesUrl);
@@ -751,6 +775,7 @@ final class HomeV29 extends FrameLayout {
             shown++;
             remoteBox[i].setLegend(p.optString("title", p.optString("id")).toLowerCase(Locale.getDefault()), px(14), px(18));
             remoteBody[i].setAlpha(age > p.optInt("ttl", 180) ? 0.55f : 1f);
+            if (!p.optString("image").isEmpty() && remoteImage(remoteBody[i], new java.io.File(act.getFilesDir(), p.optString("image")))) continue;
             JSONArray lines = p.optJSONArray("lines");
             for (int k = 0; lines != null && k < lines.length(); k++) {
                 JSONObject l = lines.optJSONObject(k);
