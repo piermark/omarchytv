@@ -744,7 +744,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var crt = typeof crtMode === "function" && crtMode() !== "off";
     if (!crt) { st.style.transform = "scale(" + s + ")"; return; }
     // Retro CRT: the 1920x1080 stage, smaller and centred a little high; the overlay covers exactly that area.
-    var k = s * 0.88, w = 1920 * k, h = 1080 * k, x = (window.innerWidth - w) / 2, y = (window.innerHeight - h) / 2 - window.innerHeight * 0.012;
+    // v2.15: 94% (was 88%), so the screen fills more of the real TV; the same size as on Android (CrtOverlay.K).
+    var k = s * 0.94, w = 1920 * k, h = 1080 * k, x = (window.innerWidth - w) / 2, y = (window.innerHeight - h) / 2 - window.innerHeight * 0.008;
     st.style.transform = "translate(" + x + "px," + y + "px) scale(" + k + ")";
     var el = document.getElementById("crt-overlay"), b = document.getElementById("crt-badge");
     if (el) { el.style.left = x + "px"; el.style.top = y + "px"; el.style.width = w + "px"; el.style.height = h + "px"; }
