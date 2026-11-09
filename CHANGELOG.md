@@ -1,6 +1,48 @@
 # Changelog
 
-## [Unreleased] — 2.14.1 (fixes)
+## [2.15.0] — unreleased (`versionCode 27`; webOS 2.15.0, Tizen 2.15.0, PC plugins 2.15.0)
+
+### Omarchy Pulse on the TV, the new screensaver
+
+- **Omarchy Pulse is the TV's screensaver now** (Android TV, LG, Samsung): Pulse 1.6's own page, with its scenes (the sphere by default), your city's skyline, the real sky over you (Sun, Moon, planets, stars, constellations, meteor showers), the planes passing overhead live, the ISS, Starlink trains, the next launches with their countdown, the weather and the air. **No PC needed**: the TV computes the sky itself (the hub's formulas, ported) and reads free public services.
+- **The TV's own panels**: its CPU, RAM and network, sky tonight, space (ISS, Starlink, aurora Kp, next launch), the planes overhead, the air quality and pollen, the last day's earthquakes (nearest first), the latest Omarchy releases.
+- **With your Omarchy PC it's the full Pulse**: your AI agents, workspaces, repos and panels, and the PC's theme colours, so TV and PC look the same (omarchy-link sends it while the TV's screensaver is on; notifications, private panels, calendar titles and LAN names never leave the PC).
+- **Look up!**: three minutes before the ISS or a Starlink train passes over you at night, the screen tells you where to look (a compass arrow); a Go launch takes the screen at T-10 minutes.
+- **Everyone switches to Pulse once**, with a note on Home; Settings › Screensaver › "Previous screensaver" puts back the one you had. The Live screensaver stays as an option (Omastorm needs it), and it is no longer cut at the edges.
+
+### OmarchyTV Arcade: your phone is the gamepad, and games for two
+
+- **Phones as gamepads** (Android TV): the arcade's sign shows a QR code; scan it and the phone's browser becomes a controller (D-pad, A, B), nothing to install. Two phones, two players. The TV serves the page itself, on your Wi-Fi only, with a random code, and only while the arcade is open.
+- **PIPE DUEL**: two processes leaving pipes behind them; against a CPU that gets smarter every round, or a couch duel to five.
+- **OMASLOT**: a slot machine with Omarchy's symbols, three marks for the jackpot. Points only: no money, nothing to buy.
+- **PANE PONG**: two tiled windows are the paddles, a cursor is the ball, first to seven.
+- **LAST WINDOW**: a card game with your theme's colours, workspaces 1-9 and Omarchy's moves (SUPER+W, FORK +2, THEME, OOM +4); against the CPU, or two on one TV with the hand hidden until its player presses OK.
+
+### More on Home
+
+- **Racing** (Android TV, by Grant Charge, #123): the race weekends left, with a countdown to the next session in the bar, live from official sources: F1, MotoGP, Moto2, Moto3, NASCAR Cup, O'Reilly and Trucks, Formula E, FIA WEC. Pick the series in Settings › Widgets; times in the TV's own time zone.
+- **Grok terminal**: hold the mic key on Home and the Grok Bot TUI opens already listening; the answer types itself out. Also a key action ("terminal") for key remappers.
+- **AI agent alerts** (Settings › Grok Bot e AI, off by default): when an agent on your PC starts waiting for you, the TV tells you over whatever is playing.
+- **Five-day forecast** in the Weather widget (#126, patch by eprompc).
+- **Remote panes can show a picture** (#115, asked by tolixx): a PNG or JPEG from your server, e.g. a graph, instead of text lines.
+- **Clock over the Aquarium and the text screensaver** (#121, Grant Charge).
+- **Random theme from every bundled theme** (#71, bkbtech), **weather presets for every capital and the big APAC cities** (#88, MrJazzMan), **"grokbot" key action** for Philips' Blue key and other remappers (#91, ghpo).
+
+### Fixes and smaller things
+
+- **Live screensaver fits the TV again** (#119), **OmaFire sound on Android TV** (#125), **Cinemarchy VHS and ASCII on Android TV**, **sharper ASCII on every TV**.
+- **Cinemarchy shows only what really plays** (#120): the dead sample links are gone; four open movies from archive.org and Blender, and a built-in test clip (bars and tone, then a pattern) to check picture and sound.
+- **Wallpaper intros play on MT9221 TVs** (#109): re-encoded at H.264 level 3.1.
+- **Grok Bot direct: your own reply server** (#70), so ntfy.sh's daily quota can't stop the replies.
+- **The ai credits pane updates as soon as the PC sends new credits** (#80).
+- **`omarchy-link cast` says when ufw blocks the stream**, and how to fix it (#82).
+- **The PC plugins read the live Omarchy theme and accept stock themes** (#128, PR #129 by Carter Steele).
+- **Link: a refused request gets its 403/413 instead of a reset** (#124, Grant Charge).
+- **Retro CRT fills more of the TV** (94%, was 88%). **The full Omarchy 4.5 palettes** in every bundled theme.
+- **LG webOS**: the text screensaver runs on Chromium 38 (#97, OldJobobo); a **Developer Mode countdown** so the 1000-hour session doesn't remove the app by surprise, and the steps to EXTEND it (#131, idea by XanderHalloran); **1080p wallpapers on 1080p TVs**, about 4× faster to decode (#47, measured by tozes); what to do if the "read installed apps" prompt was missed (#127).
+- **Seven more tested TVs** in the README.
+
+## [2.14.1] — folded into 2.15.0
 
 - **Live screensaver fits the TV again** (#119): the panes were measured before the bundled CaskaydiaMono had loaded, so on LG TVs they came out wider than the screen and were cut at the edges. The bundled fonts now come first, each frame shrinks to the box it really fills, and everything is measured again once the fonts are ready (webOS 4.x too). The small "OmarchyTV" label under the QR code keeps its size. Same file on Android TV, LG and Samsung.
 - **OmaFire sound on Android TV** (#125): the fire was silent on Android (Google TV Streamer 4K) because the wallpaper never receives the remote's keys, and Android's WebView keeps web audio asleep until it does. The sound now plays natively, with the same files and the same mix: the loops follow the heat, logs and stokes land, crickets and frogs call across the lake, and it all fades out when you leave Home. LG and Samsung unchanged.

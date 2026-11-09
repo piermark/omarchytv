@@ -75,6 +75,15 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ---
 
+## What's New in `2.15.0` (`versionCode 27`)
+
+- **Omarchy Pulse is the TV's screensaver**, on Android TV, LG and Samsung, with no PC needed: the sphere, your city's skyline, the real sky over you, the planes overhead, the ISS and Starlink ("look up!" when they pass), launch countdowns, the weather, the air and the TV's own CPU, RAM and network. Pair your Omarchy PC and it becomes the full Pulse: your AI agents, workspaces, repos, panels and colours. Settings › Screensaver › "Previous screensaver" brings yours back.
+- **Your phone is the Arcade's gamepad**: scan the QR in the arcade's sign, nothing to install; two phones, two players. Four new games for one or two: **PIPE DUEL**, **OMASLOT** (Omarchy's symbols, points only), **PANE PONG**, **LAST WINDOW** (cards).
+- **Racing on Home**: F1, MotoGP, Moto2, Moto3, NASCAR, Formula E and WEC weekends, live from the official sources, with a countdown in the bar (Grant Charge).
+- **Grok terminal** on a held mic key, **AI agent alerts** while you watch (opt-in), a **five-day forecast**, **pictures in remote panes**, the **Developer Mode countdown** on LG, **1080p wallpapers** on 1080p LG TVs, and the 2.14.1 fixes (Live screensaver, OmaFire sound, Cinemarchy VHS/ASCII on Android, intros on MT9221 TVs).
+
+Everything, with the people who asked for and built it, is in [CHANGELOG.md](CHANGELOG.md).
+
 ## What's New in `2.14.0-beta` (`versionCode 26`, pre-release)
 
 Everything below is on `main` and built as `2.14.0-beta` for Android TV, LG webOS and Samsung Tizen (Android `26`, webOS/Tizen `2.14.0`); the download links are above. New features are off by default unless noted.

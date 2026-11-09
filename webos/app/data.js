@@ -1,6 +1,6 @@
 window.OMARCHY_DATA = {
-  "version": "2.14.0",
-  "basedOnAndroidVersion": "2.14.0-beta",
+  "version": "2.15.0",
+  "basedOnAndroidVersion": "2.15.0",
   "themes": {
     "blue-mosaic": {
       "accent": "#354b67",
