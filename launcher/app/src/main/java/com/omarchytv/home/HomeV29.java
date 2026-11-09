@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * v2.9 home (spec "Omarchy TV", §3): Waybar top bar, fastfetch mini terminal, btop-style widgets, empty centre
@@ -121,6 +122,11 @@ final class HomeV29 extends FrameLayout {
     private final ImageView barWxIcon;
     private final TextView barWxTemp;
     private final TextView wxTemp, wxLine1, wxLine2;
+    private final LinearLayout wxForecastRow;
+    private final LinearLayout[] wxForecastCells = new LinearLayout[5];
+    private final TextView[] wxForecastDays = new TextView[5];
+    private final ImageView[] wxForecastIcons = new ImageView[5];
+    private final TextView[] wxForecastTemps = new TextView[5];
     // apps
     private final BoxView appWin;
     private final TextView appName, appHints;
@@ -253,7 +259,9 @@ final class HomeV29 extends FrameLayout {
         // ---- 3.3 widgets: right 32, y 76, w 1120, 3 equal columns, gap 16 ----
         widgets = new LinearLayout(a);
         widgets.setOrientation(LinearLayout.VERTICAL);
-        LayoutParams wl = new LayoutParams(px(1120), -2, Gravity.END | Gravity.TOP);
+        // Extend the row 80 px to the left so Weather fills the unused margin beside the terminal widget.
+        // Keep the right edge fixed and align Weather's left and right gutters to 16 px.
+        LayoutParams wl = new LayoutParams(px(1200), -2, Gravity.END | Gravity.TOP);
         wl.rightMargin = px(32);
         wl.topMargin = px(76);
         addView(widgets, wl);
@@ -272,11 +280,14 @@ final class HomeV29 extends FrameLayout {
         wxBox = widget(r1, act.getString(R.string.v29_weather), 0);
         pcBox = widget(r1, "omarchy · pc", 16);
         BoxView ai = widget(r1, "ai credits · pc", 16);
-        // Keep each top-row panel one column wide, (1120 - 2 x 16) / 3, even when its siblings are switched off.
-        // With weight 1 a lone panel (e.g. only the weather widget on) stretched across the whole 1120 px row.
-        for (View col : new View[]{wxBox, pcBox, ai}) {
+        // Keep the PC and AI panels one column wide. Give Weather the 80 px used to fill the left gutter.
+        float colWidth = (1120 - 32) / 3f;
+        LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
+        wxl.width = px(colWidth + 80);
+        wxl.weight = 0f;
+        for (View col : new View[]{pcBox, ai}) {
             LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
-            cl.width = px((1120 - 32) / 3f);
+            cl.width = px(colWidth);
             cl.weight = 0f;
         }
         r2.addView(new View(a), new LinearLayout.LayoutParams(0, 1, 2f));
@@ -289,9 +300,38 @@ final class HomeV29 extends FrameLayout {
         wxTemp = text("", 50, false);
         wxLine1 = line("");
         wxLine2 = line("");
+        wxForecastRow = hbox();
+        wxForecastRow.setGravity(Gravity.CENTER_VERTICAL);
+        wxForecastRow.setBaselineAligned(false);
         wxBox.addView(wxTemp);
         wxBox.addView(wxLine1);
         wxBox.addView(wxLine2);
+        LinearLayout.LayoutParams forecastRowLp = new LinearLayout.LayoutParams(-1, -2);
+        forecastRowLp.topMargin = px(9);
+        for (int i = 0; i < wxForecastCells.length; i++) {
+            LinearLayout cell = vbox();
+            cell.setGravity(Gravity.CENTER);
+            TextView day = text("", 16, false);
+            day.setGravity(Gravity.CENTER);
+            ImageView icon = new ImageView(act);
+            icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            TextView temps = text("", 16, false);
+            temps.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams iconLp = new LinearLayout.LayoutParams(px(22), px(22));
+            iconLp.gravity = Gravity.CENTER_HORIZONTAL;
+            iconLp.topMargin = px(2);
+            iconLp.bottomMargin = px(2);
+            cell.addView(day, new LinearLayout.LayoutParams(-1, -2));
+            cell.addView(icon, iconLp);
+            cell.addView(temps, new LinearLayout.LayoutParams(-1, -2));
+            wxForecastRow.addView(cell, new LinearLayout.LayoutParams(0, -2, 1f));
+            wxForecastCells[i] = cell;
+            wxForecastDays[i] = day;
+            wxForecastIcons[i] = icon;
+            wxForecastTemps[i] = temps;
+        }
+        wxForecastRow.setVisibility(GONE);
+        wxBox.addView(wxForecastRow, forecastRowLp);
         pcBody = vbox();
         pcBox.addView(pcBody, new LinearLayout.LayoutParams(-1, -2));
         aiBody = vbox();
@@ -728,6 +768,11 @@ final class HomeV29 extends FrameLayout {
         wxTemp.setTextColor(t.accent);
         wxLine1.setTextColor(t.fg);
         wxLine2.setTextColor(t.fg);
+        for (int i = 0; i < wxForecastCells.length; i++) {
+            wxForecastDays[i].setTextColor(t.fg);
+            wxForecastIcons[i].setColorFilter(t.fgBright);
+            wxForecastTemps[i].setTextColor(t.fgBright);
+        }
         JSONObject w = Weather.cached(act);
         JSONObject cur = w != null ? w.optJSONObject("current") : null;
         barWx.setVisibility(cfg.barWeather && cur != null ? VISIBLE : GONE);
@@ -742,6 +787,7 @@ final class HomeV29 extends FrameLayout {
             wxTemp.setText("--°");
             wxLine1.setText(Weather.where(act, cfg) == null ? act.getString(R.string.v29_wx_locating) : act.getString(R.string.weather_loading));
             wxLine2.setText("");
+            wxForecastRow.setVisibility(GONE);
             return;
         }
         wxTemp.setText(Weather.temp(cur.optDouble("temperature_2m"), cfg.tempF) + (cfg.tempF ? "°F" : "°"));
@@ -751,6 +797,59 @@ final class HomeV29 extends FrameLayout {
         JSONObject daily = w.optJSONObject("daily");
         JSONArray mn = daily != null ? daily.optJSONArray("temperature_2m_min") : null, mx = daily != null ? daily.optJSONArray("temperature_2m_max") : null;
         wxLine2.setText(mn != null && mx != null ? "min " + Weather.temp(mn.optDouble(0), cfg.tempF) + "° · max " + Weather.temp(mx.optDouble(0), cfg.tempF) + "°" : "");
+        updateForecast(daily);
+    }
+
+    /** Show the five days after today beneath the current conditions and today's min/max. */
+    private void updateForecast(JSONObject daily) {
+        JSONArray dates = daily != null ? daily.optJSONArray("time") : null;
+        JSONArray codes = daily != null ? daily.optJSONArray("weather_code") : null;
+        JSONArray mins = daily != null ? daily.optJSONArray("temperature_2m_min") : null;
+        JSONArray maxs = daily != null ? daily.optJSONArray("temperature_2m_max") : null;
+        if (dates == null || codes == null || mins == null || maxs == null) {
+            wxForecastRow.setVisibility(GONE);
+            return;
+        }
+        int available = Math.min(Math.min(dates.length(), codes.length()), Math.min(mins.length(), maxs.length()));
+        int count = Math.min(wxForecastCells.length, Math.max(0, available - 1));
+        if (count == 0) {
+            wxForecastRow.setVisibility(GONE);
+            return;
+        }
+        for (int i = 0; i < wxForecastCells.length; i++) {
+            if (i >= count) {
+                wxForecastCells[i].setVisibility(GONE);
+                continue;
+            }
+            int day = i + 1; // index 0 is today, already represented above
+            int code = codes.optInt(day, 3);
+            long min = Weather.temp(mins.optDouble(day), cfg.tempF);
+            long max = Weather.temp(maxs.optDouble(day), cfg.tempF);
+            String weekday = shortForecastDay(dates.optString(day, ""));
+            wxForecastDays[i].setText(weekday);
+            wxForecastIcons[i].setImageResource(Weather.icon(code));
+            wxForecastTemps[i].setText(min + "°/" + max + "°");
+            wxForecastCells[i].setContentDescription(weekday + ", " + act.getString(Weather.describe(code))
+                    + ", min " + min + "° max " + max + "°");
+            wxForecastCells[i].setVisibility(VISIBLE);
+        }
+        wxForecastRow.setVisibility(VISIBLE);
+    }
+
+    private String shortForecastDay(String isoDate) {
+        if (isoDate == null || isoDate.length() < 10) return "";
+        try {
+            Locale locale = act.getResources().getConfiguration().getLocales().get(0);
+            SimpleDateFormat parser = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
+            parser.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date date = parser.parse(isoDate.substring(0, 10));
+            if (date == null) return "";
+            SimpleDateFormat label = new SimpleDateFormat("EEE", locale);
+            label.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return label.format(date).replace(".", "");
+        } catch (Exception ignored) {
+            return "";
+        }
     }
 
     private TextView offline() {
