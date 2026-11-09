@@ -21,7 +21,8 @@
       share_done: "X opens with the post already written. You decide whether to send it.",
       share_post: "{score} at {game} on #OmarchyTV. Can you beat me?",
       tilt_1: "Tilt the whole TV and roll the ball to the exit. Holes are /dev/null.", tilt_2: "◀ ▲ ▼ ▶ tilt the TV · OK level it · the clock is your score", tilt_keys: "tilt", tilt_level: "level",
-      hypr_1: "The maze is a Hyprland desktop: the windows retile and the gaps move.", hypr_2: "glide along the gaps · OK closes the window marked SUPER+Q", hypr_keys: "glide", hypr_full: "WORKSPACE FULL!", hypr_wrong: "wrong window:"
+      hypr_1: "The maze is a Hyprland desktop: the windows retile and the gaps move.", hypr_2: "glide along the gaps · OK closes the window marked SUPER+Q", hypr_keys: "glide", hypr_full: "WORKSPACE FULL!", hypr_wrong: "wrong window:",
+      duel_1: "Two processes, one terminal: don't crash into a pipe.", duel_2: "Alone against the CPU · two phones on the QR: a couch duel", duel_keys: "steer", duel_scan: "phones as gamepads: the QR in the arcade hall", duel_two: "two players", duel_first_to: "first to {n}", duel_wins: "WINS THE ROUND", duel_draw: "BOTH OUT: DRAW", duel_cpu_out: "THE CPU PROCESS EXITED", duel_you_out: "YOUR PROCESS EXITED", duel_p2_joined: "P2 IS HERE: a new match starts next round", pad_title: "PHONE = GAMEPAD", pad_scan: "scan it with your phone"
     },
     it: {
       choose: "scegli", play: "gioca", exit: "esci", insert_coin: "INSERIRE GETTONE", press_ok: "PREMI OK", hi_scores: "RECORD",
@@ -41,7 +42,8 @@
       share_done: "Si apre X con il post già scritto. Decidi tu se pubblicarlo.",
       share_post: "{score} a {game} su #OmarchyTV. Riesci a battermi?",
       tilt_1: "Inclina tutta la TV e porta la pallina all'uscita. I buchi sono /dev/null.", tilt_2: "◀ ▲ ▼ ▶ inclina la TV · OK la raddrizza · il tempo è il punteggio", tilt_keys: "inclina", tilt_level: "raddrizza",
-      hypr_1: "Il labirinto è un desktop Hyprland: le finestre si ritassellano da sole.", hypr_2: "scivola nei varchi · OK chiude la finestra SUPER+Q", hypr_keys: "scivola", hypr_full: "WORKSPACE PIENO!", hypr_wrong: "finestra sbagliata:"
+      hypr_1: "Il labirinto è un desktop Hyprland: le finestre si ritassellano da sole.", hypr_2: "scivola nei varchi · OK chiude la finestra SUPER+Q", hypr_keys: "scivola", hypr_full: "WORKSPACE PIENO!", hypr_wrong: "finestra sbagliata:",
+      duel_1: "Due processi, un terminale: non schiantarti contro un tubo.", duel_2: "Da solo contro la CPU · due telefoni sul QR: sfida sul divano", duel_keys: "sterza", duel_scan: "telefoni come joypad: il QR nella sala giochi", duel_two: "due giocatori", duel_first_to: "vince chi arriva a {n}", duel_wins: "VINCE IL ROUND", duel_draw: "FUORI TUTTI E DUE: PARI", duel_cpu_out: "IL PROCESSO DELLA CPU È USCITO", duel_you_out: "IL TUO PROCESSO È USCITO", duel_p2_joined: "ARRIVA P2: dal prossimo round nuova sfida", pad_title: "TELEFONO = JOYPAD", pad_scan: "inquadralo col telefono"
     },
     de: {
       choose: "wählen", play: "spielen", exit: "beenden", insert_coin: "MÜNZE EINWERFEN", press_ok: "OK DRÜCKEN", hi_scores: "BESTENLISTE",
@@ -61,7 +63,8 @@
       share_done: "X öffnet sich mit fertigem Post. Du entscheidest, ob du ihn sendest.",
       share_post: "{score} bei {game} auf #OmarchyTV. Schlägst du mich?",
       tilt_1: "Neig den ganzen Fernseher, roll die Kugel zum Ausgang. Löcher: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ TV neigen · OK gerade · die Zeit ist deine Wertung", tilt_keys: "neigen", tilt_level: "gerade",
-      hypr_1: "Das Labyrinth ist ein Hyprland-Desktop: die Fenster kacheln sich neu.", hypr_2: "gleite durch die Lücken · OK schließt das SUPER+Q-Fenster", hypr_keys: "gleiten", hypr_full: "WORKSPACE VOLL!", hypr_wrong: "falsches Fenster:"
+      hypr_1: "Das Labyrinth ist ein Hyprland-Desktop: die Fenster kacheln sich neu.", hypr_2: "gleite durch die Lücken · OK schließt das SUPER+Q-Fenster", hypr_keys: "gleiten", hypr_full: "WORKSPACE VOLL!", hypr_wrong: "falsches Fenster:",
+      duel_1: "Zwei Prozesse, ein Terminal: fahr nicht in ein Rohr.", duel_2: "Allein gegen die CPU · zwei Handys am QR: Duell vom Sofa", duel_keys: "lenken", duel_scan: "Handys als Gamepad: der QR in der Spielhalle", duel_two: "zwei Spieler", duel_first_to: "wer zuerst {n} hat", duel_wins: "GEWINNT DIE RUNDE", duel_draw: "BEIDE RAUS: UNENTSCHIEDEN", duel_cpu_out: "DER CPU-PROZESS IST BEENDET", duel_you_out: "DEIN PROZESS IST BEENDET", duel_p2_joined: "P2 IST DA: nächste Runde neues Match", pad_title: "HANDY = GAMEPAD", pad_scan: "mit dem Handy scannen"
     },
     fr: {
       choose: "choisir", play: "jouer", exit: "quitter", insert_coin: "INSÉREZ UNE PIÈCE", press_ok: "APPUYEZ SUR OK", hi_scores: "MEILLEURS SCORES",
@@ -81,7 +84,8 @@
       share_done: "X s'ouvre avec le post déjà écrit. Tu décides de le publier.",
       share_post: "{score} à {game} sur #OmarchyTV. Tu peux me battre ?",
       tilt_1: "Incline toute la télé, roule la bille vers la sortie. Trous : /dev/null.", tilt_2: "◀ ▲ ▼ ▶ incliner la télé · OK la redresser · le temps fait le score", tilt_keys: "incliner", tilt_level: "redresser",
-      hypr_1: "Le labyrinthe est un bureau Hyprland : les fenêtres se réorganisent.", hypr_2: "glisse dans les espaces · OK ferme la fenêtre SUPER+Q", hypr_keys: "glisser", hypr_full: "BUREAU PLEIN !", hypr_wrong: "mauvaise fenêtre :"
+      hypr_1: "Le labyrinthe est un bureau Hyprland : les fenêtres se réorganisent.", hypr_2: "glisse dans les espaces · OK ferme la fenêtre SUPER+Q", hypr_keys: "glisser", hypr_full: "BUREAU PLEIN !", hypr_wrong: "mauvaise fenêtre :",
+      duel_1: "Deux processus, un terminal : ne percute pas un tuyau.", duel_2: "Seul contre le CPU · deux téléphones sur le QR : duel au canapé", duel_keys: "diriger", duel_scan: "téléphones en manette : le QR de la salle d'arcade", duel_two: "deux joueurs", duel_first_to: "le premier à {n}", duel_wins: "GAGNE LA MANCHE", duel_draw: "TOUS LES DEUX DEHORS : NUL", duel_cpu_out: "LE PROCESSUS CPU EST SORTI", duel_you_out: "TON PROCESSUS EST SORTI", duel_p2_joined: "P2 ARRIVE : nouveau match à la prochaine manche", pad_title: "TÉLÉPHONE = MANETTE", pad_scan: "scanne-le avec ton téléphone"
     },
     es: {
       choose: "elegir", play: "jugar", exit: "salir", insert_coin: "INSERTA MONEDA", press_ok: "PULSA OK", hi_scores: "RÉCORDS",
@@ -101,7 +105,8 @@
       share_done: "X se abre con el post ya escrito. Tú decides si publicarlo.",
       share_post: "{score} en {game} en #OmarchyTV. ¿Me superas?",
       tilt_1: "Inclina toda la tele y lleva la bola a la salida. Agujeros: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ inclinar la tele · OK nivelar · el tiempo es tu puntuación", tilt_keys: "inclinar", tilt_level: "nivelar",
-      hypr_1: "El laberinto es un escritorio Hyprland: las ventanas se reordenan.", hypr_2: "desliza por los huecos · OK cierra la ventana SUPER+Q", hypr_keys: "deslizar", hypr_full: "¡ESCRITORIO LLENO!", hypr_wrong: "ventana equivocada:"
+      hypr_1: "El laberinto es un escritorio Hyprland: las ventanas se reordenan.", hypr_2: "desliza por los huecos · OK cierra la ventana SUPER+Q", hypr_keys: "deslizar", hypr_full: "¡ESCRITORIO LLENO!", hypr_wrong: "ventana equivocada:",
+      duel_1: "Dos procesos, una terminal: no choques contra un tubo.", duel_2: "Solo contra la CPU · dos móviles en el QR: duelo en el sofá", duel_keys: "girar", duel_scan: "móviles como mando: el QR de la sala de juegos", duel_two: "dos jugadores", duel_first_to: "gana quien llegue a {n}", duel_wins: "GANA LA RONDA", duel_draw: "LOS DOS FUERA: EMPATE", duel_cpu_out: "EL PROCESO DE LA CPU HA SALIDO", duel_you_out: "TU PROCESO HA SALIDO", duel_p2_joined: "LLEGA P2: nueva partida en la próxima ronda", pad_title: "MÓVIL = MANDO", pad_scan: "escanéalo con el móvil"
     },
     "pt-PT": {
       choose: "escolher", play: "jogar", exit: "sair", insert_coin: "INSIRA MOEDA", press_ok: "PRIMA OK", hi_scores: "RECORDES",
@@ -121,7 +126,8 @@
       share_done: "O X abre com o post já escrito. Decides tu se o publicas.",
       share_post: "{score} em {game} no #OmarchyTV. Consegues bater-me?",
       tilt_1: "Inclina a TV toda e leva a bola à saída. Os buracos são /dev/null.", tilt_2: "◀ ▲ ▼ ▶ inclinar a TV · OK nivelar · o tempo é a pontuação", tilt_keys: "inclinar", tilt_level: "nivelar",
-      hypr_1: "O labirinto é um ambiente Hyprland: as janelas reorganizam-se.", hypr_2: "desliza pelos espaços · OK fecha a janela SUPER+Q", hypr_keys: "deslizar", hypr_full: "ÁREA CHEIA!", hypr_wrong: "janela errada:"
+      hypr_1: "O labirinto é um ambiente Hyprland: as janelas reorganizam-se.", hypr_2: "desliza pelos espaços · OK fecha a janela SUPER+Q", hypr_keys: "deslizar", hypr_full: "ÁREA CHEIA!", hypr_wrong: "janela errada:",
+      duel_1: "Dois processos, um terminal: não batas num tubo.", duel_2: "Sozinho contra o CPU · dois telemóveis no QR: duelo no sofá", duel_keys: "virar", duel_scan: "telemóveis como comando: o QR na sala de jogos", duel_two: "dois jogadores", duel_first_to: "ganha quem chegar a {n}", duel_wins: "GANHA A RONDA", duel_draw: "OS DOIS FORA: EMPATE", duel_cpu_out: "O PROCESSO DO CPU SAIU", duel_you_out: "O TEU PROCESSO SAIU", duel_p2_joined: "CHEGOU O P2: novo jogo na próxima ronda", pad_title: "TELEMÓVEL = COMANDO", pad_scan: "lê-o com o telemóvel"
     },
     "pt-BR": {
       choose: "escolher", play: "jogar", exit: "sair", insert_coin: "INSIRA FICHA", press_ok: "APERTE OK", hi_scores: "RECORDES",
@@ -141,7 +147,8 @@
       share_done: "O X abre com o post já escrito. Você decide se publica.",
       share_post: "{score} em {game} no #OmarchyTV. Consegue me superar?",
       tilt_1: "Incline a TV inteira e leve a bola até a saída. Os buracos são /dev/null.", tilt_2: "◀ ▲ ▼ ▶ incline a TV · OK nivela · o tempo é a pontuação", tilt_keys: "inclinar", tilt_level: "nivelar",
-      hypr_1: "O labirinto é uma área de trabalho Hyprland: as janelas se reorganizam.", hypr_2: "deslize pelos espaços · OK fecha a janela SUPER+Q", hypr_keys: "deslizar", hypr_full: "ÁREA CHEIA!", hypr_wrong: "janela errada:"
+      hypr_1: "O labirinto é uma área de trabalho Hyprland: as janelas se reorganizam.", hypr_2: "deslize pelos espaços · OK fecha a janela SUPER+Q", hypr_keys: "deslizar", hypr_full: "ÁREA CHEIA!", hypr_wrong: "janela errada:",
+      duel_1: "Dois processos, um terminal: não bata num cano.", duel_2: "Sozinho contra a CPU · dois celulares no QR: duelo no sofá", duel_keys: "virar", duel_scan: "celulares como controle: o QR no fliperama", duel_two: "dois jogadores", duel_first_to: "ganha quem chegar a {n}", duel_wins: "VENCE A RODADA", duel_draw: "OS DOIS FORA: EMPATE", duel_cpu_out: "O PROCESSO DA CPU SAIU", duel_you_out: "SEU PROCESSO SAIU", duel_p2_joined: "CHEGOU O P2: nova partida na próxima rodada", pad_title: "CELULAR = CONTROLE", pad_scan: "escaneie com o celular"
     },
     nl: {
       choose: "kiezen", play: "spelen", exit: "stoppen", insert_coin: "WERP MUNT IN", press_ok: "DRUK OP OK", hi_scores: "TOPSCORES",
@@ -161,7 +168,8 @@
       share_done: "X opent met de post al geschreven. Jij beslist of je hem plaatst.",
       share_post: "{score} bij {game} op #OmarchyTV. Kun jij me verslaan?",
       tilt_1: "Kantel de hele tv en rol de bal naar de uitgang. Gaten zijn /dev/null.", tilt_2: "◀ ▲ ▼ ▶ tv kantelen · OK recht · de tijd is je score", tilt_keys: "kantelen", tilt_level: "recht",
-      hypr_1: "Het doolhof is een Hyprland-bureaublad: vensters herschikken zich.", hypr_2: "glijd door de kieren · OK sluit het SUPER+Q-venster", hypr_keys: "glijden", hypr_full: "WERKBLAD VOL!", hypr_wrong: "verkeerd venster:"
+      hypr_1: "Het doolhof is een Hyprland-bureaublad: vensters herschikken zich.", hypr_2: "glijd door de kieren · OK sluit het SUPER+Q-venster", hypr_keys: "glijden", hypr_full: "WERKBLAD VOL!", hypr_wrong: "verkeerd venster:",
+      duel_1: "Twee processen, één terminal: knal niet tegen een pijp.", duel_2: "Alleen tegen de CPU · twee telefoons op de QR: bankduel", duel_keys: "sturen", duel_scan: "telefoons als gamepad: de QR in de speelhal", duel_two: "twee spelers", duel_first_to: "wie het eerst {n} heeft", duel_wins: "WINT DE RONDE", duel_draw: "ALLEBEI ERUIT: GELIJK", duel_cpu_out: "HET CPU-PROCES IS GESTOPT", duel_you_out: "JOUW PROCES IS GESTOPT", duel_p2_joined: "P2 IS ER: volgende ronde een nieuwe match", pad_title: "TELEFOON = GAMEPAD", pad_scan: "scan hem met je telefoon"
     },
     pl: {
       choose: "wybierz", play: "graj", exit: "wyjdź", insert_coin: "WRZUĆ MONETĘ", press_ok: "NACIŚNIJ OK", hi_scores: "REKORDY",
@@ -181,7 +189,8 @@
       share_done: "X otworzy się z gotowym postem. Ty decydujesz, czy go wysłać.",
       share_post: "{score} w {game} na #OmarchyTV. Pobijesz mnie?",
       tilt_1: "Przechyl cały telewizor i doprowadź kulkę do wyjścia. Dziury to /dev/null.", tilt_2: "◀ ▲ ▼ ▶ przechyl TV · OK wypoziomuj · czas to twój wynik", tilt_keys: "przechyl", tilt_level: "poziom",
-      hypr_1: "Labirynt to pulpit Hyprland: okna się przestawiają, przejścia wędrują.", hypr_2: "sun szczelinami · OK zamyka okno SUPER+Q", hypr_keys: "sun", hypr_full: "PULPIT PEŁNY!", hypr_wrong: "złe okno:"
+      hypr_1: "Labirynt to pulpit Hyprland: okna się przestawiają, przejścia wędrują.", hypr_2: "sun szczelinami · OK zamyka okno SUPER+Q", hypr_keys: "sun", hypr_full: "PULPIT PEŁNY!", hypr_wrong: "złe okno:",
+      duel_1: "Dwa procesy, jeden terminal: nie wjedź w rurę.", duel_2: "Sam przeciw CPU · dwa telefony na QR: pojedynek na kanapie", duel_keys: "skręcaj", duel_scan: "telefony jako pady: kod QR w salonie gier", duel_two: "dwóch graczy", duel_first_to: "do {n} wygranych", duel_wins: "WYGRYWA RUNDĘ", duel_draw: "OBAJ ODPADLI: REMIS", duel_cpu_out: "PROCES CPU ZAKOŃCZONY", duel_you_out: "TWÓJ PROCES ZAKOŃCZONY", duel_p2_joined: "JEST P2: od następnej rundy nowy mecz", pad_title: "TELEFON = PAD", pad_scan: "zeskanuj telefonem"
     },
     sv: {
       choose: "välj", play: "spela", exit: "avsluta", insert_coin: "SÄTT I MYNT", press_ok: "TRYCK OK", hi_scores: "TOPPLISTA",
@@ -201,7 +210,8 @@
       share_done: "X öppnas med inlägget redan skrivet. Du bestämmer om det skickas.",
       share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?",
       tilt_1: "Luta hela tv:n och rulla kulan till utgången. Hålen är /dev/null.", tilt_2: "◀ ▲ ▼ ▶ luta tv:n · OK räta upp · tiden är din poäng", tilt_keys: "luta", tilt_level: "räta upp",
-      hypr_1: "Labyrinten är ett Hyprland-skrivbord: fönstren ordnar om sig.", hypr_2: "glid i springorna · OK stänger SUPER+Q-fönstret", hypr_keys: "glid", hypr_full: "SKRIVBORDET FULLT!", hypr_wrong: "fel fönster:"
+      hypr_1: "Labyrinten är ett Hyprland-skrivbord: fönstren ordnar om sig.", hypr_2: "glid i springorna · OK stänger SUPER+Q-fönstret", hypr_keys: "glid", hypr_full: "SKRIVBORDET FULLT!", hypr_wrong: "fel fönster:",
+      duel_1: "Två processer, en terminal: krocka inte med ett rör.", duel_2: "Ensam mot CPU:n · två mobiler på QR-koden: soffduell", duel_keys: "styr", duel_scan: "mobiler som handkontroll: QR-koden i spelhallen", duel_two: "två spelare", duel_first_to: "först till {n}", duel_wins: "VINNER RUNDAN", duel_draw: "BÅDA UTE: OAVGJORT", duel_cpu_out: "CPU-PROCESSEN AVSLUTADES", duel_you_out: "DIN PROCESS AVSLUTADES", duel_p2_joined: "P2 ÄR HÄR: ny match nästa runda", pad_title: "MOBIL = HANDKONTROLL", pad_scan: "skanna med mobilen"
     },
     da: {
       choose: "vælg", play: "spil", exit: "afslut", insert_coin: "INDSÆT MØNT", press_ok: "TRYK OK", hi_scores: "TOPSCORER",
@@ -221,7 +231,8 @@
       share_done: "X åbner med opslaget skrevet. Du bestemmer, om det sendes.",
       share_post: "{score} i {game} på #OmarchyTV. Kan du slå mig?",
       tilt_1: "Vip hele tv'et og rul kuglen til udgangen. Hullerne er /dev/null.", tilt_2: "◀ ▲ ▼ ▶ vip tv'et · OK ret op · tiden er din score", tilt_keys: "vip", tilt_level: "ret op",
-      hypr_1: "Labyrinten er et Hyprland-skrivebord: vinduerne omarrangerer sig.", hypr_2: "glid i mellemrummene · OK lukker SUPER+Q-vinduet", hypr_keys: "glid", hypr_full: "SKRIVEBORDET FULDT!", hypr_wrong: "forkert vindue:"
+      hypr_1: "Labyrinten er et Hyprland-skrivebord: vinduerne omarrangerer sig.", hypr_2: "glid i mellemrummene · OK lukker SUPER+Q-vinduet", hypr_keys: "glid", hypr_full: "SKRIVEBORDET FULDT!", hypr_wrong: "forkert vindue:",
+      duel_1: "To processer, én terminal: kør ikke ind i et rør.", duel_2: "Alene mod CPU'en · to telefoner på QR-koden: sofaduel", duel_keys: "styr", duel_scan: "telefoner som gamepad: QR-koden i spillehallen", duel_two: "to spillere", duel_first_to: "først til {n}", duel_wins: "VINDER RUNDEN", duel_draw: "BEGGE UDE: UAFGJORT", duel_cpu_out: "CPU-PROCESSEN STOPPEDE", duel_you_out: "DIN PROCES STOPPEDE", duel_p2_joined: "P2 ER HER: ny kamp næste runde", pad_title: "TELEFON = GAMEPAD", pad_scan: "scan den med telefonen"
     },
     cs: {
       choose: "vybrat", play: "hrát", exit: "konec", insert_coin: "VHOĎ MINCI", press_ok: "STISKNI OK", hi_scores: "REKORDY",
@@ -241,7 +252,8 @@
       share_done: "Otevře se X s hotovým příspěvkem. Ty rozhodneš, zda ho odeslat.",
       share_post: "{score} ve hře {game} na #OmarchyTV. Překonáš mě?",
       tilt_1: "Nakloň celou televizi a dokutálej kuličku k východu. Díry jsou /dev/null.", tilt_2: "◀ ▲ ▼ ▶ naklonit TV · OK vyrovnat · čas je tvé skóre", tilt_keys: "naklonit", tilt_level: "vyrovnat",
-      hypr_1: "Bludiště je plocha Hyprlandu: okna se přeskládávají, mezery se posouvají.", hypr_2: "klouzej mezerami · OK zavře okno SUPER+Q", hypr_keys: "klouzat", hypr_full: "PLOCHA PLNÁ!", hypr_wrong: "špatné okno:"
+      hypr_1: "Bludiště je plocha Hyprlandu: okna se přeskládávají, mezery se posouvají.", hypr_2: "klouzej mezerami · OK zavře okno SUPER+Q", hypr_keys: "klouzat", hypr_full: "PLOCHA PLNÁ!", hypr_wrong: "špatné okno:",
+      duel_1: "Dva procesy, jeden terminál: nenaraz do trubky.", duel_2: "Sám proti CPU · dva telefony na QR: souboj z gauče", duel_keys: "zatáčej", duel_scan: "telefony jako ovladač: QR kód v herně", duel_two: "dva hráči", duel_first_to: "kdo dřív {n}", duel_wins: "VYHRÁVÁ KOLO", duel_draw: "OBA VEN: REMÍZA", duel_cpu_out: "PROCES CPU SKONČIL", duel_you_out: "TVŮJ PROCES SKONČIL", duel_p2_joined: "PŘIŠEL P2: od dalšího kola nový zápas", pad_title: "TELEFON = OVLADAČ", pad_scan: "naskenuj ho telefonem"
     },
     ro: {
       choose: "alege", play: "joacă", exit: "ieșire", insert_coin: "INTRODU O FISĂ", press_ok: "APASĂ OK", hi_scores: "RECORDURI",
@@ -261,7 +273,8 @@
       share_done: "X se deschide cu postarea scrisă. Tu decizi dacă o publici.",
       share_post: "{score} la {game} pe #OmarchyTV. Mă poți întrece?",
       tilt_1: "Înclină tot televizorul și du bila la ieșire. Găurile sunt /dev/null.", tilt_2: "◀ ▲ ▼ ▶ înclină TV-ul · OK îndreaptă · timpul e scorul", tilt_keys: "înclină", tilt_level: "îndreaptă",
-      hypr_1: "Labirintul e un desktop Hyprland: ferestrele se rearanjează.", hypr_2: "alunecă prin spații · OK închide fereastra SUPER+Q", hypr_keys: "alunecă", hypr_full: "DESKTOP PLIN!", hypr_wrong: "fereastră greșită:"
+      hypr_1: "Labirintul e un desktop Hyprland: ferestrele se rearanjează.", hypr_2: "alunecă prin spații · OK închide fereastra SUPER+Q", hypr_keys: "alunecă", hypr_full: "DESKTOP PLIN!", hypr_wrong: "fereastră greșită:",
+      duel_1: "Două procese, un terminal: nu te izbi de o țeavă.", duel_2: "Singur contra CPU · două telefoane pe QR: duel de pe canapea", duel_keys: "virează", duel_scan: "telefoanele ca gamepad: codul QR din sala de jocuri", duel_two: "doi jucători", duel_first_to: "primul la {n}", duel_wins: "CÂȘTIGĂ RUNDA", duel_draw: "AMÂNDOI AFARĂ: EGAL", duel_cpu_out: "PROCESUL CPU S-A ÎNCHEIAT", duel_you_out: "PROCESUL TĂU S-A ÎNCHEIAT", duel_p2_joined: "A VENIT P2: meci nou din runda următoare", pad_title: "TELEFON = GAMEPAD", pad_scan: "scanează-l cu telefonul"
     },
     el: {
       choose: "επιλογή", play: "παιχνίδι", exit: "έξοδος", insert_coin: "ΡΙΞΕ ΚΕΡΜΑ", press_ok: "ΠΑΤΑ OK", hi_scores: "ΡΕΚΟΡ",
@@ -281,7 +294,8 @@
       share_done: "Το X ανοίγει με έτοιμη ανάρτηση. Εσύ αποφασίζεις αν θα τη στείλεις.",
       share_post: "{score} στο {game} στο #OmarchyTV. Με νικάς;",
       tilt_1: "Γείρε όλη την TV, πήγαινε τη μπίλια στην έξοδο. Τρύπες: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ γείρε την TV · OK ίσιωμα · ο χρόνος είναι το σκορ", tilt_keys: "γείρε", tilt_level: "ίσιωμα",
-      hypr_1: "Ο λαβύρινθος είναι desktop Hyprland: τα παράθυρα ξαναστήνονται.", hypr_2: "γλίστρα στα κενά · OK κλείνει το παράθυρο SUPER+Q", hypr_keys: "γλίστρα", hypr_full: "ΓΕΜΑΤΟ WORKSPACE!", hypr_wrong: "λάθος παράθυρο:"
+      hypr_1: "Ο λαβύρινθος είναι desktop Hyprland: τα παράθυρα ξαναστήνονται.", hypr_2: "γλίστρα στα κενά · OK κλείνει το παράθυρο SUPER+Q", hypr_keys: "γλίστρα", hypr_full: "ΓΕΜΑΤΟ WORKSPACE!", hypr_wrong: "λάθος παράθυρο:",
+      duel_1: "Δύο διεργασίες, ένα τερματικό: μην πέσεις σε σωλήνα.", duel_2: "Μόνος με τη CPU · δύο κινητά στο QR: μονομαχία στον καναπέ", duel_keys: "στρίψε", duel_scan: "κινητά για χειριστήριο: το QR στην αίθουσα", duel_two: "δύο παίκτες", duel_first_to: "όποιος φτάσει {n}", duel_wins: "ΚΕΡΔΙΖΕΙ ΤΟΝ ΓΥΡΟ", duel_draw: "ΕΞΩ ΚΑΙ ΟΙ ΔΥΟ: ΙΣΟΠΑΛΙΑ", duel_cpu_out: "Η ΔΙΕΡΓΑΣΙΑ ΤΗΣ CPU ΤΕΛΕΙΩΣΕ", duel_you_out: "Η ΔΙΕΡΓΑΣΙΑ ΣΟΥ ΤΕΛΕΙΩΣΕ", duel_p2_joined: "ΗΡΘΕ Ο P2: νέος αγώνας στον επόμενο γύρο", pad_title: "ΚΙΝΗΤΟ = ΧΕΙΡΙΣΤΗΡΙΟ", pad_scan: "σκάναρέ το με το κινητό"
     },
     ru: {
       choose: "выбор", play: "играть", exit: "выход", insert_coin: "БРОСЬТЕ МОНЕТУ", press_ok: "НАЖМИТЕ OK", hi_scores: "РЕКОРДЫ",
@@ -301,7 +315,8 @@
       share_done: "Откроется X с готовым постом. Публиковать или нет, решаешь ты.",
       share_post: "{score} в {game} на #OmarchyTV. Побьёшь?",
       tilt_1: "Наклони весь телевизор и докати шарик до выхода. Дыры — это /dev/null.", tilt_2: "◀ ▲ ▼ ▶ наклон ТВ · OK выровнять · время — это счёт", tilt_keys: "наклон", tilt_level: "выровнять",
-      hypr_1: "Лабиринт — рабочий стол Hyprland: окна перестраиваются, проходы сдвигаются.", hypr_2: "скользи по зазорам · OK закрывает окно SUPER+Q", hypr_keys: "скольжение", hypr_full: "РАБОЧИЙ СТОЛ ПОЛОН!", hypr_wrong: "не то окно:"
+      hypr_1: "Лабиринт — рабочий стол Hyprland: окна перестраиваются, проходы сдвигаются.", hypr_2: "скользи по зазорам · OK закрывает окно SUPER+Q", hypr_keys: "скольжение", hypr_full: "РАБОЧИЙ СТОЛ ПОЛОН!", hypr_wrong: "не то окно:",
+      duel_1: "Два процесса, один терминал: не врежься в трубу.", duel_2: "Один против CPU · два телефона на QR: дуэль на диване", duel_keys: "руль", duel_scan: "телефоны как геймпад: QR-код в игровом зале", duel_two: "два игрока", duel_first_to: "до {n} побед", duel_wins: "ВЫИГРЫВАЕТ РАУНД", duel_draw: "ОБА ВЫБЫЛИ: НИЧЬЯ", duel_cpu_out: "ПРОЦЕСС CPU ЗАВЕРШЁН", duel_you_out: "ТВОЙ ПРОЦЕСС ЗАВЕРШЁН", duel_p2_joined: "P2 НА МЕСТЕ: со следующего раунда новый матч", pad_title: "ТЕЛЕФОН = ГЕЙМПАД", pad_scan: "отсканируй телефоном"
     },
     uk: {
       choose: "вибір", play: "грати", exit: "вихід", insert_coin: "КИНЬТЕ МОНЕТУ", press_ok: "НАТИСНІТЬ OK", hi_scores: "РЕКОРДИ",
@@ -321,7 +336,8 @@
       share_done: "Відкриється X з готовим дописом. Публікувати чи ні, вирішуєш ти.",
       share_post: "{score} у {game} на #OmarchyTV. Поб'єш?",
       tilt_1: "Нахили весь телевізор і докоти кульку до виходу. Дірки — це /dev/null.", tilt_2: "◀ ▲ ▼ ▶ нахил ТВ · OK вирівняти · час — це рахунок", tilt_keys: "нахил", tilt_level: "вирівняти",
-      hypr_1: "Лабіринт — робочий стіл Hyprland: вікна перебудовуються, проходи зсуваються.", hypr_2: "ковзай проміжками · OK закриває вікно SUPER+Q", hypr_keys: "ковзання", hypr_full: "РОБОЧИЙ СТІЛ ПОВНИЙ!", hypr_wrong: "не те вікно:"
+      hypr_1: "Лабіринт — робочий стіл Hyprland: вікна перебудовуються, проходи зсуваються.", hypr_2: "ковзай проміжками · OK закриває вікно SUPER+Q", hypr_keys: "ковзання", hypr_full: "РОБОЧИЙ СТІЛ ПОВНИЙ!", hypr_wrong: "не те вікно:",
+      duel_1: "Два процеси, один термінал: не вріжся в трубу.", duel_2: "Сам проти CPU · два телефони на QR: дуель на дивані", duel_keys: "кермо", duel_scan: "телефони як геймпад: QR-код в ігровій залі", duel_two: "два гравці", duel_first_to: "до {n} перемог", duel_wins: "ВИГРАЄ РАУНД", duel_draw: "ОБИДВА ВИБУЛИ: НІЧИЯ", duel_cpu_out: "ПРОЦЕС CPU ЗАВЕРШЕНО", duel_you_out: "ТВІЙ ПРОЦЕС ЗАВЕРШЕНО", duel_p2_joined: "P2 ТУТ: з наступного раунду новий матч", pad_title: "ТЕЛЕФОН = ГЕЙМПАД", pad_scan: "скануй телефоном"
     },
     "zh-CN": {
       choose: "选择", play: "开始", exit: "退出", insert_coin: "请投币", press_ok: "按 OK", hi_scores: "最高分",
@@ -341,7 +357,8 @@
       share_done: "X 会打开并写好帖子,由你决定是否发布。",
       share_post: "我在 #OmarchyTV 的 {game} 拿到 {score} 分,你能超过我吗?",
       tilt_1: "倾斜整台电视,把小球滚到出口。洞就是 /dev/null。", tilt_2: "◀ ▲ ▼ ▶ 倾斜电视 · OK 放平 · 用时就是分数", tilt_keys: "倾斜", tilt_level: "放平",
-      hypr_1: "迷宫是 Hyprland 桌面:窗口会重新平铺,缝隙随之移动。", hypr_2: "沿缝隙滑行 · OK 关闭标着 SUPER+Q 的窗口", hypr_keys: "滑行", hypr_full: "工作区满了!", hypr_wrong: "关错窗口:"
+      hypr_1: "迷宫是 Hyprland 桌面:窗口会重新平铺,缝隙随之移动。", hypr_2: "沿缝隙滑行 · OK 关闭标着 SUPER+Q 的窗口", hypr_keys: "滑行", hypr_full: "工作区满了!", hypr_wrong: "关错窗口:",
+      duel_1: "两个进程，一个终端：别撞上管道。", duel_2: "单人对战 CPU · 两部手机扫码：沙发对决", duel_keys: "转向", duel_scan: "手机当手柄：扫描街机大厅的二维码", duel_two: "双人", duel_first_to: "先赢 {n} 局", duel_wins: "赢得本局", duel_draw: "双双出局：平局", duel_cpu_out: "CPU 进程已退出", duel_you_out: "你的进程已退出", duel_p2_joined: "P2 加入：下一局开始新比赛", pad_title: "手机 = 手柄", pad_scan: "用手机扫描"
     },
     ja: {
       choose: "選ぶ", play: "プレイ", exit: "終了", insert_coin: "コインを入れてね", press_ok: "OK を押す", hi_scores: "ハイスコア",
@@ -361,7 +378,8 @@
       share_done: "投稿文入りで X が開きます。送るかどうかはあなた次第。",
       share_post: "#OmarchyTV の {game} で {score} 点!勝てる?",
       tilt_1: "テレビごと傾けてボールを出口へ。穴は /dev/null。", tilt_2: "◀ ▲ ▼ ▶ テレビを傾ける · OK 水平に · タイムがスコア", tilt_keys: "傾ける", tilt_level: "水平",
-      hypr_1: "迷路は Hyprland のデスクトップ。ウィンドウが並び替わり、すき間が動く。", hypr_2: "すき間を滑る · OK で SUPER+Q のウィンドウを閉じる", hypr_keys: "滑る", hypr_full: "ワークスペース満杯!", hypr_wrong: "違うウィンドウ:"
+      hypr_1: "迷路は Hyprland のデスクトップ。ウィンドウが並び替わり、すき間が動く。", hypr_2: "すき間を滑る · OK で SUPER+Q のウィンドウを閉じる", hypr_keys: "滑る", hypr_full: "ワークスペース満杯!", hypr_wrong: "違うウィンドウ:",
+      duel_1: "二つのプロセス、一つの端末：パイプにぶつかるな。", duel_2: "一人で CPU と対戦 · スマホ二台で QR：ソファで対決", duel_keys: "操作", duel_scan: "スマホがコントローラー：ホールの QR", duel_two: "二人", duel_first_to: "{n} 本先取", duel_wins: "ラウンド勝利", duel_draw: "両者アウト：引き分け", duel_cpu_out: "CPU プロセス終了", duel_you_out: "あなたのプロセス終了", duel_p2_joined: "P2 参加：次のラウンドから新しい試合", pad_title: "スマホ = パッド", pad_scan: "スマホで読み取る"
     },
     ar: {
       choose: "اختر", play: "العب", exit: "خروج", insert_coin: "أدخل عملة", press_ok: "اضغط OK", hi_scores: "أعلى النتائج",
@@ -381,7 +399,8 @@
       share_done: "يفتح X والمنشور مكتوب. أنت تقرر نشره.",
       share_post: "{score} في {game} على #OmarchyTV. هل تتفوق علي؟",
       tilt_1: "أمِل التلفاز كله ودحرج الكرة إلى المخرج. الحفر هي /dev/null.", tilt_2: "◀ ▲ ▼ ▶ أمِل التلفاز · OK سوِّه · الوقت هو نتيجتك", tilt_keys: "أمِل", tilt_level: "سوِّ",
-      hypr_1: "المتاهة سطح مكتب Hyprland: النوافذ تعيد ترتيب نفسها والفجوات تتحرك.", hypr_2: "انزلق في الفجوات · OK يغلق نافذة SUPER+Q", hypr_keys: "انزلق", hypr_full: "مساحة العمل ممتلئة!", hypr_wrong: "نافذة خاطئة:"
+      hypr_1: "المتاهة سطح مكتب Hyprland: النوافذ تعيد ترتيب نفسها والفجوات تتحرك.", hypr_2: "انزلق في الفجوات · OK يغلق نافذة SUPER+Q", hypr_keys: "انزلق", hypr_full: "مساحة العمل ممتلئة!", hypr_wrong: "نافذة خاطئة:",
+      duel_1: "عمليتان وطرفية واحدة: لا تصطدم بأنبوب.", duel_2: "وحدك ضد المعالج · هاتفان على رمز QR: مبارزة على الأريكة", duel_keys: "وجّه", duel_scan: "الهواتف كأذرع تحكم: رمز QR في صالة الألعاب", duel_two: "لاعبان", duel_first_to: "الأول إلى {n}", duel_wins: "يفوز بالجولة", duel_draw: "خرج الاثنان: تعادل", duel_cpu_out: "انتهت عملية المعالج", duel_you_out: "انتهت عمليتك", duel_p2_joined: "وصل P2: مباراة جديدة في الجولة التالية", pad_title: "الهاتف = ذراع تحكم", pad_scan: "امسحه بهاتفك"
     },
     tr: {
       choose: "seç", play: "oyna", exit: "çık", insert_coin: "JETON AT", press_ok: "OK'E BAS", hi_scores: "REKORLAR",
@@ -401,7 +420,8 @@
       share_done: "X, gönderi yazılı olarak açılır. Paylaşıp paylaşmamaya sen karar verirsin.",
       share_post: "#OmarchyTV'de {game} oyununda {score}. Beni geçebilir misin?",
       tilt_1: "Tüm televizyonu eğ ve topu çıkışa yuvarla. Delikler /dev/null.", tilt_2: "◀ ▲ ▼ ▶ TV'yi eğ · OK düzelt · süre senin puanın", tilt_keys: "eğ", tilt_level: "düzelt",
-      hypr_1: "Labirent bir Hyprland masaüstü: pencereler yeniden döşenir, boşluklar kayar.", hypr_2: "boşluklarda kay · OK SUPER+Q penceresini kapatır", hypr_keys: "kay", hypr_full: "ÇALIŞMA ALANI DOLU!", hypr_wrong: "yanlış pencere:"
+      hypr_1: "Labirent bir Hyprland masaüstü: pencereler yeniden döşenir, boşluklar kayar.", hypr_2: "boşluklarda kay · OK SUPER+Q penceresini kapatır", hypr_keys: "kay", hypr_full: "ÇALIŞMA ALANI DOLU!", hypr_wrong: "yanlış pencere:",
+      duel_1: "İki süreç, bir terminal: bir boruya çarpma.", duel_2: "CPU'ya karşı tek başına · QR'da iki telefon: kanepe düellosu", duel_keys: "yönlendir", duel_scan: "telefonlar oyun kolu: oyun salonundaki QR", duel_two: "iki oyuncu", duel_first_to: "{n} olan kazanır", duel_wins: "TURU KAZANDI", duel_draw: "İKİSİ DE DIŞARI: BERABERE", duel_cpu_out: "CPU SÜRECİ SONLANDI", duel_you_out: "SÜRECİN SONLANDI", duel_p2_joined: "P2 GELDİ: sonraki turdan yeni maç", pad_title: "TELEFON = OYUN KOLU", pad_scan: "telefonla tara"
     },
     hu: {
       choose: "választ", play: "játék", exit: "kilépés", insert_coin: "DOBJ BE ÉRMÉT", press_ok: "NYOMD MEG AZ OK-T", hi_scores: "REKORDOK",
@@ -421,7 +441,8 @@
       share_done: "Megnyílik az X a kész bejegyzéssel. Te döntöd el, elküldöd-e.",
       share_post: "{score} a {game} játékban az #OmarchyTV-n. Megversz?",
       tilt_1: "Döntsd meg a tévét, gurítsd a golyót a kijárathoz. Lyukak: /dev/null.", tilt_2: "◀ ▲ ▼ ▶ tévé döntése · OK vízszintbe · az idő a pontszám", tilt_keys: "döntés", tilt_level: "vízszint",
-      hypr_1: "A labirintus egy Hyprland asztal: az ablakok maguktól átrendeződnek.", hypr_2: "csússz a résekben · OK bezárja a SUPER+Q ablakot", hypr_keys: "csúszás", hypr_full: "TELE A MUNKATERÜLET!", hypr_wrong: "rossz ablak:"
+      hypr_1: "A labirintus egy Hyprland asztal: az ablakok maguktól átrendeződnek.", hypr_2: "csússz a résekben · OK bezárja a SUPER+Q ablakot", hypr_keys: "csúszás", hypr_full: "TELE A MUNKATERÜLET!", hypr_wrong: "rossz ablak:",
+      duel_1: "Két folyamat, egy terminál: ne ütközz csőnek.", duel_2: "Egyedül a CPU ellen · két telefon a QR-en: párbaj a kanapéról", duel_keys: "kormányozz", duel_scan: "telefon mint kontroller: a QR a játékteremben", duel_two: "két játékos", duel_first_to: "aki előbb {n}", duel_wins: "MEGNYERI A KÖRT", duel_draw: "MINDKETTŐ KIESETT: DÖNTETLEN", duel_cpu_out: "A CPU FOLYAMATA KILÉPETT", duel_you_out: "A FOLYAMATOD KILÉPETT", duel_p2_joined: "MEGJÖTT P2: a következő körtől új meccs", pad_title: "TELEFON = KONTROLLER", pad_scan: "olvasd be a telefonnal"
     },
     fi: {
       choose: "valitse", play: "pelaa", exit: "lopeta", insert_coin: "SYÖTÄ KOLIKKO", press_ok: "PAINA OK", hi_scores: "ENNÄTYKSET",
@@ -441,7 +462,8 @@
       share_done: "X avautuu valmiin julkaisun kanssa. Sinä päätät, lähetätkö sen.",
       share_post: "{score} pelissä {game} #OmarchyTV:ssä. Voitatko minut?",
       tilt_1: "Kallista koko televisiota ja vieritä kuula maaliin. Reiät ovat /dev/null.", tilt_2: "◀ ▲ ▼ ▶ kallista TV · OK suoraksi · aika on pisteesi", tilt_keys: "kallista", tilt_level: "suoraksi",
-      hypr_1: "Labyrintti on Hyprland-työpöytä: ikkunat järjestyvät uudelleen.", hypr_2: "liu'u rakoja pitkin · OK sulkee SUPER+Q-ikkunan", hypr_keys: "liu'u", hypr_full: "TYÖTILA TÄYNNÄ!", hypr_wrong: "väärä ikkuna:"
+      hypr_1: "Labyrintti on Hyprland-työpöytä: ikkunat järjestyvät uudelleen.", hypr_2: "liu'u rakoja pitkin · OK sulkee SUPER+Q-ikkunan", hypr_keys: "liu'u", hypr_full: "TYÖTILA TÄYNNÄ!", hypr_wrong: "väärä ikkuna:",
+      duel_1: "Kaksi prosessia, yksi pääte: älä törmää putkeen.", duel_2: "Yksin CPU:ta vastaan · kaksi puhelinta QR:ään: sohvakaksintaistelu", duel_keys: "ohjaa", duel_scan: "puhelimet ohjaimina: pelihallin QR-koodi", duel_two: "kaksi pelaajaa", duel_first_to: "ensin {n} voittoa", duel_wins: "VOITTAA ERÄN", duel_draw: "MOLEMMAT ULOS: TASAPELI", duel_cpu_out: "CPU:N PROSESSI PÄÄTTYI", duel_you_out: "PROSESSISI PÄÄTTYI", duel_p2_joined: "P2 TULI: uusi ottelu seuraavasta erästä", pad_title: "PUHELIN = OHJAIN", pad_scan: "skannaa puhelimella"
     },
     nb: {
       choose: "velg", play: "spill", exit: "avslutt", insert_coin: "SETT INN MYNT", press_ok: "TRYKK OK", hi_scores: "TOPPLISTE",
@@ -461,7 +483,8 @@
       share_done: "X åpnes med innlegget ferdig skrevet. Du bestemmer om det sendes.",
       share_post: "{score} i {game} på #OmarchyTV. Klarer du å slå meg?",
       tilt_1: "Vipp hele TV-en og trill kulen til utgangen. Hullene er /dev/null.", tilt_2: "◀ ▲ ▼ ▶ vipp TV-en · OK rett opp · tiden er poengsummen", tilt_keys: "vipp", tilt_level: "rett opp",
-      hypr_1: "Labyrinten er et Hyprland-skrivebord: vinduene stokker seg om.", hypr_2: "gli i mellomrommene · OK lukker SUPER+Q-vinduet", hypr_keys: "gli", hypr_full: "ARBEIDSOMRÅDET FULLT!", hypr_wrong: "feil vindu:"
+      hypr_1: "Labyrinten er et Hyprland-skrivebord: vinduene stokker seg om.", hypr_2: "gli i mellomrommene · OK lukker SUPER+Q-vinduet", hypr_keys: "gli", hypr_full: "ARBEIDSOMRÅDET FULLT!", hypr_wrong: "feil vindu:",
+      duel_1: "To prosesser, én terminal: ikke kræsj i et rør.", duel_2: "Alene mot CPU-en · to mobiler på QR-koden: sofaduell", duel_keys: "styr", duel_scan: "mobiler som spillkontroll: QR-koden i spillehallen", duel_two: "to spillere", duel_first_to: "først til {n}", duel_wins: "VINNER RUNDEN", duel_draw: "BEGGE UTE: UAVGJORT", duel_cpu_out: "CPU-PROSESSEN AVSLUTTET", duel_you_out: "PROSESSEN DIN AVSLUTTET", duel_p2_joined: "P2 ER HER: ny kamp neste runde", pad_title: "MOBIL = SPILLKONTROLL", pad_scan: "skann den med mobilen"
     }
   };
 })(typeof window !== "undefined" ? window : this);

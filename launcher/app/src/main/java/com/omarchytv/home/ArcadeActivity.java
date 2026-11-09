@@ -40,6 +40,9 @@ public final class ArcadeActivity extends Activity {
     /** Renderer deaths so far: one silent reload, the second one leaves the arcade. */
     private int rendererCrashes;
     private boolean pcTouched;
+    /** v2.15 phones as gamepads: the TV's little server, only while the arcade is open. */
+    private ArcadePad pad;
+    private String padJs = "null";
 
     static void open(Context c) {
         c.startActivity(new Intent(c, ArcadeActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK));
@@ -60,7 +63,42 @@ public final class ArcadeActivity extends Activity {
         LauncherConfig cfg = LauncherConfig.get(this);
         url = "https://" + HOST + "/assets/games/index.html#" + Uri.encode(params(cfg).toString());
         CrtOverlay.attach(this, root, cfg.pluginRetroCrt);   // the set around the screen, as before
-        if (!attachWeb()) finish();   // no WebView on this TV
+        if (!attachWeb()) {   // no WebView on this TV
+            finish();
+            return;
+        }
+        startPad();
+    }
+
+    /** The gamepad server on the TV's own address; its QR shows up in the arcade's sign once the page is up. */
+    private void startPad() {
+        pad = new ArcadePad(getAssets(), new ArcadePad.Sink() {
+            @Override
+            public void key(String k, int player) {
+                runOnUiThread(() -> {
+                    if (web != null) web.evaluateJavascript("window.OmarchyArcadeHost&&OmarchyArcadeHost.key('" + k + "'," + player + ")", null);
+                });
+            }
+
+            @Override
+            public void players(java.util.List<Integer> on) {
+                runOnUiThread(() -> pushPad(on));
+            }
+        });
+        new Thread(() -> {   // the address lookup and the bind stay off the UI thread
+            String u = pad.start(PulseSaver.ip(this));
+            if (u != null) runOnUiThread(() -> pushPad(pad.players()));
+        }, "arcade-pad-start").start();
+    }
+
+    private void pushPad(java.util.List<Integer> on) {
+        if (pad == null || pad.url() == null) return;
+        try {
+            padJs = new JSONObject().put("url", pad.url()).put("players", new org.json.JSONArray(on)).toString();
+        } catch (Exception e) {
+            return;
+        }
+        if (web != null) web.evaluateJavascript("window.OmarchyArcadeHost&&OmarchyArcadeHost.pad(" + padJs + ")", null);
     }
 
     /**
@@ -102,6 +140,11 @@ public final class ArcadeActivity extends Activity {
                 } catch (Exception e) {
                     return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found", null, null);
                 }
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String u) {
+                if (!"null".equals(padJs)) view.evaluateJavascript("window.OmarchyArcadeHost&&OmarchyArcadeHost.pad(" + padJs + ")", null);
             }
 
             @Override
@@ -228,6 +271,11 @@ public final class ArcadeActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (pcTouched) themeBack();
+        if (pad != null) {
+            final ArcadePad p = pad;
+            pad = null;
+            new Thread(p::stop, "arcade-pad-stop").start();
+        }
         if (web != null) {
             web.removeJavascriptInterface("OmarchyAndroid");
             web.destroy();

@@ -252,7 +252,7 @@
         shake: function (s) { shakeT = Math.max(shakeT, s || 0.3); }
       };
     }
-    function go(m) { mode = m; modeT = 0; }
+    function go(m) { mode = m; modeT = 0; padQr(); }
     function startGame() {
       showQr(false);
       game = games[sel];
@@ -280,6 +280,12 @@
       for (var y = 2; y < 7; y += 2) { var l2 = (y / 2 + (on ? 1 : 0)) % 2 === 0; g.put(0, y, l2 ? "●" : "○", l2 ? C.YEL : C.DIM); g.put(W - 1, y, l2 ? "○" : "●", l2 ? C.DIM : C.YEL); }
       g.center(1, "O M A R C H Y   T V", C.BRIGHT);
       g.bigCenter(2, "ARCADE", C.ACC);
+      if (padEl) {   // 2.15: phones as gamepads, the code on the right of the sign
+        g.put(3, 2, t("pad_title"), C.YEL);
+        var py = wrap(t("pad_scan") + " ▶", 20, 3, 3, C.FG), on = (padInfo.players || []);
+        g.row(3, Math.min(6, py), [["P1 " + (on.indexOf(1) >= 0 ? "●" : "○"), on.indexOf(1) >= 0 ? C.ACC : C.DIM],
+          ["P2 " + (on.indexOf(2) >= 0 ? "●" : "○"), on.indexOf(2) >= 0 ? C.YEL : C.DIM]]);
+      }
     }
     function drawCart(x, y, gm, focused) {
       var c = focused ? C.ACC : C.DIM, w = 22;
@@ -366,6 +372,25 @@
       qrEl.style.borderRadius = ".3em";
       qrEl.style.zIndex = "2";   // above the scanline veil, so phones read clean modules
       tube.appendChild(qrEl);
+    }
+    // 2.15: the arcade's own gamepad page (Android TV serves it while the arcade is open): its QR in the sign, in the hall
+    var padInfo = null, padEl = null;
+    function setPad(info) { padInfo = info && info.url ? info : null; padQr(); }
+    function padQr() {
+      var want = !!(padInfo && root.OmarchyQR && (mode === "hall" || mode === "scores" || mode === "insert"));
+      if (padEl && (!want || padEl._url !== padInfo.url)) { if (padEl.parentNode) padEl.parentNode.removeChild(padEl); padEl = null; }
+      if (!want || padEl) return;
+      var em = 6 * 1.2;   // six rows tall, inside the sign's frame
+      padEl = root.OmarchyQR.canvas(doc, padInfo.url, Math.round(em * fs * 2), "L", { light: palette.fg, dark: palette.bg });
+      if (!padEl) return;
+      padEl._url = padInfo.url;
+      padEl.style.position = "absolute";
+      padEl.style.left = ((W - 2) * charRatio - em).toFixed(2) + "em";
+      padEl.style.top = (1 * 1.2).toFixed(2) + "em";
+      padEl.style.width = padEl.style.height = em.toFixed(2) + "em";
+      padEl.style.borderRadius = ".3em";
+      padEl.style.zIndex = "2";
+      tube.appendChild(padEl);
     }
     function wrap(text, width, x, y, c) {
       var words = text.split(" "), line = "";
@@ -466,10 +491,11 @@
     rafId = raf(frame);
     render();
 
-    function key(k) {
+    function key(k, who) {   // who: 1 or 2 for a phone pad (2.15), nothing for the remote
       if (!k) return false;
       idle = 0;
       if (mode === "hall") {
+        if (who && k === "back") return true;   // a phone can't close the arcade under everyone
         if (k === "left") { sel = (sel - 1 + games.length) % games.length; play("blip"); }
         else if (k === "right") { sel = (sel + 1) % games.length; play("blip"); }
         else if (k === "down") { go("scores"); play("blip"); }
@@ -481,7 +507,7 @@
       if (mode === "insert" || mode === "tune") { if (k === "back") toHall(); return true; }
       if (mode === "play") {
         if (k === "back") { go("pause"); pauseIdx = 0; play("blip"); return true; }
-        inst.key(k);
+        inst.key(k, who || 1);
         return true;
       }
       if (mode === "pause") {
@@ -516,7 +542,7 @@
     function close() { destroy(); if (typeof opts.onExit === "function") opts.onExit(); }
 
     return {
-      key: key, destroy: destroy,
+      key: key, destroy: destroy, setPad: setPad,
       pause: function () { if (mode === "play") { go("pause"); pauseIdx = 0; } },
       setSound: function (on) { if (sfx) sfx.setOn(on); },
       // for tests and the demo video

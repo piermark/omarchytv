@@ -198,7 +198,7 @@ final class PulseSaver {
         return Math.round(best * 10) / 10.0;
     }
 
-    private static String ip(Context c) {
+    static String ip(Context c) {
         try {
             ConnectivityManager cm = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
             Network n = cm.getActiveNetwork();
