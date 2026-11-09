@@ -49,6 +49,7 @@ final class CineFxView extends View {
     private int rows, fails, blank;
     private boolean copying;
     private long trackStart;
+    private volatile float[] range = {Float.NaN, Float.NaN};   // the eased contrast range (low, high), per film
 
     CineFxView(Context c, SurfaceView video, Clock clock, Runnable onBlocked) {
         super(c);
@@ -101,6 +102,7 @@ final class CineFxView extends View {
         fails = 0;
         blank = 0;
         grid = null;
+        range = new float[]{Float.NaN, Float.NaN};
         copier = new HandlerThread("cine-ascii");
         copier.start();
         copyH = new Handler(copier.getLooper());
@@ -132,7 +134,7 @@ final class CineFxView extends View {
             try {
                 PixelCopy.request(video, b, result -> {
                     char[][] g = null;
-                    if (result == PixelCopy.SUCCESS) g = toAscii(b);
+                    if (result == PixelCopy.SUCCESS) g = toAscii(b, range);
                     final char[][] done = g;
                     final int res = result;
                     ui.post(() -> {
@@ -171,18 +173,50 @@ final class CineFxView extends View {
         return true;
     }
 
-    private static char[][] toAscii(Bitmap b) {
-        int w = b.getWidth(), h = b.getHeight();
-        int[] px = new int[w * h];
+    /**
+     * Light to characters with each frame's contrast stretched, as cinemarchy.js asciiArt does on LG and Samsung: the
+     * darkest 2 % become spaces, the brightest 2 % the densest characters, the range eased over a few frames (no
+     * flicker); a quarter of the plain light is kept, and a flat frame keeps its own level (black blank, white white).
+     * A hazy film used to come out as a sheet of ":;,"; now its figures stand out.
+     */
+    static char[][] toAscii(Bitmap b, float[] range) {
+        int w = b.getWidth(), h = b.getHeight(), n = w * h, bins = 32;
+        int[] px = new int[n], hist = new int[bins];
+        float[] lum = new float[n];
         b.getPixels(px, 0, w, 0, 0, w, h);
+        for (int i = 0; i < n; i++) {
+            int c = px[i];
+            float l = (((c >> 16) & 255) * 0.3f + ((c >> 8) & 255) * 0.59f + (c & 255) * 0.11f) / 255f;
+            lum[i] = l;
+            hist[Math.min(bins - 1, (int) (l * bins))]++;
+        }
+        float lo = 0f, hi = 1f, cut = n * 0.02f;
+        int acc = 0;
+        for (int k = 0; k < bins; k++) {
+            acc += hist[k];
+            if (acc > cut) { lo = (float) k / bins; break; }
+        }
+        acc = 0;
+        for (int k = bins - 1; k >= 0; k--) {
+            acc += hist[k];
+            if (acc > cut) { hi = (float) (k + 1) / bins; break; }
+        }
+        if (range != null) {
+            if (Float.isNaN(range[0])) { range[0] = lo; range[1] = hi; }
+            else { range[0] += (lo - range[0]) * 0.3f; range[1] += (hi - range[1]) * 0.3f; }
+            lo = range[0];
+            hi = range[1];
+        }
+        float span = hi - lo;
+        if (span < 0.2f) {   // a flat frame: black, grey or white as it is
+            lo = Math.max(0f, Math.min(0.8f, (lo + hi) / 2f - 0.1f));
+            span = 0.2f;
+        }
+        int r = RAMP.length();
         char[][] g = new char[h][w];
-        int n = RAMP.length();
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                int c = px[y * w + x];
-                float l = (((c >> 16) & 255) * 0.3f + ((c >> 8) & 255) * 0.59f + (c & 255) * 0.11f) / 255f;
-                g[y][x] = RAMP.charAt(Math.min(n - 1, (int) (l * n)));
-            }
+        for (int i = 0; i < n; i++) {
+            float v = 0.25f * lum[i] + 0.75f * Math.max(0f, Math.min(1f, (lum[i] - lo) / span));
+            g[i / w][i % w] = RAMP.charAt(Math.min(r - 1, (int) (v * r)));
         }
         return g;
     }

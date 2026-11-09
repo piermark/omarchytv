@@ -23,6 +23,27 @@ test("ASCII bars and times", () => {
   assert.strictEqual(C.fmtTime(65), "1:05");
 });
 
+test("ASCII mode stretches each frame's contrast: a hazy film shows its figures, black stays blank, grey stays grey", () => {
+  const frame = (fn, cols, rows) => { const d = []; for (let y = 0; y < rows; y++) for (let x = 0; x < cols; x++) { const v = fn(x, y); d.push(v, v, v, 255); } return d; };
+  const chars = (s) => new Set(s.replace(/\n/g, "").split(""));
+  // A hazy picture: everything between 90 and 140 of 255. Before, only ",:;" (three characters); now the whole ramp.
+  const hazy = C.asciiArt(frame((x) => 90 + Math.round(x * 50 / 39), 40, 10), 40, 10, {});
+  assert.strictEqual(hazy.split("\n").length, 11, "one line per row");
+  assert.ok(/^[ .]/.test(hazy), "the darkest part becomes (almost) empty");
+  assert.ok(/[%@]/.test(hazy), "the brightest part becomes the densest characters");
+  assert.ok(chars(hazy).size >= 9, "most of the ramp is used: " + [...chars(hazy)].join(""));
+  assert.strictEqual(C.asciiArt(frame(() => 0, 20, 5), 20, 5, {}).trim(), "", "black stays blank (no noise blown up)");
+  const grey = chars(C.asciiArt(frame(() => 128, 20, 5), 20, 5, {}));
+  assert.ok(grey.size === 1 && !grey.has("@") && !grey.has(" "), "a flat grey is one quiet character: " + [...grey].join(""));
+  assert.ok(/^@+$/.test(C.asciiArt(frame(() => 255, 20, 5), 20, 5, {}).replace(/\n/g, "")), "white is @");
+  // The range eases between frames: a sudden flash moves it only part of the way.
+  const st = {};
+  C.asciiArt(frame((x) => 90 + Math.round(x * 50 / 39), 40, 10), 40, 10, st);
+  const lo0 = st.lo;
+  C.asciiArt(frame((x) => Math.round(x * 255 / 39), 40, 10), 40, 10, st);
+  assert.ok(st.lo < lo0 && st.lo > 0.1, "eased, not jumped: " + st.lo);
+});
+
 test("resume: real positions only, forgets barely started and finished videos, keeps the newest 200", () => {
   const mem = {};
   const store = { getItem: (k) => mem[k] || null, setItem: (k, v) => { mem[k] = v; } };
