@@ -69,3 +69,40 @@ test("wrapper falls back instead of drawing nothing: still art on a tainted canv
   assert.ok(/art\.onerror/.test(src) && /fallbackArt/.test(src), "a decode error retries another art");
   assert.ok(/getImageData\(0, 0, 720, 480\)[\s\S]{0,200}catch/.test(src), "getImageData is guarded");
 });
+
+test("Android plays the fire natively (#125): the page drives OmaFireNative with the same mix, WebAudio untouched", (t) => {
+  t.mock.timers.enable({ apis: ["setTimeout"] });
+  global.window = global;
+  ["OmaFireSound", "OmaFireNight", "OmaFireAudio", "OmaFireNative"].forEach((k) => delete global[k]);
+  for (const f of ["sound.js", "night.js", "omafire-audio.js"]) { delete require.cache[require.resolve(V + f)]; require(V + f); }
+  const calls = [];
+  global.OmaFireNative = {
+    setOn: (on, secs) => calls.push(["setOn", on, secs]),
+    loop: (n, v, secs) => calls.push(["loop", n, v, secs]),
+    shot: (n, v) => calls.push(["shot", n, v]),
+  };
+  global.AudioContext = function () { throw new Error("WebAudio must not be used on Android"); };
+  const a = global.OmaFireAudio.create("");
+  assert.ok(a, "a player even where WebAudio would fail");
+  a.setFire(0.6, 0);                       // off: nothing
+  assert.strictEqual(calls.length, 0);
+  a.setOn(true);
+  assert.deepStrictEqual(calls[0], ["setOn", true, 0.3]);
+  a.setFire(0.6, 0.2);
+  const loops = calls.filter((c) => c[0] === "loop").map((c) => c[1]);
+  assert.deepStrictEqual(loops, ["fire-embers", "fire-crackle", "fire-roar"]);
+  calls.filter((c) => c[0] === "loop").forEach((c) => assert.ok(c[2] >= 0 && c[2] <= 1 && c[3] === 0.6, String(c)));
+  a.playLog();
+  assert.deepStrictEqual(calls[calls.length - 1], ["shot", "fire-log", 0.2]);
+  for (let i = 0; i < 1200; i++) t.mock.timers.tick(100);   // two minutes of the night around the lake
+  const night = calls.filter((c) => c[0] === "shot" && ["cricket", "peep", "croak"].indexOf(c[1]) >= 0);
+  assert.ok(night.length > 0, "crickets or frogs within two minutes");
+  night.forEach((c) => assert.ok(c[2] > 0 && c[2] <= 0.12));
+  a.setOn(false);
+  assert.deepStrictEqual(calls[calls.length - 1], ["setOn", false, 0.3]);
+  a.destroy();
+  const n = calls.length;
+  t.mock.timers.tick(5000);
+  assert.strictEqual(calls.length, n, "nothing after destroy");
+  delete global.OmaFireNative; delete global.AudioContext;
+});

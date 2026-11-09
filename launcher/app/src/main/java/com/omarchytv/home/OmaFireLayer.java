@@ -25,6 +25,8 @@ final class OmaFireLayer {
     /** Renderer deaths in a row: after this many the layer stays off until the launcher restarts, never a loop. */
     private static final int MAX_DEATHS = 2;
     private static WebView web;
+    /** v2.14.1: the fire's sound, played natively (#125); only while the sound setting is on. */
+    private static OmaFireSound sound;
     private static int deaths;
 
     private OmaFireLayer() {
@@ -70,6 +72,16 @@ final class OmaFireLayer {
         s.setAllowFileAccess(false);
         s.setAllowContentAccess(false);
         s.setMediaPlaybackRequiresUserGesture(false);   // v2.14 OmaFire sound (only when omafireSound is on)
+        boolean withSound = LauncherConfig.get(a).omafireSound;
+        if (withSound) {   // v2.14.1 (#125): the page drives it, Android plays it; no WebAudio to wake up
+            try {
+                sound = new OmaFireSound(a.getApplicationContext());
+                w.addJavascriptInterface(sound, "OmaFireNative");
+            } catch (Throwable e) {
+                sound = null;
+                android.util.Log.w("OmarchyTV", "omafire: suono nativo non disponibile, resta WebAudio: " + e);
+            }
+        }
         final android.content.res.AssetManager assets = a.getAssets();
         w.setWebViewClient(new WebViewClient() {
             @Override
@@ -104,12 +116,13 @@ final class OmaFireLayer {
             }
         });
         parent.addView(w, parent.indexOfChild(wall) + 1, new ViewGroup.LayoutParams(wall.getLayoutParams()));
-        w.loadUrl("https://" + HOST + "/assets/omafire/index.html#" + m + (LauncherConfig.get(a).omafireSound ? "&sound" : ""));
+        w.loadUrl("https://" + HOST + "/assets/omafire/index.html#" + m + (withSound ? "&sound" : ""));
         web = w;
     }
 
     /** From onPause / onDestroy: nothing keeps running behind other apps. */
     static void onPause() {
+        releaseSound();
         WebView w = web;
         web = null;
         if (w == null) return;
@@ -126,9 +139,16 @@ final class OmaFireLayer {
      * the parent, free it, and leave the still wallpaper that is already underneath. On the UI thread, as the
      * callback is.
      */
+    private static void releaseSound() {
+        OmaFireSound s = sound;
+        sound = null;
+        if (s != null) s.release();
+    }
+
     private static void drop(WebView w) {
         if (w == null) return;
         deaths++;
+        releaseSound();
         android.util.Log.w("OmarchyTV", "omafire: renderer WebView morto (" + deaths + "/" + MAX_DEATHS
                 + "), resta lo sfondo fisso" + (deaths >= MAX_DEATHS ? ", animazione spenta fino al riavvio" : ""));
         if (web == w) web = null;
