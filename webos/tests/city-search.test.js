@@ -20,5 +20,10 @@ for (const n of ["Milano", "Alessandria", "Roma", "Berlin", "San Francisco", "To
 for (const c of cities) assert.ok(Math.abs(c.lat) <= 90 && Math.abs(c.lon) <= 180 && c.label.startsWith(c.name), c.name);
 assert.strictEqual(G.filterPresets(cities, "").length, cities.length);
 assert.strictEqual(G.filterPresets(cities, "tok").map((c) => c.name).join(), "Tokyo");
-assert.ok(G.filterPresets(cities, ", jp").length === 1);
+assert.ok(G.filterPresets(cities, ", jp").some((c) => c.name === "Tokyo") && G.filterPresets(cities, ", jp").every((c) => c.label.endsWith(", JP")));
+// v2.15 (#88): every national capital plus the big cities of Asia-Pacific and beyond (GeoNames, CC BY 4.0)
+assert.ok(cities.length >= 200, "world list: " + cities.length);
+assert.strictEqual(new Set(cities.map((c) => c.label)).size, cities.length, "no duplicate labels");
+for (const n of ["Canberra", "Wellington", "Taipei", "Seoul", "Beijing", "Osaka", "Brasília", "Nairobi", "Ottawa", "Buenos Aires"]) assert.ok(cities.some((c) => c.name === n), n);
+for (const c of cities) assert.ok(/, [A-Z]{2}$/.test(c.label), c.label);
 console.log("city-search ok");
