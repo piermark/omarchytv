@@ -470,6 +470,13 @@ omarchy-tv adb-lock --tv 192.168.1.9:5555                                 # clos
 | TCL 40S5400A (MT9221, 1 GB RAM, 1280x720) | 11 | ? | 2.13.8 | ok (community) | first TCL report: installs and runs, and works as Home once the stock launcher is disabled (`pm disable-user`), because the Home preference is not kept otherwise; TclAppBoot needs `APP_AUTO_START` to bring the launcher back after boot; its keyboard trapped D-pad focus in text dialogs (see [#86](https://github.com/piermark/omarchytv/issues/86)); reported by GrantCharge ([#75](https://github.com/piermark/omarchytv/issues/75)) |
 | Amazon Fire TV Stick HD AFTSS | 9 (Fire OS 7.7.1.3) | 138 (Amazon WebView) | 2.13.0-beta | works (community) | installs and launches; HomeOverride works but has Fire OS quirks (double Home events, accessibility reset on reboot); tested by @podzpau ([#58](https://github.com/piermark/omarchytv/issues/58)) |
 
+| LG 65SK8500PLA (2018, 4K) | webOS 4.4 | — | 2.14.0 (webOS) | ok (community) | unrooted, Developer Mode; installed TV apps listed and launched after the permission prompt (missed once on first boot, fixed with Re-pair with TV); reported by @postmanpat-303 ([#127](https://github.com/piermark/omarchytv/issues/127)) |
+| LG OLED77B4PUA | webOS 25 (10.3.2) | — | 2.14.0 (webOS) | ok (community) | Developer Mode; runs daily; reported by @XanderHalloran ([#131](https://github.com/piermark/omarchytv/issues/131)) |
+| Hisense 65U8QG (Google TV) | 14 | 156 | 2.13.0-beta | ok (community) | ADB over Ethernet needs Wi-Fi debugging first, see the steps in [#102](https://github.com/piermark/omarchytv/issues/102); reported by @KeroZelvin |
+| Philips Google TV TA1 (PH1M_WW_9972) | 12 | ? | 2.13.8 | ok (community) | the firmware gives the Blue key to the TV manual when another app is open: bind it to the `grokbot` action ([#91](https://github.com/piermark/omarchytv/issues/91)); reported by @ghpo |
+| Sony XBR-75X900H | 9 | ? | 2.13.8 | ok (community) | reported by @bkbtech ([#71](https://github.com/piermark/omarchytv/issues/71)) |
+| Coocaa / Skyworth SWTV-21AE (720p) | 14 | ? | 2.14.0-beta | ok (community) | small text at 720p, readability work in [#122](https://github.com/piermark/omarchytv/pull/122); reported by @henrikklee |
+| Telefunken D65U546A (Vestel MB230, Novatek) | not Android: Vestel Linux, Opera/OMI browser (Chromium 67) | — | 2.13.2-testing (web app) | ok (community, rooted) | the shared web app served by the TV itself; uses the `OMARCHY_LAUNCH`, `OMARCHY_PREFERS_24H` and `OMARCHY_FIT_SCREEN` hooks; field report by @ekollof1 ([#66](https://github.com/piermark/omarchytv/issues/66)) |
 Tested yours? Open an issue with the "TV report" template.
 
 ## Trademarks

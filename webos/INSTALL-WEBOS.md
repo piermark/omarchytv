@@ -222,6 +222,7 @@ OmarchyTV reads the apps installed on your LG TV (for example NOW, MUBI, DAZN an
 - If you decline or the prompt times out, the built-in app list stays and OmarchyTV doesn't ask again on its own.
 - **Settings > All settings > Read installed TV apps** turns this on or off (on by default).
 - **Settings > All settings > Re-pair with TV** forgets the key and shows the prompt again, for example after a TV reset or if new apps don't appear.
+- **Missed the prompt on the first start?** The app row then shows only the built-in tiles. Use **Re-pair with TV** above and accept the prompt: your TV's own apps appear, with their icons ([#127](https://github.com/piermark/omarchytv/issues/127)).
 
 ## Grok Bot · Omarchy TUI (new in `2.13.9`)
 
