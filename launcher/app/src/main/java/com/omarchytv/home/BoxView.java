@@ -28,7 +28,7 @@ final class BoxView extends LinearLayout {
         setOrientation(VERTICAL);
         setWillNotDraw(false);
         title.setTypeface(tf);
-        title.setTextSize(19 * s);
+        title.setTextSize(LauncherDimensions.sp(c, LauncherDimensions.TEXT_BOX_TITLE_SP));
         line.setStyle(Paint.Style.FILL);
     }
 

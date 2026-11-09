@@ -155,13 +155,15 @@ final class HomeV29 extends FrameLayout {
         tfBold = Typeface.create(tf, Typeface.BOLD);
         setClipChildren(false);
 
-        // ---- 3.1 bar: 52 px, padding 32, three equal columns ----
+        // Keep the clock screen-centred while reserving space for the controls on each side.
         bar = new FrameLayout(a);
-        addView(bar, new LayoutParams(-1, px(52)));
+        addView(bar, new LayoutParams(-1, LauncherDimensions.dp(act, 28)));
+        LinearLayout barContents = hbox();
+        bar.addView(barContents, new LayoutParams(-1, -1));
         LinearLayout left = hbox();
-        left.setPadding(px(32), 0, 0, 0);
-        bar.addView(left, new LayoutParams(-2, -1, Gravity.START));
-        menuBtn = iconButton(R.drawable.ln_menu, 44, 24);
+        left.setPadding(LauncherDimensions.dp(act, 16), 0, 0, 0);
+        barContents.addView(left, new LinearLayout.LayoutParams(-2, -1));
+        menuBtn = iconButton(R.drawable.ln_menu, 44, 32);
         left.addView(menuBtn);
         menuBtn.setOnClickListener(v -> host.openSettings(v));
         for (int i = 0; i < 5; i++) {
@@ -169,17 +171,25 @@ final class HomeV29 extends FrameLayout {
             TextView w = text(String.valueOf(n), 20, false);
             w.setGravity(Gravity.CENTER);
             w.setFocusable(true);
-            w.setPadding(px(10), 0, px(10), 0);
+            w.setPadding(LauncherDimensions.dp(act, 5), 0, LauncherDimensions.dp(act, 5), 0);
             w.setOnClickListener(v -> host.showWorkspace(cfg != null ? cfg.workspaceAt(n) : n));   // n = bar position
             w.setBackground(new Underline());
             ws[i] = w;
             left.addView(w, new LinearLayout.LayoutParams(-2, -1));
         }
         clock = text("", 22, false);
-        bar.addView(clock, new LayoutParams(-2, -2, Gravity.CENTER));
+        clock.setGravity(Gravity.CENTER);
+        clock.setSingleLine(true);
+        clock.setEllipsize(TextUtils.TruncateAt.END);
+        barContents.addView(new View(a), new LinearLayout.LayoutParams(0, 1, 1f));
         LinearLayout right = hbox();
-        right.setPadding(0, 0, px(32) - px(13), 0);
-        bar.addView(right, new LayoutParams(-2, -1, Gravity.END));
+        right.setPadding(0, 0, LauncherDimensions.dp(act, 9.5f), 0);
+        barContents.addView(right, new LinearLayout.LayoutParams(-2, -1));
+        bar.addView(clock, new LayoutParams(-2, -1, Gravity.CENTER));
+        bar.addOnLayoutChangeListener((v, l, top, r, bottom, oldL, oldTop, oldR, oldBottom) -> {
+            int available = Math.max(0, bar.getWidth() - 2 * Math.max(left.getWidth(), right.getWidth()));
+            if (clock.getMaxWidth() != available) clock.setMaxWidth(available);
+        });
         barSpacex = text("🚀 SpaceX TV", 18, true);
         barSpacex.setFocusable(true);
         barSpacex.setClickable(true);
@@ -206,7 +216,7 @@ final class HomeV29 extends FrameLayout {
         // v2.10: no gear (the menu is the Omarchy logo on the left).
         int[] icons = {R.drawable.ln_cinemarchy, R.drawable.ln_arcade, R.drawable.ln_wifi, R.drawable.ln_bt, R.drawable.ln_vol, R.drawable.ln_input, R.drawable.ln_monitor};
         for (int ic : icons) {
-            View b = iconButton(ic, 24 + 26, 24);
+            View b = iconButton(ic, 50, 32);
             right.addView(b);
             barIcons.add(b);
         }
@@ -236,11 +246,11 @@ final class HomeV29 extends FrameLayout {
         tl.leftMargin = px(32);
         tl.topMargin = px(76);
         addView(term, tl);
-        termPrompt = text("", 20, false);
+        termPrompt = tokenText("", LauncherDimensions.TEXT_BODY_SP, false);
         termLogo = text(logoText(), 8, false);
         termLogo.setLineSpacing(0, 1.15f);
         termLogo.setHorizontallyScrolling(true);
-        termInfo = text("", 20, false);
+        termInfo = tokenText("", LauncherDimensions.TEXT_BODY_SP, false);
         termInfo.setMaxLines(3);   // v2.10: one item per line (the single line was cut to "up" on the TV)
         termInfo.setLineSpacing(px(4), 1f);
         term.addView(termPrompt);
@@ -276,7 +286,7 @@ final class HomeV29 extends FrameLayout {
         // With weight 1 a lone panel (e.g. only the weather widget on) stretched across the whole 1120 px row.
         for (View col : new View[]{wxBox, pcBox, ai}) {
             LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
-            cl.width = px((1120 - 32) / 3f);
+            cl.width = Math.max(0, (px(1120) - 2 * LauncherDimensions.dp(act, 8)) / 3);
             cl.weight = 0f;
         }
         r2.addView(new View(a), new LinearLayout.LayoutParams(0, 1, 2f));
@@ -286,7 +296,7 @@ final class HomeV29 extends FrameLayout {
         ((LinearLayout.LayoutParams) depBox.getLayoutParams()).weight = 1f;
         // 2 columns + 1 gap left of the third column: weights 2 : 1 with a 32 px spacer ≈ 3 equal columns, 16 gaps
         this.aiBoxRef = ai;
-        wxTemp = text("", 50, false);
+        wxTemp = tokenText("", LauncherDimensions.TEXT_DISPLAY_SP, false);
         wxLine1 = line("");
         wxLine2 = line("");
         wxBox.addView(wxTemp);
@@ -323,11 +333,11 @@ final class HomeV29 extends FrameLayout {
         appWin.setClipChildren(false);
         appWin.setClipToPadding(false);
         FrameLayout head = new FrameLayout(a);
-        appName = text("", 30, true);
+        appName = tokenText("", LauncherDimensions.TEXT_ITEM_TITLE_SP, true);
         appName.setSingleLine(true);
         appName.setEllipsize(TextUtils.TruncateAt.END);
         head.addView(appName, new LayoutParams(-2, -2, Gravity.START | Gravity.CENTER_VERTICAL));
-        appHints = text("", 18, false);
+        appHints = tokenText("", LauncherDimensions.TEXT_SECONDARY_SP, false);
         head.addView(appHints, new LayoutParams(-2, -2, Gravity.END | Gravity.CENTER_VERTICAL));
         appWin.addView(head, new LinearLayout.LayoutParams(-1, -2));
         row = new RecyclerView(a);
@@ -370,13 +380,16 @@ final class HomeV29 extends FrameLayout {
         // ---- v2.10 workspaces 2-5: same v2.9 windows (square boxes, titles in the border) ----
         tvWin = window("tv");
         tvBody = vbox();
+        // Input tiles grow on focus; keep their focus rings visible at the row edges.
+        tvBody.setClipChildren(false);
+        tvBody.setClipToPadding(false);
         tvWin.addView(tvBody, new LinearLayout.LayoutParams(-1, -2));
         appsWin = window("app");
         FrameLayout gh = new FrameLayout(a);
-        gridName = text("", 30, true);
+        gridName = tokenText("", LauncherDimensions.TEXT_ITEM_TITLE_SP, true);
         gridName.setSingleLine(true);
         gh.addView(gridName, new LayoutParams(-2, -2, Gravity.START | Gravity.CENTER_VERTICAL));
-        gridHints = text("", 18, false);
+        gridHints = tokenText("", LauncherDimensions.TEXT_SECONDARY_SP, false);
         gh.addView(gridHints, new LayoutParams(-2, -2, Gravity.END | Gravity.CENTER_VERTICAL));
         appsWin.addView(gh, new LinearLayout.LayoutParams(-1, -2));
         grid = new RecyclerView(a);
@@ -396,8 +409,14 @@ final class HomeV29 extends FrameLayout {
         pcPaneBody = vbox();
         pcWin.addView(pcPaneBody, new LinearLayout.LayoutParams(-1, -2));
         sysWin = window(act.getString(R.string.v29_system));
+        ((LayoutParams) sysWin.getLayoutParams()).height = -1;
+        sysWin.setClipChildren(true);
+        sysWin.setClipToPadding(true);
+        android.widget.ScrollView sysScroll = new android.widget.ScrollView(a);
+        sysScroll.setFillViewport(true);
         sysBody = vbox();
-        sysWin.addView(sysBody, new LinearLayout.LayoutParams(-1, -2));
+        sysScroll.addView(sysBody, new android.widget.ScrollView.LayoutParams(-1, -2));
+        sysWin.addView(sysScroll, new LinearLayout.LayoutParams(-1, 0, 1f));
     }
 
     /** A full-width v2.9 window under the bar for workspaces 2-5 (hidden until its workspace is shown). */
@@ -442,13 +461,27 @@ final class HomeV29 extends FrameLayout {
         TextView tv = new TextView(act);
         tv.setText(v);
         tv.setTypeface(bold ? tfBold : tf);
-        tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizePx * s * big);
+        if (sizePx <= 8) {
+            // ASCII artwork is sized as a grid, not body text.
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, sizePx * s * big);
+        } else {
+            tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, LauncherDimensions.legacyTextSp(sizePx) * big);
+        }
+        tv.setIncludeFontPadding(false);
+        return tv;
+    }
+
+    private TextView tokenText(String v, float sizeSp, boolean bold) {
+        TextView tv = new TextView(act);
+        tv.setText(v);
+        tv.setTypeface(bold ? tfBold : tf);
+        tv.setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp * big);
         tv.setIncludeFontPadding(false);
         return tv;
     }
 
     private TextView line(String v) {
-        TextView tv = text(v, 19, false);
+        TextView tv = tokenText(v, LauncherDimensions.TEXT_BODY_SP, false);
         tv.setSingleLine(true);
         tv.setEllipsize(TextUtils.TruncateAt.END);
         LinearLayout.LayoutParams l = new LinearLayout.LayoutParams(-1, -2);
@@ -459,11 +492,11 @@ final class HomeV29 extends FrameLayout {
 
     private BoxView widget(LinearLayout parent, String title, int gapLeft) {
         BoxView b = new BoxView(act, s, tf);
-        b.setLegend(title, px(14), px(18));
+        b.setLegend(title, LauncherDimensions.dp(act, 7), LauncherDimensions.dp(act, 9));
         b.setFocusable(true);
         b.focusBorder = true;
         LinearLayout.LayoutParams l = new LinearLayout.LayoutParams(0, -2, 1f);
-        l.leftMargin = px(gapLeft);
+        l.leftMargin = LauncherDimensions.dp(act, gapLeft / 2f);
         parent.addView(b, l);
         return b;
     }
@@ -474,8 +507,10 @@ final class HomeV29 extends FrameLayout {
         f.setClickable(true);
         ImageView iv = new ImageView(act);
         iv.setImageResource(res);
-        f.addView(iv, new LayoutParams(px(iconPx), px(iconPx), Gravity.CENTER));
-        f.setLayoutParams(new LinearLayout.LayoutParams(px(boxPx), px(44)));
+        int iconSize = LauncherDimensions.dp(act, iconPx / 2f);
+        f.addView(iv, new LayoutParams(iconSize, iconSize, Gravity.CENTER));
+        f.setLayoutParams(new LinearLayout.LayoutParams(
+                LauncherDimensions.dp(act, boxPx / 2f), LauncherDimensions.dp(act, 22)));
         f.setBackground(new Underline());
         return f;
     }
@@ -596,7 +631,7 @@ final class HomeV29 extends FrameLayout {
         gridName.setTextColor(t.accent);
         gridHints.setTextColor(t.fg);
         gridHints.setText(gridHintsText());
-        term.setLegend(null, px(18), px(22));
+        term.setLegend(null, LauncherDimensions.dp(act, 9), LauncherDimensions.dp(act, 11));
         appWin.setLegend(null, px(20), px(28));
         // fastfetch
         SpannableStringBuilder p = new SpannableStringBuilder();
@@ -673,7 +708,8 @@ final class HomeV29 extends FrameLayout {
             remoteBody[i].removeAllViews();
             if (!show) continue;
             shown++;
-            remoteBox[i].setLegend(p.optString("title", p.optString("id")).toLowerCase(Locale.getDefault()), px(14), px(18));
+            remoteBox[i].setLegend(p.optString("title", p.optString("id")).toLowerCase(Locale.getDefault()),
+                    LauncherDimensions.dp(act, 7), LauncherDimensions.dp(act, 9));
             remoteBody[i].setAlpha(age > p.optInt("ttl", 180) ? 0.55f : 1f);
             JSONArray lines = p.optJSONArray("lines");
             for (int k = 0; lines != null && k < lines.length(); k++) {
@@ -1031,8 +1067,9 @@ final class HomeV29 extends FrameLayout {
         ImageView iv = new ImageView(act);
         iv.setImageResource(icon);
         iv.setColorFilter(t.accent);
-        col.addView(iv, new LinearLayout.LayoutParams(px(72), px(72)));
-        TextView tv = text(label, 30, true);
+        int iconSize = LauncherDimensions.dp(act, 36);
+        col.addView(iv, new LinearLayout.LayoutParams(iconSize, iconSize));
+        TextView tv = tokenText(label, LauncherDimensions.TEXT_ITEM_TITLE_SP, true);
         tv.setTextColor(t.fgBright);
         tv.setGravity(Gravity.CENTER);
         tv.setSingleLine(true);
@@ -1041,7 +1078,7 @@ final class HomeV29 extends FrameLayout {
         tl.topMargin = px(12);
         col.addView(tv, tl);
         if (sub != null && !sub.isEmpty()) {
-            TextView sv = text(sub, 20, false);
+            TextView sv = tokenText(sub, LauncherDimensions.TEXT_SECONDARY_SP, false);
             sv.setTextColor(t.fg);
             sv.setSingleLine(true);
             sv.setEllipsize(TextUtils.TruncateAt.END);
@@ -1173,20 +1210,26 @@ final class HomeV29 extends FrameLayout {
     }
 
     private void sysRow(int label, String value, String id) {
-        FrameLayout r = new FrameLayout(act);
+        LinearLayout r = new LinearLayout(act);
+        r.setOrientation(LinearLayout.HORIZONTAL);
+        r.setGravity(Gravity.CENTER_VERTICAL);
         r.setFocusable(true);
         r.setClickable(true);
-        r.setPadding(px(16), px(10), px(16), px(10));
-        TextView a = text(act.getString(label), 24, false);
+        int horizontalPadding = LauncherDimensions.dp(act, 8);
+        int verticalPadding = LauncherDimensions.dp(act, 5);
+        r.setPadding(horizontalPadding, verticalPadding, horizontalPadding, verticalPadding);
+        TextView a = tokenText(act.getString(label), LauncherDimensions.TEXT_BODY_SP, false);
         a.setTextColor(t.fgBright);
-        r.addView(a, new LayoutParams(-2, -2, Gravity.START | Gravity.CENTER_VERTICAL));
-        TextView b = text(value != null ? value : "›", 24, false);
+        r.addView(a, new LinearLayout.LayoutParams(0, -2, 1f));
+        TextView b = tokenText(value != null ? value : "›", LauncherDimensions.TEXT_BODY_SP, false);
         b.setTextColor(t.accent);
-        r.addView(b, new LayoutParams(-2, -2, Gravity.END | Gravity.CENTER_VERTICAL));
+        LinearLayout.LayoutParams valueLayout = new LinearLayout.LayoutParams(-2, -2);
+        valueLayout.setMarginStart(horizontalPadding);
+        r.addView(b, valueLayout);
         r.setBackground(new Underline());
         r.setOnClickListener(v -> host.sys(id));
-        LinearLayout.LayoutParams l = new LinearLayout.LayoutParams(px(900), -2);
-        l.topMargin = px(4);
+        LinearLayout.LayoutParams l = new LinearLayout.LayoutParams(-1, -2);
+        l.topMargin = LauncherDimensions.dp(act, 2);
         sysBody.addView(r, l);
     }
 
