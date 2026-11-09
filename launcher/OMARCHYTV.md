@@ -258,7 +258,10 @@ otherwise OK opens Live TV (Android has no public "tune to number" intent).
   Key names are Android `KeyEvent` keycode names without `KEYCODE_` (`BUTTON_12`, ...); unknown names are ignored. A press type has exactly one of `app` (package name, started like its tile), `intent` (an
   `Intent.toUri(Intent.URI_INTENT_SCHEME)` string: started as an activity, sent as a broadcast if no activity
   matches) or `action` (an OmarchyTV action id); anything else counts as unbound. Action ids: `walker` (search),
-  `voice` (search by voice), `home`, `ask`, `menu`, `screensaver`, `next-theme`, `cinemarchy`, `arcade`, `workspace-1` … `workspace-5`.
+  `voice` (search by voice), `home`, `ask`, `menu`, `screensaver`, `next-theme`, `cinemarchy`, `arcade`, `grokbot` (the Grok Bot
+  companion), `workspace-1` … `workspace-5`. On TVs whose firmware takes the Blue key first (Philips: the TV manual,
+  [#91](https://github.com/piermark/omarchytv/issues/91)), bind Blue in a key remapper to
+  `adb shell am start -n com.omarchytv.home/.MainActivity --es com.omarchytv.home.extra.ACTION grokbot`.
   Quick presses less than about 0.35 s apart count together; a press type that isn't bound falls back to the
   highest bound count below it (double with only single bound runs single), and a lone single press runs at once
   when nothing higher is bound. A long press (about 0.5 s) runs while the key is held.

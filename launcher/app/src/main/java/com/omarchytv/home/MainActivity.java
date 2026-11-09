@@ -860,6 +860,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 if (menu != null && menu.isShowing()) menu.dismiss();
                 ArcadeActivity.open(this);
                 break;
+            case "grokbot":   // v2.15 (#91): a key remapper can bind any key to the Grok Bot companion (Philips: Blue)
+                if (walker != null) walker.close();
+                if (menu != null && menu.isShowing()) menu.dismiss();
+                openCompanionChat(false);
+                break;
             default:
                 break;
         }
@@ -1652,6 +1657,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "next-theme": return str(R.string.keys_action_next_theme);
             case "cinemarchy": return "🎬 Cinemarchy";   // product names: the same in every language
             case "arcade": return "🕹 OmarchyTV Arcade";
+            case "grokbot": return "● Grok Bot";
             default: return id;
         }
     }
