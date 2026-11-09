@@ -5,6 +5,10 @@
  *        notes:[{app, title, body, at}], x:[{kind, user, text, at}], xMode, xError}. ES5. */
 (function (root) {
   "use strict";
+  // The fonts the apps bundle: 'CaskaydiaMono' (@font-face in the LG/Samsung index.html) and 'mono' (the Android saver
+  // page). The names used before matched neither, so the Live screen fell back to the TV's own monospace, whose box
+  // and block glyphs can be wider than 0.6em: lines overflowed past the screen edge whatever the margins (#119).
+  var FONT_STACK = "CaskaydiaMono, mono, 'CaskaydiaMono Nerd Font', 'Caskaydia Mono', monospace";
   var ART = {
     sun:    ["    \\   /   ", "     .-.    ", "  - (   ) - ", "     `-'    ", "    /   \\   "],
     partly: ["   \\  /     ", " _ /\"\".-.   ", "   \\_(   ). ", "   /(___(__)", "            "],
@@ -144,7 +148,7 @@
     // transform, so viewport units come out at the wrong scale (the widget looked huge and misplaced on the TV).
     var hw = host.clientWidth || 1920, hh = host.clientHeight || 1080;
     s.position = "absolute"; s.right = Math.round(hw * 0.025) + "px"; s.top = Math.round(hh * 0.04) + "px"; s.margin = "0"; s.zIndex = "5";
-    s.fontFamily = opts.font || "'CaskaydiaMono Nerd Font', 'Caskaydia Mono', monospace";
+    s.fontFamily = opts.font || FONT_STACK;
     s.fontSize = opts.fontSize || Math.max(10, Math.round(hw * 0.0125)) + "px"; s.lineHeight = "1.22"; s.whiteSpace = "pre";
     s.color = opts.color || "#c0caf5"; s.background = "rgba(0,0,0,.55)"; s.padding = ".6em .8em";
     s.textShadow = "0 0 6px " + (opts.accent || "#7aa2f7");
@@ -365,7 +369,7 @@
     var doc = host.ownerDocument || document;
     var COLS = 112, ROWS = 32, LW = 42, GAP = 3, acc = opts.accent || "#7aa2f7", acc2 = opts.accent2 || acc, fg = opts.color || "#c0caf5";
     var fs = "24px";
-    var font = opts.font || "'CaskaydiaMono Nerd Font','Caskaydia Mono',monospace";
+    var font = opts.font || FONT_STACK;
     var wrapEl = doc.createElement("div"), term = doc.createElement("div"), pre = doc.createElement("pre"), st = doc.createElement("style");
     var cv = doc.createElement("canvas"), sweep = doc.createElement("div"), ban = doc.createElement("div");
     var panL = doc.createElement("i"), panR = doc.createElement("i");
@@ -388,11 +392,23 @@
     // panel. "Usable" leaves SAFE_X/SAFE_Y of the panel free on every side: a TV with overscan (the 32" LG cuts the
     // outer edge of the picture) then clips only empty margin, never a column of the clock or a box border.
     var SAFE_X = 0.05, SAFE_Y = 0.055;
+    var boxW = 0, boxH = 0, fitK = 1, lastW = 0, lastH = 0;
+    // After a frame is drawn: if the text is wider or taller than its box (a font whose glyphs are not 0.6em, a TV
+    // engine that rounds differently), shrink the font by the measured ratio. Only shrinks; a resize starts again.
+    function fitMeasured() {
+      var pw = pre.scrollWidth, ph = pre.scrollHeight;
+      if (!(pw > 0 && ph > 0 && boxW > 0)) return;
+      var r = Math.min(boxW / pw, boxH / ph);
+      if (r < 0.995) { fitK *= r; fitFont(); }
+    }
     function fitFont() {
       var w = wrapEl.clientWidth || host.clientWidth || 1920, h = wrapEl.clientHeight || host.clientHeight || 1080;
       var iw = w * (1 - 2 * SAFE_X), ih = h * (1 - 2 * SAFE_Y);
       var f = Math.min(95 / COLS / 0.6 * iw / 100, 92 / ROWS / 1.18 * ih / 100);
       if (!(f > 0)) return;
+      // A new box (resize) or a newly loaded font starts the measurement again.
+      if (w !== lastW || h !== lastH) { lastW = w; lastH = h; fitK = 1; lastHtml = ""; }
+      boxW = iw * 0.95; boxH = ih * 0.92; f *= fitK;
       term.style.fontSize = f.toFixed(2) + "px";
       term.style.left = (SAFE_X * 100).toFixed(2) + "%";
       term.style.top = (SAFE_Y * 100).toFixed(2) + "%";
@@ -413,10 +429,15 @@
       if (qrc) {
         qrc.style.cssText = "position:absolute;left:37.3ch;top:2.4em;width:6.4ch;height:6.4ch;border-radius:.25em;opacity:.88;" +
           "box-shadow:0 0 .8em " + acc + "55;image-rendering:pixelated";
+        // Position the label box in the term's own ch/em (same as the QR). Put the small type on an
+        // inner span: otherwise font-size:.5em halves ch/em on the box itself and the old *2 override
+        // drifted once the bundled mono replaced the TV fallback (#119).
         var qrl = doc.createElement("div");
-        qrl.textContent = "OmarchyTV";
-        qrl.style.cssText = "position:absolute;left:37.3ch;width:6.4ch;top:calc(2.6em + 6.4ch);font-size:.5em;letter-spacing:.05em;text-align:center;opacity:.55;color:" + fg;
-        qrl.style.left = (37.3 * 2) + "ch"; qrl.style.width = (6.4 * 2) + "ch"; qrl.style.top = "calc(5.2em + 12.8ch)";
+        qrl.style.cssText = "position:absolute;left:37.3ch;width:6.4ch;top:calc(2.6em + 6.4ch);text-align:center;opacity:.55;color:" + fg;
+        var qrlT = doc.createElement("span");
+        qrlT.textContent = "OmarchyTV";
+        qrlT.style.cssText = "font-size:.5em;letter-spacing:.05em";
+        qrl.appendChild(qrlT);
         term.appendChild(qrc); term.appendChild(qrl);
       }
     }
@@ -428,6 +449,9 @@
       if (typeof root.ResizeObserver === "function") {
         try { new root.ResizeObserver(fitFont).observe(wrapEl); } catch (e) {}
       }
+      // The bundled font may arrive after the first frame: measure again once it is loaded (also on TVs without
+      // ResizeObserver, such as webOS 4.x).
+      try { if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(function () { lastW = 0; fitFont(); }); } catch (e) {}
     }
 
     // Behind the glass: glyph rain everywhere, a synthwave grid rolling in at the bottom. 12 fps, small cost.
@@ -517,7 +541,7 @@
       }
       prev = seen;
       var out = html.join("\n");
-      if (out !== lastHtml) { pre.innerHTML = out; lastHtml = out; }   // no layout when nothing changed
+      if (out !== lastHtml) { pre.innerHTML = out; lastHtml = out; fitMeasured(); }   // no layout when nothing changed
       var m = Math.floor(ms / 60000) % 4;   // burn-in care: drift a few pixels every minute
       term.style.transform = "translate(" + [0, 6, 6, 0][m] + "px," + [0, 0, 6, 6][m] + "px)";
       sweep.style.top = (((ms / 40) % 130) - 15) + "%";

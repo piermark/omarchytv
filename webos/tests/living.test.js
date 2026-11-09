@@ -111,3 +111,14 @@ test("Live keeps clear of a TV's overscan, which crops the outer edge of the pic
   assert.ok(code.indexOf('term.style.left = (SAFE_X * 100).toFixed(2) + "%"') > 0, "the text starts inside it");
   assert.ok(code.indexOf('term.style.top = (SAFE_Y * 100).toFixed(2) + "%"') > 0);
 });
+
+test("Live: strict mode really on, the bundled fonts first, measured again when they load (#119)", () => {
+  const P = require("path");
+  const code = fs.readFileSync(P.join(__dirname, "..", "app", "living.js"), "utf8");
+  assert.ok(/\(function \(root\) \{\s*"use strict";/.test(code), "\"use strict\" is the first statement, or it does nothing");
+  assert.ok(code.indexOf('var FONT_STACK = "CaskaydiaMono, mono,') > 0, "the fonts the apps bundle come first");
+  const ro = code.indexOf("new root.ResizeObserver(fitFont)"), close = code.indexOf("}", ro + 60), fr = code.indexOf("fonts.ready");
+  assert.ok(fr > close, "the font reload is outside the ResizeObserver branch (webOS 4.x has none)");
+  const android = fs.readFileSync(P.join(__dirname, "..", "..", "launcher", "app", "src", "main", "assets", "saver", "living.js"), "utf8");
+  assert.strictEqual(android, code, "Android and webOS run the same Live screen");
+});
