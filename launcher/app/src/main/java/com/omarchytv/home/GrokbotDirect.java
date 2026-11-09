@@ -14,7 +14,7 @@ import java.util.Random;
  * "Grok Bot diretto (senza PC)": the TV asks a Grok Bot webhook routine itself when no PC companion is linked.
  * The question goes to the user's own routine webhook (POST JSON, the routine's Sender key as Bearer and
  * X-Automation-Key, the same two headers grokbot-ask sends); the routine publishes {id, text, action} to
- * https://ntfy.sh/&lt;reply_topic&gt; and the TV polls that topic. Plain Java (org.json only), unit-tested; the same
+ * https://ntfy.sh/&lt;reply_topic&gt; (or the user's own ntfy server, v2.15) and the TV polls that topic. Plain Java (org.json only), unit-tested; the same
  * rules as webos/app/grokdirect.js. It is an addition next to the PC companion, which it never touches.
  */
 final class GrokbotDirect {
@@ -81,6 +81,11 @@ final class GrokbotDirect {
     }
 
     static String body(String question, String lang, String topic, String id, List<String> apps, String context) throws Exception {
+        return body(question, lang, topic, id, apps, context, NTFY);
+    }
+
+    /** reply_server tells the routine where to publish (#70): it is the same server the TV reads. */
+    static String body(String question, String lang, String topic, String id, List<String> apps, String context, String server) throws Exception {
         JSONArray a = new JSONArray();
         if (apps != null) for (String s : apps) if (s != null && !s.isEmpty() && a.length() < 80) a.put(s.length() > 40 ? s.substring(0, 40) : s);
         return new JSONObject()
@@ -90,11 +95,35 @@ final class GrokbotDirect {
                 .put("id", id)
                 .put("apps", a)
                 .put("context", context == null ? "" : context)
+                .put("reply_server", server(server))
                 .toString();
     }
 
     static String pollUrl(String topic, long sinceSec) {
-        return NTFY + topic + "/json?poll=1&since=" + sinceSec;
+        return pollUrl(NTFY, topic, sinceSec);
+    }
+
+    static String pollUrl(String server, String topic, long sinceSec) {
+        return server(server) + topic + "/json?poll=1&since=" + sinceSec;
+    }
+
+    /**
+     * v2.15 (#70): the reply server, ntfy.sh unless the user set another one (a self-hosted ntfy, so the shared
+     * ntfy.sh daily quota can't stop the replies). https only: the routine runs in the cloud and must reach it too.
+     * No query, no fragment; always ends with "/". Anything else falls back to ntfy.sh.
+     */
+    static String server(String s) {
+        if (!validServer(s)) return NTFY;
+        return s.endsWith("/") ? s : s + "/";
+    }
+
+    static boolean validServer(String s) {
+        return s != null && s.length() <= 200 && s.matches("https://[A-Za-z0-9.-]+(:[0-9]{1,5})?(/[A-Za-z0-9._~/-]*)?");
+    }
+
+    /** An ntfy access token for reading a protected server ("tk_…"); "" = none. Never shown back, never logged. */
+    static boolean validToken(String t) {
+        return t != null && t.matches("tk_[A-Za-z0-9]{8,64}");
     }
 
     /** A routine's reply: text to show and speak, and one optional action. */

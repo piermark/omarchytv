@@ -2185,6 +2185,30 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 }).setNegativeButton(android.R.string.cancel, null).show();
     }
 
+    /** v2.15 (#70): the ntfy server the routine publishes to and the TV reads (empty = ntfy.sh), and its read token. */
+    private void replyServerDialog(boolean token) {
+        android.content.SharedPreferences sp = GrokbotDirectActivity.prefs(this);
+        android.widget.EditText e = new android.widget.EditText(this);
+        e.setSingleLine(true);
+        if (token) {
+            e.setHint("tk_…");
+            e.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        } else {
+            e.setText(sp.getString("server", ""));
+            e.setHint("https://ntfy.example.com/");
+            e.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_URI);
+        }
+        new android.app.AlertDialog.Builder(this).setTitle(token ? "Reply server token (optional)" : "Reply server (empty = ntfy.sh)").setView(e)
+                .setPositiveButton(android.R.string.ok, (d, w) -> {
+                    String v = e.getText().toString().trim();
+                    String k = token ? "ntfy_token" : "server";
+                    if (v.isEmpty()) sp.edit().remove(k).apply();
+                    else if (token ? GrokbotDirect.validToken(v) : GrokbotDirect.validServer(v)) sp.edit().putString(k, v).apply();
+                    else Toast.makeText(this, token ? "An ntfy access token starts with tk_" : "The reply server must start with https://", Toast.LENGTH_SHORT).show();
+                    showMenu("grok-bot", null);
+                }).setNegativeButton(android.R.string.cancel, null).show();
+    }
+
     /** xAI API key for the optional Grok voice: typed on the TV, kept in its own prefs, never shown back. */
     private void xaiKeyDialog() {
         android.content.SharedPreferences sp = GrokbotDirectActivity.prefs(this);
@@ -3767,6 +3791,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         });
         p.add("  Sender key", GrokbotDirect.mask(gd.getString("key", "")) + " ›", r -> {
             directDialog(true);
+            return false;
+        });
+        // v2.15 (#70): your own ntfy server for the replies, so ntfy.sh's shared daily quota can't stop them.
+        p.add("  Reply server", android.net.Uri.parse(GrokbotDirect.server(gd.getString("server", ""))).getHost() + " ›", r -> {
+            replyServerDialog(false);
+            return false;
+        });
+        p.add("  Reply server token", gd.getString("ntfy_token", "").isEmpty() ? "none ›" : GrokbotDirect.mask(gd.getString("ntfy_token", "")) + " ›", r -> {
+            replyServerDialog(true);
             return false;
         });
         p.add("  Leggi risposte ad alta voce", gd.getBoolean("speak", true) ? str(R.string.on) : str(R.string.off), r -> {

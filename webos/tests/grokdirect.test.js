@@ -25,9 +25,9 @@ test("headers copy grokbot-ask; key is masked; URL must be https", () => {
   assert.ok(!G.validKey("bad key"));
 });
 
-test("body has question, lang, reply_topic, id, apps, context", () => {
+test("body has question, lang, reply_topic, id, apps, context, reply_server", () => {
   const b = JSON.parse(G.body("hi", "it", "otv-x", "id1", ["Netflix", ""], "ctx"));
-  assert.deepStrictEqual(b, { question: "hi", lang: "it", reply_topic: "otv-x", id: "id1", apps: ["Netflix"], context: "ctx" });
+  assert.deepStrictEqual(b, { question: "hi", lang: "it", reply_topic: "otv-x", id: "id1", apps: ["Netflix"], context: "ctx", reply_server: "https://ntfy.sh/" });
 });
 
 test("find matches on id and validates actions", () => {
@@ -120,4 +120,43 @@ test("xAI voice: body, voice list, 8 s timeout falls back, blob on success", asy
   assert.strictEqual(sent[1].headers.Authorization, "Bearer placeholder-key-123");
   await assert.rejects(G.xaiAudio(st, "x", "", { fetch: () => new Promise(() => {}), setTimeout: (fn) => fn() }), /timeout/);
   await assert.rejects(G.xaiAudio(st, "x", "", { fetch: () => Promise.resolve({ ok: false, status: 401 }), setTimeout: () => {} }), /401/);
+});
+
+test("your own reply server (#70): https only, ntfy.sh otherwise; the routine is told where", () => {
+  const G = require("../app/grokdirect.js");
+  assert.strictEqual(G.server(""), "https://ntfy.sh/");
+  assert.strictEqual(G.server(undefined), "https://ntfy.sh/");
+  assert.strictEqual(G.server("https://ntfy.example.com"), "https://ntfy.example.com/");
+  assert.strictEqual(G.server("https://ntfy.example.com:8443"), "https://ntfy.example.com:8443/");
+  assert.ok(!G.validServer("http://192.168.1.20:2586/"), "the cloud routine can't reach the LAN");
+  assert.ok(!G.validServer("http://ntfy.example.com/"));
+  assert.ok(!G.validServer("http://8.8.8.8/"));
+  assert.ok(!G.validServer("https://x.com/?a=b"));
+  assert.ok(!G.validServer("javascript:alert(1)"));
+  assert.strictEqual(G.serverHost(""), "ntfy.sh");
+  assert.strictEqual(G.serverHost("https://ntfy.example.com:8443"), "ntfy.example.com");
+  assert.strictEqual(G.pollUrl("otv-t", 5), "https://ntfy.sh/otv-t/json?poll=1&since=5");
+  assert.strictEqual(G.pollUrl("otv-t", 5, "https://ntfy.example.com"), "https://ntfy.example.com/otv-t/json?poll=1&since=5");
+  assert.strictEqual(JSON.parse(G.body("q", "it", "otv-t", "id", [], "c", "https://ntfy.example.com")).reply_server, "https://ntfy.example.com/");
+  assert.strictEqual(JSON.parse(G.body("q", "it", "otv-t", "id", [], "c")).reply_server, "https://ntfy.sh/");
+  assert.ok(G.validToken("tk_abcdefgh12345678") && !G.validToken("abc"));
+});
+
+test("ask() posts the server to the routine and reads the replies from it, with the token", async () => {
+  const G = require("../app/grokdirect.js");
+  const calls = [];
+  let t = 1000;
+  const s = { enabled: true, url: "https://hook.example.com/x", key: "crsr_placeholder123", topic: "otv-" + "a".repeat(32),
+    server: "https://ntfy.example.com", ntfyToken: "tk_abcdefgh12345678" };
+  const fetch = (u, o) => {
+    calls.push([u, o]);
+    if (u === s.url) return Promise.resolve({ ok: true, status: 200 });
+    const id = JSON.parse(calls[0][1].body).id;
+    return Promise.resolve({ ok: true, text: () => Promise.resolve(JSON.stringify({ event: "message", message: JSON.stringify({ id, text: "hi" }) })) });
+  };
+  const rep = await new Promise((res) => G.ask(s, "q", "it", [], "c", (e, r) => res(r), { fetch, now: () => (t += 100), setTimeout: (f) => f() }));
+  assert.strictEqual(rep.text, "hi");
+  assert.strictEqual(JSON.parse(calls[0][1].body).reply_server, "https://ntfy.example.com/");
+  assert.ok(calls[1][0].startsWith("https://ntfy.example.com/otv-"));
+  assert.strictEqual(calls[1][1].headers.Authorization, "Bearer tk_abcdefgh12345678");
 });

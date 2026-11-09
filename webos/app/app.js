@@ -3543,6 +3543,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           GBD.xaiVoices(gst).then(function (v) { if (v.length) { gst.xaiVoices = v; GBD.save(window.localStorage, gst); } }, function () {})
             .then(function () { gbdSpeak("Ciao! Sono Grok, con la voce " + gst.xaiVoice + ".", "it"); });
         } });
+      // v2.15 (#70): your own ntfy server for the replies (ntfy.sh's shared daily quota can't stop them), and its token.
+      var srvIdx = items.length;
+      items.push(
+        { label: "Save the reply server typed above (empty = ntfy.sh)", right: GBD.serverHost(gst.server) + " ›", act: function () {
+          var u = code.trim();
+          if (u && !GBD.validServer(u)) { showToast("The reply server must start with https://"); return; }
+          gst.server = u; showToast(u ? "Reply server saved" : "Back to ntfy.sh"); gsave(srvIdx);
+        } },
+        { label: "Save the reply server token typed above (optional)", right: gst.ntfyToken ? GBD.mask(gst.ntfyToken) : "none", act: function () {
+          var k = code.trim();
+          if (k && !GBD.validToken(k)) { showToast("An ntfy access token starts with tk_"); return; }
+          gst.ntfyToken = k; showToast(k ? "Token saved on this TV" : "Token removed"); gsave(srvIdx + 1);
+        } });
     }
     var offIdx = items.length;   // Android parity: companion offset steps 0/24/48/96/160 px, up/down half of it
     items.push({ label: "Companion offset (sideways · up/down)", right: (cfg.companionOffsetX || 0) + " · " + (cfg.companionOffsetY || 0), act: function () {
