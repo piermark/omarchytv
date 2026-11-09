@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK ou jaune : groupe suivant (tous, ★, …)</string>
     <string name="cine_live">DIRECT</string>
     <string name="cine_demo_note">Film libre Blender · CC BY · flux de démo</string>
+    <string name="cine_test_clip_note">Créé pour OmarchyTV · inclus dans l\'app · fonctionne hors ligne</string>
     <string name="cine_queue_empty">À suivre est vide : appuyez sur rouge sur une vidéo</string>
     <string name="cine_queue_clear">Vider À suivre</string>
     <string name="cine_embed">Lire @dhh37 dans Cinemarchy</string>

@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK vagy sárga: következő csoport (mind, ★, …)</string>
     <string name="cine_live">ÉLŐ</string>
     <string name="cine_demo_note">Blender nyílt film · CC BY · demó adás</string>
+    <string name="cine_test_clip_note">Az OmarchyTV-hez készült · az alkalmazásban · offline is működik</string>
     <string name="cine_queue_empty">A Következő üres: nyomd a pirosat egy videón</string>
     <string name="cine_queue_clear">Következő ürítése</string>
     <string name="cine_embed">\@dhh37 lejátszása a Cinemarchyban</string>

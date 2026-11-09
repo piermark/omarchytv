@@ -522,6 +522,7 @@
     <string name="cine_group_hint">OK or yellow: next group (all, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender open movie · CC BY · demo stream</string>
+    <string name="cine_test_clip_note">Made for OmarchyTV · inside the app · plays offline</string>
     <string name="cine_queue_empty">Up next is empty: press red on any video</string>
     <string name="cine_queue_clear">Clear Up next</string>
     <string name="cine_embed">Play @dhh37 inside Cinemarchy</string>

@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK sau galben: grupul următor (toate, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Film liber Blender · CC BY · flux demo</string>
+    <string name="cine_test_clip_note">Creat pentru OmarchyTV · inclus în aplicație · merge și offline</string>
     <string name="cine_queue_empty">Urmează e gol: apasă roșu pe un video</string>
     <string name="cine_queue_clear">Golește Urmează</string>
     <string name="cine_embed">Redă @dhh37 în Cinemarchy</string>

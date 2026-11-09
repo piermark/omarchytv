@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK of geel: volgende groep (alle, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender open film · CC BY · demostream</string>
+    <string name="cine_test_clip_note">Gemaakt voor OmarchyTV · in de app · werkt ook offline</string>
     <string name="cine_queue_empty">Hierna is leeg: druk op rood bij een video</string>
     <string name="cine_queue_clear">Hierna wissen</string>
     <string name="cine_embed">\@dhh37 in Cinemarchy afspelen</string>

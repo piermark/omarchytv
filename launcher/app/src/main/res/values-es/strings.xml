@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK o amarillo: siguiente grupo (todos, ★, …)</string>
     <string name="cine_live">EN VIVO</string>
     <string name="cine_demo_note">Película libre de Blender · CC BY · emisión demo</string>
+    <string name="cine_test_clip_note">Hecho para OmarchyTV · dentro de la app · funciona sin conexión</string>
     <string name="cine_queue_empty">A continuación está vacío: pulsa rojo en un vídeo</string>
     <string name="cine_queue_clear">Vaciar A continuación</string>
     <string name="cine_embed">Reproducir @dhh37 en Cinemarchy</string>

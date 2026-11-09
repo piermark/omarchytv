@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK nebo žlutá: další skupina (vše, ★, …)</string>
     <string name="cine_live">ŽIVĚ</string>
     <string name="cine_demo_note">Otevřený film Blender · CC BY · demo stream</string>
+    <string name="cine_test_clip_note">Vytvořeno pro OmarchyTV · přímo v aplikaci · funguje offline</string>
     <string name="cine_queue_empty">Další je prázdné: stiskni červenou u videa</string>
     <string name="cine_queue_clear">Vyprázdnit Další</string>
     <string name="cine_embed">Přehrávat @dhh37 v Cinemarchy</string>

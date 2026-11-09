@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK lub żółty: następna grupa (wszystkie, ★, …)</string>
     <string name="cine_live">NA ŻYWO</string>
     <string name="cine_demo_note">Otwarty film Blendera · CC BY · strumień demo</string>
+    <string name="cine_test_clip_note">Stworzony dla OmarchyTV · w aplikacji · działa offline</string>
     <string name="cine_queue_empty">Następne jest puste: naciśnij czerwony na filmie</string>
     <string name="cine_queue_clear">Wyczyść Następne</string>
     <string name="cine_embed">Odtwarzaj @dhh37 w Cinemarchy</string>

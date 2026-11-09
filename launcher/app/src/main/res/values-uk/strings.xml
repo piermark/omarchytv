@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK або жовта: наступна група (усі, ★, …)</string>
     <string name="cine_live">ЕФІР</string>
     <string name="cine_demo_note">Відкритий фільм Blender · CC BY · демо-потік</string>
+    <string name="cine_test_clip_note">Створено для OmarchyTV · усередині застосунку · працює офлайн</string>
     <string name="cine_queue_empty">Далі порожньо: натисніть червону на відео</string>
     <string name="cine_queue_clear">Очистити Далі</string>
     <string name="cine_embed">Дивитися @dhh37 у Cinemarchy</string>

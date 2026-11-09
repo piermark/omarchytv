@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK か黄: 次のグループ (すべて, ★, …)</string>
     <string name="cine_live">ライブ</string>
     <string name="cine_demo_note">Blender オープン映画 · CC BY · デモ配信</string>
+    <string name="cine_test_clip_note">OmarchyTV 用に作成 · アプリに内蔵 · オフラインでも再生</string>
     <string name="cine_queue_empty">次に再生は空です: 動画で赤を押してね</string>
     <string name="cine_queue_clear">次に再生を空にする</string>
     <string name="cine_embed">\@dhh37 を Cinemarchy で再生</string>

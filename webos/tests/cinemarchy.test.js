@@ -79,6 +79,10 @@ test("strings in every language, the page loads it, the open movies are labelled
     assert.strictEqual((i18n.match(new RegExp('"' + k + '"', "g")) || []).length, 20, k + " in the 20 other languages");
   });
   assert.ok(fs.readFileSync(path.join(__dirname, "../app/index.html"), "utf8").indexOf('<script src="cinemarchy.js"></script>') > 0);
-  assert.strictEqual(C.DEMO.length, 4);
+  assert.strictEqual(C.DEMO.length, 3);
+  assert.ok(C.DEMO.every((d) => /^https:\/\/(download\.blender\.org|archive\.org)\//.test(d[1])), "only the real open-movie sources (#120)");
+  assert.ok(!/googleapis|gtv-videos-bucket/.test(src), "no dead Google sample links");
+  assert.ok(fs.existsSync(path.join(__dirname, "../app", C.TEST_CLIP)), "the test clip is in the app");
+  assert.ok(fs.readFileSync(path.join(__dirname, "../app", C.TEST_CLIP)).equals(fs.readFileSync(path.join(__dirname, "../../launcher/app/src/main/assets/cinemarchy/omarchytv-test.mp4"))), "the same clip on Android");
   assert.ok(!/4K HDR|OLED|60fps/.test(src));
 });

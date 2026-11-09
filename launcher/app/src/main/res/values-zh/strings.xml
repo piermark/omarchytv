@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK 或黄键: 下一分组 (全部, ★, …)</string>
     <string name="cine_live">直播</string>
     <string name="cine_demo_note">Blender 开放电影 · CC BY · 演示流</string>
+    <string name="cine_test_clip_note">为 OmarchyTV 制作 · 内置于应用 · 离线也能播放</string>
     <string name="cine_queue_empty">接下来为空: 在视频上按红键</string>
     <string name="cine_queue_clear">清空接下来</string>
     <string name="cine_embed">在 Cinemarchy 内播放 @dhh37</string>

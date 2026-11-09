@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK eller gul: nästa grupp (alla, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender öppen film · CC BY · demoström</string>
+    <string name="cine_test_clip_note">Gjord för OmarchyTV · i appen · fungerar offline</string>
     <string name="cine_queue_empty">Härnäst är tom: tryck röd på en video</string>
     <string name="cine_queue_clear">Töm Härnäst</string>
     <string name="cine_embed">Spela @dhh37 i Cinemarchy</string>

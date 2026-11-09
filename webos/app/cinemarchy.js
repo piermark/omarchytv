@@ -13,11 +13,14 @@
 (function (root) {
   "use strict";
   var ROWS0 = 12, RESUME = "omarchytv.cine.resume.v1", MAX_RESUME = 200;
+  // v2.15 (#120): Google's sample bucket answers 403 to everyone now. The test clip ships inside the app (it always
+  // plays, even offline); the Blender open movies (CC BY) come from blender.org and archive.org (checked 9 Nov 2026).
+  var TEST_CLIP = "vendor/cinemarchy/omarchytv-test.mp4";
   var DEMO = [
-    ["Big Buck Bunny", "BigBuckBunny.mp4"], ["Sintel", "Sintel.mp4"],
-    ["Tears of Steel", "TearsOfSteel.mp4"], ["Elephants Dream", "ElephantsDream.mp4"]
+    ["Big Buck Bunny", "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"],
+    ["Tears of Steel", "https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov"],
+    ["Elephants Dream", "https://download.blender.org/ED/elephantsdream-720-h264-st-aac.mov"]
   ];
-  var DEMO_BASE = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/";
 
   function rep(c, n) { var s = ""; for (var i = 0; i < n; i++) s += c; return s; }
   function bar(p, w) { var f = Math.max(0, Math.min(w, Math.round(p * w))); return rep("█", f) + rep("░", w - f); }
@@ -222,7 +225,8 @@
           });
         }
       } else if (id === "demo") {
-        DEMO.forEach(function (d) { out.push(progressItem({ title: d[0], sub: t("cine_demo_note"), badge: "[OPEN]", kind: "stream", url: DEMO_BASE + d[1] })); });
+        out.push(progressItem({ title: "OmarchyTV · test clip (24 s)", sub: t("cine_test_clip_note"), badge: "[TEST]", kind: "stream", url: TEST_CLIP }));
+        DEMO.forEach(function (d) { out.push(progressItem({ title: d[0], sub: t("cine_demo_note"), badge: "[OPEN]", kind: "stream", url: d[1] })); });
       } else if (id === "queue") {
         if (!c.queue.length) out.push({ title: t("cine_queue_empty"), sub: "", badge: "[ ]", kind: "noop" });
         c.queue.forEach(function (it, i) { out.push(progressItem({ title: it.title, sub: host(it.url), badge: "[#" + (i + 1) + "]", kind: "stream", url: it.url, live: !!it.live, queueIdx: i })); });
@@ -555,5 +559,5 @@
     return "";
   }
 
-  root.OmarchyCinemarchy = { open: open, keyName: keyName, parseM3U: parseM3U, bar: bar, fmtTime: fmtTime, asciiArt: asciiArt, Resume: Resume, DEMO: DEMO };
+  root.OmarchyCinemarchy = { open: open, keyName: keyName, parseM3U: parseM3U, bar: bar, fmtTime: fmtTime, asciiArt: asciiArt, Resume: Resume, DEMO: DEMO, TEST_CLIP: TEST_CLIP };
 })(typeof window !== "undefined" ? window : this);

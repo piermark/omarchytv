@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK veya sarı: sonraki grup (tümü, ★, …)</string>
     <string name="cine_live">CANLI</string>
     <string name="cine_demo_note">Blender açık filmi · CC BY · demo yayın</string>
+    <string name="cine_test_clip_note">OmarchyTV için yapıldı · uygulamanın içinde · çevrimdışı da oynar</string>
     <string name="cine_queue_empty">Sıradaki boş: bir videoda kırmızıya bas</string>
     <string name="cine_queue_clear">Sıradakini temizle</string>
     <string name="cine_embed">\@dhh37\'yi Cinemarchy içinde oynat</string>

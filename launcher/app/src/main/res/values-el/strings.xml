@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK ή κίτρινο: επόμενη ομάδα (όλα, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Ανοιχτή ταινία Blender · CC BY · ροή demo</string>
+    <string name="cine_test_clip_note">Φτιαγμένο για το OmarchyTV · μέσα στην εφαρμογή · παίζει και χωρίς σύνδεση</string>
     <string name="cine_queue_empty">Τα Επόμενα είναι άδεια: πάτα κόκκινο σε ένα βίντεο</string>
     <string name="cine_queue_clear">Άδειασμα Επόμενων</string>
     <string name="cine_embed">Αναπαραγωγή @dhh37 στο Cinemarchy</string>

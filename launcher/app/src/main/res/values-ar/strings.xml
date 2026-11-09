@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK أو الأصفر: المجموعة التالية (الكل، ★، …)</string>
     <string name="cine_live">مباشر</string>
     <string name="cine_demo_note">فيلم Blender مفتوح · CC BY · بث تجريبي</string>
+    <string name="cine_test_clip_note">صُنع لـ OmarchyTV · داخل التطبيق · يعمل دون اتصال</string>
     <string name="cine_queue_empty">التالي فارغ: اضغط الأحمر على فيديو</string>
     <string name="cine_queue_clear">إفراغ التالي</string>
     <string name="cine_embed">شغّل @dhh37 داخل Cinemarchy</string>

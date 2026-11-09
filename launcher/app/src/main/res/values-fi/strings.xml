@@ -485,6 +485,7 @@
     <string name="cine_group_hint">OK tai keltainen: seuraava ryhmä (kaikki, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blenderin avoin elokuva · CC BY · demolähetys</string>
+    <string name="cine_test_clip_note">Tehty OmarchyTV:lle · sovelluksen sisällä · toimii ilman verkkoa</string>
     <string name="cine_queue_empty">Seuraavaksi on tyhjä: paina punaista videon kohdalla</string>
     <string name="cine_queue_clear">Tyhjennä Seuraavaksi</string>
     <string name="cine_embed">Toista @dhh37 Cinemarchyssa</string>

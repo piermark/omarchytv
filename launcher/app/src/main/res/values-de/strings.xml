@@ -489,6 +489,7 @@
     <string name="cine_group_hint">OK oder Gelb: nächste Gruppe (alle, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender Open Movie · CC BY · Demo-Stream</string>
+    <string name="cine_test_clip_note">Für OmarchyTV gemacht · in der App · läuft auch offline</string>
     <string name="cine_queue_empty">Als Nächstes ist leer: Rot auf einem Video drücken</string>
     <string name="cine_queue_clear">Als Nächstes leeren</string>
     <string name="cine_embed">\@dhh37 in Cinemarchy abspielen</string>
