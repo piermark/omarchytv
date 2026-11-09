@@ -520,4 +520,7 @@
     <string name="cine_pc_need">先に Omarchy PC をペアリングしてね</string>
     <string name="cine_up">‹ 戻る</string>
     <string name="cine_pc_empty">このフォルダに再生できるものはありません</string>
+    <string name="pulse_notice">新しいスクリーンセーバー: Omarchy Pulse。変更や元に戻すには 設定 › スクリーンセーバー。</string>
+    <string name="ss_pulse_scene">Pulse のシーン</string>
+    <string name="ss_restore_previous">前のスクリーンセーバー</string>
 </resources>

@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Pareie o PC Omarchy primeiro</string>
     <string name="cine_up">‹ voltar</string>
     <string name="cine_pc_empty">Nada para tocar nesta pasta</string>
+    <string name="pulse_notice">Novo protetor de tela: Omarchy Pulse. Configurações › Protetor de tela para mudar ou voltar.</string>
+    <string name="ss_pulse_scene">Cena do Pulse</string>
+    <string name="ss_restore_previous">Protetor de tela anterior</string>
 </resources>

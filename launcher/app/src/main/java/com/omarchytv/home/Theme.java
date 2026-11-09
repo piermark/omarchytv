@@ -78,6 +78,11 @@ final class Theme {
         return out.toArray(new String[0]);
     }
 
+    /** v2.15 Pulse on the TV: a stock theme's colors.toml values (null for a theme pushed by the PC). */
+    static JSONObject paletteOf(Context c, String name) {
+        return palette(c, name);
+    }
+
     private static synchronized JSONObject palette(Context c, String name) {
         try {
             if (bundled == null) {

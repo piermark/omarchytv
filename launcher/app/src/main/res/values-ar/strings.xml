@@ -520,4 +520,7 @@
     <string name="cine_pc_need">اقرن حاسوب Omarchy أولًا</string>
     <string name="cine_up">‹ رجوع</string>
     <string name="cine_pc_empty">لا شيء للتشغيل في هذا المجلد</string>
+    <string name="pulse_notice">شاشة توقف جديدة: Omarchy Pulse. الإعدادات › شاشة التوقف لتغييرها أو للعودة.</string>
+    <string name="ss_pulse_scene">مشهد Pulse</string>
+    <string name="ss_restore_previous">شاشة التوقف السابقة</string>
 </resources>

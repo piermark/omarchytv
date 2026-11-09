@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Asociază întâi PC-ul Omarchy</string>
     <string name="cine_up">‹ înapoi</string>
     <string name="cine_pc_empty">Nimic de redat în acest folder</string>
+    <string name="pulse_notice">Protector de ecran nou: Omarchy Pulse. Setări › Protector de ecran pentru a-l schimba sau a reveni.</string>
+    <string name="ss_pulse_scene">Scena Pulse</string>
+    <string name="ss_restore_previous">Protectorul de ecran anterior</string>
 </resources>

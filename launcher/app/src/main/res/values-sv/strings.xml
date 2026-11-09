@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Para ihop Omarchy-datorn först</string>
     <string name="cine_up">‹ tillbaka</string>
     <string name="cine_pc_empty">Inget att spela i den här mappen</string>
+    <string name="pulse_notice">Ny skärmsläckare: Omarchy Pulse. Inställningar › Skärmsläckare för att byta eller gå tillbaka.</string>
+    <string name="ss_pulse_scene">Pulse-scen</string>
+    <string name="ss_restore_previous">Föregående skärmsläckare</string>
 </resources>

@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Nejdřív spáruj PC Omarchy</string>
     <string name="cine_up">‹ zpět</string>
     <string name="cine_pc_empty">V této složce není co přehrát</string>
+    <string name="pulse_notice">Nový spořič: Omarchy Pulse. Nastavení › Spořič obrazovky pro změnu nebo návrat.</string>
+    <string name="ss_pulse_scene">Scéna Pulse</string>
+    <string name="ss_restore_previous">Předchozí spořič</string>
 </resources>

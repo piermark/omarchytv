@@ -73,8 +73,8 @@ public class ThemeTest {
         try {
             LauncherConfig defCfg = new LauncherConfig(null, null, 0L);
             assertEquals("last-horizon", defCfg.theme.name);
-            assertEquals("aquarium", defCfg.screensaverArt);
-            assertEquals("aquarium", defCfg.screensaverMode);
+            assertEquals("pulse", defCfg.screensaverArt);   // v2.15: Pulse is the default screensaver
+            assertEquals("pulse", defCfg.screensaverMode);
             assertTrue(defCfg.saverSound);
             assertTrue(defCfg.randomTheme);
             assertTrue(defCfg.randomWallpaper);
@@ -164,5 +164,31 @@ public class ThemeTest {
         assertTrue("the fire still comes now and then: " + fires, fires > 10 && fires < 120);
         assertEquals("intros", new LauncherConfig(null, new JSONObject(), 1L).randomScope);
         assertEquals("all", new LauncherConfig(null, new JSONObject().put("randomScope", "all"), 1L).randomScope);
+    }
+
+    @org.junit.Test
+    public void pulseBecomesTheScreensaverOnce_andCanBeUndone() throws Exception {
+        JSONObject j = new JSONObject().put("screensaver", new JSONObject().put("art", "aquarium-classic").put("mode", "aquarium"))
+                .put("living", new JSONObject().put("enabled", true));
+        assertTrue(LauncherConfig.pulseDefault(j));
+        assertEquals("pulse", j.getJSONObject("screensaver").getString("art"));
+        assertEquals("pulse", j.getJSONObject("screensaver").getString("mode"));
+        org.junit.Assert.assertFalse("the Live screen gives way to Pulse", j.getJSONObject("living").getBoolean("enabled"));
+        assertTrue(j.getBoolean("pulseNotice"));
+        org.junit.Assert.assertFalse("only once", LauncherConfig.pulseDefault(j));
+        j.getJSONObject("screensaver").put("art", "omarchy-tv");   // the user picks another one later: it stays
+        org.junit.Assert.assertFalse(LauncherConfig.pulseDefault(j));
+        assertEquals("omarchy-tv", j.getJSONObject("screensaver").getString("art"));
+        assertTrue(LauncherConfig.restoreBeforePulse(j));
+        assertEquals("aquarium-classic", j.getJSONObject("screensaver").getString("art"));
+        assertTrue("the Live screen comes back", j.getJSONObject("living").getBoolean("enabled"));
+        org.junit.Assert.assertFalse(LauncherConfig.restoreBeforePulse(j));
+        JSONObject fresh = new JSONObject();
+        assertTrue(LauncherConfig.pulseDefault(fresh));
+        assertTrue("untouched settings: told once too", fresh.getBoolean("pulseNotice"));
+        assertEquals("the old default comes back", "aquarium", fresh.getJSONObject("ssBefore215").getString("art"));
+        LauncherConfig c = new LauncherConfig(null, fresh, 1L);
+        assertEquals("pulse", c.screensaverArt);
+        assertEquals("sphere", c.pulseScene);
     }
 }

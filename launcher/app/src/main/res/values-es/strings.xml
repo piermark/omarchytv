@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Empareja primero el PC Omarchy</string>
     <string name="cine_up">‹ atrás</string>
     <string name="cine_pc_empty">Nada que reproducir en esta carpeta</string>
+    <string name="pulse_notice">Nuevo salvapantallas: Omarchy Pulse. Ajustes › Salvapantallas para cambiarlo o volver.</string>
+    <string name="ss_pulse_scene">Escena de Pulse</string>
+    <string name="ss_restore_previous">Salvapantallas anterior</string>
 </resources>

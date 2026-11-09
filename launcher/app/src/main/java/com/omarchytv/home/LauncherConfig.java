@@ -493,6 +493,10 @@ final class LauncherConfig {
     final int accent2;               // focus border end, "TV" gradient end
     final String logo;               // "omarchy-tv" (default), "omarchy" or "original" (see Art)
     final String screensaverArt;     // defaults to logo
+    /** v2.15 the Pulse screensaver's scene: sphere (default), skyline, orbit, calm, hacker, noir. */
+    final String pulseScene;
+    /** v2.15: Home says once that Pulse is the new screensaver; "Previous screensaver" can undo the switch. */
+    final boolean pulseNotice, hasSsBefore;
     final boolean screensaverClock;
     /** v2.13: procedural ST3 synth audio for Aquarium screensaver (default true). */
     final boolean saverSound;
@@ -782,10 +786,16 @@ final class LauncherConfig {
         String defLogo = c != null ? c.getString(R.string.logo).trim() : "omarchy-tv";
         logo = j != null ? j.optString("logo", defLogo).trim() : defLogo;
         String defaultSsArt = (ss != null && ss.has("mode") && !"aquarium".equals(ss.optString("mode"))) ? logo : "aquarium";
-        screensaverArt = ss != null ? ss.optString("art", defaultSsArt).trim() : "aquarium";
+        // v2.15: Pulse is the default screensaver (an existing setup is switched once by pulseDefault()).
+        screensaverArt = ss != null ? ss.optString("art", defaultSsArt).trim() : "pulse";
         boolean aqArt = "aquarium".equals(screensaverArt) || "aquarium-classic".equals(screensaverArt);
-        String ssMode = ss != null ? ss.optString("mode", aqArt ? "aquarium" : "logo").trim() : "aquarium";
+        String ssMode = ss != null ? ss.optString("mode", aqArt ? "aquarium" : "logo").trim() : "pulse";
         if (aqArt) ssMode = "aquarium";
+        if ("pulse".equals(screensaverArt)) ssMode = "pulse";
+        String ps = ss != null ? ss.optString("pulseScene", "sphere") : "sphere";
+        pulseNotice = j != null && j.optBoolean("pulseNotice", false);
+        hasSsBefore = j != null && j.optJSONObject("ssBefore215") != null;
+        pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir").contains(ps) ? ps : "sphere";
         screensaverMode = ssMode;
         boolean defSsClock = c != null && c.getResources().getBoolean(R.bool.screensaver_clock);
         screensaverClock = ss != null ? ss.optBoolean("clock", defSsClock) : defSsClock;
@@ -867,6 +877,45 @@ final class LauncherConfig {
      * Rotates theme and/or animated wallpaper/intro in {@code j} according to {@code random_theme} and
      * {@code random_wallpaper} flags. Returns true if {@code j} was modified.
      */
+    /**
+     * v2.15: Pulse becomes everyone's screensaver, once. What was there before (art, mode, the Live screen) is kept in
+     * "ssBefore215" so Settings › Screensaver can put it back; "pulseNotice" asks Home to say so once. Never again after.
+     */
+    static boolean pulseDefault(JSONObject j) throws org.json.JSONException {
+        if (j == null || j.optBoolean("pulseDefault215", false)) return false;
+        JSONObject ss = j.optJSONObject("screensaver");
+        if (ss == null) j.put("screensaver", ss = new JSONObject());
+        JSONObject lv = j.optJSONObject("living");
+        boolean wasPulse = "pulse".equals(ss.optString("art", "")) && (lv == null || !lv.optBoolean("enabled", false));
+        if (!wasPulse) {
+            // no art set yet = the old default, the Aquarium (so "Previous screensaver" brings that back)
+            j.put("ssBefore215", new JSONObject().put("art", ss.optString("art", "aquarium")).put("mode", ss.optString("mode", "aquarium"))
+                    .put("living", lv != null && lv.optBoolean("enabled", false)));
+            j.put("pulseNotice", true);
+        }
+        ss.put("art", "pulse").put("mode", "pulse");
+        if (lv != null) lv.put("enabled", false);
+        j.put("pulseDefault215", true);
+        return true;
+    }
+
+    /** Settings › Screensaver › "Previous screensaver": back to what pulseDefault() replaced. */
+    static boolean restoreBeforePulse(JSONObject j) throws org.json.JSONException {
+        JSONObject b = j != null ? j.optJSONObject("ssBefore215") : null;
+        if (b == null) return false;
+        JSONObject ss = j.optJSONObject("screensaver");
+        if (ss == null) j.put("screensaver", ss = new JSONObject());
+        if (b.optString("art", "").isEmpty()) ss.remove("art"); else ss.put("art", b.optString("art"));
+        if (b.optString("mode", "").isEmpty()) ss.remove("mode"); else ss.put("mode", b.optString("mode"));
+        if (b.optBoolean("living", false)) {
+            JSONObject lv = j.optJSONObject("living");
+            if (lv == null) j.put("living", lv = new JSONObject());
+            lv.put("enabled", true);
+        }
+        j.remove("ssBefore215");
+        return true;
+    }
+
     static boolean applyRandomRotation(JSONObject j, java.util.Random rng) {
         return applyRandomRotation(j, rng, null);
     }

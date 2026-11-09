@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Сначала свяжите ПК Omarchy</string>
     <string name="cine_up">‹ назад</string>
     <string name="cine_pc_empty">В этой папке нечего воспроизвести</string>
+    <string name="pulse_notice">Новая заставка: Omarchy Pulse. Настройки › Заставка, чтобы сменить её или вернуть прежнюю.</string>
+    <string name="ss_pulse_scene">Сцена Pulse</string>
+    <string name="ss_restore_previous">Прежняя заставка</string>
 </resources>

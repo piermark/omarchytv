@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Önce Omarchy PC\'yi eşleştir</string>
     <string name="cine_up">‹ geri</string>
     <string name="cine_pc_empty">Bu klasörde oynatılacak bir şey yok</string>
+    <string name="pulse_notice">Yeni ekran koruyucu: Omarchy Pulse. Değiştirmek ya da geri dönmek için Ayarlar › Ekran koruyucu.</string>
+    <string name="ss_pulse_scene">Pulse sahnesi</string>
+    <string name="ss_restore_previous">Önceki ekran koruyucu</string>
 </resources>

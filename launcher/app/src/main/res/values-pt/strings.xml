@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Emparelha primeiro o PC Omarchy</string>
     <string name="cine_up">‹ voltar</string>
     <string name="cine_pc_empty">Nada para reproduzir nesta pasta</string>
+    <string name="pulse_notice">Nova proteção de ecrã: Omarchy Pulse. Definições › Proteção de ecrã para mudar ou voltar atrás.</string>
+    <string name="ss_pulse_scene">Cena do Pulse</string>
+    <string name="ss_restore_previous">Proteção de ecrã anterior</string>
 </resources>

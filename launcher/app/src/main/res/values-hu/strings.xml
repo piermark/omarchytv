@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Előbb párosítsd az Omarchy PC-t</string>
     <string name="cine_up">‹ vissza</string>
     <string name="cine_pc_empty">Ebben a mappában nincs lejátszható</string>
+    <string name="pulse_notice">Új képernyővédő: Omarchy Pulse. Beállítások › Képernyővédő a módosításhoz vagy a visszaállításhoz.</string>
+    <string name="ss_pulse_scene">Pulse jelenet</string>
+    <string name="ss_restore_previous">Előző képernyővédő</string>
 </resources>

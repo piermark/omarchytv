@@ -524,4 +524,7 @@
     <string name="cine_pc_need">Koppele zuerst den Omarchy-PC</string>
     <string name="cine_up">‹ zurück</string>
     <string name="cine_pc_empty">Nichts Abspielbares in diesem Ordner</string>
+    <string name="pulse_notice">Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.</string>
+    <string name="ss_pulse_scene">Pulse-Szene</string>
+    <string name="ss_restore_previous">Vorheriger Bildschirmschoner</string>
 </resources>

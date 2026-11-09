@@ -520,4 +520,7 @@
     <string name="cine_pc_need">请先配对 Omarchy 电脑</string>
     <string name="cine_up">‹ 返回</string>
     <string name="cine_pc_empty">此文件夹中没有可播放的内容</string>
+    <string name="pulse_notice">新屏保：Omarchy Pulse。在 设置 › 屏保 中更换或恢复。</string>
+    <string name="ss_pulse_scene">Pulse 场景</string>
+    <string name="ss_restore_previous">之前的屏保</string>
 </resources>

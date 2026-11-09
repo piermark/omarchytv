@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Par Omarchy-PC-en først</string>
     <string name="cine_up">‹ tilbake</string>
     <string name="cine_pc_empty">Ingenting å spille i denne mappen</string>
+    <string name="pulse_notice">Ny skjermsparer: Omarchy Pulse. Innstillinger › Skjermsparer for å bytte eller gå tilbake.</string>
+    <string name="ss_pulse_scene">Pulse-scene</string>
+    <string name="ss_restore_previous">Forrige skjermsparer</string>
 </resources>

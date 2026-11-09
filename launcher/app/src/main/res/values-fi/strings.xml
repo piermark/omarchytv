@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Muodosta ensin pari Omarchy-PC:n kanssa</string>
     <string name="cine_up">‹ takaisin</string>
     <string name="cine_pc_empty">Tässä kansiossa ei ole toistettavaa</string>
+    <string name="pulse_notice">Uusi näytönsäästäjä: Omarchy Pulse. Asetukset › Näytönsäästäjä vaihtaaksesi tai palataksesi.</string>
+    <string name="ss_pulse_scene">Pulse-näkymä</string>
+    <string name="ss_restore_previous">Edellinen näytönsäästäjä</string>
 </resources>

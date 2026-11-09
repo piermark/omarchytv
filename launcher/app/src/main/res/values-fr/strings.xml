@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Associez d\'abord le PC Omarchy</string>
     <string name="cine_up">‹ retour</string>
     <string name="cine_pc_empty">Rien à lire dans ce dossier</string>
+    <string name="pulse_notice">Nouvel économiseur : Omarchy Pulse. Réglages › Économiseur pour le changer ou revenir en arrière.</string>
+    <string name="ss_pulse_scene">Scène de Pulse</string>
+    <string name="ss_restore_previous">Économiseur précédent</string>
 </resources>

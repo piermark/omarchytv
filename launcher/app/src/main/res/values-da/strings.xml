@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Par Omarchy-pc\'en først</string>
     <string name="cine_up">‹ tilbage</string>
     <string name="cine_pc_empty">Intet at afspille i denne mappe</string>
+    <string name="pulse_notice">Ny pauseskærm: Omarchy Pulse. Indstillinger › Pauseskærm for at skifte eller gå tilbage.</string>
+    <string name="ss_pulse_scene">Pulse-scene</string>
+    <string name="ss_restore_previous">Forrige pauseskærm</string>
 </resources>

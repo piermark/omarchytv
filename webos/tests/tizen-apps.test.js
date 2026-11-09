@@ -158,7 +158,9 @@ test("uninstalling the focused All Apps tile moves focus to the last remaining a
   assert.deepStrictEqual(tz.calls, ["3201907018807"]);
   t.press("ArrowLeft"); t.press("Enter");
   assert.deepStrictEqual(tz.calls, ["3201907018807", "111299001912"], "navigation still works after the shrink");
-  assert.deepStrictEqual(JSON.parse(t.store.omarchytv_cfg_2110), cfg, "saved order and hidden apps are untouched");
+  const saved = JSON.parse(t.store.omarchytv_cfg_2110);
+  for (const k of ["saverMode", "saverArt", "living", "pulseDefault215", "ssBefore215", "pulseNotice"]) delete saved[k];   // v2.15: the one-time switch to Pulse
+  assert.deepStrictEqual(saved, cfg, "saved order and hidden apps are untouched");
 });
 
 test("a catalogue shrink keeps a surviving focused app by id on both the dock and All Apps", () => {

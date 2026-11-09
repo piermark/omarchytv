@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Najpierw sparuj komputer Omarchy</string>
     <string name="cine_up">‹ wstecz</string>
     <string name="cine_pc_empty">Brak plików do odtworzenia</string>
+    <string name="pulse_notice">Nowy wygaszacz: Omarchy Pulse. Ustawienia › Wygaszacz, aby go zmienić lub wrócić.</string>
+    <string name="ss_pulse_scene">Scena Pulse</string>
+    <string name="ss_restore_previous">Poprzedni wygaszacz</string>
 </resources>

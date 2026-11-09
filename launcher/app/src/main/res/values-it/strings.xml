@@ -524,4 +524,7 @@
     <string name="cine_pc_need">Abbina prima il PC Omarchy</string>
     <string name="cine_up">‹ indietro</string>
     <string name="cine_pc_empty">Niente da riprodurre in questa cartella</string>
+    <string name="pulse_notice">Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.</string>
+    <string name="ss_pulse_scene">Scena di Pulse</string>
+    <string name="ss_restore_previous">Salvaschermo precedente</string>
 </resources>

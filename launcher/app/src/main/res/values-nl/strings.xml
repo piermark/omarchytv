@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Koppel eerst de Omarchy-pc</string>
     <string name="cine_up">‹ terug</string>
     <string name="cine_pc_empty">Niets af te spelen in deze map</string>
+    <string name="pulse_notice">Nieuwe schermbeveiliging: Omarchy Pulse. Instellingen › Schermbeveiliging om te wijzigen of terug te gaan.</string>
+    <string name="ss_pulse_scene">Pulse-scène</string>
+    <string name="ss_restore_previous">Vorige schermbeveiliging</string>
 </resources>

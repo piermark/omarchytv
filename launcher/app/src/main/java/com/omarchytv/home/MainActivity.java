@@ -1000,7 +1000,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));   // v2.14 OmaFire animated wallpaper   // "wake" mode: replay after the screen came on
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
+        LauncherConfig.update(this, j -> LauncherConfig.pulseDefault(j));   // v2.15: Pulse for everyone, once
         LauncherConfig cfg = LauncherConfig.get(this);
+        if (cfg.pulseNotice) {
+            Toast.makeText(this, R.string.pulse_notice, Toast.LENGTH_LONG).show();
+            LauncherConfig.update(this, j -> j.remove("pulseNotice"));
+            cfg = LauncherConfig.get(this);
+        }
         if (builtWith != null && reopenPage == null && (cfg.randomTheme || cfg.randomWallpaper)) {
             final String[] allThemes = Theme.names(this);
             LauncherConfig.update(this, j -> LauncherConfig.applyRandomRotation(j, new java.util.Random(), allThemes));
@@ -3333,7 +3339,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     private AsciiMenu.Page screensaverPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
-        String[] logos = {"aquarium", "aquarium-classic", "omarchy-tv", "omarchy", "cinemarchy", "original"};
+        String[] logos = {"pulse", "aquarium", "aquarium-classic", "omarchy-tv", "omarchy", "cinemarchy", "original"};
         String[] sizes = {"small", "medium", "large"};
         String lLogo = str(R.string.set_logo), lSize = str(R.string.ss_size), lClock = str(R.string.ss_clock);
         AsciiMenu.Page p = new AsciiMenu.Page(str(R.string.menu_screensaver));
@@ -3343,10 +3349,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         });
         p.add(lLogo, logoLabel(cfg.screensaverArt), r -> {
             String n = next(logos, cfg.screensaverArt);
-            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", n.startsWith("aquarium") ? "aquarium" : "logo")
+            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", "pulse".equals(n) ? "pulse" : n.startsWith("aquarium") ? "aquarium" : "logo")
                     .put("pcText", false));   // #84: a logo chosen here wins over a screensaver.txt pushed by the PC
             return true;
         });
+        if ("pulse".equals(cfg.screensaverArt)) {   // v2.15: Pulse's scene
+            String[] scenes = {"sphere", "skyline", "orbit", "calm", "hacker", "noir"};
+            String lScene = str(R.string.ss_pulse_scene);
+            p.add(lScene, cfg.pulseScene, r -> {
+                String n = next(scenes, cfg.pulseScene);
+                applyLive("screensaver", lScene, j -> screensaver(j).put("pulseScene", n));
+                return true;
+            });
+        }
+        if (cfg.hasSsBefore) {   // v2.15: undo the one-time switch to Pulse
+            String lPrev = str(R.string.ss_restore_previous);
+            p.add(lPrev, "›", r -> {
+                applyLive("screensaver", lPrev, j -> LauncherConfig.restoreBeforePulse(j));
+                return true;
+            });
+        }
         if (!cfg.screensaverText.isEmpty()) {   // #84: only when the PC really pushed a text
             String lFromPc = str(R.string.ss_from_pc);
             p.add(lFromPc, str(cfg.screensaverFromPc ? R.string.on : R.string.off), r -> {
@@ -3895,6 +3917,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     private String logoLabel(String l) {
+        if ("pulse".equals(l)) return "Omarchy Pulse";
         if ("aquarium".equals(l)) return "Omarchy Aquarium (homage)";
         if ("aquarium-classic".equals(l)) return "Aquarium Classic";
         if ("cinemarchy".equals(l)) return "CINEMARCHY";

@@ -520,4 +520,7 @@
     <string name="cine_pc_need">Σύζευξε πρώτα το PC Omarchy</string>
     <string name="cine_up">‹ πίσω</string>
     <string name="cine_pc_empty">Τίποτα για αναπαραγωγή εδώ</string>
+    <string name="pulse_notice">Νέα προφύλαξη οθόνης: Omarchy Pulse. Ρυθμίσεις › Προφύλαξη οθόνης για αλλαγή ή επιστροφή.</string>
+    <string name="ss_pulse_scene">Σκηνή Pulse</string>
+    <string name="ss_restore_previous">Προηγούμενη προφύλαξη</string>
 </resources>

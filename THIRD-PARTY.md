@@ -111,6 +111,18 @@ from the user's Omarchy install (not redistributed). If published, the plugin mu
 | Blender open movies in Cinemarchy (*Big Buck Bunny*, *Tears of Steel*, *Elephants Dream*) | Blender Foundation | https://archive.org/details/BigBuckBunny_124, https://download.blender.org | CC BY 3.0 | Linked and streamed from the official copies, not bundled. |
 | Cinemarchy test clip (`assets/cinemarchy/omarchytv-test.mp4`, `webos/app/vendor/cinemarchy/`) | Marco Porro (OmarchyTV) | generated with FFmpeg's `smptehdbars`, `testsrc2`, `sine` and `aevalsrc` sources | MIT (part of OmarchyTV) | No third-party footage or audio. |
 
+## 7d. Pulse on the TV (2.15)
+| Item | Author | Source | Licence | Notes |
+|---|---|---|---|---|
+| Omarchy Pulse 1.6 page (`pulse.js`, `pulse.css`, `index.html`, `omarchy.png`) in `webos/app/vendor/pulse/` and `assets/pulse/` | Marco Porro | https://github.com/piermark/omarchy-pulse-theme | MIT | Unchanged except `index.html` (the bundled font, the TV scripts). |
+| Sky tables in `pulse-tv-data.js` (bright stars, constellation lines, meteor showers, JPL approximate planet elements) | Omarchy Pulse; elements from E. M. Standish (JPL), "Keplerian Elements for Approximate Positions of the Major Planets" | `tools/pulse-tv-data.py` reads them from omarchy-pulse | MIT (tables); public-domain science | |
+| Planes over the TV | adsb.lol (Android, read through the launcher), adsbdb.com (routes) | https://api.adsb.lol, https://api.adsbdb.com | adsb.lol data ODbL 1.0 | Read live, kept in memory only; nothing stored or redistributed. |
+| ISS position | wheretheiss.at | https://wheretheiss.at | free API | |
+| Starlink orbits | CelesTrak (Android; LG/Samsung through the paired PC) | https://celestrak.org | free data | |
+| Rocket launches | Launch Library 2, The Space Devs | https://thespacedevs.com | free API (15 calls an hour) | Read 4 times an hour. |
+| Kp index | NOAA SWPC | https://services.swpc.noaa.gov | US public domain | |
+| Weather | Open-Meteo | https://open-meteo.com | CC BY 4.0 | |
+
 ## 8. Trademarks
 Netflix, YouTube, Google, Android, Android TV, Google TV, Chromecast, Sony, BRAVIA, X, Prime Video, Disney+, Spotify and
 all other product names, logos and app icons that appear in the launcher or in screenshots are trademarks of their

@@ -557,4 +557,7 @@
     <string name="cine_pc_need">Pair the Omarchy PC first</string>
     <string name="cine_up">‹ back</string>
     <string name="cine_pc_empty">Nothing to play in this folder</string>
+    <string name="pulse_notice">New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.</string>
+    <string name="ss_pulse_scene">Pulse scene</string>
+    <string name="ss_restore_previous">Previous screensaver</string>
 </resources>
