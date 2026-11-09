@@ -103,7 +103,7 @@ session of either series, ticking every second (`"racing": {"bar": false}` hides
 "racing": { "timezone": "Asia/Bangkok", "bar": true }
 ```
 
-Times are 24 h in `racing.timezone` (any tz id, default `Asia/Bangkok`). Sources, both official and keyless: MotoGP from
+Times are 24 h in `racing.timezone` (any tz id, default: the TV's own time zone). Sources, both official and keyless: MotoGP from
 `api.motogp.pulselive.com` (the API behind motogp.com; MotoGP class only, no warm-up, cancelled sessions hidden), F1
 from the formula1.com page of the next meeting (formula1.com has no public season feed). `assets/racing_2026.json`
 is a snapshot of both calendars, so the panel works offline; refresh it with `python3 tools/racing_calendar.py`.

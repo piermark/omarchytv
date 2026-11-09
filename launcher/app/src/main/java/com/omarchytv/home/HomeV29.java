@@ -817,7 +817,7 @@ final class HomeV29 extends FrameLayout {
     }
 
     private static String raceZoneLabel(java.util.TimeZone tz) {
-        return Racing.DEFAULT_ZONE.equals(tz.getID()) ? "thai time" : Racing.zoneLabel(tz);
+        return Racing.zoneLabel(tz);
     }
 
     private static String shortName(Racing.Meeting m) {

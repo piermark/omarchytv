@@ -214,9 +214,11 @@ final class Racing {
     // ---- formatting -------------------------------------------------------------------------------------------
 
     static TimeZone zone(String id) {
-        TimeZone tz = TimeZone.getTimeZone(id == null || id.isEmpty() ? DEFAULT_ZONE : id);
-        // getTimeZone answers GMT for an unknown id: fall back to Bangkok rather than silently showing UTC.
-        return "GMT".equals(tz.getID()) && !"GMT".equalsIgnoreCase(id) ? TimeZone.getTimeZone(DEFAULT_ZONE) : tz;
+        // 2.15: no racing.timezone means the TV's own time zone; an unknown id too (getTimeZone answers GMT for
+        // those, and silently showing UTC would be wrong).
+        if (id == null || id.isEmpty()) return TimeZone.getDefault();
+        TimeZone tz = TimeZone.getTimeZone(id);
+        return "GMT".equals(tz.getID()) && !"GMT".equalsIgnoreCase(id) ? TimeZone.getDefault() : tz;
     }
 
     /** "sun 22 nov 11:00" in the given zone (24 h, the way race schedules are printed). */

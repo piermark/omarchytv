@@ -41,8 +41,8 @@ public class RacingTest {
         assertEquals("sun 22 nov 11:00", Racing.when(Racing.utc("2026-11-21T20:00:00-08:00"), BKK, Locale.ENGLISH));
         // São Paulo: Sunday 14:00 local is Monday 00:00 in Thailand
         assertEquals("mon 9 nov 00:00", Racing.when(Racing.utc("2026-11-08T17:00:00Z"), BKK, Locale.ENGLISH));
-        assertEquals("Asia/Bangkok", Racing.zone("Not/AZone").getID());
-        assertEquals("Asia/Bangkok", Racing.zone("").getID());
+        assertEquals(TimeZone.getDefault().getID(), Racing.zone("Not/AZone").getID());   // 2.15: the TV's own zone
+        assertEquals(TimeZone.getDefault().getID(), Racing.zone("").getID());
     }
 
     @Test

@@ -838,7 +838,7 @@ final class LauncherConfig {
         wRacing = hw != null && hw.optBoolean("racing", false);   // opt-in: a new widget never appears unasked
         JSONObject rc = j != null ? j.optJSONObject("racing") : null;
         barRacing = rc != null && rc.has("bar") ? rc.optBoolean("bar") : wRacing;   // follows the widget unless set
-        racingTz = rc != null && !rc.optString("timezone", "").trim().isEmpty() ? rc.optString("timezone").trim() : Racing.DEFAULT_ZONE;
+        racingTz = rc != null && !rc.optString("timezone", "").trim().isEmpty() ? rc.optString("timezone").trim() : "";   // 2.15: "" = the TV's own zone
         java.util.Map<String, int[]> ppos = new java.util.HashMap<>();
         JSONObject pj = j != null ? j.optJSONObject("panelPos") : null;
         if (pj != null) for (java.util.Iterator<String> it = pj.keys(); it.hasNext(); ) {
