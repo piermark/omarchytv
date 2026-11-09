@@ -239,6 +239,21 @@ class UpdatePowerBridgeTest(unittest.TestCase):
         self.assertEqual(self.post("/v1/living", {}, tok)[0], 403)
         webos._living_obj = None
 
+    def test_pulse_state_for_the_tv(self):   # 2.15 Pulse on the TV
+        class PS:
+            st = {"v": "1.6.0", "agents": [{"name": "codex"}]}
+
+            @staticmethod
+            def read():
+                return PS.st
+        webos._link_mod = lambda n: PS if n == "pulse_state" else None
+        self.assertEqual(self.post("/v1/pulse", {})[0], 401)
+        tok = webos.bridge_token()
+        st, d = self.post("/v1/pulse", {}, tok)
+        self.assertEqual((st, d["agents"][0]["name"]), (200, "codex"))
+        PS.st = None
+        self.assertEqual(self.post("/v1/pulse", {}, tok)[0], 404)   # Pulse not running on the PC
+
     def test_status_has_liftoff(self):
         with urllib.request.urlopen(self.base + "/v1/status", timeout=5) as r:
             self.assertIn("liftoff", json.loads(r.read()))

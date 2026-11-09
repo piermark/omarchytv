@@ -942,6 +942,10 @@ public final class OmarchyLink implements LinkServer.Host {
             Living.set(data);
             return;
         }
+        if ("pulse".equals(type)) {   // v2.15: the PC's Pulse, for the Pulse screensaver (PulseLink, memory only)
+            PulseLink.put(data.toString());
+            return;
+        }
         if ("pc_wol".equals(type)) {   // remember the PC's MAC for Wake-on-LAN; rewrite only when it changed
             LauncherConfig cur = LauncherConfig.get(app);
             String mac = data.optString("mac", ""), bc = data.optString("broadcast", "");

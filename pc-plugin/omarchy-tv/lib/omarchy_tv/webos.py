@@ -25,6 +25,8 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
                                       (updateFromTv in omarchy-link's config) -> {current, latest} | {result}
   POST /v1/power                   -> same token; {state: standby|on}: TV and PC power together (omarchy-link
                                       power.py: suspend after powerGraceS, cancelled when the TV comes back)
+  POST /v1/pulse                   -> same token; this PC's Omarchy Pulse state for the TV's Pulse screensaver
+                                      (private panels, calendar titles, device names removed), 404 if Pulse is off
   POST /v1/living                  -> same token; {notes, github, x: off|notify|api}: the Living screensaver asks
                                       while it runs (every few seconds) -> {github, notes, x, xMode, xError?}
                                       (omarchy-link living.py; notifications only when asked, never stored)
@@ -347,7 +349,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
         global _last_ask
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
-                        "/v1/update/tv", "/v1/power", "/v1/living"):
+                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse"):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -381,6 +383,11 @@ class WebOSHandler(BaseHTTPRequestHandler):
             return
         if path == "/v1/living":
             self._living(body)
+            return
+        if path == "/v1/pulse":   # 2.15 Pulse on the TV: this PC's Pulse state, private parts removed
+            ps = _link_mod("pulse_state")
+            st = ps.read() if ps else None
+            self._send_json(st if st else {"error": "pulse_off"}, 200 if st else 404)
             return
         g = _grokbot()
         if not g:
