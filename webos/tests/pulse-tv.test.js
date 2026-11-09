@@ -157,3 +157,36 @@ test("the page's bridge: /api/state and /api/live answered on the TV, nothing re
   const pj = fs.readFileSync(V + "pulse.js", "utf8");
   assert.ok(/getJSON\("\/api\/state"\)/.test(pj) && /new EventSource\("\/api\/live/.test(pj), "pulse.js as Pulse 1.6 ships it");
 });
+
+test("the TV's own panels with no PC: the sky, space, planes, the air, earthquakes, Omarchy; the PC's panels and colours when paired", async () => {
+  const air = P.airFrom({ current: { european_aqi: 47.4, grass_pollen: 31, birch_pollen: 2 } });
+  assert.deepStrictEqual(air, { aqi: 47, level: "moderate", pollen: "grass", pollenLevel: "moderate" });
+  assert.strictEqual(P.airFrom({ current: { european_aqi: 12 } }).pollen, "");
+  assert.strictEqual(P.airFrom(null), null);
+  const q = P.quakesFrom({ features: [
+    { properties: { place: "far away", mag: 6.8, time: 1e12 }, geometry: { coordinates: [140, 35] } },
+    { properties: { place: "near", mag: 4.6, time: 1e12 }, geometry: { coordinates: [9.2, 45.4] } }] }, 44.91, 8.61);
+  assert.strictEqual(q[0].title, "near", "a quake within 1000 km first");
+  assert.ok(q[0].km < 100 && q[1].level === "crit" && q[1].right === "M6.8");
+  const t = { v: 1794268800 };
+  const h = hubAt(t, { answers: {
+    "air-quality": { current: { european_aqi: 18 } },
+    "earthquake.usgs.gov": { features: [{ properties: { place: "Off the coast", mag: 5.1, time: 1794260000000 }, geometry: { coordinates: [10, 40] } }] },
+    "api.github.com": [{ tag_name: "v3.2.0", name: "Hyprland 0.52", published_at: "2026-11-01T10:00:00Z" }, { tag_name: "v3.3.0-rc", draft: true }] } });
+  h._tick.night(); h._tick.air(); h._tick.quakes(); h._tick.omarchy();
+  await new Promise((r) => setImmediate(r));
+  let st = h.state();
+  const ids = st.widgets.map((w) => w.id);
+  ["tv-sky", "tv-space", "tv-quakes", "tv-omarchy"].forEach((id) => assert.ok(ids.includes(id), id));
+  assert.strictEqual(st.air.level, "good", "the air row under the weather and the haze over the city");
+  assert.ok(st.widgets.find((w) => w.id === "tv-sky").data.rows.some((r) => r[0] === "moon"));
+  assert.deepStrictEqual(st.widgets.find((w) => w.id === "tv-omarchy").data.items.map((i) => i.title), ["Omarchy 3.2.0"]);
+  // paired: the PC's panels and its theme
+  const pcSt = { v: "1.6.0", widgets: [{ id: "github", type: "list" }], theme: { name: "kanagawa", colors: { accent: "#7e9cd8" } } };
+  const h2 = hubAt(t, { cfg: { pc: () => Promise.resolve(pcSt) }, answers: { "earthquake.usgs.gov": { features: [] } } });
+  h2._tick.night(); h2._tick.pc();
+  await new Promise((r) => setImmediate(r));
+  st = h2.state();
+  assert.deepStrictEqual(st.widgets.map((w) => w.id), ["github"]);
+  assert.strictEqual(st.theme.name, "kanagawa", "the same colours as on the PC");
+});

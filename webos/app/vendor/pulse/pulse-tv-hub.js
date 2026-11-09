@@ -258,6 +258,28 @@
   var TIPS = ["SUPER + SPACE · Launch apps", "SUPER + RETURN · Terminal", "SUPER + K · Show key bindings", "SUPER + W · Close window",
     "SUPER + ALT + SPACE · Omarchy menu", "SUPER + CTRL + SPACE · Next background", "SUPER + SHIFT + B · Browser", "SUPER + ESCAPE · Lock, suspend, restart"];
 
+  /** Open-Meteo's air: {aqi, level, pollen, pollenLevel} as the PC's hub hands it to Pulse. */
+  function airFrom(j) {
+    var c = j && j.current;
+    if (!c || c.european_aqi == null) return null;
+    var a = c.european_aqi, level = a <= 20 ? "good" : a <= 40 ? "fair" : a <= 60 ? "moderate" : a <= 80 ? "poor" : a <= 100 ? "very poor" : "extremely poor";
+    var best = null, v = 0;
+    ["alder", "birch", "grass", "mugwort", "olive", "ragweed"].forEach(function (p) { var x = +c[p + "_pollen"] || 0; if (x > v) { v = x; best = p; } });
+    return { aqi: Math.round(a), level: level, pollen: v >= 1 ? best : "", pollenLevel: v < 1 ? "" : v < 20 ? "low" : v < 50 ? "moderate" : v < 100 ? "high" : "very high" };
+  }
+  /** USGS's last day of M4.5+, nearest first when one is within 1000 km, else the strongest. */
+  function quakesFrom(j, lat, lon) {
+    return (j.features || []).map(function (f) {
+      var p = f.properties || {}, g = (f.geometry || {}).coordinates || [], km = isFinite(lat) && g.length > 1 ? distKm(lat, lon, g[1], g[0]) : 1e9;
+      return { title: String(p.place || "?").slice(0, 40), text: km < 1e8 ? Math.round(km) + " km away" : "", right: "M" + (+p.mag || 0).toFixed(1),
+        level: p.mag >= 6.5 ? "crit" : p.mag >= 5.5 ? "warn" : "", t: Math.floor((p.time || 0) / 1000), mag: +p.mag || 0, km: km };
+    }).sort(function (a, b) { return (a.km < 1000) !== (b.km < 1000) ? (a.km < 1000 ? -1 : 1) : b.mag - a.mag; });
+  }
+  function distKm(a1, o1, a2, o2) {
+    var r = Math.PI / 180, d = Math.sin((a2 - a1) * r / 2), e = Math.sin((o2 - o1) * r / 2);
+    return 12742 * Math.asin(Math.sqrt(d * d + Math.cos(a1 * r) * Math.cos(a2 * r) * e * e));
+  }
+
   // ------------------------------------------------------------------ the hub
   /**
    * cfg: {lat, lon, city, imperial, theme: {name, colors}, quality, motion, scene, pc: {state: fn() -> Promise|null},
@@ -267,7 +289,7 @@
   function create(cfg, net, clock) {
     clock = clock || now;
     var lat = Number(cfg.lat), lon = Number(cfg.lon), hasLoc = isFinite(lat) && isFinite(lon) && !(lat === 0 && lon === 0);
-    var S = { weather: null, sky: [], skyT: 0, space: { iss: null, kp: null, launch: null }, launches: [], starlink: { sats: [], next: null },
+    var S = { air: null, quakes: [], omarchy: [], weather: null, sky: [], skyT: 0, space: { iss: null, kp: null, launch: null }, launches: [], starlink: { sats: [], next: null },
       night: null, fxSeq: 0, fx: [], hist: { cpu: [], rx: [], tx: [] }, sys: null, pc: null };
     var groups = {}, passes = [], track = [], issUp = false, launched = {}, told = {}, routes = {}, routeQ = [], timers = [], fxCbs = [];
     function fx(kind, text, extra) {
@@ -342,6 +364,22 @@
       if (l[1] > 10 && !issUp) fx("iss", "ISS overhead · " + Math.round(p.velocity || 27600).toLocaleString("en") + " km/h", { az: rnd(l[0], 1) });
       issUp = l[1] > 10;
     }
+    // 2.15 more of what the TV can read on its own (free public services, no key): the air, earthquakes, Omarchy
+    function airq() {
+      if (!hasLoc) return;
+      quiet(net("https://air-quality-api.open-meteo.com/v1/air-quality?latitude=" + lat + "&longitude=" + lon +
+        "&current=european_aqi,alder_pollen,birch_pollen,grass_pollen,mugwort_pollen,olive_pollen,ragweed_pollen")).then(function (j) { S.air = airFrom(j); });
+    }
+    function quakes() {
+      quiet(net("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/4.5_day.geojson")).then(function (j) { if (j && j.features) S.quakes = quakesFrom(j, lat, lon); });
+    }
+    function omarchy() {   // 60 calls an hour without a key: 4 a day here
+      quiet(net("https://api.github.com/repos/basecamp/omarchy/releases?per_page=4")).then(function (j) {
+        if (j && j.length) S.omarchy = j.filter(function (r) { return r && r.tag_name && !r.draft; }).slice(0, 4).map(function (r) {
+          return { title: "Omarchy " + String(r.tag_name).replace(/^v/, ""), text: String(r.name || "") === String(r.tag_name) ? "" : String(r.name || "").slice(0, 60), t: Math.floor(Date.parse(r.published_at) / 1000) || 0 };
+        });
+      });
+    }
     function kp() { quiet(net("https://services.swpc.noaa.gov/products/noaa-planetary-k-index.json")).then(function (j) { var k = latestKp(j); if (k != null) S.space.kp = k; }); }
     function launches() {
       if (cfg.launches === "off") return;
@@ -403,6 +441,9 @@
       every(E.route || 4000, route);
       every(E.iss || 5000, iss);
       every(E.kp || 900000, kp);
+      every(E.air || 1800000, airq);
+      every(E.quakes || 900000, quakes);
+      every(E.omarchy || 6 * 3600000, omarchy);
       every(E.launches || 900000, launches);   // the free API allows 15 calls an hour: 4 here
       every(E.launchTick || 1000, launchTick);
       every(E.starlink || 6 * 3600000, starlinkFetch);
@@ -423,11 +464,12 @@
       var ls = S.launches.filter(function (x) { return x.net > t - 120; }).slice(0, 3);
       var widgets = ls.length ? [{ id: "launches", title: "launches", type: "list", slot: "ticker", order: 27, icon: "󱓞",
         data: { items: ls.map(function (x) { return { title: x.rocket + " · " + x.mission, text: countdown(x.net - t) + " · " + x.status, t: x.net }; }) } }] : [];
+      widgets = widgets.concat(tvPanels(t));
       var st = { v: "1.6.0-tv", t: t, demo: false, tv: true, sys: S.sys, hist: S.hist, weather: w, widgets: widgets, alerts: [], privacy: false, screencast: false,
         mons: {}, theme: cfg.theme || { name: "", colors: {} }, agents: [], focus: null, git: [], space: { iss: S.space.iss, kp: S.space.kp, launch: S.space.launch },
         heart: null, listen: null, speaking: false, fxSeq: S.fxSeq, music: false, perfProbe: false, growth: null,
-        sky: t - S.skyT < 120 ? S.sky : [], calendar: [], meeting: false, night: S.night, season: {}, eclipses: [], expiry: [], energy: null, net: null, bolts: [],
-        term: [], noc: { on: false, incident: null }, starlink: S.starlink, storms: null, air: null, robots: [], car: null, ring: false, timelapse: false,
+        sky: t - S.skyT < 120 ? S.sky : [], calendar: [], air: S.air, meeting: false, night: S.night, season: {}, eclipses: [], expiry: [], energy: null, net: null, bolts: [],
+        term: [], noc: { on: false, incident: null }, starlink: S.starlink, storms: null, robots: [], car: null, ring: false, timelapse: false,
         timelapseEvery: 0, away: false, digest: null, tower: [], tips: TIPS, updates: null, layout: {}, layoutEdit: false, friends: [], lan: [],
         scene: null, sceneTicket: "", ui: ui };
       var pc = S.pc;
@@ -437,7 +479,10 @@
           if (pc[k] !== undefined && pc[k] !== null) st[k] = pc[k];
         });
         if (pc.sys) { st.sys = pc.sys; st.hist = pc.hist || st.hist; st.ui.system = true; st.ui.network = true; }
-        if (pc.widgets && ls.length) st.widgets = pc.widgets.concat(widgets.filter(function (x) { return !pc.widgets.some(function (y) { return y.id === x.id; }); }));
+        // the PC's panels take the screen; of the TV's own only the launches stay (in the ticker)
+        if (pc.widgets) st.widgets = pc.widgets.concat(widgets.filter(function (x) { return x.id === "launches" && !pc.widgets.some(function (y) { return y.id === x.id; }); }));
+        if (pc.theme && pc.theme.colors && Object.keys(pc.theme.colors).length) st.theme = pc.theme;   // the PC's colours: the same Pulse on both
+        if (!S.air && pc.air) st.air = pc.air;
         if (pc.ui) ["face", "agentsAs", "ivy", "banner", "music", "cars"].forEach(function (k) { if (pc.ui[k] !== undefined) st.ui[k] = pc.ui[k]; });
         if (!w && pc.weather) st.weather = pc.weather;
         if (!S.night && pc.night) st.night = pc.night;
@@ -447,6 +492,33 @@
         if (!st.space.launch && pc.space && pc.space.launch) st.space.launch = pc.space.launch;
       }
       return st;
+    }
+    /** 2.15 the panels of a TV with no PC: everything it can read by itself. */
+    function tvPanels(t) {
+      var out = [], n = S.night, w = S.weather;
+      if (n && n.moon) {
+        var rows = [["moon", n.moon.name + " · " + Math.round(n.moon.lit * 100) + "%"]];
+        if (w && w.sunrise) rows.push(["sun", "↑ " + w.sunrise + "  ↓ " + w.sunset]);
+        var up = (n.planets || []).filter(function (p) { return p.el > 5; }).map(function (p) { return p.n; });
+        rows.push(["planets", up.length ? up.join(" · ") : "none up"]);
+        if (n.shower) rows.push(["meteors", n.shower.name || n.shower.n || "shower"]);
+        out.push({ id: "tv-sky", title: "sky tonight", type: "kv", slot: "left", order: 30, icon: "", data: { rows: rows } });
+      }
+      var sp = [], is = S.space.iss;
+      sp.push(["ISS", is ? (is.el < 3 ? "rising · " : "up · ") + compass(is.az) + (is.el >= 3 ? " " + Math.round(is.el) + "°" : "") : S.issNext ? "rises in " + Math.max(0, Math.round((S.issNext.start - t) / 60)) + " min" : "below the horizon"]);
+      var nx = S.starlink.next;
+      if (nx) { var at = new Date(nx.start * 1000); sp.push(["Starlink", (at.getHours() < 10 ? "0" : "") + at.getHours() + ":" + (at.getMinutes() < 10 ? "0" : "") + at.getMinutes() + " · " + compass(nx.az) + " · " + nx.n + " sats"]); }
+      if (S.space.kp != null) sp.push(["aurora", "Kp " + S.space.kp + (S.space.kp >= 5 ? " · storm!" : S.space.kp >= 4 ? " · active" : " · quiet")]);
+      var l0 = S.launches.filter(function (x) { return x.net > t - 120; })[0];
+      if (l0) sp.push(["launch", l0.rocket + " · " + countdown(l0.net - t)]);
+      out.push({ id: "tv-space", title: "space", type: "kv", slot: "left", order: 31, icon: "󰑣", data: { rows: sp } });
+      var pl = t - S.skyT < 120 ? S.sky : [];
+      if (pl.length) out.push({ id: "tv-planes", title: "overhead", type: "list", slot: "right", order: 30, icon: "󰀝", data: { items: pl.slice(0, 4).map(function (p) {
+        return { title: (p.flight || p.hex || "?") + (p.type ? " · " + p.type : ""), text: p.from && p.to ? p.from + " → " + p.to : p.airline || "", right: Math.round((p.alt || 0) / 100) * 100 + " ft" };
+      }) } });
+      if (S.quakes.length) out.push({ id: "tv-quakes", title: "earthquakes", type: "list", slot: "right", order: 32, icon: "󰖟", data: { items: S.quakes.slice(0, 4) } });
+      if (S.omarchy.length) out.push({ id: "tv-omarchy", title: "omarchy", type: "list", slot: "right", order: 34, icon: "", data: { items: S.omarchy.slice(0, 3) } });
+      return out;
     }
     /**
      * 2.15 what deserves the whole screen, now: "look up" (the ISS or a Starlink train over you, from 3 minutes before
@@ -466,10 +538,10 @@
     }
     return { start: start, stop: stop, state: state, events: events, onFx: function (cb) { fxCbs.push(cb); }, fx: fx, _S: S,
       _tick: { weather: weather, night: night, sky: sky, route: route, iss: iss, kp: kp, launches: launches, launchTick: launchTick,
-        starlinkFetch: starlinkFetch, starlinkTick: starlinkTick, tv: tvNumbers, pc: pcState } };
+        starlinkFetch: starlinkFetch, starlinkTick: starlinkTick, tv: tvNumbers, pc: pcState, air: airq, quakes: quakes, omarchy: omarchy } };
   }
 
-  root.OmarchyPulseTV = { create: create, nightSky: nightSky, altaz: altaz, lookAngles: lookAngles, satLook: satLook, starlinkGroups: starlinkGroups,
+  root.OmarchyPulseTV = { create: create, airFrom: airFrom, quakesFrom: quakesFrom, nightSky: nightSky, altaz: altaz, lookAngles: lookAngles, satLook: satLook, starlinkGroups: starlinkGroups,
     starlinkPasses: starlinkPasses, issAt: issAt, planesOver: planesOver, latestKp: latestKp, parseLaunch: parseLaunch, countdown: countdown,
     cityKey: cityKey, weatherFrom: weatherFrom, compass: compass, julian: julian, moonPhase: moonPhase, TIPS: TIPS };
   if (typeof module !== "undefined" && module.exports) module.exports = root.OmarchyPulseTV;
