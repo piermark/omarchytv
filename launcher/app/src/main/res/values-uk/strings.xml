@@ -523,4 +523,6 @@
     <string name="pulse_notice">Нова заставка: Omarchy Pulse. Налаштування › Заставка, щоб змінити її або повернути попередню.</string>
     <string name="ss_pulse_scene">Сцена Pulse</string>
     <string name="ss_restore_previous">Попередня заставка</string>
+    <string name="agent_alert_row">Сповіщення ШІ-агентів під час перегляду</string>
+    <string name="agent_alert" formatted="true">● %1$s чекає на тебе: %2$s</string>
 </resources>

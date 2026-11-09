@@ -523,4 +523,6 @@
     <string name="pulse_notice">Nova proteção de ecrã: Omarchy Pulse. Definições › Proteção de ecrã para mudar ou voltar atrás.</string>
     <string name="ss_pulse_scene">Cena do Pulse</string>
     <string name="ss_restore_previous">Proteção de ecrã anterior</string>
+    <string name="agent_alert_row">Avisos dos agentes de IA enquanto vês TV</string>
+    <string name="agent_alert" formatted="true">● %1$s precisa de ti: %2$s</string>
 </resources>

@@ -523,4 +523,6 @@
     <string name="pulse_notice">新屏保：Omarchy Pulse。在 设置 › 屏保 中更换或恢复。</string>
     <string name="ss_pulse_scene">Pulse 场景</string>
     <string name="ss_restore_previous">之前的屏保</string>
+    <string name="agent_alert_row">观看时的 AI 代理提醒</string>
+    <string name="agent_alert" formatted="true">● %1$s 需要你：%2$s</string>
 </resources>

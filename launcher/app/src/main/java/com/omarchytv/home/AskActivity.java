@@ -254,6 +254,9 @@ public class AskActivity extends Activity implements OmarchyLink.Listener {
         String initCmd = getIntent().getStringExtra("cmd");
         if (initCmd != null && !initCmd.trim().isEmpty()) {
             runCommand(initCmd.trim());
+        } else if (getIntent().getBooleanExtra("voice", false)) {   // v2.15: the mic key held on the home screen
+            btnVoice.requestFocus();
+            btnVoice.post(this::listen);
         } else {
             btnVoice.requestFocus();
         }

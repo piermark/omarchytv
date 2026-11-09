@@ -523,4 +523,6 @@
     <string name="pulse_notice">Nouvel économiseur : Omarchy Pulse. Réglages › Économiseur pour le changer ou revenir en arrière.</string>
     <string name="ss_pulse_scene">Scène de Pulse</string>
     <string name="ss_restore_previous">Économiseur précédent</string>
+    <string name="agent_alert_row">Alertes des agents IA pendant que tu regardes</string>
+    <string name="agent_alert" formatted="true">● %1$s a besoin de toi : %2$s</string>
 </resources>

@@ -523,4 +523,6 @@
     <string name="pulse_notice">Ny pauseskærm: Omarchy Pulse. Indstillinger › Pauseskærm for at skifte eller gå tilbage.</string>
     <string name="ss_pulse_scene">Pulse-scene</string>
     <string name="ss_restore_previous">Forrige pauseskærm</string>
+    <string name="agent_alert_row">AI-agentbeskeder mens du ser TV</string>
+    <string name="agent_alert" formatted="true">● %1$s har brug for dig: %2$s</string>
 </resources>

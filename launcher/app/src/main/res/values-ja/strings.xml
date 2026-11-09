@@ -523,4 +523,6 @@
     <string name="pulse_notice">新しいスクリーンセーバー: Omarchy Pulse。変更や元に戻すには 設定 › スクリーンセーバー。</string>
     <string name="ss_pulse_scene">Pulse のシーン</string>
     <string name="ss_restore_previous">前のスクリーンセーバー</string>
+    <string name="agent_alert_row">視聴中の AI エージェント通知</string>
+    <string name="agent_alert" formatted="true">● %1$s があなたを待っています: %2$s</string>
 </resources>

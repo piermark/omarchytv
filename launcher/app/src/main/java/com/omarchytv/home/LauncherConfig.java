@@ -58,7 +58,7 @@ final class LauncherConfig {
     static final int LONG_PRESS = 3;
     /** OmarchyTV actions a key can run (see MainActivity.runKeyAction). */
     static final String[] KEY_ACTIONS = {"walker", "voice", "home", "ask", "menu", "screensaver", "next-theme",
-            "cinemarchy", "arcade", "grokbot",   // v2.15 (#91): the Grok Bot companion, e.g. for Philips TVs whose Blue key opens the manual
+            "cinemarchy", "arcade", "grokbot", "terminal",   // v2.15 (#91): the Grok Bot companion, e.g. for Philips TVs whose Blue key opens the manual
             "workspace-1", "workspace-2", "workspace-3", "workspace-4", "workspace-5"};
 
     /** Maps a key name without the KEYCODE_ prefix to an Android keycode; 0 or less = unknown. */
@@ -497,6 +497,8 @@ final class LauncherConfig {
     final String pulseScene;
     /** v2.15: Home says once that Pulse is the new screensaver; "Previous screensaver" can undo the switch. */
     final boolean pulseNotice, hasSsBefore;
+    /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
+    final boolean agentAlert;
     final boolean screensaverClock;
     /** v2.13: procedural ST3 synth audio for Aquarium screensaver (default true). */
     final boolean saverSound;
@@ -799,6 +801,7 @@ final class LauncherConfig {
         if ("pulse".equals(screensaverArt)) ssMode = "pulse";
         String ps = ss != null ? ss.optString("pulseScene", "sphere") : "sphere";
         pulseNotice = j != null && j.optBoolean("pulseNotice", false);
+        agentAlert = j != null && j.optBoolean("agentAlert", false);
         hasSsBefore = j != null && j.optJSONObject("ssBefore215") != null;
         pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir").contains(ps) ? ps : "sphere";
         screensaverMode = ssMode;

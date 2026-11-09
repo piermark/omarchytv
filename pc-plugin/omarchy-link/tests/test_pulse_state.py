@@ -71,3 +71,24 @@ class Read(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_waiting_agents_are_told_once():
+    from omarchy_link import session as sess
+    st = {"v": "1.6", "agents": [{"name": "claude · omarchytv", "state": "working", "since": 1},
+                                 {"name": "grok", "state": "waiting", "text": "needs your OK", "since": 2}]}
+    w = pulse_state.waiting(st)
+    assert list(w.values()) == [{"name": "grok", "text": "needs your OK"}]
+    assert pulse_state.waiting(None) == {}
+
+    sent = []
+    s = sess.Session.__new__(sess.Session)
+    s.stream = type("S", (), {"send": lambda self, t, d: sent.append((t, d))})()
+    s.cfg = {}
+    s.state = {"screensaver": False}
+    states = [{"v": "1", "agents": []}, st, st]
+    with mock.patch.object(pulse_state, "read", lambda: states.pop(0)):
+        for _ in range(3):
+            s.agents_at = 0
+            s.push_agents()
+    assert sent == [("agent", {"name": "grok", "text": "needs your OK"})], "told once, when it starts waiting"

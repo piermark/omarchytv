@@ -866,6 +866,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 if (menu != null && menu.isShowing()) menu.dismiss();
                 openCompanionChat(false);
                 break;
+            case "terminal":   // v2.15: the Grok terminal, listening
+                openTerminal();
+                break;
             default:
                 break;
         }
@@ -1666,6 +1669,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "cinemarchy": return "🎬 Cinemarchy";   // product names: the same in every language
             case "arcade": return "🕹 OmarchyTV Arcade";
             case "grokbot": return "● Grok Bot";
+            case "terminal": return "▌ Grok terminal";
             default: return id;
         }
     }
@@ -3766,6 +3770,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> openCompanionChat(false));
             return false;
         });
+        String lAgentAlert = str(R.string.agent_alert_row);   // v2.15: off by default
+        p.add(lAgentAlert, str(gc.agentAlert ? R.string.on : R.string.off), r -> {
+            boolean n = !gc.agentAlert;
+            applyLive("grok-bot", lAgentAlert, j -> j.put("agentAlert", n));
+            return true;
+        });
         String lOv = "Floating companion on the home screen";
         p.add(lOv, str(gc.companionOverlay ? R.string.on : R.string.off), r -> {
             boolean n = !gc.companionOverlay;
@@ -4147,12 +4157,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             if (home.movingApp >= 0) return home.onKey(e);
             // Voice / search key: the Grok Bot companion by voice (v2.14 default), Walker, or the system assistant if chosen.
             if (kc == KeyEvent.KEYCODE_SEARCH || kc == KeyEvent.KEYCODE_VOICE_ASSIST || kc == KeyEvent.KEYCODE_ASSIST) {
-                if (voiceToCompanion()) {
-                    if (e.getAction() == KeyEvent.ACTION_UP) openCompanionChat(true);
-                    return true;
-                }
-                if ("launcher".equals(LauncherConfig.get(this).voiceKey)) {
-                    if (e.getAction() == KeyEvent.ACTION_UP) openWalker();
+                boolean companionKey = voiceToCompanion();
+                if (companionKey || "launcher".equals(LauncherConfig.get(this).voiceKey)) {
+                    // v2.15: held for 0.7 s it opens the Grok terminal, listening; a press does what it always did
+                    if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) micHeld = false;
+                    else if (e.getAction() == KeyEvent.ACTION_DOWN && !micHeld && e.getEventTime() - e.getDownTime() >= 700) {
+                        micHeld = true;
+                        openTerminal();
+                    } else if (e.getAction() == KeyEvent.ACTION_UP) {
+                        if (micHeld) micHeld = false;
+                        else if (companionKey) openCompanionChat(true);
+                        else openWalker();
+                    }
                     return true;
                 }
             }
@@ -5102,6 +5118,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             j.put("assistant", a);
         }
         return a;
+    }
+
+    /** v2.15 the mic key was held long enough to open the Grok terminal: its release does nothing else. */
+    private boolean micHeld;
+
+    /** v2.15 the Grok terminal: OmarchyTV's Ask TUI, full screen, already listening. */
+    private void openTerminal() {
+        if (walker != null) walker.close();
+        if (menu != null && menu.isShowing()) menu.dismiss();
+        open(new Intent(this, AskActivity.class).putExtra("voice", true));
     }
 
     @Override

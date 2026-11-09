@@ -523,4 +523,6 @@
     <string name="pulse_notice">شاشة توقف جديدة: Omarchy Pulse. الإعدادات › شاشة التوقف لتغييرها أو للعودة.</string>
     <string name="ss_pulse_scene">مشهد Pulse</string>
     <string name="ss_restore_previous">شاشة التوقف السابقة</string>
+    <string name="agent_alert_row">تنبيهات وكلاء الذكاء الاصطناعي أثناء المشاهدة</string>
+    <string name="agent_alert" formatted="true">● %1$s يحتاجك: %2$s</string>
 </resources>

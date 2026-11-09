@@ -77,3 +77,13 @@ def read(timeout: float = 2.0) -> dict | None:
     except Exception:   # noqa: BLE001 - Pulse off, restarting, or not installed
         return None
 
+
+
+def waiting(st: dict | None) -> dict:
+    """The agents waiting for you in a Pulse state: {name|since: {name, text}} (the same wait is told once)."""
+    out = {}
+    for a in (st or {}).get("agents") or []:
+        if isinstance(a, dict) and a.get("state") == "waiting":
+            name = str(a.get("name") or "agent")[:120]
+            out[f"{name}|{a.get('since', '')}"] = {"name": name, "text": str(a.get("text") or "needs you")[:200]}
+    return out

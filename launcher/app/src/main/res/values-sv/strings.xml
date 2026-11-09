@@ -523,4 +523,6 @@
     <string name="pulse_notice">Ny skärmsläckare: Omarchy Pulse. Inställningar › Skärmsläckare för att byta eller gå tillbaka.</string>
     <string name="ss_pulse_scene">Pulse-scen</string>
     <string name="ss_restore_previous">Föregående skärmsläckare</string>
+    <string name="agent_alert_row">AI-agentaviseringar medan du tittar</string>
+    <string name="agent_alert" formatted="true">● %1$s behöver dig: %2$s</string>
 </resources>

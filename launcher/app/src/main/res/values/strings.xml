@@ -562,4 +562,6 @@
     <string name="pulse_notice">New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.</string>
     <string name="ss_pulse_scene">Pulse scene</string>
     <string name="ss_restore_previous">Previous screensaver</string>
+    <string name="agent_alert_row">AI agent alerts while you watch</string>
+    <string name="agent_alert" formatted="true">● %1$s needs you: %2$s</string>
 </resources>

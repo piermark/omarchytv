@@ -527,4 +527,6 @@
     <string name="pulse_notice">Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.</string>
     <string name="ss_pulse_scene">Scena di Pulse</string>
     <string name="ss_restore_previous">Salvaschermo precedente</string>
+    <string name="agent_alert_row">Avvisi degli agenti AI mentre guardi</string>
+    <string name="agent_alert" formatted="true">● %1$s ha bisogno di te: %2$s</string>
 </resources>

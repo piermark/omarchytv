@@ -523,4 +523,6 @@
     <string name="pulse_notice">Protector de ecran nou: Omarchy Pulse. Setări › Protector de ecran pentru a-l schimba sau a reveni.</string>
     <string name="ss_pulse_scene">Scena Pulse</string>
     <string name="ss_restore_previous">Protectorul de ecran anterior</string>
+    <string name="agent_alert_row">Alerte de la agenții AI cât te uiți</string>
+    <string name="agent_alert" formatted="true">● %1$s are nevoie de tine: %2$s</string>
 </resources>

@@ -523,4 +523,6 @@
     <string name="pulse_notice">Új képernyővédő: Omarchy Pulse. Beállítások › Képernyővédő a módosításhoz vagy a visszaállításhoz.</string>
     <string name="ss_pulse_scene">Pulse jelenet</string>
     <string name="ss_restore_previous">Előző képernyővédő</string>
+    <string name="agent_alert_row">MI-ügynökök értesítései tévézés közben</string>
+    <string name="agent_alert" formatted="true">● %1$s rád vár: %2$s</string>
 </resources>

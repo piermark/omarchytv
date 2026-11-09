@@ -523,4 +523,6 @@
     <string name="pulse_notice">Ny skjermsparer: Omarchy Pulse. Innstillinger › Skjermsparer for å bytte eller gå tilbake.</string>
     <string name="ss_pulse_scene">Pulse-scene</string>
     <string name="ss_restore_previous">Forrige skjermsparer</string>
+    <string name="agent_alert_row">Varsler fra AI-agenter mens du ser på</string>
+    <string name="agent_alert" formatted="true">● %1$s trenger deg: %2$s</string>
 </resources>

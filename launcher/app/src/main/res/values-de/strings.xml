@@ -527,4 +527,6 @@
     <string name="pulse_notice">Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.</string>
     <string name="ss_pulse_scene">Pulse-Szene</string>
     <string name="ss_restore_previous">Vorheriger Bildschirmschoner</string>
+    <string name="agent_alert_row">KI-Agenten-Hinweise beim Fernsehen</string>
+    <string name="agent_alert" formatted="true">● %1$s braucht dich: %2$s</string>
 </resources>

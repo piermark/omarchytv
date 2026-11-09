@@ -523,4 +523,6 @@
     <string name="pulse_notice">Nowy wygaszacz: Omarchy Pulse. Ustawienia › Wygaszacz, aby go zmienić lub wrócić.</string>
     <string name="ss_pulse_scene">Scena Pulse</string>
     <string name="ss_restore_previous">Poprzedni wygaszacz</string>
+    <string name="agent_alert_row">Alerty agentów AI podczas oglądania</string>
+    <string name="agent_alert" formatted="true">● %1$s potrzebuje cię: %2$s</string>
 </resources>

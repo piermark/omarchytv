@@ -523,4 +523,6 @@
     <string name="pulse_notice">Νέα προφύλαξη οθόνης: Omarchy Pulse. Ρυθμίσεις › Προφύλαξη οθόνης για αλλαγή ή επιστροφή.</string>
     <string name="ss_pulse_scene">Σκηνή Pulse</string>
     <string name="ss_restore_previous">Προηγούμενη προφύλαξη</string>
+    <string name="agent_alert_row">Ειδοποιήσεις πρακτόρων AI ενώ βλέπεις</string>
+    <string name="agent_alert" formatted="true">● Το %1$s σε χρειάζεται: %2$s</string>
 </resources>

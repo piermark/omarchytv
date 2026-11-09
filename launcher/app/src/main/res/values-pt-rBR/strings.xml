@@ -523,4 +523,6 @@
     <string name="pulse_notice">Novo protetor de tela: Omarchy Pulse. Configurações › Protetor de tela para mudar ou voltar.</string>
     <string name="ss_pulse_scene">Cena do Pulse</string>
     <string name="ss_restore_previous">Protetor de tela anterior</string>
+    <string name="agent_alert_row">Avisos dos agentes de IA enquanto você assiste</string>
+    <string name="agent_alert" formatted="true">● %1$s precisa de você: %2$s</string>
 </resources>

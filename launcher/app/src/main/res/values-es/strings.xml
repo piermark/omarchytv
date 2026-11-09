@@ -523,4 +523,6 @@
     <string name="pulse_notice">Nuevo salvapantallas: Omarchy Pulse. Ajustes › Salvapantallas para cambiarlo o volver.</string>
     <string name="ss_pulse_scene">Escena de Pulse</string>
     <string name="ss_restore_previous">Salvapantallas anterior</string>
+    <string name="agent_alert_row">Avisos de agentes IA mientras ves la tele</string>
+    <string name="agent_alert" formatted="true">● %1$s te necesita: %2$s</string>
 </resources>

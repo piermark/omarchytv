@@ -523,4 +523,6 @@
     <string name="pulse_notice">Nieuwe schermbeveiliging: Omarchy Pulse. Instellingen › Schermbeveiliging om te wijzigen of terug te gaan.</string>
     <string name="ss_pulse_scene">Pulse-scène</string>
     <string name="ss_restore_previous">Vorige schermbeveiliging</string>
+    <string name="agent_alert_row">Meldingen van AI-agents tijdens het kijken</string>
+    <string name="agent_alert" formatted="true">● %1$s heeft je nodig: %2$s</string>
 </resources>

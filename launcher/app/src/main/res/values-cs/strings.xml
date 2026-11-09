@@ -523,4 +523,6 @@
     <string name="pulse_notice">Nový spořič: Omarchy Pulse. Nastavení › Spořič obrazovky pro změnu nebo návrat.</string>
     <string name="ss_pulse_scene">Scéna Pulse</string>
     <string name="ss_restore_previous">Předchozí spořič</string>
+    <string name="agent_alert_row">Upozornění AI agentů při sledování</string>
+    <string name="agent_alert" formatted="true">● %1$s tě potřebuje: %2$s</string>
 </resources>
