@@ -67,8 +67,12 @@ button.on { background: var(--acc); color: var(--bg); border-color: var(--acc); 
     fetch("/k?c=" + code + "&i=" + id + "&k=" + k, { cache: "no-store" }).catch(function () {});
   }
   Array.prototype.forEach.call(document.querySelectorAll("button"), function (b) {
-    function down(e) { e.preventDefault(); b.className = (b.className + " on").trim(); send(b.getAttribute("data-k")); }
-    function up() { b.className = b.className.replace(/\s*\bon\b/, ""); }
+    var rep = null, k = b.getAttribute("data-k"), arrow = k !== "ok" && k !== "back";
+    function down(e) {
+      e.preventDefault(); b.className = (b.className + " on").trim(); send(k);
+      if (arrow) { clearInterval(rep); rep = setTimeout(function () { rep = setInterval(function () { send(k); }, 110); }, 320); }   // held: it repeats, like a remote
+    }
+    function up() { clearTimeout(rep); clearInterval(rep); rep = null; b.className = b.className.replace(/\s*\bon\b/, ""); }
     b.addEventListener("pointerdown", down);
     b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("pointerleave", up);
   });
