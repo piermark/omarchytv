@@ -33,7 +33,7 @@
     function deal() {
       s.pile = deck(R); s.hands = [[], []];
       for (var i = 0; i < 7; i++) { s.hands[0].push(draw()); s.hands[1].push(draw()); }
-      do { s.top = draw(); } while (s.top.c < 0);   // the first card is never a wild one
+      do { s.top = draw(); if (s.top.c < 0) s.pile.unshift(s.top); } while (s.top.c < 0);   // never a wild one first: it goes back under the pile
       s.colour = s.top.c; s.turn = 0; s.sel = 0; s.picking = false; s.winner = -1; s.drew = false;
       s.hidden = s.versus;   // two people: P1 looks first
       sort(0); sort(1);

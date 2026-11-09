@@ -472,7 +472,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     pcSimulated: false,
     aiCredits: "percent",
     clockFormat: "auto",   // "auto" (12 h in English, 24 h otherwise), "12" or "24"
-    widgets: { term: true, weather: true, pc: true, ai: true, deploy: false },
+    widgets: { term: true, weather: true, pc: true, ai: true, deploy: false, devmode: false },
+    devModeUntil: 0,   // 2.15 (#131): when the Developer Mode session runs out, as last confirmed (epoch ms)
     tvApps: true,         // LG webOS: read the apps installed on the TV over SSAP (tvapps.js), DEFAULT_APPS stay the fallback
     hiddenApps: [],
     appOrder: []   // app ids in the user's order; apps not listed keep their DEFAULT_APPS position after them
@@ -942,6 +943,13 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     document.getElementById("pc-box").style.display = cfg.widgets.pc ? "block" : "none";
     document.getElementById("ai-box").style.display = cfg.widgets.ai ? "block" : "none";
     document.getElementById("deploy-box").style.display = cfg.widgets.deploy ? "block" : "none";
+    var dmOn = !!cfg.widgets.devmode && window.OMARCHY_PLATFORM !== "tizen" && window.OmarchyDevMode;
+    document.getElementById("devmode-box").style.display = dmOn ? "block" : "none";
+    if (dmOn) {
+      var dm = window.OmarchyDevMode.left(cfg.devModeUntil || 0, Date.now()), dmb = document.getElementById("devmode-body");
+      dmb.textContent = dm.text;
+      dmb.style.color = dm.level === "crit" || dm.level === "over" ? "var(--t-red)" : dm.level === "warn" ? "var(--t-yellow)" : "var(--t-fg)";
+    }
 
     var wx = state.weather;
     var wmoMap = tr("wmo") || {};
@@ -1739,7 +1747,13 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "omarchy · pc", right: cfg.widgets.pc ? "on" : "off", act: function () { tog("pc"); } },
       { label: "ai credits · pc", right: cfg.widgets.ai ? "on" : "off", act: function () { tog("ai"); } },
       { label: "deploys · pc", right: cfg.widgets.deploy ? "on" : "off", act: function () { tog("deploy"); } }
-    ]);
+    ].concat(window.OMARCHY_PLATFORM === "tizen" ? [] : [   // 2.15 (#131): LG Developer Mode's 1000-hour session
+      { label: "dev mode countdown", right: cfg.widgets.devmode ? "on" : "off", act: function () { tog("devmode"); } },
+      { label: "dev mode · I just pressed EXTEND", right: cfg.devModeUntil ? window.OmarchyDevMode.left(cfg.devModeUntil, Date.now()).text.split(" · ")[0] : "›", act: function () {
+        cfg.devModeUntil = window.OmarchyDevMode.extended(Date.now()); cfg.widgets.devmode = true;
+        saveCfg(); renderAll(); showToast("Developer Mode: 1000 hours from now"); openWidgetsModal();
+      } }
+    ]));
   }
 
   function openSaverModal(keepFocus) {

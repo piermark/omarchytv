@@ -14,7 +14,7 @@
     function serve(dir) {
       var a = (R() - 0.5) * 0.9;
       s.ball = { x: 40, y: 12, vx: dir * 26, vy: Math.sin(a) * 14 };
-      s.pause = 1.2; s.hits = 0;
+      s.pause = 1.2;
     }
     serve(R() < 0.5 ? -1 : 1);
     function move(n, d) {

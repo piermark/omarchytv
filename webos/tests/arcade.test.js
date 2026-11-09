@@ -469,7 +469,7 @@ test("LAST WINDOW: the deck, only matching cards, the moves, the CPU plays by th
   assert.strictEqual(s.hands[0].length, 7);
   assert.strictEqual(s.hands[1].length, 7);
   assert.ok(s.top.c >= 0, "never a wild card to start");
-  assert.strictEqual(s.pile.length, 4 * (17 + 4) + 8 - 15);
+  assert.strictEqual(s.pile.length, 4 * (17 + 4) + 8 - 15, "92 cards, 7 each, one on the table");
   // a card that doesn't match is refused
   const bad = s.hands[0].findIndex((c) => c.c >= 0 && c.c !== s.colour && c.k !== s.top.k);
   if (bad >= 0) { s.sel = bad; const n0 = s.hands[0].length; h.key("ok"); assert.strictEqual(s.hands[0].length, n0); }
