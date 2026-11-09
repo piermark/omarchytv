@@ -25,3 +25,17 @@ test("dev mode: off by default, never on Samsung, loaded by the page, documented
   assert.ok(fs.readFileSync(path.join(__dirname, "../app/index.html"), "utf8").indexOf('src="devmode.js"') > 0);
   assert.ok(/EXTEND/.test(fs.readFileSync(path.join(__dirname, "../INSTALL-WEBOS.md"), "utf8")));
 });
+
+test("#47: 1080p copies of the 4K wallpapers, used on 1080p panels (or by choice), never instead of a missing file", () => {
+  const dir = path.join(__dirname, "../app/wallpapers-1080");
+  const idx = fs.readFileSync(path.join(dir, "index.js"), "utf8");
+  const names = JSON.parse(/OMARCHY_WP1080 = (\[.*\]);/.exec(idx)[1]);
+  assert.ok(names.length >= 30);
+  for (const n of names) {
+    assert.ok(fs.existsSync(path.join(dir, n)), n);
+    assert.ok(fs.existsSync(path.join(__dirname, "../../launcher/app/src/main/assets/wallpapers", n)), "a copy of a bundled one: " + n);
+  }
+  const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
+  assert.ok(/window\.devicePixelRatio \|\| 1\) <= 1/.test(app) && /OMARCHY_WP1080\.indexOf\(rel\) >= 0/.test(app));
+  assert.ok(fs.readFileSync(path.join(__dirname, "../app/index.html"), "utf8").indexOf('src="wallpapers-1080/index.js"') > 0);
+});

@@ -712,6 +712,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
     var wl = document.getElementById("wallpaper-layer");
     var wv = document.getElementById("wallpaper-video");
+    // 2.15 (#47, measured by @tozes): on a 1080p panel (devicePixelRatio 1), or with "Light wallpapers" on, the
+    // 1920x1080 copy (wallpapers-1080/, made by tools/wallpapers-1080.py): it decodes ~4x faster; the 4K file
+    // only pays off on a UHD panel. Wallpapers already 1080p have no copy and stay as they are.
+    function wpFile(p) {
+      var light = cfg.lightWallpapers === true || (cfg.lightWallpapers !== false && (window.devicePixelRatio || 1) <= 1);
+      var rel = String(p || "").replace(/^wallpapers\//, "");
+      return light && window.OMARCHY_WP1080 && window.OMARCHY_WP1080.indexOf(rel) >= 0 ? "wallpapers-1080/" + rel : p;
+    }
     var wlist = DATA.wallpapers[cfg.theme] || [];
     var picked = cfg.wallpaper && cfg.wallpaper !== "plain" && allWallpapers().indexOf(cfg.wallpaper) >= 0 ? cfg.wallpaper : "";
     var activeWp = "";
@@ -721,12 +729,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       wl.style.backgroundImage = "none";   // v2.14 OmaFire draws into the layer itself
     } else if (picked) {
       activeWp = picked;
-      wl.style.backgroundImage = "url('" + picked + "')";
+      wl.style.backgroundImage = "url('" + wpFile(picked) + "')";
     } else if (cfg.proceduralBg || cfg.wallpaper === "plain" || !wlist.length) {
       wl.style.backgroundImage = "radial-gradient(circle at 75% 20%, " + hexToRgba(t.accent, 0.22) + " 0%, " + t.bg + " 70%)";
     } else {
       activeWp = wlist[cfg.wallpaperIdx % wlist.length];
-      wl.style.backgroundImage = "url('" + activeWp + "')";
+      wl.style.backgroundImage = "url('" + wpFile(activeWp) + "')";
     }
     if (wv) {
       var intro = cfg.wallpaperIntro && activeWp && DATA.wallpaperIntros && DATA.wallpaperIntros[activeWp];
@@ -1968,6 +1976,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } },
       { label: "Always-animated wallpaper", right: cfg.wallpaperLoop ? "on" : "off", act: function () {
         cfg.wallpaperLoop = !cfg.wallpaperLoop; saveCfg(); applyTheme(); openAllSettingsModal();
+      } },
+      { label: "Light wallpapers (1080p)", right: cfg.lightWallpapers === true ? "on" : cfg.lightWallpapers === false ? "off" : "auto", act: function () {
+        // 2.15 (#47): auto = on a 1080p panel only; on = always (faster start on a UHD set); off = always 4K
+        cfg.lightWallpapers = cfg.lightWallpapers === undefined || cfg.lightWallpapers === null ? true : cfg.lightWallpapers === true ? false : null;
+        saveCfg(); applyTheme(); openAllSettingsModal();
       } },
       { label: "Wallpaper dimming", right: Math.round((cfg.wallpaperDim || 0) * 100) + "%", act: function () {
         var d = [0, 0.25, 0.5];
