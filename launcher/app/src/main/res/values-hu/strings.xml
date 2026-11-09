@@ -379,6 +379,9 @@
     <string name="ha_token">Hozzáférési token</string>
     <string name="ha_entities">Lámpák (entity ids)</string>
     <string name="set_random_theme">Véletlenszerű téma</string>
+    <string name="set_random_scope">Véletlenszerűen</string>
+    <string name="set_random_intros">animált intrók</string>
+    <string name="set_random_all">összes téma</string>
     <string name="set_random_wallpaper">Véletlenszerű háttér / intró</string>
     <string name="menu_remote_keys">Távirányító gombjai</string>
     <string name="keys_service">Kisegítő szolgáltatás</string>

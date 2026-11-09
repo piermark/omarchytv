@@ -379,6 +379,9 @@
     <string name="ha_token">Διακριτικό πρόσβασης</string>
     <string name="ha_entities">Φώτα (entity ids)</string>
     <string name="set_random_theme">Τυχαίο θέμα</string>
+    <string name="set_random_scope">Τυχαία από</string>
+    <string name="set_random_intros">κινούμενα intro</string>
+    <string name="set_random_all">όλα τα θέματα</string>
     <string name="set_random_wallpaper">Τυχαίο φόντο / intro</string>
     <string name="menu_remote_keys">Κουμπιά τηλεχειριστηρίου</string>
     <string name="keys_service">Υπηρεσία προσβασιμότητας</string>

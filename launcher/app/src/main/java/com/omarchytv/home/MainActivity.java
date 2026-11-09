@@ -997,7 +997,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
         LauncherConfig cfg = LauncherConfig.get(this);
         if (builtWith != null && reopenPage == null && (cfg.randomTheme || cfg.randomWallpaper)) {
-            LauncherConfig.update(this, j -> LauncherConfig.applyRandomRotation(j, new java.util.Random()));
+            final String[] allThemes = Theme.names(this);
+            LauncherConfig.update(this, j -> LauncherConfig.applyRandomRotation(j, new java.util.Random(), allThemes));
             cfg = LauncherConfig.get(this);
         }
         if (builtWith != null && cfg != builtWith && !cfg.restSig.equals(builtWith.restSig)) {
@@ -3107,6 +3108,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         p.add(lRandTheme, str(cfg.randomTheme ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.randomTheme;
             applyLive("themes", lRandTheme, j -> j.put("random_theme", n));
+            return true;
+        });
+        String lScope = str(R.string.set_random_scope);   // v2.15 (#71): the intros (default) or every theme
+        boolean all = "all".equals(cfg.randomScope);
+        p.add(lScope, str(all ? R.string.set_random_all : R.string.set_random_intros), r -> {
+            applyLive("themes", lScope, j -> j.put("randomScope", all ? "intros" : "all"));
             return true;
         });
         p.add(lRandWp, str(cfg.randomWallpaper ? R.string.on : R.string.off), r -> {

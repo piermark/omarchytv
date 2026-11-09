@@ -416,6 +416,9 @@
     <string name="ha_token">Access token</string>
     <string name="ha_entities">Lights (entity ids)</string>
     <string name="set_random_theme">Random theme</string>
+    <string name="set_random_scope">Random picks from</string>
+    <string name="set_random_intros">animated intros</string>
+    <string name="set_random_all">all themes</string>
     <string name="set_random_wallpaper">Random wallpaper / intro</string>
     <string name="menu_remote_keys">Remote buttons</string>
     <string name="keys_service">Accessibility service</string>

@@ -379,6 +379,9 @@
     <string name="ha_token">Tilgangstoken</string>
     <string name="ha_entities">Lys (entity ids)</string>
     <string name="set_random_theme">Tilfeldig tema</string>
+    <string name="set_random_scope">Tilfeldig blant</string>
+    <string name="set_random_intros">animerte intro</string>
+    <string name="set_random_all">alle temaer</string>
     <string name="set_random_wallpaper">Tilfeldig bakgrunn / intro</string>
     <string name="menu_remote_keys">Fjernkontrollknapper</string>
     <string name="keys_service">Tilgjengelighetstjeneste</string>

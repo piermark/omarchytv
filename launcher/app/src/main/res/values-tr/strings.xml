@@ -379,6 +379,9 @@
     <string name="ha_token">Erişim belirteci</string>
     <string name="ha_entities">Işıklar (entity ids)</string>
     <string name="set_random_theme">Rastgele tema</string>
+    <string name="set_random_scope">Rastgele seçim</string>
+    <string name="set_random_intros">animasyonlu girişler</string>
+    <string name="set_random_all">tüm temalar</string>
     <string name="set_random_wallpaper">Rastgele duvar kâğıdı / intro</string>
     <string name="menu_remote_keys">Kumanda tuşları</string>
     <string name="keys_service">Erişilebilirlik hizmeti</string>

@@ -379,6 +379,9 @@
     <string name="ha_token">Token de acces</string>
     <string name="ha_entities">Lumini (entity ids)</string>
     <string name="set_random_theme">Temă aleatorie</string>
+    <string name="set_random_scope">Aleatoriu din</string>
+    <string name="set_random_intros">intro animate</string>
+    <string name="set_random_all">toate temele</string>
     <string name="set_random_wallpaper">Fundal / intro aleatoriu</string>
     <string name="menu_remote_keys">Butoanele telecomenzii</string>
     <string name="keys_service">Serviciu de accesibilitate</string>

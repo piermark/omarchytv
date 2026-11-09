@@ -383,6 +383,9 @@
     <string name="ha_token">Token di accesso</string>
     <string name="ha_entities">Luci (entity id)</string>
     <string name="set_random_theme">Tema casuale</string>
+    <string name="set_random_scope">Casuale tra</string>
+    <string name="set_random_intros">intro animate</string>
+    <string name="set_random_all">tutti i temi</string>
     <string name="set_random_wallpaper">Sfondo / intro casuale</string>
     <string name="menu_remote_keys">Tasti del telecomando</string>
     <string name="keys_service">Servizio di accessibilità</string>

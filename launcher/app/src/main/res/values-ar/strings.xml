@@ -379,6 +379,9 @@
     <string name="ha_token">رمز الوصول</string>
     <string name="ha_entities">الأضواء (entity ids)</string>
     <string name="set_random_theme">سمة عشوائية</string>
+    <string name="set_random_scope">عشوائي من</string>
+    <string name="set_random_intros">المقدمات المتحركة</string>
+    <string name="set_random_all">كل السمات</string>
     <string name="set_random_wallpaper">خلفية / مقدمة عشوائية</string>
     <string name="menu_remote_keys">أزرار جهاز التحكم</string>
     <string name="keys_service">خدمة تسهيل الاستخدام</string>

@@ -383,6 +383,9 @@
     <string name="ha_token">Zugriffstoken</string>
     <string name="ha_entities">Lichter (Entity-IDs)</string>
     <string name="set_random_theme">Zufälliges Thema</string>
+    <string name="set_random_scope">Zufällig aus</string>
+    <string name="set_random_intros">animierten Intros</string>
+    <string name="set_random_all">allen Themes</string>
     <string name="set_random_wallpaper">Zufälliges Hintergrundbild / Intro</string>
     <string name="menu_remote_keys">Fernbedienungstasten</string>
     <string name="keys_service">Bedienungshilfe</string>

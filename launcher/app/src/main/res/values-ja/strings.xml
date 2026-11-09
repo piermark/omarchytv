@@ -379,6 +379,9 @@
     <string name="ha_token">アクセストークン</string>
     <string name="ha_entities">照明（entity ids）</string>
     <string name="set_random_theme">ランダムなテーマ</string>
+    <string name="set_random_scope">ランダムの対象</string>
+    <string name="set_random_intros">アニメーションのイントロ</string>
+    <string name="set_random_all">すべてのテーマ</string>
     <string name="set_random_wallpaper">ランダムな壁紙 / イントロ</string>
     <string name="menu_remote_keys">リモコンのボタン</string>
     <string name="keys_service">ユーザー補助サービス</string>

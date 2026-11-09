@@ -379,6 +379,9 @@
     <string name="ha_token">Toegangstoken</string>
     <string name="ha_entities">Lampen (entity ids)</string>
     <string name="set_random_theme">Willekeurig thema</string>
+    <string name="set_random_scope">Willekeurig uit</string>
+    <string name="set_random_intros">geanimeerde intro\'s</string>
+    <string name="set_random_all">alle thema\'s</string>
     <string name="set_random_wallpaper">Willekeurige achtergrond / intro</string>
     <string name="menu_remote_keys">Afstandsbedieningsknoppen</string>
     <string name="keys_service">Toegankelijkheidsservice</string>

@@ -379,6 +379,9 @@
     <string name="ha_token">Åtkomsttoken</string>
     <string name="ha_entities">Lampor (entity ids)</string>
     <string name="set_random_theme">Slumpmässigt tema</string>
+    <string name="set_random_scope">Slumpa bland</string>
+    <string name="set_random_intros">animerade intron</string>
+    <string name="set_random_all">alla teman</string>
     <string name="set_random_wallpaper">Slumpmässig bakgrund / intro</string>
     <string name="menu_remote_keys">Fjärrkontrollens knappar</string>
     <string name="keys_service">Tillgänglighetstjänst</string>

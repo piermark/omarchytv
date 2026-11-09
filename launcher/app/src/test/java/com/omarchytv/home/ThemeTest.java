@@ -136,4 +136,33 @@ public class ThemeTest {
             Theme.resolve(null, new JSONObject().put("name", "tokyo-night"));
         }
     }
+
+    @org.junit.Test
+    public void randomScopeAll_picksAnyBundledTheme_issue71() throws Exception {
+        String[] all = {"catppuccin", "gruvbox", "nord", "tokyo-night", "white"};
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        java.util.Random r = new java.util.Random(3L);
+        for (int k = 0; k < 200; k++) {
+            JSONObject j = new JSONObject().put("randomScope", "all").put("random_wallpaper", false)
+                    .put("theme", new JSONObject().put("name", "nord"));
+            assertTrue(LauncherConfig.applyRandomRotation(j, r, all));
+            String n = j.getJSONObject("theme").getString("name");
+            org.junit.Assert.assertNotEquals("never the same theme again", "nord", n);
+            assertTrue(n, java.util.Arrays.asList(all).contains(n));
+            org.junit.Assert.assertFalse("wallpaper not random: left alone", j.has("wallpaper"));
+            seen.add(n);
+        }
+        assertEquals("every other theme comes up", 4, seen.size());
+        JSONObject w = new JSONObject().put("randomScope", "all").put("theme", new JSONObject().put("name", "nord"));
+        int fires = 0;
+        for (int k = 0; k < 400; k++) {
+            assertTrue(LauncherConfig.applyRandomRotation(w, r, all));
+            String wp = w.getString("wallpaper");
+            if (wp.startsWith("omafire:")) fires++;
+            else assertEquals("omarchy", wp);   // one of the theme's own backgrounds
+        }
+        assertTrue("the fire still comes now and then: " + fires, fires > 10 && fires < 120);
+        assertEquals("intros", new LauncherConfig(null, new JSONObject(), 1L).randomScope);
+        assertEquals("all", new LauncherConfig(null, new JSONObject().put("randomScope", "all"), 1L).randomScope);
+    }
 }

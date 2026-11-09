@@ -379,6 +379,9 @@
     <string name="ha_token">访问令牌</string>
     <string name="ha_entities">灯（entity ids）</string>
     <string name="set_random_theme">随机主题</string>
+    <string name="set_random_scope">随机范围</string>
+    <string name="set_random_intros">动画开场</string>
+    <string name="set_random_all">全部主题</string>
     <string name="set_random_wallpaper">随机壁纸 / 开场</string>
     <string name="menu_remote_keys">遥控器按键</string>
     <string name="keys_service">无障碍服务</string>

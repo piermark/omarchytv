@@ -379,6 +379,9 @@
     <string name="ha_token">Přístupový token</string>
     <string name="ha_entities">Světla (entity ids)</string>
     <string name="set_random_theme">Náhodný motiv</string>
+    <string name="set_random_scope">Náhodně z</string>
+    <string name="set_random_intros">animovaných úvodů</string>
+    <string name="set_random_all">všech motivů</string>
     <string name="set_random_wallpaper">Náhodné pozadí / intro</string>
     <string name="menu_remote_keys">Tlačítka ovladače</string>
     <string name="keys_service">Služba usnadnění přístupu</string>

@@ -379,6 +379,9 @@
     <string name="ha_token">Token de acceso</string>
     <string name="ha_entities">Luces (entity ids)</string>
     <string name="set_random_theme">Tema aleatorio</string>
+    <string name="set_random_scope">Al azar entre</string>
+    <string name="set_random_intros">intros animadas</string>
+    <string name="set_random_all">todos los temas</string>
     <string name="set_random_wallpaper">Fondo / intro aleatorio</string>
     <string name="menu_remote_keys">Botones del mando</string>
     <string name="keys_service">Servicio de accesibilidad</string>

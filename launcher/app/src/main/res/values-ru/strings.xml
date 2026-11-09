@@ -379,6 +379,9 @@
     <string name="ha_token">Токен доступа</string>
     <string name="ha_entities">Светильники (entity ids)</string>
     <string name="set_random_theme">Случайная тема</string>
+    <string name="set_random_scope">Случайно из</string>
+    <string name="set_random_intros">анимированных заставок</string>
+    <string name="set_random_all">всех тем</string>
     <string name="set_random_wallpaper">Случайный фон / интро</string>
     <string name="menu_remote_keys">Кнопки пульта</string>
     <string name="keys_service">Служба специальных возможностей</string>

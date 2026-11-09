@@ -379,6 +379,9 @@
     <string name="ha_token">Jeton d\'accès</string>
     <string name="ha_entities">Lumières (entity ids)</string>
     <string name="set_random_theme">Thème aléatoire</string>
+    <string name="set_random_scope">Au hasard parmi</string>
+    <string name="set_random_intros">intros animées</string>
+    <string name="set_random_all">tous les thèmes</string>
     <string name="set_random_wallpaper">Fond / intro aléatoire</string>
     <string name="menu_remote_keys">Boutons de la télécommande</string>
     <string name="keys_service">Service d\'accessibilité</string>

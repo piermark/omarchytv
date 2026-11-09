@@ -379,6 +379,9 @@
     <string name="ha_token">Käyttötunnus</string>
     <string name="ha_entities">Valot (entity ids)</string>
     <string name="set_random_theme">Satunnainen teema</string>
+    <string name="set_random_scope">Satunnaisesti</string>
+    <string name="set_random_intros">animoiduista introista</string>
+    <string name="set_random_all">kaikista teemoista</string>
     <string name="set_random_wallpaper">Satunnainen tausta / intro</string>
     <string name="menu_remote_keys">Kaukosäätimen painikkeet</string>
     <string name="keys_service">Saavutettavuuspalvelu</string>

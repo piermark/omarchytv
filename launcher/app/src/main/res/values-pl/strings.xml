@@ -379,6 +379,9 @@
     <string name="ha_token">Token dostępu</string>
     <string name="ha_entities">Światła (entity ids)</string>
     <string name="set_random_theme">Losowy motyw</string>
+    <string name="set_random_scope">Losowo spośród</string>
+    <string name="set_random_intros">animowanych intro</string>
+    <string name="set_random_all">wszystkich motywów</string>
     <string name="set_random_wallpaper">Losowa tapeta / intro</string>
     <string name="menu_remote_keys">Przyciski pilota</string>
     <string name="keys_service">Usługa ułatwień dostępu</string>

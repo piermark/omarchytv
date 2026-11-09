@@ -485,6 +485,8 @@ final class LauncherConfig {
     final String screensaverMode;
     /** v2.10: which of the current theme's official backgrounds (assets/wallpapers/<theme>/), like Omarchy next-background. */
     final int wallpaperBg;
+    /** v2.15 (#71): "randomScope": "intros" (the animated intros, default) or "all" (every bundled theme). */
+    final String randomScope;
     /** The resolved Omarchy theme (see Theme). */
     final Theme theme;
     final int accent;                // focus border start, walker border, active workspace underline
@@ -767,6 +769,7 @@ final class LauncherConfig {
         String tvIp = j != null ? j.optString("ambilight_tv_ip", "127.0.0.1").trim() : "127.0.0.1";
         ambilightTvIp = tvIp.matches("[0-9A-Za-z.:-]{1,64}") ? tvIp : "127.0.0.1";
         wallpaperBg = j != null ? Math.max(0, j.optInt("wallpaper_bg", 0)) : 0;
+        randomScope = j != null && "all".equals(j.optString("randomScope", "intros")) ? "all" : "intros";
         JSONObject theme = j != null ? j.optJSONObject("theme") : null;
         if (theme == null && j != null && j.opt("theme") instanceof String) {
             try { theme = new JSONObject().put("name", j.optString("theme", "last-horizon")); } catch (Exception ignored) {}
@@ -865,11 +868,35 @@ final class LauncherConfig {
      * {@code random_wallpaper} flags. Returns true if {@code j} was modified.
      */
     static boolean applyRandomRotation(JSONObject j, java.util.Random rng) {
+        return applyRandomRotation(j, rng, null);
+    }
+
+    /**
+     * v2.15 (#71): with "randomScope": "all", a random theme is any bundled theme ({@code allThemes}), with one of its
+     * own backgrounds when the wallpaper is random too (and the fires now and then). Default "intros": as before.
+     */
+    static boolean applyRandomRotation(JSONObject j, java.util.Random rng, String[] allThemes) {
         if (j == null || rng == null) return false;
         boolean rt = j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
         boolean rw = j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         if (!rt && !rw) return false;
         try {
+            if (rt && "all".equals(j.optString("randomScope", "intros")) && allThemes != null && allThemes.length > 1
+                    && !(rw && rng.nextInt(8) == 0)) {   // 1 in 8 the fire still comes (below)
+                JSONObject cto = j.optJSONObject("theme");
+                String cur = cto != null ? cto.optString("name", "") : j.optString("theme", "");
+                String next = allThemes[rng.nextInt(allThemes.length)];
+                if (next.equals(cur)) next = allThemes[(java.util.Arrays.asList(allThemes).indexOf(next) + 1 + rng.nextInt(allThemes.length - 1)) % allThemes.length];
+                JSONObject t = cto != null ? new JSONObject(cto.toString()) : new JSONObject();
+                t.put("name", next);
+                t.put("source", "tv");
+                j.put("theme", t);
+                if (rw) {
+                    j.put("wallpaper", "omarchy");
+                    j.put("wallpaper_bg", rng.nextInt(12));   // the theme's own backgrounds, taken modulo their count
+                }
+                return true;
+            }
             JSONObject curThemeObj = j.optJSONObject("theme");
             String curTheme = curThemeObj != null ? curThemeObj.optString("name", "last-horizon") : j.optString("theme", "last-horizon");
             int curBg = j.optInt("wallpaper_bg", 0);
