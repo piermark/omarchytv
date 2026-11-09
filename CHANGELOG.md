@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] — 2.14.1 (fixes)
+
+- **Live screensaver fits the TV again** (#119): the panes were measured before the bundled CaskaydiaMono had loaded, so on LG TVs they came out wider than the screen and were cut at the edges. The bundled fonts now come first, each frame shrinks to the box it really fills, and everything is measured again once the fonts are ready (webOS 4.x too). The small "OmarchyTV" label under the QR code keeps its size. Same file on Android TV, LG and Samsung.
+- **OmaFire sound on Android TV** (#125): the fire was silent on Android (Google TV Streamer 4K) because the wallpaper never receives the remote's keys, and Android's WebView keeps web audio asleep until it does. The sound now plays natively, with the same files and the same mix: the loops follow the heat, logs and stokes land, crickets and frogs call across the lake, and it all fades out when you leave Home. LG and Samsung unchanged.
+- **Cinemarchy VHS and ASCII on Android TV**: ▲ (or the blue key, Menu, V) in the player switches normal → VHS/CRT (scanlines, rolling tracking bar, PLAY ▶ and the SP counter) → ASCII (the film as live, theme-coloured characters), as on LG and Samsung. A stream the TV cannot read back goes back to the normal picture with a note.
+
 ## [2.14.0-beta] — 2026-11-05 (pre-release, `versionCode 26`; webOS 2.14.0, Tizen 2.14.0)
 
 ### Cinemarchy, the new hub
