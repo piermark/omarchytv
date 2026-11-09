@@ -94,8 +94,18 @@ final class TteSaver {
             @JavascriptInterface public String forceEffect() { return forceEffect; }
             @JavascriptInterface public String forceMode() { return forceMode; }
             @JavascriptInterface public void log(String m) { Log.i(TAG, "salvaschermo: " + m); }
+            /** v2.15 Pulse: where the TV is, its theme and scene (PulseSaver.config). */
+            @JavascriptInterface public String pulse() { return PulseSaver.config(c.getApplicationContext()); }
+            /** v2.15 Pulse: the TV's own numbers for the system and network panels. */
+            @JavascriptInterface public String tvStats() { return PulseSaver.tvStats(c.getApplicationContext()); }
+            /** v2.15 Pulse: the paired PC's Pulse state, as omarchy-link last pushed it (null without a PC). */
+            @JavascriptInterface public String pcPulse() { return PulseLink.state(); }
+            /** v2.15 Pulse: an effect (ISS overhead, liftoff, a Starlink train): "Look up, now". */
+            @JavascriptInterface public void fx(String json) { PulseLink.onFx(c.getApplicationContext(), json); }
             /** v2.14 Living screensaver: weather + the PC's feed, as JSON (Living.forSaver). */
             @JavascriptInterface public String living() { return Living.forSaver(c.getApplicationContext()); }
+            /** Screensaver > Clock (#83): the web saver draws its own clock when this is on. */
+            @JavascriptInterface public boolean clock() { return LauncherConfig.get(c.getApplicationContext()).screensaverClock; }
             @JavascriptInterface public void drawn(String mode, int count, String effect) {
                 drawn = true;
                 h.post(() -> revealWeb());
@@ -140,6 +150,7 @@ final class TteSaver {
 
     /** Minimal WebViewAssetLoader: https://appassets.androidplatform.net/assets/... -> APK assets; nothing else loads. */
     private WebResourceResponse serve(Uri u) {
+        if (PulseSaver.proxied(u)) return PulseSaver.proxy(u, "https://" + HOST);   // v2.15 Pulse's data services
         String path = u.getPath();
         if (!HOST.equals(u.getHost()) || path == null || !path.startsWith("/assets/") || path.contains("..")) {
             return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found", null, null);
@@ -148,7 +159,8 @@ final class TteSaver {
         try {
             InputStream in = ctx.getAssets().open(rel);
             String mime = rel.endsWith(".js") ? "text/javascript" : rel.endsWith(".html") ? "text/html"
-                    : rel.endsWith(".ttf") ? "font/ttf" : rel.endsWith(".json") ? "application/json" : "text/plain";
+                    : rel.endsWith(".ttf") ? "font/ttf" : rel.endsWith(".json") ? "application/json"
+                    : rel.endsWith(".css") ? "text/css" : rel.endsWith(".png") ? "image/png" : "text/plain";
             WebResourceResponse r = new WebResourceResponse(mime, "utf-8", in);
             java.util.Map<String, String> hd = new java.util.HashMap<>();
             hd.put("Access-Control-Allow-Origin", "https://" + HOST);
@@ -245,7 +257,8 @@ final class TteSaver {
         }
         drawn = false;
         LauncherConfig cfg = LauncherConfig.get(ctx);
-        if (!cfg.living && ("native".equals(forceMode) || AsciiSaverView.isAquarium(cfg))) {   // v2.14 Live needs the page
+        boolean pulse = !cfg.living && "pulse".equals(cfg.screensaverArt) && !"native".equals(forceMode);   // v2.15
+        if (!pulse && !cfg.living && ("native".equals(forceMode) || AsciiSaverView.isAquarium(cfg))) {   // v2.14 Live needs the page
             toNative("aquarium/nativo");
             return;
         }
@@ -257,7 +270,7 @@ final class TteSaver {
             placeholder.start();
         }
         web.setAlpha(0f);
-        web.loadUrl("https://" + HOST + "/assets/saver/index.html");
+        web.loadUrl("https://" + HOST + (pulse ? "/assets/pulse/index.html" : "/assets/saver/index.html"));
         h.postDelayed(() -> {
             if (!drawn) toNative("nessun disegno entro " + drawTimeoutMs + " ms");
         }, drawTimeoutMs);

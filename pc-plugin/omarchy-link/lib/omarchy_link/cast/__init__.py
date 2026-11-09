@@ -530,6 +530,8 @@ def via_link(client, item: dict, serve_ok: bool = False, wait: bool = False, out
         res = client.request("POST", "/v1/cast", body)
         result = {"via": "link", "id": rid, "app": res.get("app"), "state": res.get("state", "opening")}
         if server:
+            result["served"] = True   # #82: a stream the TV must fetch from this PC (the CLI hints at ufw if it fails)
+            result["tvIp"] = server.allow
             out(f"Serving {item['title']} to the TV only, at a one-time address; stops when playback ends.")
         if not events:
             return result

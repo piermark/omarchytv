@@ -54,4 +54,15 @@ public class RemotePanesUrlTest {
         assertFalse(LanHttpDataSource.lanHost(""));
         assertFalse(LanHttpDataSource.lanHost(null));
     }
+
+    @Test
+    public void paneImagesArePngOrJpegByTheirBytes() {   // v2.15 (#115)
+        assertTrue(RemotePanes.imageOk(new byte[]{(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10}));
+        assertTrue(RemotePanes.imageOk(new byte[]{(byte) 0xff, (byte) 0xd8, (byte) 0xff, (byte) 0xe0, 0, 16, 'J', 'F'}));
+        assertFalse(RemotePanes.imageOk("<svg xmlns=".getBytes()));
+        assertFalse(RemotePanes.imageOk(new byte[]{'G', 'I', 'F', '8', '9', 'a', 0, 0}));
+        assertFalse(RemotePanes.imageOk(null));
+        assertTrue(RemotePanes.urlAllowed("http://192.168.1.20:2310/tv/power24h.png"));
+        assertFalse(RemotePanes.urlAllowed("http://example.com/power.png"));
+    }
 }

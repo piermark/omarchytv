@@ -1126,14 +1126,12 @@ public final class CinemarchyActivity extends Activity implements OmarchyLink.Li
                             ResumeStore.bar(this, url), "", resumeAt(url, o.optDouble("position", 0))));
                 }
             }
-            // Four Blender open movies (CC BY), Google's public sample copies: labelled as demo streams, no made-up
-            // quality claims; the bar is where you really stopped.
-            String[][] demo = {{"Big Buck Bunny", "BigBuckBunny.mp4"}, {"Sintel", "Sintel.mp4"},
-                    {"Tears of Steel", "TearsOfSteel.mp4"}, {"Elephants Dream", "ElephantsDream.mp4"}};
-            for (String[] d : demo) {
-                String url = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/" + d[1];
+            // v2.15 (#120): Google's sample bucket answers 403 to everyone now. The test clip ships inside the app (it
+            // always plays, even offline); the three Blender open movies (CC BY) come from blender.org and archive.org.
+            out.add(testClip());
+            for (String[] d : OPEN_MOVIES) {
                 out.add(new MediaEntry(d[0], getString(R.string.cine_demo_note), getString(R.string.cine_src_demo), "[OPEN]",
-                        url, null, "video", false, ResumeStore.bar(this, url), "", resumeAt(url, 0)));
+                        d[1], null, "video", false, ResumeStore.bar(this, d[1]), "", resumeAt(d[1], 0)));
             }
         } else if (src == SRC_MPV_HANDOFF) {
             JSONObject ho = cine != null ? cine.optJSONObject("lastHandoff") : null;
@@ -1162,23 +1160,23 @@ public final class CinemarchyActivity extends Activity implements OmarchyLink.Li
                             + "Press [H] on any item here or during playback,\n"
                             + "or run `$ omarchy-tv handoff --back` on your PC.", 0));
         } else if (src == SRC_STREAMING) {
-            out.add(new MediaEntry("Jellyfin Media Server", "Self-hosted cinema & TV server (LAN / WebApp)", "Self-Hosted", "[JELLYFIN]", "https://jellyfin.org", "org.jellyfin.androidtv", "service", false, "", "", 0));
-            out.add(new MediaEntry("Plex", "Personal media server & live channels", "Media Server", "[PLEX]", "https://app.plex.tv", "com.plexapp.android", "service", false, "", "", 0));
-            out.add(new MediaEntry("Stremio", "Unified streaming hub & add-ons", "Media Center", "[STREMIO]", "https://web.stremio.com", "com.stremio.one", "service", false, "", "", 0));
-            out.add(new MediaEntry("YouTube", "Native Android TV app or WebApp", "Streaming", "[YT]", "https://www.youtube.com/tv", "com.google.android.youtube.tv", "service", false, "", "", 0));
-            out.add(new MediaEntry("Netflix", "Cinema & series streaming", "Streaming", "[NETFLIX]", "https://www.netflix.com", "com.netflix.ninja", "service", false, "", "", 0));
+            // v2.15: only the apps this TV really has (a website of Netflix & co. can't play in a WebView); X always works.
+            int before = out.size();
+            addIfInstalled(out, new MediaEntry("Jellyfin Media Server", "Self-hosted cinema & TV server (LAN / WebApp)", "Self-Hosted", "[JELLYFIN]", "https://jellyfin.org", "org.jellyfin.androidtv", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Plex", "Personal media server & live channels", "Media Server", "[PLEX]", "https://app.plex.tv", "com.plexapp.android", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Stremio", "Unified streaming hub & add-ons", "Media Center", "[STREMIO]", "https://web.stremio.com", "com.stremio.one", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("YouTube", "Native Android TV app or WebApp", "Streaming", "[YT]", "https://www.youtube.com/tv", "com.google.android.youtube.tv", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Netflix", "Cinema & series streaming", "Streaming", "[NETFLIX]", "https://www.netflix.com", "com.netflix.ninja", "service", false, "", "", 0));
             out.add(new MediaEntry("X", "x.com · videos, the remote mapped to X's keys", "Social", "[X]", "", null, "x_app", false, "", "", 0));
-            out.add(new MediaEntry("Prime Video", "Amazon Prime cinema & live sports", "Streaming", "[PRIME]", "https://www.primevideo.com", "com.amazon.amazonvideo.livingroom", "service", false, "", "", 0));
-            out.add(new MediaEntry("Disney+", "Disney, Pixar, Marvel, Star Wars", "Streaming", "[DISNEY+]", "https://www.disneyplus.com", "com.disney.disneyplus", "service", false, "", "", 0));
-            out.add(new MediaEntry("Apple TV+", "Apple Original films & series", "Streaming", "[APPLETV]", "https://tv.apple.com", "com.apple.atve.androidtv.appletv", "service", false, "", "", 0));
-            out.add(new MediaEntry("Twitch", "Live coding, gaming & creator streams", "Live Stream", "[TWITCH]", "https://www.twitch.tv", "tv.twitch.android.app", "service", false, "", "", 0));
-            out.add(new MediaEntry("Crunchyroll", "Anime simulcasts & cinema", "Anime", "[ANIME]", "https://www.crunchyroll.com", "com.crunchyroll.crunchyroid", "service", false, "", "", 0));
-            out.add(new MediaEntry("RaiPlay", "Italian live TV & cinema on demand", "Broadcaster", "[RAI]", "https://www.raiplay.it", "it.rainet.androidtv", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Prime Video", "Amazon Prime cinema & live sports", "Streaming", "[PRIME]", "https://www.primevideo.com", "com.amazon.amazonvideo.livingroom", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Disney+", "Disney, Pixar, Marvel, Star Wars", "Streaming", "[DISNEY+]", "https://www.disneyplus.com", "com.disney.disneyplus", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Apple TV+", "Apple Original films & series", "Streaming", "[APPLETV]", "https://tv.apple.com", "com.apple.atve.androidtv.appletv", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Twitch", "Live coding, gaming & creator streams", "Live Stream", "[TWITCH]", "https://www.twitch.tv", "tv.twitch.android.app", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("Crunchyroll", "Anime simulcasts & cinema", "Anime", "[ANIME]", "https://www.crunchyroll.com", "com.crunchyroll.crunchyroid", "service", false, "", "", 0));
+            addIfInstalled(out, new MediaEntry("RaiPlay", "Italian live TV & cinema on demand", "Broadcaster", "[RAI]", "https://www.raiplay.it", "it.rainet.androidtv", "service", false, "", "", 0));
+            if (out.size() == before) out.add(new MediaEntry(getString(R.string.cine_none), "", "", "[ ]", "", null, "noop", false, "", "", 0));
         } else if (src == SRC_LIVETV) {
             out.add(new MediaEntry("System Live TV (DVB-T2 / S2 / HDMI Tuner)", "Opens native Android TV hardware tuner", "Hardware Tuner", "[TUNER]", "", null, "livetv_sys", true, "● LIVE", "", 0));
-            out.add(new MediaEntry("NASA TV Public (Live ISS & Mission Control)", "24/7 Orbital feed via Omarchy WebApp", "Space Live", "[LIVE]", "https://plus.nasa.gov", null, "service", true, "● LIVE", "", 0));
-            out.add(new MediaEntry("Euronews Live Hub", "European live news stream", "News Live", "[NEWS]", "https://www.euronews.com/live", null, "service", true, "● LIVE", "", 0));
-            out.add(new MediaEntry("Sky TG24 Live", "24-hour Italian & international news stream", "News Live", "[SKYTG24]", "https://tg24.sky.it/diretta-tv", null, "service", true, "● LIVE", "", 0));
         } else if (src == SRC_SNIPPETS) {
             JSONArray snips = cine != null ? cine.optJSONArray("snippets") : null;
             if (snips != null) {
@@ -1194,16 +1192,32 @@ public final class CinemarchyActivity extends Activity implements OmarchyLink.Li
                             url, null, "video", false, "LOOP", "", 0));
                 }
             }
-            out.add(new MediaEntry("For Bigger Blazes (15 s)", "Google sample clip", "OLED Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", null, "video", false, "", "", 0));
-            out.add(new MediaEntry("For Bigger Escapes (15 s)", "Google sample clip", "Motion Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4", null, "video", false, "", "", 0));
-            out.add(new MediaEntry("For Bigger Joyrides (15 s)", "Google sample clip", "Night Snippet", "[15s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4", null, "video", false, "", "", 0));
-            out.add(new MediaEntry("For Bigger Fun (60 s)", "Google sample clip", "Color Snippet", "[60s]", "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4", null, "video", false, "", "", 0));
+            out.add(testClip());   // v2.15: Google's sample clips are gone (403); the bundled test clip always plays
         } else if (src == SRC_IPTV) {
             return iptvEntries(root);
         } else if (src == SRC_QUEUE) {
             return queueEntries(cine);
         }
         return out;
+    }
+
+    /** v2.15 (#120): open movies that really answer (checked 9 Nov 2026), Blender Foundation, CC BY. */
+    static final String[][] OPEN_MOVIES = {
+            {"Big Buck Bunny", "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"},
+            {"Tears of Steel", "https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov"},
+            {"Elephants Dream", "https://download.blender.org/ED/elephantsdream-720-h264-st-aac.mov"}};
+    static final String TEST_CLIP = "asset:///cinemarchy/omarchytv-test.mp4";
+
+    /** 24 s made for OmarchyTV, inside the app: colour bars and a 1 kHz tone, then a fractal zoom with a chord. */
+    private MediaEntry testClip() {
+        return new MediaEntry("OmarchyTV · test clip (24 s)", getString(R.string.cine_test_clip_note), getString(R.string.cine_src_demo), "[TEST]",
+                TEST_CLIP, null, "video", false, ResumeStore.bar(this, TEST_CLIP), "", 0);
+    }
+
+    /** A streaming app only when it is installed on this TV. */
+    private void addIfInstalled(List<MediaEntry> out, MediaEntry e) {
+        PackageManager pm = getPackageManager();
+        if (e.pkg != null && (pm.getLeanbackLaunchIntentForPackage(e.pkg) != null || pm.getLaunchIntentForPackage(e.pkg) != null)) out.add(e);
     }
 
     @Override

@@ -2281,6 +2281,12 @@ public final class LinkServer {
             case "living":   // v2.14 Living screensaver feed (GitHub, PC notifications, X), memory only
                 host.onEvent(c.pcId, type, living(data));
                 break;
+            case "agent":   // v2.15 an AI agent on the PC needs you: {name, text}, shown only when the TV opted in
+                if (data.optString("name", "").length() <= 200 && data.optString("text", "").length() <= 500) host.onEvent(c.pcId, type, data);
+                break;
+            case "pulse":   // v2.15 the PC's Omarchy Pulse state for the Pulse screensaver, memory only
+                if (data.has("v") && data.toString().length() <= 256 * 1024) host.onEvent(c.pcId, type, data);
+                break;
             case "liftoff":   // v2.14 a build/update on the PC: rocket countdown on Home (LiftoffView)
                 host.onEvent(c.pcId, type, liftoff(data));
                 break;

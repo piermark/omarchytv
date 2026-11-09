@@ -379,6 +379,9 @@
     <string name="ha_token">アクセストークン</string>
     <string name="ha_entities">照明（entity ids）</string>
     <string name="set_random_theme">ランダムなテーマ</string>
+    <string name="set_random_scope">ランダムの対象</string>
+    <string name="set_random_intros">アニメーションのイントロ</string>
+    <string name="set_random_all">すべてのテーマ</string>
     <string name="set_random_wallpaper">ランダムな壁紙 / イントロ</string>
     <string name="menu_remote_keys">リモコンのボタン</string>
     <string name="keys_service">ユーザー補助サービス</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK か黄: 次のグループ (すべて, ★, …)</string>
     <string name="cine_live">ライブ</string>
     <string name="cine_demo_note">Blender オープン映画 · CC BY · デモ配信</string>
+    <string name="cine_test_clip_note">OmarchyTV 用に作成 · アプリに内蔵 · オフラインでも再生</string>
     <string name="cine_queue_empty">次に再生は空です: 動画で赤を押してね</string>
     <string name="cine_queue_clear">次に再生を空にする</string>
     <string name="cine_embed">\@dhh37 を Cinemarchy で再生</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">先に Omarchy PC をペアリングしてね</string>
     <string name="cine_up">‹ 戻る</string>
     <string name="cine_pc_empty">このフォルダに再生できるものはありません</string>
+    <string name="pulse_notice">新しいスクリーンセーバー: Omarchy Pulse。変更や元に戻すには 設定 › スクリーンセーバー。</string>
+    <string name="ss_pulse_scene">Pulse のシーン</string>
+    <string name="ss_restore_previous">前のスクリーンセーバー</string>
+    <string name="agent_alert_row">視聴中の AI エージェント通知</string>
+    <string name="agent_alert" formatted="true">● %1$s があなたを待っています: %2$s</string>
 </resources>

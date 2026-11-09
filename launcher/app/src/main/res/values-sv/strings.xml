@@ -379,6 +379,9 @@
     <string name="ha_token">Åtkomsttoken</string>
     <string name="ha_entities">Lampor (entity ids)</string>
     <string name="set_random_theme">Slumpmässigt tema</string>
+    <string name="set_random_scope">Slumpa bland</string>
+    <string name="set_random_intros">animerade intron</string>
+    <string name="set_random_all">alla teman</string>
     <string name="set_random_wallpaper">Slumpmässig bakgrund / intro</string>
     <string name="menu_remote_keys">Fjärrkontrollens knappar</string>
     <string name="keys_service">Tillgänglighetstjänst</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK eller gul: nästa grupp (alla, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender öppen film · CC BY · demoström</string>
+    <string name="cine_test_clip_note">Gjord för OmarchyTV · i appen · fungerar offline</string>
     <string name="cine_queue_empty">Härnäst är tom: tryck röd på en video</string>
     <string name="cine_queue_clear">Töm Härnäst</string>
     <string name="cine_embed">Spela @dhh37 i Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Para ihop Omarchy-datorn först</string>
     <string name="cine_up">‹ tillbaka</string>
     <string name="cine_pc_empty">Inget att spela i den här mappen</string>
+    <string name="pulse_notice">Ny skärmsläckare: Omarchy Pulse. Inställningar › Skärmsläckare för att byta eller gå tillbaka.</string>
+    <string name="ss_pulse_scene">Pulse-scen</string>
+    <string name="ss_restore_previous">Föregående skärmsläckare</string>
+    <string name="agent_alert_row">AI-agentaviseringar medan du tittar</string>
+    <string name="agent_alert" formatted="true">● %1$s behöver dig: %2$s</string>
 </resources>

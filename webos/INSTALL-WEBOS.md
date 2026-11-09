@@ -90,6 +90,17 @@ omarchy-tv update omarchytv-webos-2.14.0-testing.ipk --tv lgtv
 
 ---
 
+### Keep Developer Mode alive (1000 hours)
+
+On an unrooted TV, OmarchyTV runs through LG's Developer Mode, and a Developer Mode session lasts **1000 hours** (about
+41 days). When it runs out, Developer Mode turns off and the TV **removes the sideloaded app**. To keep it, open the
+**Developer Mode** app on the TV before then and press **EXTEND**: that starts a new 1000 hours.
+
+OmarchyTV can remind you (2.15, idea by @XanderHalloran, #131): Settings › Widgets › **dev mode countdown** adds a box
+to the widget row with the days left (hours under 48 h; yellow under 14 days, red under 7). The app can't read LG's
+timer, so after each EXTEND choose **dev mode · I just pressed EXTEND** and it counts the next 1000 hours. Rooted TVs
+(Method C) don't need any of this.
+
 ## Method C — Rooted TV (Homebrew Channel, no Developer Mode)
 
 If your TV is rooted with [Homebrew Channel](https://github.com/webosbrew/webos-homebrew-channel), you can install over SSH as root. There is no Developer Mode session to renew, and the rooted-only settings described [above](#optional-make-omarchytv-act-like-the-home-screen) become available.
@@ -222,6 +233,7 @@ OmarchyTV reads the apps installed on your LG TV (for example NOW, MUBI, DAZN an
 - If you decline or the prompt times out, the built-in app list stays and OmarchyTV doesn't ask again on its own.
 - **Settings > All settings > Read installed TV apps** turns this on or off (on by default).
 - **Settings > All settings > Re-pair with TV** forgets the key and shows the prompt again, for example after a TV reset or if new apps don't appear.
+- **Missed the prompt on the first start?** The app row then shows only the built-in tiles. Use **Re-pair with TV** above and accept the prompt: your TV's own apps appear, with their icons ([#127](https://github.com/piermark/omarchytv/issues/127)).
 
 ## Grok Bot · Omarchy TUI (new in `2.13.9`)
 

@@ -67,7 +67,9 @@ final class CrtOverlay extends View {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_NO);
     }
 
-    static final float K = 0.88f;   // the home shrinks to 88% inside the set, like the LG/Samsung version
+    // v2.15: the screen fills more of the real TV (94%, was 88%): a slimmer set, the badge still fits under it.
+    static final float K = 0.94f;   // the home shrinks to 94% inside the set, like the LG/Samsung version
+    static final float LIFT = 0.008f;   // the screen sits a little high, leaving room for the badge
 
     /** From MainActivity.onCreate: Home shrinks into a CRT set (overlay on the window's decor view) when on. */
     static void attach(android.app.Activity a, FrameLayout root, String mode) {
@@ -78,7 +80,7 @@ final class CrtOverlay extends View {
         root.setScaleY(K);
         root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             v.setPivotX((r - l) / 2f);
-            v.setPivotY((b - t) / 2f - (b - t) * 0.012f / (1 - K));
+            v.setPivotY((b - t) / 2f - (b - t) * LIFT / (1 - K));
         });
         CrtOverlay v = new CrtOverlay(a, "strong".equals(mode));
         ((android.view.ViewGroup) decor).addView(v, new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
@@ -106,7 +108,7 @@ final class CrtOverlay extends View {
     @Override
     protected void onSizeChanged(int w, int h, int ow, int oh) {
         super.onSizeChanged(w, h, ow, oh);
-        float sw = w * K, sh = h * K, x = (w - sw) / 2f, y = (h - sh) / 2f - h * 0.012f;
+        float sw = w * K, sh = h * K, x = (w - sw) / 2f, y = (h - sh) / 2f - h * LIFT;
         screen.set(x, y, x + sw, y + sh);
         float rad = h * 0.022f;
         frame.reset();

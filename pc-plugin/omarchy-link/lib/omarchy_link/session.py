@@ -546,6 +546,42 @@ class Session:
             self.living_sig = sig
             self.stream.send("living", pub)
 
+    def push_pulse(self) -> None:
+        """2.15 Pulse on the TV: while the TV's screensaver is on, this PC's Pulse state (private parts removed), every 2 s."""
+        if not self.stream or self.cfg.get("pulseToTv", True) is False or not self.state.get("screensaver"):
+            return
+        now = time.time()
+        if now - getattr(self, "pulse_at", 0) < 2:
+            return
+        self.pulse_at = now
+        from . import pulse_state   # noqa: PLC0415
+        st = pulse_state.read()
+        if st:
+            self.stream.send("pulse", st)
+
+    def push_agents(self) -> None:
+        """2.15: an AI agent that starts waiting for you (Pulse's agents, state "waiting"), told to the TV once.
+
+        The TV shows it only when it opted in (Settings › Grok Bot e AI). Every 3 s, from the local Pulse hub; nothing
+        when Pulse isn't running. While the screensaver is on, the TV's Pulse shows the agents anyway: no alert then.
+        """
+        if not self.stream or self.cfg.get("agentAlertToTv", True) is False:
+            return
+        now = time.time()
+        if now - getattr(self, "agents_at", 0) < 3:
+            return
+        self.agents_at = now
+        from . import pulse_state   # noqa: PLC0415
+        st = pulse_state.read()
+        waiting = pulse_state.waiting(st)
+        told = getattr(self, "agents_told", None)
+        self.agents_told = set(waiting)
+        if told is None or self.state.get("screensaver"):   # the first look only learns who already waits
+            return
+        for key, a in waiting.items():
+            if key not in told:
+                self.stream.send("agent", {"name": a["name"], "text": a["text"]})
+
     def push_liftoff(self) -> None:
         """A build/update countdown for the TV: on every change, and every 5 s while it runs."""
         if not self.stream or self.cfg.get("liftoffToTv", True) is False:
@@ -636,6 +672,8 @@ class Session:
             try:
                 self.push_liftoff()
                 self.push_living()
+                self.push_pulse()
+                self.push_agents()
             except (OSError, ValueError) as e:
                 self.log(f"liftoff/living push failed: {e}")
             if tick % 3:

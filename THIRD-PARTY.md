@@ -19,7 +19,7 @@ Audit date: 2026-10-25. Per-background provenance: `launcher/WALLPAPER-PROVENANC
 | Item | Author | Source | Licence | Modifications |
 |---|---|---|---|---|
 | `logo.txt` (home/screensaver logo), `icon.txt` (bar icon → `res/drawable/omarchy_icon.xml`) | David Heinemeier Hansson / Omarchy contributors | https://github.com/basecamp/omarchy (omacom/omarchy) | MIT, `licenses/OMARCHY-LICENSE-MIT.txt` | Icon vectorised; logo animated; "TV" glyphs original; the icon sampled to 20x19 cells is the maze of FORK BOMB's first level (OmarchyTV Arcade, `webos/app/games/forkbomb.js`). |
-| Theme palettes (`themes/*/colors.toml`, colour values only) → `assets/omarchy_themes.json` | same | same, commit be54892 | MIT | Converted to JSON. Tokyo Night palette originally by enkia/folke (colour values only). |
+| Theme palettes (`themes/*/colors.toml`, colour values only) → `assets/omarchy_themes.json` | same | same, commit be54892; completed from tag `v4.5.0` (2.15: `brown`, `bright_red`, `bright_green`, `bright_blue`) | MIT | Converted to JSON. Tokyo Night palette originally by enkia/folke (colour values only). |
 | Theme backgrounds: **all 28 Omarchy-original wordmark images** (`NN-omarchy.webp`, flat theme-background + accent across all 28 bundled MIT themes) | David Heinemeier Hansson (commit "Add omarchy bg option to all themes", 2026-04-28) | same | MIT | PNG → WebP, scaled to 3840x2160. |
 | **Jade Horse** theme (`jade-horse`) & 3 original wallpapers (`01-ink-horse.webp`, `02-carved-jade-horse.webp`, `03-mountain-horses.webp`) | David Heinemeier Hansson | https://github.com/dhh/omarchy-jade-horse-theme | MIT (Copyright (c) 2026 David Heinemeier Hansson) | `colors.toml` added to `omarchy_themes.json`; PNG 1672x941 → WebP (q88). |
 | **Year of the Horse** theme (`year-of-the-horse`) & 3 original wallpapers (`01-ink-horse.webp`, `02-paper-horse.webp`, `03-mountain-horses.webp`) | David Heinemeier Hansson | https://github.com/dhh/omarchy-year-of-the-horse-theme | MIT (Copyright (c) 2026 David Heinemeier Hansson) | `colors.toml` added to `omarchy_themes.json`; PNG 1672x941 → WebP (q88). |
@@ -103,6 +103,25 @@ from the user's Omarchy install (not redistributed). If published, the plugin mu
 | iPhone Remote integration (`webos/iphone-remote/`, `webos/app/iphone-remote.js`) | [@mmdisbrow](https://github.com/mmdisbrow) | pull request to this repo | MIT (this repo) | Off unless built with `OMARCHY_IPHONE_REMOTE=1`; not in the normal IPK or the Android build. |
 | HAP-NodeJS 0.11.2 | Homebridge contributors | https://github.com/homebridge/HAP-NodeJS | Apache 2.0 | Installed on the build machine only, from `package-lock.json`; embedded in the optional backend archive with its licence. |
 | node-qrcode 1.5.4 | Ryan Day (soldair) | https://github.com/soldair/node-qrcode | MIT | Same: build-machine dependency of the optional backend, licence included in the archive. |
+
+## 7c. Data and media added in 2.15
+| Item | Author | Source | Licence | Notes |
+|---|---|---|---|---|
+| Weather city presets (`webos/app/data.js` `weatherCities`: national capitals and large cities, names, country codes, coordinates) | GeoNames | https://www.geonames.org (via the `geonamescache` package) | CC BY 4.0 | Coordinates rounded to 3 decimals; only used to pick a weather location on the TV. |
+| Blender open movies in Cinemarchy (*Big Buck Bunny*, *Tears of Steel*, *Elephants Dream*) | Blender Foundation | https://archive.org/details/BigBuckBunny_124, https://download.blender.org | CC BY 3.0 | Linked and streamed from the official copies, not bundled. |
+| Cinemarchy test clip (`assets/cinemarchy/omarchytv-test.mp4`, `webos/app/vendor/cinemarchy/`) | Marco Porro (OmarchyTV) | generated with FFmpeg's `smptehdbars`, `testsrc2`, `sine` and `aevalsrc` sources | MIT (part of OmarchyTV) | No third-party footage or audio. |
+
+## 7d. Pulse on the TV (2.15)
+| Item | Author | Source | Licence | Notes |
+|---|---|---|---|---|
+| Omarchy Pulse 1.6 page (`pulse.js`, `pulse.css`, `index.html`, `omarchy.png`) in `webos/app/vendor/pulse/` and `assets/pulse/` | Marco Porro | https://github.com/piermark/omarchy-pulse-theme | MIT | Unchanged except `index.html` (the bundled font, the TV scripts). |
+| Sky tables in `pulse-tv-data.js` (bright stars, constellation lines, meteor showers, JPL approximate planet elements) | Omarchy Pulse; elements from E. M. Standish (JPL), "Keplerian Elements for Approximate Positions of the Major Planets" | `tools/pulse-tv-data.py` reads them from omarchy-pulse | MIT (tables); public-domain science | |
+| Planes over the TV | adsb.lol (Android, read through the launcher), adsbdb.com (routes) | https://api.adsb.lol, https://api.adsbdb.com | adsb.lol data ODbL 1.0 | Read live, kept in memory only; nothing stored or redistributed. |
+| ISS position | wheretheiss.at | https://wheretheiss.at | free API | |
+| Starlink orbits | CelesTrak (Android; LG/Samsung through the paired PC) | https://celestrak.org | free data | |
+| Rocket launches | Launch Library 2, The Space Devs | https://thespacedevs.com | free API (15 calls an hour) | Read 4 times an hour. |
+| Kp index | NOAA SWPC | https://services.swpc.noaa.gov | US public domain | |
+| Weather | Open-Meteo | https://open-meteo.com | CC BY 4.0 | |
 
 ## 8. Trademarks
 Netflix, YouTube, Google, Android, Android TV, Google TV, Chromecast, Sony, BRAVIA, X, Prime Video, Disney+, Spotify and

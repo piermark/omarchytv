@@ -942,6 +942,18 @@ public final class OmarchyLink implements LinkServer.Host {
             Living.set(data);
             return;
         }
+        if ("pulse".equals(type)) {   // v2.15: the PC's Pulse, for the Pulse screensaver (PulseLink, memory only)
+            PulseLink.put(data.toString());
+            return;
+        }
+        if ("agent".equals(type)) {   // v2.15: an AI agent on the PC is waiting for you (opt-in, over any app)
+            if (!LauncherConfig.get(app).agentAlert) return;
+            String name = data.optString("name", "agent"), what = data.optString("text", "");
+            String msg = app.getString(R.string.agent_alert, name.length() > 40 ? name.substring(0, 40) : name, what.length() > 80 ? what.substring(0, 80) : what);
+            main.post(() -> android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show());
+            emit(type, data);
+            return;
+        }
         if ("pc_wol".equals(type)) {   // remember the PC's MAC for Wake-on-LAN; rewrite only when it changed
             LauncherConfig cur = LauncherConfig.get(app);
             String mac = data.optString("mac", ""), bc = data.optString("broadcast", "");

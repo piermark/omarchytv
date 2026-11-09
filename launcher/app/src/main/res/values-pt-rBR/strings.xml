@@ -379,6 +379,9 @@
     <string name="ha_token">Token de acesso</string>
     <string name="ha_entities">Luzes (entity ids)</string>
     <string name="set_random_theme">Tema aleatório</string>
+    <string name="set_random_scope">Aleatório entre</string>
+    <string name="set_random_intros">intros animadas</string>
+    <string name="set_random_all">todos os temas</string>
     <string name="set_random_wallpaper">Fundo / intro aleatório</string>
     <string name="menu_remote_keys">Botões do controle</string>
     <string name="keys_service">Serviço de acessibilidade</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK ou amarelo: próximo grupo (todos, ★, …)</string>
     <string name="cine_live">AO VIVO</string>
     <string name="cine_demo_note">Filme livre Blender · CC BY · transmissão demo</string>
+    <string name="cine_test_clip_note">Feito para o OmarchyTV · incluído no app · funciona offline</string>
     <string name="cine_queue_empty">A seguir está vazio: aperte vermelho em um vídeo</string>
     <string name="cine_queue_clear">Limpar A seguir</string>
     <string name="cine_embed">Tocar @dhh37 no Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Pareie o PC Omarchy primeiro</string>
     <string name="cine_up">‹ voltar</string>
     <string name="cine_pc_empty">Nada para tocar nesta pasta</string>
+    <string name="pulse_notice">Novo protetor de tela: Omarchy Pulse. Configurações › Protetor de tela para mudar ou voltar.</string>
+    <string name="ss_pulse_scene">Cena do Pulse</string>
+    <string name="ss_restore_previous">Protetor de tela anterior</string>
+    <string name="agent_alert_row">Avisos dos agentes de IA enquanto você assiste</string>
+    <string name="agent_alert" formatted="true">● %1$s precisa de você: %2$s</string>
 </resources>

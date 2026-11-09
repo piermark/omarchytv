@@ -123,7 +123,7 @@ public class GrokbotDirectActivity extends Activity {
         title.setPadding(dp(12), 0, 0, 0);
         head.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
         panel.addView(head);
-        TextView via = text("Asks your Grok Bot webhook routine; replies come back through ntfy.sh on a random topic.", 11, t.fgDim, false);
+        TextView via = text("Asks your Grok Bot webhook routine; replies come back through " + android.net.Uri.parse(GrokbotDirect.server(prefs(this).getString("server", ""))).getHost() + " on a random topic.", 11, t.fgDim, false);
         via.setPadding(0, dp(6), 0, dp(10));
         panel.addView(via);
 
@@ -233,6 +233,8 @@ public class GrokbotDirectActivity extends Activity {
         final String lang = MainActivity.speechLanguage(this).substring(0, 2);
         final List<String> apps = GrokbotDirect.names(installedApps(null));
         final String question = q;
+        final String server = GrokbotDirect.server(p.getString("server", ""));
+        final String token = p.getString("ntfy_token", "");
         pendingId = id;
         line("Grok Bot", "…", false, false);
         mark.pose("think");
@@ -241,16 +243,17 @@ public class GrokbotDirectActivity extends Activity {
             GrokbotDirect.Reply r = null;
             try {
                 long since = System.currentTimeMillis() / 1000 - 5;
-                post(url, GrokbotDirect.headers(key), GrokbotDirect.body(question, lang, topic, id, apps, "OmarchyTV on Android TV"));
+                post(url, GrokbotDirect.headers(key), GrokbotDirect.body(question, lang, topic, id, apps, "OmarchyTV on Android TV", server));
                 long end = System.currentTimeMillis() + GrokbotDirect.TIMEOUT_MS;
                 while (r == null && id.equals(pendingId) && System.currentTimeMillis() < end) {
                     Thread.sleep(GrokbotDirect.POLL_MS);
                     try {
-                        r = GrokbotDirect.find(get(GrokbotDirect.pollUrl(topic, since)), id);
+                        r = GrokbotDirect.find(get(GrokbotDirect.pollUrl(server, topic, since), token), id);
                     } catch (Exception ignored) {   // one failed poll: keep trying until the deadline
                     }
                 }
-                if (r == null && id.equals(pendingId)) err = "No answer from Grok Bot within 90 s. Check the routine and its ntfy.sh step (see docs/GROKBOT-DIRECT.md).";
+                if (r == null && id.equals(pendingId)) err = "No answer from Grok Bot within 90 s. Check the routine and its ntfy step (see docs/GROKBOT-DIRECT.md)."
+                        + (GrokbotDirect.NTFY.equals(server) ? " If ntfy.sh's daily quota ran out, set your own reply server in Settings." : "");
             } catch (HttpCode e) {
                 err = e.code == 401 || e.code == 403 ? "The webhook refused the key (HTTP " + e.code + "): check it in Settings." : "The webhook answered HTTP " + e.code + ".";
             } catch (Exception e) {
@@ -477,9 +480,10 @@ public class GrokbotDirectActivity extends Activity {
         }
     }
 
-    private static String get(String url) throws Exception {
+    private static String get(String url, String token) throws Exception {
         HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         try {
+            if (GrokbotDirect.validToken(token)) c.setRequestProperty("Authorization", "Bearer " + token);
             c.setConnectTimeout(8_000);
             c.setReadTimeout(10_000);
             if (c.getResponseCode() != 200) return "";

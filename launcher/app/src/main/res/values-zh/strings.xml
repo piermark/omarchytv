@@ -379,6 +379,9 @@
     <string name="ha_token">访问令牌</string>
     <string name="ha_entities">灯（entity ids）</string>
     <string name="set_random_theme">随机主题</string>
+    <string name="set_random_scope">随机范围</string>
+    <string name="set_random_intros">动画开场</string>
+    <string name="set_random_all">全部主题</string>
     <string name="set_random_wallpaper">随机壁纸 / 开场</string>
     <string name="menu_remote_keys">遥控器按键</string>
     <string name="keys_service">无障碍服务</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK 或黄键: 下一分组 (全部, ★, …)</string>
     <string name="cine_live">直播</string>
     <string name="cine_demo_note">Blender 开放电影 · CC BY · 演示流</string>
+    <string name="cine_test_clip_note">为 OmarchyTV 制作 · 内置于应用 · 离线也能播放</string>
     <string name="cine_queue_empty">接下来为空: 在视频上按红键</string>
     <string name="cine_queue_clear">清空接下来</string>
     <string name="cine_embed">在 Cinemarchy 内播放 @dhh37</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">请先配对 Omarchy 电脑</string>
     <string name="cine_up">‹ 返回</string>
     <string name="cine_pc_empty">此文件夹中没有可播放的内容</string>
+    <string name="pulse_notice">新屏保：Omarchy Pulse。在 设置 › 屏保 中更换或恢复。</string>
+    <string name="ss_pulse_scene">Pulse 场景</string>
+    <string name="ss_restore_previous">之前的屏保</string>
+    <string name="agent_alert_row">观看时的 AI 代理提醒</string>
+    <string name="agent_alert" formatted="true">● %1$s 需要你：%2$s</string>
 </resources>

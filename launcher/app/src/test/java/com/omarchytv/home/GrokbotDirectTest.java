@@ -126,4 +126,26 @@ public class GrokbotDirectTest {
         assertTrue(GrokbotDirect.voices("not json").isEmpty());
         assertEquals(8000, GrokbotDirect.XAI_TIMEOUT_MS);
     }
+
+    @org.junit.Test
+    public void replyServer_ownNtfyServer_issue70() throws Exception {
+        assertEquals("https://ntfy.sh/", GrokbotDirect.server(""));
+        assertEquals("https://ntfy.sh/", GrokbotDirect.server(null));
+        assertEquals("https://ntfy.example.com/", GrokbotDirect.server("https://ntfy.example.com"));
+        assertEquals("https://example.com/ntfy/", GrokbotDirect.server("https://example.com/ntfy/"));
+        assertEquals("https://ntfy.example.com:8443/", GrokbotDirect.server("https://ntfy.example.com:8443"));
+        assertFalse(GrokbotDirect.validServer("http://192.168.1.20:2586/"));   // the cloud routine can't reach the LAN
+        assertFalse(GrokbotDirect.validServer("http://ntfy.example.com/"));
+        assertFalse(GrokbotDirect.validServer("http://8.8.8.8/"));
+        assertFalse(GrokbotDirect.validServer("https://x.com/?a=b"));
+        assertFalse(GrokbotDirect.validServer("javascript:alert(1)"));
+        assertEquals("https://ntfy.sh/", GrokbotDirect.server("ftp://x"));
+        assertEquals("https://ntfy.example.com/otv-t/json?poll=1&since=5", GrokbotDirect.pollUrl("https://ntfy.example.com", "otv-t", 5));
+        assertEquals("https://ntfy.sh/otv-t/json?poll=1&since=5", GrokbotDirect.pollUrl("otv-t", 5));
+        org.json.JSONObject b = new org.json.JSONObject(GrokbotDirect.body("q", "it", "otv-t", "id1", null, "c", "https://ntfy.example.com"));
+        assertEquals("https://ntfy.example.com/", b.getString("reply_server"));
+        assertEquals("https://ntfy.sh/", new org.json.JSONObject(GrokbotDirect.body("q", "it", "otv-t", "id1", null, "c")).getString("reply_server"));
+        assertTrue(GrokbotDirect.validToken("tk_abcdefgh12345678"));
+        assertFalse(GrokbotDirect.validToken("abc"));
+    }
 }

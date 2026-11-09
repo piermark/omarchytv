@@ -4,7 +4,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.14.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.15.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)
@@ -31,7 +31,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Animated logo", sys_text_tiles: "Text tiles (terminal style)", sys_all: "All OmarchyTV settings", sys_about: "About & licences",
       tile_move: "Move", tile_hide: "Hide", tile_cancel: "Cancel", move_hint: "◀▶▲▼ move · OK save · Back cancel",
       app_hidden: "Hidden. Show it again in All settings › Hidden apps", hidden_apps: "Hidden apps", hidden_none: "No hidden apps",
-      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
+      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
       wx_title: "Weather", wx_auto: "Automatic (from IP)", wx_auto_fail: "Couldn't find your location, keeping the current city", wx_search: "Search city…", wx_unit: "Temperature unit",
       root_boot: "Open when the TV starts", root_home: "Home button opens OmarchyTV", root_needed: "rooted TV only",
       root_keep: "Keep loaded in the background", root_keep_na: "not on this TV",
@@ -106,6 +106,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cine_group_hint: "OK or yellow: next group (all, ★, …)",
       cine_live: "LIVE",
       cine_demo_note: "Blender open movie · CC BY · demo stream",
+      cine_test_clip_note: "Made for OmarchyTV · inside the app · plays offline",
       cine_queue_empty: "Up next is empty: press red on any video",
       cine_queue_clear: "Clear Up next",
       cine_embed: "Play @dhh37 inside Cinemarchy",
@@ -160,7 +161,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Logo animato", sys_text_tiles: "Tile solo testo (stile terminale)", sys_all: "Tutte le impostazioni OmarchyTV", sys_about: "Info e licenze",
       tile_move: "Sposta", tile_hide: "Nascondi", tile_cancel: "Annulla", move_hint: "◀▶▲▼ sposta · OK salva · Indietro annulla",
       app_hidden: "Nascosta. Mostrala di nuovo in Tutte le impostazioni › App nascoste", hidden_apps: "App nascoste", hidden_none: "Nessuna app nascosta",
-      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV e Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
+      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV e Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
       wx_title: "Meteo", wx_auto: "Automatica (da IP)", wx_auto_fail: "Posizione non trovata, resta la città attuale", wx_search: "Cerca città…", wx_unit: "Unità temperatura",
       root_boot: "Apri all'avvio della TV", root_home: "Il tasto Home apre OmarchyTV", root_needed: "solo TV con root",
       root_keep: "Tieni caricata in background", root_keep_na: "non su questa TV",
@@ -235,6 +236,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cine_group_hint: "OK o giallo: gruppo successivo (tutti, ★, …)",
       cine_live: "LIVE",
       cine_demo_note: "Film aperto Blender · CC BY · flusso demo",
+      cine_test_clip_note: "Creato per OmarchyTV · dentro l'app · funziona anche offline",
       cine_queue_empty: "Prossimi è vuoto: premi rosso su un video",
       cine_queue_clear: "Svuota Prossimi",
       cine_embed: "Riproduci @dhh37 dentro Cinemarchy",
@@ -289,7 +291,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Animiertes Logo", sys_text_tiles: "Text-Kacheln (Terminal-Stil)", sys_all: "Alle OmarchyTV-Einstellungen", sys_about: "Info & Lizenzen",
       tile_move: "Verschieben", tile_hide: "Ausblenden", tile_cancel: "Abbrechen", move_hint: "◀▶▲▼ verschieben · OK speichern · Zurück abbrechen",
       app_hidden: "Ausgeblendet. Wieder einblenden unter Alle Einstellungen › Ausgeblendete Apps", hidden_apps: "Ausgeblendete Apps", hidden_none: "Keine ausgeblendeten Apps",
-      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
+      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
       wx_title: "Wetter", wx_auto: "Automatisch (über IP)", wx_auto_fail: "Standort nicht gefunden, die aktuelle Stadt bleibt", wx_search: "Stadt suchen…", wx_unit: "Temperatureinheit",
       root_boot: "Beim Einschalten öffnen", root_home: "Home-Taste öffnet OmarchyTV", root_needed: "nur gerootete TVs",
       root_keep: "Im Hintergrund geladen lassen", root_keep_na: "nicht auf diesem TV",
@@ -364,6 +366,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cine_group_hint: "OK oder Gelb: nächste Gruppe (alle, ★, …)",
       cine_live: "LIVE",
       cine_demo_note: "Blender Open Movie · CC BY · Demo-Stream",
+      cine_test_clip_note: "Für OmarchyTV gemacht · in der App · läuft auch offline",
       cine_queue_empty: "Als Nächstes ist leer: Rot auf einem Video drücken",
       cine_queue_clear: "Als Nächstes leeren",
       cine_embed: "@dhh37 in Cinemarchy abspielen",
@@ -406,6 +409,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   var DEFAULT_CFG = {
     theme: "last-horizon",
     randomTheme: true,
+    randomScope: "intros",   // v2.15 (#71): "all" = every bundled theme
     randomWallpaper: true,
     pluginSpacexTv: true,
     embedPlayer: true,     // Cinemarchy: YouTube plays inside (official embed) by default; an explicit false stays off
@@ -434,9 +438,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     tvEnabled: true,
     textScale: 1,         // launcher text size: 0.9 / 1 (default) / 1.15 / 1.3, CSS var --ts
     saverIdleMin: 2.5,
-    saverMode: "aquarium",
+    saverMode: "pulse",   // v2.15: Omarchy Pulse is the default screensaver
     saverSpeed: "normal",
-    saverArt: "aquarium",
+    saverArt: "pulse",
+    pulseScene: "sphere",
     saverSound: true,
     saverLogoScale: 0.65,
     saverShowClock: false,
@@ -467,7 +472,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     pcSimulated: false,
     aiCredits: "percent",
     clockFormat: "auto",   // "auto" (12 h in English, 24 h otherwise), "12" or "24"
-    widgets: { term: true, weather: true, pc: true, ai: true, deploy: false },
+    widgets: { term: true, weather: true, pc: true, ai: true, deploy: false, devmode: false },
+    devModeUntil: 0,   // 2.15 (#131): when the Developer Mode session runs out, as last confirmed (epoch ms)
     tvApps: true,         // LG webOS: read the apps installed on the TV over SSAP (tvapps.js), DEFAULT_APPS stay the fallback
     hiddenApps: [],
     appOrder: []   // app ids in the user's order; apps not listed keep their DEFAULT_APPS position after them
@@ -481,6 +487,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function saveCfg() {
     try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(cfg)); } catch (e) {}
+  }
+  // v2.15: Pulse becomes everyone's screensaver, once; the previous one is kept for "Previous screensaver" (as on Android).
+  if (!cfg.pulseDefault215) {
+    var pulseWas = {};
+    try { pulseWas = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "{}") || {}; } catch (e) {}
+    var pulseSw = { saverMode: "pulse", saverArt: "pulse", living: false, pulseDefault215: true };
+    if (!(cfg.saverMode === "pulse" && !cfg.living)) {
+      pulseSw.ssBefore215 = { saverMode: pulseWas.saverMode || "aquarium", saverArt: pulseWas.saverArt || "aquarium", living: !!cfg.living };
+      pulseSw.pulseNotice = true;
+    }
+    Object.keys(pulseSw).forEach(function (k) { cfg[k] = pulseWas[k] = pulseSw[k]; });
+    // only these keys are written: the rest of the saved settings stays exactly as it was
+    try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(pulseWas)); } catch (e) {}
   }
 
   function getLang() {
@@ -693,6 +712,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
     var wl = document.getElementById("wallpaper-layer");
     var wv = document.getElementById("wallpaper-video");
+    // 2.15 (#47, measured by @tozes): on a 1080p panel (devicePixelRatio 1), or with "Light wallpapers" on, the
+    // 1920x1080 copy (wallpapers-1080/, made by tools/wallpapers-1080.py): it decodes ~4x faster; the 4K file
+    // only pays off on a UHD panel. Wallpapers already 1080p have no copy and stay as they are.
+    function wpFile(p) {
+      var light = cfg.lightWallpapers === true || (cfg.lightWallpapers !== false && (window.devicePixelRatio || 1) <= 1);
+      var rel = String(p || "").replace(/^wallpapers\//, "");
+      return light && window.OMARCHY_WP1080 && window.OMARCHY_WP1080.indexOf(rel) >= 0 ? "wallpapers-1080/" + rel : p;
+    }
     var wlist = DATA.wallpapers[cfg.theme] || [];
     var picked = cfg.wallpaper && cfg.wallpaper !== "plain" && allWallpapers().indexOf(cfg.wallpaper) >= 0 ? cfg.wallpaper : "";
     var activeWp = "";
@@ -702,12 +729,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       wl.style.backgroundImage = "none";   // v2.14 OmaFire draws into the layer itself
     } else if (picked) {
       activeWp = picked;
-      wl.style.backgroundImage = "url('" + picked + "')";
+      wl.style.backgroundImage = "url('" + wpFile(picked) + "')";
     } else if (cfg.proceduralBg || cfg.wallpaper === "plain" || !wlist.length) {
       wl.style.backgroundImage = "radial-gradient(circle at 75% 20%, " + hexToRgba(t.accent, 0.22) + " 0%, " + t.bg + " 70%)";
     } else {
       activeWp = wlist[cfg.wallpaperIdx % wlist.length];
-      wl.style.backgroundImage = "url('" + activeWp + "')";
+      wl.style.backgroundImage = "url('" + wpFile(activeWp) + "')";
     }
     if (wv) {
       var intro = cfg.wallpaperIntro && activeWp && DATA.wallpaperIntros && DATA.wallpaperIntros[activeWp];
@@ -744,7 +771,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var crt = typeof crtMode === "function" && crtMode() !== "off";
     if (!crt) { st.style.transform = "scale(" + s + ")"; return; }
     // Retro CRT: the 1920x1080 stage, smaller and centred a little high; the overlay covers exactly that area.
-    var k = s * 0.88, w = 1920 * k, h = 1080 * k, x = (window.innerWidth - w) / 2, y = (window.innerHeight - h) / 2 - window.innerHeight * 0.012;
+    // v2.15: 94% (was 88%), so the screen fills more of the real TV; the same size as on Android (CrtOverlay.K).
+    var k = s * 0.94, w = 1920 * k, h = 1080 * k, x = (window.innerWidth - w) / 2, y = (window.innerHeight - h) / 2 - window.innerHeight * 0.008;
     st.style.transform = "translate(" + x + "px," + y + "px) scale(" + k + ")";
     var el = document.getElementById("crt-overlay"), b = document.getElementById("crt-badge");
     if (el) { el.style.left = x + "px"; el.style.top = y + "px"; el.style.width = w + "px"; el.style.height = h + "px"; }
@@ -923,6 +951,13 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     document.getElementById("pc-box").style.display = cfg.widgets.pc ? "block" : "none";
     document.getElementById("ai-box").style.display = cfg.widgets.ai ? "block" : "none";
     document.getElementById("deploy-box").style.display = cfg.widgets.deploy ? "block" : "none";
+    var dmOn = !!cfg.widgets.devmode && window.OMARCHY_PLATFORM !== "tizen" && window.OmarchyDevMode;
+    document.getElementById("devmode-box").style.display = dmOn ? "block" : "none";
+    if (dmOn) {
+      var dm = window.OmarchyDevMode.left(cfg.devModeUntil || 0, Date.now()), dmb = document.getElementById("devmode-body");
+      dmb.textContent = dm.text;
+      dmb.style.color = dm.level === "crit" || dm.level === "over" ? "var(--t-red)" : dm.level === "warn" ? "var(--t-yellow)" : "var(--t-fg)";
+    }
 
     var wx = state.weather;
     var wmoMap = tr("wmo") || {};
@@ -1405,6 +1440,16 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function rotateRandomIfEnabled() {
     if (!cfg.randomTheme && !cfg.randomWallpaper) return false;
+    // v2.15 (#71): "all" = any bundled theme, with one of its own backgrounds (the fires 1 time in 8), as on Android
+    if (cfg.randomTheme && cfg.randomScope === "all" && !(cfg.randomWallpaper && Math.random() < 0.125)) {
+      var all = Object.keys(DATA.themes).filter(function (n) { return n !== cfg.theme; });
+      if (all.length) {
+        cfg.theme = all[Math.floor(Math.random() * all.length)];
+        if (cfg.randomWallpaper) { cfg.wallpaper = ""; cfg.wallpaperIdx = Math.floor(Math.random() * 12); }
+        saveCfg(); applyTheme(); renderAll();
+        return true;
+      }
+    }
     var pick = ANIMATED_INTROS[Math.floor(Math.random() * ANIMATED_INTROS.length)];
     if (pick.fire && cfg.randomWallpaper) {
       if (pick.fire === cfg.wallpaper) pick = { fire: pick.fire === "omafire:campfire" ? "omafire:embers" : "omafire:campfire" };
@@ -1439,6 +1484,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var items = [
       { label: tr("random_theme"), right: cfg.randomTheme ? "on" : "off", act: function () {
         cfg.randomTheme = !cfg.randomTheme; saveCfg(); openThemesModal(true);
+      } },
+      { label: tr("random_scope"), right: tr(cfg.randomScope === "all" ? "random_all" : "random_intros"), act: function () {
+        cfg.randomScope = cfg.randomScope === "all" ? "intros" : "all"; saveCfg(); openThemesModal(true);
       } },
       { label: tr("random_wallpaper"), right: cfg.randomWallpaper ? "on" : "off", act: function () {
         cfg.randomWallpaper = !cfg.randomWallpaper; saveCfg(); openThemesModal(true);
@@ -1707,21 +1755,32 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "omarchy · pc", right: cfg.widgets.pc ? "on" : "off", act: function () { tog("pc"); } },
       { label: "ai credits · pc", right: cfg.widgets.ai ? "on" : "off", act: function () { tog("ai"); } },
       { label: "deploys · pc", right: cfg.widgets.deploy ? "on" : "off", act: function () { tog("deploy"); } }
-    ]);
+    ].concat(window.OMARCHY_PLATFORM === "tizen" ? [] : [   // 2.15 (#131): LG Developer Mode's 1000-hour session
+      { label: "dev mode countdown", right: cfg.widgets.devmode ? "on" : "off", act: function () { tog("devmode"); } },
+      { label: "dev mode · I just pressed EXTEND", right: cfg.devModeUntil ? window.OmarchyDevMode.left(cfg.devModeUntil, Date.now()).text.split(" · ")[0] : "›", act: function () {
+        cfg.devModeUntil = window.OmarchyDevMode.extended(Date.now()); cfg.widgets.devmode = true;
+        saveCfg(); renderAll(); showToast("Developer Mode: 1000 hours from now"); openWidgetsModal();
+      } }
+    ]));
   }
 
   function openSaverModal(keepFocus) {
     var focus = state.modalIdx;
     openModal(tr("sys_saver"), "37 tte.js TerminalTextEffects or multi-layer Omarchy Cyber-TUI Aquarium", [
       { label: "Preview screensaver now", right: "▶", act: function () { closeModal(); startScreensaver(); } },
-      { label: "Screensaver mode / art", right: cfg.saverMode === "aquarium" ? (cfg.saverArt === "aquarium-classic" ? "Aquarium Classic" : "Omarchy Aquarium (homage)") : (cfg.saverArt === "cinemarchy" ? "CINEMARCHY" : "OMARCHY TV"), act: function () {
-        // cycle: Aquarium (homage, default) -> Aquarium Classic -> OMARCHY TV -> CINEMARCHY -> Aquarium
-        if (cfg.saverMode === "aquarium" && cfg.saverArt !== "aquarium-classic") { cfg.saverArt = "aquarium-classic"; cfg.saverMode = "aquarium"; }
+      { label: "Screensaver mode / art", right: cfg.saverMode === "pulse" ? "Omarchy Pulse" : cfg.saverMode === "aquarium" ? (cfg.saverArt === "aquarium-classic" ? "Aquarium Classic" : "Omarchy Aquarium (homage)") : (cfg.saverArt === "cinemarchy" ? "CINEMARCHY" : "OMARCHY TV"), act: function () {
+        // cycle: Pulse (default, 2.15) -> Aquarium (homage) -> Aquarium Classic -> OMARCHY TV -> CINEMARCHY -> Pulse
+        if (cfg.saverMode === "pulse") { cfg.saverArt = "aquarium"; cfg.saverMode = "aquarium"; }
+        else if (cfg.saverMode === "aquarium" && cfg.saverArt !== "aquarium-classic") { cfg.saverArt = "aquarium-classic"; cfg.saverMode = "aquarium"; }
         else if (cfg.saverMode === "aquarium") { cfg.saverArt = "omarchy-tv"; cfg.saverMode = "logo"; }
         else if (cfg.saverArt !== "cinemarchy") { cfg.saverArt = "cinemarchy"; cfg.saverMode = "logo"; }
-        else { cfg.saverArt = "aquarium"; cfg.saverMode = "aquarium"; }
+        else { cfg.saverArt = "pulse"; cfg.saverMode = "pulse"; }
         saveCfg(); openSaverModal(true);
-      } },
+      } }].concat(cfg.saverMode === "pulse" ? [{ label: tr("ss_pulse_scene"), right: cfg.pulseScene || "sphere", act: function () {
+        var sc = ["sphere", "skyline", "orbit", "calm", "hacker", "noir"]; cfg.pulseScene = sc[(sc.indexOf(cfg.pulseScene || "sphere") + 1) % sc.length]; saveCfg(); openSaverModal(true);
+      } }] : []).concat(cfg.ssBefore215 ? [{ label: tr("ss_restore_previous"), right: "›", act: function () {
+        var b = cfg.ssBefore215; cfg.saverMode = b.saverMode; cfg.saverArt = b.saverArt; cfg.living = !!b.living; delete cfg.ssBefore215; saveCfg(); openSaverModal(true);
+      } }] : []).concat([
       { label: "tte.js speed", right: cfg.saverSpeed || "normal", act: function () {
         var sp = ["normal", "slow", "fast"]; cfg.saverSpeed = sp[(sp.indexOf(cfg.saverSpeed || "normal") + 1) % 3]; saveCfg(); openSaverModal(true);
       } },
@@ -1770,7 +1829,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           if (state.modalOpen) openSaverModal(true);
         });
       } }
-    ]);
+    ]));
     // Toggling an item re-opens the menu; keep the cursor on it instead of jumping to the top.
     if (keepFocus) { state.modalIdx = Math.min(focus, state.modalItems.length - 1); renderModalList(); }
   }
@@ -1917,6 +1976,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } },
       { label: "Always-animated wallpaper", right: cfg.wallpaperLoop ? "on" : "off", act: function () {
         cfg.wallpaperLoop = !cfg.wallpaperLoop; saveCfg(); applyTheme(); openAllSettingsModal();
+      } },
+      { label: "Light wallpapers (1080p)", right: cfg.lightWallpapers === true ? "on" : cfg.lightWallpapers === false ? "off" : "auto", act: function () {
+        // 2.15 (#47): auto = on a 1080p panel only; on = always (faster start on a UHD set); off = always 4K
+        cfg.lightWallpapers = cfg.lightWallpapers === undefined || cfg.lightWallpapers === null ? true : cfg.lightWallpapers === true ? false : null;
+        saveCfg(); applyTheme(); openAllSettingsModal();
       } },
       { label: "Wallpaper dimming", right: Math.round((cfg.wallpaperDim || 0) * 100) + "%", act: function () {
         var d = [0, 0.25, 0.5];
@@ -2577,10 +2641,31 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var ov = document.getElementById("saver-overlay");
     var fr = document.getElementById("saver-frame");
     // v2.14 Live screensaver: a screen of its own (living.js fullscreen), no art under it.
-    fr.src = cfg.living && window.OmarchyLiving ? "about:blank" : "saver/index.html";
+    fr.src = cfg.living && window.OmarchyLiving ? "about:blank" : cfg.saverMode === "pulse" ? pulseUrl() : "saver/index.html";
     ov.className = "active";
     livingStart(ov);
+    pulseStart(fr);
   }
+
+  // ---- v2.15 Pulse screensaver: Pulse 1.6's own page (vendor/pulse), the TV's hub inside it, the PC's state on top ----
+  function pulseUrl() {
+    var t = DATA.themes[cfg.theme] || {};
+    var c = { city: cfg.weatherCity || "", imperial: cfg.tempUnit === "F", theme: { name: cfg.theme, colors: t }, scene: cfg.pulseScene || "sphere" };
+    if (typeof cfg.weatherLat === "number" && typeof cfg.weatherLon === "number") { c.lat = cfg.weatherLat; c.lon = cfg.weatherLon; }
+    return "vendor/pulse/index.html#cfg=" + encodeURIComponent(JSON.stringify(c));
+  }
+  var pulseTimer = null;
+  function pulseStart(fr) {
+    pulseStop();
+    if (cfg.living || cfg.saverMode !== "pulse" || !pcReady()) return;
+    // the paired PC's Pulse (agents, workspaces, repos, panels, planes...) through the bridge, every 2 s
+    pulseTimer = setInterval(function () {
+      pcPost("/v1/pulse", {}).then(function (r) {
+        if (r.status === 200 && r.j && r.j.v && fr.contentWindow) fr.contentWindow.postMessage({ pulseTV: "pc", state: r.j }, "*");
+      }, function () {});
+    }, 2000);
+  }
+  function pulseStop() { if (pulseTimer) { clearInterval(pulseTimer); pulseTimer = null; } }
 
   // ---- v2.14 Living screensaver (living.js): weather here, the rest from the PC bridge every 3 s ----
   var livingUi = null, livingTimer = null, livingData = {};
@@ -2631,6 +2716,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var ov = document.getElementById("saver-overlay");
     var fr = document.getElementById("saver-frame");
     livingStop();
+    pulseStop();
     if (ov.className === "active") {
       ov.className = "";
       fr.src = "about:blank";
@@ -3239,7 +3325,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     } else if (c.kind === "theme-unknown") tuiAdd("err", "no single theme matches “" + c.query + "” · try “themes”");
     else if (c.kind === "wallpaper") { cfg.wallpaperIdx = (cfg.wallpaperIdx || 0) + 1; cfg.wallpaper = ""; saveCfg(); applyTheme(); tuiAdd("ok", "next wallpaper"); }
     else if (c.kind === "saver") {
-      if (c.style === "aquarium") { cfg.saverMode = "aquarium"; cfg.saverArt = "aquarium"; }
+      if (c.style === "pulse") { cfg.saverMode = "pulse"; cfg.saverArt = "pulse"; }
+      else if (c.style === "aquarium") { cfg.saverMode = "aquarium"; cfg.saverArt = "aquarium"; }
       else if (c.style === "classic") { cfg.saverMode = "aquarium"; cfg.saverArt = "aquarium-classic"; }
       else if (c.style === "logo") { cfg.saverMode = "logo"; cfg.saverArt = "omarchy-tv"; }
       else if (c.style === "cinemarchy") { cfg.saverMode = "logo"; cfg.saverArt = "cinemarchy"; }
@@ -3538,6 +3625,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
           if (!GBD.xaiOn(gst)) { showToast("Turn on the Grok voice and save the xAI key first"); return; }
           GBD.xaiVoices(gst).then(function (v) { if (v.length) { gst.xaiVoices = v; GBD.save(window.localStorage, gst); } }, function () {})
             .then(function () { gbdSpeak("Ciao! Sono Grok, con la voce " + gst.xaiVoice + ".", "it"); });
+        } });
+      // v2.15 (#70): your own ntfy server for the replies (ntfy.sh's shared daily quota can't stop them), and its token.
+      var srvIdx = items.length;
+      items.push(
+        { label: "Save the reply server typed above (empty = ntfy.sh)", right: GBD.serverHost(gst.server) + " ›", act: function () {
+          var u = code.trim();
+          if (u && !GBD.validServer(u)) { showToast("The reply server must start with https://"); return; }
+          gst.server = u; showToast(u ? "Reply server saved" : "Back to ntfy.sh"); gsave(srvIdx);
+        } },
+        { label: "Save the reply server token typed above (optional)", right: gst.ntfyToken ? GBD.mask(gst.ntfyToken) : "none", act: function () {
+          var k = code.trim();
+          if (k && !GBD.validToken(k)) { showToast("An ntfy access token starts with tk_"); return; }
+          gst.ntfyToken = k; showToast(k ? "Token saved on this TV" : "Token removed"); gsave(srvIdx + 1);
         } });
     }
     var offIdx = items.length;   // Android parity: companion offset steps 0/24/48/96/160 px, up/down half of it
@@ -3969,6 +4069,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   renderAll();
   fetchWeather();
   pollPcStatus();
+  if (cfg.pulseNotice) {   // v2.15: say once that Pulse is the new screensaver (and how to go back)
+    delete cfg.pulseNotice; saveCfg();
+    setTimeout(function () { showToast(tr("pulse_notice")); }, 5000);
+  }
 
   // Keep the PC panels live: refresh /v1/status every 5 s while the app is on screen. A request that
   // gets no answer (e.g. a firewall dropping packets) can hang for a long time, so skip ticks while one

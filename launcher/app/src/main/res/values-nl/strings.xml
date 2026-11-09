@@ -379,6 +379,9 @@
     <string name="ha_token">Toegangstoken</string>
     <string name="ha_entities">Lampen (entity ids)</string>
     <string name="set_random_theme">Willekeurig thema</string>
+    <string name="set_random_scope">Willekeurig uit</string>
+    <string name="set_random_intros">geanimeerde intro\'s</string>
+    <string name="set_random_all">alle thema\'s</string>
     <string name="set_random_wallpaper">Willekeurige achtergrond / intro</string>
     <string name="menu_remote_keys">Afstandsbedieningsknoppen</string>
     <string name="keys_service">Toegankelijkheidsservice</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK of geel: volgende groep (alle, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender open film · CC BY · demostream</string>
+    <string name="cine_test_clip_note">Gemaakt voor OmarchyTV · in de app · werkt ook offline</string>
     <string name="cine_queue_empty">Hierna is leeg: druk op rood bij een video</string>
     <string name="cine_queue_clear">Hierna wissen</string>
     <string name="cine_embed">\@dhh37 in Cinemarchy afspelen</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Koppel eerst de Omarchy-pc</string>
     <string name="cine_up">‹ terug</string>
     <string name="cine_pc_empty">Niets af te spelen in deze map</string>
+    <string name="pulse_notice">Nieuwe schermbeveiliging: Omarchy Pulse. Instellingen › Schermbeveiliging om te wijzigen of terug te gaan.</string>
+    <string name="ss_pulse_scene">Pulse-scène</string>
+    <string name="ss_restore_previous">Vorige schermbeveiliging</string>
+    <string name="agent_alert_row">Meldingen van AI-agents tijdens het kijken</string>
+    <string name="agent_alert" formatted="true">● %1$s heeft je nodig: %2$s</string>
 </resources>

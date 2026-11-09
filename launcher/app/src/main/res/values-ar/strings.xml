@@ -379,6 +379,9 @@
     <string name="ha_token">رمز الوصول</string>
     <string name="ha_entities">الأضواء (entity ids)</string>
     <string name="set_random_theme">سمة عشوائية</string>
+    <string name="set_random_scope">عشوائي من</string>
+    <string name="set_random_intros">المقدمات المتحركة</string>
+    <string name="set_random_all">كل السمات</string>
     <string name="set_random_wallpaper">خلفية / مقدمة عشوائية</string>
     <string name="menu_remote_keys">أزرار جهاز التحكم</string>
     <string name="keys_service">خدمة تسهيل الاستخدام</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK أو الأصفر: المجموعة التالية (الكل، ★، …)</string>
     <string name="cine_live">مباشر</string>
     <string name="cine_demo_note">فيلم Blender مفتوح · CC BY · بث تجريبي</string>
+    <string name="cine_test_clip_note">صُنع لـ OmarchyTV · داخل التطبيق · يعمل دون اتصال</string>
     <string name="cine_queue_empty">التالي فارغ: اضغط الأحمر على فيديو</string>
     <string name="cine_queue_clear">إفراغ التالي</string>
     <string name="cine_embed">شغّل @dhh37 داخل Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">اقرن حاسوب Omarchy أولًا</string>
     <string name="cine_up">‹ رجوع</string>
     <string name="cine_pc_empty">لا شيء للتشغيل في هذا المجلد</string>
+    <string name="pulse_notice">شاشة توقف جديدة: Omarchy Pulse. الإعدادات › شاشة التوقف لتغييرها أو للعودة.</string>
+    <string name="ss_pulse_scene">مشهد Pulse</string>
+    <string name="ss_restore_previous">شاشة التوقف السابقة</string>
+    <string name="agent_alert_row">تنبيهات وكلاء الذكاء الاصطناعي أثناء المشاهدة</string>
+    <string name="agent_alert" formatted="true">● %1$s يحتاجك: %2$s</string>
 </resources>

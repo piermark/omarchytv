@@ -80,6 +80,16 @@ are shown in a row under the home widgets.
                "lines": [ { "label": "BTC", "value": "$80,148  +0.3%", "tone": "up" } ] } ] }
 ```
 
+A pane may show a picture instead of its lines (2.15, #115): `"image"` is the URL of a PNG or JPEG, under the same
+rule as `remotePanes.url` (https, or http only to a LAN address; no redirects), at most 512 KiB, e.g. a graph your
+server draws. The TV fetches it with the panes, keeps it next to them (so it survives a restart and goes stale with
+the pane's `ttl`), and shows it under the pane's title, scaled to the pane's width; a picture about 720 × 400 px fits
+well. If it can't be fetched the last one stays; if there never was one, the lines show.
+
+```json
+{ "panes": [ { "id": "power24h", "title": "power · 24h", "ttl": 600, "image": "http://192.168.1.20:2310/tv/power24h.png" } ] }
+```
+
 Rules: `https://` only, no redirects, at most 64 KiB, fetched on a background thread at most every
 `refreshSec` (300–86400, default 300: the PLUGINS.md minimum) and only while the home screen is resumed. The last good answer is
 cached in the app's files dir; a pane dims after `ttl` and hides after 2 × `ttl` (counted from its `at`,
@@ -90,6 +100,36 @@ else from the fetch), so a dead source never shows old numbers as current. No ur
 `"barWeather": true` shows the current weather as a line icon and the temperature in the bar, left of the
 status icons (same data and location as the weather widget). Combine with `"homeWidgets": {"weather": false}`
 to keep only the bar version.
+
+### Racing: F1 and MotoGP 2026
+
+`"homeWidgets": {"racing": true}` (default off; also Settings → Widgets) adds a `racing` panel as the first column of
+the top widget row, left of weather. It lists the race weekends that are not over yet for the series you follow, each
+with its race day and time, plus the next (or running) session of the current weekend. The bar then shows a countdown
+to the next session of any of them, ticking every second (`"racing": {"bar": false}` hides it; Settings → Widgets too).
+
+```json
+"homeWidgets": { "racing": true },
+"racing": { "series": ["f1", "motogp", "wec"], "timezone": "Europe/Rome", "bar": true }
+```
+
+`racing.series` (default `["f1", "motogp"]`; Settings → Widgets has one row per series) can hold:
+
+| id | series | official source, keyless |
+|---|---|---|
+| `f1` | Formula 1 | the formula1.com page of the next meeting (formula1.com has no public season feed) |
+| `motogp`, `moto2`, `moto3` | MotoGP and its classes | `api.motogp.pulselive.com`, the API behind motogp.com (no warm-up, cancelled sessions hidden) |
+| `nascar`, `nascar2`, `truck` | NASCAR Cup, O'Reilly Auto Parts, Craftsman Truck | `cf.nascar.com`, NASCAR's own schedule feed (practice, qualifying, race) |
+| `fe` | Formula E | the fiaformulae.com calendar (its schema.org event list: the day of each E-Prix, no times) |
+| `wec` | FIA WEC | fiawec.com (each round with the start of its first practice) |
+
+With one or two series every weekend left is listed; with more, the next two (or the next one past four series) of
+each, so they all fit in the column. Times are 24 h in `racing.timezone` (any tz id, default: the TV's own time
+zone); Formula E shows just the day. `assets/racing_2026.json` is a snapshot of the F1 and MotoGP calendars, so the
+panel works offline; refresh it with `python3 tools/racing_calendar.py`. Live data is fetched on a background thread
+every 6 h, hourly when a session starts within 48 h; MotoGP and NASCAR move on to next year's season by themselves
+once this one is over. IndyCar, WorldSBK and WRC aren't in the list yet: their official sites have no calendar a TV
+can read reliably.
 
 ## Screensaver
 
@@ -258,7 +298,10 @@ otherwise OK opens Live TV (Android has no public "tune to number" intent).
   Key names are Android `KeyEvent` keycode names without `KEYCODE_` (`BUTTON_12`, ...); unknown names are ignored. A press type has exactly one of `app` (package name, started like its tile), `intent` (an
   `Intent.toUri(Intent.URI_INTENT_SCHEME)` string: started as an activity, sent as a broadcast if no activity
   matches) or `action` (an OmarchyTV action id); anything else counts as unbound. Action ids: `walker` (search),
-  `voice` (search by voice), `home`, `ask`, `menu`, `screensaver`, `next-theme`, `cinemarchy`, `arcade`, `workspace-1` … `workspace-5`.
+  `voice` (search by voice), `home`, `ask`, `menu`, `screensaver`, `next-theme`, `cinemarchy`, `arcade`, `grokbot` (the Grok Bot
+  companion), `workspace-1` … `workspace-5`. On TVs whose firmware takes the Blue key first (Philips: the TV manual,
+  [#91](https://github.com/piermark/omarchytv/issues/91)), bind Blue in a key remapper to
+  `adb shell am start -n com.omarchytv.home/.MainActivity --es com.omarchytv.home.extra.ACTION grokbot`.
   Quick presses less than about 0.35 s apart count together; a press type that isn't bound falls back to the
   highest bound count below it (double with only single bound runs single), and a lone single press runs at once
   when nothing higher is bound. A long press (about 0.5 s) runs while the key is held.

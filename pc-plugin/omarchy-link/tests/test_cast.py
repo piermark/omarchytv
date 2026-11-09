@@ -270,5 +270,21 @@ class CastE2E(unittest.TestCase):
         self.assertFalse(list(apps.glob("omarchy-link-*.desktop")))
 
 
+
+class UfwHintTests(unittest.TestCase):
+    """#82: a served cast that fails while ufw is on gets the one-line fix, with the TV's address."""
+
+    def test_hint_only_when_ufw_is_active_and_a_served_cast_failed(self):
+        ok = mock.Mock(return_value=mock.Mock(returncode=0))
+        off = mock.Mock(return_value=mock.Mock(returncode=3))
+        has = lambda n: "/usr/bin/ufw"
+        h = cli_mod._ufw_hint("disconnected", True, "192.168.1.50", run=ok, which=has)
+        self.assertIn("sudo ufw allow from 192.168.1.50 proto tcp", h)
+        self.assertIn("<tv-ip>", cli_mod._ufw_hint("timeout", True, None, run=ok, which=has))
+        self.assertEqual(cli_mod._ufw_hint("playing", True, "x", run=ok, which=has), "")      # it worked
+        self.assertEqual(cli_mod._ufw_hint("error", False, "x", run=ok, which=has), "")       # nothing was served
+        self.assertEqual(cli_mod._ufw_hint("error", True, "x", run=off, which=has), "")       # ufw not active
+        self.assertEqual(cli_mod._ufw_hint("error", True, "x", run=ok, which=lambda n: None), "")   # no ufw
+
 if __name__ == "__main__":
     unittest.main()

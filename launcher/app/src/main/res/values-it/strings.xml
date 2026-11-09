@@ -383,6 +383,9 @@
     <string name="ha_token">Token di accesso</string>
     <string name="ha_entities">Luci (entity id)</string>
     <string name="set_random_theme">Tema casuale</string>
+    <string name="set_random_scope">Casuale tra</string>
+    <string name="set_random_intros">intro animate</string>
+    <string name="set_random_all">tutti i temi</string>
     <string name="set_random_wallpaper">Sfondo / intro casuale</string>
     <string name="menu_remote_keys">Tasti del telecomando</string>
     <string name="keys_service">Servizio di accessibilità</string>
@@ -489,6 +492,7 @@
     <string name="cine_group_hint">OK o giallo: gruppo successivo (tutti, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Film aperto Blender · CC BY · flusso demo</string>
+    <string name="cine_test_clip_note">Creato per OmarchyTV · dentro l\'app · funziona anche offline</string>
     <string name="cine_queue_empty">Prossimi è vuoto: premi rosso su un video</string>
     <string name="cine_queue_clear">Svuota Prossimi</string>
     <string name="cine_embed">Riproduci @dhh37 dentro Cinemarchy</string>
@@ -520,4 +524,9 @@
     <string name="cine_pc_need">Abbina prima il PC Omarchy</string>
     <string name="cine_up">‹ indietro</string>
     <string name="cine_pc_empty">Niente da riprodurre in questa cartella</string>
+    <string name="pulse_notice">Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.</string>
+    <string name="ss_pulse_scene">Scena di Pulse</string>
+    <string name="ss_restore_previous">Salvaschermo precedente</string>
+    <string name="agent_alert_row">Avvisi degli agenti AI mentre guardi</string>
+    <string name="agent_alert" formatted="true">● %1$s ha bisogno di te: %2$s</string>
 </resources>

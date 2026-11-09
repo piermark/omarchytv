@@ -379,6 +379,9 @@
     <string name="ha_token">Token de acces</string>
     <string name="ha_entities">Lumini (entity ids)</string>
     <string name="set_random_theme">Temă aleatorie</string>
+    <string name="set_random_scope">Aleatoriu din</string>
+    <string name="set_random_intros">intro animate</string>
+    <string name="set_random_all">toate temele</string>
     <string name="set_random_wallpaper">Fundal / intro aleatoriu</string>
     <string name="menu_remote_keys">Butoanele telecomenzii</string>
     <string name="keys_service">Serviciu de accesibilitate</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK sau galben: grupul următor (toate, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Film liber Blender · CC BY · flux demo</string>
+    <string name="cine_test_clip_note">Creat pentru OmarchyTV · inclus în aplicație · merge și offline</string>
     <string name="cine_queue_empty">Urmează e gol: apasă roșu pe un video</string>
     <string name="cine_queue_clear">Golește Urmează</string>
     <string name="cine_embed">Redă @dhh37 în Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Asociază întâi PC-ul Omarchy</string>
     <string name="cine_up">‹ înapoi</string>
     <string name="cine_pc_empty">Nimic de redat în acest folder</string>
+    <string name="pulse_notice">Protector de ecran nou: Omarchy Pulse. Setări › Protector de ecran pentru a-l schimba sau a reveni.</string>
+    <string name="ss_pulse_scene">Scena Pulse</string>
+    <string name="ss_restore_previous">Protectorul de ecran anterior</string>
+    <string name="agent_alert_row">Alerte de la agenții AI cât te uiți</string>
+    <string name="agent_alert" formatted="true">● %1$s are nevoie de tine: %2$s</string>
 </resources>

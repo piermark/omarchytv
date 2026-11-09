@@ -75,6 +75,15 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ---
 
+## What's New in `2.15.0` (`versionCode 27`)
+
+- **Omarchy Pulse is the TV's screensaver**, on Android TV, LG and Samsung, with no PC needed: the sphere, your city's skyline, the real sky over you, the planes overhead, the ISS and Starlink ("look up!" when they pass), launch countdowns, the weather, the air and the TV's own CPU, RAM and network. Pair your Omarchy PC and it becomes the full Pulse: your AI agents, workspaces, repos, panels and colours. Settings › Screensaver › "Previous screensaver" brings yours back.
+- **Your phone is the Arcade's gamepad**: scan the QR in the arcade's sign, nothing to install; two phones, two players. Four new games for one or two: **PIPE DUEL**, **OMASLOT** (Omarchy's symbols, points only), **PANE PONG**, **LAST WINDOW** (cards).
+- **Racing on Home**: F1, MotoGP, Moto2, Moto3, NASCAR, Formula E and WEC weekends, live from the official sources, with a countdown in the bar (Grant Charge).
+- **Grok terminal** on a held mic key, **AI agent alerts** while you watch (opt-in), a **five-day forecast**, **pictures in remote panes**, the **Developer Mode countdown** on LG, **1080p wallpapers** on 1080p LG TVs, and the 2.14.1 fixes (Live screensaver, OmaFire sound, Cinemarchy VHS/ASCII on Android, intros on MT9221 TVs).
+
+Everything, with the people who asked for and built it, is in [CHANGELOG.md](CHANGELOG.md).
+
 ## What's New in `2.14.0-beta` (`versionCode 26`, pre-release)
 
 Everything below is on `main` and built as `2.14.0-beta` for Android TV, LG webOS and Samsung Tizen (Android `26`, webOS/Tizen `2.14.0`); the download links are above. New features are off by default unless noted.
@@ -470,6 +479,13 @@ omarchy-tv adb-lock --tv 192.168.1.9:5555                                 # clos
 | TCL 40S5400A (MT9221, 1 GB RAM, 1280x720) | 11 | ? | 2.13.8 | ok (community) | first TCL report: installs and runs, and works as Home once the stock launcher is disabled (`pm disable-user`), because the Home preference is not kept otherwise; TclAppBoot needs `APP_AUTO_START` to bring the launcher back after boot; its keyboard trapped D-pad focus in text dialogs (see [#86](https://github.com/piermark/omarchytv/issues/86)); reported by GrantCharge ([#75](https://github.com/piermark/omarchytv/issues/75)) |
 | Amazon Fire TV Stick HD AFTSS | 9 (Fire OS 7.7.1.3) | 138 (Amazon WebView) | 2.13.0-beta | works (community) | installs and launches; HomeOverride works but has Fire OS quirks (double Home events, accessibility reset on reboot); tested by @podzpau ([#58](https://github.com/piermark/omarchytv/issues/58)) |
 
+| LG 65SK8500PLA (2018, 4K) | webOS 4.4 | — | 2.14.0 (webOS) | ok (community) | unrooted, Developer Mode; installed TV apps listed and launched after the permission prompt (missed once on first boot, fixed with Re-pair with TV); reported by @postmanpat-303 ([#127](https://github.com/piermark/omarchytv/issues/127)) |
+| LG OLED77B4PUA | webOS 25 (10.3.2) | — | 2.14.0 (webOS) | ok (community) | Developer Mode; runs daily; reported by @XanderHalloran ([#131](https://github.com/piermark/omarchytv/issues/131)) |
+| Hisense 65U8QG (Google TV) | 14 | 156 | 2.13.0-beta | ok (community) | ADB over Ethernet needs Wi-Fi debugging first, see the steps in [#102](https://github.com/piermark/omarchytv/issues/102); reported by @KeroZelvin |
+| Philips Google TV TA1 (PH1M_WW_9972) | 12 | ? | 2.13.8 | ok (community) | the firmware gives the Blue key to the TV manual when another app is open: bind it to the `grokbot` action ([#91](https://github.com/piermark/omarchytv/issues/91)); reported by @ghpo |
+| Sony XBR-75X900H | 9 | ? | 2.13.8 | ok (community) | reported by @bkbtech ([#71](https://github.com/piermark/omarchytv/issues/71)) |
+| Coocaa / Skyworth SWTV-21AE (720p) | 14 | ? | 2.14.0-beta | ok (community) | small text at 720p, readability work in [#122](https://github.com/piermark/omarchytv/pull/122); reported by @henrikklee |
+| Telefunken D65U546A (Vestel MB230, Novatek) | not Android: Vestel Linux, Opera/OMI browser (Chromium 67) | — | 2.13.2-testing (web app) | ok (community, rooted) | the shared web app served by the TV itself; uses the `OMARCHY_LAUNCH`, `OMARCHY_PREFERS_24H` and `OMARCHY_FIT_SCREEN` hooks; field report by @ekollof1 ([#66](https://github.com/piermark/omarchytv/issues/66)) |
 Tested yours? Open an issue with the "TV report" template.
 
 ## Trademarks

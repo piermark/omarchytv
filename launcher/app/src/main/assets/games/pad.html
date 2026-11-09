@@ -1,0 +1,84 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1a1b26">
+<title>OmarchyTV Arcade · gamepad</title>
+<!-- v2.15: the phone as the arcade's gamepad. Served by the TV itself (ArcadePad.java) while the arcade is open. -->
+<style>
+:root { --bg: #1a1b26; --fg: #c0caf5; --dim: #565f89; --acc: #7aa2f7; --p2: #e0af68; --red: #f7768e; --key: #24283b; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); overflow: hidden; touch-action: none;
+  font-family: ui-monospace, "SF Mono", Menlo, "Cascadia Mono", monospace; }
+header { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; font-size: 14px; color: var(--dim); }
+#who { font-size: 22px; font-weight: 700; color: var(--acc); letter-spacing: .08em; }
+#who.p2 { color: var(--p2); }
+main { position: absolute; top: 52px; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: space-around;
+  padding: 16px; gap: 16px; flex-wrap: wrap; }
+.dpad { display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); width: min(70vw, 60vh, 300px); aspect-ratio: 1; gap: 6px; }
+.dpad button:nth-child(1) { grid-column: 2; grid-row: 1; }
+.dpad button:nth-child(2) { grid-column: 1; grid-row: 2; }
+.dpad button:nth-child(3) { grid-column: 3; grid-row: 2; }
+.dpad button:nth-child(4) { grid-column: 2; grid-row: 3; }
+.ab { display: flex; gap: 22px; align-items: center; }
+button { border: 2px solid var(--dim); background: var(--key); color: var(--fg); font: inherit; font-size: 28px; border-radius: 14px; padding: 0; touch-action: none; }
+button.on { background: var(--acc); color: var(--bg); border-color: var(--acc); }
+.round { width: min(26vw, 110px); height: min(26vw, 110px); border-radius: 50%; font-size: 30px; font-weight: 700; }
+#a { border-color: var(--acc); color: var(--acc); }
+#b { border-color: var(--red); color: var(--red); }
+#msg { position: absolute; left: 0; right: 0; bottom: 0; top: 52px; display: none; align-items: center; justify-content: center; text-align: center;
+  padding: 24px; font-size: 18px; background: var(--bg); line-height: 1.5; }
+@media (orientation: landscape) { main { flex-wrap: nowrap; } }
+</style></head>
+<body>
+<header><span id="who">P·</span><span>OmarchyTV Arcade</span></header>
+<main>
+  <div class="dpad">
+    <button data-k="up" aria-label="up">▲</button><button data-k="left" aria-label="left">◀</button>
+    <button data-k="right" aria-label="right">▶</button><button data-k="down" aria-label="down">▼</button>
+  </div>
+  <div class="ab"><button id="b" class="round" data-k="back" aria-label="back">B</button><button id="a" class="round" data-k="ok" aria-label="ok">A</button></div>
+</main>
+<div id="msg"></div>
+<script>
+(function () {
+  "use strict";
+  var L = { en: ["Two phones are already playing. Wait for one to leave, then reload this page.", "The arcade is closed on the TV."],
+    it: ["Stanno già giocando due telefoni. Aspetta che uno esca e ricarica la pagina.", "La sala giochi sul TV è chiusa."],
+    de: ["Schon zwei Handys spielen. Warte, bis eins aufhört, und lade die Seite neu.", "Die Spielhalle auf dem TV ist zu."],
+    fr: ["Deux téléphones jouent déjà. Attends qu'un parte, puis recharge la page.", "La salle d'arcade est fermée sur la TV."],
+    es: ["Ya juegan dos móviles. Espera a que uno salga y recarga la página.", "La sala de juegos de la tele está cerrada."] };
+  var S = L[(navigator.language || "en").slice(0, 2)] || L.en;
+  var code = location.pathname.split("/").pop(), id;
+  try { id = localStorage.getItem("otv.pad.id"); } catch (e) {}
+  if (!id) { id = Math.random().toString(36).slice(2, 12); try { localStorage.setItem("otv.pad.id", id); } catch (e) {} }
+  var who = document.getElementById("who"), msg = document.getElementById("msg"), fails = 0;
+  function say(t) { msg.textContent = t; msg.style.display = t ? "flex" : "none"; }
+  function hello() {
+    fetch("/hello?c=" + code + "&i=" + id, { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (j) {
+      fails = 0;
+      if (!j.p) { who.textContent = "P·"; say(S[0]); return; }
+      say("");
+      who.textContent = "P" + j.p;
+      who.className = j.p === 2 ? "p2" : "";
+    }).catch(function () { if (++fails >= 2) say(S[1]); });
+  }
+  function send(k) {
+    if (navigator.vibrate) try { navigator.vibrate(12); } catch (e) {}
+    fetch("/k?c=" + code + "&i=" + id + "&k=" + k, { cache: "no-store" }).catch(function () {});
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("button"), function (b) {
+    var rep = null, k = b.getAttribute("data-k"), arrow = k !== "ok" && k !== "back";
+    function down(e) {
+      e.preventDefault(); b.className = (b.className + " on").trim(); send(k);
+      if (arrow) { clearInterval(rep); rep = setTimeout(function () { rep = setInterval(function () { send(k); }, 110); }, 320); }   // held: it repeats, like a remote
+    }
+    function up() { clearTimeout(rep); clearInterval(rep); rep = null; b.className = b.className.replace(/\s*\bon\b/, ""); }
+    b.addEventListener("pointerdown", down);
+    b.addEventListener("pointerup", up); b.addEventListener("pointercancel", up); b.addEventListener("pointerleave", up);
+  });
+  document.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  hello();
+  setInterval(hello, 15000);
+})();
+</script>
+</body></html>

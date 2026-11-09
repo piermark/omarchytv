@@ -383,6 +383,9 @@
     <string name="ha_token">Zugriffstoken</string>
     <string name="ha_entities">Lichter (Entity-IDs)</string>
     <string name="set_random_theme">Zufälliges Thema</string>
+    <string name="set_random_scope">Zufällig aus</string>
+    <string name="set_random_intros">animierten Intros</string>
+    <string name="set_random_all">allen Themes</string>
     <string name="set_random_wallpaper">Zufälliges Hintergrundbild / Intro</string>
     <string name="menu_remote_keys">Fernbedienungstasten</string>
     <string name="keys_service">Bedienungshilfe</string>
@@ -489,6 +492,7 @@
     <string name="cine_group_hint">OK oder Gelb: nächste Gruppe (alle, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender Open Movie · CC BY · Demo-Stream</string>
+    <string name="cine_test_clip_note">Für OmarchyTV gemacht · in der App · läuft auch offline</string>
     <string name="cine_queue_empty">Als Nächstes ist leer: Rot auf einem Video drücken</string>
     <string name="cine_queue_clear">Als Nächstes leeren</string>
     <string name="cine_embed">\@dhh37 in Cinemarchy abspielen</string>
@@ -520,4 +524,9 @@
     <string name="cine_pc_need">Koppele zuerst den Omarchy-PC</string>
     <string name="cine_up">‹ zurück</string>
     <string name="cine_pc_empty">Nichts Abspielbares in diesem Ordner</string>
+    <string name="pulse_notice">Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.</string>
+    <string name="ss_pulse_scene">Pulse-Szene</string>
+    <string name="ss_restore_previous">Vorheriger Bildschirmschoner</string>
+    <string name="agent_alert_row">KI-Agenten-Hinweise beim Fernsehen</string>
+    <string name="agent_alert" formatted="true">● %1$s braucht dich: %2$s</string>
 </resources>

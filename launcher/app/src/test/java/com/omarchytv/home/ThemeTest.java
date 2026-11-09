@@ -73,8 +73,8 @@ public class ThemeTest {
         try {
             LauncherConfig defCfg = new LauncherConfig(null, null, 0L);
             assertEquals("last-horizon", defCfg.theme.name);
-            assertEquals("aquarium", defCfg.screensaverArt);
-            assertEquals("aquarium", defCfg.screensaverMode);
+            assertEquals("pulse", defCfg.screensaverArt);   // v2.15: Pulse is the default screensaver
+            assertEquals("pulse", defCfg.screensaverMode);
             assertTrue(defCfg.saverSound);
             assertTrue(defCfg.randomTheme);
             assertTrue(defCfg.randomWallpaper);
@@ -135,5 +135,60 @@ public class ThemeTest {
         } finally {
             Theme.resolve(null, new JSONObject().put("name", "tokyo-night"));
         }
+    }
+
+    @org.junit.Test
+    public void randomScopeAll_picksAnyBundledTheme_issue71() throws Exception {
+        String[] all = {"catppuccin", "gruvbox", "nord", "tokyo-night", "white"};
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        java.util.Random r = new java.util.Random(3L);
+        for (int k = 0; k < 200; k++) {
+            JSONObject j = new JSONObject().put("randomScope", "all").put("random_wallpaper", false)
+                    .put("theme", new JSONObject().put("name", "nord"));
+            assertTrue(LauncherConfig.applyRandomRotation(j, r, all));
+            String n = j.getJSONObject("theme").getString("name");
+            org.junit.Assert.assertNotEquals("never the same theme again", "nord", n);
+            assertTrue(n, java.util.Arrays.asList(all).contains(n));
+            org.junit.Assert.assertFalse("wallpaper not random: left alone", j.has("wallpaper"));
+            seen.add(n);
+        }
+        assertEquals("every other theme comes up", 4, seen.size());
+        JSONObject w = new JSONObject().put("randomScope", "all").put("theme", new JSONObject().put("name", "nord"));
+        int fires = 0;
+        for (int k = 0; k < 400; k++) {
+            assertTrue(LauncherConfig.applyRandomRotation(w, r, all));
+            String wp = w.getString("wallpaper");
+            if (wp.startsWith("omafire:")) fires++;
+            else assertEquals("omarchy", wp);   // one of the theme's own backgrounds
+        }
+        assertTrue("the fire still comes now and then: " + fires, fires > 10 && fires < 120);
+        assertEquals("intros", new LauncherConfig(null, new JSONObject(), 1L).randomScope);
+        assertEquals("all", new LauncherConfig(null, new JSONObject().put("randomScope", "all"), 1L).randomScope);
+    }
+
+    @org.junit.Test
+    public void pulseBecomesTheScreensaverOnce_andCanBeUndone() throws Exception {
+        JSONObject j = new JSONObject().put("screensaver", new JSONObject().put("art", "aquarium-classic").put("mode", "aquarium"))
+                .put("living", new JSONObject().put("enabled", true));
+        assertTrue(LauncherConfig.pulseDefault(j));
+        assertEquals("pulse", j.getJSONObject("screensaver").getString("art"));
+        assertEquals("pulse", j.getJSONObject("screensaver").getString("mode"));
+        org.junit.Assert.assertFalse("the Live screen gives way to Pulse", j.getJSONObject("living").getBoolean("enabled"));
+        assertTrue(j.getBoolean("pulseNotice"));
+        org.junit.Assert.assertFalse("only once", LauncherConfig.pulseDefault(j));
+        j.getJSONObject("screensaver").put("art", "omarchy-tv");   // the user picks another one later: it stays
+        org.junit.Assert.assertFalse(LauncherConfig.pulseDefault(j));
+        assertEquals("omarchy-tv", j.getJSONObject("screensaver").getString("art"));
+        assertTrue(LauncherConfig.restoreBeforePulse(j));
+        assertEquals("aquarium-classic", j.getJSONObject("screensaver").getString("art"));
+        assertTrue("the Live screen comes back", j.getJSONObject("living").getBoolean("enabled"));
+        org.junit.Assert.assertFalse(LauncherConfig.restoreBeforePulse(j));
+        JSONObject fresh = new JSONObject();
+        assertTrue(LauncherConfig.pulseDefault(fresh));
+        assertTrue("untouched settings: told once too", fresh.getBoolean("pulseNotice"));
+        assertEquals("the old default comes back", "aquarium", fresh.getJSONObject("ssBefore215").getString("art"));
+        LauncherConfig c = new LauncherConfig(null, fresh, 1L);
+        assertEquals("pulse", c.screensaverArt);
+        assertEquals("sphere", c.pulseScene);
     }
 }

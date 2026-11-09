@@ -361,6 +361,8 @@
     <string name="v210_w_pc">─ omarchy · pc ─</string>
     <string name="v210_w_ai">─ ai credits · pc ─</string>
     <string name="v210_w_deploys">─ deploys · pc ─</string>
+    <string name="w_racing" translatable="false">─ racing · f1 · motogp ─</string>
+    <string name="w_racing_bar" translatable="false">racing countdown in the bar</string>
     <string name="v210_cast">Send to TV (cast)</string>
     <string name="wp_next">Next background</string>
     <string name="v210_w_term">─ terminal · logo ─</string>
@@ -416,6 +418,9 @@
     <string name="ha_token">Access token</string>
     <string name="ha_entities">Lights (entity ids)</string>
     <string name="set_random_theme">Random theme</string>
+    <string name="set_random_scope">Random picks from</string>
+    <string name="set_random_intros">animated intros</string>
+    <string name="set_random_all">all themes</string>
     <string name="set_random_wallpaper">Random wallpaper / intro</string>
     <string name="menu_remote_keys">Remote buttons</string>
     <string name="keys_service">Accessibility service</string>
@@ -522,6 +527,7 @@
     <string name="cine_group_hint">OK or yellow: next group (all, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender open movie · CC BY · demo stream</string>
+    <string name="cine_test_clip_note">Made for OmarchyTV · inside the app · plays offline</string>
     <string name="cine_queue_empty">Up next is empty: press red on any video</string>
     <string name="cine_queue_clear">Clear Up next</string>
     <string name="cine_embed">Play @dhh37 inside Cinemarchy</string>
@@ -553,4 +559,9 @@
     <string name="cine_pc_need">Pair the Omarchy PC first</string>
     <string name="cine_up">‹ back</string>
     <string name="cine_pc_empty">Nothing to play in this folder</string>
+    <string name="pulse_notice">New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.</string>
+    <string name="ss_pulse_scene">Pulse scene</string>
+    <string name="ss_restore_previous">Previous screensaver</string>
+    <string name="agent_alert_row">AI agent alerts while you watch</string>
+    <string name="agent_alert" formatted="true">● %1$s needs you: %2$s</string>
 </resources>

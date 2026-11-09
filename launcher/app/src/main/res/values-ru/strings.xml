@@ -379,6 +379,9 @@
     <string name="ha_token">Токен доступа</string>
     <string name="ha_entities">Светильники (entity ids)</string>
     <string name="set_random_theme">Случайная тема</string>
+    <string name="set_random_scope">Случайно из</string>
+    <string name="set_random_intros">анимированных заставок</string>
+    <string name="set_random_all">всех тем</string>
     <string name="set_random_wallpaper">Случайный фон / интро</string>
     <string name="menu_remote_keys">Кнопки пульта</string>
     <string name="keys_service">Служба специальных возможностей</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK или жёлтая: следующая группа (все, ★, …)</string>
     <string name="cine_live">ЭФИР</string>
     <string name="cine_demo_note">Открытый фильм Blender · CC BY · демо-поток</string>
+    <string name="cine_test_clip_note">Сделано для OmarchyTV · внутри приложения · работает офлайн</string>
     <string name="cine_queue_empty">Далее пусто: нажмите красную на видео</string>
     <string name="cine_queue_clear">Очистить Далее</string>
     <string name="cine_embed">Смотреть @dhh37 в Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Сначала свяжите ПК Omarchy</string>
     <string name="cine_up">‹ назад</string>
     <string name="cine_pc_empty">В этой папке нечего воспроизвести</string>
+    <string name="pulse_notice">Новая заставка: Omarchy Pulse. Настройки › Заставка, чтобы сменить её или вернуть прежнюю.</string>
+    <string name="ss_pulse_scene">Сцена Pulse</string>
+    <string name="ss_restore_previous">Прежняя заставка</string>
+    <string name="agent_alert_row">Оповещения ИИ-агентов во время просмотра</string>
+    <string name="agent_alert" formatted="true">● %1$s ждёт тебя: %2$s</string>
 </resources>

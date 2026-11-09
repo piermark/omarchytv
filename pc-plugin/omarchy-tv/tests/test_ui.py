@@ -85,5 +85,19 @@ class ChooseTest(unittest.TestCase):
             self.assertIsNone(self.choose({**self.env, "SSH_TTY": "/dev/pts/1"}))
 
 
+class ColorsTest(unittest.TestCase):
+    def test_colors_prefer_the_state_dir(self):
+        with tempfile.TemporaryDirectory() as td:
+            home = Path(td)
+            state = home / ".local/state/omarchy/current/theme"
+            legacy = home / ".config/omarchy/current/theme"
+            state.mkdir(parents=True)
+            legacy.mkdir(parents=True)
+            (state / "colors.toml").write_text('accent = "#112233"\n')
+            (legacy / "colors.toml").write_text('accent = "#aabbcc"\n')
+            with mock.patch.object(ui.Path, "home", return_value=home):
+                self.assertEqual(ui.colors()["accent"], "#112233")
+
+
 if __name__ == "__main__":
     unittest.main()

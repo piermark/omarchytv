@@ -379,6 +379,9 @@
     <string name="ha_token">Tilgangstoken</string>
     <string name="ha_entities">Lys (entity ids)</string>
     <string name="set_random_theme">Tilfeldig tema</string>
+    <string name="set_random_scope">Tilfeldig blant</string>
+    <string name="set_random_intros">animerte intro</string>
+    <string name="set_random_all">alle temaer</string>
     <string name="set_random_wallpaper">Tilfeldig bakgrunn / intro</string>
     <string name="menu_remote_keys">Fjernkontrollknapper</string>
     <string name="keys_service">Tilgjengelighetstjeneste</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK eller gul: neste gruppe (alle, ★, …)</string>
     <string name="cine_live">DIREKTE</string>
     <string name="cine_demo_note">Blender åpen film · CC BY · demostrøm</string>
+    <string name="cine_test_clip_note">Laget for OmarchyTV · i appen · virker uten nett</string>
     <string name="cine_queue_empty">Neste er tom: trykk rød på en video</string>
     <string name="cine_queue_clear">Tøm Neste</string>
     <string name="cine_embed">Spill @dhh37 i Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Par Omarchy-PC-en først</string>
     <string name="cine_up">‹ tilbake</string>
     <string name="cine_pc_empty">Ingenting å spille i denne mappen</string>
+    <string name="pulse_notice">Ny skjermsparer: Omarchy Pulse. Innstillinger › Skjermsparer for å bytte eller gå tilbake.</string>
+    <string name="ss_pulse_scene">Pulse-scene</string>
+    <string name="ss_restore_previous">Forrige skjermsparer</string>
+    <string name="agent_alert_row">Varsler fra AI-agenter mens du ser på</string>
+    <string name="agent_alert" formatted="true">● %1$s trenger deg: %2$s</string>
 </resources>

@@ -13,11 +13,14 @@
 (function (root) {
   "use strict";
   var ROWS0 = 12, RESUME = "omarchytv.cine.resume.v1", MAX_RESUME = 200;
+  // v2.15 (#120): Google's sample bucket answers 403 to everyone now. The test clip ships inside the app (it always
+  // plays, even offline); the Blender open movies (CC BY) come from blender.org and archive.org (checked 9 Nov 2026).
+  var TEST_CLIP = "vendor/cinemarchy/omarchytv-test.mp4";
   var DEMO = [
-    ["Big Buck Bunny", "BigBuckBunny.mp4"], ["Sintel", "Sintel.mp4"],
-    ["Tears of Steel", "TearsOfSteel.mp4"], ["Elephants Dream", "ElephantsDream.mp4"]
+    ["Big Buck Bunny", "https://archive.org/download/BigBuckBunny_124/Content/big_buck_bunny_720p_surround.mp4"],
+    ["Tears of Steel", "https://download.blender.org/demo/movies/ToS/tears_of_steel_720p.mov"],
+    ["Elephants Dream", "https://download.blender.org/ED/elephantsdream-720-h264-st-aac.mov"]
   ];
-  var DEMO_BASE = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/";
 
   function rep(c, n) { var s = ""; for (var i = 0; i < n; i++) s += c; return s; }
   function bar(p, w) { var f = Math.max(0, Math.min(w, Math.round(p * w))); return rep("█", f) + rep("░", w - f); }
@@ -25,6 +28,32 @@
     s = Math.max(0, Math.floor(s || 0));
     var h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, x = s % 60;
     return (h ? h + ":" + (m < 10 ? "0" : "") : "") + m + ":" + (x < 10 ? "0" : "") + x;
+  }
+  // ASCII mode: light to characters, with the contrast of each frame stretched (the darkest 2 % become spaces, the
+  // brightest 2 % "@"), eased over a few frames so it never flickers. A dull or hazy film used to come out as a sheet
+  // of ":;," (Sintel's sky); now its figures stand out. Kept a quarter of the plain light, and a flat frame keeps its
+  // own level: black stays blank, grey stays grey, white stays white. The Android player does the same (CineFxView.java). st keeps the eased range.
+  var RAMP = " .,:;-=+*#%@";
+  function asciiArt(rgba, cols, rows, st) {
+    var n = cols * rows, L = new Array(n), hist = [], B = 32, i, k;
+    for (k = 0; k < B; k++) hist[k] = 0;
+    for (i = 0; i < n; i++) { var l = (rgba[i * 4] * 0.3 + rgba[i * 4 + 1] * 0.59 + rgba[i * 4 + 2] * 0.11) / 255; L[i] = l; hist[Math.min(B - 1, Math.floor(l * B))]++; }
+    var c = 0, lo = 0, hi = 1, cut = n * 0.02;
+    for (k = 0; k < B; k++) { c += hist[k]; if (c > cut) { lo = k / B; break; } }
+    c = 0;
+    for (k = B - 1; k >= 0; k--) { c += hist[k]; if (c > cut) { hi = (k + 1) / B; break; } }
+    if (st) {
+      if (st.lo == null) { st.lo = lo; st.hi = hi; } else { st.lo += (lo - st.lo) * 0.3; st.hi += (hi - st.hi) * 0.3; }
+      lo = st.lo; hi = st.hi;
+    }
+    var span = hi - lo, out = "", R = RAMP.length;
+    if (span < 0.2) { lo = Math.max(0, Math.min(0.8, (lo + hi) / 2 - 0.1)); span = 0.2; }   // a flat frame: black, grey or white as it is
+    for (i = 0; i < n; i++) {
+      var v = 0.25 * L[i] + 0.75 * Math.max(0, Math.min(1, (L[i] - lo) / span));
+      out += RAMP.charAt(Math.min(R - 1, Math.floor(v * R)));
+      if ((i + 1) % cols === 0) out += "\n";
+    }
+    return out;
   }
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function host(u) { var m = /^[a-z]+:\/\/([^\/?#]+)/i.exec(u || ""); return m ? m[1] : ""; }
@@ -196,7 +225,8 @@
           });
         }
       } else if (id === "demo") {
-        DEMO.forEach(function (d) { out.push(progressItem({ title: d[0], sub: t("cine_demo_note"), badge: "[OPEN]", kind: "stream", url: DEMO_BASE + d[1] })); });
+        out.push(progressItem({ title: "OmarchyTV · test clip (24 s)", sub: t("cine_test_clip_note"), badge: "[TEST]", kind: "stream", url: TEST_CLIP }));
+        DEMO.forEach(function (d) { out.push(progressItem({ title: d[0], sub: t("cine_demo_note"), badge: "[OPEN]", kind: "stream", url: d[1] })); });
       } else if (id === "queue") {
         if (!c.queue.length) out.push({ title: t("cine_queue_empty"), sub: "", badge: "[ ]", kind: "noop" });
         c.queue.forEach(function (it, i) { out.push(progressItem({ title: it.title, sub: host(it.url), badge: "[#" + (i + 1) + "]", kind: "stream", url: it.url, live: !!it.live, queueIdx: i })); });
@@ -360,14 +390,14 @@
     }
     var osdTick = setInterval(function () { if (S.player && q(".osd").style.opacity !== "0") osd(); }, 1000);
     // ---- VHS tape mode and ASCII mode ----
-    var cv = doc.createElement("canvas"), cx = null, ascT = 0, RAMP = " .,:;-=+*#%@";
+    var cv = doc.createElement("canvas"), cx = null, ascT = 0, ascSt = {};
     function setMode(m) {
       var P = S.player; if (!P) return;
       P.mode = m; S.lastMode = m;
       q(".vhs").style.display = m === "vhs" ? "block" : "none";
       q(".asc").style.display = m === "ascii" ? "block" : "none";
       clearInterval(ascT);
-      if (m === "ascii") { ascT = setInterval(asciiFrame, 90); }
+      if (m === "ascii") { ascSt = {}; ascT = setInterval(asciiFrame, 90); }
     }
     function asciiFrame() {
       var P = S.player, v = q(".pl video"), pre = q(".asc");
@@ -378,15 +408,7 @@
       var data;
       try { cx.drawImage(v, 0, 0, cols, rows); data = cx.getImageData(0, 0, cols, rows).data; }
       catch (e) { asciiBlocked(); return; }
-      var out = "";
-      for (var y = 0; y < rows; y++) {
-        for (var x = 0; x < cols; x++) {
-          var i = (y * cols + x) * 4, l = (data[i] * 0.3 + data[i + 1] * 0.59 + data[i + 2] * 0.11) / 255;
-          out += RAMP.charAt(Math.min(RAMP.length - 1, Math.floor(l * RAMP.length)));
-        }
-        out += "\n";
-      }
-      pre.textContent = out;
+      pre.textContent = asciiArt(data, cols, rows, ascSt);
     }
     function asciiBlocked() {   // the stream's server forbids reading its pixels: try once with CORS, else stay normal
       var P = S.player, v = q(".pl video");
@@ -537,5 +559,5 @@
     return "";
   }
 
-  root.OmarchyCinemarchy = { open: open, keyName: keyName, parseM3U: parseM3U, bar: bar, fmtTime: fmtTime, Resume: Resume, DEMO: DEMO };
+  root.OmarchyCinemarchy = { open: open, keyName: keyName, parseM3U: parseM3U, bar: bar, fmtTime: fmtTime, asciiArt: asciiArt, Resume: Resume, DEMO: DEMO, TEST_CLIP: TEST_CLIP };
 })(typeof window !== "undefined" ? window : this);

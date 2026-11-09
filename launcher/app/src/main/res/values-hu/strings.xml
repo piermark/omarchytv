@@ -379,6 +379,9 @@
     <string name="ha_token">Hozzáférési token</string>
     <string name="ha_entities">Lámpák (entity ids)</string>
     <string name="set_random_theme">Véletlenszerű téma</string>
+    <string name="set_random_scope">Véletlenszerűen</string>
+    <string name="set_random_intros">animált intrók</string>
+    <string name="set_random_all">összes téma</string>
     <string name="set_random_wallpaper">Véletlenszerű háttér / intró</string>
     <string name="menu_remote_keys">Távirányító gombjai</string>
     <string name="keys_service">Kisegítő szolgáltatás</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK vagy sárga: következő csoport (mind, ★, …)</string>
     <string name="cine_live">ÉLŐ</string>
     <string name="cine_demo_note">Blender nyílt film · CC BY · demó adás</string>
+    <string name="cine_test_clip_note">Az OmarchyTV-hez készült · az alkalmazásban · offline is működik</string>
     <string name="cine_queue_empty">A Következő üres: nyomd a pirosat egy videón</string>
     <string name="cine_queue_clear">Következő ürítése</string>
     <string name="cine_embed">\@dhh37 lejátszása a Cinemarchyban</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Előbb párosítsd az Omarchy PC-t</string>
     <string name="cine_up">‹ vissza</string>
     <string name="cine_pc_empty">Ebben a mappában nincs lejátszható</string>
+    <string name="pulse_notice">Új képernyővédő: Omarchy Pulse. Beállítások › Képernyővédő a módosításhoz vagy a visszaállításhoz.</string>
+    <string name="ss_pulse_scene">Pulse jelenet</string>
+    <string name="ss_restore_previous">Előző képernyővédő</string>
+    <string name="agent_alert_row">MI-ügynökök értesítései tévézés közben</string>
+    <string name="agent_alert" formatted="true">● %1$s rád vár: %2$s</string>
 </resources>

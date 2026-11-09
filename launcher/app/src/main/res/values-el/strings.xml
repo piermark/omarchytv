@@ -379,6 +379,9 @@
     <string name="ha_token">Διακριτικό πρόσβασης</string>
     <string name="ha_entities">Φώτα (entity ids)</string>
     <string name="set_random_theme">Τυχαίο θέμα</string>
+    <string name="set_random_scope">Τυχαία από</string>
+    <string name="set_random_intros">κινούμενα intro</string>
+    <string name="set_random_all">όλα τα θέματα</string>
     <string name="set_random_wallpaper">Τυχαίο φόντο / intro</string>
     <string name="menu_remote_keys">Κουμπιά τηλεχειριστηρίου</string>
     <string name="keys_service">Υπηρεσία προσβασιμότητας</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK ή κίτρινο: επόμενη ομάδα (όλα, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Ανοιχτή ταινία Blender · CC BY · ροή demo</string>
+    <string name="cine_test_clip_note">Φτιαγμένο για το OmarchyTV · μέσα στην εφαρμογή · παίζει και χωρίς σύνδεση</string>
     <string name="cine_queue_empty">Τα Επόμενα είναι άδεια: πάτα κόκκινο σε ένα βίντεο</string>
     <string name="cine_queue_clear">Άδειασμα Επόμενων</string>
     <string name="cine_embed">Αναπαραγωγή @dhh37 στο Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Σύζευξε πρώτα το PC Omarchy</string>
     <string name="cine_up">‹ πίσω</string>
     <string name="cine_pc_empty">Τίποτα για αναπαραγωγή εδώ</string>
+    <string name="pulse_notice">Νέα προφύλαξη οθόνης: Omarchy Pulse. Ρυθμίσεις › Προφύλαξη οθόνης για αλλαγή ή επιστροφή.</string>
+    <string name="ss_pulse_scene">Σκηνή Pulse</string>
+    <string name="ss_restore_previous">Προηγούμενη προφύλαξη</string>
+    <string name="agent_alert_row">Ειδοποιήσεις πρακτόρων AI ενώ βλέπεις</string>
+    <string name="agent_alert" formatted="true">● Το %1$s σε χρειάζεται: %2$s</string>
 </resources>

@@ -379,6 +379,9 @@
     <string name="ha_token">Adgangstoken</string>
     <string name="ha_entities">Lys (entity ids)</string>
     <string name="set_random_theme">Tilfældigt tema</string>
+    <string name="set_random_scope">Tilfældigt blandt</string>
+    <string name="set_random_intros">animerede intros</string>
+    <string name="set_random_all">alle temaer</string>
     <string name="set_random_wallpaper">Tilfældig baggrund / intro</string>
     <string name="menu_remote_keys">Fjernbetjeningens knapper</string>
     <string name="keys_service">Hjælpefunktionstjeneste</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK eller gul: næste gruppe (alle, ★, …)</string>
     <string name="cine_live">LIVE</string>
     <string name="cine_demo_note">Blender åben film · CC BY · demostream</string>
+    <string name="cine_test_clip_note">Lavet til OmarchyTV · i appen · virker offline</string>
     <string name="cine_queue_empty">Næste er tom: tryk rød på en video</string>
     <string name="cine_queue_clear">Ryd Næste</string>
     <string name="cine_embed">Afspil @dhh37 i Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Par Omarchy-pc\'en først</string>
     <string name="cine_up">‹ tilbage</string>
     <string name="cine_pc_empty">Intet at afspille i denne mappe</string>
+    <string name="pulse_notice">Ny pauseskærm: Omarchy Pulse. Indstillinger › Pauseskærm for at skifte eller gå tilbage.</string>
+    <string name="ss_pulse_scene">Pulse-scene</string>
+    <string name="ss_restore_previous">Forrige pauseskærm</string>
+    <string name="agent_alert_row">AI-agentbeskeder mens du ser TV</string>
+    <string name="agent_alert" formatted="true">● %1$s har brug for dig: %2$s</string>
 </resources>

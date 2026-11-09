@@ -62,7 +62,7 @@ final class Weather {
                 URL url = new URL(String.format(Locale.ROOT,
                         "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f"
                                 + "&current=temperature_2m,weather_code,wind_speed_10m"
-                                + "&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto", lat, lon));
+                                + "&daily=weather_code,temperature_2m_max,temperature_2m_min&forecast_days=6&timezone=auto", lat, lon));
                 con = (HttpURLConnection) url.openConnection();
                 con.setConnectTimeout(8000);
                 con.setReadTimeout(8000);

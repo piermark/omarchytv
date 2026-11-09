@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omarchy Pulse · OmarchyTV</title>
+<!-- Omarchy Pulse: a live wallpaper for Omarchy. (c) 2026 Marco Porro (x.com/MarcoPorro), MIT.
+     OmarchyTV 2.15: the same page on the TV; pulse-tv*.js stand in for the PC's hub. pulse.js and pulse.css are Pulse 1.6 unchanged. -->
+<style>
+/* OmarchyTV: the bundled CaskaydiaMono (Pulse asks for the Nerd Font installed on the PC) */
+@font-face { font-family: 'CaskaydiaMono Nerd Font'; src: url('../fonts/CaskaydiaMonoNerdFontMono-Regular.ttf') format('truetype'), url('../../fonts/caskaydia_mono_regular.ttf') format('truetype'); }
+html, body { background: #000; cursor: none; }
+</style>
+<link rel="stylesheet" href="pulse.css">
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="vig"></div>
+<div id="ui">
+  <section id="left" class="col"></section>
+  <section id="center" class="col">
+    <div id="clock">
+      <div class="time"><span class="hm">--:--</span><span class="ss">--</span></div>
+      <div class="secbar"><i></i></div>
+      <div class="date"></div>
+      <div class="who"></div>
+    </div>
+    <div id="center-w"></div>
+  </section>
+  <section id="right" class="col"></section>
+</div>
+<div id="ticker"><div class="track"></div></div>
+<div id="badge"></div>
+<div id="incoming" hidden>
+  <div class="frame">
+    <div class="tag">▲ INCOMING</div>
+    <div class="title"></div>
+    <div class="text"></div>
+  </div>
+</div>
+<script src="pulse-tv-data.js"></script>
+<script src="pulse-tv-hub.js"></script>
+<script src="pulse-tv.js"></script>
+<script src="pulse.js"></script>
+<script src="pulse-tv-moments.js"></script>
+</body>
+</html>

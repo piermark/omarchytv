@@ -8,8 +8,48 @@
   var MASTER = 0.5, EVENT = 0.2, EASE = 0.6, FADE = 0.3;
   var FILES = ["fire-embers", "fire-crackle", "fire-roar", "fire-log", "fire-stoke", "cricket", "peep", "croak"];
 
+  /** v2.14.1 (#125): on Android TV the launcher plays the sound natively (window.OmaFireNative, SoundPool): the
+   *  wallpaper's WebView never gets a key, so a TV that starts WebAudio suspended kept the fire silent. Same mix,
+   *  same timings; only the player changes. LG and Samsung have no OmaFireNative and keep WebAudio below. */
+  function createNative(NV, S, N) {
+    var on = false, timer = null, ambience = N.createAmbience(5919);
+    function lvl(v) { return Math.max(0, Math.min(1, v)); }
+    function shot(name, v) { if (on) { try { NV.shot(name, lvl(v)); } catch (e) {} } }
+    function night() {
+      timer = setTimeout(night, 100);
+      if (!on) return;
+      var ev = N.advanceAmbience(ambience, 0.1);
+      for (var i = 0; i < ev.length; i++) {
+        var e = ev[i], b = e.kind === "cricket" ? 0.055 : e.kind === "croak" ? 0.048 : 0.042;
+        shot(e.kind === "cricket" ? "cricket" : e.kind === "croak" ? "croak" : "peep", Math.min(0.12, b * e.gain));
+      }
+    }
+    night();
+    return {
+      setFire: function (heat, boost) {
+        if (!on) return;
+        try {
+          NV.loop("fire-embers", lvl(MASTER * S.embersGain(heat)), EASE);
+          NV.loop("fire-crackle", lvl(MASTER * S.crackleGain(heat)), EASE);
+          NV.loop("fire-roar", lvl(MASTER * S.roarGain(heat, boost)), EASE);
+        } catch (e) {}
+      },
+      playLog: function () { shot("fire-log", EVENT); },
+      playStoke: function () { shot("fire-stoke", EVENT); },
+      setOn: function (v) {
+        v = !!v;
+        if (v === on) return;
+        on = v;
+        if (on) ambience = N.createAmbience(5919);
+        try { NV.setOn(on, FADE); } catch (e) {}
+      },
+      destroy: function () { clearTimeout(timer); if (on) { on = false; try { NV.setOn(false, FADE); } catch (e) {} } }
+    };
+  }
+
   function create(base) {
     var AC = root.AudioContext || root.webkitAudioContext, S = root.OmaFireSound, N = root.OmaFireNight;
+    if (root.OmaFireNative && S && N) return createNative(root.OmaFireNative, S, N);
     if (!AC || !S || !N) return null;
     var ctx, master, buf = {}, loops = {}, ready = false, on = false, timer = null, ambience = N.createAmbience(5919);
     try { ctx = new AC(); } catch (e) { return null; }

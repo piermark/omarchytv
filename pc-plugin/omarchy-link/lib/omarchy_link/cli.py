@@ -378,6 +378,21 @@ def cmd_action(a, cfg):
 
 
 # ------------------------------------------------------------------ cast ("Share to TV")
+def _ufw_hint(state, served: bool, tv_ip: str | None = None, run=subprocess.run, which=shutil.which) -> str:
+    """#82: stock Omarchy turns ufw on (deny incoming), so the TV can't fetch a stream the PC serves on a random
+    port and the cast just ends as "disconnected"/"error". When that happens with ufw active, say so and how to fix it."""
+    if not served or state not in ("error", "disconnected", "timeout") or not which("ufw"):
+        return ""
+    try:
+        if run(["systemctl", "is-active", "--quiet", "ufw"], timeout=3).returncode != 0:
+            return ""
+    except Exception:
+        return ""
+    who = tv_ip or "<tv-ip>"
+    return (f"ufw is on and probably blocked the TV from fetching the stream. Allow the TV once with:\n"
+            f"  sudo ufw allow from {who} proto tcp comment 'OmarchyTV'")
+
+
 def _notify(text: str, title: str = "OmarchyTV") -> None:
     cmds = [["omarchy-notification-send", "-g", "󰔂", title, text], ["notify-send", "-a", "omarchy-link", title, text]]
     if sys.platform == "darwin":  # title and text go in as arguments, so quotes in them can't break the AppleScript
@@ -498,6 +513,9 @@ def cmd_cast(a, cfg):
         else:
             print(f"Sent {item['kind']} \u201c{item.get('title', '')}\u201d to the TV via {where}."
                   + (f" Last state: {result['state']}." if result.get("state") not in (None, "opening") else ""))
+            hint = _ufw_hint(result.get("state"), result["via"] == "link" and bool(result.get("served")), result.get("tvIp"))
+            if hint:
+                print(hint, file=sys.stderr)
         if a.notify:
             _notify(f"{item.get('title', item['kind'])} → TV via {where}", "Sent to TV")
         return 0 if result.get("state") != "error" else 1

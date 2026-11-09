@@ -31,6 +31,8 @@ import java.nio.charset.StandardCharsets;
 final class RemotePanes {
 
     static final int MAX_BYTES = 64 * 1024;
+    /** v2.15 (#115): a pane's optional picture, PNG or JPEG, at most this big. */
+    static final int MAX_IMAGE = 512 * 1024;
     private static volatile boolean fetching;
     private static volatile long lastAttemptMs;
     private static volatile boolean forced;
@@ -118,6 +120,7 @@ final class RemotePanes {
                 String[] why = new String[2];
                 JSONArray panes = LinkServer.cleanPanes(in != null ? in : new JSONArray(), System.currentTimeMillis() / 1000L, why);
                 if (panes == null) return;
+                images(c, in, panes);
                 JSONObject out = new JSONObject().put("url", url).put("fetchedAt", System.currentTimeMillis()).put("panes", panes);
                 File f = cacheFile(c), tmp = new File(f.getPath() + ".tmp");
                 try (FileOutputStream o = new FileOutputStream(tmp)) {
@@ -131,6 +134,68 @@ final class RemotePanes {
                 new Handler(Looper.getMainLooper()).post(onDone);
             }
         }, "omarchytv-remote-panes").start();
+    }
+
+    /**
+     * v2.15 (#115, asked by @tolixx): a pane may carry "image": a PNG or JPEG URL (the same rule as the panes URL:
+     * https, or http only to a LAN address; no redirects; at most 512 KiB). It is fetched here, on the same thread, and
+     * kept in the files dir next to the panes, so it survives a restart and goes stale with the pane's ttl. A pane
+     * with a picture shows it under its title instead of its lines. A picture that can't be fetched keeps the last one.
+     */
+    private static void images(Context c, JSONArray in, JSONArray panes) {
+        for (int i = 0; in != null && i < panes.length(); i++) {
+            JSONObject p = panes.optJSONObject(i), src = in.optJSONObject(i);
+            String url = src != null ? src.optString("image", "") : "";
+            if (p == null || url.isEmpty() || !urlAllowed(url)) continue;
+            File f = imageFile(c, p.optString("id"));
+            try {
+                byte[] img = fetchImage(url);
+                if (img != null) {
+                    File tmp = new File(f.getPath() + ".tmp");
+                    try (FileOutputStream o = new FileOutputStream(tmp)) {
+                        o.write(img);
+                    }
+                    if (!tmp.renameTo(f)) tmp.delete();
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                if (f.isFile()) p.put("image", f.getName());
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    static File imageFile(Context c, String paneId) {
+        return new File(c.getFilesDir(), "remote-pane-" + paneId.replaceAll("[^A-Za-z0-9_-]", "_") + ".img");
+    }
+
+    private static byte[] fetchImage(String url) throws Exception {
+        HttpURLConnection con = (HttpURLConnection) new URL(url).openConnection();
+        try {
+            URL u = con.getURL();
+            if (!"https".equals(u.getProtocol()) && !httpLan(u)) return null;
+            con.setInstanceFollowRedirects(false);
+            con.setConnectTimeout(8000);
+            con.setReadTimeout(8000);
+            con.setRequestProperty("Accept", "image/png, image/jpeg");
+            if (con.getResponseCode() != 200) return null;
+            byte[] b;
+            try (InputStream in = con.getInputStream()) {
+                b = readAll(in, MAX_IMAGE);
+            }
+            return imageOk(b) ? b : null;
+        } finally {
+            con.disconnect();
+        }
+    }
+
+    /** PNG or JPEG by their first bytes (whatever the server says the type is). */
+    static boolean imageOk(byte[] b) {
+        if (b == null || b.length < 8) return false;
+        boolean png = (b[0] & 0xff) == 0x89 && b[1] == 'P' && b[2] == 'N' && b[3] == 'G';
+        boolean jpg = (b[0] & 0xff) == 0xff && (b[1] & 0xff) == 0xd8 && (b[2] & 0xff) == 0xff;
+        return png || jpg;
     }
 
     /** Reads at most {@code max} bytes; more is an error (a pane file is small). */

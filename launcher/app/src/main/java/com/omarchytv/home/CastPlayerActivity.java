@@ -48,6 +48,10 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
     private SurfaceView video;
     private LinearLayout overlay;
     private AsciiSaverView pauseSaver;
+    private CineFxView fx;
+    private TextView modeView;
+    /** v2.14.1 the last tape mode chosen, kept for the next film until the launcher restarts (as on LG/Samsung). */
+    private static String lastMode = CineFxView.NORMAL;
     private TextView timeView, stateView;
     private View progress;
     private FrameLayout progressTrack;
@@ -113,6 +117,24 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         if (audio) {
             TextView note = CastUi.label(this, "♪", 96, t.accent);
             root.addView(note, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.CENTER));
+        } else if (!omastorm()) {
+            // v2.14.1 Cinemarchy's VHS and ASCII modes, over the picture and under the title pane (▲ switches).
+            fx = new CineFxView(this, video, new CineFxView.Clock() {
+                @Override
+                public boolean paused() {
+                    return player == null || !player.isPlaying();
+                }
+
+                @Override
+                public long positionMs() {
+                    return player == null ? 0 : player.getCurrentPosition();
+                }
+            }, () -> {
+                lastMode = CineFxView.NORMAL;
+                updateMode();
+                android.widget.Toast.makeText(this, R.string.cine_ascii_blocked, android.widget.Toast.LENGTH_LONG).show();
+            });
+            root.addView(fx, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         }
 
         // Title pane: "▶ title" / "from <pc>", then the progress line and time (or "● live").
@@ -147,6 +169,13 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         row.addView(timeView);
         row.setPadding(0, CastUi.dp(this, 8), 0, 0);
         overlay.addView(row);
+        if (fx != null) {
+            modeView = CastUi.label(this, "", 12, t.fgDim);
+            modeView.setPadding(0, CastUi.dp(this, 6), 0, 0);
+            overlay.addView(modeView);
+            fx.setMode(lastMode);
+            updateMode();
+        }
         if (live) progressTrack.setVisibility(View.GONE);
         FrameLayout.LayoutParams op = new FrameLayout.LayoutParams(CastUi.dp(this, 560), ViewGroup.LayoutParams.WRAP_CONTENT, Gravity.BOTTOM | Gravity.START);
         op.setMargins(CastUi.dp(this, 56), 0, 0, CastUi.dp(this, 40));
@@ -515,6 +544,18 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
                 seekBy(30_000);
                 return true;
             case KeyEvent.KEYCODE_DPAD_UP:
+            case KeyEvent.KEYCODE_PROG_BLUE:
+            case KeyEvent.KEYCODE_MENU:
+            case KeyEvent.KEYCODE_V:
+                if (fx != null) {   // v2.14.1 normal → VHS → ASCII → normal (the blue key on LG and Samsung)
+                    lastMode = CineFxView.next(fx.mode());
+                    fx.setMode(lastMode);
+                    updateMode();
+                    android.widget.Toast.makeText(this, CineFxView.VHS.equals(lastMode) ? "VHS · CRT" : CineFxView.ASCII.equals(lastMode)
+                            ? "ASCII" : getString(R.string.cine_mode_normal), android.widget.Toast.LENGTH_SHORT).show();
+                }
+                showOverlay(true);
+                return true;
             case KeyEvent.KEYCODE_DPAD_DOWN:
                 showOverlay(true);
                 return true;
@@ -537,6 +578,14 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
             default:
                 return super.dispatchKeyEvent(e);
         }
+    }
+
+    /** The title pane's last line: which picture is on, and the key that changes it. */
+    private void updateMode() {
+        if (modeView == null || fx == null) return;
+        String m = fx.mode();
+        modeView.setText("▲ " + (CineFxView.VHS.equals(m) ? "[VHS]" : "VHS") + " · " + (CineFxView.ASCII.equals(m) ? "[ASCII]" : "ASCII")
+                + " · " + (CineFxView.NORMAL.equals(m) ? "[" + getString(R.string.cine_mode_normal) + "]" : getString(R.string.cine_mode_normal)));
     }
 
     private void seekBy(long ms) {
@@ -615,6 +664,7 @@ public final class CastPlayerActivity extends Activity implements CastRouter.Sur
         saveResume();
         h.removeCallbacksAndMessages(null);
         if (pauseSaver != null) pauseSaver.stop();
+        if (fx != null) fx.release();
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         if (player != null) {
             player.release();

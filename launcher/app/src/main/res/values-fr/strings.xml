@@ -379,6 +379,9 @@
     <string name="ha_token">Jeton d\'accès</string>
     <string name="ha_entities">Lumières (entity ids)</string>
     <string name="set_random_theme">Thème aléatoire</string>
+    <string name="set_random_scope">Au hasard parmi</string>
+    <string name="set_random_intros">intros animées</string>
+    <string name="set_random_all">tous les thèmes</string>
     <string name="set_random_wallpaper">Fond / intro aléatoire</string>
     <string name="menu_remote_keys">Boutons de la télécommande</string>
     <string name="keys_service">Service d\'accessibilité</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK ou jaune : groupe suivant (tous, ★, …)</string>
     <string name="cine_live">DIRECT</string>
     <string name="cine_demo_note">Film libre Blender · CC BY · flux de démo</string>
+    <string name="cine_test_clip_note">Créé pour OmarchyTV · inclus dans l\'app · fonctionne hors ligne</string>
     <string name="cine_queue_empty">À suivre est vide : appuyez sur rouge sur une vidéo</string>
     <string name="cine_queue_clear">Vider À suivre</string>
     <string name="cine_embed">Lire @dhh37 dans Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Associez d\'abord le PC Omarchy</string>
     <string name="cine_up">‹ retour</string>
     <string name="cine_pc_empty">Rien à lire dans ce dossier</string>
+    <string name="pulse_notice">Nouvel économiseur : Omarchy Pulse. Réglages › Économiseur pour le changer ou revenir en arrière.</string>
+    <string name="ss_pulse_scene">Scène de Pulse</string>
+    <string name="ss_restore_previous">Économiseur précédent</string>
+    <string name="agent_alert_row">Alertes des agents IA pendant que tu regardes</string>
+    <string name="agent_alert" formatted="true">● %1$s a besoin de toi : %2$s</string>
 </resources>

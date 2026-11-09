@@ -25,6 +25,8 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
                                       (updateFromTv in omarchy-link's config) -> {current, latest} | {result}
   POST /v1/power                   -> same token; {state: standby|on}: TV and PC power together (omarchy-link
                                       power.py: suspend after powerGraceS, cancelled when the TV comes back)
+  POST /v1/pulse                   -> same token; this PC's Omarchy Pulse state for the TV's Pulse screensaver
+                                      (private panels, calendar titles, device names removed), 404 if Pulse is off
   POST /v1/living                  -> same token; {notes, github, x: off|notify|api}: the Living screensaver asks
                                       while it runs (every few seconds) -> {github, notes, x, xMode, xError?}
                                       (omarchy-link living.py; notifications only when asked, never stored)
@@ -55,7 +57,6 @@ from pathlib import Path
 
 from . import VERSION, themes, ui
 
-OMARCHY_CURRENT = Path.home() / ".config/omarchy/current"
 AI_CFG = Path.home() / ".config/omarchy-link/ai.json"
 LINK_CFG = Path.home() / ".config/omarchy-link/config.json"
 
@@ -221,26 +222,37 @@ def uptime_seconds() -> int:
         return 0
 
 
+def _current_dirs() -> list[Path]:
+    """omarchy-theme-set writes the live theme under the state dir. The config path is the older location."""
+    home = Path.home()
+    return [
+        home / ".local/state/omarchy/current",
+        home / ".config/omarchy/current",
+    ]
+
+
 def current_theme_name() -> str:
-    for p in (OMARCHY_CURRENT / "theme.name", OMARCHY_CURRENT / "theme"):
-        try:
-            if p.is_symlink():
-                return Path(os.readlink(p)).name
-            if p.is_file():
-                return p.read_text().strip() or "tokyo-night"
-        except OSError:
-            pass
+    for root in _current_dirs():
+        for p in (root / "theme.name", root / "theme"):
+            try:
+                if p.is_symlink():
+                    return Path(os.readlink(p)).name
+                if p.is_file():
+                    return p.read_text().strip() or "tokyo-night"
+            except OSError:
+                pass
     return "tokyo-night"
 
 
 def current_wallpaper_path() -> Path | None:
-    bg = OMARCHY_CURRENT / "background"
-    try:
-        real = Path(os.path.realpath(bg))
-        if real.is_file():
-            return real
-    except OSError:
-        pass
+    for root in _current_dirs():
+        bg = root / "background"
+        try:
+            real = Path(os.path.realpath(bg))
+            if real.is_file():
+                return real
+        except OSError:
+            pass
     return None
 
 
@@ -347,7 +359,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
         global _last_ask
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
-                        "/v1/update/tv", "/v1/power", "/v1/living"):
+                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse"):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -381,6 +393,11 @@ class WebOSHandler(BaseHTTPRequestHandler):
             return
         if path == "/v1/living":
             self._living(body)
+            return
+        if path == "/v1/pulse":   # 2.15 Pulse on the TV: this PC's Pulse state, private parts removed
+            ps = _link_mod("pulse_state")
+            st = ps.read() if ps else None
+            self._send_json(st if st else {"error": "pulse_off"}, 200 if st else 404)
             return
         g = _grokbot()
         if not g:

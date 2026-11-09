@@ -379,6 +379,9 @@
     <string name="ha_token">Přístupový token</string>
     <string name="ha_entities">Světla (entity ids)</string>
     <string name="set_random_theme">Náhodný motiv</string>
+    <string name="set_random_scope">Náhodně z</string>
+    <string name="set_random_intros">animovaných úvodů</string>
+    <string name="set_random_all">všech motivů</string>
     <string name="set_random_wallpaper">Náhodné pozadí / intro</string>
     <string name="menu_remote_keys">Tlačítka ovladače</string>
     <string name="keys_service">Služba usnadnění přístupu</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK nebo žlutá: další skupina (vše, ★, …)</string>
     <string name="cine_live">ŽIVĚ</string>
     <string name="cine_demo_note">Otevřený film Blender · CC BY · demo stream</string>
+    <string name="cine_test_clip_note">Vytvořeno pro OmarchyTV · přímo v aplikaci · funguje offline</string>
     <string name="cine_queue_empty">Další je prázdné: stiskni červenou u videa</string>
     <string name="cine_queue_clear">Vyprázdnit Další</string>
     <string name="cine_embed">Přehrávat @dhh37 v Cinemarchy</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Nejdřív spáruj PC Omarchy</string>
     <string name="cine_up">‹ zpět</string>
     <string name="cine_pc_empty">V této složce není co přehrát</string>
+    <string name="pulse_notice">Nový spořič: Omarchy Pulse. Nastavení › Spořič obrazovky pro změnu nebo návrat.</string>
+    <string name="ss_pulse_scene">Scéna Pulse</string>
+    <string name="ss_restore_previous">Předchozí spořič</string>
+    <string name="agent_alert_row">Upozornění AI agentů při sledování</string>
+    <string name="agent_alert" formatted="true">● %1$s tě potřebuje: %2$s</string>
 </resources>

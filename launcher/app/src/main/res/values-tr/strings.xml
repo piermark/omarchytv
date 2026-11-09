@@ -379,6 +379,9 @@
     <string name="ha_token">Erişim belirteci</string>
     <string name="ha_entities">Işıklar (entity ids)</string>
     <string name="set_random_theme">Rastgele tema</string>
+    <string name="set_random_scope">Rastgele seçim</string>
+    <string name="set_random_intros">animasyonlu girişler</string>
+    <string name="set_random_all">tüm temalar</string>
     <string name="set_random_wallpaper">Rastgele duvar kâğıdı / intro</string>
     <string name="menu_remote_keys">Kumanda tuşları</string>
     <string name="keys_service">Erişilebilirlik hizmeti</string>
@@ -485,6 +488,7 @@
     <string name="cine_group_hint">OK veya sarı: sonraki grup (tümü, ★, …)</string>
     <string name="cine_live">CANLI</string>
     <string name="cine_demo_note">Blender açık filmi · CC BY · demo yayın</string>
+    <string name="cine_test_clip_note">OmarchyTV için yapıldı · uygulamanın içinde · çevrimdışı da oynar</string>
     <string name="cine_queue_empty">Sıradaki boş: bir videoda kırmızıya bas</string>
     <string name="cine_queue_clear">Sıradakini temizle</string>
     <string name="cine_embed">\@dhh37\'yi Cinemarchy içinde oynat</string>
@@ -516,4 +520,9 @@
     <string name="cine_pc_need">Önce Omarchy PC\'yi eşleştir</string>
     <string name="cine_up">‹ geri</string>
     <string name="cine_pc_empty">Bu klasörde oynatılacak bir şey yok</string>
+    <string name="pulse_notice">Yeni ekran koruyucu: Omarchy Pulse. Değiştirmek ya da geri dönmek için Ayarlar › Ekran koruyucu.</string>
+    <string name="ss_pulse_scene">Pulse sahnesi</string>
+    <string name="ss_restore_previous">Önceki ekran koruyucu</string>
+    <string name="agent_alert_row">İzlerken yapay zekâ ajanı uyarıları</string>
+    <string name="agent_alert" formatted="true">● %1$s seni bekliyor: %2$s</string>
 </resources>
