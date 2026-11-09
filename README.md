@@ -1,12 +1,16 @@
 # OmarchyTV
 
-**An Omarchy-style home screen for Android TV, featuring a native Omarchy TUI Grok Bot assistant, 32 MIT themes with TV wallpapers, a desktop link to your Omarchy PC / Mac, a native MCP server, and an Android smartphone wireless installer.**
+**An Omarchy-style home screen for Android TV, LG webOS and Samsung Tizen: Omarchy Pulse as the screensaver (the real sky over you, live), an arcade where your phone is the gamepad, a native Omarchy TUI Grok Bot assistant, 32 MIT themes with TV wallpapers, a desktop link to your Omarchy PC / Mac, a native MCP server, and an Android smartphone wireless installer.**
 
 Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](https://x.com/MarcoPorro) · [www.marcoporro.it](https://www.marcoporro.it))
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **5 November 2026 (latest published release: 2.14.0-beta — Android TV, LG webOS & Samsung Tizen)** (`versionCode 26`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **9 November 2026 (latest release: 2.15.0 — Android TV, LG webOS & Samsung Tizen)** (`versionCode 27`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
+
+[![OmarchyTV 2.15: Omarchy Pulse on the TV, the arcade with your phone as the gamepad, games for two](docs/media/omarchytv-2.15.png)](https://github.com/piermark/omarchytv/raw/main/docs/media/omarchytv-2.15.mp4)
+
+*OmarchyTV 2.15 in 50 seconds: click the picture for the video (MP4, 6 MB, with music). Everything new is in [What's New in 2.15.0](#whats-new-in-2150-versioncode-27).*
 
 > [!WARNING]
 > **Beta software.** Tested on Sony BRAVIA (Android 9), Google TV Streamer (Android 14), Sharp AQUOS, Noblex/Hisense (Android 11), LG webOS and the Android TV emulator. Some features may be missing on some TVs. It never roots or uninstalls anything, and you can always switch back to your stock home screen (see [INSTALL](launcher/docs/INSTALL.md)).
@@ -33,21 +37,21 @@ OmarchyTV; see [Trademarks](#trademarks).*
 
 ---
 
-## Release Downloads & Checksums (`v2.14.0-beta`, pre-release)
+## Release Downloads & Checksums (`v2.15.0`)
 
-I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d`), so `adb install -r` upgrades over `2.12.0-beta` and keeps your settings. All checksums are also in `SHA256SUMS` on the release.
+I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d`), so `adb install -r` upgrades over `2.14.0-beta` and earlier and keeps your settings. All checksums are also in `SHA256SUMS` on the release.
 
 | Artifact | Download | Platform | Version | Size | SHA-256 |
 |---|---|---|---|---|---|
-| **`omarchytv-release-2.14.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchytv-release-2.14.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.14.0-beta` (`versionCode 26`) | `10.7 MB` | `934d07d7084e44dd7cbb919b3f8d4b4ffc6fa13cc4c44df675378d5a861b122e` |
-| **`omarchytv-webos-2.14.0-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchytv-webos-2.14.0-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.14.0` | `8.2 MB` | `42fb9878b6a9598d47da9a8fa50a2d76f0acd16135b114f4ef73e38a4f684194` |
-| **`OmarchyTV-tizen-2.14.0-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/OmarchyTV-tizen-2.14.0-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.14.0` | `8.3 MB` | `5d12bd2ad82098d674f0217d61d71adfb5dda62c0e996b04b337b2282a30977c` |
+| **`omarchytv-release-2.15.0.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchytv-release-2.15.0.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.15.0` (`versionCode 27`) | `13.6 MB` | `5d74f8c5fdf983da46c63b68740f33b6f08db1078f9cd01b4508209b62743705` |
+| **`omarchytv-webos-2.15.0-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchytv-webos-2.15.0-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.15.0` | `11.4 MB` | `2a7890459dee3401d3b42487a01341bcd3d8a8188cbcd568e5192b3e3617b992` |
+| **`OmarchyTV-tizen-2.15.0-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/OmarchyTV-tizen-2.15.0-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.15.0` | `11.5 MB` | `37ecdb60243ee9016f3596f2985b75a104d8978fcea88d408c40976a06c9565f` |
 | **`omarchytv-mobile-2.13.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchytv-mobile-2.13.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Android phone installer & companion (`com.omarchytv.mobile`, `minSdk 26`) | `2.13.0-beta` (`versionCode 21300`) | `177 KB` | `e45a5c0f7ccd662279d34e80ffbf4e9581061603012e8814e5941e8909b67f79` |
-| **`omarchy-tv-pc-plugin-2.14.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchy-tv-pc-plugin-2.14.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.14.0-beta` | `270 KB` | `4e1379d630f2b4f947548c2cf412b600a28bbbedcb408dbabc7730dfba453630` |
-| **`omarchy-tv-2.14.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchy-tv-2.14.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | PC plugin `omarchy-tv` only | `2.14.0-beta` | `65 KB` | `9b3334793e0d783ead3659ade57544f3a2234cba0ad9faa4c04fd2625b61176b` |
-| **`omarchy-link-2.14.0-beta.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.14.0-beta/omarchy-link-2.14.0-beta.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.14.0-beta)** | PC plugin `omarchy-link` only | `2.14.0-beta` | `196 KB` | `e786ce48ef9368a3aaaccaac8fc0b34c9b23b74969f2d5b6305af1c993fb6099` |
+| **`omarchy-tv-pc-plugin-2.15.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchy-tv-pc-plugin-2.15.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.15.0` | `284 KB` | `6bc225f27c8dc1855bd5b3036511bdf6636da0d8824a4ed37d7fd5d7eb864506` |
+| **`omarchy-tv-2.15.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchy-tv-2.15.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | PC plugin `omarchy-tv` only | `2.15.0` | `68 KB` | `7e1a8203150831e52af2a4d776fd3919333565f47eb08c449eb93da28854ccc1` |
+| **`omarchy-link-2.15.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchy-link-2.15.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | PC plugin `omarchy-link` only | `2.15.0` | `205 KB` | `36718d2c761f0eac111020da8d5ab3108c66fd34997e3ac0ee4fa2ffd0346527` |
 
-All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.13.11](https://github.com/piermark/omarchytv/releases/tag/v2.13.11).
+All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.14.0-beta](https://github.com/piermark/omarchytv/releases/tag/v2.14.0-beta).
 
 ---
 
@@ -208,6 +212,9 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 - **32 Bundled MIT Themes & 4K Wallpapers**: Instant live theme switching with bundled 4K WebP backgrounds, `"next wallpaper"` cycling, custom image support, procedural aurora fallback, and custom theme packs pushed from your PC.
 - **Customizable Home Panels**: Toggle individual panels (Clock, Weather with `°C / °F` switch and auto-location, PC Stats, AI Credits, Deploys, Terminal) and move them on a **12×8 grid** with **Arrange panels**.
 - **App Shelf & Hidden Apps Manager**: Reorder or pin favorite apps, hide unwanted system tiles (including optional Sony bloatware toggle), restore hidden tiles in Workspace 5 (`System → Hidden apps`), and push custom 16:9 PNG app banners (`omarchy-tv icons push`).
+- **Omarchy Pulse screensaver (2.15)**: Pulse's scenes with your city's skyline and the real sky over you (Sun, Moon, planets, stars), the planes overhead, the ISS and Starlink ("look up!"), launch countdowns, weather, air quality, earthquakes and the TV's own CPU/RAM/network, with no PC; the full Pulse (AI agents, workspaces, repos, panels, colours) with your Omarchy PC paired.
+- **OmarchyTV Arcade (2.14–2.15)**: nine text-mode games, four of them for two players (PIPE DUEL, OMASLOT, PANE PONG, LAST WINDOW); on Android TV your phone is the gamepad (scan the QR in the arcade's sign, nothing to install).
+- **Racing widget (2.15)**: F1, MotoGP, Moto2, Moto3, NASCAR, Formula E and WEC weekends live from the official sources, with a countdown in the bar.
 - **37 `tte.js` ASCII Screensaver Effects**: Runs all 37 `TerminalTextEffects` / `tte.js` animations in a dedicated `:saver` process with configurable idle timeout (`1 / 2.5 / 5 / 10 min` or `Never`), **Effect speed (`Slow / Normal / Fast`)**, native fallback for legacy WebViews, and Android Daydream (`OmarchyDream`) support.
 - **Cast to TV (opt-in)**: Send videos, audio (Media3 ExoPlayer), images, text, and links from your paired PC/Mac directly to the TV.
 - **Crash Watchdog & Safe Debloat**: Independent `:watchdog` process that restores the stock launcher if 3 crashes ever occur within 5 minutes; safe debloat scripts use only reversible `pm disable-user --user 0` (never `pm uninstall`, never touching DNS or `setupwraith`).
@@ -274,18 +281,18 @@ Every theme bundled in OmarchyTV `2.13.0-beta` is **100% MIT-licensed** and ship
 
 > **Want a hand?** I made [OmarchyTV Installer](https://x.ai/bot/kkVjmjPKhIb2atxHQPsfp), a Grok Bot that walks you through the install step by step on Android TV / Google TV, LG webOS or Samsung Tizen. It uses only the official releases from this repo, checks the SHA-256 with you, and follows the guides below. It never asks for passwords and has no access to my accounts or keys.
 
-### 1. Install on Android TV / Google TV / Sony BRAVIA / Sharp AQUOS (`2.13.0-beta`)
+### 1. Install on Android TV / Google TV / Sony BRAVIA / Sharp AQUOS (`2.15.0`)
 
 #### Option A — Install via ADB from a PC / Mac
 1. On your TV, enable Developer Options: **Settings → Device Preferences → About → press Build 7 times**, then enable **USB debugging / Network debugging** in **Developer options** and note the TV's IP address.
 2. Connect and install the signed release APK:
    ```bash
    adb connect <tv-ip>:5555
-   sha256sum omarchytv-release-2.13.0-beta.apk
-   # Expected SHA-256: 53d88d14ffad8933048570e7ae324d11bba0907ff0a8252ad142eb6ac564b2ea
-   apksigner verify --print-certs omarchytv-release-2.13.0-beta.apk
+   sha256sum omarchytv-release-2.15.0.apk
+   # Expected SHA-256: 5d74f8c5fdf983da46c63b68740f33b6f08db1078f9cd01b4508209b62743705
+   apksigner verify --print-certs omarchytv-release-2.15.0.apk
    # Expected Signer #1 SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d
-   adb install -r omarchytv-release-2.13.0-beta.apk
+   adb install -r omarchytv-release-2.15.0.apk
    ```
 3. **Set OmarchyTV as the default Home screen (optional):**
    ```bash
@@ -340,10 +347,10 @@ You can interact using the **1-click D-pad quick-action chips** at the top of th
 
 ---
 
-### 4. PC / macOS Plugin & MCP Server (`omarchy-tv-pc-plugin-2.13.0-beta.tar.gz`)
+### 4. PC / macOS Plugin & MCP Server (`omarchy-tv-pc-plugin-2.15.0.tar.gz`)
 
 ```bash
-tar -xzf omarchy-tv-pc-plugin-2.13.0-beta.tar.gz
+tar -xzf omarchy-tv-pc-plugin-2.15.0.tar.gz
 cd pc-plugin
 mkdir -p ~/.local/share ~/.local/bin
 cp -r omarchy-link ~/.local/share/omarchy-link
@@ -364,10 +371,10 @@ Full PC plugin documentation: **[pc-plugin/README.md](pc-plugin/README.md)** and
 
 ---
 
-### 5. LG webOS and Samsung Tizen TVs — Experimental (`2.13.11`)
-- **LG webOS:** `omarchytv-webos-2.13.11-testing.ipk`. Install guide: **[webos/INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md)**.
-- **Samsung Tizen:** `OmarchyTV-tizen-2.13.11-unsigned.wgt` is unsigned: sign it with your own Samsung certificate in Tizen Studio before installing. Guide: **[tizen/INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)**.
-- Both share the same web app (`webos/app`), including the new **Settings > System > Text size** option (90/100/115/130%), Cinemarchy 0.1.0-alpha, the Grok Bot companion (Blue key), the plugin marketplace and both Aquariums.
+### 5. LG webOS and Samsung Tizen TVs — Experimental (`2.15.0`)
+- **LG webOS:** `omarchytv-webos-2.15.0-testing.ipk`. Install guide: **[webos/INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md)**.
+- **Samsung Tizen:** `OmarchyTV-tizen-2.15.0-unsigned.wgt` is unsigned: sign it with your own Samsung certificate in Tizen Studio before installing. Guide: **[tizen/INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)**.
+- Both share the same web app (`webos/app`): Omarchy Pulse as the screensaver, the Arcade (nine games), Cinemarchy, the **Settings > System > Text size** option (90/100/115/130%), Cinemarchy 0.1.0-alpha, the Grok Bot companion (Blue key), the plugin marketplace and both Aquariums.
 
 ---
 
