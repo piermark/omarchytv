@@ -48,6 +48,20 @@ When one is open:
 
 Small files (at most the TV's `castUploadMax`, 64 MiB on the mock) are uploaded over the signed channel instead, with no port at all. Above 8 MiB, `--serve` streams rather than uploads, so playback starts sooner.
 
+### Firewall (ufw on Omarchy)
+
+Stock Omarchy turns **ufw** on and denies incoming connections, so when the PC serves a file or the screen
+(`--serve`, `--screen`) the TV can't fetch it: the cast ends as `disconnected`, `error` or `timeout` and nothing
+plays ([#82](https://github.com/piermark/omarchytv/issues/82)). Allow your TV once:
+
+```sh
+sudo ufw allow from <tv-ip> proto tcp comment 'OmarchyTV'
+```
+
+The rule lets only that TV in, on any TCP port (the stream port is random). The CLI prints this hint, with the TV's
+address filled in, when a served cast fails while ufw is active. Uploads and links the TV fetches from the internet
+need no rule.
+
 ## Screen mirroring on Hyprland (experimental)
 
 **Pipeline:**
