@@ -1,6 +1,6 @@
 package com.omarchytv.home;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -125,5 +125,76 @@ public class RacingTest {
         assertEquals("QUALI", a.getJSONObject(0).getString("code"));
         assertEquals("RACE", a.getJSONObject(1).getString("code"));
         assertEquals("2026-11-22T04:00:00Z", a.getJSONObject(1).getString("start"));
+    }
+
+    // ---- 2.15 every series: parsers on real answers of the official sources (src/test/resources/racing) ----
+
+    private static String fixture(String name) throws Exception {
+        try (java.io.InputStream in = RacingTest.class.getResourceAsStream("/racing/" + name)) {
+            return new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+    }
+
+    @Test
+    public void motogpApiGivesEachClassItsOwnWeekend() throws Exception {
+        org.json.JSONArray ev = new org.json.JSONArray(fixture("motogp-event.json"));
+        for (String cls : new String[]{"MGP", "MT2", "MT3"}) {
+            org.json.JSONArray a = Racing.parseMotoGp(ev, cls);
+            assertEquals(cls, 1, a.length());
+            org.json.JSONArray ss = a.getJSONObject(0).getJSONArray("sessions");
+            assertTrue(cls, ss.length() >= 3);
+            assertEquals(cls, "RACE", ss.getJSONObject(ss.length() - 1).getString("code"));
+        }
+        assertNotEquals(Racing.parseMotoGp(ev, "MGP").toString(), Racing.parseMotoGp(ev, "MT3").toString());
+    }
+
+    @Test
+    public void nascarKeepsPracticeQualifyingAndRaceOnly() throws Exception {
+        org.json.JSONObject d = new org.json.JSONObject(fixture("nascar.json"));
+        for (String k : new String[]{"series_1", "series_2", "series_3"}) {
+            org.json.JSONArray a = Racing.parseNascar(d.getJSONArray(k));
+            assertEquals(k, 2, a.length());
+            for (int i = 0; i < a.length(); i++) {
+                org.json.JSONArray ss = a.getJSONObject(i).getJSONArray("sessions");
+                for (int j = 0; j < ss.length(); j++) assertTrue(ss.getJSONObject(j).getString("code").matches("P\\d|QUALI|RACE"));
+                assertEquals("RACE", ss.getJSONObject(ss.length() - 1).getString("code"));
+                assertFalse(a.getJSONObject(i).getString("name").isEmpty());
+            }
+        }
+        java.util.List<Racing.Meeting> m = Racing.parse(Racing.parseNascar(d.getJSONArray("series_1")));
+        assertEquals("Homestead-Miami Speedway", m.get(m.size() - 1).name);
+    }
+
+    @Test
+    public void formulaEDaysWithoutTimes() throws Exception {
+        org.json.JSONArray a = Racing.parseFePage(fixture("fe.html"));
+        assertTrue(a.length() >= 15);
+        org.json.JSONObject first = a.getJSONObject(0);
+        assertEquals("Jeddah E-Prix", first.getString("name"));
+        java.util.List<Racing.Meeting> m = Racing.parse(a);
+        assertTrue(m.get(0).sessions.get(0).dateOnly);
+        assertEquals("fri 18 dec", Racing.day(m.get(0).sessions.get(0).start, java.util.Locale.ENGLISH));
+        // a day-only E-Prix never drives the bar's countdown
+        java.util.Map<String, java.util.List<Racing.Meeting>> all = new java.util.LinkedHashMap<>();
+        all.put("fe", m);
+        assertNull(Racing.soonest(all, m.get(0).sessions.get(0).start - 3600_000L));
+    }
+
+    @Test
+    public void wecRoundsFromTheOfficialSite() throws Exception {
+        org.json.JSONArray a = Racing.parseWecPage(fixture("wec.html"));
+        assertEquals(9, a.length());
+        assertEquals("Qatar 1812km", a.getJSONObject(0).getString("name"));
+        assertEquals("24 Hours of Le Mans", a.getJSONObject(4).getString("name"));
+        assertEquals("6 Hours of Spa Francorchamps", Racing.wecName("totalenergies-6-hours-of-spa-francorchamps-2027"));
+        assertEquals("FP1", a.getJSONObject(0).getJSONArray("sessions").getJSONObject(0).getString("code"));
+    }
+
+    @Test
+    public void everySeriesHasALabelAndUnknownOnesAreRefused() {
+        assertTrue(Racing.SERIES.length >= 9);
+        for (String[] s : Racing.SERIES) assertTrue(Racing.known(s[0]) && !Racing.label(s[0]).isEmpty());
+        assertFalse(Racing.known("drag-racing"));
+        assertEquals("NASCAR Cup", Racing.label("nascar"));
     }
 }

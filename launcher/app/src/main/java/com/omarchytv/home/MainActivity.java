@@ -120,7 +120,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 home.refresh();
                 LauncherConfig c = LauncherConfig.get(MainActivity.this);
                 Weather.refreshAuto(MainActivity.this, c, home::refresh);
-                if (c.wRacing || c.barRacing) Racing.refreshIfStale(MainActivity.this, home::refresh);
+                if (c.wRacing || c.barRacing) Racing.refreshIfStale(MainActivity.this, c.racingSeries, home::refresh);
                 RemotePanes.refreshIfStale(MainActivity.this, c.remotePanesUrl, c.remotePanesRefreshSec, home::refresh);
             }
             handler.postDelayed(this, untilNextMinute());
@@ -1063,7 +1063,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (home != null) {
             home.bind(cfg, adapter);
             Weather.refreshAuto(this, cfg, home::refresh);
-            if (cfg.wRacing || cfg.barRacing) Racing.refreshIfStale(this, home::refresh);
+            if (cfg.wRacing || cfg.barRacing) Racing.refreshIfStale(this, cfg.racingSeries, home::refresh);
             RemotePanes.refreshIfStale(this, cfg.remotePanesUrl, cfg.remotePanesRefreshSec, home::refresh);
         }
         // Stock launcher back as home after a reboot? Ask once per boot, gently; never change it ourselves.
@@ -3568,6 +3568,22 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             });
             return true;
         });
+        if (cfg.wRacing || cfg.barRacing) {   // v2.15: every series the racing widget can follow, one row each
+            for (String[] sr : Racing.SERIES) {
+                final String id = sr[0], label = "  🏁 " + sr[1];
+                final boolean on = cfg.racingSeries.contains(id);
+                p.add(label, str(on ? R.string.on : R.string.off), r -> {
+                    applyLive("widgets", label, j -> {
+                        org.json.JSONObject o = j.optJSONObject("racing");
+                        if (o == null) j.put("racing", o = new org.json.JSONObject());
+                        org.json.JSONArray a = new org.json.JSONArray();
+                        for (String[] x : Racing.SERIES) if (x[0].equals(id) ? !on : cfg.racingSeries.contains(x[0])) a.put(x[0]);
+                        o.put("series", a);
+                    });
+                    return true;
+                });
+            }
+        }
         String rpHost = cfg.remotePanesUrl.isEmpty() ? null : android.net.Uri.parse(cfg.remotePanesUrl).getHost();
         p.add(str(R.string.remote_panes), rpHost == null ? str(R.string.off) : rpHost, r -> {
             handler.post(this::remotePanesDialog);

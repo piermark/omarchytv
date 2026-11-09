@@ -46,10 +46,30 @@ final class Racing {
     static final int YEAR = 2026;
     static final String DEFAULT_ZONE = "Asia/Bangkok";
     static final String F1 = "f1", MOTOGP = "motogp";
+    /**
+     * 2.15 every series the widget can follow, with the label it shows: the MotoGP classes from the MotoGP API, the
+     * three NASCAR national series from NASCAR's own feed, Formula E and the WEC from their official sites. Which
+     * ones show is omarchytv.json racing.series (default f1 and motogp).
+     */
+    static final String[][] SERIES = {{F1, "F1"}, {MOTOGP, "MotoGP"}, {"moto2", "Moto2"}, {"moto3", "Moto3"},
+            {"nascar", "NASCAR Cup"}, {"nascar2", "NASCAR O'Reilly"}, {"truck", "NASCAR Trucks"}, {"fe", "Formula E"}, {"wec", "WEC"}};
+
+    static String label(String id) {
+        for (String[] x : SERIES) if (x[0].equals(id)) return x[1];
+        return id;
+    }
+
+    static boolean known(String id) {
+        for (String[] x : SERIES) if (x[0].equals(id)) return true;
+        return false;
+    }
     static final long MAX_AGE_MS = 6 * 3600_000L, WEEKEND_AGE_MS = 3600_000L;
     /** A session with no end time (MotoGP races, sprints) counts as running for this long after its start. */
     static final long DEFAULT_LENGTH_MS = 2 * 3600_000L;
-    private static final String MGP_API = "https://api.motogp.pulselive.com/motogp/v1/events?seasonYear=" + YEAR;
+    private static final String MGP_API = "https://api.motogp.pulselive.com/motogp/v1/events?seasonYear=";
+    private static final String NASCAR_API = "https://cf.nascar.com/cacher/";   // + year + "/race_list_basic.json"
+    private static final String FE_PAGE = "https://www.fiaformulae.com/en/calendar";
+    private static final String WEC_PAGE = "https://www.fiawec.com/en/";
     private static final String F1_PAGE = "https://www.formula1.com/en/racing/" + YEAR + "/";
     private static final String UA = "Mozilla/5.0 (Linux; Android TV) OmarchyTV";
     private static volatile boolean fetching;
@@ -61,6 +81,8 @@ final class Racing {
     static final class Session {
         final String code, name;
         final long start, end;
+        /** 2.15: only the day is known (Formula E's calendar): shown without a time, "running" all that day (UTC). */
+        boolean dateOnly;
 
         Session(String code, String name, long start, long end) {
             this.code = code;
@@ -102,7 +124,7 @@ final class Racing {
     /** Meetings of one series: the live cache when there is one, else the bundled snapshot. */
     static List<Meeting> meetings(Context c, String series) {
         JSONObject live = readJson(cacheFile(c, series));
-        if (live != null && live.optInt("year") == YEAR) {
+        if (live != null) {   // 2.15: any season the live sources answered (they move on to the next year by themselves)
             List<Meeting> l = parse(live.optJSONArray("meetings"));
             if (!l.isEmpty()) return l;
         }
@@ -134,7 +156,9 @@ final class Racing {
                 long st = s != null ? utc(s.optString("start")) : -1;
                 if (st < 0) continue;
                 long en = s.isNull("end") ? -1 : utc(s.optString("end"));
-                sessions.add(new Session(s.optString("code"), s.optString("name"), st, Math.max(en, 0)));
+                Session x = new Session(s.optString("code"), s.optString("name"), st, Math.max(en, 0));
+                x.dateOnly = s.optBoolean("dateOnly", false);
+                sessions.add(x);
             }
             if (sessions.isEmpty()) continue;
             Collections.sort(sessions, (x, y) -> Long.compare(x.start, y.start));
@@ -184,13 +208,21 @@ final class Racing {
 
     /** Running sessions win; otherwise the one starting soonest. Null when 2026 is over for both. */
     static Next soonest(List<Meeting> f1, List<Meeting> motogp, long now) {
+        java.util.LinkedHashMap<String, List<Meeting>> m = new java.util.LinkedHashMap<>();
+        m.put(F1, f1);
+        m.put(MOTOGP, motogp);
+        return soonest(m, now);
+    }
+
+    /** 2.15: across every followed series. Day-only sessions don't drive the bar's countdown (no time to count to). */
+    static Next soonest(java.util.Map<String, List<Meeting>> all, long now) {
         Next best = null;
-        for (int k = 0; k < 2; k++) {
-            List<Meeting> list = k == 0 ? f1 : motogp;
+        for (java.util.Map.Entry<String, List<Meeting>> e : all.entrySet()) {
+            List<Meeting> list = e.getValue();
             Meeting m = next(list, now);
             Session s = m != null ? current(m, now) : null;
-            if (s == null) continue;
-            Next n = new Next(k == 0 ? F1 : MOTOGP, m, s);
+            if (s == null || s.dateOnly) continue;
+            Next n = new Next(e.getKey(), m, s);
             if (best == null) best = n;
             else if (s.live(now) != best.session.live(now)) { if (s.live(now)) best = n; }
             else if (s.start < best.session.start) best = n;
@@ -228,6 +260,13 @@ final class Racing {
         return f.format(new Date(t)).replace(".", "").toLowerCase(loc);
     }
 
+    /** 2.15 "sat 18 dec": a day with no time (Formula E), in UTC so the date never shifts. */
+    static String day(long t, Locale loc) {
+        SimpleDateFormat f = new SimpleDateFormat("EEE d MMM", loc);
+        f.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return f.format(new Date(t)).replace(".", "").toLowerCase(loc);
+    }
+
     /** Short zone label for the legend: "bangkok" for Asia/Bangkok. */
     static String zoneLabel(TimeZone tz) {
         String id = tz.getID();
@@ -238,27 +277,30 @@ final class Racing {
     // ---- fetching ---------------------------------------------------------------------------------------------
 
     static void refreshIfStale(Context ctx, Runnable onDone) {
+        refreshIfStale(ctx, java.util.Arrays.asList(F1, MOTOGP), onDone);
+    }
+
+    /** 2.15: the followed series whose cache is old (6 h, 1 h in a race weekend) are re-read, one source each. */
+    static void refreshIfStale(Context ctx, List<String> series, Runnable onDone) {
         if (fetching) return;
         final Context c = ctx.getApplicationContext();
         long now = System.currentTimeMillis();
-        boolean due = false;
-        for (String series : new String[]{F1, MOTOGP}) {
-            File f = cacheFile(c, series);
-            long soon = nextStart(meetings(c, series), now);
-            if (soon == Long.MAX_VALUE) continue;   // 2026 is over for this series: nothing left to refresh
-            long maxAge = soon - now < 48 * 3600_000L ? WEEKEND_AGE_MS : MAX_AGE_MS;
-            if (!f.isFile() || now - f.lastModified() > maxAge) due = true;
+        final Set<String> due = new HashSet<>();
+        for (String id : series) {
+            File f = cacheFile(c, id);
+            long soon = nextStart(meetings(c, id), now);
+            long maxAge = soon != Long.MAX_VALUE && soon - now < 48 * 3600_000L ? WEEKEND_AGE_MS : MAX_AGE_MS;
+            if (!f.isFile() || now - f.lastModified() > maxAge) due.add(id);
         }
-        if (!due) return;
+        if (due.isEmpty()) return;
         fetching = true;
         new Thread(() -> {
             try {
-                refreshMotoGp(c);
-            } catch (Exception ignored) {
-            }
-            try {
-                refreshF1(c);
-            } catch (Exception ignored) {
+                if (due.contains(MOTOGP) || due.contains("moto2") || due.contains("moto3")) quietly(() -> refreshMotoGp(c));
+                if (due.contains("nascar") || due.contains("nascar2") || due.contains("truck")) quietly(() -> refreshNascar(c));
+                if (due.contains("fe")) quietly(() -> refreshFe(c));
+                if (due.contains("wec")) quietly(() -> refreshWec(c));
+                if (due.contains(F1)) quietly(() -> refreshF1(c));
             } finally {
                 fetching = false;
                 new Handler(Looper.getMainLooper()).post(onDone);
@@ -266,11 +308,153 @@ final class Racing {
         }, "omarchytv-racing").start();
     }
 
+    private interface Job {
+        void run() throws Exception;
+    }
+
+    private static void quietly(Job j) {
+        try {
+            j.run();
+        } catch (Exception ignored) {   // one source down never stops the others
+        }
+    }
+
+    /** This year's season, or next year's once this one has nothing left (the API serves both). */
+    private static JSONArray latest(String base, String tail, java.util.function.Function<String, JSONArray> parse) throws Exception {
+        int y = java.util.Calendar.getInstance(TimeZone.getTimeZone("UTC")).get(java.util.Calendar.YEAR);
+        JSONArray best = null;
+        for (int k = 0; k < 2; k++) {
+            String body = get(base + (y + k) + tail);
+            JSONArray a = body != null ? parse.apply(body) : null;
+            if (a == null) continue;
+            if (best == null) best = a;
+            if (!upcoming(parse(a), System.currentTimeMillis()).isEmpty()) return a;
+        }
+        return best;
+    }
+
     private static void refreshMotoGp(Context c) throws Exception {
-        String body = get(MGP_API);
-        if (body == null) return;
-        JSONArray meetings = parseMotoGp(new JSONArray(body));
-        if (meetings.length() > 0) write(cacheFile(c, MOTOGP), meetings);
+        String[][] cls = {{MOTOGP, "MGP"}, {"moto2", "MT2"}, {"moto3", "MT3"}};
+        for (String[] k : cls) {
+            JSONArray meetings = latest(MGP_API, "", body -> {
+                try {
+                    return parseMotoGp(new JSONArray(body), k[1]);
+                } catch (Exception e) {
+                    return null;
+                }
+            });
+            if (meetings != null && meetings.length() > 0) write(cacheFile(c, k[0]), meetings);
+        }
+    }
+
+    private static void refreshNascar(Context c) throws Exception {
+        String[][] ser = {{"nascar", "series_1"}, {"nascar2", "series_2"}, {"truck", "series_3"}};
+        for (String[] k : ser) {
+            JSONArray meetings = latest(NASCAR_API, "/race_list_basic.json", body -> {
+                try {
+                    return parseNascar(new JSONObject(body).optJSONArray(k[1]));
+                } catch (Exception e) {
+                    return null;
+                }
+            });
+            if (meetings != null && meetings.length() > 0) write(cacheFile(c, k[0]), meetings);
+        }
+    }
+
+    private static void refreshFe(Context c) throws Exception {
+        String page = get(FE_PAGE);
+        JSONArray m = page != null ? parseFePage(page) : null;
+        if (m != null && m.length() > 0) write(cacheFile(c, "fe"), m);
+    }
+
+    private static void refreshWec(Context c) throws Exception {
+        String page = get(WEC_PAGE);
+        JSONArray m = page != null ? parseWecPage(page) : null;
+        if (m != null && m.length() > 0) write(cacheFile(c, "wec"), m);
+    }
+
+    /** NASCAR's race list (one series) → meetings: practice, qualifying and the race from each weekend's schedule. */
+    static JSONArray parseNascar(JSONArray races) throws Exception {
+        JSONArray out = new JSONArray();
+        for (int i = 0; races != null && i < races.length(); i++) {
+            JSONObject r = races.optJSONObject(i);
+            JSONArray sch = r != null ? r.optJSONArray("schedule") : null;
+            JSONArray sessions = new JSONArray();
+            int practice = 0;
+            for (int k = 0; sch != null && k < sch.length(); k++) {
+                JSONObject e = sch.optJSONObject(k);
+                int type = e != null ? e.optInt("run_type") : 0;
+                if (type < 1 || type > 3) continue;   // 0: garage hours, meetings, autographs...
+                long st = utc(e.optString("start_time_utc") + "Z");
+                if (st < 0) continue;
+                String code = type == 3 ? "RACE" : type == 2 ? "QUALI" : "P" + (++practice);
+                sessions.put(new JSONObject().put("code", code).put("name", e.optString("event_name").trim()).put("start", iso(st)).put("end", JSONObject.NULL));
+            }
+            if (sessions.length() == 0) continue;
+            out.put(new JSONObject().put("slug", String.valueOf(r.optInt("race_id"))).put("name", r.optString("track_name", r.optString("race_name")).trim())
+                    .put("sessions", sessions));
+        }
+        return out;
+    }
+
+    private static final Pattern LD_JSON = Pattern.compile("<script[^>]*application/ld\\+json[^>]*>(.*?)</script>", Pattern.DOTALL);
+
+    /** fiaformulae.com/en/calendar: its schema.org list of SportsEvents (the day of each E-Prix, no times). */
+    static JSONArray parseFePage(String html) throws Exception {
+        Matcher m = LD_JSON.matcher(html);
+        JSONArray out = new JSONArray();
+        while (m.find()) {
+            JSONObject o;
+            try {
+                o = new JSONObject(m.group(1).trim());
+            } catch (Exception e) {
+                continue;
+            }
+            JSONArray items = o.optJSONArray("itemListElement");
+            for (int i = 0; items != null && i < items.length(); i++) {
+                JSONObject it = items.optJSONObject(i);
+                JSONObject ev = it != null ? it.optJSONObject("item") : null;
+                if (ev == null || !"SportsEvent".equals(ev.optString("@type"))) continue;
+                if (ev.optString("eventStatus").contains("Cancelled")) continue;
+                long day = utc(ev.optString("startDate") + "T00:00:00Z");
+                if (day < 0) continue;
+                String name = ev.optString("name").replaceFirst("^R\\d+\\s+", "").trim();
+                out.put(new JSONObject().put("slug", ev.optString("name")).put("name", name).put("sessions", new JSONArray()
+                        .put(new JSONObject().put("code", "RACE").put("name", "E-Prix").put("start", iso(day)).put("end", iso(day + 86_400_000L)).put("dateOnly", true))));
+            }
+        }
+        return out;
+    }
+
+    private static final Pattern WEC_EVENT = Pattern.compile("href=\"/en/race/([a-z0-9-]+)\"(?:(?!href=\"/en/race/).){0,3000}?data-date=\"(\\d{9,11})\"", Pattern.DOTALL);
+
+    /** fiawec.com: each round of the season with its first practice ("countdown to Free Practice 1"). */
+    static JSONArray parseWecPage(String html) throws Exception {
+        Matcher m = WEC_EVENT.matcher(html);
+        Set<String> seen = new HashSet<>();
+        List<JSONObject> list = new ArrayList<>();
+        while (m.find()) {
+            String slug = m.group(1);
+            if (!seen.add(slug)) continue;
+            long st = Long.parseLong(m.group(2)) * 1000L;
+            list.add(new JSONObject().put("slug", slug).put("name", wecName(slug)).put("sessions", new JSONArray()
+                    .put(new JSONObject().put("code", "FP1").put("name", "Free Practice 1").put("start", iso(st)).put("end", JSONObject.NULL))));
+        }
+        JSONArray out = new JSONArray();
+        for (JSONObject o : list) out.put(o);
+        return out;
+    }
+
+    /** "totalenergies-6-hours-of-spa-francorchamps-2027" → "6 Hours of Spa Francorchamps". */
+    static String wecName(String slug) {
+        String s = slug.replaceAll("-\\d{4}$", "").replaceFirst("^(totalenergies|rolex|bapco-energies|qatar-airways)-", "");
+        StringBuilder b = new StringBuilder();
+        for (String w : s.split("-")) {
+            if (w.isEmpty()) continue;
+            if (b.length() > 0) b.append(' ');
+            b.append(w.equals("of") ? w : Character.toUpperCase(w.charAt(0)) + w.substring(1));
+        }
+        return b.toString();
     }
 
     /** F1: re-read the page of the meeting that is next (or running) and put its sessions over the known list. */
@@ -313,6 +497,11 @@ final class Racing {
 
     /** MotoGP events → meetings JSON (GP weekends, MotoGP class, no warm-up, cancelled sessions dropped). */
     static JSONArray parseMotoGp(JSONArray events) throws Exception {
+        return parseMotoGp(events, "MGP");
+    }
+
+    /** 2.15: one class of the MotoGP API: "MGP", "MT2" (Moto2) or "MT3" (Moto3). */
+    static JSONArray parseMotoGp(JSONArray events, String acronym) throws Exception {
         JSONArray out = new JSONArray();
         for (int i = 0; i < events.length(); i++) {
             JSONObject e = events.optJSONObject(i);
@@ -323,7 +512,7 @@ final class Racing {
                 JSONObject s = b.optJSONObject(k);
                 if (s == null || !"SESSION".equals(s.optString("type"))) continue;
                 JSONObject cat = s.optJSONObject("category");
-                if (cat == null || !"MGP".equals(cat.optString("acronym"))) continue;
+                if (cat == null || !acronym.equals(cat.optString("acronym"))) continue;
                 String code = mgpCode(s.optString("shortname"));
                 String name = s.optString("name").trim();
                 if (code == null || s.optString("status").toUpperCase(Locale.ROOT).contains("CANCEL")

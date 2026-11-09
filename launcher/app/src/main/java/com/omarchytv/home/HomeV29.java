@@ -824,21 +824,32 @@ final class HomeV29 extends FrameLayout {
         return m.name.endsWith(" GP") ? m.name.substring(0, m.name.length() - 3) : m.name;
     }
 
+    /** 2.15 the followed series (racing.series), each one's meetings. */
+    private java.util.LinkedHashMap<String, List<Racing.Meeting>> racingNow() {
+        java.util.LinkedHashMap<String, List<Racing.Meeting>> all = new java.util.LinkedHashMap<>();
+        for (String id : cfg.racingSeries) all.put(id, Racing.meetings(act, id));
+        return all;
+    }
+
     private void updateRacing() {
         long now = System.currentTimeMillis();
-        List<Racing.Meeting> f1 = Racing.meetings(act, Racing.F1), mgp = Racing.meetings(act, Racing.MOTOGP);
-        nextRace = Racing.soonest(f1, mgp, now);
+        java.util.LinkedHashMap<String, List<Racing.Meeting>> all = racingNow();
+        nextRace = Racing.soonest(all, now);
         tickRaceBar();
         raceBody.removeAllViews();
         if (!cfg.wRacing) return;
         java.util.TimeZone tz = Racing.zone(cfg.racingTz);
         raceBox.setLegend("racing · " + raceZoneLabel(tz), px(14), px(18));
-        raceSeries("f1", Racing.upcoming(f1, now), now, tz, 0);
-        raceSeries("motogp", Racing.upcoming(mgp, now), now, tz, 14);
+        // two series: every weekend left; more: the next two of each, so all of them fit in the column
+        int rows = all.size() <= 2 ? Integer.MAX_VALUE : all.size() <= 4 ? 2 : 1, top = 0;
+        for (java.util.Map.Entry<String, List<Racing.Meeting>> e : all.entrySet()) {
+            raceSeries(Racing.label(e.getKey()).toLowerCase(Locale.ROOT), Racing.upcoming(e.getValue(), now), now, tz, top, rows);
+            top = 14;
+        }
     }
 
     /** "f1  4 left", then one row per remaining weekend: name … race day and time; this weekend also its next session. */
-    private void raceSeries(String label, List<Racing.Meeting> left, long now, java.util.TimeZone tz, int top) {
+    private void raceSeries(String label, List<Racing.Meeting> left, long now, java.util.TimeZone tz, int top, int rows) {
         SpannableStringBuilder h = new SpannableStringBuilder();
         span(h, label, t.accent);
         span(h, left.isEmpty() ? "" : "  " + left.size() + " left", t.fg);
@@ -848,15 +859,16 @@ final class HomeV29 extends FrameLayout {
         ((LinearLayout.LayoutParams) head.getLayoutParams()).topMargin = px(top);
         raceBody.addView(head);
         if (left.isEmpty()) {
-            TextView v = line(Racing.YEAR + " season complete");
+            TextView v = line("season complete");
             v.setTextColor(t.fg);
             raceBody.addView(v);
             return;
         }
-        for (int i = 0; i < left.size(); i++) {
+        for (int i = 0; i < left.size() && i < rows; i++) {
             Racing.Meeting m = left.get(i);
             int col = i == 0 ? t.fgBright : t.fg;
-            raceBody.addView(raceRow(shortName(m), Racing.when(Racing.race(m).start, tz, Locale.ENGLISH), col, col));
+            Racing.Session rs = Racing.race(m);
+            raceBody.addView(raceRow(shortName(m), rs.dateOnly ? Racing.day(rs.start, Locale.ENGLISH) : Racing.when(rs.start, tz, Locale.ENGLISH), col, col));
             if (i > 0) continue;
             Racing.Session s = Racing.current(m, now);
             if (s == null || s == Racing.race(m) && !s.live(now)) continue;
@@ -896,13 +908,13 @@ final class HomeV29 extends FrameLayout {
         long now = System.currentTimeMillis();
         Racing.Next n = nextRace;
         if (n != null && now >= n.session.endOrDefault())
-            n = nextRace = Racing.soonest(Racing.meetings(act, Racing.F1), Racing.meetings(act, Racing.MOTOGP), now);
+            n = nextRace = Racing.soonest(racingNow(), now);
         if (n == null) {
             barRace.setVisibility(GONE);
             return;
         }
         SpannableStringBuilder b = new SpannableStringBuilder();
-        span(b, Racing.F1.equals(n.series) ? "F1 " : "MotoGP ", t.accent);
+        span(b, Racing.label(n.series) + " ", t.accent);
         span(b, n.session.code.toLowerCase(Locale.ROOT) + " · " + shortName(n.meeting) + "  ", t.fg);
         if (n.session.live(now)) span(b, "● live", t.green);
         else span(b, Racing.clock(n.session.start - now), t.fgBright);

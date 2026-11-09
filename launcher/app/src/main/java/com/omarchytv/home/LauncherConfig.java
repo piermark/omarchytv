@@ -545,6 +545,8 @@ final class LauncherConfig {
     final boolean wRacing, barRacing;
     /** omarchytv.json racing.timezone: the zone session times are shown in (default Asia/Bangkok). */
     final String racingTz;
+    /** 2.15 omarchytv.json racing.series: the series the widget follows (Racing.SERIES ids), default f1 and motogp. */
+    final java.util.List<String> racingSeries;
     /** v2.10 "Disponi riquadri": panel id -> {cellX, cellY} offset on a 12x8 screen grid (empty = default layout). */
     final java.util.Map<String, int[]> panelPos;
     /** v2.10: Send to TV (cast) is off until switched on (omarchytv.json "cast": {"enabled": true}). */
@@ -842,6 +844,14 @@ final class LauncherConfig {
         JSONObject rc = j != null ? j.optJSONObject("racing") : null;
         barRacing = rc != null && rc.has("bar") ? rc.optBoolean("bar") : wRacing;   // follows the widget unless set
         racingTz = rc != null && !rc.optString("timezone", "").trim().isEmpty() ? rc.optString("timezone").trim() : "";   // 2.15: "" = the TV's own zone
+        java.util.List<String> rs = new java.util.ArrayList<>();
+        JSONArray rsa = rc != null ? rc.optJSONArray("series") : null;
+        for (int i = 0; rsa != null && i < rsa.length(); i++) {
+            String id = rsa.optString(i);
+            if (Racing.known(id) && !rs.contains(id)) rs.add(id);
+        }
+        if (rsa == null) { rs.add(Racing.F1); rs.add(Racing.MOTOGP); }
+        racingSeries = java.util.Collections.unmodifiableList(rs);
         java.util.Map<String, int[]> ppos = new java.util.HashMap<>();
         JSONObject pj = j != null ? j.optJSONObject("panelPos") : null;
         if (pj != null) for (java.util.Iterator<String> it = pj.keys(); it.hasNext(); ) {

@@ -94,21 +94,32 @@ to keep only the bar version.
 ### Racing: F1 and MotoGP 2026
 
 `"homeWidgets": {"racing": true}` (default off; also Settings → Widgets) adds a `racing` panel as the first column of
-the top widget row, left of weather. It lists the 2026 F1 and MotoGP weekends that are not over yet, each with its race
-day and time, plus the next (or running) session of the current weekend. The bar then shows a countdown to the next
-session of either series, ticking every second (`"racing": {"bar": false}` hides it; Settings → Widgets too).
+the top widget row, left of weather. It lists the race weekends that are not over yet for the series you follow, each
+with its race day and time, plus the next (or running) session of the current weekend. The bar then shows a countdown
+to the next session of any of them, ticking every second (`"racing": {"bar": false}` hides it; Settings → Widgets too).
 
 ```json
 "homeWidgets": { "racing": true },
-"racing": { "timezone": "Asia/Bangkok", "bar": true }
+"racing": { "series": ["f1", "motogp", "wec"], "timezone": "Europe/Rome", "bar": true }
 ```
 
-Times are 24 h in `racing.timezone` (any tz id, default: the TV's own time zone). Sources, both official and keyless: MotoGP from
-`api.motogp.pulselive.com` (the API behind motogp.com; MotoGP class only, no warm-up, cancelled sessions hidden), F1
-from the formula1.com page of the next meeting (formula1.com has no public season feed). `assets/racing_2026.json`
-is a snapshot of both calendars, so the panel works offline; refresh it with `python3 tools/racing_calendar.py`.
-Live data is fetched on a background thread every 6 h, hourly when a session starts within 48 h. After the last 2026
-session the panel says the season is complete and the bar countdown goes away.
+`racing.series` (default `["f1", "motogp"]`; Settings → Widgets has one row per series) can hold:
+
+| id | series | official source, keyless |
+|---|---|---|
+| `f1` | Formula 1 | the formula1.com page of the next meeting (formula1.com has no public season feed) |
+| `motogp`, `moto2`, `moto3` | MotoGP and its classes | `api.motogp.pulselive.com`, the API behind motogp.com (no warm-up, cancelled sessions hidden) |
+| `nascar`, `nascar2`, `truck` | NASCAR Cup, O'Reilly Auto Parts, Craftsman Truck | `cf.nascar.com`, NASCAR's own schedule feed (practice, qualifying, race) |
+| `fe` | Formula E | the fiaformulae.com calendar (its schema.org event list: the day of each E-Prix, no times) |
+| `wec` | FIA WEC | fiawec.com (each round with the start of its first practice) |
+
+With one or two series every weekend left is listed; with more, the next two (or the next one past four series) of
+each, so they all fit in the column. Times are 24 h in `racing.timezone` (any tz id, default: the TV's own time
+zone); Formula E shows just the day. `assets/racing_2026.json` is a snapshot of the F1 and MotoGP calendars, so the
+panel works offline; refresh it with `python3 tools/racing_calendar.py`. Live data is fetched on a background thread
+every 6 h, hourly when a session starts within 48 h; MotoGP and NASCAR move on to next year's season by themselves
+once this one is over. IndyCar, WorldSBK and WRC aren't in the list yet: their official sites have no calendar a TV
+can read reliably.
 
 ## Screensaver
 
