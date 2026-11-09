@@ -971,6 +971,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (builtWith != null && cfg.restSig.equals(builtWith.restSig)) {
             boolean scChanged = !sameShortcuts(builtWith, cfg);
             builtWith = cfg;
+            if (home != null) home.data(cfg);   // #80: the ai credits / pc widgets of Home redraw now, not on the next Home press
             buildPanes();   // PC panes may come, go or change size
             if (scChanged) applyShortcuts();
             refreshMenu("ai");

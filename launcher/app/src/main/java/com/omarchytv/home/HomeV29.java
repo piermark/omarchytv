@@ -636,6 +636,16 @@ final class HomeV29 extends FrameLayout {
         b.setSpan(new ForegroundColorSpan(color), st, b.length(), 0);
     }
 
+    /**
+     * v2.15 (#80): the PC pushed new data (AI credits, link panes) without changing the layout: take the new config and
+     * redraw the widgets in place. Before, the ai credits pane kept the old numbers until Home was pressed.
+     */
+    void data(LauncherConfig c) {
+        if (c == null) return;
+        cfg = c;
+        refresh();
+    }
+
     /** Clock, fastfetch line, widgets; cheap (in-memory reads + small cached files). */
     void refresh() {
         if (cfg == null) return;
