@@ -495,6 +495,10 @@ final class LauncherConfig {
     final String screensaverArt;     // defaults to logo
     /** v2.15 the Pulse screensaver's scene: sphere (default), skyline, orbit, calm, hacker, noir. */
     final String pulseScene;
+    /** Pulse's planes: how far the panel looks (screensaver.planesNm: 25 default, 50, 100, 150, 200, 250), the earthquakes
+     *  panel (screensaver.earthquakes, default on) and OpenSky as a second plane feed (screensaver.opensky, default off). */
+    final int pulsePlanesNm;
+    final boolean pulseQuakes, pulseOpensky;
     /** v2.15: Home says once that Pulse is the new screensaver; "Previous screensaver" can undo the switch. */
     final boolean pulseNotice, hasSsBefore;
     /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
@@ -806,6 +810,10 @@ final class LauncherConfig {
         agentAlert = j != null && j.optBoolean("agentAlert", false);
         hasSsBefore = j != null && j.optJSONObject("ssBefore215") != null;
         pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir").contains(ps) ? ps : "sphere";
+        int pnm = ss != null ? ss.optInt("planesNm", 25) : 25;
+        pulsePlanesNm = pnm == 50 || pnm == 100 || pnm == 150 || pnm == 200 || pnm == 250 ? pnm : 25;
+        pulseQuakes = ss == null || ss.optBoolean("earthquakes", true);
+        pulseOpensky = ss != null && ss.optBoolean("opensky", false);
         screensaverMode = ssMode;
         boolean defSsClock = c != null && c.getResources().getBoolean(R.bool.screensaver_clock);
         screensaverClock = ss != null ? ss.optBoolean("clock", defSsClock) : defSsClock;
