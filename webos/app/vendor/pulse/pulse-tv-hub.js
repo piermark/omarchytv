@@ -12,6 +12,7 @@
   var R = Math.PI / 180;
   function now() { return Date.now() / 1000; }
   function rnd(v, d) { var k = Math.pow(10, d || 0); return Math.round(v * k) / k; }
+  function num(v) { var n = parseFloat(v); return isFinite(n) ? n : null; }
   function mod(a, b) { return ((a % b) + b) % b; }
 
   // ------------------------------------------------------------------ the sky, as the hub computes it
@@ -199,6 +200,55 @@
     }
     return null;
   }
+  // ICAO type designators (A20N, B77W, B38M) as people say them: the codes alone read like a name cut short
+  var TYPES = { A318: "A318", A319: "A319", A320: "A320", A321: "A321", A19N: "A319neo", A20N: "A320neo", A21N: "A321neo",
+    BCS1: "A220-100", BCS3: "A220-300", A306: "A300-600", A310: "A310", A332: "A330-200", A333: "A330-300", A338: "A330-800neo",
+    A339: "A330-900neo", A342: "A340-200", A343: "A340-300", A345: "A340-500", A346: "A340-600", A359: "A350-900",
+    A35K: "A350-1000", A388: "A380", B712: "717", B732: "737-200", B733: "737-300", B734: "737-400", B735: "737-500",
+    B736: "737-600", B737: "737-700", B738: "737-800", B739: "737-900", B37M: "737 MAX 7", B38M: "737 MAX 8",
+    B39M: "737 MAX 9", B3XM: "737 MAX 10", B742: "747-200", B744: "747-400", B748: "747-8", B752: "757-200", B753: "757-300",
+    B762: "767-200", B763: "767-300", B764: "767-400", B772: "777-200", B77L: "777-200LR", B773: "777-300", B77W: "777-300ER",
+    B778: "777-8", B779: "777-9", B788: "787-8", B789: "787-9", B78X: "787-10", AT43: "ATR 42-300", AT45: "ATR 42-500",
+    AT46: "ATR 42-600", AT72: "ATR 72", AT75: "ATR 72-500", AT76: "ATR 72-600", DH8A: "Dash 8-100", DH8B: "Dash 8-200",
+    DH8C: "Dash 8-300", DH8D: "Dash 8 Q400", CRJ2: "CRJ-200", CRJ7: "CRJ-700", CRJ9: "CRJ-900", CRJX: "CRJ-1000",
+    E135: "ERJ-135", E145: "ERJ-145", E170: "E170", E75L: "E175", E75S: "E175", E190: "E190", E195: "E195",
+    E290: "E190-E2", E295: "E195-E2", AJ27: "ARJ21", C919: "C919", SU95: "Superjet 100", MD11: "MD-11", MD82: "MD-82",
+    MD83: "MD-83", MD88: "MD-88", MD90: "MD-90", DC10: "DC-10", A400: "A400M", C130: "C-130 Hercules", C30J: "C-130J",
+    C208: "Cessna Caravan", C172: "Cessna 172", PC12: "Pilatus PC-12", GLF5: "Gulfstream V", GLF6: "Gulfstream G650",
+    GLEX: "Global Express", CL60: "Challenger 600", E55P: "Phenom 300", BE20: "King Air 200", B350: "King Air 350",
+    A139: "AW139", EC35: "H135", EC45: "H145", S76: "S-76", IL76: "Il-76", AN12: "An-12", AN26: "An-26", Y12: "Y-12" };
+  function typeName(code) {
+    var c = String(code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4);
+    return TYPES[c] || c;
+  }
+  function bearing(a1, o1, a2, o2) {
+    var r = Math.PI / 180, y = Math.sin((o2 - o1) * r) * Math.cos(a2 * r),
+        x = Math.cos(a1 * r) * Math.sin(a2 * r) - Math.sin(a1 * r) * Math.cos(a2 * r) * Math.cos((o2 - o1) * r);
+    return (Math.atan2(y, x) / r + 360) % 360;
+  }
+  /**
+   * adsbdb knows a route by callsign only, and airlines reuse flight numbers, so a route can be years old. It is shown
+   * only when the plane is plausibly on it: no big detour between the two airports and, away from the destination,
+   * heading towards it. A route without airport positions can't be checked and is kept.
+   */
+  function routeFits(r, lat, lon, track) {
+    if (!r || r.oLat == null || r.dLat == null || lat == null || lon == null) return true;
+    var od = distKm(r.oLat, r.oLon, r.dLat, r.dLon), dO = distKm(r.oLat, r.oLon, lat, lon), dD = distKm(lat, lon, r.dLat, r.dLon);
+    if (dO + dD > od * 1.15 + 75) return false;
+    if (track != null && isFinite(track) && dD > 80) {
+      var off = Math.abs(((bearing(lat, lon, r.dLat, r.dLon) - track) % 360 + 540) % 360 - 180);
+      if (off > 90) return false;
+    }
+    return true;
+  }
+  function withRoute(p, r) {
+    if (!r) return;
+    if (r.from && r.to && routeFits(r, p.lat, p.lon, p.track)) { p.from = r.from; p.to = r.to; p.fromCity = r.fromCity; p.toCity = r.toCity; }
+    if (r.airline) p.airline = r.airline;
+  }
+  function ftText(ft) {
+    return String(Math.round((Number(ft) || 0) / 100) * 100).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " ft";
+  }
   function planesOver(lat, lon, raw) {
     var out = [];
     (raw || []).forEach(function (a) {
@@ -208,7 +258,7 @@
       var l = lookAngles(lat, lon, Number(a.lat), Number(a.lon), ft * 0.0003048);
       if (l[1] < 10) return;
       out.push({ id: String(a.hex || "").slice(0, 8), flight: String(a.flight || "").toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 8),
-        type: String(a.type || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 5), az: rnd(l[0], 1), el: rnd(l[1], 1),
+        type: typeName(a.type), az: rnd(l[0], 1), el: rnd(l[1], 1), lat: rnd(Number(a.lat), 3), lon: rnd(Number(a.lon), 3),
         ft: Math.round(ft / 100) * 100, kt: Math.floor(Number(a.gs) || 0), track: Number(a.track) || 0 });
     });
     return out.sort(function (a, b) { return b.el - a.el; }).slice(0, 16);
@@ -321,7 +371,7 @@
         var pl = planesOver(lat, lon, raw);
         pl.forEach(function (p) {
           var r = routes[p.flight];
-          if (r) { for (var k in r) if (r.hasOwnProperty(k)) p[k] = r[k]; }
+          if (r) withRoute(p, r);
           else if (p.flight && routeQ.indexOf(p.flight) < 0 && !(p.flight in routes)) routeQ.push(p.flight);
         });
         S.sky = pl; S.skyT = clock();
@@ -336,7 +386,8 @@
         if (!r) { routes[f] = {}; return; }
         var o = r.origin || {}, d = r.destination || {};
         routes[f] = { from: o.iata_code || o.icao_code || "", to: d.iata_code || d.icao_code || "", fromCity: o.municipality || "",
-          toCity: d.municipality || "", airline: (r.airline || {}).name || "" };
+          toCity: d.municipality || "", airline: (r.airline || {}).name || "",
+          oLat: num(o.latitude), oLon: num(o.longitude), dLat: num(d.latitude), dLon: num(d.longitude) };
       });
     }
     function iss() {
@@ -514,7 +565,7 @@
       out.push({ id: "tv-space", title: "space", type: "kv", slot: "left", order: 31, icon: "󰑣", data: { rows: sp } });
       var pl = t - S.skyT < 120 ? S.sky : [];
       if (pl.length) out.push({ id: "tv-planes", title: "overhead", type: "list", slot: "right", order: 30, icon: "󰀝", data: { items: pl.slice(0, 4).map(function (p) {
-        return { title: (p.flight || p.hex || "?") + (p.type ? " · " + p.type : ""), text: p.from && p.to ? p.from + " → " + p.to : p.airline || "", right: Math.round((p.alt || 0) / 100) * 100 + " ft" };
+        return { title: (p.flight || p.hex || "?") + (p.type ? " · " + p.type : ""), text: p.from && p.to ? p.from + " → " + p.to : p.airline || "", right: ftText(p.ft) };
       }) } });
       if (S.quakes.length) out.push({ id: "tv-quakes", title: "earthquakes", type: "list", slot: "right", order: 32, icon: "󰖟", data: { items: S.quakes.slice(0, 4) } });
       if (S.omarchy.length) out.push({ id: "tv-omarchy", title: "omarchy", type: "list", slot: "right", order: 34, icon: "", data: { items: S.omarchy.slice(0, 3) } });
@@ -542,7 +593,7 @@
   }
 
   root.OmarchyPulseTV = { create: create, airFrom: airFrom, quakesFrom: quakesFrom, nightSky: nightSky, altaz: altaz, lookAngles: lookAngles, satLook: satLook, starlinkGroups: starlinkGroups,
-    starlinkPasses: starlinkPasses, issAt: issAt, planesOver: planesOver, latestKp: latestKp, parseLaunch: parseLaunch, countdown: countdown,
+    starlinkPasses: starlinkPasses, issAt: issAt, planesOver: planesOver, typeName: typeName, routeFits: routeFits, ftText: ftText, latestKp: latestKp, parseLaunch: parseLaunch, countdown: countdown,
     cityKey: cityKey, weatherFrom: weatherFrom, compass: compass, julian: julian, moonPhase: moonPhase, TIPS: TIPS };
   if (typeof module !== "undefined" && module.exports) module.exports = root.OmarchyPulseTV;
 })(typeof window !== "undefined" ? window : this);

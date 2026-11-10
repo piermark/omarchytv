@@ -190,3 +190,41 @@ test("the TV's own panels with no PC: the sky, space, planes, the air, earthquak
   assert.deepStrictEqual(st.widgets.map((w) => w.id), ["github"]);
   assert.strictEqual(st.theme.name, "kanagawa", "the same colours as on the PC");
 });
+
+test("planes: real altitude in the panel, plain type names, and a stale route is not shown", async () => {
+  assert.strictEqual(P.typeName("a20n"), "A320neo");
+  assert.strictEqual(P.typeName("B77W"), "777-300ER");
+  assert.strictEqual(P.typeName("B38M"), "737 MAX 8");
+  assert.strictEqual(P.typeName("ZZ99"), "ZZ99", "an unknown code stays as it is");
+  assert.strictEqual(P.ftText(37975), "38,000 ft");
+  assert.strictEqual(P.ftText(4250), "4,300 ft");
+  // KUL -> CCU passes over Phuket heading north-west; the same flight number heading south-east is not on it
+  const kulCcu = { from: "KUL", to: "CCU", oLat: 2.7456, oLon: 101.71, dLat: 22.6547, dLon: 88.4467 };
+  assert.ok(P.routeFits(kulCcu, 8.0, 98.3, 320));
+  assert.ok(!P.routeFits(kulCcu, 8.0, 98.3, 140));
+  assert.ok(!P.routeFits({ oLat: 51.47, oLon: -0.45, dLat: 40.64, dLon: -73.78 }, 45.0, 8.7, 150), "LHR -> JFK over Italy");
+  assert.ok(P.routeFits({ from: "X", to: "Y" }, 45, 8, 0), "no airport positions: can't tell, kept");
+
+  const t = { v: 1794243552 };
+  const ap = (iata, lat, lon, city) => ({ iata_code: iata, latitude: lat, longitude: lon, municipality: city });
+  const h = hubAt(t, { answers: {
+    "adsb.lol": { ac: [{ hex: "abc123", flight: "AZ123 ", lat: 45.0, lon: 8.7, alt_baro: 34000, gs: 450, track: 150, t: "A20N" },
+      { hex: "def456", flight: "BA117 ", lat: 44.95, lon: 8.65, alt_baro: 36000, gs: 480, track: 150, t: "B77W" }] },
+    "callsign/AZ123": { response: { flightroute: { origin: ap("MXP", 45.63, 8.72, "Milan"), destination: ap("FCO", 41.80, 12.25, "Rome"), airline: { name: "ITA Airways" } } } },
+    "callsign/BA117": { response: { flightroute: { origin: ap("LHR", 51.47, -0.45, "London"), destination: ap("JFK", 40.64, -73.78, "New York"), airline: { name: "British Airways" } } } } } });
+  h._tick.sky();
+  await new Promise((r) => setImmediate(r));
+  h._tick.route(); h._tick.route();
+  await new Promise((r) => setImmediate(r));
+  h._tick.sky();
+  await new Promise((r) => setImmediate(r));
+  const sky = h.state().sky;
+  const az = sky.find((p) => p.flight === "AZ123"), ba = sky.find((p) => p.flight === "BA117");
+  assert.deepStrictEqual([az.type, az.from, az.to, az.ft], ["A320neo", "MXP", "FCO", 34000]);
+  assert.ok(!ba.from && !ba.to, "LHR -> JFK is not where BA117 is: no route");
+  assert.strictEqual(ba.airline, "British Airways", "the airline (from the callsign) still shows");
+  const panel = h.state().widgets.find((w) => w.id === "tv-planes");
+  const rows = panel.data.items;
+  assert.ok(rows.some((r) => r.title === "AZ123 · A320neo" && r.text === "MXP → FCO" && r.right === "34,000 ft"), JSON.stringify(rows));
+  assert.ok(rows.some((r) => r.title === "BA117 · 777-300ER" && r.text === "British Airways" && r.right === "36,000 ft"), JSON.stringify(rows));
+});
