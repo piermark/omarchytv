@@ -4,7 +4,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.15.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.15.1";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)

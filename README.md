@@ -79,6 +79,16 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ---
 
+## What's New in `2.15.1` (`versionCode 28`)
+
+- **Pulse on the TV is Pulse 1.8** (Android TV, LG, Samsung): a city that looks like one (towers lit by the real Sun and Moon, a far skyline, mist, reflections), rain with depth, planes with a tag you can read, a rocket and a Starlink train you can recognise.
+- **Graphics that fit your TV**: `auto` gives the new look on TVs that can carry it and the plain one on small ones, and steps down by itself if frames take too long; or choose `low`, `medium`, `high` (Settings → Screensaver → Pulse graphics on Android TV).
+- **Two new Pulse scenes**: `mars`, a colony with its own sky, and `monolith`.
+- **Racing**: the countdown to the next session moved from the bar into the racing panel on Home, and the race weekends are a side panel of the Pulse screensaver too (Android TV), each one on or off in Settings.
+- **Planes** (Grant Charge): altitude and plain type names (737 MAX 8, A320neo), no stale routes, a range up to 250 nm, the earthquakes panel on or off, OpenSky as an opt-in second feed.
+
+The downloads below are still 2.15.0 until the 2.15.1 files are published. Everything is in [CHANGELOG.md](CHANGELOG.md).
+
 ## What's New in `2.15.0` (`versionCode 27`)
 
 - **Omarchy Pulse is the TV's screensaver**, on Android TV, LG and Samsung, with no PC needed: the sphere, your city's skyline, the real sky over you, the planes overhead, the ISS and Starlink ("look up!" when they pass), launch countdowns, the weather, the air and the TV's own CPU, RAM and network. Pair your Omarchy PC and it becomes the full Pulse: your AI agents, workspaces, repos, panels and colours. Settings › Screensaver › "Previous screensaver" brings yours back.
@@ -214,7 +224,7 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 - **App Shelf & Hidden Apps Manager**: Reorder or pin favorite apps, hide unwanted system tiles (including optional Sony bloatware toggle), restore hidden tiles in Workspace 5 (`System → Hidden apps`), and push custom 16:9 PNG app banners (`omarchy-tv icons push`).
 - **Omarchy Pulse screensaver (2.15)**: Pulse's scenes with your city's skyline and the real sky over you (Sun, Moon, planets, stars), the planes overhead, the ISS and Starlink ("look up!"), launch countdowns, weather, air quality, earthquakes and the TV's own CPU/RAM/network, with no PC; the full Pulse (AI agents, workspaces, repos, panels, colours) with your Omarchy PC paired.
 - **OmarchyTV Arcade (2.14–2.15)**: nine text-mode games, four of them for two players (PIPE DUEL, OMASLOT, PANE PONG, LAST WINDOW); on Android TV your phone is the gamepad (scan the QR in the arcade's sign, nothing to install).
-- **Racing widget (2.15)**: F1, MotoGP, Moto2, Moto3, NASCAR, Formula E and WEC weekends live from the official sources, with a countdown in the bar.
+- **Racing widget (2.15)**: F1, MotoGP, Moto2, Moto3, NASCAR, Formula E and WEC weekends live from the official sources, with a countdown to the next session in the panel (2.15.1), and as a side panel of the Pulse screensaver.
 - **37 `tte.js` ASCII Screensaver Effects**: Runs all 37 `TerminalTextEffects` / `tte.js` animations in a dedicated `:saver` process with configurable idle timeout (`1 / 2.5 / 5 / 10 min` or `Never`), **Effect speed (`Slow / Normal / Fast`)**, native fallback for legacy WebViews, and Android Daydream (`OmarchyDream`) support.
 - **Cast to TV (opt-in)**: Send videos, audio (Media3 ExoPlayer), images, text, and links from your paired PC/Mac directly to the TV.
 - **Crash Watchdog & Safe Debloat**: Independent `:watchdog` process that restores the stock launcher if 3 crashes ever occur within 5 minutes; safe debloat scripts use only reversible `pm disable-user --user 0` (never `pm uninstall`, never touching DNS or `setupwraith`).

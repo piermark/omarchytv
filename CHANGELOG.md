@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.15.1] — unreleased
+## [2.15.1] — unreleased (`versionCode 28`; webOS 2.15.1, Tizen 2.15.1, PC plugins 2.15.1)
 
 ### Pulse 1.8 on the TV
 
