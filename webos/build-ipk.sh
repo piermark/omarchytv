@@ -34,6 +34,7 @@ if [ -d "$ANDROID_MAIN" ]; then
   cp -rf "$ANDROID_MAIN/assets/licenses/"* "$APP/licenses/"
   cp -f "$ANDROID_MAIN/assets/saver/tte-bundle.js" "$APP/saver/tte-bundle.js"
   cp -f "$ANDROID_MAIN/assets/saver/screensaver-tv.txt" "$APP/saver/screensaver-tv.txt"
+  cp -f "$ANDROID_MAIN/assets/racing_2026.json" "$APP/racing_2026.json"
   cp -rf "$ANDROID_MAIN/assets/saver/tte-js" "$APP/saver/"
 fi
 

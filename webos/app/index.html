@@ -335,6 +335,35 @@ html, body {
   margin-left: 16px;
 }
 
+#race-body {
+  margin-top: 4px;
+  font-size: calc(19px * var(--ts, 1));
+  line-height: 1.35;
+  color: var(--t-fg);
+}
+#race-next { font-weight: 700; }
+#race-next-clock {
+  font-size: calc(30px * var(--ts, 1));
+  font-weight: 700;
+  margin-top: 4px;
+  color: var(--t-fg-bright);
+}
+.race-head { font-weight: 700; }
+.race-row { display: flex; margin-top: 6px; }
+.race-row-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.race-row-when { margin-left: 10px; white-space: nowrap; }
+#bar-race {
+  display: none;
+  margin-right: 10px;
+  font-size: calc(15px * var(--ts, 1));
+  font-weight: 700;
+  white-space: nowrap;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
 .widget-col {
   flex: 1;
   min-width: 0;
@@ -867,6 +896,7 @@ body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rg
     <div id="bar-clock">sat 24 oct  7:06 PM</div>
 
     <div id="bar-right">
+      <div id="bar-race"></div>
       <!-- SpaceX TV Top-Bar Countdown Pill (Sighmon MIT plugin) -->
       <div id="spacex-pill" style="display:inline-flex;align-items:center;padding:4px 12px;margin-right:10px;border:1px solid var(--t-accent);background:var(--t-bg-alt);color:var(--t-accent);font-size:calc(15px * var(--ts, 1));font-weight:700;cursor:pointer;" title="SpaceX TV (Sighmon)">🚀 Starship · T-02:14:00</div>
       <!-- Cinemarchy Hub -->
@@ -942,6 +972,15 @@ body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rg
     <!-- Top-Right Widgets -->
     <div id="widgets-wrap">
       <div id="widgets-row1">
+        <!-- racing (Grant Charge, #123): left of weather, like Android -->
+        <div id="race-box" class="box has-legend widget-col" style="display:none">
+          <div class="box-top-line">
+            <span class="box-top-left"></span>
+            <span class="box-legend" id="legend-race">racing</span>
+            <span class="box-top-right"></span>
+          </div>
+          <div id="race-body"></div>
+        </div>
         <!-- Weather -->
         <div id="wx-box" class="box has-legend widget-col">
           <div class="box-top-line">
@@ -1134,6 +1173,7 @@ body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rg
 <script src="lang.js"></script>
 <script src="i18n.js"></script>
 <script src="iphone-remote.js"></script>
+<script src="racing.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

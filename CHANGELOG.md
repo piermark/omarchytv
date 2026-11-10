@@ -20,9 +20,13 @@
 
 - **The countdown moved into the panel**: the racing panel on Home now starts with the next session of any series you
   follow and its countdown. The bar no longer shows it unless you ask (`"racing": {"bar": true}`; Settings → Widgets).
-- **Racing on Pulse** (Android TV): a `racing` side panel in the screensaver, the next sessions soonest first, each
-  with its countdown, `● live` while it runs (`screensaver.racing`; on when the Home racing widget is on; Settings →
-  Screensaver → racing panel on Pulse).
+- **Racing on Pulse** (Android TV, LG, Samsung): a `racing` side panel in the screensaver, the next sessions soonest
+  first, each with its countdown, `● live` while it runs (`screensaver.racing`; on when the Home racing widget is on;
+  Settings → Screensaver → racing panel on Pulse).
+- **Racing on LG and Samsung** (Grant Charge's calendars, #123): the Home widget is the same one as on Android TV —
+  the race weekends you follow (F1, MotoGP, Moto2, Moto3, NASCAR Cup, O'Reilly and Trucks, Formula E, WEC), the next
+  session and its countdown, each series on or off in Settings › Home widgets. A bundled snapshot of the F1 and
+  MotoGP calendars is there when the TV cannot reach a source.
 
 ### From the community
 

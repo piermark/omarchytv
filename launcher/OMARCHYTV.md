@@ -104,7 +104,8 @@ to keep only the bar version.
 ### Racing: F1 and MotoGP 2026
 
 `"homeWidgets": {"racing": true}` (default off; also Settings → Widgets) adds a `racing` panel as the first column of
-the top widget row, left of weather. It lists the race weekends that are not over yet for the series you follow, each
+the top widget row, left of weather. On LG and Samsung the same widget lives in the shared web app (`racing.js`;
+Settings → Home widgets), off until you ask (`widgets.racing`). It lists the race weekends that are not over yet for the series you follow, each
 with its race day and time, plus the next (or running) session of the current weekend. Since 2.15.1 the panel starts
 with the next session of any of them and its countdown, ticking every second; the same countdown in the bar is off
 unless you ask (`"racing": {"bar": true}`; Settings → Widgets too). `"screensaver": {"racing": true}` shows the
@@ -128,7 +129,8 @@ next sessions as a side panel of the Pulse screensaver (default: the same as the
 With one or two series every weekend left is listed; with more, the next two (or the next one past four series) of
 each, so they all fit in the column. Times are 24 h in `racing.timezone` (any tz id, default: the TV's own time
 zone); Formula E shows just the day. `assets/racing_2026.json` is a snapshot of the F1 and MotoGP calendars, so the
-panel works offline; refresh it with `python3 tools/racing_calendar.py`. Live data is fetched on a background thread
+panel works offline; refresh it with `python3 tools/racing_calendar.py`. The webOS/Tizen package copies that file
+beside the page (`racing_2026.json`). Live data is fetched on a background thread
 every 6 h, hourly when a session starts within 48 h; MotoGP and NASCAR move on to next year's season by themselves
 once this one is over. IndyCar, WorldSBK and WRC aren't in the list yet: their official sites have no calendar a TV
 can read reliably.

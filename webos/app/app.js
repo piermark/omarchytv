@@ -472,7 +472,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     pcSimulated: false,
     aiCredits: "percent",
     clockFormat: "auto",   // "auto" (12 h in English, 24 h otherwise), "12" or "24"
-    widgets: { term: true, weather: true, pc: true, ai: true, deploy: false, devmode: false },
+    widgets: { term: true, weather: true, pc: true, ai: true, deploy: false, devmode: false, racing: false },
+    racingBar: false,     // 2.15.1: countdown in the bar only if asked (Grant Charge, #123)
+    racingTz: "",         // empty = the TV's own time zone
     devModeUntil: 0,   // 2.15 (#131): when the Developer Mode session runs out, as last confirmed (epoch ms)
     tvApps: true,         // LG webOS: read the apps installed on the TV over SSAP (tvapps.js), DEFAULT_APPS stay the fallback
     hiddenApps: [],
@@ -947,7 +949,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     document.getElementById("legend-ai").textContent = tr("box_ai");
 
     document.getElementById("term-box").style.display = cfg.widgets.term ? "block" : "none";
+    var raceOn = !!cfg.widgets.racing;
+    var raceBox = document.getElementById("race-box");
+    if (raceBox) raceBox.style.display = raceOn ? "block" : "none";
     document.getElementById("wx-box").style.display = cfg.widgets.weather ? "block" : "none";
+    document.getElementById("wx-box").style.marginLeft = raceOn ? "16px" : "0";
     document.getElementById("pc-box").style.display = cfg.widgets.pc ? "block" : "none";
     document.getElementById("ai-box").style.display = cfg.widgets.ai ? "block" : "none";
     document.getElementById("deploy-box").style.display = cfg.widgets.deploy ? "block" : "none";
@@ -986,6 +992,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       aiBody.textContent = tr("pc_not_connected");
       if (ws4Live) ws4Live.textContent = "";
     }
+    updateRacing();
   }
 
   // Remember a PC that answered, so pairing again is one OK press instead of typing with the remote.
@@ -1226,7 +1233,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
 
     // Widget focus borders on WS1
-    var wBoxes = [document.getElementById("term-box"), document.getElementById("wx-box"), document.getElementById("pc-box"), document.getElementById("ai-box")];
+    var wBoxes = [document.getElementById("term-box"), document.getElementById("race-box"), document.getElementById("wx-box"), document.getElementById("pc-box"), document.getElementById("ai-box")];
     wBoxes.forEach(function (el, idx) {
       if (!el) return;
       el.classList.toggle("focused", state.ws === 0 && state.zone === "widgets" && state.widgetIdx === idx);
@@ -1748,14 +1755,31 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   function openWidgetsModal() {
-    function tog(k) { cfg.widgets[k] = !cfg.widgets[k]; saveCfg(); renderAll(); openWidgetsModal(); }
+    function tog(k) { cfg.widgets[k] = !cfg.widgets[k]; saveCfg(); if (k === "racing") racingKick(); renderAll(); openWidgetsModal(); }
+    function racingSeriesRows() {
+      var R = window.OmarchyRacing, list = R ? R.SERIES : [["f1", "F1"], ["motogp", "MotoGP"]], on = racingSeries(), rows = [], i;
+      for (i = 0; i < list.length; i++) (function (id, name) {
+        var isOn = on.indexOf(id) >= 0;
+        rows.push({ label: "  " + name, right: isOn ? "on" : "off", act: function () {
+          var cur = racingSeries().slice(), j = cur.indexOf(id);
+          if (j >= 0) cur.splice(j, 1); else cur.push(id);
+          cfg.racingSeries = list.map(function (x) { return x[0]; }).filter(function (x) { return cur.indexOf(x) >= 0; });
+          saveCfg(); racingKick(); renderAll(); openWidgetsModal();
+        } });
+      })(list[i][0], list[i][1]);
+      return rows;
+    }
     openModal(tr("sys_widgets"), "", [
       { label: "terminal · logo", right: cfg.widgets.term ? "on" : "off", act: function () { tog("term"); } },
       { label: "weather", right: cfg.widgets.weather ? "on" : "off", act: function () { tog("weather"); } },
       { label: "omarchy · pc", right: cfg.widgets.pc ? "on" : "off", act: function () { tog("pc"); } },
       { label: "ai credits · pc", right: cfg.widgets.ai ? "on" : "off", act: function () { tog("ai"); } },
-      { label: "deploys · pc", right: cfg.widgets.deploy ? "on" : "off", act: function () { tog("deploy"); } }
-    ].concat(window.OMARCHY_PLATFORM === "tizen" ? [] : [   // 2.15 (#131): LG Developer Mode's 1000-hour session
+      { label: "deploys · pc", right: cfg.widgets.deploy ? "on" : "off", act: function () { tog("deploy"); } },
+      { label: "racing", right: cfg.widgets.racing ? "on" : "off", act: function () { tog("racing"); } },
+      { label: "racing countdown in the bar", right: cfg.racingBar ? "on" : "off", act: function () {
+        cfg.racingBar = !cfg.racingBar; saveCfg(); racingKick(); renderAll(); openWidgetsModal();
+      } }
+    ].concat(cfg.widgets.racing || cfg.racingBar ? racingSeriesRows() : []).concat(window.OMARCHY_PLATFORM === "tizen" ? [] : [   // 2.15 (#131): LG Developer Mode's 1000-hour session
       { label: "dev mode countdown", right: cfg.widgets.devmode ? "on" : "off", act: function () { tog("devmode"); } },
       { label: "dev mode · I just pressed EXTEND", right: cfg.devModeUntil ? window.OmarchyDevMode.left(cfg.devModeUntil, Date.now()).text.split(" · ")[0] : "›", act: function () {
         cfg.devModeUntil = window.OmarchyDevMode.extended(Date.now()); cfg.widgets.devmode = true;
@@ -1779,6 +1803,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } }].concat(cfg.saverMode === "pulse" ? [{ label: tr("ss_pulse_scene"), right: LG_SCENES[cfg.pulseScene] ? cfg.pulseScene : "sphere", act: function () {
         // 2.15.1: mars and monolith are Android TV only for now (they restarted the app on LG); a saved one counts as the sphere
         var sc = ["sphere", "skyline", "orbit", "calm", "hacker", "noir"], cur = LG_SCENES[cfg.pulseScene] ? cfg.pulseScene : "sphere"; cfg.pulseScene = sc[(sc.indexOf(cur) + 1) % sc.length]; saveCfg(); openSaverModal(true);
+      } }, { label: "racing panel on Pulse", right: pulseRacingOn() ? "on" : "off", act: function () {
+        cfg.pulseRacing = !pulseRacingOn(); saveCfg(); racingKick(); openSaverModal(true);
       } }] : []).concat(cfg.ssBefore215 ? [{ label: tr("ss_restore_previous"), right: "›", act: function () {
         var b = cfg.ssBefore215; cfg.saverMode = b.saverMode; cfg.saverArt = b.saverArt; cfg.living = !!b.living; delete cfg.ssBefore215; saveCfg(); openSaverModal(true);
       } }] : []).concat([
@@ -2648,12 +2674,138 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     pulseStart(fr);
   }
 
+
+  // ---- 2.15.1 racing on LG and Samsung (Grant Charge, #123): same calendars as Android's Racing.java ----
+  var racingAsset = null, racingTick = null, racingNext = null;
+  function racingSeries() {
+    var R = window.OmarchyRacing, raw = cfg.racingSeries, out = [], i, id;
+    if (raw && raw.length) {
+      for (i = 0; i < raw.length; i++) {
+        id = raw[i];
+        if ((!R || R.known(id)) && out.indexOf(id) < 0) out.push(id);
+      }
+      return out;
+    }
+    return ["f1", "motogp"];
+  }
+  function pulseRacingOn() {
+    if (cfg.pulseRacing === true || cfg.pulseRacing === false) return cfg.pulseRacing;
+    return !!cfg.widgets.racing;
+  }
+  function racingWanted() { return !!cfg.widgets.racing || !!cfg.racingBar || pulseRacingOn(); }
+  function racingRead(id) {
+    try { var s = localStorage.getItem("omarchytv_racing_" + id); return s ? JSON.parse(s) : null; } catch (e) { return null; }
+  }
+  function racingWrite(id, meetings) {
+    try { localStorage.setItem("omarchytv_racing_" + id, JSON.stringify({ year: (window.OmarchyRacing && window.OmarchyRacing.YEAR) || 2026, meetings: meetings, saved: Date.now() })); } catch (e) {}
+  }
+  function racingAll(now) {
+    var R = window.OmarchyRacing, all = {}, series = racingSeries(), i;
+    if (!R) return all;
+    for (i = 0; i < series.length; i++) all[series[i]] = R.meetingsFrom(racingAsset, racingRead(series[i]), series[i]);
+    return all;
+  }
+  function racingIo() {
+    return {
+      series: racingSeries(), asset: racingAsset, read: racingRead, write: racingWrite,
+      get: function (url) { return fetch(url).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); }); },
+      onDone: function () { renderWidgets(); }
+    };
+  }
+  function racingKick() {
+    var R = window.OmarchyRacing;
+    if (!R || !racingWanted()) { if (!cfg.widgets.racing && !cfg.racingBar) stopRaceTick(); return; }
+    if (cfg.widgets.racing || cfg.racingBar) startRaceTick();
+    R.refreshIfStale(racingIo());
+  }
+  function startRaceTick() {
+    if (racingTick) return;
+    racingTick = setInterval(function () { tickRaceBar(); tickRaceNext(); }, 1000);
+  }
+  function stopRaceTick() {
+    if (racingTick) { clearInterval(racingTick); racingTick = null; }
+  }
+  function raceRowHtml(name, whenStr, nameCol, whenCol) {
+    return '<div class="race-row"><span class="race-row-name" style="color:' + nameCol + '">' + escHtml(name) +
+      '</span><span class="race-row-when" style="color:' + whenCol + '">' + escHtml(whenStr) + '</span></div>';
+  }
+  function raceSeriesHtml(R, label, left, now, tz, top, rows) {
+    var html = '<div class="race-series" style="margin-top:' + top + 'px"><div class="race-head"><span style="color:var(--t-accent)">' +
+      escHtml(label) + '</span><span>' + (left.length ? "  " + left.length + " left" : "") + "</span></div>";
+    if (!left.length) return html + '<div class="race-row-name">season complete</div></div>';
+    var i;
+    for (i = 0; i < left.length && i < rows; i++) {
+      var m = left[i], col = i === 0 ? "var(--t-fg-bright)" : "var(--t-fg)", rs = R.race(m);
+      html += raceRowHtml(R.shortName(m), rs.dateOnly ? R.day(rs.start) : R.when(rs.start, tz), col, col);
+      if (i > 0) continue;
+      var s = R.current(m, now);
+      if (!s || (s === R.race(m) && !s.live(now))) continue;
+      var live = s.live(now);
+      html += raceRowHtml("  " + (live ? "● live " : "▸ ") + String(s.code).toLowerCase(),
+        live ? "until " + R.when(s.endOrDefault(), tz).replace(/.* /, "") : R.when(s.start, tz),
+        live ? "var(--t-green)" : "var(--t-accent2)", live ? "var(--t-green)" : "var(--t-fg)");
+    }
+    return html + "</div>";
+  }
+  function updateRacing() {
+    var R = window.OmarchyRacing, body = document.getElementById("race-body"), legend = document.getElementById("legend-race");
+    if (!R) { tickRaceBar(); return; }
+    var now = Date.now(), all = racingAll(now);
+    racingNext = R.soonest(all, now);
+    var tz = R.zone(cfg.racingTz || "");
+    if (legend) legend.textContent = "racing · " + (R.zoneLabel(tz) || "local");
+    if (body && cfg.widgets.racing) {
+      var series = racingSeries(), rows = series.length <= 2 ? 1e9 : series.length <= 4 ? 2 : 1, html = "", i;
+      html += '<div id="race-next"></div><div id="race-next-clock"></div>';
+      for (i = 0; i < series.length; i++) {
+        html += raceSeriesHtml(R, R.label(series[i]).toLowerCase(), R.upcoming(all[series[i]] || [], now), now, tz, i === 0 && racingNext ? 14 : (i ? 14 : 0), rows);
+      }
+      body.innerHTML = html;
+      tickRaceNext();
+    }
+    tickRaceBar();
+    if (cfg.widgets.racing || cfg.racingBar) startRaceTick();
+    else stopRaceTick();
+  }
+  function tickRaceNext() {
+    var el = document.getElementById("race-next"), clockEl = document.getElementById("race-next-clock"), R = window.OmarchyRacing;
+    if (!cfg.widgets.racing || !el || !clockEl || !R) return;
+    var now = Date.now(), n = racingNext;
+    if (n && now >= n.session.endOrDefault()) n = racingNext = R.soonest(racingAll(now), now);
+    if (!n) { el.style.display = "none"; clockEl.style.display = "none"; return; }
+    el.style.display = "block"; clockEl.style.display = "block";
+    el.innerHTML = '<span style="color:var(--t-fg)">next · </span><span style="color:var(--t-accent)">' +
+      escHtml(R.label(n.series).toLowerCase() + " " + String(n.session.code).toLowerCase()) +
+      '</span><span style="color:var(--t-fg-bright)"> · ' + escHtml(R.shortName(n.meeting)) + "</span>";
+    var live = n.session.live(now);
+    clockEl.textContent = live ? "● live" : R.clock(n.session.start - now);
+    clockEl.style.color = live ? "var(--t-green)" : "var(--t-fg-bright)";
+  }
+  function tickRaceBar() {
+    var bar = document.getElementById("bar-race"), R = window.OmarchyRacing;
+    if (!bar) return;
+    if (!cfg.racingBar || !R) { bar.style.display = "none"; return; }
+    var now = Date.now(), n = racingNext;
+    if (n && now >= n.session.endOrDefault()) n = racingNext = R.soonest(racingAll(now), now);
+    if (!n) { bar.style.display = "none"; return; }
+    var live = n.session.live(now);
+    bar.style.display = "inline-block";
+    bar.innerHTML = '<span style="color:var(--t-accent)">' + escHtml(R.label(n.series)) +
+      ' </span><span style="color:var(--t-fg)">' + escHtml(String(n.session.code).toLowerCase() + " · " + R.shortName(n.meeting)) +
+      '  </span><span style="color:' + (live ? "var(--t-green)" : "var(--t-fg-bright)") + '">' +
+      (live ? "● live" : R.clock(n.session.start - now)) + "</span>";
+  }
+
   // ---- v2.15 Pulse screensaver: Pulse's own page (1.8 since 2.15.1) (vendor/pulse), the TV's hub inside it, the PC's state on top ----
   var LG_SCENES = { sphere: 1, skyline: 1, orbit: 1, calm: 1, hacker: 1, noir: 1 };   // the scenes LG and Samsung run
   function pulseUrl() {
     var t = DATA.themes[cfg.theme] || {};
     var c = { city: cfg.weatherCity || "", imperial: cfg.tempUnit === "F", theme: { name: cfg.theme, colors: t }, scene: LG_SCENES[cfg.pulseScene] ? cfg.pulseScene : "sphere", scenes: false, graphics: cfg.pulseGraphics || "auto" };
     if (typeof cfg.weatherLat === "number" && typeof cfg.weatherLon === "number") { c.lat = cfg.weatherLat; c.lon = cfg.weatherLon; }
+    if (pulseRacingOn() && window.OmarchyRacing) {
+      var rows = window.OmarchyRacing.pulseRows(racingAll(Date.now()), racingSeries(), Date.now());
+      if (rows.length) c.racing = rows;
+    }
     return "vendor/pulse/index.html#cfg=" + encodeURIComponent(JSON.stringify(c));
   }
   var pulseTimer = null;
@@ -3705,10 +3857,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     else launchApp({ name: "LG Settings", appId: "com.palm.app.settings" });
   }
 
-  // Home widgets that can take focus, in on-screen order (state.widgetIdx: 0 terminal, 1 weather,
-  // 2 pc, 3 ai credits). Hidden ones (Home widgets menu) are skipped, so ▲ ▼ never stop on nothing.
+  // Home widgets that can take focus, in on-screen order (state.widgetIdx: 0 terminal, 1 racing,
+  // 2 weather, 3 pc, 4 ai credits). Hidden ones (Home widgets menu) are skipped, so ▲ ▼ never stop on nothing.
   function focusableWidgets() {
-    return [cfg.widgets.term, cfg.widgets.weather, cfg.widgets.pc, cfg.widgets.ai]
+    return [cfg.widgets.term, !!cfg.widgets.racing, cfg.widgets.weather, cfg.widgets.pc, cfg.widgets.ai]
       .map(function (on, i) { return on ? i : -1; })
       .filter(function (i) { return i >= 0; });
   }
@@ -3814,7 +3966,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       if (k === "ArrowDown") { state.zone = "dock"; renderAll(); e.preventDefault(); return; }
       if (k === "Enter") {
         if (state.widgetIdx === 0) openThemesModal();
-        else if (state.widgetIdx === 1) openWeatherModal();
+        else if (state.widgetIdx === 1) openWidgetsModal();
+        else if (state.widgetIdx === 2) openWeatherModal();
         else switchWorkspace(3);
         e.preventDefault(); return;
       }
@@ -3974,6 +4127,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   if (gbEl) gbEl.onclick = function () { openCompanionChat(false); };
   document.getElementById("wx-box").onclick = openWeatherModal;
   document.getElementById("term-box").onclick = openThemesModal;
+  var raceEl = document.getElementById("race-box");
+  if (raceEl) raceEl.onclick = openWidgetsModal;
   document.getElementById("pc-box").onclick = function () { switchWorkspace(3); };
   document.getElementById("ai-box").onclick = function () { switchWorkspace(3); };
   document.getElementById("ws4-pair-btn").onclick = function () { state.zone = "ws4"; state.ws4Idx = 0; renderAll(); };
@@ -4070,6 +4225,13 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   animateLogo();
   renderAll();
   fetchWeather();
+  if (window.OmarchyRacing) {
+    fetch("racing_2026.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (j) racingAsset = j;
+      if (racingWanted()) { racingKick(); renderWidgets(); }
+    }).catch(function () { if (racingWanted()) racingKick(); });
+    if (racingWanted()) racingKick();
+  }
   pollPcStatus();
   if (cfg.pulseNotice) {   // v2.15: say once that Pulse is the new screensaver (and how to go back)
     delete cfg.pulseNotice; saveCfg();
