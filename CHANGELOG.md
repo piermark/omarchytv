@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.15.1] — unreleased (`versionCode 28`; webOS 2.15.1, Tizen 2.15.1, PC plugins 2.15.1)
+## [2.15.1] — 2026-11-11 (`versionCode 28`; webOS 2.15.1, Tizen 2.15.1, PC plugins 2.15.1)
 
 ### Pulse 1.8 on the TV
 
@@ -49,7 +49,7 @@
   false` removes that panel; `screensaver.opensky` adds OpenSky as a second, opt-in plane feed.
 - Tests: the iPhone remote supervisor test is skipped where `flock` is missing (Grant Charge, #138).
 
-## [2.15.0] — unreleased (`versionCode 27`; webOS 2.15.0, Tizen 2.15.0, PC plugins 2.15.0)
+## [2.15.0] — 2026-11-09 (`versionCode 27`; webOS 2.15.0, Tizen 2.15.0, PC plugins 2.15.0)
 
 ### Omarchy Pulse on the TV, the new screensaver
 
