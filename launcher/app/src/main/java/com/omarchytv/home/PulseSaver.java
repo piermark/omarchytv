@@ -167,6 +167,7 @@ final class PulseSaver {
                     .put("scene", cfg.pulseScene).put("quality", "auto");
             o.put("planesNm", cfg.pulsePlanesNm).put("earthquakes", cfg.pulseQuakes).put("opensky", cfg.pulseOpensky);
             o.put("openskyAuth", cfg.pulseOpensky && openskyCreds(c) != null);   // signed in to OpenSky: read it every minute
+            if (cfg.pulseRacing) o.put("racing", Racing.pulseRows(c, cfg.racingSeries, System.currentTimeMillis()));   // 2.15.1
             if (!Double.isNaN(cfg.weatherLat) && !Double.isNaN(cfg.weatherLon)) o.put("lat", cfg.weatherLat).put("lon", cfg.weatherLon);
             return o.toString();
         } catch (Exception e) {

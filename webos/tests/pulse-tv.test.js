@@ -322,3 +322,23 @@ test("defaults are unchanged: 25 nm overhead, earthquakes on, no OpenSky; the se
     on.stop();
   } finally { global.setInterval = real; }
 });
+
+test("2.15.1 screensaver.racing: the next sessions as a side panel, soonest first, live and day-only ones said plainly", () => {
+  const net = () => Promise.resolve(null), t = 1000000;
+  const racing = [
+    { series: "MotoGP", code: "RACE", name: "Valencia", start: t + 3 * 86400 + 3600, end: t + 3 * 86400 + 7200, day: false },
+    { series: "F1", code: "FP3", name: "São Paulo", start: t - 600, end: t + 3000, day: false },
+    { series: "Formula E", code: "RACE", name: "Tokyo", start: t + 5 * 86400, end: t + 6 * 86400, day: true },
+    { series: "WEC", code: "RACE", name: "Bahrain", start: t - 90000, end: t - 80000, day: false },
+    { series: "F1", code: "QUALI", name: "São Paulo", start: t + 4 * 3600 + 125, end: t + 5 * 3600, day: false }
+  ];
+  const items = P.racingItems(racing, t, 5);
+  assert.deepStrictEqual(items.map(i => [i.title, i.text, i.right]), [
+    ["F1 · fp3", "São Paulo", "● live"], ["F1 · quali", "São Paulo", "4h 02m"],
+    ["MotoGP · race", "Valencia", "3d 1h"], ["Formula E · race", "Tokyo", "in 5d"]]);
+  const panel = cfg => P.create(Object.assign({ lat: 44.91, lon: 8.61 }, cfg), net, () => t).state().widgets.filter(w => w.id === "tv-racing");
+  assert.strictEqual(panel({ racing }).length, 1);
+  assert.strictEqual(panel({ racing })[0].slot, "right");
+  assert.strictEqual(panel({}).length, 0);                       // off, or LG/Samsung: no panel
+  assert.strictEqual(panel({ racing: [racing[3]] }).length, 0);   // nothing left to race: no empty panel
+});

@@ -3367,6 +3367,12 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 applyLive("screensaver", lScene, j -> screensaver(j).put("pulseScene", n));
                 return true;
             });
+            String lRace = str(R.string.ss_pulse_racing);   // 2.15.1: the race weekends as one of Pulse's side panels
+            p.add(lRace, str(cfg.pulseRacing ? R.string.on : R.string.off), r -> {
+                boolean n = !cfg.pulseRacing;
+                applyLive("screensaver", lRace, j -> screensaver(j).put("racing", n));
+                return true;
+            });
         }
         if (cfg.hasSsBefore) {   // v2.15: undo the one-time switch to Pulse
             String lPrev = str(R.string.ss_restore_previous);

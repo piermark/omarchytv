@@ -824,6 +824,7 @@ final class HomeV29 extends FrameLayout {
         @Override
         public void run() {
             tickRaceBar();
+            tickRaceNext();
             postDelayed(this, 1000 - System.currentTimeMillis() % 1000 + 5);   // on the second, like a clock
         }
     };
@@ -865,8 +866,18 @@ final class HomeV29 extends FrameLayout {
         if (!cfg.wRacing) return;
         java.util.TimeZone tz = Racing.zone(cfg.racingTz);
         raceBox.setLegend("racing · " + raceZoneLabel(tz), px(14), px(18));
+        // 2.15.1 the countdown to the next session of any followed series, at the top of the panel (it was only in the bar)
+        raceNext = line("");
+        raceNext.setTypeface(tfBold);
+        raceNextClock = line("");
+        raceNextClock.setTextSize(TypedValue.COMPLEX_UNIT_PX, 30 * s * big);
+        raceNextClock.setTypeface(tfBold);
+        ((LinearLayout.LayoutParams) raceNextClock.getLayoutParams()).topMargin = px(4);
+        raceBody.addView(raceNext);
+        raceBody.addView(raceNextClock);
+        tickRaceNext();
         // two series: every weekend left; more: the next two of each, so all of them fit in the column
-        int rows = all.size() <= 2 ? Integer.MAX_VALUE : all.size() <= 4 ? 2 : 1, top = 0;
+        int rows = all.size() <= 2 ? Integer.MAX_VALUE : all.size() <= 4 ? 2 : 1, top = nextRace != null ? 14 : 0;
         for (java.util.Map.Entry<String, List<Racing.Meeting>> e : all.entrySet()) {
             raceSeries(Racing.label(e.getKey()).toLowerCase(Locale.ROOT), Racing.upcoming(e.getValue(), now), now, tz, top, rows);
             top = 14;
@@ -922,6 +933,27 @@ final class HomeV29 extends FrameLayout {
         wl.leftMargin = px(10);
         r.addView(w, wl);
         return r;
+    }
+
+    private TextView raceNext, raceNextClock;
+
+    /** Panel: "next · f1 fp3 · São Paulo" and under it "02:14:09" (or "● live"), every second, from raceTick. */
+    private void tickRaceNext() {
+        if (cfg == null || !cfg.wRacing || raceNext == null || raceNext.getParent() != raceBody) return;
+        long now = System.currentTimeMillis();
+        Racing.Next n = nextRace;
+        if (n != null && now >= n.session.endOrDefault()) n = nextRace = Racing.soonest(racingNow(), now);
+        raceNext.setVisibility(n != null ? VISIBLE : GONE);
+        raceNextClock.setVisibility(n != null ? VISIBLE : GONE);
+        if (n == null) return;
+        SpannableStringBuilder b = new SpannableStringBuilder();
+        span(b, "next · ", t.fg);
+        span(b, Racing.label(n.series).toLowerCase(Locale.ROOT) + " " + n.session.code.toLowerCase(Locale.ROOT), t.accent);
+        span(b, " · " + shortName(n.meeting), t.fgBright);
+        raceNext.setText(b);
+        boolean live = n.session.live(now);
+        raceNextClock.setText(live ? "● live" : Racing.clock(n.session.start - now));
+        raceNextClock.setTextColor(live ? t.green : t.fgBright);
     }
 
     /** Bar: "F1 fp3 · São Paulo  02:14:09", or "● live" while it runs. Every second, from raceTick. */

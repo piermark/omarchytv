@@ -301,6 +301,20 @@
     });
     return out.sort(function (a, b) { return a.nm - b.nm; }).slice(0, n || 5);
   }
+  /**
+   * 2.15.1 the race weekends the launcher follows (Android: screensaver.racing), as one of Pulse's side panels: the
+   * next sessions, soonest first, each with its countdown ("● live" while it runs; a day-only one says the days).
+   * `list`: [{series, code, name, start, end, day}], times in seconds.
+   */
+  function racingItems(list, t, n) {
+    return (list || []).filter(function (x) { return x && Number(x.start) > 0 && (Number(x.end) || Number(x.start) + 7200) > t; })
+      .sort(function (a, b) { return a.start - b.start; }).slice(0, n || 5).map(function (x) {
+        var left = x.start - t, live = left <= 0;
+        return { title: String(x.series || "").slice(0, 12) + (x.code ? " · " + String(x.code).toLowerCase().slice(0, 8) : ""),
+          text: String(x.name || "").slice(0, 28),
+          right: live ? "● live" : x.day ? (left < 86400 ? "today" : "in " + Math.ceil(left / 86400) + "d") : countdown(left).slice(2) };
+      });
+  }
   function planesOver(lat, lon, raw) {
     var out = [];
     (raw || []).forEach(function (a) {
@@ -613,9 +627,11 @@
           "energy", "car", "music", "heart", "digest", "away", "privacy", "tips", "lan", "term", "noc", "bolts", "storms", "air", "eclipses", "season"].forEach(function (k) {
           if (pc[k] !== undefined && pc[k] !== null) st[k] = pc[k];
         });
+        var rp = pc.widgets ? racingPanel(t) : null;   // 2.15.1 the TV's own racing panel stays beside the PC's panels
         if (pc.sys) { st.sys = pc.sys; st.hist = pc.hist || st.hist; st.ui.system = true; st.ui.network = true; }
         // the PC's panels take the screen; of the TV's own only the launches stay (in the ticker)
         if (pc.widgets) st.widgets = pc.widgets.concat(widgets.filter(function (x) { return x.id === "launches" && !pc.widgets.some(function (y) { return y.id === x.id; }); }));
+        if (rp) st.widgets.push(rp);
         if (pc.theme && pc.theme.colors && Object.keys(pc.theme.colors).length) st.theme = pc.theme;   // the PC's colours: the same Pulse on both
         if (!S.air && pc.air) st.air = pc.air;
         if (pc.ui) ["face", "agentsAs", "ivy", "banner", "music", "cars"].forEach(function (k) { if (pc.ui[k] !== undefined) st.ui[k] = pc.ui[k]; });
@@ -627,6 +643,10 @@
         if (!st.space.launch && pc.space && pc.space.launch) st.space.launch = pc.space.launch;
       }
       return st;
+    }
+    function racingPanel(t) {
+      var items = cfg.racing && cfg.racing.length ? racingItems(cfg.racing, t, 5) : [];
+      return items.length ? { id: "tv-racing", title: "racing", type: "list", slot: "right", order: 33, icon: "󰄶", data: { items: items } } : null;
     }
     /** 2.15 the panels of a TV with no PC: everything it can read by itself. */
     function tvPanels(t) {
@@ -661,6 +681,8 @@
           }), note: near.length ? "" : fresh ? "no planes within " + reach + " nm" : "looking for planes…" } });
       }
       if (S.quakes.length) out.push({ id: "tv-quakes", title: "earthquakes", type: "list", slot: "right", order: 32, icon: "󰖟", data: { items: S.quakes.slice(0, 4) } });
+      var rp = racingPanel(t);
+      if (rp) out.push(rp);
       if (S.omarchy.length) out.push({ id: "tv-omarchy", title: "omarchy", type: "list", slot: "right", order: 34, icon: "", data: { items: S.omarchy.slice(0, 3) } });
       return out;
     }
@@ -687,7 +709,7 @@
   }
 
   root.OmarchyPulseTV = { create: create, airFrom: airFrom, quakesFrom: quakesFrom, nightSky: nightSky, altaz: altaz, lookAngles: lookAngles, satLook: satLook, starlinkGroups: starlinkGroups,
-    starlinkPasses: starlinkPasses, issAt: issAt, planesOver: planesOver, planesNm: planesNm, openskyStates: openskyStates, mergePlanes: mergePlanes, typeName: typeName, routeFits: routeFits, ftText: ftText, latestKp: latestKp, parseLaunch: parseLaunch, countdown: countdown,
+    starlinkPasses: starlinkPasses, issAt: issAt, planesOver: planesOver, racingItems: racingItems, planesNm: planesNm, openskyStates: openskyStates, mergePlanes: mergePlanes, typeName: typeName, routeFits: routeFits, ftText: ftText, latestKp: latestKp, parseLaunch: parseLaunch, countdown: countdown,
     cityKey: cityKey, weatherFrom: weatherFrom, compass: compass, julian: julian, moonPhase: moonPhase, TIPS: TIPS };
   if (typeof module !== "undefined" && module.exports) module.exports = root.OmarchyPulseTV;
 })(typeof window !== "undefined" ? window : this);

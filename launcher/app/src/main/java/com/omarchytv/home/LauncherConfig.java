@@ -499,6 +499,8 @@ final class LauncherConfig {
      *  panel (screensaver.earthquakes, default on) and OpenSky as a second plane feed (screensaver.opensky, default off). */
     final int pulsePlanesNm;
     final boolean pulseQuakes, pulseOpensky;
+    /** 2.15.1 Pulse's racing side panel (screensaver.racing; default: on when the Home racing widget is on). */
+    final boolean pulseRacing;
     /** v2.15: Home says once that Pulse is the new screensaver; "Previous screensaver" can undo the switch. */
     final boolean pulseNotice, hasSsBefore;
     /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
@@ -545,7 +547,7 @@ final class LauncherConfig {
     /** v2.10: home widgets on/off: weather, pc, ai, deploys (default all on). */
     final boolean wWeather, wPc, wAi, wDeploys, wTerm;
     /** "racing" home widget (remaining 2026 F1 + MotoGP weekends, homeWidgets.racing, default off) and its
-     *  countdown in the bar (racing.bar, default: same as the widget). */
+     *  countdown in the bar (racing.bar; 2.15.1: off unless set, the panel has its own countdown). */
     final boolean wRacing, barRacing;
     /** omarchytv.json racing.timezone: the zone session times are shown in (default Asia/Bangkok). */
     final String racingTz;
@@ -850,7 +852,7 @@ final class LauncherConfig {
         wTerm = hw == null || hw.optBoolean("term", true);
         wRacing = hw != null && hw.optBoolean("racing", false);   // opt-in: a new widget never appears unasked
         JSONObject rc = j != null ? j.optJSONObject("racing") : null;
-        barRacing = rc != null && rc.has("bar") ? rc.optBoolean("bar") : wRacing;   // follows the widget unless set
+        barRacing = rc != null && rc.optBoolean("bar", false);   // 2.15.1: off unless asked (the countdown is in the panel now)
         racingTz = rc != null && !rc.optString("timezone", "").trim().isEmpty() ? rc.optString("timezone").trim() : "";   // 2.15: "" = the TV's own zone
         java.util.List<String> rs = new java.util.ArrayList<>();
         JSONArray rsa = rc != null ? rc.optJSONArray("series") : null;
@@ -860,6 +862,7 @@ final class LauncherConfig {
         }
         if (rsa == null) { rs.add(Racing.F1); rs.add(Racing.MOTOGP); }
         racingSeries = java.util.Collections.unmodifiableList(rs);
+        pulseRacing = ss != null && ss.has("racing") ? ss.optBoolean("racing") : wRacing;
         java.util.Map<String, int[]> ppos = new java.util.HashMap<>();
         JSONObject pj = j != null ? j.optJSONObject("panelPos") : null;
         if (pj != null) for (java.util.Iterator<String> it = pj.keys(); it.hasNext(); ) {

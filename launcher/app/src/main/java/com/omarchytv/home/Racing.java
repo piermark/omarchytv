@@ -193,6 +193,30 @@ final class Racing {
         return null;
     }
 
+    /**
+     * 2.15.1 Pulse's racing panel: for each followed series, the next session of its next weekend and that weekend's
+     * race, as [{series, code, name, start, end, day}] (seconds). The page sorts them and counts down.
+     */
+    static JSONArray pulseRows(Context c, List<String> series, long now) {
+        JSONArray out = new JSONArray();
+        try {
+            for (String id : series) {
+                List<Meeting> left = upcoming(meetings(c, id), now);
+                if (left.isEmpty()) continue;
+                Meeting m = left.get(0);
+                Session s = current(m, now), r = race(m);
+                String name = m.name.endsWith(" GP") ? m.name.substring(0, m.name.length() - 3) : m.name;
+                for (Session x : s == null || s == r ? new Session[]{r} : new Session[]{s, r}) {
+                    if (x == null || x.endOrDefault() <= now || out.length() >= 10) continue;
+                    out.put(new JSONObject().put("series", label(id)).put("code", x.code).put("name", name)
+                            .put("start", x.start / 1000).put("end", x.endOrDefault() / 1000).put("day", x.dateOnly));
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return out;
+    }
+
     /** What the bar counts down to: the running or next session across both series. */
     static final class Next {
         final String series;
