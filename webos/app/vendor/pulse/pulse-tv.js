@@ -58,6 +58,8 @@
     if (d && d.pulseTV === "pc" && d.state && d.state.v) { fromParent = d.state; fromParentAt = Date.now(); }
     if (d && d.pulseTV === "cfg") {
       if (Object.prototype.hasOwnProperty.call(d, "racing")) hubCfg.racing = d.racing;
+      if (Object.prototype.hasOwnProperty.call(d, "pulsePanels")) hubCfg.pulsePanels = d.pulsePanels;
+      if (Object.prototype.hasOwnProperty.call(d, "earthquakes")) hubCfg.earthquakes = d.earthquakes;
     }
   });
   function pc() {
@@ -100,7 +102,7 @@
     lat: cfg.lat, lon: cfg.lon, city: cfg.city || "", imperial: !!cfg.imperial, theme: cfg.theme, quality: quality, polish: polish, scenes: scenesOk,
     motion: cfg.motion, scene: cfg.scene || "sphere", clock: cfg.clock, launches: cfg.launches, planes: cfg.planes, starlink: cfg.starlink,
     planesNm: cfg.planesNm, earthquakes: cfg.earthquakes, opensky: !!cfg.opensky, openskyAuth: !!cfg.openskyAuth, racing: cfg.racing,
-    tv: tv, pc: pc
+    pulsePanels: cfg.pulsePanels, tv: tv, pc: pc
   };
   var hub = root.OmarchyPulseTV.create(hubCfg, net);
   root.__pulseTV = hub;

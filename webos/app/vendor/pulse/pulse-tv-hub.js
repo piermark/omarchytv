@@ -256,6 +256,17 @@
   var SCENES = { mars: 1, monolith: 1 };   // 2.15.1 Pulse 1.8's scenes in code: each runs in its own sandboxed frame
   var PLANES_NM = [25, 50, 100, 150, 200, 250];
   function planesNm(v) { v = Number(v); return PLANES_NM.indexOf(v) >= 0 ? v : 25; }
+
+  /** 2.15.1 which Pulse side panels to show (screensaver.pulsePanels). Missing keys are on.
+   *  screensaver.earthquakes: false is still honoured when pulsePanels.earthquakes is unset. */
+  var PULSE_PANELS = ["weather", "air", "system", "sky", "space", "launches", "planes", "earthquakes", "racing", "omarchy", "pc"];
+  function panelOn(cfg, id) {
+    var p = cfg && cfg.pulsePanels;
+    if (p && Object.prototype.hasOwnProperty.call(p, id) && p[id] === false) return false;
+    if (id === "earthquakes" && cfg && cfg.earthquakes === false) return false;
+    if (id === "planes" && cfg && cfg.planes === false) return false;
+    return true;
+  }
   /**
    * OpenSky's state vectors (its own receivers: where adsb.lol has few feeders, it can see several times more) in
    * adsb.lol's shape. Altitude m -> ft, speed m/s -> kt; `at` is when the position was seen.
@@ -591,21 +602,21 @@
 
     function start() {
       var E = cfg.every || {};
-      every(E.weather || 900000, weather);
+      if (panelOn(cfg, "weather")) every(E.weather || 900000, weather);
       every(E.night || 30000, night);
-      every(E.sky || 20000, sky);
-      if (cfg.opensky) every(E.opensky || (cfg.openskyAuth ? 60000 : 480000), opensky);
-      every(E.route || 4000, route);
+      if (panelOn(cfg, "planes")) every(E.sky || 20000, sky);
+      if (panelOn(cfg, "planes") && cfg.opensky) every(E.opensky || (cfg.openskyAuth ? 60000 : 480000), opensky);
+      if (panelOn(cfg, "planes")) every(E.route || 4000, route);
       every(E.iss || 5000, iss);
       every(E.kp || 900000, kp);
-      every(E.air || 1800000, airq);
-      if (cfg.earthquakes !== false) every(E.quakes || 900000, quakes);   // screensaver.earthquakes: false, no panel, no USGS fetch
-      every(E.omarchy || 6 * 3600000, omarchy);
-      every(E.launches || 900000, launches);   // the free API allows 15 calls an hour: 4 here
-      every(E.launchTick || 1000, launchTick);
+      if (panelOn(cfg, "air")) every(E.air || 1800000, airq);
+      if (panelOn(cfg, "earthquakes")) every(E.quakes || 900000, quakes);   // screensaver.earthquakes: false, no panel, no USGS fetch
+      if (panelOn(cfg, "omarchy")) every(E.omarchy || 6 * 3600000, omarchy);
+      if (panelOn(cfg, "launches") || panelOn(cfg, "space")) every(E.launches || 900000, launches);   // the free API allows 15 calls an hour: 4 here
+      if (panelOn(cfg, "launches") || panelOn(cfg, "space")) every(E.launchTick || 1000, launchTick);
       every(E.starlink || 6 * 3600000, starlinkFetch);
       every(E.starlinkTick || 5000, starlinkTick);
-      every(E.tv || 2000, tvNumbers);
+      if (panelOn(cfg, "system")) every(E.tv || 2000, tvNumbers);
       if (cfg.pc) every(E.pc || 2000, pcState);
     }
     function stop() { timers.forEach(clearInterval); timers = []; }
@@ -618,7 +629,7 @@
         face: "agents", agentsAs: "drones", banner: "OMARCHY TV · WE CAN FIX EVERYTHING", bannerEvery: 45, fireworks: true, infraWeather: true,
         wallpaper: null, musicCover: null, wled: false, tipsEvery: 40, ivy: false, secondary: "full", hackerStyle: "phosphor", nocHide: [],
         music: false, sun: true, polish: polish, quality: cfg.quality || "auto", sound: null, sphere: "real", cars: false, eyes: true };
-      var ls = S.launches.filter(function (x) { return x.net > t - 120; }).slice(0, 3);
+      var ls = panelOn(cfg, "launches") ? S.launches.filter(function (x) { return x.net > t - 120; }).slice(0, 3) : [];
       var widgets = ls.length ? [{ id: "launches", title: "launches", type: "list", slot: "ticker", order: 27, icon: "󱓞",
         data: { items: ls.map(function (x) { return { title: x.rocket + " · " + x.mission, text: countdown(x.net - t) + " · " + x.status, t: x.net }; }) } }] : [];
       widgets = widgets.concat(tvPanels(t));
@@ -632,15 +643,17 @@
       if (SCENES[ui.scene] && cfg.scenes === false) ui.scene = "sphere";   // a TV browser that can't frame a scene: the sphere
       var pc = S.pc;
       if (pc) {   // the PC knows everything the TV can't: its agents, workspaces, repos, panels... the TV keeps its own sky
-        ["agents", "focus", "git", "tower", "updates", "widgets", "alerts", "calendar", "meeting", "growth", "friends", "robots", "expiry",
+        ["agents", "focus", "git", "tower", "updates", "alerts", "calendar", "meeting", "growth", "friends", "robots", "expiry",
           "energy", "car", "music", "heart", "digest", "away", "privacy", "tips", "lan", "term", "noc", "bolts", "storms", "air", "eclipses", "season"].forEach(function (k) {
           if (pc[k] !== undefined && pc[k] !== null) st[k] = pc[k];
         });
-        var rp = pc.widgets ? racingPanel(t) : null;   // 2.15.1 the TV's own racing panel stays beside the PC's panels
+        var rp = (panelOn(cfg, "pc") && pc.widgets) ? racingPanel(t) : null;   // 2.15.1 the TV's own racing panel stays beside the PC's panels
         if (pc.sys) { st.sys = pc.sys; st.hist = pc.hist || st.hist; st.ui.system = true; st.ui.network = true; }
         // the PC's panels take the screen; of the TV's own only the launches stay (in the ticker)
-        if (pc.widgets) st.widgets = pc.widgets.concat(widgets.filter(function (x) { return x.id === "launches" && !pc.widgets.some(function (y) { return y.id === x.id; }); }));
-        if (rp) st.widgets.push(rp);
+        if (panelOn(cfg, "pc") && pc.widgets) {
+          st.widgets = pc.widgets.concat(widgets.filter(function (x) { return x.id === "launches" && !pc.widgets.some(function (y) { return y.id === x.id; }); }));
+          if (rp) st.widgets.push(rp);
+        }
         if (pc.theme && pc.theme.colors && Object.keys(pc.theme.colors).length) st.theme = pc.theme;   // the PC's colours: the same Pulse on both
         if (!S.air && pc.air) st.air = pc.air;
         if (pc.ui) ["face", "agentsAs", "ivy", "banner", "music", "cars"].forEach(function (k) { if (pc.ui[k] !== undefined) st.ui[k] = pc.ui[k]; });
@@ -651,6 +664,9 @@
         if (!(st.starlink.sats.length || st.starlink.next) && pc.starlink) st.starlink = pc.starlink;
         if (!st.space.launch && pc.space && pc.space.launch) st.space.launch = pc.space.launch;
       }
+      if (!panelOn(cfg, "weather")) st.weather = null;
+      if (!panelOn(cfg, "air")) st.air = null;
+      if (!panelOn(cfg, "system")) { st.sys = null; st.ui.system = false; st.ui.network = false; }
       if (SCENES[ui.scene]) { st.sceneTicket = "tv"; st.scene = sceneState(st, t); }   // 2.15.1 Pulse 1.8's scenes (mars, monolith)
       return st;
     }
@@ -679,6 +695,7 @@
         panels: panels, layout: { horizon: 0.745 } };
     }
     function racingPanel(t) {
+      if (!panelOn(cfg, "racing")) return null;
       var items = cfg.racing && cfg.racing.length ? racingItems(cfg.racing, t, 5) : [];
       return items.length ? { id: "tv-racing", title: "racing", type: "list", slot: "right", order: 21, icon: "󰄶", data: { items: items } } : null;
     }
@@ -691,7 +708,7 @@
         var up = (n.planets || []).filter(function (p) { return p.el > 5; }).map(function (p) { return p.n; });
         rows.push(["planets", up.length ? up.join(" · ") : "none up"]);
         if (n.shower) rows.push(["meteors", n.shower.name || n.shower.n || "shower"]);
-        out.push({ id: "tv-sky", title: "sky tonight", type: "kv", slot: "left", order: 30, icon: "", data: { rows: rows } });
+        if (panelOn(cfg, "sky")) out.push({ id: "tv-sky", title: "sky tonight", type: "kv", slot: "left", order: 30, icon: "", data: { rows: rows } });
       }
       var sp = [], is = S.space.iss;
       sp.push(["ISS", is ? (is.el < 3 ? "rising · " : "up · ") + compass(is.az) + (is.el >= 3 ? " " + Math.round(is.el) + "°" : "") : S.issNext ? "rises in " + Math.max(0, Math.round((S.issNext.start - t) / 60)) + " min" : "below the horizon"]);
@@ -700,13 +717,13 @@
       if (S.space.kp != null) sp.push(["aurora", "Kp " + S.space.kp + (S.space.kp >= 5 ? " · storm!" : S.space.kp >= 4 ? " · active" : " · quiet")]);
       var l0 = S.launches.filter(function (x) { return x.net > t - 120; })[0];
       if (l0) sp.push(["launch", l0.rocket + " · " + countdown(l0.net - t)]);
-      out.push({ id: "tv-space", title: "space", type: "kv", slot: "left", order: 31, icon: "󰑣", data: { rows: sp } });
-      if (reach === 25) {   // the planes in your sky
+      if (panelOn(cfg, "space")) out.push({ id: "tv-space", title: "space", type: "kv", slot: "left", order: 31, icon: "󰑣", data: { rows: sp } });
+      if (panelOn(cfg, "planes") && reach === 25) {   // the planes in your sky
         var pl = t - S.skyT < 120 ? S.sky : [];
         if (pl.length) out.push({ id: "tv-planes", title: "overhead", type: "list", slot: "right", order: 30, icon: "󰀝", data: { items: pl.slice(0, 4).map(function (p) {
           return { title: (p.flight || p.hex || "?") + (p.type ? " · " + p.type : ""), text: p.from && p.to ? p.from + " → " + p.to : p.airline || "", right: ftText(p.ft) };
         }) } });
-      } else if (hasLoc && cfg.planes !== false) {   // further out: the nearest five, the panel stays up
+      } else if (panelOn(cfg, "planes") && hasLoc && cfg.planes !== false) {   // further out: the nearest five, the panel stays up
         var fresh = S.skyT && t - S.skyT < 120, near = fresh ? S.near || [] : [];
         out.push({ id: "tv-planes", title: "planes · " + reach + " nm", type: "list", slot: "right", order: 30, icon: "󰀝", data: {
           items: near.map(function (p) {
@@ -714,10 +731,10 @@
             return { title: (p.flight || p.hex || p.id || "?") + (p.type ? " · " + p.type : ""), text: (where ? where + " · " : "") + p.nm + " nm", right: ftText(p.ft) };
           }), note: near.length ? "" : fresh ? "no planes within " + reach + " nm" : "looking for planes…" } });
       }
-      if (S.quakes.length) out.push({ id: "tv-quakes", title: "earthquakes", type: "list", slot: "right", order: 32, icon: "󰖟", data: { items: S.quakes.slice(0, 4) } });
+      if (panelOn(cfg, "earthquakes") && S.quakes.length) out.push({ id: "tv-quakes", title: "earthquakes", type: "list", slot: "right", order: 32, icon: "󰖟", data: { items: S.quakes.slice(0, 4) } });
       var rp = racingPanel(t);
       if (rp) out.push(rp);
-      if (S.omarchy.length) out.push({ id: "tv-omarchy", title: "omarchy", type: "list", slot: "right", order: 34, icon: "", data: { items: S.omarchy.slice(0, 3) } });
+      if (panelOn(cfg, "omarchy") && S.omarchy.length) out.push({ id: "tv-omarchy", title: "omarchy", type: "list", slot: "right", order: 34, icon: "", data: { items: S.omarchy.slice(0, 3) } });
       return out;
     }
     /**
@@ -766,6 +783,7 @@
   }
 
   root.OmarchyPulseTV = { create: create, airFrom: airFrom, quakesFrom: quakesFrom, nightSky: nightSky, altaz: altaz, lookAngles: lookAngles, satLook: satLook, starlinkGroups: starlinkGroups,
+    panelOn: panelOn, PULSE_PANELS: PULSE_PANELS,
     starlinkPasses: starlinkPasses, issAt: issAt, planesOver: planesOver, racingItems: racingItems, planesNm: planesNm, openskyStates: openskyStates, mergePlanes: mergePlanes, typeName: typeName, routeFits: routeFits, ftText: ftText, latestKp: latestKp, parseLaunch: parseLaunch, countdown: countdown,
     cityKey: cityKey, weatherFrom: weatherFrom, compass: compass, julian: julian, moonPhase: moonPhase, TIPS: TIPS,
     adaptPerf: adaptPerf, GFX_RUNGS: GFX_RUNGS };

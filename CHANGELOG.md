@@ -4,9 +4,10 @@
 
 ### Pulse 1.8 on the TV
 
-- **Pulse on the TV is Pulse 1.8** (Android TV, LG, Samsung): the city that looks like one (towers lit by the real Sun
-  and Moon, a far skyline, mist, reflections), rain with depth, planes with a tag you can read, a rocket and a
-  Starlink train you can recognise. `pulse.js` and `pulse.css` are Pulse 1.8's, unchanged.
+- **Pulse on the TV is Pulse 1.8** (Android TV, LG, Samsung): the same Pulse 1.8 as on the PC (`pulse.js` and
+  `pulse.css` are unchanged). The city that looks like one (towers lit by the real Sun and Moon, a far skyline,
+  mist, reflections), rain with depth, the 1.8 clouds, planes with a tag you can read, a rocket and a Starlink
+  train you can recognise.
 - **Graphics that fit the TV** (`screensaver.pulseGraphics`, Settings → Screensaver → Pulse graphics on Android):
   `auto` (default) starts at Pulse 1.8's look on the PC (the 1.8 polish, full pixels) on every TV, then measures
   frame time and steps down (half pixels, then the plain look) when frames are slow, and steps back up when there
@@ -14,6 +15,11 @@
   resolution, `medium` the 1.8 look at half resolution, `high` the 1.8 look at full resolution.
 - **The plane tag is Pulse 1.8's**: the card with the route line (FCO → JFK, city names, ft/kt) fills in as soon
   as the lookup returns, and the TV page loads the same Caskaydia Mono weights the tag uses (regular and bold).
+- **Pulse panels** (Android TV, LG, Samsung): Settings › Screensaver › Pulse panels turns each side panel on or off
+  (weather, air, TV stats, sky tonight, space, launches, planes, earthquakes, racing, omarchy, PC panels). All start
+  on, as before, except racing, which still follows the Home widget unless you set it. A panel you turn off frees
+  space for the others, so racing and earthquakes can both show when there is room. `screensaver.earthquakes: false`
+  still hides that panel (`screensaver.pulsePanels`).
 - **Two new scenes**: `mars` (a colony with its own sky: the dome is the TV or the paired PC, rovers for the PC's AI
   agents, launch pads for its repos) and `monolith`. Each runs in its own frame, as on the PC; on a TV browser too
   old for that, the sphere stays. On LG and Samsung the frame keeps the same origin as the app (a unique origin
@@ -32,7 +38,7 @@
   session and its countdown, each series on or off in Settings › Home widgets. A bundled snapshot of the F1 and
   MotoGP calendars is there when the TV cannot reach a source (read with XMLHttpRequest, so file:// works).
   The Home widget is one compact line per series (a short countdown such as 9d 02h) so it fits beside weather
-  at 1280×720 and 1366×768 without covering deploys. Pulse's racing side panel follows the Home widget and
+  at 1280×720 and 1366×768 without covering deploys, and on Android TV without covering the OMARCHY TV logo. Pulse's racing side panel follows the Home widget and
   the series picked there; on LG and Samsung the launcher hands those rows to the screensaver the same way
   Android does (and again by postMessage), because a file:// iframe can drop the URL hash.
 

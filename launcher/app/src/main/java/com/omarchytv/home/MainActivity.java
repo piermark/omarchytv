@@ -1802,6 +1802,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "arrange": return arrangePage();
             case "workspaces": return workspacesPage();
             case "screensaver": return screensaverPage();
+            case "pulse-panels": return pulsePanelsPage();
             case "hidden": return hiddenPage();
             case "link": return linkPage();
             case "ai": return aiPage();
@@ -3343,6 +3344,29 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         return String.format(java.util.Locale.getDefault(), "%.1f min", sec / 60f);
     }
 
+    private static final int[] PULSE_PANEL_LABELS = {
+            R.string.ss_pulse_panel_weather, R.string.ss_pulse_panel_air, R.string.ss_pulse_panel_system,
+            R.string.ss_pulse_panel_sky, R.string.ss_pulse_panel_space, R.string.ss_pulse_panel_launches,
+            R.string.ss_pulse_panel_planes, R.string.ss_pulse_panel_earthquakes, R.string.ss_pulse_panel_racing,
+            R.string.ss_pulse_panel_omarchy, R.string.ss_pulse_panel_pc
+    };
+
+    /** 2.15.1 Settings › Screensaver › Pulse panels: which side panels Pulse shows. */
+    private AsciiMenu.Page pulsePanelsPage() {
+        LauncherConfig cfg = LauncherConfig.get(this);
+        AsciiMenu.Page p = new AsciiMenu.Page(str(R.string.ss_pulse_panels));
+        for (int i = 0; i < LauncherConfig.PULSE_PANEL_IDS.length; i++) {
+            final String id = LauncherConfig.PULSE_PANEL_IDS[i];
+            final String label = str(PULSE_PANEL_LABELS[i]);
+            final boolean on = cfg.pulsePanel(id);
+            p.add(label, str(on ? R.string.on : R.string.off), r -> {
+                applyLive("pulse-panels", label, j -> LauncherConfig.putPulsePanel(screensaver(j), id, !on));
+                return true;
+            });
+        }
+        return p;
+    }
+
     private AsciiMenu.Page screensaverPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
         String[] logos = {"pulse", "aquarium", "aquarium-classic", "omarchy-tv", "omarchy", "cinemarchy", "original"};
@@ -3377,8 +3401,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             String lRace = str(R.string.ss_pulse_racing);   // 2.15.1: the race weekends as one of Pulse's side panels
             p.add(lRace, str(cfg.pulseRacing ? R.string.on : R.string.off), r -> {
                 boolean n = !cfg.pulseRacing;
-                applyLive("screensaver", lRace, j -> screensaver(j).put("racing", n));
+                applyLive("screensaver", lRace, j -> LauncherConfig.putPulsePanel(screensaver(j), "racing", n));
                 return true;
+            });
+            String lPanels = str(R.string.ss_pulse_panels);
+            p.add(lPanels, "›", r -> {
+                push(pulsePanelsPage());
+                return false;
             });
         }
         if (cfg.hasSsBefore) {   // v2.15: undo the one-time switch to Pulse

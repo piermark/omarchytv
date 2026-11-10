@@ -503,6 +503,9 @@ final class LauncherConfig {
     final boolean pulseQuakes, pulseOpensky;
     /** 2.15.1 Pulse's racing side panel (screensaver.racing; default: on when the Home racing widget is on). */
     final boolean pulseRacing;
+    /** 2.15.1 which Pulse side panels show (screensaver.pulsePanels). Missing keys are on. */
+    static final String[] PULSE_PANEL_IDS = {"weather", "air", "system", "sky", "space", "launches", "planes", "earthquakes", "racing", "omarchy", "pc"};
+    final java.util.Map<String, Boolean> pulsePanels;
     /** v2.15: Home says once that Pulse is the new screensaver; "Previous screensaver" can undo the switch. */
     final boolean pulseNotice, hasSsBefore;
     /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
@@ -818,7 +821,13 @@ final class LauncherConfig {
         pulseGraphics = Arrays.asList("low", "medium", "high").contains(pg) ? pg : "auto";
         int pnm = ss != null ? ss.optInt("planesNm", 25) : 25;
         pulsePlanesNm = pnm == 50 || pnm == 100 || pnm == 150 || pnm == 200 || pnm == 250 ? pnm : 25;
-        pulseQuakes = ss == null || ss.optBoolean("earthquakes", true);
+        org.json.JSONObject ppo = ss != null ? ss.optJSONObject("pulsePanels") : null;
+        java.util.Map<String, Boolean> pulsePanelMap = new java.util.HashMap<>();
+        for (String id : PULSE_PANEL_IDS) {
+            if (ppo != null && ppo.has(id)) pulsePanelMap.put(id, ppo.optBoolean(id, true));
+        }
+        pulsePanels = java.util.Collections.unmodifiableMap(pulsePanelMap);
+        pulseQuakes = pulsePanelMap.containsKey("earthquakes") ? pulsePanelMap.get("earthquakes") : (ss == null || ss.optBoolean("earthquakes", true));
         pulseOpensky = ss != null && ss.optBoolean("opensky", false);
         screensaverMode = ssMode;
         boolean defSsClock = c != null && c.getResources().getBoolean(R.bool.screensaver_clock);
@@ -866,7 +875,7 @@ final class LauncherConfig {
         }
         if (rsa == null) { rs.add(Racing.F1); rs.add(Racing.MOTOGP); }
         racingSeries = java.util.Collections.unmodifiableList(rs);
-        pulseRacing = ss != null && ss.has("racing") ? ss.optBoolean("racing") : wRacing;
+        pulseRacing = pulsePanelMap.containsKey("racing") ? pulsePanelMap.get("racing") : (ss != null && ss.has("racing") ? ss.optBoolean("racing") : wRacing);
         java.util.Map<String, int[]> ppos = new java.util.HashMap<>();
         JSONObject pj = j != null ? j.optJSONObject("panelPos") : null;
         if (pj != null) for (java.util.Iterator<String> it = pj.keys(); it.hasNext(); ) {
@@ -934,6 +943,31 @@ final class LauncherConfig {
         if (lv != null) lv.put("enabled", false);
         j.put("pulseDefault215", true);
         return true;
+    }
+
+    
+    /** A Pulse side panel is on unless screensaver.pulsePanels names it false. earthquakes still follows screensaver.earthquakes. */
+    boolean pulsePanel(String id) {
+        Boolean v = pulsePanels.get(id);
+        if (v != null) return v;
+        if ("earthquakes".equals(id)) return pulseQuakes;
+        if ("racing".equals(id)) return pulseRacing;
+        return true;
+    }
+
+    /** Write one Pulse panel toggle, keeping screensaver.earthquakes / screensaver.racing in step. */
+    static void putPulsePanel(org.json.JSONObject ss, String id, boolean on) throws org.json.JSONException {
+        org.json.JSONObject p = ss.optJSONObject("pulsePanels");
+        if (p == null) ss.put("pulsePanels", p = new org.json.JSONObject());
+        p.put(id, on);
+        if ("earthquakes".equals(id)) ss.put("earthquakes", on);
+        if ("racing".equals(id)) ss.put("racing", on);
+    }
+
+    static org.json.JSONObject pulsePanelsJson(LauncherConfig cfg) throws org.json.JSONException {
+        org.json.JSONObject o = new org.json.JSONObject();
+        for (String id : PULSE_PANEL_IDS) o.put(id, cfg.pulsePanel(id));
+        return o;
     }
 
     /** Settings › Screensaver › "Previous screensaver": back to what pulseDefault() replaced. */

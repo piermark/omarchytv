@@ -440,3 +440,62 @@ test("2.15.1 LG and Samsung: mars and monolith cycle again; the scene frame keep
     assert.ok(/no 2d context/.test(src), n + " stops if there is no canvas");
   }
 });
+
+test("2.15.1 screensaver.pulsePanels: each side panel can be switched off; earthquakes keeps its alias; the rest keep their space", async () => {
+  assert.deepStrictEqual(P.PULSE_PANELS, ["weather", "air", "system", "sky", "space", "launches", "planes", "earthquakes", "racing", "omarchy", "pc"]);
+  assert.strictEqual(P.panelOn({}, "weather"), true);
+  assert.strictEqual(P.panelOn({ earthquakes: false }, "earthquakes"), false);
+  assert.strictEqual(P.panelOn({ pulsePanels: { earthquakes: false }, earthquakes: true }, "earthquakes"), false);
+  assert.strictEqual(P.panelOn({ pulsePanels: { earthquakes: true }, earthquakes: false }, "earthquakes"), false, "either alias off hides it");
+
+  const t = { v: 1794268800 };
+  const racing = [{ series: "F1", code: "RACE", name: "Monza", start: t.v + 3600, end: t.v + 7200, day: false }];
+  const h = hubAt(t, { cfg: {
+    racing,
+    tv: () => ({ cpu: 12, ram: 40, rx: 1000, tx: 10, host: "TV" }),
+    pulsePanels: { weather: false, air: false, system: false, sky: false, space: false, launches: false, planes: false, omarchy: false, pc: false }
+  }, answers: {
+    "air-quality": { current: { european_aqi: 18 } },
+    "earthquake.usgs.gov": { features: [{ properties: { place: "Off the coast", mag: 5.1, time: 1794260000000 }, geometry: { coordinates: [10, 40] } }] },
+    "api.github.com": [{ tag_name: "v3.2.0", name: "Hyprland", published_at: "2026-11-01T10:00:00Z" }],
+    "adsb.lol": { ac: [{ hex: "abc123", flight: "AZ123 ", lat: 45.0, lon: 8.7, alt_baro: 34000, gs: 450, track: 150, t: "A20N" }] }
+  } });
+  h._tick.night(); h._tick.air(); h._tick.quakes(); h._tick.omarchy(); h._tick.sky(); h._tick.tv(); h._tick.weather && h._tick.weather();
+  await new Promise((r) => setImmediate(r));
+  const st = h.state();
+  const ids = st.widgets.map((w) => w.id);
+  assert.ok(ids.includes("tv-quakes"), "earthquakes stays when the others are off: " + ids);
+  assert.ok(ids.includes("tv-racing"), "racing stays when the others are off: " + ids);
+  assert.ok(!ids.includes("tv-sky") && !ids.includes("tv-space") && !ids.includes("tv-planes") && !ids.includes("tv-omarchy") && !ids.includes("launches"), ids.join());
+  assert.strictEqual(st.weather, null);
+  assert.strictEqual(st.air, null);
+  assert.strictEqual(st.sys, null);
+  assert.strictEqual(st.ui.system, false);
+
+  const pc = hubAt(t, { cfg: { pulsePanels: { pc: false }, pc: () => Promise.resolve({ v: "1.8.0", widgets: [{ id: "pc-svc", title: "svc", type: "status", slot: "right", order: 10, data: { rows: [{ name: "disk", level: "ok" }] } }] }) } });
+  pc._tick.pc();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(!pc.state().widgets.some((w) => w.id === "pc-svc"), "PC panels off: the PC's widgets stay off the screen");
+
+  let asked = [];
+  const net = (u) => { asked.push(u); return Promise.reject(new Error("offline")); };
+  const timers = [];
+  const real = global.setInterval;
+  global.setInterval = (f, ms) => { timers.push(f); return 0; };
+  try {
+    const off = P.create({ lat: 44.91, lon: 8.61, earthquakes: false }, net, () => t.v);
+    off.start(); timers.forEach((f) => f());
+    await new Promise((r) => setImmediate(r));
+    assert.ok(!asked.some((u) => u.indexOf("usgs") >= 0), "earthquakes alias: no USGS fetch");
+    off.stop();
+    asked = []; timers.length = 0;
+    const off2 = P.create({ lat: 44.91, lon: 8.61, pulsePanels: { earthquakes: false } }, net, () => t.v);
+    off2.start(); timers.forEach((f) => f());
+    await new Promise((r) => setImmediate(r));
+    assert.ok(!asked.some((u) => u.indexOf("usgs") >= 0), "pulsePanels.earthquakes false: no USGS fetch");
+    off2.stop();
+  } finally { global.setInterval = real; }
+
+  const bridge = fs.readFileSync(A + "pulse-tv.js", "utf8");
+  assert.ok(/pulsePanels: cfg\.pulsePanels/.test(bridge) && /hubCfg\.pulsePanels = d\.pulsePanels/.test(bridge), "the bridge passes pulsePanels on");
+});

@@ -166,7 +166,8 @@ final class PulseSaver {
                     .put("theme", new JSONObject().put("name", t.name).put("colors", colors))
                     .put("scene", cfg.pulseScene).put("quality", "auto")
                     .put("graphics", cfg.pulseGraphics).put("lowEnd", lowEnd(c));   // 2.15.1
-            o.put("planesNm", cfg.pulsePlanesNm).put("earthquakes", cfg.pulseQuakes).put("opensky", cfg.pulseOpensky);
+            o.put("planesNm", cfg.pulsePlanesNm).put("earthquakes", cfg.pulsePanel("earthquakes")).put("opensky", cfg.pulseOpensky);
+            o.put("pulsePanels", LauncherConfig.pulsePanelsJson(cfg));
             o.put("openskyAuth", cfg.pulseOpensky && openskyCreds(c) != null);   // signed in to OpenSky: read it every minute
             if (cfg.pulseRacing) o.put("racing", Racing.pulseRows(c, cfg.racingSeries, System.currentTimeMillis()));   // 2.15.1
             if (!Double.isNaN(cfg.weatherLat) && !Double.isNaN(cfg.weatherLon)) o.put("lat", cfg.weatherLat).put("lon", cfg.weatherLon);

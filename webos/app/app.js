@@ -1804,8 +1804,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         var sc = ["sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith"];
         cfg.pulseScene = sc[(sc.indexOf(cfg.pulseScene || "sphere") + 1) % sc.length]; saveCfg(); openSaverModal(true);
       } }, { label: "racing panel on Pulse", right: pulseRacingOn() ? "on" : "off", act: function () {
-        cfg.pulseRacing = !pulseRacingOn(); saveCfg(); racingKick(); openSaverModal(true);
-      } }] : []).concat(cfg.ssBefore215 ? [{ label: tr("ss_restore_previous"), right: "›", act: function () {
+        cfg.pulseRacing = !pulseRacingOn(); setPulsePanel("racing", pulseRacingOn()); saveCfg(); racingKick(); openSaverModal(true);
+      } }, { label: "Pulse panels", right: "›", act: function () { openPulsePanelsModal(); }
+      }] : []).concat(cfg.ssBefore215 ? [{ label: tr("ss_restore_previous"), right: "›", act: function () {
         var b = cfg.ssBefore215; cfg.saverMode = b.saverMode; cfg.saverArt = b.saverArt; cfg.living = !!b.living; delete cfg.ssBefore215; saveCfg(); openSaverModal(true);
       } }] : []).concat([
       { label: "tte.js speed", right: cfg.saverSpeed || "normal", act: function () {
@@ -2697,6 +2698,34 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return !!cfg.widgets.racing;
   }
   function racingWanted() { return !!cfg.widgets.racing || !!cfg.racingBar || pulseRacingOn(); }
+  var PULSE_PANEL_IDS = ["weather", "air", "system", "sky", "space", "launches", "planes", "earthquakes", "racing", "omarchy", "pc"];
+  var PULSE_PANEL_LABELS = { weather: "weather", air: "air", system: "TV stats", sky: "sky tonight", space: "space",
+    launches: "launches", planes: "planes", earthquakes: "earthquakes", racing: "racing", omarchy: "omarchy", pc: "PC panels" };
+  function pulsePanelOn(id) {
+    var p = cfg.pulsePanels;
+    if (p && Object.prototype.hasOwnProperty.call(p, id) && p[id] === false) return false;
+    if (id === "earthquakes" && cfg.earthquakes === false) return false;
+    if (id === "racing") return pulseRacingOn();
+    return true;
+  }
+  function setPulsePanel(id, on) {
+    if (!cfg.pulsePanels) cfg.pulsePanels = {};
+    cfg.pulsePanels[id] = !!on;
+    if (id === "earthquakes") cfg.earthquakes = !!on;
+    if (id === "racing") cfg.pulseRacing = !!on;
+  }
+  function pulsePanelsResolved() {
+    var o = {}, i;
+    for (i = 0; i < PULSE_PANEL_IDS.length; i++) o[PULSE_PANEL_IDS[i]] = pulsePanelOn(PULSE_PANEL_IDS[i]);
+    return o;
+  }
+  function openPulsePanelsModal() {
+    openModal("Pulse panels", "Which Pulse side panels show on the screensaver", PULSE_PANEL_IDS.map(function (id) {
+      return { label: PULSE_PANEL_LABELS[id], right: pulsePanelOn(id) ? "on" : "off", act: function () {
+        setPulsePanel(id, !pulsePanelOn(id)); saveCfg(); racingKick(); openPulsePanelsModal();
+      } };
+    }).concat([{ label: "Back", right: "‹", act: function () { openSaverModal(true); } }]));
+  }
   function racingRead(id) {
     try { var s = localStorage.getItem("omarchytv_racing_" + id); return s ? JSON.parse(s) : null; } catch (e) { return null; }
   }
@@ -2803,6 +2832,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var t = DATA.themes[cfg.theme] || {};
     var c = { city: cfg.weatherCity || "", imperial: cfg.tempUnit === "F", theme: { name: cfg.theme, colors: t }, scene: cfg.pulseScene || "sphere", graphics: cfg.pulseGraphics || "auto" };
     if (typeof cfg.weatherLat === "number" && typeof cfg.weatherLon === "number") { c.lat = cfg.weatherLat; c.lon = cfg.weatherLon; }
+    c.earthquakes = pulsePanelOn("earthquakes");
+    c.pulsePanels = pulsePanelsResolved();
     // screensaver.racing follows the Home widget unless set; the series are the ones picked on Home.
     if (pulseRacingOn() && window.OmarchyRacing) {
       var rows = window.OmarchyRacing.pulseRows(racingAll(Date.now()), racingSeries(), Date.now());
@@ -2818,7 +2849,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   // plus a postMessage once the frame is up (and again when the snapshot arrives).
   function pulsePush(fr) {
     if (!fr || !fr.contentWindow || cfg.living || cfg.saverMode !== "pulse") return;
-    try { fr.contentWindow.postMessage({ pulseTV: "cfg", racing: (pulseCfg().racing) || [] }, "*"); } catch (e) {}
+    try { var c = pulseCfg(); fr.contentWindow.postMessage({ pulseTV: "cfg", racing: c.racing || [], pulsePanels: c.pulsePanels, earthquakes: c.earthquakes }, "*"); } catch (e) {}
   }
   window.OmarchySaver.pulse = function () {
     try { return JSON.stringify(pulseCfg()); } catch (e) { return "{}"; }
