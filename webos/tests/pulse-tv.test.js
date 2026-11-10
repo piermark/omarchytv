@@ -249,3 +249,37 @@ test("fork: the planes panel looks 200 nm out, nearest five, low and far planes 
   assert.strictEqual(items[0].right, "3,000 ft");
   assert.strictEqual(items[4].text, "96 nm");
 });
+
+test("fork: OpenSky fills in the planes adsb.lol doesn't see, moved on to now, with their type from adsbdb", async () => {
+  // OpenSky state vectors: [icao24, callsign, country, time_position, last_contact, lon, lat, baro_alt_m, on_ground, velocity_ms, track, ...]
+  const os = P.openskyStates([["8851EC", "THA222  ", "Thailand", 1000, 1000, 8.61, 45.5, 10000, false, 250, 0],
+    ["abc123", "AZ123", "Italy", 1000, 1000, 8.7, 45.0, 10000, false, 200, 90],
+    ["gone", "OLD1", "X", 1, 1, 8.6, 45.1, 9000, false, 200, 0]]);
+  assert.strictEqual(os[0].hex, "8851ec");
+  assert.strictEqual(Math.round(os[0].alt), 32808, "m -> ft");
+  assert.strictEqual(Math.round(os[0].gs), 486, "m/s -> kt");
+  const m = P.mergePlanes([{ hex: "abc123", flight: "AZ123", lat: 45.0, lon: 8.7, alt: 34000, type: "A20N" }], os, 1000 + 600, { "8851ec": "A320" });
+  assert.deepStrictEqual(m.map((a) => a.hex), ["abc123", "8851ec"], "adsb.lol wins a plane both see; a 26-minute-old position is dropped");
+  assert.ok(Math.abs(m[1].lat - (45.5 + 486 * 600 / 3600 / 60)) < 0.01, "10 minutes on at 486 kt due north: " + m[1].lat);
+  assert.strictEqual(m[1].type, "A320");
+
+  const t = { v: 1794243552 };
+  const asked = [];
+  const answers = {
+    "opensky-network.org": { states: [["8851ec", "THA222  ", "Thailand", t.v - 60, t.v - 60, 8.61, 45.2, 10000, false, 230, 180]] },
+    "adsbdb.com/v0/aircraft/8851ec": { response: { aircraft: { icao_type: "B788" } } } };
+  const net = (u) => { asked.push(u); for (const k of Object.keys(answers)) if (u.indexOf(k) >= 0) return Promise.resolve(answers[k]); return Promise.reject(new Error("offline")); };
+  const h = P.create({ lat: 44.91, lon: 8.61, city: "Alessandria" }, net, () => t.v);
+  h._tick.sky(); h._tick.opensky();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(asked.some((u) => /opensky-network\.org\/api\/states\/all\?lamin=41\.58&lamax=48\.24&lomin=3\.90&lomax=13\.32/.test(u)), asked.join("\n"));
+  let items = h.state().widgets.find((w) => w.id === "tv-planes").data.items;
+  assert.strictEqual(items.length, 1, "adsb.lol offline: OpenSky's plane still shows");
+  assert.strictEqual(items[0].title, "THA222");
+  h._tick.route();   // no route to look up yet... THA222's route is queued first
+  h._tick.route();   // ...then its type
+  await new Promise((r) => setImmediate(r));
+  items = h.state().widgets.find((w) => w.id === "tv-planes").data.items;
+  assert.strictEqual(items[0].title, "THA222 · 787-8");
+  assert.strictEqual(items[0].right, "32,800 ft");
+});

@@ -42,7 +42,8 @@ final class PulseSaver {
     /** The only services the Pulse page may reach, through the launcher. */
     static final Set<String> HOSTS = new HashSet<>(Arrays.asList("api.open-meteo.com", "api.adsb.lol", "api.adsbdb.com",
             "api.wheretheiss.at", "services.swpc.noaa.gov", "ll.thespacedevs.com", "celestrak.org",
-            "air-quality-api.open-meteo.com", "earthquake.usgs.gov", "api.github.com"));
+            "air-quality-api.open-meteo.com", "earthquake.usgs.gov", "api.github.com",
+            "opensky-network.org"));   // fork: OpenSky, a second plane feed
     private static final int MAX_BYTES = 8 << 20;   // CelesTrak's last-30-days list is a few MB
 
     static boolean proxied(Uri u) {
