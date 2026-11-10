@@ -13,8 +13,9 @@
   frames take too long; `low` is the plain look at half resolution, `medium` the 1.8 look at half resolution, `high`
   the 1.8 look at full resolution.
 - **Two new scenes**: `mars` (a colony with its own sky: the dome is the TV or the paired PC, rovers for the PC's AI
-  agents, launch pads for its repos) and `monolith`, on Android TV. Each runs in its own sandboxed frame, as on the
-  PC. On LG and Samsung they are not offered yet (on LG they restarted the app): a saved one shows the sphere.
+  agents, launch pads for its repos) and `monolith`. Each runs in its own frame, as on the PC; on a TV browser too
+  old for that, the sphere stays. On LG and Samsung the frame keeps the same origin as the app (a unique origin
+  closed the app on LG), and they start light (a smaller canvas, fewer details, a cap on the frame rate).
 
 ### Racing
 

@@ -13,7 +13,10 @@ const P = require(V + "pulse-tv-hub.js");
 test("Pulse on the TV: one copy for LG/Samsung and Android, the TV's files in plain ES5", () => {
   const files = fs.readdirSync(V).sort();
   assert.deepStrictEqual(fs.readdirSync(A).sort(), files, "same files");
-  for (const f of files) assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f + " identical");
+  for (const f of files) {
+    if (f === "scene-mars.html" || f === "scene-monolith.html") continue;   // TV copies start light so they don't restart LG
+    assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f + " identical");
+  }
   for (const f of ["index.html", "pulse.js", "pulse.css", "pulse-tv-data.js", "pulse-tv-hub.js", "pulse-tv.js", "pulse-tv-moments.js"]) assert.ok(files.includes(f), f);
   for (const f of ["pulse-tv-hub.js", "pulse-tv.js", "pulse-tv-moments.js"]) {   // webOS 4 runs Chromium 53
     const src = fs.readFileSync(V + f, "utf8").replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -371,20 +374,32 @@ test("2.15.1 Pulse 1.8 on the TV: its look, its scenes in their own frames, and 
   assert.ok(/gfx === "low" \|\| gfx === "medium" \? "half" : gfx === "high" \? "full"/.test(tvjs) && /slowRuns >= 3/.test(tvjs));
 });
 
-test("2.15.1 LG and Samsung: no mars or monolith (a scene's frame restarted the app on LG), the sphere instead", () => {
+test("2.15.1 LG and Samsung: mars and monolith cycle again; the scene frame keeps the same origin as the app", () => {
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8"), tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
-  // the menu row, run for real: from a saved mars or monolith the next press gives skyline (after the sphere they count as)
-  const line = app.split("\n").find(l => /var sc = \["sphere"/.test(l));
-  assert.ok(line && !/\/\//.test(line), "no comment on the line that changes the scene");
-  const LG = eval("(" + /var LG_SCENES = (\{[^}]*\})/.exec(app)[1] + ")");
-  const step = (scene) => { const cfg = { pulseScene: scene }; let saved = 0; new Function("cfg", "LG_SCENES", "saveCfg", "openSaverModal", line)(cfg, LG, () => saved++, () => {}); return [cfg.pulseScene, saved]; };
-  assert.deepStrictEqual(step("monolith"), ["skyline", 1]);
-  assert.deepStrictEqual(step("mars"), ["skyline", 1]);
+  const lines = app.split("\n");
+  const i = lines.findIndex(l => /var sc = \["sphere"/.test(l));
+  assert.ok(i >= 0 && /"mars"/.test(lines[i]) && /"monolith"/.test(lines[i]), "the row lists mars and monolith");
+  assert.ok(!/\/\//.test(lines[i]) && !/\/\//.test(lines[i + 1]), "no comment on the lines that change the scene");
+  const body = lines[i] + "\n" + lines[i + 1];
+  const step = (scene) => { const cfg = { pulseScene: scene }; let saved = 0; new Function("cfg", "saveCfg", "openSaverModal", body)(cfg, () => saved++, () => {}); return [cfg.pulseScene, saved]; };
+  assert.deepStrictEqual(step("noir"), ["mars", 1]);
+  assert.deepStrictEqual(step("mars"), ["monolith", 1]);
+  assert.deepStrictEqual(step("monolith"), ["sphere", 1]);
   assert.deepStrictEqual(step("sphere"), ["skyline", 1]);
-  assert.deepStrictEqual(step("noir"), ["sphere", 1]);
-  assert.deepStrictEqual(["sphere", "skyline", "orbit", "calm", "hacker", "noir"].reduce((a) => [...a, step(a[a.length - 1])[0]], ["sphere"]).slice(1),
-    ["skyline", "orbit", "calm", "hacker", "noir", "sphere"], "every scene in turn, then back to the sphere");
-  assert.ok(/right: LG_SCENES\[cfg\.pulseScene\] \? cfg\.pulseScene : "sphere"/.test(app), "the menu shows sphere for a saved mars");
-  assert.ok(/scene: LG_SCENES\[cfg\.pulseScene\] \? cfg\.pulseScene : "sphere", scenes: false/.test(app), "a saved mars falls back to the sphere");
-  assert.ok(/if \(cfg\.scenes !== false\) try \{/.test(tvjs), "no frame is redirected when the host says no scenes");
+  assert.deepStrictEqual(["sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith"].reduce((a) => [...a, step(a[a.length - 1])[0]], ["sphere"]).slice(1),
+    ["skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith", "sphere"], "every scene in turn, then back to the sphere");
+  assert.ok(/right: cfg\.pulseScene \|\| "sphere"/.test(app), "the menu shows the saved scene");
+  assert.ok(/scene: cfg\.pulseScene \|\| "sphere"/.test(app) && !/scenes: false/.test(app), "the TV opens the saved scene, including mars and monolith");
+  assert.ok(/if \(cfg\.scenes !== false\) try \{/.test(tvjs), "a scene's frame is rewritten to the page beside this one");
+  assert.ok(/allow-scripts allow-same-origin/.test(tvjs) && /setAttribute/.test(tvjs) && /!host/.test(tvjs),
+    "on LG/Samsung the scene frame keeps the same origin as the app (a unique origin closed the app)");
+  assert.ok(/cfg\.scene === "mars" \|\| cfg\.scene === "monolith"/.test(tvjs) && /quality = "half"/.test(tvjs), "the parent Pulse canvas stays at half for those scenes");
+  for (const n of ["mars", "monolith"]) {
+    const page = fs.readFileSync(V + "scene-" + n + ".html", "utf8");
+    const src = page.replace(/\/\/.*$/gm, "");
+    assert.ok(/this\.q = 0;/.test(src), n + " starts light");
+    assert.ok(/1280/.test(src) && /Math\.min\(1, window\.devicePixelRatio/.test(src), n + " caps the backing store");
+    assert.ok(/Math\.min\(15, \+m\.fps \|\| 15\)/.test(src), n + " caps the frame rate");
+    assert.ok(/no 2d context/.test(src), n + " stops if there is no canvas");
+  }
 });

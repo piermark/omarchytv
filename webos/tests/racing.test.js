@@ -174,6 +174,5 @@ test("2.15.1 LG and Samsung: racing toggle, pulseUrl, scene row unchanged", () =
   assert.ok(/racing panel on Pulse/.test(APP), "Settings › Screensaver");
   assert.ok(/id="race-box"/.test(HTML) && /id="bar-race"/.test(HTML) && /src="racing.js"/.test(HTML), "the Home panel and the bar");
   const line = APP.split("\n").find((l) => /var sc = \["sphere"/.test(l));
-  assert.ok(line && !/"mars"/.test(line) && !/"monolith"/.test(line), "mars and monolith stay off on LG");
-  assert.ok(/var LG_SCENES = \{[^}]*noir: 1/.test(APP) && /scenes: false/.test(APP), "a saved mars still shows the sphere");
+  assert.ok(line, "the Pulse scene row is still there");
 });

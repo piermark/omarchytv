@@ -67,10 +67,22 @@
   var gfx = { low: 1, medium: 1, high: 1 }[cfg.graphics] ? cfg.graphics : "auto";
   var polish = gfx === "auto" ? !(cfg.lowEnd || oldEngine) : gfx !== "low";
   var quality = gfx === "low" || gfx === "medium" ? "half" : gfx === "high" ? "full" : cfg.quality || "auto";
+  if (!host && (cfg.scene === "mars" || cfg.scene === "monolith")) quality = "half";   // coded scenes: never a full-res parent + high scene together
   // Pulse 1.8's scenes in code (mars, monolith) run in a sandboxed frame that pulse.js asks its hub for (/scene/NAME);
   // on the TV that frame is a page beside this one. Where the browser can't redirect it, the sphere stays.
   var scenesOk = false;
-  if (cfg.scenes !== false) try {   // 2.15.1: LG and Samsung say scenes: false (a scene's frame restarted the app on LG)
+  if (cfg.scenes !== false) try {   // rewrite /scene/NAME to the page beside this one (or the frame can navigate the app)
+    // LG/Samsung only: pulse.js sets sandbox="allow-scripts" and not allow-same-origin. On file:// that makes an
+    // opaque origin ("://") and webOS Chromium's renderer dies (Inspector.detached, target_closed). Keep
+    // allow-scripts and add allow-same-origin so the scene stays file:// like this page; do not add
+    // allow-top-navigation. Android has OmarchySaver (host) and is left alone.
+    if (!host && HTMLIFrameElement && HTMLIFrameElement.prototype.setAttribute) {
+      var setAttr = HTMLIFrameElement.prototype.setAttribute;
+      HTMLIFrameElement.prototype.setAttribute = function (name, value) {
+        if (String(name).toLowerCase() === "sandbox") value = "allow-scripts allow-same-origin";
+        return setAttr.call(this, name, value);
+      };
+    }
     var ifd = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, "src");
     if (ifd && ifd.set && ifd.configurable) {
       Object.defineProperty(HTMLIFrameElement.prototype, "src", { configurable: true, enumerable: ifd.enumerable, get: ifd.get,
