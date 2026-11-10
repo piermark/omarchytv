@@ -373,7 +373,18 @@ test("2.15.1 Pulse 1.8 on the TV: its look, its scenes in their own frames, and 
 
 test("2.15.1 LG and Samsung: no mars or monolith (a scene's frame restarted the app on LG), the sphere instead", () => {
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8"), tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
-  assert.ok(/var sc = \["sphere", "skyline", "orbit", "calm", "hacker", "noir"\];/.test(app), "the scenes menu");
+  // the menu row, run for real: from a saved mars or monolith the next press gives skyline (after the sphere they count as)
+  const line = app.split("\n").find(l => /var sc = \["sphere"/.test(l));
+  assert.ok(line && !/\/\//.test(line), "no comment on the line that changes the scene");
+  const LG = eval("(" + /var LG_SCENES = (\{[^}]*\})/.exec(app)[1] + ")");
+  const step = (scene) => { const cfg = { pulseScene: scene }; let saved = 0; new Function("cfg", "LG_SCENES", "saveCfg", "openSaverModal", line)(cfg, LG, () => saved++, () => {}); return [cfg.pulseScene, saved]; };
+  assert.deepStrictEqual(step("monolith"), ["skyline", 1]);
+  assert.deepStrictEqual(step("mars"), ["skyline", 1]);
+  assert.deepStrictEqual(step("sphere"), ["skyline", 1]);
+  assert.deepStrictEqual(step("noir"), ["sphere", 1]);
+  assert.deepStrictEqual(["sphere", "skyline", "orbit", "calm", "hacker", "noir"].reduce((a) => [...a, step(a[a.length - 1])[0]], ["sphere"]).slice(1),
+    ["skyline", "orbit", "calm", "hacker", "noir", "sphere"], "every scene in turn, then back to the sphere");
+  assert.ok(/right: LG_SCENES\[cfg\.pulseScene\] \? cfg\.pulseScene : "sphere"/.test(app), "the menu shows sphere for a saved mars");
   assert.ok(/scene: LG_SCENES\[cfg\.pulseScene\] \? cfg\.pulseScene : "sphere", scenes: false/.test(app), "a saved mars falls back to the sphere");
   assert.ok(/if \(cfg\.scenes !== false\) try \{/.test(tvjs), "no frame is redirected when the host says no scenes");
 });

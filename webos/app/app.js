@@ -1776,8 +1776,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         else if (cfg.saverArt !== "cinemarchy") { cfg.saverArt = "cinemarchy"; cfg.saverMode = "logo"; }
         else { cfg.saverArt = "pulse"; cfg.saverMode = "pulse"; }
         saveCfg(); openSaverModal(true);
-      } }].concat(cfg.saverMode === "pulse" ? [{ label: tr("ss_pulse_scene"), right: cfg.pulseScene || "sphere", act: function () {
-        var sc = ["sphere", "skyline", "orbit", "calm", "hacker", "noir"];   // 2.15.1: mars and monolith are Android TV only for now (they restarted the app on LG) cfg.pulseScene = sc[(sc.indexOf(cfg.pulseScene || "sphere") + 1) % sc.length]; saveCfg(); openSaverModal(true);
+      } }].concat(cfg.saverMode === "pulse" ? [{ label: tr("ss_pulse_scene"), right: LG_SCENES[cfg.pulseScene] ? cfg.pulseScene : "sphere", act: function () {
+        // 2.15.1: mars and monolith are Android TV only for now (they restarted the app on LG); a saved one counts as the sphere
+        var sc = ["sphere", "skyline", "orbit", "calm", "hacker", "noir"], cur = LG_SCENES[cfg.pulseScene] ? cfg.pulseScene : "sphere"; cfg.pulseScene = sc[(sc.indexOf(cur) + 1) % sc.length]; saveCfg(); openSaverModal(true);
       } }] : []).concat(cfg.ssBefore215 ? [{ label: tr("ss_restore_previous"), right: "›", act: function () {
         var b = cfg.ssBefore215; cfg.saverMode = b.saverMode; cfg.saverArt = b.saverArt; cfg.living = !!b.living; delete cfg.ssBefore215; saveCfg(); openSaverModal(true);
       } }] : []).concat([
