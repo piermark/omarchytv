@@ -1,7 +1,9 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),os=require('os'),path=require('path'),cp=require('child_process');
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
-test('production supervisor survives more than five crashes, keeps one instance, and stops its child',async()=>{
+// The supervisor takes its single-instance lock with flock (util-linux): on webOS and Linux, not on macOS.
+const noFlock=cp.spawnSync('sh',['-c','command -v flock']).status!==0&&'flock is not installed (util-linux; not on macOS)';
+test('production supervisor survives more than five crashes, keeps one instance, and stops its child',{skip:noFlock},async()=>{
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'remote-supervisor-'));fs.mkdirSync(root+'/app');
  // Adapt the executable path and shorten retry waits; exercise the real supervisor loop.
  let script=fs.readFileSync(require.resolve('../iphone-remote/start'),'utf8').replace('/usr/bin/node',"'"+process.execPath.replace(/'/g,"'\\''")+"'");
