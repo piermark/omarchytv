@@ -1,4 +1,4 @@
-// OmarchyTV 2.15: Pulse on the TV (vendor/pulse): Pulse 1.6's page with the TV's own hub.
+// OmarchyTV 2.15: Pulse on the TV (vendor/pulse): Pulse's own page (1.8 since 2.15.1) with the TV's own hub.
 const test = require("node:test");
 const assert = require("node:assert");
 const fs = require("fs");
@@ -13,7 +13,9 @@ const P = require(V + "pulse-tv-hub.js");
 test("Pulse on the TV: one copy for LG/Samsung and Android, the TV's files in plain ES5", () => {
   const files = fs.readdirSync(V).sort();
   assert.deepStrictEqual(fs.readdirSync(A).sort(), files, "same files");
-  for (const f of files) assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f + " identical");
+  for (const f of files) {
+    assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f + " identical");
+  }
   for (const f of ["index.html", "pulse.js", "pulse.css", "pulse-tv-data.js", "pulse-tv-hub.js", "pulse-tv.js", "pulse-tv-moments.js"]) assert.ok(files.includes(f), f);
   for (const f of ["pulse-tv-hub.js", "pulse-tv.js", "pulse-tv-moments.js"]) {   // webOS 4 runs Chromium 53
     const src = fs.readFileSync(V + f, "utf8").replace(/\/\/.*$/gm, "").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -23,6 +25,12 @@ test("Pulse on the TV: one copy for LG/Samsung and Android, the TV's files in pl
   const order = ["pulse-tv-data.js", "pulse-tv-hub.js", "pulse-tv.js", "pulse.js", "pulse-tv-moments.js"].map((s) => html.indexOf('src="' + s + '"'));
   assert.ok(order.every((i, k) => i > 0 && (k === 0 || i > order[k - 1])), "the TV's hub loads before pulse.js, the moments after");
   assert.ok(/CaskaydiaMonoNerdFontMono-Regular\.ttf[\s\S]*caskaydia_mono_regular\.ttf/.test(html), "the bundled font on both platforms");
+  assert.ok(/font-weight:\s*700/.test(html) && /caskaydia_mono_bold\.ttf/.test(html), "the 1.8 tag's bold weight is loaded");
+  const fontsWeb = path.join(__dirname, "../app/vendor/fonts/");
+  const fontsAnd = path.join(__dirname, "../../launcher/app/src/main/assets/fonts/");
+  for (const f of ["CaskaydiaMonoNerdFontMono-Regular.ttf", "caskaydia_mono_bold.ttf"]) {
+    assert.ok(fs.existsSync(fontsWeb + f) && fs.existsSync(fontsAnd + f), f + " on both platforms");
+  }
 });
 
 test("the TV's sky: the Sun, the Moon, the planets and the stars from the PC hub's formulas", () => {
@@ -50,6 +58,12 @@ test("planes, launches and the Kp index read like the hub's", () => {
   assert.strictEqual(pl[0].flight, "AZ123");
   assert.strictEqual(pl[0].type, "A320");
   assert.ok(pl[0].el > 10);
+  // a plane that already has a route keeps it for the 1.8 tag (and kt can come as kt)
+  const tagged = P.planesOver(44.91, 8.61, [{ hex: "abc123", flight: "AZ123", lat: 45.0, lon: 8.7, alt: 34000, gs: 450, track: 90, type: "A320",
+    from: "MXP", to: "FCO", fromCity: "Milan", toCity: "Rome" }])[0];
+  assert.deepStrictEqual([tagged.from, tagged.to, tagged.fromCity, tagged.toCity, tagged.kt], ["MXP", "FCO", "Milan", "Rome", 450]);
+  const byKt = P.planesOver(44.91, 8.61, [{ hex: "abc123", flight: "AZ123", lat: 45.0, lon: 8.7, alt: 34000, kt: 420, track: 90, type: "A320" }])[0];
+  assert.strictEqual(byKt.kt, 420);
   const L = P.parseLaunch({ id: "x", name: "Falcon 9 Block 5 | Starlink 12-9", net: "2026-11-10T03:00:00Z", status: { abbrev: "Go" } });
   assert.deepStrictEqual([L.rocket, L.mission, L.status], ["Falcon 9", "Starlink 12-9", "Go"]);
   assert.strictEqual(P.countdown(3725), "T-1h 02m");
@@ -71,7 +85,7 @@ test("the state the page reads: TV only, then with the PC's Pulse on top", async
   const h = hubAt(t, { cfg: { tv: () => ({ cpu: 12, ram: 40, rx: 1000, tx: 10, host: "TV" }) } });
   h._tick.tv(); h._tick.night();
   let st = h.state();
-  assert.strictEqual(st.v, "1.6.0-tv");
+  assert.strictEqual(st.v, "1.8.0-tv");
   assert.strictEqual(st.ui.scene, "sphere", "the sphere is the default scene");
   assert.strictEqual(st.ui.skyline, "alessandria");
   assert.strictEqual(st.ui.system, true);
@@ -155,7 +169,7 @@ test("the page's bridge: /api/state and /api/live answered on the TV, nothing re
   assert.ok(/d\.pulseTV === "pc"/.test(src), "LG/Samsung post the PC's Pulse into the frame");
   assert.ok(/host\.pcPulse/.test(src) && /host\.tvStats/.test(src) && /host\.pulse\(\)/.test(src), "Android's OmarchySaver bridge");
   const pj = fs.readFileSync(V + "pulse.js", "utf8");
-  assert.ok(/getJSON\("\/api\/state"\)/.test(pj) && /new EventSource\("\/api\/live/.test(pj), "pulse.js as Pulse 1.6 ships it");
+  assert.ok(/getJSON\("\/api\/state"\)/.test(pj) && /new EventSource\("\/api\/live/.test(pj), "pulse.js as Pulse ships it");
 });
 
 test("the TV's own panels with no PC: the sky, space, planes, the air, earthquakes, Omarchy; the PC's panels and colours when paired", async () => {
@@ -216,6 +230,8 @@ test("planes: real altitude in the panel, plain type names, and a stale route is
   await new Promise((r) => setImmediate(r));
   h._tick.route(); h._tick.route();
   await new Promise((r) => setImmediate(r));
+  const mid = h.state().sky.find((p) => p.flight === "AZ123");
+  assert.deepStrictEqual([mid.from, mid.to, mid.fromCity, mid.toCity], ["MXP", "FCO", "Milan", "Rome"], "the 1.8 tag gets the route as soon as adsbdb answers");
   h._tick.sky();
   await new Promise((r) => setImmediate(r));
   const sky = h.state().sky;
@@ -321,4 +337,165 @@ test("defaults are unchanged: 25 nm overhead, earthquakes on, no OpenSky; the se
     assert.ok(asked.some((u) => u.indexOf("usgs") >= 0), "earthquakes on by default");
     on.stop();
   } finally { global.setInterval = real; }
+});
+
+test("2.15.1 screensaver.racing: the next sessions as a side panel, soonest first, live and day-only ones said plainly", () => {
+  const net = () => Promise.resolve(null), t = 1000000;
+  const racing = [
+    { series: "MotoGP", code: "RACE", name: "Valencia", start: t + 3 * 86400 + 3600, end: t + 3 * 86400 + 7200, day: false },
+    { series: "F1", code: "FP3", name: "São Paulo", start: t - 600, end: t + 3000, day: false },
+    { series: "Formula E", code: "RACE", name: "Tokyo", start: t + 5 * 86400, end: t + 6 * 86400, day: true },
+    { series: "WEC", code: "RACE", name: "Bahrain", start: t - 90000, end: t - 80000, day: false },
+    { series: "F1", code: "QUALI", name: "São Paulo", start: t + 4 * 3600 + 125, end: t + 5 * 3600, day: false }
+  ];
+  const items = P.racingItems(racing, t, 5);
+  assert.deepStrictEqual(items.map(i => [i.title, i.text, i.right]), [
+    ["F1 · fp3", "São Paulo", "● live"], ["F1 · quali", "São Paulo", "4h 02m"],
+    ["MotoGP · race", "Valencia", "3d 1h"], ["Formula E · race", "Tokyo", "in 5d"]]);
+  const panel = cfg => P.create(Object.assign({ lat: 44.91, lon: 8.61 }, cfg), net, () => t).state().widgets.filter(w => w.id === "tv-racing");
+  assert.strictEqual(panel({ racing }).length, 1);
+  assert.strictEqual(panel({ racing })[0].slot, "right");
+  assert.strictEqual(panel({}).length, 0);                       // off, or LG/Samsung: no panel
+  assert.strictEqual(panel({ racing: [racing[3]] }).length, 0);   // nothing left to race: no empty panel
+});
+
+test("2.15.1 Pulse 1.8 on the TV: its look, its scenes in their own frames, and graphics that fit the TV", () => {
+  const net = () => Promise.resolve(null), mk = cfg => P.create(Object.assign({ lat: 44.91, lon: 8.61 }, cfg), net, () => 1000000);
+  const pj = fs.readFileSync(V + "pulse.js", "utf8");
+  assert.ok(/function polished\(\)/.test(pj) && /drawLiftoffsFine/.test(pj) && /drawStarlinkFine/.test(pj), "pulse.js is 1.8");
+  // the look: on by default, off when asked, and it can be dropped while running
+  assert.strictEqual(mk({}).state().ui.polish, true);
+  assert.strictEqual(mk({ polish: false }).state().ui.polish, false);
+  const h = mk({}); h.setPolish(false); assert.strictEqual(h.state().ui.polish, false);
+  // the scenes: a ticket and a read-only state for mars and monolith, nothing for the built-in ones
+  let st = mk({ scene: "mars" }).state();
+  assert.strictEqual(st.ui.scene, "mars"); assert.strictEqual(st.sceneTicket, "tv");
+  assert.deepStrictEqual(Object.keys(st.scene).sort(), ["agents", "away", "demo", "events", "focus", "git", "layout", "meeting", "music", "panels", "privacy", "season", "space", "sys", "t", "theme", "time", "ui", "v", "weather"]);
+  assert.ok(!("lat" in st.scene) && !/44\.91|8\.61|Alessandria/.test(JSON.stringify(st.scene)), "a scene never gets the place");
+  st = mk({ scene: "sphere" }).state(); assert.strictEqual(st.sceneTicket, ""); assert.strictEqual(st.scene, null);
+  assert.strictEqual(mk({ scene: "mars", scenes: false }).state().ui.scene, "sphere");   // an old TV browser: the sphere
+  // the pages of the two scenes: the runtime and the scene, nothing else, no network
+  for (const n of ["mars", "monolith"]) {
+    const page = fs.readFileSync(V + "scene-" + n + ".html", "utf8");
+    assert.ok(!/src=|href=|url\(/.test(page), "one page, nothing beside it (a sandboxed frame can't load it on LG and Samsung)");
+    const src = page.replace(/\/\/.*$/gm, "");
+    assert.ok(/window\.PulseScene = /.test(src) && new RegExp('PulseScene\\.register\\("' + n + '"').test(src), n + ": the runtime and the scene");
+    assert.ok(!/=>|\blet\s|\bconst\s|`|fetch\(|XMLHttpRequest/.test(src), n + " is ES5 and offline");
+  }
+  // graphics: the bridge maps the setting; auto starts at Pulse 1.8 and walks the ladder from /api/perf
+  const tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
+  assert.ok(/gfx === "low" \|\| gfx === "medium" \? "half" : gfx === "high" \? "full"/.test(tvjs));
+  assert.ok(/polish = gfx !== "low"/.test(tvjs) && !/oldEngine/.test(tvjs), "auto starts at the 1.8 look, no browser guess");
+  assert.ok(/OmarchyPulseTV\.adaptPerf/.test(tvjs) && /applyRung/.test(tvjs));
+  // the ladder: start at polish+auto, down after 3 slow reports, up after 6 with headroom
+  let s = { rung: 0, slow: 0, fast: 0 };
+  for (let i = 0; i < 2; i++) s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "");
+  s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "down");
+  assert.deepStrictEqual(s.level, { polish: true, quality: "half" });
+  for (let i = 0; i < 3; i++) s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "down");
+  assert.deepStrictEqual(s.level, { polish: false, quality: "half" });
+  s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "", "already at the bottom");
+  for (let i = 0; i < 5; i++) s = P.adaptPerf(s, { draw: 8, fps: 58, want: 60 });
+  assert.strictEqual(s.changed, "");
+  s = P.adaptPerf(s, { draw: 8, fps: 58, want: 60 });
+  assert.strictEqual(s.changed, "up");
+  assert.deepStrictEqual(s.level, { polish: true, quality: "half" });
+  h.setQuality("half");
+  assert.strictEqual(h.quality(), "half");
+});
+
+test("2.15.1 LG and Samsung: mars and monolith cycle again; the scene frame keeps the same origin as the app", () => {
+  const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8"), tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
+  const lines = app.split("\n");
+  const i = lines.findIndex(l => /var sc = \["sphere"/.test(l));
+  assert.ok(i >= 0 && /"mars"/.test(lines[i]) && /"monolith"/.test(lines[i]), "the row lists mars and monolith");
+  assert.ok(!/\/\//.test(lines[i]) && !/\/\//.test(lines[i + 1]), "no comment on the lines that change the scene");
+  const body = lines[i] + "\n" + lines[i + 1];
+  const step = (scene) => { const cfg = { pulseScene: scene }; let saved = 0; new Function("cfg", "saveCfg", "openSaverModal", body)(cfg, () => saved++, () => {}); return [cfg.pulseScene, saved]; };
+  assert.deepStrictEqual(step("noir"), ["mars", 1]);
+  assert.deepStrictEqual(step("mars"), ["monolith", 1]);
+  assert.deepStrictEqual(step("monolith"), ["sphere", 1]);
+  assert.deepStrictEqual(step("sphere"), ["skyline", 1]);
+  assert.deepStrictEqual(["sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith"].reduce((a) => [...a, step(a[a.length - 1])[0]], ["sphere"]).slice(1),
+    ["skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith", "sphere"], "every scene in turn, then back to the sphere");
+  assert.ok(/right: cfg\.pulseScene \|\| "sphere"/.test(app), "the menu shows the saved scene");
+  assert.ok(/scene: cfg\.pulseScene \|\| "sphere"/.test(app) && !/scenes: false/.test(app), "the TV opens the saved scene, including mars and monolith");
+  assert.ok(/if \(cfg\.scenes !== false\) try \{/.test(tvjs), "a scene's frame is rewritten to the page beside this one");
+  assert.ok(/allow-scripts allow-same-origin/.test(tvjs) && /setAttribute/.test(tvjs) && /!ownHost/.test(tvjs),
+    "on LG/Samsung the scene frame keeps the same origin as the app (a unique origin closed the app)");
+  assert.ok(!/if \(!host && \(cfg\.scene === "mars"/.test(tvjs), "the parent Pulse canvas is not forced to half for mars or monolith");
+  for (const n of ["mars", "monolith"]) {
+    const page = fs.readFileSync(V + "scene-" + n + ".html", "utf8");
+    const src = page.replace(/\/\/.*$/gm, "");
+    assert.ok(/this\.q = 2;/.test(src), n + " starts at Android quality");
+    assert.ok(/Math\.min\(2, window\.devicePixelRatio/.test(src) && /backing = 1/.test(src) && /fpsCap = 60/.test(src),
+      n + " starts at Pulse 1.8's backing and frame rate");
+    assert.ok(!/Math\.min\(1\.5, window\.devicePixelRatio/.test(src) && !/innerWidth \* r > 1920/.test(src), n + " has no fixed TV cap");
+    assert.ok(/Math\.min\(fpsCap, \+m\.fps \|\| 20\)/.test(src), n + " the frame rate follows the adaptive cap");
+    assert.ok(/slowRuns >= 3/.test(src) && /fastRuns >= 6/.test(src), n + " steps down and back up");
+    assert.ok(/no 2d context/.test(src), n + " stops if there is no canvas");
+  }
+});
+
+test("2.15.1 screensaver.pulsePanels: each side panel can be switched off; earthquakes keeps its alias; the rest keep their space", async () => {
+  assert.deepStrictEqual(P.PULSE_PANELS, ["weather", "air", "system", "sky", "space", "launches", "planes", "earthquakes", "racing", "omarchy", "pc"]);
+  assert.strictEqual(P.panelOn({}, "weather"), true);
+  assert.strictEqual(P.panelOn({ earthquakes: false }, "earthquakes"), false);
+  assert.strictEqual(P.panelOn({ pulsePanels: { earthquakes: false }, earthquakes: true }, "earthquakes"), false);
+  assert.strictEqual(P.panelOn({ pulsePanels: { earthquakes: true }, earthquakes: false }, "earthquakes"), false, "either alias off hides it");
+
+  const t = { v: 1794268800 };
+  const racing = [{ series: "F1", code: "RACE", name: "Monza", start: t.v + 3600, end: t.v + 7200, day: false }];
+  const h = hubAt(t, { cfg: {
+    racing,
+    tv: () => ({ cpu: 12, ram: 40, rx: 1000, tx: 10, host: "TV" }),
+    pulsePanels: { weather: false, air: false, system: false, sky: false, space: false, launches: false, planes: false, omarchy: false, pc: false }
+  }, answers: {
+    "air-quality": { current: { european_aqi: 18 } },
+    "earthquake.usgs.gov": { features: [{ properties: { place: "Off the coast", mag: 5.1, time: 1794260000000 }, geometry: { coordinates: [10, 40] } }] },
+    "api.github.com": [{ tag_name: "v3.2.0", name: "Hyprland", published_at: "2026-11-01T10:00:00Z" }],
+    "adsb.lol": { ac: [{ hex: "abc123", flight: "AZ123 ", lat: 45.0, lon: 8.7, alt_baro: 34000, gs: 450, track: 150, t: "A20N" }] }
+  } });
+  h._tick.night(); h._tick.air(); h._tick.quakes(); h._tick.omarchy(); h._tick.sky(); h._tick.tv(); h._tick.weather && h._tick.weather();
+  await new Promise((r) => setImmediate(r));
+  const st = h.state();
+  const ids = st.widgets.map((w) => w.id);
+  assert.ok(ids.includes("tv-quakes"), "earthquakes stays when the others are off: " + ids);
+  assert.ok(ids.includes("tv-racing"), "racing stays when the others are off: " + ids);
+  assert.ok(!ids.includes("tv-sky") && !ids.includes("tv-space") && !ids.includes("tv-planes") && !ids.includes("tv-omarchy") && !ids.includes("launches"), ids.join());
+  assert.strictEqual(st.weather, null);
+  assert.strictEqual(st.air, null);
+  assert.strictEqual(st.sys, null);
+  assert.strictEqual(st.ui.system, false);
+
+  const pc = hubAt(t, { cfg: { pulsePanels: { pc: false }, pc: () => Promise.resolve({ v: "1.8.0", widgets: [{ id: "pc-svc", title: "svc", type: "status", slot: "right", order: 10, data: { rows: [{ name: "disk", level: "ok" }] } }] }) } });
+  pc._tick.pc();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(!pc.state().widgets.some((w) => w.id === "pc-svc"), "PC panels off: the PC's widgets stay off the screen");
+
+  let asked = [];
+  const net = (u) => { asked.push(u); return Promise.reject(new Error("offline")); };
+  const timers = [];
+  const real = global.setInterval;
+  global.setInterval = (f, ms) => { timers.push(f); return 0; };
+  try {
+    const off = P.create({ lat: 44.91, lon: 8.61, earthquakes: false }, net, () => t.v);
+    off.start(); timers.forEach((f) => f());
+    await new Promise((r) => setImmediate(r));
+    assert.ok(!asked.some((u) => u.indexOf("usgs") >= 0), "earthquakes alias: no USGS fetch");
+    off.stop();
+    asked = []; timers.length = 0;
+    const off2 = P.create({ lat: 44.91, lon: 8.61, pulsePanels: { earthquakes: false } }, net, () => t.v);
+    off2.start(); timers.forEach((f) => f());
+    await new Promise((r) => setImmediate(r));
+    assert.ok(!asked.some((u) => u.indexOf("usgs") >= 0), "pulsePanels.earthquakes false: no USGS fetch");
+    off2.stop();
+  } finally { global.setInterval = real; }
+
+  const bridge = fs.readFileSync(A + "pulse-tv.js", "utf8");
+  assert.ok(/pulsePanels: cfg\.pulsePanels/.test(bridge) && /hubCfg\.pulsePanels = d\.pulsePanels/.test(bridge), "the bridge passes pulsePanels on");
 });

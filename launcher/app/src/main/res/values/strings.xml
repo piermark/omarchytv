@@ -363,6 +363,20 @@
     <string name="v210_w_deploys">─ deploys · pc ─</string>
     <string name="w_racing" translatable="false">─ racing · f1 · motogp ─</string>
     <string name="w_racing_bar" translatable="false">racing countdown in the bar</string>
+    <string name="ss_pulse_graphics" translatable="false">Pulse graphics</string>
+    <string name="ss_pulse_racing" translatable="false">racing panel on Pulse</string>
+    <string name="ss_pulse_panels" translatable="false">Pulse panels</string>
+    <string name="ss_pulse_panel_weather" translatable="false">weather</string>
+    <string name="ss_pulse_panel_air" translatable="false">air</string>
+    <string name="ss_pulse_panel_system" translatable="false">TV stats</string>
+    <string name="ss_pulse_panel_sky" translatable="false">sky tonight</string>
+    <string name="ss_pulse_panel_space" translatable="false">space</string>
+    <string name="ss_pulse_panel_launches" translatable="false">launches</string>
+    <string name="ss_pulse_panel_planes" translatable="false">planes</string>
+    <string name="ss_pulse_panel_earthquakes" translatable="false">earthquakes</string>
+    <string name="ss_pulse_panel_racing" translatable="false">racing</string>
+    <string name="ss_pulse_panel_omarchy" translatable="false">omarchy</string>
+    <string name="ss_pulse_panel_pc" translatable="false">PC panels</string>
     <string name="v210_cast">Send to TV (cast)</string>
     <string name="wp_next">Next background</string>
     <string name="v210_w_term">─ terminal · logo ─</string>

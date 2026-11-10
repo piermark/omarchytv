@@ -164,13 +164,28 @@ final class PulseSaver {
             }
             JSONObject o = new JSONObject().put("city", cfg.weatherPlace).put("imperial", cfg.tempF)
                     .put("theme", new JSONObject().put("name", t.name).put("colors", colors))
-                    .put("scene", cfg.pulseScene).put("quality", "auto");
-            o.put("planesNm", cfg.pulsePlanesNm).put("earthquakes", cfg.pulseQuakes).put("opensky", cfg.pulseOpensky);
+                    .put("scene", cfg.pulseScene).put("quality", "auto")
+                    .put("graphics", cfg.pulseGraphics).put("lowEnd", lowEnd(c));   // 2.15.1
+            o.put("planesNm", cfg.pulsePlanesNm).put("earthquakes", cfg.pulsePanel("earthquakes")).put("opensky", cfg.pulseOpensky);
+            o.put("pulsePanels", LauncherConfig.pulsePanelsJson(cfg));
             o.put("openskyAuth", cfg.pulseOpensky && openskyCreds(c) != null);   // signed in to OpenSky: read it every minute
+            if (cfg.pulseRacing) o.put("racing", Racing.pulseRows(c, cfg.racingSeries, System.currentTimeMillis()));   // 2.15.1
             if (!Double.isNaN(cfg.weatherLat) && !Double.isNaN(cfg.weatherLon)) o.put("lat", cfg.weatherLat).put("lon", cfg.weatherLon);
             return o.toString();
         } catch (Exception e) {
             return "{}";
+        }
+    }
+
+    /** 2.15.1 a small TV (low-RAM flag, under 1.7 GB, or fewer than four cores). Still sent in the Pulse config for diagnostics; auto no longer starts the plain look from this flag. */
+    static boolean lowEnd(Context c) {
+        try {
+            android.app.ActivityManager am = (android.app.ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+            android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
+            return am.isLowRamDevice() || mi.totalMem < 1700L * 1024 * 1024 || Runtime.getRuntime().availableProcessors() < 4;
+        } catch (Exception e) {
+            return false;
         }
     }
 

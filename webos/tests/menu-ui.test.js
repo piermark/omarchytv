@@ -8,7 +8,7 @@ const vm = require("vm");
 
 const APP = path.join(__dirname, "../app");
 // Load optional source modules when testing an integration, without requiring them upstream.
-const SRC = ["data.js", "theme.js", "homeprofile.js", "tui.js", "app.js"]
+const SRC = ["data.js", "theme.js", "homeprofile.js", "tui.js", "racing.js", "app.js"]
   .filter((f) => fs.existsSync(path.join(APP, f)))
   .map((f) => [f, fs.readFileSync(path.join(APP, f), "utf8")]);
 

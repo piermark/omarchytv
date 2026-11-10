@@ -40,4 +40,25 @@ public class AppSizeTest {
         }
         assertEquals(282, HomeV29.tileW(inner, gap, 6));   // unchanged v2.9 size at the default
     }
+
+    /** Racing takes a fixed-width slot in the remaining space; the row must not overlap the 32+640 term box. */
+    @Test
+    public void racingSlotFitsBesideTheTermBox() {
+        int termRight = HomeV29.HOME_MARGIN + HomeV29.TERM_W;
+        assertEquals(672, termRight);
+        assertEquals(1120, HomeV29.widgetsWidth(false));
+        assertEquals(1200, HomeV29.widgetsWidth(true));
+        assertEquals(268, HomeV29.raceColWidth());
+        assertEquals(768, HomeV29.widgetsLeft(false));
+        assertEquals(688, HomeV29.widgetsLeft(true));
+        assertTrue("racing-off row stays right of the term box", HomeV29.widgetsLeft(false) >= termRight);
+        assertTrue("racing-on row stays right of the term box", HomeV29.widgetsLeft(true) >= termRight + HomeV29.WIDGET_GAP);
+        int gap = HomeV29.WIDGET_GAP;
+        int sum = HomeV29.raceColWidth() + HomeV29.weatherColWidth(true) + 2 * HomeV29.sideColWidth(true) + 3 * gap;
+        assertEquals("four columns fill the 1200 row", 1200, sum);
+        assertEquals(HomeV29.sideColWidth(true) + 80, HomeV29.weatherColWidth(true));
+        // racing off: weather still has the extra 80, pc/ai stay at the original column
+        assertEquals((1120 - 32) / 3, HomeV29.sideColWidth(false));
+        assertEquals((1120 - 32) / 3 + 80, HomeV29.weatherColWidth(false));
+    }
 }

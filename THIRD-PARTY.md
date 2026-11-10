@@ -114,7 +114,7 @@ from the user's Omarchy install (not redistributed). If published, the plugin mu
 ## 7d. Pulse on the TV (2.15)
 | Item | Author | Source | Licence | Notes |
 |---|---|---|---|---|
-| Omarchy Pulse 1.6 page (`pulse.js`, `pulse.css`, `index.html`, `omarchy.png`) in `webos/app/vendor/pulse/` and `assets/pulse/` | Marco Porro | https://github.com/piermark/omarchy-pulse-theme | MIT | Unchanged except `index.html` (the bundled font, the TV scripts). |
+| Omarchy Pulse 1.8 page (`pulse.js`, `pulse.css`, `index.html`, `omarchy.png`; the scenes `mars` and `monolith` with the scene runtime in `scene-*.html`) in `webos/app/vendor/pulse/` and `assets/pulse/` | Marco Porro | https://github.com/piermark/omarchy-pulse-theme | MIT | Unchanged except `index.html` (the bundled font, the TV scripts). |
 | Sky tables in `pulse-tv-data.js` (bright stars, constellation lines, meteor showers, JPL approximate planet elements) | Omarchy Pulse; elements from E. M. Standish (JPL), "Keplerian Elements for Approximate Positions of the Major Planets" | `tools/pulse-tv-data.py` reads them from omarchy-pulse | MIT (tables); public-domain science | |
 | Planes over the TV | adsb.lol (Android, read through the launcher), adsbdb.com (routes) | https://api.adsb.lol, https://api.adsbdb.com | adsb.lol data ODbL 1.0 | Read live, kept in memory only; nothing stored or redistributed. |
 | Planes, second feed (opt-in: `screensaver.opensky`) | The OpenSky Network (Android, read through the launcher; optional sign-in with the owner's own API client) | https://opensky-network.org/api, https://auth.opensky-network.org | OpenSky Network terms of use (non-commercial use) | Off by default. Read live, kept in memory only; nothing stored or redistributed. |

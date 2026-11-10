@@ -1,6 +1,55 @@
 # Changelog
 
-## [2.15.0] — unreleased (`versionCode 27`; webOS 2.15.0, Tizen 2.15.0, PC plugins 2.15.0)
+## [2.15.1] — 2026-11-11 (`versionCode 28`; webOS 2.15.1, Tizen 2.15.1, PC plugins 2.15.1)
+
+### Pulse 1.8 on the TV
+
+- **Pulse on the TV is Pulse 1.8** (Android TV, LG, Samsung): the same Pulse 1.8 as on the PC (`pulse.js` and
+  `pulse.css` are unchanged). The city that looks like one (towers lit by the real Sun and Moon, a far skyline,
+  mist, reflections), rain with depth, the 1.8 clouds, planes with a tag you can read, a rocket and a Starlink
+  train you can recognise.
+- **Graphics that fit the TV** (`screensaver.pulseGraphics`, Settings → Screensaver → Pulse graphics on Android):
+  `auto` (default) starts at Pulse 1.8's look on the PC (the 1.8 polish, full pixels) on every TV, then measures
+  frame time and steps down (half pixels, then the plain look) when frames are slow, and steps back up when there
+  is headroom; it no longer guesses from the browser version or a low-RAM flag. `low` is the plain look at half
+  resolution, `medium` the 1.8 look at half resolution, `high` the 1.8 look at full resolution.
+- **The plane tag is Pulse 1.8's**: the card with the route line (FCO → JFK, city names, ft/kt) fills in as soon
+  as the lookup returns, and the TV page loads the same Caskaydia Mono weights the tag uses (regular and bold).
+- **Pulse panels** (Android TV, LG, Samsung): Settings › Screensaver › Pulse panels turns each side panel on or off
+  (weather, air, TV stats, sky tonight, space, launches, planes, earthquakes, racing, omarchy, PC panels). All start
+  on, as before, except racing, which still follows the Home widget unless you set it. A panel you turn off frees
+  space for the others, so racing and earthquakes can both show when there is room. `screensaver.earthquakes: false`
+  still hides that panel (`screensaver.pulsePanels`).
+- **Two new scenes**: `mars` (a colony with its own sky: the dome is the TV or the paired PC, rovers for the PC's AI
+  agents, launch pads for its repos) and `monolith`. Each runs in its own frame, as on the PC; on a TV browser too
+  old for that, the sphere stays. On LG and Samsung the frame keeps the same origin as the app (a unique origin
+  closed the app on LG). They start at Pulse 1.8's quality on the PC (up to 2×dpr, 60 fps) and drop on their own
+  if frames are slow (and climb back). A canvas that cannot be allocated is retried at a smaller backing store.
+
+### Racing
+
+- **The countdown moved into the panel**: the racing panel on Home now starts with the next session of any series you
+  follow and its countdown. The bar no longer shows it unless you ask (`"racing": {"bar": true}`; Settings → Widgets).
+- **Racing on Pulse** (Android TV, LG, Samsung): a `racing` side panel in the screensaver, the next sessions soonest
+  first, each with its countdown, `● live` while it runs (`screensaver.racing`; on when the Home racing widget is on;
+  Settings → Screensaver → racing panel on Pulse).
+- **Racing on LG and Samsung** (Grant Charge's calendars, #123): the Home widget is the same one as on Android TV —
+  the race weekends you follow (F1, MotoGP, Moto2, Moto3, NASCAR Cup, O'Reilly and Trucks, Formula E, WEC), the next
+  session and its countdown, each series on or off in Settings › Home widgets. A bundled snapshot of the F1 and
+  MotoGP calendars is there when the TV cannot reach a source (read with XMLHttpRequest, so file:// works).
+  The Home widget is one compact line per series (a short countdown such as 9d 02h) so it fits beside weather
+  at 1280×720 and 1366×768 without covering deploys, and on Android TV without covering the OMARCHY TV logo. Pulse's racing side panel follows the Home widget and
+  the series picked there; on LG and Samsung the launcher hands those rows to the screensaver the same way
+  Android does (and again by postMessage), because a file:// iframe can drop the URL hash.
+
+### From the community
+
+- **Planes** (Grant Charge, #136, #139): the planes panel shows the altitude, plain type names (737 MAX 8, A320neo),
+  no stale routes; `screensaver.planesNm` looks further out (up to 250 nm, the nearest five); `screensaver.earthquakes:
+  false` removes that panel; `screensaver.opensky` adds OpenSky as a second, opt-in plane feed.
+- Tests: the iPhone remote supervisor test is skipped where `flock` is missing (Grant Charge, #138).
+
+## [2.15.0] — 2026-11-09 (`versionCode 27`; webOS 2.15.0, Tizen 2.15.0, PC plugins 2.15.0)
 
 ### Omarchy Pulse on the TV, the new screensaver
 

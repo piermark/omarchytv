@@ -104,9 +104,12 @@ to keep only the bar version.
 ### Racing: F1 and MotoGP 2026
 
 `"homeWidgets": {"racing": true}` (default off; also Settings → Widgets) adds a `racing` panel as the first column of
-the top widget row, left of weather. It lists the race weekends that are not over yet for the series you follow, each
-with its race day and time, plus the next (or running) session of the current weekend. The bar then shows a countdown
-to the next session of any of them, ticking every second (`"racing": {"bar": false}` hides it; Settings → Widgets too).
+the top widget row, left of weather. On LG and Samsung the same widget lives in the shared web app (`racing.js`;
+Settings → Home widgets), off until you ask (`widgets.racing`). It lists the race weekends that are not over yet for the series you follow, each
+with its race day and time, plus the next (or running) session of the current weekend. Since 2.15.1 the panel starts
+with the next session of any of them and its countdown, ticking every second; the same countdown in the bar is off
+unless you ask (`"racing": {"bar": true}`; Settings → Widgets too). `"screensaver": {"racing": true}` shows the
+next sessions as a side panel of the Pulse screensaver (default: the same as the Home widget; Settings → Screensaver).
 
 ```json
 "homeWidgets": { "racing": true },
@@ -126,7 +129,8 @@ to the next session of any of them, ticking every second (`"racing": {"bar": fal
 With one or two series every weekend left is listed; with more, the next two (or the next one past four series) of
 each, so they all fit in the column. Times are 24 h in `racing.timezone` (any tz id, default: the TV's own time
 zone); Formula E shows just the day. `assets/racing_2026.json` is a snapshot of the F1 and MotoGP calendars, so the
-panel works offline; refresh it with `python3 tools/racing_calendar.py`. Live data is fetched on a background thread
+panel works offline; refresh it with `python3 tools/racing_calendar.py`. The webOS/Tizen package copies that file
+beside the page (`racing_2026.json`). Live data is fetched on a background thread
 every 6 h, hourly when a session starts within 48 h; MotoGP and NASCAR move on to next year's season by themselves
 once this one is over. IndyCar, WorldSBK and WRC aren't in the list yet: their official sites have no calendar a TV
 can read reliably.
@@ -161,6 +165,26 @@ tools/venv/bin/python -I tools/tv.py 'settings put system screen_off_timeout 900
 
 Or pick "OmarchyTV" in Settings → Device Preferences → Screen saver. Clock: `.ClockDream`.
 Logo (`logo` in config / JSON, used by home and screensaver): `omarchy-tv` (default: Omarchy's logo.txt + a matching pixel "TV"), `omarchy` (logo.txt unchanged), `original` (OmarchyTV's own block font, no Omarchy artwork - use this, `wallpaper: procedural` and `omarchy_icon=false` for a public build without Omarchy branding).
+
+### Pulse: scenes and graphics (2.15.1)
+
+```json
+"screensaver": { "pulseScene": "mars", "pulseGraphics": "auto" }
+```
+
+- `pulseScene`: `sphere` (default), `skyline`, `orbit`, `calm`, `hacker`, `noir`, and Pulse 1.8's `mars` and `monolith`.
+  On LG and Samsung the scene frame keeps the same origin as the app (a unique origin closed the app on LG).
+  Those two start at Pulse 1.8's quality on the PC (up to 2×dpr, 60 fps) and drop on their own if frames are slow
+  (and climb back).
+- `pulseGraphics`: `auto` (default), `low`, `medium`, `high`. `auto` starts at Pulse 1.8's look (polish on, full
+  pixels) and walks a short quality ladder from measured frame time (down after three slow reports, up after six
+  fast). It does not start plain from a low-RAM flag or an old browser. `low`: the plain look, half resolution.
+  `medium`: the 1.8 look, half resolution. `high`: the 1.8 look, full resolution. An Android TV draws its
+  interface at 1080p even on a 4K panel, so "full" is 1080p there.
+- The scenes' pages (`scene-mars.html`, `scene-monolith.html`) are written by `python3 tools/pulse-tv-scenes.py
+  /path/to/omarchy-pulse-theme`. The TV copies start at Pulse 1.8's defaults, adapt backing and fps from frame
+  time, and stop if there is no 2d context; regenerating the pages writes the PC runtime again, and the 2d-context
+  guard and the adaptive ladder would need to be put back.
 
 ### Pulse: planes and earthquakes (config only, Android)
 
