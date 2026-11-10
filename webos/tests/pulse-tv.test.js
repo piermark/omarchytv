@@ -370,3 +370,10 @@ test("2.15.1 Pulse 1.8 on the TV: its look, its scenes in their own frames, and 
   const tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
   assert.ok(/gfx === "low" \|\| gfx === "medium" \? "half" : gfx === "high" \? "full"/.test(tvjs) && /slowRuns >= 3/.test(tvjs));
 });
+
+test("2.15.1 LG and Samsung: no mars or monolith (a scene's frame restarted the app on LG), the sphere instead", () => {
+  const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8"), tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
+  assert.ok(/var sc = \["sphere", "skyline", "orbit", "calm", "hacker", "noir"\];/.test(app), "the scenes menu");
+  assert.ok(/scene: LG_SCENES\[cfg\.pulseScene\] \? cfg\.pulseScene : "sphere", scenes: false/.test(app), "a saved mars falls back to the sphere");
+  assert.ok(/if \(cfg\.scenes !== false\) try \{/.test(tvjs), "no frame is redirected when the host says no scenes");
+});

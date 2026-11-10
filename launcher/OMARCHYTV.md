@@ -170,7 +170,8 @@ Logo (`logo` in config / JSON, used by home and screensaver): `omarchy-tv` (defa
 "screensaver": { "pulseScene": "mars", "pulseGraphics": "auto" }
 ```
 
-- `pulseScene`: `sphere` (default), `skyline`, `orbit`, `calm`, `hacker`, `noir`, and Pulse 1.8's `mars` and `monolith`.
+- `pulseScene`: `sphere` (default), `skyline`, `orbit`, `calm`, `hacker`, `noir`, and Pulse 1.8's `mars` and `monolith`
+  (Android TV only for now; LG and Samsung show the sphere instead).
 - `pulseGraphics`: `auto` (default), `low`, `medium`, `high`. `auto` gives Pulse 1.8's look unless the TV is a small
   one (low-RAM flag, under 1.7 GB, fewer than four cores, or an old browser), lets Pulse choose its resolution and
   drops to the plain look by itself when frames take too long. `low`: the plain look, half resolution. `medium`: the

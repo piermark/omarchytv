@@ -1777,7 +1777,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         else { cfg.saverArt = "pulse"; cfg.saverMode = "pulse"; }
         saveCfg(); openSaverModal(true);
       } }].concat(cfg.saverMode === "pulse" ? [{ label: tr("ss_pulse_scene"), right: cfg.pulseScene || "sphere", act: function () {
-        var sc = ["sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith"]; cfg.pulseScene = sc[(sc.indexOf(cfg.pulseScene || "sphere") + 1) % sc.length]; saveCfg(); openSaverModal(true);
+        var sc = ["sphere", "skyline", "orbit", "calm", "hacker", "noir"];   // 2.15.1: mars and monolith are Android TV only for now (they restarted the app on LG) cfg.pulseScene = sc[(sc.indexOf(cfg.pulseScene || "sphere") + 1) % sc.length]; saveCfg(); openSaverModal(true);
       } }] : []).concat(cfg.ssBefore215 ? [{ label: tr("ss_restore_previous"), right: "›", act: function () {
         var b = cfg.ssBefore215; cfg.saverMode = b.saverMode; cfg.saverArt = b.saverArt; cfg.living = !!b.living; delete cfg.ssBefore215; saveCfg(); openSaverModal(true);
       } }] : []).concat([
@@ -2648,9 +2648,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   // ---- v2.15 Pulse screensaver: Pulse's own page (1.8 since 2.15.1) (vendor/pulse), the TV's hub inside it, the PC's state on top ----
+  var LG_SCENES = { sphere: 1, skyline: 1, orbit: 1, calm: 1, hacker: 1, noir: 1 };   // the scenes LG and Samsung run
   function pulseUrl() {
     var t = DATA.themes[cfg.theme] || {};
-    var c = { city: cfg.weatherCity || "", imperial: cfg.tempUnit === "F", theme: { name: cfg.theme, colors: t }, scene: cfg.pulseScene || "sphere", graphics: cfg.pulseGraphics || "auto" };
+    var c = { city: cfg.weatherCity || "", imperial: cfg.tempUnit === "F", theme: { name: cfg.theme, colors: t }, scene: LG_SCENES[cfg.pulseScene] ? cfg.pulseScene : "sphere", scenes: false, graphics: cfg.pulseGraphics || "auto" };
     if (typeof cfg.weatherLat === "number" && typeof cfg.weatherLon === "number") { c.lat = cfg.weatherLat; c.lon = cfg.weatherLon; }
     return "vendor/pulse/index.html#cfg=" + encodeURIComponent(JSON.stringify(c));
   }

@@ -70,7 +70,7 @@
   // Pulse 1.8's scenes in code (mars, monolith) run in a sandboxed frame that pulse.js asks its hub for (/scene/NAME);
   // on the TV that frame is a page beside this one. Where the browser can't redirect it, the sphere stays.
   var scenesOk = false;
-  try {
+  if (cfg.scenes !== false) try {   // 2.15.1: LG and Samsung say scenes: false (a scene's frame restarted the app on LG)
     var ifd = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, "src");
     if (ifd && ifd.set && ifd.configurable) {
       Object.defineProperty(HTMLIFrameElement.prototype, "src", { configurable: true, enumerable: ifd.enumerable, get: ifd.get,
