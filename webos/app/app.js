@@ -2741,7 +2741,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       var s = R.current(m, now);
       if (!s || (s === R.race(m) && !s.live(now))) continue;
       var live = s.live(now);
-      html += raceRowHtml("  " + (live ? "● live " : "▸ ") + String(s.code).toLowerCase(),
+      html += raceRowHtml("\u00a0\u00a0" + (live ? "● live " : "▸ ") + String(s.code).toLowerCase(),
         live ? "until " + R.when(s.endOrDefault(), tz).replace(/.* /, "") : R.when(s.start, tz),
         live ? "var(--t-green)" : "var(--t-accent2)", live ? "var(--t-green)" : "var(--t-fg)");
     }
@@ -2755,7 +2755,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var tz = R.zone(cfg.racingTz || "");
     if (legend) legend.textContent = "racing · " + (R.zoneLabel(tz) || "local");
     if (body && cfg.widgets.racing) {
-      var series = racingSeries(), rows = series.length <= 2 ? 1e9 : series.length <= 4 ? 2 : 1, html = "", i;
+      var series = racingSeries(), rows = series.length <= 4 ? 2 : 1, html = "", i;
       html += '<div id="race-next"></div><div id="race-next-clock"></div>';
       for (i = 0; i < series.length; i++) {
         html += raceSeriesHtml(R, R.label(series[i]).toLowerCase(), R.upcoming(all[series[i]] || [], now), now, tz, i === 0 && racingNext ? 14 : (i ? 14 : 0), rows);
@@ -2801,6 +2801,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var t = DATA.themes[cfg.theme] || {};
     var c = { city: cfg.weatherCity || "", imperial: cfg.tempUnit === "F", theme: { name: cfg.theme, colors: t }, scene: cfg.pulseScene || "sphere", graphics: cfg.pulseGraphics || "auto" };
     if (typeof cfg.weatherLat === "number" && typeof cfg.weatherLon === "number") { c.lat = cfg.weatherLat; c.lon = cfg.weatherLon; }
+    // screensaver.racing follows the Home widget unless set; the series are the ones picked on Home.
     if (pulseRacingOn() && window.OmarchyRacing) {
       var rows = window.OmarchyRacing.pulseRows(racingAll(Date.now()), racingSeries(), Date.now());
       if (rows.length) c.racing = rows;
@@ -4225,7 +4226,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   renderAll();
   fetchWeather();
   if (window.OmarchyRacing) {
-    fetch("racing_2026.json").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+    // Fetch cannot load file:// on webOS/Tizen; XMLHttpRequest can (status 0 or 200).
+    window.OmarchyRacing.getText("racing_2026.json").then(function (text) {
+      var j = JSON.parse(text);
       if (j) racingAsset = j;
       if (racingWanted()) { racingKick(); renderWidgets(); }
     }).catch(function () { if (racingWanted()) racingKick(); });

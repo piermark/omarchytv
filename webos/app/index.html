@@ -329,29 +329,52 @@ html, body {
 #widgets-row1 {
   display: flex;
   width: 100%;
+  align-items: stretch;
 }
 
 #widgets-row1 > * + * {
   margin-left: 16px;
 }
 
+/* Match weather / omarchy / credits: the body is out of flow so extra weekends
+   cannot stretch the row or shove deploys under the panel. */
+#race-box {
+  overflow: hidden;
+  min-height: 148px;
+}
 #race-body {
-  margin-top: 4px;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 22px 22px 18px 22px;
+  box-sizing: border-box;
+  overflow: hidden;
+  margin: 0;
   font-size: calc(19px * var(--ts, 1));
   line-height: 1.35;
   color: var(--t-fg);
 }
-#race-next { font-weight: 700; }
+#race-next {
+  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 #race-next-clock {
   font-size: calc(30px * var(--ts, 1));
   font-weight: 700;
   margin-top: 4px;
   color: var(--t-fg-bright);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 .race-head { font-weight: 700; }
-.race-row { display: flex; margin-top: 6px; }
+.race-row { display: flex; margin-top: 6px; overflow: hidden; }
 .race-row-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.race-row-when { margin-left: 10px; white-space: nowrap; }
+.race-row-when { margin-left: 10px; white-space: nowrap; flex-shrink: 0; }
 #bar-race {
   display: none;
   margin-right: 10px;

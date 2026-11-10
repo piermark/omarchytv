@@ -14,7 +14,7 @@ test("Pulse on the TV: one copy for LG/Samsung and Android, the TV's files in pl
   const files = fs.readdirSync(V).sort();
   assert.deepStrictEqual(fs.readdirSync(A).sort(), files, "same files");
   for (const f of files) {
-    if (f === "scene-mars.html" || f === "scene-monolith.html") continue;   // TV copies start light so they don't restart LG
+    if (f === "scene-mars.html" || f === "scene-monolith.html") continue;   // TV copies keep a backing-store cap and a 2d-context guard
     assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f + " identical");
   }
   for (const f of ["index.html", "pulse.js", "pulse.css", "pulse-tv-data.js", "pulse-tv-hub.js", "pulse-tv.js", "pulse-tv-moments.js"]) assert.ok(files.includes(f), f);
@@ -393,13 +393,13 @@ test("2.15.1 LG and Samsung: mars and monolith cycle again; the scene frame keep
   assert.ok(/if \(cfg\.scenes !== false\) try \{/.test(tvjs), "a scene's frame is rewritten to the page beside this one");
   assert.ok(/allow-scripts allow-same-origin/.test(tvjs) && /setAttribute/.test(tvjs) && /!host/.test(tvjs),
     "on LG/Samsung the scene frame keeps the same origin as the app (a unique origin closed the app)");
-  assert.ok(/cfg\.scene === "mars" \|\| cfg\.scene === "monolith"/.test(tvjs) && /quality = "half"/.test(tvjs), "the parent Pulse canvas stays at half for those scenes");
+  assert.ok(!/if \(!host && \(cfg\.scene === "mars"/.test(tvjs), "the parent Pulse canvas is not forced to half for mars or monolith");
   for (const n of ["mars", "monolith"]) {
     const page = fs.readFileSync(V + "scene-" + n + ".html", "utf8");
     const src = page.replace(/\/\/.*$/gm, "");
-    assert.ok(/this\.q = 0;/.test(src), n + " starts light");
-    assert.ok(/1280/.test(src) && /Math\.min\(1, window\.devicePixelRatio/.test(src), n + " caps the backing store");
-    assert.ok(/Math\.min\(15, \+m\.fps \|\| 15\)/.test(src), n + " caps the frame rate");
+    assert.ok(/this\.q = 2;/.test(src), n + " starts at Android quality");
+    assert.ok(/1920/.test(src) && /Math\.min\(1\.5, window\.devicePixelRatio/.test(src), n + " caps the backing store");
+    assert.ok(/Math\.min\(30, \+m\.fps \|\| 20\)/.test(src), n + " caps the frame rate at 30");
     assert.ok(/no 2d context/.test(src), n + " stops if there is no canvas");
   }
 });

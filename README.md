@@ -83,7 +83,7 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 - **Pulse on the TV is Pulse 1.8** (Android TV, LG, Samsung): a city that looks like one (towers lit by the real Sun and Moon, a far skyline, mist, reflections), rain with depth, planes with a tag you can read, a rocket and a Starlink train you can recognise.
 - **Graphics that fit your TV**: `auto` gives the new look on TVs that can carry it and the plain one on small ones, and steps down by itself if frames take too long; or choose `low`, `medium`, `high` (Settings → Screensaver → Pulse graphics on Android TV).
-- **Two new Pulse scenes**: `mars`, a colony with its own sky, and `monolith`. On LG and Samsung the scene frame keeps the same origin as the app, and they start light so they do not restart the app.
+- **Two new Pulse scenes**: `mars`, a colony with its own sky, and `monolith`. On LG and Samsung the scene frame keeps the same origin as the app.
 - **Racing**: the countdown to the next session moved from the bar into the racing panel on Home, and the race weekends are a side panel of the Pulse screensaver too (Android TV, LG, Samsung), each one on or off in Settings.
 - **Planes** (Grant Charge): altitude and plain type names (737 MAX 8, A320neo), no stale routes, a range up to 250 nm, the earthquakes panel on or off, OpenSky as an opt-in second feed.
 

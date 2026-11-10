@@ -176,3 +176,123 @@ test("2.15.1 LG and Samsung: racing toggle, pulseUrl, scene row unchanged", () =
   const line = APP.split("\n").find((l) => /var sc = \["sphere"/.test(l));
   assert.ok(line, "the Pulse scene row is still there");
 });
+
+test("upcoming meetings are sorted by start time", () => {
+  const now = Racing.utc("2026-11-10T00:00:00Z");
+  const raw = [
+    { slug: "valencia", name: "Valencia GP", sessions: [{ code: "RACE", name: "Race", start: "2026-11-29T13:00:00Z", end: null }] },
+    { slug: "portugal", name: "Portugal GP", sessions: [
+      { code: "FP1", name: "Free Practice 1", start: "2026-11-20T10:45:00Z", end: "2026-11-20T11:30:00Z" },
+      { code: "RACE", name: "Race", start: "2026-11-22T13:00:00Z", end: null }
+    ] },
+    { slug: "extra", name: "Friday Extra", sessions: [{ code: "RACE", name: "Race", start: "2026-11-20T09:00:00Z", end: null }] }
+  ];
+  const parsed = Racing.parse(raw);
+  const shuffled = [parsed[2], parsed[0], parsed[1]];
+  const left = Racing.upcoming(shuffled, now);
+  assert.deepStrictEqual(left.map((m) => m.name), ["Friday Extra", "Portugal GP", "Valencia GP"]);
+  const dates = left.map((m) => Racing.when(Racing.race(m).start, "Europe/Rome"));
+  assert.ok(dates[0].indexOf("20 nov") >= 0, dates[0]);
+  assert.ok(dates[1].indexOf("22 nov") >= 0, dates[1]);
+  assert.ok(dates[2].indexOf("29 nov") >= 0, dates[2]);
+});
+
+test("bundled calendar loads with XMLHttpRequest so file:// works on the TV", async () => {
+  assert.ok(/OmarchyRacing\.getText\("racing_2026\.json"\)/.test(APP), "the page uses getText for the snapshot");
+  assert.ok(!/fetch\("racing_2026\.json"\)/.test(APP), "fetch is not used for the snapshot (webOS refuses file://)");
+  assert.ok(typeof Racing.getText === "function");
+  const prev = global.XMLHttpRequest;
+  function mockXhr(status, body) {
+    return function () {
+      this.readyState = 0;
+      this.status = 0;
+      this.responseText = "";
+      this.open = function (method, url) { this.method = method; this.url = url; };
+      this.send = function () {
+        this.readyState = 4;
+        this.status = status;
+        this.responseText = body;
+        if (this.onreadystatechange) this.onreadystatechange();
+        if (this.onload) this.onload();
+      };
+    };
+  }
+  try {
+    global.XMLHttpRequest = mockXhr(0, "{\"year\":2026}");
+    const text = await Racing.getText("file:///media/internal/racing_2026.json");
+    assert.strictEqual(text, "{\"year\":2026}");
+    global.XMLHttpRequest = mockXhr(200, "ok");
+    assert.strictEqual(await Racing.getText("racing_2026.json"), "ok");
+    global.XMLHttpRequest = mockXhr(0, "");
+    await assert.rejects(() => Racing.getText("file:///missing.json"));
+    global.XMLHttpRequest = mockXhr(404, "no");
+    await assert.rejects(() => Racing.getText("racing_2026.json"));
+  } finally {
+    global.XMLHttpRequest = prev;
+  }
+});
+
+test("the racing panel fits the other Home widgets", () => {
+  assert.ok(/#race-box\s*\{[^}]*overflow:\s*hidden/.test(HTML), "the box clips extra weekends");
+  assert.ok(/#race-body\s*\{[^}]*overflow:\s*hidden/.test(HTML), "the body clips extra weekends");
+  assert.ok(/text-overflow:\s*ellipsis/.test(HTML), "long names ellipsize");
+  assert.ok(/series\.length <= 4 \? 2 : 1/.test(APP) && !/1e9/.test(APP), "at most two remaining weekends of each series");
+});
+
+test("Pulse on the TV shows the Home widget's series from the bundled snapshot", async () => {
+  assert.ok(/pulseRacing === true \|\| cfg\.pulseRacing === false/.test(APP) && /return !!cfg\.widgets\.racing/.test(APP),
+    "Pulse racing follows the Home widget unless the screensaver toggle is set");
+  assert.ok(/pulseRows\(racingAll\(Date\.now\(\)\), racingSeries\(\)/.test(APP), "pulseUrl uses the Home series list");
+  assert.ok(/if \(rows\.length\) c\.racing = rows/.test(APP), "non-empty rows reach Pulse as c.racing");
+  assert.ok(/racing: cfg\.racing/.test(fs.readFileSync(path.join(__dirname, "../app/vendor/pulse/pulse-tv.js"), "utf8")),
+    "the TV bridge hands c.racing to the hub");
+
+  const prev = global.XMLHttpRequest;
+  const body = fs.readFileSync(ASSET, "utf8");
+  global.XMLHttpRequest = function () {
+    this.readyState = 0; this.status = 0; this.responseText = "";
+    this.open = function (method, url) { this.method = method; this.url = url; };
+    this.send = function () {
+      this.readyState = 4; this.status = 0; this.responseText = body;
+      if (this.onreadystatechange) this.onreadystatechange();
+      if (this.onload) this.onload();
+    };
+  };
+  try {
+    const text = await Racing.getText("file:///media/internal/racing_2026.json");
+    const asset = JSON.parse(text);
+    assert.ok(asset.f1 && asset.motogp, "the snapshot has F1 and MotoGP");
+    const now = Racing.utc("2026-11-10T12:00:00Z");
+    const allOf = (series) => {
+      const all = {};
+      series.forEach((id) => { all[id] = Racing.meetingsFrom(asset, null, id); });
+      return all;
+    };
+    const home = ["f1", "motogp"];
+    const rows = Racing.pulseRows(allOf(home), home, now);
+    assert.ok(rows.length >= 2, "rows exist from the snapshot with no live fetch");
+    assert.deepStrictEqual([...new Set(rows.map((r) => r.series))].sort(), ["F1", "MotoGP"]);
+
+    if (!global.window) global.window = global;
+    require("../app/vendor/pulse/pulse-tv-data.js");
+    const PulseTV = require("../app/vendor/pulse/pulse-tv-hub.js");
+    const net = () => Promise.resolve(null);
+    const clock = () => now / 1000;
+    const st = PulseTV.create({ lat: 44.91, lon: 8.61, racing: rows }, net, clock).state();
+    const panel = st.widgets.filter((w) => w.id === "tv-racing");
+    assert.strictEqual(panel.length, 1, "the hub renders the racing side panel on webOS");
+    assert.strictEqual(panel[0].slot, "right");
+    assert.ok(panel[0].data.items.length, "the panel has sessions");
+    assert.ok(panel[0].data.items.some((i) => /^F1/.test(i.title)));
+    assert.ok(panel[0].data.items.some((i) => /^MotoGP/.test(i.title)));
+
+    const motoOnly = Racing.pulseRows(allOf(["motogp"]), ["motogp"], now);
+    assert.ok(motoOnly.length && motoOnly.every((r) => r.series === "MotoGP"));
+    const p2 = PulseTV.create({ lat: 44.91, lon: 8.61, racing: motoOnly }, net, clock).state()
+      .widgets.find((w) => w.id === "tv-racing");
+    assert.ok(p2 && p2.data.items.every((i) => /^MotoGP/.test(i.title)));
+    assert.ok(!p2.data.items.some((i) => /^F1/.test(i.title)), "only the series picked on Home");
+  } finally {
+    global.XMLHttpRequest = prev;
+  }
+});

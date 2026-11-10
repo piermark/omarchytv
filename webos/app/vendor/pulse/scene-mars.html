@@ -23,9 +23,9 @@
     return o;
   }
   function resize() {
-    // TV: a full-HD canvas at q=2 on top of Pulse restarted the app on LG. Cap the backing store.
-    var r = Math.min(1, window.devicePixelRatio || 1) * Math.min(scale || 1, 1);
-    if (innerWidth * r > 1280) r = 1280 / Math.max(1, innerWidth);
+    // TV: cap the backing store so a 4K canvas does not run away; quality still drops on its own.
+    var r = Math.min(1.5, window.devicePixelRatio || 1) * (scale || 1);
+    if (innerWidth * r > 1920) r = 1920 / Math.max(1, innerWidth);
     W = Math.max(1, Math.round(innerWidth * r)); H = Math.max(1, Math.round(innerHeight * r));
     try { cv.width = W; cv.height = H; } catch (e) { fail("resize", e); return; }
     if (def && def.init) { try { def.init(g, { w: W, h: H, scale: r }); inited = true; } catch (e) { fail("init", e); } }
@@ -54,7 +54,7 @@
     if (ev.source !== parentWin || !m.pulse) return;
     if (m.pulse === "state") {
       state = frozen(m.state || {});
-      fps = Math.max(1, Math.min(15, +m.fps || 15));
+      fps = Math.max(1, Math.min(30, +m.fps || 20));
       if (m.scale && m.scale !== scale) { scale = m.scale; resize(); }
       if (def && def.update) { try { def.update(state); } catch (e) { fail("update", e); } }
     } else if (m.pulse === "pause") paused = !!m.on;
@@ -103,7 +103,7 @@
 // It measures how long a frame takes and draws in one of four ways, from an old laptop to a fast PC on a 4K screen.
 PulseScene.register("mars", {
   init: function (g, size) {
-    this.q = 0;            // how rich it draws: 0 light, 1 medium, 2 high, 3 ultra
+    this.q = 2;            // how rich it draws: 0 light, 1 medium, 2 high, 3 ultra
     this.cost = []; this.qAt = 0;
     this.hit = [];         // what a click can find: [x, y, r, text]
     this.prev = null; this.said = {}; this.seen = 0;

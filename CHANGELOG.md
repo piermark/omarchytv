@@ -15,7 +15,8 @@
 - **Two new scenes**: `mars` (a colony with its own sky: the dome is the TV or the paired PC, rovers for the PC's AI
   agents, launch pads for its repos) and `monolith`. Each runs in its own frame, as on the PC; on a TV browser too
   old for that, the sphere stays. On LG and Samsung the frame keeps the same origin as the app (a unique origin
-  closed the app on LG), and they start light (a smaller canvas, fewer details, a cap on the frame rate).
+  closed the app on LG). They start at Android quality and drop on their own if frames are slow (canvas at most
+  1.5×dpr up to 1920 wide, 30 fps).
 
 ### Racing
 
@@ -27,7 +28,8 @@
 - **Racing on LG and Samsung** (Grant Charge's calendars, #123): the Home widget is the same one as on Android TV —
   the race weekends you follow (F1, MotoGP, Moto2, Moto3, NASCAR Cup, O'Reilly and Trucks, Formula E, WEC), the next
   session and its countdown, each series on or off in Settings › Home widgets. A bundled snapshot of the F1 and
-  MotoGP calendars is there when the TV cannot reach a source.
+  MotoGP calendars is there when the TV cannot reach a source (read with XMLHttpRequest, so file:// works).
+  Pulse's racing side panel follows the Home widget and the series picked there.
 
 ### From the community
 

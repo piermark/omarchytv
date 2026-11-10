@@ -67,7 +67,6 @@
   var gfx = { low: 1, medium: 1, high: 1 }[cfg.graphics] ? cfg.graphics : "auto";
   var polish = gfx === "auto" ? !(cfg.lowEnd || oldEngine) : gfx !== "low";
   var quality = gfx === "low" || gfx === "medium" ? "half" : gfx === "high" ? "full" : cfg.quality || "auto";
-  if (!host && (cfg.scene === "mars" || cfg.scene === "monolith")) quality = "half";   // coded scenes: never a full-res parent + high scene together
   // Pulse 1.8's scenes in code (mars, monolith) run in a sandboxed frame that pulse.js asks its hub for (/scene/NAME);
   // on the TV that frame is a page beside this one. Where the browser can't redirect it, the sphere stays.
   var scenesOk = false;

@@ -103,9 +103,14 @@
     for (i = 0; i < list.length; i++) if (list[i].lastEnd() > now) return list[i];
     return null;
   }
+  function meetingStart(m) {
+    var r = race(m);
+    return r && r.start ? r.start : (m.sessions[0] ? m.sessions[0].start : 0);
+  }
   function upcoming(list, now) {
     var out = [], i;
     for (i = 0; i < list.length; i++) if (list[i].lastEnd() > now) out.push(list[i]);
+    out.sort(function (a, b) { return meetingStart(a) - meetingStart(b); });
     return out;
   }
   function race(m) {
@@ -419,6 +424,30 @@
     return p.then(function (v) { return v; }, function () { return null; });
   }
 
+  // webOS and Tizen package the app as file://; their Fetch API refuses that scheme
+  // ("URL scheme file is not supported"). XMLHttpRequest reads local files (status 0 or 200).
+  function getText(url) {
+    return new Promise(function (resolve, reject) {
+      var Xhr = typeof XMLHttpRequest !== "undefined" ? XMLHttpRequest : null;
+      if (!Xhr) { reject(new Error("no XMLHttpRequest")); return; }
+      var x = new Xhr(), done = false;
+      function finish() {
+        if (done || x.readyState && x.readyState !== 4) return;
+        done = true;
+        if (x.status === 200 || x.status === 0) {
+          if (x.responseText == null || x.responseText === "") { reject(new Error("HTTP " + x.status)); return; }
+          resolve(x.responseText);
+          return;
+        }
+        reject(new Error("HTTP " + x.status));
+      }
+      x.onreadystatechange = function () { if (x.readyState === 4) finish(); };
+      x.onload = finish;
+      x.onerror = function () { if (!done) { done = true; reject(new Error("network")); } };
+      try { x.open("GET", url, true); x.send(); } catch (e) { reject(e); }
+    });
+  }
+
   function refreshIfStale(io) {
     var now = io.now != null ? io.now : Date.now();
     var series = io.series || [F1, MOTOGP];
@@ -512,7 +541,7 @@
     label: label, known: known, utc: utc, iso: iso, parse: parse, next: next, upcoming: upcoming,
     race: race, current: current, shortName: shortName, pulseRows: pulseRows, soonest: soonest,
     clock: clock, nextStart: nextStart, zone: zone, zoneLabel: zoneLabel, when: when, day: day,
-    meetingsFrom: meetingsFrom, mgpCode: mgpCode, mgpName: mgpName, parseMotoGp: parseMotoGp,
+    meetingsFrom: meetingsFrom, getText: getText, mgpCode: mgpCode, mgpName: mgpName, parseMotoGp: parseMotoGp,
     parseNascar: parseNascar, parseFePage: parseFePage, parseWecPage: parseWecPage, wecName: wecName,
     parseF1Page: parseF1Page, f1Code: f1Code, refreshIfStale: refreshIfStale
   };
