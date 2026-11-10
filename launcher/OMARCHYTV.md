@@ -174,16 +174,17 @@ Logo (`logo` in config / JSON, used by home and screensaver): `omarchy-tv` (defa
 
 - `pulseScene`: `sphere` (default), `skyline`, `orbit`, `calm`, `hacker`, `noir`, and Pulse 1.8's `mars` and `monolith`.
   On LG and Samsung the scene frame keeps the same origin as the app (a unique origin closed the app on LG).
-  Those two start at Android quality (`q=2`) and drop on their own if frames are slow.
-- `pulseGraphics`: `auto` (default), `low`, `medium`, `high`. `auto` gives Pulse 1.8's look unless the TV is a small
-  one (low-RAM flag, under 1.7 GB, fewer than four cores, or an old browser), lets Pulse choose its resolution and
-  drops to the plain look by itself when frames take too long. `low`: the plain look, half resolution. `medium`: the
-  1.8 look, half resolution. `high`: the 1.8 look, full resolution. An Android TV draws its interface at 1080p even
-  on a 4K panel, so "full" is 1080p there.
+  Those two start at Pulse 1.8's quality on the PC (up to 2×dpr, 60 fps) and drop on their own if frames are slow
+  (and climb back).
+- `pulseGraphics`: `auto` (default), `low`, `medium`, `high`. `auto` starts at Pulse 1.8's look (polish on, full
+  pixels) and walks a short quality ladder from measured frame time (down after three slow reports, up after six
+  fast). It does not start plain from a low-RAM flag or an old browser. `low`: the plain look, half resolution.
+  `medium`: the 1.8 look, half resolution. `high`: the 1.8 look, full resolution. An Android TV draws its
+  interface at 1080p even on a 4K panel, so "full" is 1080p there.
 - The scenes' pages (`scene-mars.html`, `scene-monolith.html`) are written by `python3 tools/pulse-tv-scenes.py
-  /path/to/omarchy-pulse-theme`. The webOS/Tizen copies cap the canvas at 1.5×dpr up to 1920 wide and 30 fps,
-  and stop if there is no 2d context; regenerating the pages writes the PC runtime again, and those caps would
-  need to be put back.
+  /path/to/omarchy-pulse-theme`. The TV copies start at Pulse 1.8's defaults, adapt backing and fps from frame
+  time, and stop if there is no 2d context; regenerating the pages writes the PC runtime again, and the 2d-context
+  guard and the adaptive ladder would need to be put back.
 
 ### Pulse: planes and earthquakes (config only, Android)
 

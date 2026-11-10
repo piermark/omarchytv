@@ -176,6 +176,12 @@
     var hms = pad(h) + ":" + pad(mi) + ":" + pad(s);
     return d > 0 ? d + "d " + hms : hms;
   }
+  function clockShort(ms) {
+    var sec = Math.max(0, Math.floor(ms / 1000)), d = Math.floor(sec / 86400), h = Math.floor(sec / 3600) % 24, mi = Math.floor(sec / 60) % 60;
+    if (d > 0) return d + "d " + pad(h) + "h";
+    if (h > 0) return pad(h) + "h " + pad(mi) + "m";
+    return pad(mi) + "m " + pad(sec % 60) + "s";
+  }
 
   function nextStart(list, now) {
     var i, k;
@@ -540,7 +546,7 @@
     MAX_AGE_MS: MAX_AGE_MS, WEEKEND_AGE_MS: WEEKEND_AGE_MS,
     label: label, known: known, utc: utc, iso: iso, parse: parse, next: next, upcoming: upcoming,
     race: race, current: current, shortName: shortName, pulseRows: pulseRows, soonest: soonest,
-    clock: clock, nextStart: nextStart, zone: zone, zoneLabel: zoneLabel, when: when, day: day,
+    clock: clock, clockShort: clockShort, nextStart: nextStart, zone: zone, zoneLabel: zoneLabel, when: when, day: day,
     meetingsFrom: meetingsFrom, getText: getText, mgpCode: mgpCode, mgpName: mgpName, parseMotoGp: parseMotoGp,
     parseNascar: parseNascar, parseFePage: parseFePage, parseWecPage: parseWecPage, wecName: wecName,
     parseF1Page: parseF1Page, f1Code: f1Code, refreshIfStale: refreshIfStale

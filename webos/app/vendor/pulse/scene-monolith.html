@@ -11,7 +11,7 @@
   var cv = document.getElementById("c"), g = cv.getContext("2d");
   var def = null, name = "", state = null, W = 0, H = 0, scale = 1, fps = 20, paused = false, last = 0;
   var t0 = performance.now(), inited = false, cost = 0, n = 0, worst = 0, rep = performance.now(), errs = 0;
-  var parentWin = window.parent;
+  var parentWin = window.parent, backing = 1, fpsCap = 60, slowRuns = 0, fastRuns = 0;
   function post(m) { try { parentWin.postMessage(m, "*"); } catch (e) {} }
   if (!g) { post({ pulseScene: "error", where: "init", error: "no 2d context" }); return; }
   function fail(where, e) {
@@ -23,11 +23,15 @@
     return o;
   }
   function resize() {
-    // TV: cap the backing store so a 4K canvas does not run away; quality still drops on its own.
-    var r = Math.min(1.5, window.devicePixelRatio || 1) * (scale || 1);
-    if (innerWidth * r > 1920) r = 1920 / Math.max(1, innerWidth);
+    // Same start as Pulse 1.8 on the PC: up to 2x dpr. backing and fpsCap step down if frames are
+    // slow and back up when there is headroom (see the perf window in frame()). If a huge canvas
+    // throws, try a smaller backing store once — a safety, not a fixed cap.
+    var r = Math.min(2, window.devicePixelRatio || 1) * (scale || 1) * backing;
     W = Math.max(1, Math.round(innerWidth * r)); H = Math.max(1, Math.round(innerHeight * r));
-    try { cv.width = W; cv.height = H; } catch (e) { fail("resize", e); return; }
+    try { cv.width = W; cv.height = H; } catch (e) {
+      if (backing > 0.5) { backing = backing > 0.75 ? 0.75 : 0.5; resize(); return; }
+      fail("resize", e); return;
+    }
     if (def && def.init) { try { def.init(g, { w: W, h: H, scale: r }); inited = true; } catch (e) { fail("init", e); } }
   }
   window.PulseScene = {
@@ -54,7 +58,7 @@
     if (ev.source !== parentWin || !m.pulse) return;
     if (m.pulse === "state") {
       state = frozen(m.state || {});
-      fps = Math.max(1, Math.min(30, +m.fps || 20));
+      fps = Math.max(1, Math.min(fpsCap, +m.fps || 20));
       if (m.scale && m.scale !== scale) { scale = m.scale; resize(); }
       if (def && def.update) { try { def.update(state); } catch (e) { fail("update", e); } }
     } else if (m.pulse === "pause") paused = !!m.on;
@@ -85,7 +89,22 @@
     catch (e) { fail("draw", e); }
     var c = performance.now() - a;
     cost += c; n++; if (c > worst) worst = c;
-    if (now - rep > 2000) { post({ pulseScene: "perf", draw: +(cost / Math.max(1, n)).toFixed(2), worst: +worst.toFixed(1), fps: +(n / ((now - rep) / 1000)).toFixed(1), w: W, h: H }); cost = 0; n = 0; worst = 0; rep = now; }
+    if (now - rep > 2000) {
+      var draw = cost / Math.max(1, n), meas = n / ((now - rep) / 1000);
+      post({ pulseScene: "perf", draw: +draw.toFixed(2), worst: +worst.toFixed(1), fps: +meas.toFixed(1), w: W, h: H });
+      var slow = draw > 16 || meas < fps * 0.6, head = draw < 10 && meas > fps * 0.9;
+      if (slow) { slowRuns += 1; fastRuns = 0; } else if (head) { fastRuns += 1; slowRuns = 0; } else { slowRuns = 0; fastRuns = 0; }
+      if (slowRuns >= 3) {
+        slowRuns = 0;
+        if (backing > 0.5) { backing = backing > 0.75 ? 0.75 : 0.5; resize(); }
+        else if (fpsCap > 20) fpsCap = Math.max(20, Math.round(fpsCap * 0.7));
+      } else if (fastRuns >= 6) {
+        fastRuns = 0;
+        if (fpsCap < 60) fpsCap = Math.min(60, fpsCap < 30 ? 30 : 60);
+        else if (backing < 1) { backing = backing < 0.75 ? 0.75 : 1; resize(); }
+      }
+      cost = 0; n = 0; worst = 0; rep = now;
+    }
   }
   requestAnimationFrame(frame);
 })();

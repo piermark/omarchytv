@@ -176,7 +176,7 @@ final class PulseSaver {
         }
     }
 
-    /** 2.15.1 a small TV (Android's own low-RAM flag, under 1.7 GB of memory or fewer than four cores): Pulse's plain look. */
+    /** 2.15.1 a small TV (low-RAM flag, under 1.7 GB, or fewer than four cores). Still sent in the Pulse config for diagnostics; auto no longer starts the plain look from this flag. */
     static boolean lowEnd(Context c) {
         try {
             android.app.ActivityManager am = (android.app.ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);

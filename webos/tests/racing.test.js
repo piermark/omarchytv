@@ -35,6 +35,11 @@ test("countdown clock", () => {
   assert.strictEqual(Racing.clock(86_399_000), "23:59:59");
   assert.strictEqual(Racing.clock(86_400_000), "1d 00:00:00");
   assert.strictEqual(Racing.clock(((12 * 24 + 4) * 3600 + 12 * 60 + 9) * 1000), "12d 04:12:09");
+  assert.strictEqual(Racing.clockShort(-5), "00m 00s");
+  assert.strictEqual(Racing.clockShort(65_000), "01m 05s");
+  assert.strictEqual(Racing.clockShort(86_399_000), "23h 59m");
+  assert.strictEqual(Racing.clockShort(86_400_000), "1d 00h");
+  assert.strictEqual(Racing.clockShort(((12 * 24 + 4) * 3600 + 12 * 60 + 9) * 1000), "12d 04h");
 });
 
 test("bundled calendar only shows what is left", () => {
@@ -169,7 +174,9 @@ test("Pulse rows: next session and the race, times in seconds", () => {
 test("2.15.1 LG and Samsung: racing toggle, pulseUrl, scene row unchanged", () => {
   assert.ok(/racing: false/.test(APP) && /widgets: \{[^}]*racing: false/.test(APP), "racing is off unless asked");
   assert.ok(/racingBar: false/.test(APP), "the bar countdown is off unless asked");
-  assert.ok(/OmarchyRacing\.pulseRows/.test(APP) && /c\.racing = /.test(APP), "pulseUrl passes the rows");
+  assert.ok(/OmarchyRacing\.pulseRows/.test(APP) && /c\.racing = /.test(APP), "pulseCfg passes the rows");
+  assert.ok(/function pulseCfg\(\)/.test(APP) && /window\.OmarchySaver\.pulse/.test(APP) && /pulseTV: "cfg"/.test(APP),
+    "the screensaver host and a postMessage carry racing, not only the URL hash");
   assert.ok(/label: "racing"/.test(APP) && /racing countdown in the bar/.test(APP), "Settings › Home widgets");
   assert.ok(/racing panel on Pulse/.test(APP), "Settings › Screensaver");
   assert.ok(/id="race-box"/.test(HTML) && /id="bar-race"/.test(HTML) && /src="racing.js"/.test(HTML), "the Home panel and the bar");
@@ -233,10 +240,12 @@ test("bundled calendar loads with XMLHttpRequest so file:// works on the TV", as
 });
 
 test("the racing panel fits the other Home widgets", () => {
-  assert.ok(/#race-box\s*\{[^}]*overflow:\s*hidden/.test(HTML), "the box clips extra weekends");
-  assert.ok(/#race-body\s*\{[^}]*overflow:\s*hidden/.test(HTML), "the body clips extra weekends");
+  assert.ok(!/#race-body\s*\{[^}]*position:\s*absolute/.test(HTML), "the body stays in flow so the box is as tall as its lines");
+  assert.ok(!/#race-box\s*\{[^}]*overflow:\s*hidden/.test(HTML), "the box is not clipped out of flow");
   assert.ok(/text-overflow:\s*ellipsis/.test(HTML), "long names ellipsize");
-  assert.ok(/series\.length <= 4 \? 2 : 1/.test(APP) && !/1e9/.test(APP), "at most two remaining weekends of each series");
+  assert.ok(/clockShort/.test(APP), "the Home countdown is the short form");
+  assert.ok(/function raceSeriesLine/.test(APP) && /extraWeekend && left\[1\]/.test(APP),
+    "one line per series, plus the next weekend only when a single series is on");
 });
 
 test("Pulse on the TV shows the Home widget's series from the bundled snapshot", async () => {
@@ -244,8 +253,11 @@ test("Pulse on the TV shows the Home widget's series from the bundled snapshot",
     "Pulse racing follows the Home widget unless the screensaver toggle is set");
   assert.ok(/pulseRows\(racingAll\(Date\.now\(\)\), racingSeries\(\)/.test(APP), "pulseUrl uses the Home series list");
   assert.ok(/if \(rows\.length\) c\.racing = rows/.test(APP), "non-empty rows reach Pulse as c.racing");
-  assert.ok(/racing: cfg\.racing/.test(fs.readFileSync(path.join(__dirname, "../app/vendor/pulse/pulse-tv.js"), "utf8")),
-    "the TV bridge hands c.racing to the hub");
+  const tvjs = fs.readFileSync(path.join(__dirname, "../app/vendor/pulse/pulse-tv.js"), "utf8");
+  assert.ok(/racing: cfg\.racing/.test(tvjs), "the TV bridge hands c.racing to the hub");
+  assert.ok(/root\.parent !== root && root\.parent\.OmarchySaver/.test(tvjs), "the iframe reads the parent's OmarchySaver");
+  assert.ok(/d\.pulseTV === "cfg"/.test(tvjs) && /hubCfg\.racing = d\.racing/.test(tvjs), "a postMessage updates the hub's racing rows");
+  assert.ok(/!ownHost/.test(tvjs), "the scene-frame sandbox patch still runs on LG/Samsung when the host is the parent");
 
   const prev = global.XMLHttpRequest;
   const body = fs.readFileSync(ASSET, "utf8");
@@ -282,6 +294,7 @@ test("Pulse on the TV shows the Home widget's series from the bundled snapshot",
     const panel = st.widgets.filter((w) => w.id === "tv-racing");
     assert.strictEqual(panel.length, 1, "the hub renders the racing side panel on webOS");
     assert.strictEqual(panel[0].slot, "right");
+    assert.strictEqual(panel[0].order, 21);
     assert.ok(panel[0].data.items.length, "the panel has sessions");
     assert.ok(panel[0].data.items.some((i) => /^F1/.test(i.title)));
     assert.ok(panel[0].data.items.some((i) => /^MotoGP/.test(i.title)));

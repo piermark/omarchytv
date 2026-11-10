@@ -14,7 +14,6 @@ test("Pulse on the TV: one copy for LG/Samsung and Android, the TV's files in pl
   const files = fs.readdirSync(V).sort();
   assert.deepStrictEqual(fs.readdirSync(A).sort(), files, "same files");
   for (const f of files) {
-    if (f === "scene-mars.html" || f === "scene-monolith.html") continue;   // TV copies keep a backing-store cap and a 2d-context guard
     assert.ok(fs.readFileSync(V + f).equals(fs.readFileSync(A + f)), f + " identical");
   }
   for (const f of ["index.html", "pulse.js", "pulse.css", "pulse-tv-data.js", "pulse-tv-hub.js", "pulse-tv.js", "pulse-tv-moments.js"]) assert.ok(files.includes(f), f);
@@ -26,6 +25,12 @@ test("Pulse on the TV: one copy for LG/Samsung and Android, the TV's files in pl
   const order = ["pulse-tv-data.js", "pulse-tv-hub.js", "pulse-tv.js", "pulse.js", "pulse-tv-moments.js"].map((s) => html.indexOf('src="' + s + '"'));
   assert.ok(order.every((i, k) => i > 0 && (k === 0 || i > order[k - 1])), "the TV's hub loads before pulse.js, the moments after");
   assert.ok(/CaskaydiaMonoNerdFontMono-Regular\.ttf[\s\S]*caskaydia_mono_regular\.ttf/.test(html), "the bundled font on both platforms");
+  assert.ok(/font-weight:\s*700/.test(html) && /caskaydia_mono_bold\.ttf/.test(html), "the 1.8 tag's bold weight is loaded");
+  const fontsWeb = path.join(__dirname, "../app/vendor/fonts/");
+  const fontsAnd = path.join(__dirname, "../../launcher/app/src/main/assets/fonts/");
+  for (const f of ["CaskaydiaMonoNerdFontMono-Regular.ttf", "caskaydia_mono_bold.ttf"]) {
+    assert.ok(fs.existsSync(fontsWeb + f) && fs.existsSync(fontsAnd + f), f + " on both platforms");
+  }
 });
 
 test("the TV's sky: the Sun, the Moon, the planets and the stars from the PC hub's formulas", () => {
@@ -53,6 +58,12 @@ test("planes, launches and the Kp index read like the hub's", () => {
   assert.strictEqual(pl[0].flight, "AZ123");
   assert.strictEqual(pl[0].type, "A320");
   assert.ok(pl[0].el > 10);
+  // a plane that already has a route keeps it for the 1.8 tag (and kt can come as kt)
+  const tagged = P.planesOver(44.91, 8.61, [{ hex: "abc123", flight: "AZ123", lat: 45.0, lon: 8.7, alt: 34000, gs: 450, track: 90, type: "A320",
+    from: "MXP", to: "FCO", fromCity: "Milan", toCity: "Rome" }])[0];
+  assert.deepStrictEqual([tagged.from, tagged.to, tagged.fromCity, tagged.toCity, tagged.kt], ["MXP", "FCO", "Milan", "Rome", 450]);
+  const byKt = P.planesOver(44.91, 8.61, [{ hex: "abc123", flight: "AZ123", lat: 45.0, lon: 8.7, alt: 34000, kt: 420, track: 90, type: "A320" }])[0];
+  assert.strictEqual(byKt.kt, 420);
   const L = P.parseLaunch({ id: "x", name: "Falcon 9 Block 5 | Starlink 12-9", net: "2026-11-10T03:00:00Z", status: { abbrev: "Go" } });
   assert.deepStrictEqual([L.rocket, L.mission, L.status], ["Falcon 9", "Starlink 12-9", "Go"]);
   assert.strictEqual(P.countdown(3725), "T-1h 02m");
@@ -219,6 +230,8 @@ test("planes: real altitude in the panel, plain type names, and a stale route is
   await new Promise((r) => setImmediate(r));
   h._tick.route(); h._tick.route();
   await new Promise((r) => setImmediate(r));
+  const mid = h.state().sky.find((p) => p.flight === "AZ123");
+  assert.deepStrictEqual([mid.from, mid.to, mid.fromCity, mid.toCity], ["MXP", "FCO", "Milan", "Rome"], "the 1.8 tag gets the route as soon as adsbdb answers");
   h._tick.sky();
   await new Promise((r) => setImmediate(r));
   const sky = h.state().sky;
@@ -369,9 +382,30 @@ test("2.15.1 Pulse 1.8 on the TV: its look, its scenes in their own frames, and 
     assert.ok(/window\.PulseScene = /.test(src) && new RegExp('PulseScene\\.register\\("' + n + '"').test(src), n + ": the runtime and the scene");
     assert.ok(!/=>|\blet\s|\bconst\s|`|fetch\(|XMLHttpRequest/.test(src), n + " is ES5 and offline");
   }
-  // graphics: the bridge maps the setting and watches Pulse's own performance reports
+  // graphics: the bridge maps the setting; auto starts at Pulse 1.8 and walks the ladder from /api/perf
   const tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
-  assert.ok(/gfx === "low" \|\| gfx === "medium" \? "half" : gfx === "high" \? "full"/.test(tvjs) && /slowRuns >= 3/.test(tvjs));
+  assert.ok(/gfx === "low" \|\| gfx === "medium" \? "half" : gfx === "high" \? "full"/.test(tvjs));
+  assert.ok(/polish = gfx !== "low"/.test(tvjs) && !/oldEngine/.test(tvjs), "auto starts at the 1.8 look, no browser guess");
+  assert.ok(/OmarchyPulseTV\.adaptPerf/.test(tvjs) && /applyRung/.test(tvjs));
+  // the ladder: start at polish+auto, down after 3 slow reports, up after 6 with headroom
+  let s = { rung: 0, slow: 0, fast: 0 };
+  for (let i = 0; i < 2; i++) s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "");
+  s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "down");
+  assert.deepStrictEqual(s.level, { polish: true, quality: "half" });
+  for (let i = 0; i < 3; i++) s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "down");
+  assert.deepStrictEqual(s.level, { polish: false, quality: "half" });
+  s = P.adaptPerf(s, { draw: 20, fps: 20, want: 60 });
+  assert.strictEqual(s.changed, "", "already at the bottom");
+  for (let i = 0; i < 5; i++) s = P.adaptPerf(s, { draw: 8, fps: 58, want: 60 });
+  assert.strictEqual(s.changed, "");
+  s = P.adaptPerf(s, { draw: 8, fps: 58, want: 60 });
+  assert.strictEqual(s.changed, "up");
+  assert.deepStrictEqual(s.level, { polish: true, quality: "half" });
+  h.setQuality("half");
+  assert.strictEqual(h.quality(), "half");
 });
 
 test("2.15.1 LG and Samsung: mars and monolith cycle again; the scene frame keeps the same origin as the app", () => {
@@ -391,15 +425,18 @@ test("2.15.1 LG and Samsung: mars and monolith cycle again; the scene frame keep
   assert.ok(/right: cfg\.pulseScene \|\| "sphere"/.test(app), "the menu shows the saved scene");
   assert.ok(/scene: cfg\.pulseScene \|\| "sphere"/.test(app) && !/scenes: false/.test(app), "the TV opens the saved scene, including mars and monolith");
   assert.ok(/if \(cfg\.scenes !== false\) try \{/.test(tvjs), "a scene's frame is rewritten to the page beside this one");
-  assert.ok(/allow-scripts allow-same-origin/.test(tvjs) && /setAttribute/.test(tvjs) && /!host/.test(tvjs),
+  assert.ok(/allow-scripts allow-same-origin/.test(tvjs) && /setAttribute/.test(tvjs) && /!ownHost/.test(tvjs),
     "on LG/Samsung the scene frame keeps the same origin as the app (a unique origin closed the app)");
   assert.ok(!/if \(!host && \(cfg\.scene === "mars"/.test(tvjs), "the parent Pulse canvas is not forced to half for mars or monolith");
   for (const n of ["mars", "monolith"]) {
     const page = fs.readFileSync(V + "scene-" + n + ".html", "utf8");
     const src = page.replace(/\/\/.*$/gm, "");
     assert.ok(/this\.q = 2;/.test(src), n + " starts at Android quality");
-    assert.ok(/1920/.test(src) && /Math\.min\(1\.5, window\.devicePixelRatio/.test(src), n + " caps the backing store");
-    assert.ok(/Math\.min\(30, \+m\.fps \|\| 20\)/.test(src), n + " caps the frame rate at 30");
+    assert.ok(/Math\.min\(2, window\.devicePixelRatio/.test(src) && /backing = 1/.test(src) && /fpsCap = 60/.test(src),
+      n + " starts at Pulse 1.8's backing and frame rate");
+    assert.ok(!/Math\.min\(1\.5, window\.devicePixelRatio/.test(src) && !/innerWidth \* r > 1920/.test(src), n + " has no fixed TV cap");
+    assert.ok(/Math\.min\(fpsCap, \+m\.fps \|\| 20\)/.test(src), n + " the frame rate follows the adaptive cap");
+    assert.ok(/slowRuns >= 3/.test(src) && /fastRuns >= 6/.test(src), n + " steps down and back up");
     assert.ok(/no 2d context/.test(src), n + " stops if there is no canvas");
   }
 });

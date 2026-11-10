@@ -8,15 +8,17 @@
   and Moon, a far skyline, mist, reflections), rain with depth, planes with a tag you can read, a rocket and a
   Starlink train you can recognise. `pulse.js` and `pulse.css` are Pulse 1.8's, unchanged.
 - **Graphics that fit the TV** (`screensaver.pulseGraphics`, Settings → Screensaver → Pulse graphics on Android):
-  `auto` (default) gives the 1.8 look unless the TV is a small one (Android's low-RAM flag, under 1.7 GB, fewer than
-  four cores, or an old TV browser), lets Pulse choose its resolution, and goes back to the plain look by itself if
-  frames take too long; `low` is the plain look at half resolution, `medium` the 1.8 look at half resolution, `high`
-  the 1.8 look at full resolution.
+  `auto` (default) starts at Pulse 1.8's look on the PC (the 1.8 polish, full pixels) on every TV, then measures
+  frame time and steps down (half pixels, then the plain look) when frames are slow, and steps back up when there
+  is headroom; it no longer guesses from the browser version or a low-RAM flag. `low` is the plain look at half
+  resolution, `medium` the 1.8 look at half resolution, `high` the 1.8 look at full resolution.
+- **The plane tag is Pulse 1.8's**: the card with the route line (FCO → JFK, city names, ft/kt) fills in as soon
+  as the lookup returns, and the TV page loads the same Caskaydia Mono weights the tag uses (regular and bold).
 - **Two new scenes**: `mars` (a colony with its own sky: the dome is the TV or the paired PC, rovers for the PC's AI
   agents, launch pads for its repos) and `monolith`. Each runs in its own frame, as on the PC; on a TV browser too
   old for that, the sphere stays. On LG and Samsung the frame keeps the same origin as the app (a unique origin
-  closed the app on LG). They start at Android quality and drop on their own if frames are slow (canvas at most
-  1.5×dpr up to 1920 wide, 30 fps).
+  closed the app on LG). They start at Pulse 1.8's quality on the PC (up to 2×dpr, 60 fps) and drop on their own
+  if frames are slow (and climb back). A canvas that cannot be allocated is retried at a smaller backing store.
 
 ### Racing
 
@@ -29,7 +31,10 @@
   the race weekends you follow (F1, MotoGP, Moto2, Moto3, NASCAR Cup, O'Reilly and Trucks, Formula E, WEC), the next
   session and its countdown, each series on or off in Settings › Home widgets. A bundled snapshot of the F1 and
   MotoGP calendars is there when the TV cannot reach a source (read with XMLHttpRequest, so file:// works).
-  Pulse's racing side panel follows the Home widget and the series picked there.
+  The Home widget is one compact line per series (a short countdown such as 9d 02h) so it fits beside weather
+  at 1280×720 and 1366×768 without covering deploys. Pulse's racing side panel follows the Home widget and
+  the series picked there; on LG and Samsung the launcher hands those rows to the screensaver the same way
+  Android does (and again by postMessage), because a file:// iframe can drop the URL hash.
 
 ### From the community
 

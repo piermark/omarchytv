@@ -495,7 +495,7 @@ final class LauncherConfig {
     final String screensaverArt;     // defaults to logo
     /** v2.15 the Pulse screensaver's scene: sphere (default), skyline, orbit, calm, hacker, noir; 2.15.1 mars, monolith. */
     final String pulseScene;
-    /** 2.15.1 how rich Pulse draws (screensaver.pulseGraphics): auto (default, fits the TV), low, medium, high. */
+    /** 2.15.1 how rich Pulse draws (screensaver.pulseGraphics): auto (default, starts at 1.8 and adapts), low, medium, high. */
     final String pulseGraphics;
     /** Pulse's planes: how far the panel looks (screensaver.planesNm: 25 default, 50, 100, 150, 200, 250), the earthquakes
      *  panel (screensaver.earthquakes, default on) and OpenSky as a second plane feed (screensaver.opensky, default off). */

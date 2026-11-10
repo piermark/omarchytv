@@ -324,9 +324,14 @@
       if (ft < 300) return;
       var l = lookAngles(lat, lon, Number(a.lat), Number(a.lon), ft * 0.0003048);
       if (l[1] < 10) return;
-      out.push({ id: String(a.hex || "").slice(0, 8), flight: String(a.flight || "").toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 8),
+      var row = { id: String(a.hex || "").slice(0, 8), flight: String(a.flight || "").toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 8),
         type: typeName(a.type), az: rnd(l[0], 1), el: rnd(l[1], 1), lat: rnd(Number(a.lat), 3), lon: rnd(Number(a.lon), 3),
-        ft: Math.round(ft / 100) * 100, kt: Math.floor(Number(a.gs) || 0), track: Number(a.track) || 0 });
+        ft: Math.round(ft / 100) * 100, kt: Math.floor((a.gs != null && a.gs !== "" ? Number(a.gs) : Number(a.kt)) || 0), track: Number(a.track) || 0 };
+      if (a.from) row.from = a.from;
+      if (a.to) row.to = a.to;
+      if (a.fromCity) row.fromCity = a.fromCity;
+      if (a.toCity) row.toCity = a.toCity;
+      out.push(row);
     });
     return out.sort(function (a, b) { return b.el - a.el; }).slice(0, 16);
   }
@@ -487,6 +492,7 @@
         routes[f] = { from: o.iata_code || o.icao_code || "", to: d.iata_code || d.icao_code || "", fromCity: o.municipality || "",
           toCity: d.municipality || "", airline: (r.airline || {}).name || "",
           oLat: num(o.latitude), oLon: num(o.longitude), dLat: num(d.latitude), dLon: num(d.longitude) };
+        mergeSky();   // 1.8 tag: the route line (FCO → JFK) as soon as adsbdb answers, not at the next poll
       });
     }
     function iss() {
@@ -674,7 +680,7 @@
     }
     function racingPanel(t) {
       var items = cfg.racing && cfg.racing.length ? racingItems(cfg.racing, t, 5) : [];
-      return items.length ? { id: "tv-racing", title: "racing", type: "list", slot: "right", order: 33, icon: "󰄶", data: { items: items } } : null;
+      return items.length ? { id: "tv-racing", title: "racing", type: "list", slot: "right", order: 21, icon: "󰄶", data: { items: items } } : null;
     }
     /** 2.15 the panels of a TV with no PC: everything it can read by itself. */
     function tvPanels(t) {
@@ -730,14 +736,38 @@
       if (L && L.status === "Go" && L.net - t <= 600 && L.net - t > -5) out.push({ kind: "launch", phase: "countdown", in: L.net - t, rocket: L.rocket, mission: L.mission });
       return out;
     }
-    return { start: start, stop: stop, state: state, setPolish: function (on) { polish = !!on; }, polish: function () { return polish; }, events: events, onFx: function (cb) { fxCbs.push(cb); }, fx: fx, _S: S,
+    return { start: start, stop: stop, state: state,
+      setPolish: function (on) { polish = !!on; }, polish: function () { return polish; },
+      setQuality: function (q) { cfg.quality = q; }, quality: function () { return cfg.quality || "auto"; },
+      events: events, onFx: function (cb) { fxCbs.push(cb); }, fx: fx, _S: S,
       openskyEvery: cfg.openskyAuth ? 60000 : 480000,
       _tick: { weather: weather, night: night, sky: sky, opensky: opensky, route: route, iss: iss, kp: kp, launches: launches, launchTick: launchTick,
         starlinkFetch: starlinkFetch, starlinkTick: starlinkTick, tv: tvNumbers, pc: pcState, air: airq, quakes: quakes, omarchy: omarchy } };
   }
 
+  /**
+   * Auto graphics for the TV: start at Pulse 1.8's look (rung 0), step down when frames are slow, step
+   * back up when there is headroom. Down after 3 slow reports, up after 6 fast ones (hysteresis).
+   * rungs: 0 polish+auto (PC default), 1 polish+half pixels, 2 plain look + half pixels.
+   */
+  var GFX_RUNGS = [{ polish: true, quality: "auto" }, { polish: true, quality: "half" }, { polish: false, quality: "half" }];
+  function adaptPerf(s, pf) {
+    s = s || { rung: 0, slow: 0, fast: 0 };
+    pf = pf || {};
+    var slow = pf.draw > 16 || (pf.want && pf.fps < pf.want * 0.6);
+    var head = pf.draw < 10 && (!pf.want || pf.fps > pf.want * 0.9);
+    var out = { rung: s.rung || 0, slow: 0, fast: 0, changed: "" };
+    if (slow) { out.slow = (s.slow || 0) + 1; out.fast = 0; }
+    else if (head) { out.fast = (s.fast || 0) + 1; out.slow = 0; }
+    if (out.slow >= 3 && out.rung < GFX_RUNGS.length - 1) { out.rung += 1; out.slow = 0; out.changed = "down"; }
+    else if (out.fast >= 6 && out.rung > 0) { out.rung -= 1; out.fast = 0; out.changed = "up"; }
+    out.level = GFX_RUNGS[out.rung];
+    return out;
+  }
+
   root.OmarchyPulseTV = { create: create, airFrom: airFrom, quakesFrom: quakesFrom, nightSky: nightSky, altaz: altaz, lookAngles: lookAngles, satLook: satLook, starlinkGroups: starlinkGroups,
     starlinkPasses: starlinkPasses, issAt: issAt, planesOver: planesOver, racingItems: racingItems, planesNm: planesNm, openskyStates: openskyStates, mergePlanes: mergePlanes, typeName: typeName, routeFits: routeFits, ftText: ftText, latestKp: latestKp, parseLaunch: parseLaunch, countdown: countdown,
-    cityKey: cityKey, weatherFrom: weatherFrom, compass: compass, julian: julian, moonPhase: moonPhase, TIPS: TIPS };
+    cityKey: cityKey, weatherFrom: weatherFrom, compass: compass, julian: julian, moonPhase: moonPhase, TIPS: TIPS,
+    adaptPerf: adaptPerf, GFX_RUNGS: GFX_RUNGS };
   if (typeof module !== "undefined" && module.exports) module.exports = root.OmarchyPulseTV;
 })(typeof window !== "undefined" ? window : this);

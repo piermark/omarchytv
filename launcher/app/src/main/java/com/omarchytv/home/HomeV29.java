@@ -289,8 +289,8 @@ final class HomeV29 extends FrameLayout {
         LinearLayout.LayoutParams r2l = new LinearLayout.LayoutParams(-1, -2);
         r2l.topMargin = px(16);
         widgets.addView(r2, r2l);
-        // "racing" is an extra first column: while it is on, the widget area grows one column + gap to the left
-        // (setWidgetsWidth), so weather, pc and ai credits keep their places and racing sits left of weather.
+        // "racing" is an extra first column, in a fixed-width slot. The row never grows past the
+        // term box (widgetsWidth): weather, pc and ai share what remains, racing sits left of weather.
         raceBox = widget(r1, "racing", 0);
         raceBody = vbox();
         raceBox.addView(raceBody, new LinearLayout.LayoutParams(-1, -2));
@@ -654,8 +654,9 @@ final class HomeV29 extends FrameLayout {
         wxl.leftMargin = c.wRacing ? px(16) : 0;
         wxBox.setLayoutParams(wxl);
         LayoutParams wl = (LayoutParams) widgets.getLayoutParams();
-        wl.width = px(1120 + (c.wRacing ? 16 + (1120 - 32) / 3f : 0));
+        wl.width = px(widgetsWidth(c.wRacing));
         widgets.setLayoutParams(wl);
+        applyRaceColumns(c.wRacing);
         term.setVisibility(activeWs == 1 && c.wTerm ? VISIBLE : GONE);
         if (editPanel == null) post(() -> applyPanelPos(c));
         gridName.setTextColor(t.accent);
@@ -1998,6 +1999,51 @@ final class HomeV29 extends FrameLayout {
     /** 16:9 tile width that fits cols tiles and cols - 1 gaps in inner px. */
     static int tileW(int inner, int gap, int cols) {
         return (inner - gap * (cols - 1)) / cols;
+    }
+
+    // Home is designed at 1920×1080. The term box is 32+640; a 16 px gutter stays between it and the widgets.
+    static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 268;
+
+    /** Right-aligned widgets row width in design px. With racing on, the row uses the space from the term gutter to the right margin (1200), never the term box. */
+    static int widgetsWidth(boolean racing) {
+        if (!racing) return WIDGETS_W;
+        return HOME_W - HOME_MARGIN - (HOME_MARGIN + TERM_W + WIDGET_GAP);
+    }
+
+    /** Racing column: a fixed slot, only when the widget is on. */
+    static int raceColWidth() { return RACE_COL_W; }
+
+    /** PC / AI column; when racing is on, weather keeps an extra 80 px and these three share the rest. */
+    static int sideColWidth(boolean racing) {
+        if (!racing) return (WIDGETS_W - 32) / 3;
+        return (widgetsWidth(true) - RACE_COL_W - 3 * WIDGET_GAP - 80) / 3;
+    }
+
+    static int weatherColWidth(boolean racing) {
+        return sideColWidth(racing) + 80;
+    }
+
+    /** Left edge of the right-aligned widgets row; must stay to the right of the term box. */
+    static int widgetsLeft(boolean racing) {
+        return HOME_W - HOME_MARGIN - widgetsWidth(racing);
+    }
+
+    private void applyRaceColumns(boolean racing) {
+        float raceW = raceColWidth(), side = sideColWidth(racing), weather = weatherColWidth(racing);
+        LinearLayout.LayoutParams rl = (LinearLayout.LayoutParams) raceBox.getLayoutParams();
+        rl.width = px(raceW);
+        rl.weight = 0f;
+        raceBox.setLayoutParams(rl);
+        LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
+        wxl.width = px(weather);
+        wxl.weight = 0f;
+        wxBox.setLayoutParams(wxl);
+        for (View col : new View[]{pcBox, aiBoxRef}) {
+            LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
+            cl.width = px(side);
+            cl.weight = 0f;
+            col.setLayoutParams(cl);
+        }
     }
 
     // ---- tiles: home row (TV + apps, App size per row, 16:9) and the 7-per-row grid of workspace 3 ----

@@ -2672,6 +2672,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     ov.className = "active";
     livingStart(ov);
     pulseStart(fr);
+    if (cfg.saverMode === "pulse" && !cfg.living) {
+      fr.onload = function () { pulsePush(fr); };
+      pulsePush(fr);
+    }
   }
 
 
@@ -2729,23 +2733,21 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return '<div class="race-row"><span class="race-row-name" style="color:' + nameCol + '">' + escHtml(name) +
       '</span><span class="race-row-when" style="color:' + whenCol + '">' + escHtml(whenStr) + '</span></div>';
   }
-  function raceSeriesHtml(R, label, left, now, tz, top, rows) {
-    var html = '<div class="race-series" style="margin-top:' + top + 'px"><div class="race-head"><span style="color:var(--t-accent)">' +
-      escHtml(label) + '</span><span>' + (left.length ? "  " + left.length + " left" : "") + "</span></div>";
-    if (!left.length) return html + '<div class="race-row-name">season complete</div></div>';
-    var i;
-    for (i = 0; i < left.length && i < rows; i++) {
-      var m = left[i], col = i === 0 ? "var(--t-fg-bright)" : "var(--t-fg)", rs = R.race(m);
-      html += raceRowHtml(R.shortName(m), rs.dateOnly ? R.day(rs.start) : R.when(rs.start, tz), col, col);
-      if (i > 0) continue;
-      var s = R.current(m, now);
-      if (!s || (s === R.race(m) && !s.live(now))) continue;
-      var live = s.live(now);
-      html += raceRowHtml("\u00a0\u00a0" + (live ? "● live " : "▸ ") + String(s.code).toLowerCase(),
-        live ? "until " + R.when(s.endOrDefault(), tz).replace(/.* /, "") : R.when(s.start, tz),
-        live ? "var(--t-green)" : "var(--t-accent2)", live ? "var(--t-green)" : "var(--t-fg)");
+  // One line per selected series (the next session). A second, dimmer line for the following
+  // weekend only when a single series is on, so two series still fit beside weather.
+  function raceSeriesLine(R, label, left, now, tz, extraWeekend) {
+    if (!left.length) return raceRowHtml(label + " · season complete", "", "var(--t-fg-dim)", "var(--t-fg-dim)");
+    var m = left[0], s = R.current(m, now) || R.race(m);
+    var live = !!(s && s.live(now));
+    var code = s ? String(s.code).toLowerCase() : "";
+    var name = label + " \u00b7 " + (live ? "\u25cf " : "") + code + " " + R.shortName(m);
+    var whenStr = !s ? "" : s.dateOnly ? R.day(s.start) : live ? "until " + R.when(s.endOrDefault(), tz).replace(/.* /, "") : R.when(s.start, tz);
+    var html = raceRowHtml(name, whenStr, live ? "var(--t-green)" : "var(--t-fg-bright)", live ? "var(--t-green)" : "var(--t-fg)");
+    if (extraWeekend && left[1]) {
+      var rs = R.race(left[1]);
+      html += raceRowHtml(R.shortName(left[1]), rs.dateOnly ? R.day(rs.start) : R.when(rs.start, tz), "var(--t-fg)", "var(--t-fg)");
     }
-    return html + "</div>";
+    return html;
   }
   function updateRacing() {
     var R = window.OmarchyRacing, body = document.getElementById("race-body"), legend = document.getElementById("legend-race");
@@ -2753,12 +2755,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var now = Date.now(), all = racingAll(now);
     racingNext = R.soonest(all, now);
     var tz = R.zone(cfg.racingTz || "");
-    if (legend) legend.textContent = "racing · " + (R.zoneLabel(tz) || "local");
+    if (legend) legend.textContent = "racing \u00b7 " + (R.zoneLabel(tz) || "local");
     if (body && cfg.widgets.racing) {
-      var series = racingSeries(), rows = series.length <= 4 ? 2 : 1, html = "", i;
+      var series = racingSeries(), extra = series.length <= 1, html = "", i;
       html += '<div id="race-next"></div><div id="race-next-clock"></div>';
       for (i = 0; i < series.length; i++) {
-        html += raceSeriesHtml(R, R.label(series[i]).toLowerCase(), R.upcoming(all[series[i]] || [], now), now, tz, i === 0 && racingNext ? 14 : (i ? 14 : 0), rows);
+        html += raceSeriesLine(R, R.label(series[i]).toLowerCase(), R.upcoming(all[series[i]] || [], now), now, tz, extra);
       }
       body.innerHTML = html;
       tickRaceNext();
@@ -2774,11 +2776,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (n && now >= n.session.endOrDefault()) n = racingNext = R.soonest(racingAll(now), now);
     if (!n) { el.style.display = "none"; clockEl.style.display = "none"; return; }
     el.style.display = "block"; clockEl.style.display = "block";
-    el.innerHTML = '<span style="color:var(--t-fg)">next · </span><span style="color:var(--t-accent)">' +
+    el.innerHTML = '<span style="color:var(--t-fg)">next \u00b7 </span><span style="color:var(--t-accent)">' +
       escHtml(R.label(n.series).toLowerCase() + " " + String(n.session.code).toLowerCase()) +
-      '</span><span style="color:var(--t-fg-bright)"> · ' + escHtml(R.shortName(n.meeting)) + "</span>";
+      '</span><span style="color:var(--t-fg-bright)"> \u00b7 ' + escHtml(R.shortName(n.meeting)) + "</span>";
     var live = n.session.live(now);
-    clockEl.textContent = live ? "● live" : R.clock(n.session.start - now);
+    clockEl.textContent = live ? "\u25cf live" : R.clockShort(n.session.start - now);
     clockEl.style.color = live ? "var(--t-green)" : "var(--t-fg-bright)";
   }
   function tickRaceBar() {
@@ -2797,7 +2799,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   // ---- v2.15 Pulse screensaver: Pulse's own page (1.8 since 2.15.1) (vendor/pulse), the TV's hub inside it, the PC's state on top ----
-  function pulseUrl() {
+  function pulseCfg() {
     var t = DATA.themes[cfg.theme] || {};
     var c = { city: cfg.weatherCity || "", imperial: cfg.tempUnit === "F", theme: { name: cfg.theme, colors: t }, scene: cfg.pulseScene || "sphere", graphics: cfg.pulseGraphics || "auto" };
     if (typeof cfg.weatherLat === "number" && typeof cfg.weatherLon === "number") { c.lat = cfg.weatherLat; c.lon = cfg.weatherLon; }
@@ -2806,8 +2808,21 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       var rows = window.OmarchyRacing.pulseRows(racingAll(Date.now()), racingSeries(), Date.now());
       if (rows.length) c.racing = rows;
     }
-    return "vendor/pulse/index.html#cfg=" + encodeURIComponent(JSON.stringify(c));
+    return c;
   }
+  function pulseUrl() {
+    return "vendor/pulse/index.html#cfg=" + encodeURIComponent(JSON.stringify(pulseCfg()));
+  }
+  // The Pulse page is an iframe: webOS often drops the #cfg hash on file://, and the calendar
+  // may still be loading when the URL is first built. Same path as Android: OmarchySaver.pulse()
+  // plus a postMessage once the frame is up (and again when the snapshot arrives).
+  function pulsePush(fr) {
+    if (!fr || !fr.contentWindow || cfg.living || cfg.saverMode !== "pulse") return;
+    try { fr.contentWindow.postMessage({ pulseTV: "cfg", racing: (pulseCfg().racing) || [] }, "*"); } catch (e) {}
+  }
+  window.OmarchySaver.pulse = function () {
+    try { return JSON.stringify(pulseCfg()); } catch (e) { return "{}"; }
+  };
   var pulseTimer = null;
   function pulseStart(fr) {
     pulseStop();
@@ -4231,6 +4246,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       var j = JSON.parse(text);
       if (j) racingAsset = j;
       if (racingWanted()) { racingKick(); renderWidgets(); }
+      var fr = document.getElementById("saver-frame");
+      if (fr && document.getElementById("saver-overlay") && document.getElementById("saver-overlay").className === "active") pulsePush(fr);
     }).catch(function () { if (racingWanted()) racingKick(); });
     if (racingWanted()) racingKick();
   }
