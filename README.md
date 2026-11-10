@@ -6,7 +6,7 @@ Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](http
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **9 November 2026 (latest release: 2.15.0 — Android TV, LG webOS & Samsung Tizen)** (`versionCode 27`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **10 November 2026 (latest release: 2.15.1 — Android TV, LG webOS & Samsung Tizen)** (`versionCode 28`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 [![OmarchyTV 2.15: Omarchy Pulse on the TV, the arcade with your phone as the gamepad, games for two](docs/media/omarchytv-2.15.png)](https://github.com/piermark/omarchytv/raw/main/docs/media/omarchytv-2.15.mp4)
 
@@ -37,21 +37,21 @@ OmarchyTV; see [Trademarks](#trademarks).*
 
 ---
 
-## Release Downloads & Checksums (`v2.15.0`)
+## Release Downloads & Checksums (`v2.15.1`)
 
 I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d`), so `adb install -r` upgrades over `2.14.0-beta` and earlier and keeps your settings. All checksums are also in `SHA256SUMS` on the release.
 
 | Artifact | Download | Platform | Version | Size | SHA-256 |
 |---|---|---|---|---|---|
-| **`omarchytv-release-2.15.0.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchytv-release-2.15.0.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.15.0` (`versionCode 27`) | `13.6 MB` | `5d74f8c5fdf983da46c63b68740f33b6f08db1078f9cd01b4508209b62743705` |
-| **`omarchytv-webos-2.15.0-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchytv-webos-2.15.0-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.15.0` | `11.4 MB` | `2a7890459dee3401d3b42487a01341bcd3d8a8188cbcd568e5192b3e3617b992` |
-| **`OmarchyTV-tizen-2.15.0-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/OmarchyTV-tizen-2.15.0-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.15.0` | `11.5 MB` | `37ecdb60243ee9016f3596f2985b75a104d8978fcea88d408c40976a06c9565f` |
+| **`omarchytv-release-2.15.1.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.1/omarchytv-release-2.15.1.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.15.1` (`versionCode 28`) | `13.7 MB` | `df9c35a46950980ac63d0686e21452b47cb38a52f5c982aabb798d41c4e892e0` |
+| **`omarchytv-webos-2.15.1-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.1/omarchytv-webos-2.15.1-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.15.1` | `11.8 MB` | `cb078513b0e10e495c0807f80d737196f39e9d488b27b41098ba5d968ee829ba` |
+| **`OmarchyTV-tizen-2.15.1-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.1/OmarchyTV-tizen-2.15.1-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.15.1` | `11.9 MB` | `b251423d350f6fa0b612dea014e2e2871e13542e52ea340af6762268a56add7a` |
 | **`omarchytv-mobile-2.13.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchytv-mobile-2.13.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Android phone installer & companion (`com.omarchytv.mobile`, `minSdk 26`) | `2.13.0-beta` (`versionCode 21300`) | `177 KB` | `e45a5c0f7ccd662279d34e80ffbf4e9581061603012e8814e5941e8909b67f79` |
-| **`omarchy-tv-pc-plugin-2.15.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchy-tv-pc-plugin-2.15.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.15.0` | `284 KB` | `6bc225f27c8dc1855bd5b3036511bdf6636da0d8824a4ed37d7fd5d7eb864506` |
-| **`omarchy-tv-2.15.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchy-tv-2.15.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | PC plugin `omarchy-tv` only | `2.15.0` | `68 KB` | `7e1a8203150831e52af2a4d776fd3919333565f47eb08c449eb93da28854ccc1` |
-| **`omarchy-link-2.15.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.0/omarchy-link-2.15.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.0)** | PC plugin `omarchy-link` only | `2.15.0` | `205 KB` | `36718d2c761f0eac111020da8d5ab3108c66fd34997e3ac0ee4fa2ffd0346527` |
+| **`omarchy-tv-pc-plugin-2.15.1.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.1/omarchy-tv-pc-plugin-2.15.1.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.15.1` | `285 KB` | `d5af5e316cce0470fb35ec7c54bceb12ba3a6a9e4e2a6c934417b9c01f9425b0` |
+| **`omarchy-tv-2.15.1.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.1/omarchy-tv-2.15.1.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1)** | PC plugin `omarchy-tv` only | `2.15.1` | `67 KB` | `1e909e029d5c7232ec1d3f3b86c0254a01948e1168fcff8a14c2e05977dfc97c` |
+| **`omarchy-link-2.15.1.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.15.1/omarchy-link-2.15.1.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1)** | PC plugin `omarchy-link` only | `2.15.1` | `206 KB` | `6e0fb4a8da4b7b10e6e037b3b7be57a21e04c2d51bdbeff9dce015f0981d0fb5` |
 
-All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.14.0-beta](https://github.com/piermark/omarchytv/releases/tag/v2.14.0-beta).
+All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.15.0](https://github.com/piermark/omarchytv/releases/tag/v2.15.0).
 
 ---
 
@@ -86,8 +86,6 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 - **Two new Pulse scenes**: `mars`, a colony with its own sky, and `monolith`.
 - **Racing**: the countdown to the next session moved from the bar into the racing panel on Home, and the race weekends are a side panel of the Pulse screensaver too (Android TV), each one on or off in Settings.
 - **Planes** (Grant Charge): altitude and plain type names (737 MAX 8, A320neo), no stale routes, a range up to 250 nm, the earthquakes panel on or off, OpenSky as an opt-in second feed.
-
-The downloads below are still 2.15.0 until the 2.15.1 files are published. Everything is in [CHANGELOG.md](CHANGELOG.md).
 
 ## What's New in `2.15.0` (`versionCode 27`)
 
