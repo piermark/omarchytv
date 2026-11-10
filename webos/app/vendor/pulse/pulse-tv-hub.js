@@ -249,6 +249,20 @@
   function ftText(ft) {
     return String(Math.round((Number(ft) || 0) / 100) * 100).replace(/\B(?=(\d{3})+(?!\d))/g, ",") + " ft";
   }
+  var PLANES_NM = 200;   // fork: how far the planes panel looks (upstream: 25 nm, the planes in your sky only)
+  /** fork: the planes within PLANES_NM, nearest first, whether or not they are high enough to be in your sky. */
+  function planesNear(lat, lon, raw, n) {
+    var out = [];
+    (raw || []).forEach(function (a) {
+      if (!a || a.ground || a.lat == null || a.lon == null) return;
+      var nm = distKm(lat, lon, Number(a.lat), Number(a.lon)) / 1.852;
+      if (nm > PLANES_NM) return;
+      out.push({ id: String(a.hex || "").slice(0, 8), flight: String(a.flight || "").toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 8),
+        type: typeName(a.type), lat: rnd(Number(a.lat), 3), lon: rnd(Number(a.lon), 3), ft: Math.round((Number(a.alt) || 0) / 100) * 100,
+        track: Number(a.track) || 0, nm: Math.round(nm) });
+    });
+    return out.sort(function (a, b) { return a.nm - b.nm; }).slice(0, n || 5);
+  }
   function planesOver(lat, lon, raw) {
     var out = [];
     (raw || []).forEach(function (a) {
@@ -363,7 +377,7 @@
     function night() { if (hasLoc) S.night = nightSky(lat, lon, clock()); }
     function sky() {
       if (!hasLoc || cfg.planes === false) return;
-      quiet(net("https://api.adsb.lol/v2/lat/" + lat.toFixed(4) + "/lon/" + lon.toFixed(4) + "/dist/25")).then(function (j) {
+      quiet(net("https://api.adsb.lol/v2/lat/" + lat.toFixed(4) + "/lon/" + lon.toFixed(4) + "/dist/" + PLANES_NM)).then(function (j) {
         if (!j) return;
         var raw = (j.ac || j.aircraft || []).map(function (a) {
           return { hex: a.hex, flight: a.flight, lat: a.lat, lon: a.lon, alt: a.alt_baro === "ground" ? 0 : a.alt_baro, gs: a.gs, track: a.track, type: a.t, ground: a.alt_baro === "ground" };
@@ -374,7 +388,13 @@
           if (r) withRoute(p, r);
           else if (p.flight && routeQ.indexOf(p.flight) < 0 && !(p.flight in routes)) routeQ.push(p.flight);
         });
-        S.sky = pl; S.skyT = clock();
+        var near = planesNear(lat, lon, raw, 5);
+        near.forEach(function (p) {
+          var r = routes[p.flight];
+          if (r) withRoute(p, r);
+          else if (p.flight && routeQ.indexOf(p.flight) < 0 && !(p.flight in routes)) routeQ.push(p.flight);
+        });
+        S.sky = pl; S.near = near; S.skyT = clock();
       });
     }
     function route() {   // where a flight comes from and goes (adsbdb.com), one lookup every few seconds, kept for the day
@@ -493,7 +513,7 @@
       every(E.iss || 5000, iss);
       every(E.kp || 900000, kp);
       every(E.air || 1800000, airq);
-      every(E.quakes || 900000, quakes);
+      // fork: no earthquakes panel, so no USGS fetch
       every(E.omarchy || 6 * 3600000, omarchy);
       every(E.launches || 900000, launches);   // the free API allows 15 calls an hour: 4 here
       every(E.launchTick || 1000, launchTick);
@@ -563,11 +583,15 @@
       var l0 = S.launches.filter(function (x) { return x.net > t - 120; })[0];
       if (l0) sp.push(["launch", l0.rocket + " · " + countdown(l0.net - t)]);
       out.push({ id: "tv-space", title: "space", type: "kv", slot: "left", order: 31, icon: "󰑣", data: { rows: sp } });
-      var pl = t - S.skyT < 120 ? S.sky : [];
-      if (pl.length) out.push({ id: "tv-planes", title: "overhead", type: "list", slot: "right", order: 30, icon: "󰀝", data: { items: pl.slice(0, 4).map(function (p) {
-        return { title: (p.flight || p.hex || "?") + (p.type ? " · " + p.type : ""), text: p.from && p.to ? p.from + " → " + p.to : p.airline || "", right: ftText(p.ft) };
-      }) } });
-      if (S.quakes.length) out.push({ id: "tv-quakes", title: "earthquakes", type: "list", slot: "right", order: 32, icon: "󰖟", data: { items: S.quakes.slice(0, 4) } });
+      // fork: the planes panel all the time, where the earthquakes were: the nearest within PLANES_NM
+      if (hasLoc && cfg.planes !== false) {
+        var fresh = S.skyT && t - S.skyT < 120, near = fresh ? S.near || [] : [];
+        out.push({ id: "tv-planes", title: "planes · " + PLANES_NM + " nm", type: "list", slot: "right", order: 30, icon: "󰀝", data: {
+          items: near.map(function (p) {
+            var where = p.from && p.to ? p.from + " → " + p.to : p.airline || "";
+            return { title: (p.flight || p.hex || p.id || "?") + (p.type ? " · " + p.type : ""), text: (where ? where + " · " : "") + p.nm + " nm", right: ftText(p.ft) };
+          }), note: near.length ? "" : fresh ? "no planes within " + PLANES_NM + " nm" : "looking for planes…" } });
+      }
       if (S.omarchy.length) out.push({ id: "tv-omarchy", title: "omarchy", type: "list", slot: "right", order: 34, icon: "", data: { items: S.omarchy.slice(0, 3) } });
       return out;
     }

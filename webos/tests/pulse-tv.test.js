@@ -177,7 +177,10 @@ test("the TV's own panels with no PC: the sky, space, planes, the air, earthquak
   await new Promise((r) => setImmediate(r));
   let st = h.state();
   const ids = st.widgets.map((w) => w.id);
-  ["tv-sky", "tv-space", "tv-quakes", "tv-omarchy"].forEach((id) => assert.ok(ids.includes(id), id));
+  ["tv-sky", "tv-space", "tv-planes", "tv-omarchy"].forEach((id) => assert.ok(ids.includes(id), id));
+  assert.ok(!ids.includes("tv-quakes"), "fork: no earthquakes panel");
+  const pp = st.widgets.find((w) => w.id === "tv-planes");
+  assert.deepStrictEqual([pp.title, pp.order, pp.data.items.length, pp.data.note], ["planes · 200 nm", 30, 0, "looking for planes…"], "fork: the planes panel all the time");
   assert.strictEqual(st.air.level, "good", "the air row under the weather and the haze over the city");
   assert.ok(st.widgets.find((w) => w.id === "tv-sky").data.rows.some((r) => r[0] === "moon"));
   assert.deepStrictEqual(st.widgets.find((w) => w.id === "tv-omarchy").data.items.map((i) => i.title), ["Omarchy 3.2.0"]);
@@ -225,6 +228,24 @@ test("planes: real altitude in the panel, plain type names, and a stale route is
   assert.strictEqual(ba.airline, "British Airways", "the airline (from the callsign) still shows");
   const panel = h.state().widgets.find((w) => w.id === "tv-planes");
   const rows = panel.data.items;
-  assert.ok(rows.some((r) => r.title === "AZ123 · A320neo" && r.text === "MXP → FCO" && r.right === "34,000 ft"), JSON.stringify(rows));
-  assert.ok(rows.some((r) => r.title === "BA117 · 777-300ER" && r.text === "British Airways" && r.right === "36,000 ft"), JSON.stringify(rows));
+  assert.deepStrictEqual(rows, [{ title: "BA117 · 777-300ER", text: "British Airways · 3 nm", right: "36,000 ft" },
+    { title: "AZ123 · A320neo", text: "MXP → FCO · 7 nm", right: "34,000 ft" }], "fork: nearest first, with the distance");
+});
+
+test("fork: the planes panel looks 200 nm out, nearest five, low and far planes included", async () => {
+  const t = { v: 1794243552 };
+  const ac = [];
+  for (let i = 0; i < 8; i++) ac.push({ hex: "h" + i, flight: "F" + i, lat: 44.91 + i * 0.4, lon: 8.61, alt_baro: 3000 + i * 1000, track: 0, t: "B738" });
+  ac.push({ hex: "far", flight: "FAR", lat: 49.0, lon: 8.61, alt_baro: 39000 });   // ~245 nm: out of range
+  ac.push({ hex: "gnd", flight: "GND", lat: 44.92, lon: 8.61, alt_baro: "ground" });
+  let asked = "";
+  const net = (u) => { if (u.indexOf("adsb.lol") >= 0) { asked = u; return Promise.resolve({ ac }); } return Promise.reject(new Error("offline")); };
+  const h = P.create({ lat: 44.91, lon: 8.61, city: "Alessandria" }, net, () => t.v);
+  h._tick.sky();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(/\/dist\/200$/.test(asked), asked);
+  const items = h.state().widgets.find((w) => w.id === "tv-planes").data.items;
+  assert.deepStrictEqual(items.map((i) => i.title), ["F0 · 737-800", "F1 · 737-800", "F2 · 737-800", "F3 · 737-800", "F4 · 737-800"]);
+  assert.strictEqual(items[0].right, "3,000 ft");
+  assert.strictEqual(items[4].text, "96 nm");
 });
