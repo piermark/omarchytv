@@ -190,3 +190,135 @@ test("the TV's own panels with no PC: the sky, space, planes, the air, earthquak
   assert.deepStrictEqual(st.widgets.map((w) => w.id), ["github"]);
   assert.strictEqual(st.theme.name, "kanagawa", "the same colours as on the PC");
 });
+
+test("planes: real altitude in the panel, plain type names, and a stale route is not shown", async () => {
+  assert.strictEqual(P.typeName("a20n"), "A320neo");
+  assert.strictEqual(P.typeName("B77W"), "777-300ER");
+  assert.strictEqual(P.typeName("B38M"), "737 MAX 8");
+  assert.strictEqual(P.typeName("ZZ99"), "ZZ99", "an unknown code stays as it is");
+  assert.strictEqual(P.ftText(37975), "38,000 ft");
+  assert.strictEqual(P.ftText(4250), "4,300 ft");
+  // KUL -> CCU passes over Phuket heading north-west; the same flight number heading south-east is not on it
+  const kulCcu = { from: "KUL", to: "CCU", oLat: 2.7456, oLon: 101.71, dLat: 22.6547, dLon: 88.4467 };
+  assert.ok(P.routeFits(kulCcu, 8.0, 98.3, 320));
+  assert.ok(!P.routeFits(kulCcu, 8.0, 98.3, 140));
+  assert.ok(!P.routeFits({ oLat: 51.47, oLon: -0.45, dLat: 40.64, dLon: -73.78 }, 45.0, 8.7, 150), "LHR -> JFK over Italy");
+  assert.ok(P.routeFits({ from: "X", to: "Y" }, 45, 8, 0), "no airport positions: can't tell, kept");
+
+  const t = { v: 1794243552 };
+  const ap = (iata, lat, lon, city) => ({ iata_code: iata, latitude: lat, longitude: lon, municipality: city });
+  const h = hubAt(t, { answers: {
+    "adsb.lol": { ac: [{ hex: "abc123", flight: "AZ123 ", lat: 45.0, lon: 8.7, alt_baro: 34000, gs: 450, track: 150, t: "A20N" },
+      { hex: "def456", flight: "BA117 ", lat: 44.95, lon: 8.65, alt_baro: 36000, gs: 480, track: 150, t: "B77W" }] },
+    "callsign/AZ123": { response: { flightroute: { origin: ap("MXP", 45.63, 8.72, "Milan"), destination: ap("FCO", 41.80, 12.25, "Rome"), airline: { name: "ITA Airways" } } } },
+    "callsign/BA117": { response: { flightroute: { origin: ap("LHR", 51.47, -0.45, "London"), destination: ap("JFK", 40.64, -73.78, "New York"), airline: { name: "British Airways" } } } } } });
+  h._tick.sky();
+  await new Promise((r) => setImmediate(r));
+  h._tick.route(); h._tick.route();
+  await new Promise((r) => setImmediate(r));
+  h._tick.sky();
+  await new Promise((r) => setImmediate(r));
+  const sky = h.state().sky;
+  const az = sky.find((p) => p.flight === "AZ123"), ba = sky.find((p) => p.flight === "BA117");
+  assert.deepStrictEqual([az.type, az.from, az.to, az.ft], ["A320neo", "MXP", "FCO", 34000]);
+  assert.ok(!ba.from && !ba.to, "LHR -> JFK is not where BA117 is: no route");
+  assert.strictEqual(ba.airline, "British Airways", "the airline (from the callsign) still shows");
+  const panel = h.state().widgets.find((w) => w.id === "tv-planes");
+  const rows = panel.data.items;
+  assert.ok(rows.some((r) => r.title === "AZ123 · A320neo" && r.text === "MXP → FCO" && r.right === "34,000 ft"), JSON.stringify(rows));
+  assert.ok(rows.some((r) => r.title === "BA117 · 777-300ER" && r.text === "British Airways" && r.right === "36,000 ft"), JSON.stringify(rows));
+});
+
+test("screensaver.planesNm 200: the panel looks 200 nm out, nearest five with distance, low planes included", async () => {
+  const t = { v: 1794243552 };
+  const ac = [];
+  for (let i = 0; i < 8; i++) ac.push({ hex: "h" + i, flight: "F" + i, lat: 44.91 + i * 0.4, lon: 8.61, alt_baro: 3000 + i * 1000, track: 0, t: "B738" });
+  ac.push({ hex: "far", flight: "FAR", lat: 49.0, lon: 8.61, alt_baro: 39000 });   // ~245 nm: out of range
+  ac.push({ hex: "gnd", flight: "GND", lat: 44.92, lon: 8.61, alt_baro: "ground" });
+  let asked = "";
+  const net = (u) => { if (u.indexOf("adsb.lol") >= 0) { asked = u; return Promise.resolve({ ac }); } return Promise.reject(new Error("offline")); };
+  const h = P.create({ lat: 44.91, lon: 8.61, city: "Alessandria", planesNm: 200 }, net, () => t.v);
+  assert.strictEqual(h.state().widgets.find((w) => w.id === "tv-planes").data.note, "looking for planes…", "the panel stays up");
+  h._tick.sky();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(/\/dist\/200$/.test(asked), asked);
+  assert.strictEqual(h.state().widgets.find((w) => w.id === "tv-planes").title, "planes · 200 nm");
+  const items = h.state().widgets.find((w) => w.id === "tv-planes").data.items;
+  assert.deepStrictEqual(items.map((i) => i.title), ["F0 · 737-800", "F1 · 737-800", "F2 · 737-800", "F3 · 737-800", "F4 · 737-800"]);
+  assert.strictEqual(items[0].right, "3,000 ft");
+  assert.strictEqual(items[4].text, "96 nm");
+});
+
+test("screensaver.opensky: OpenSky fills in the planes adsb.lol doesn't see, moved on to now, with their type from adsbdb", async () => {
+  // OpenSky state vectors: [icao24, callsign, country, time_position, last_contact, lon, lat, baro_alt_m, on_ground, velocity_ms, track, ...]
+  const os = P.openskyStates([["8851EC", "THA222  ", "Thailand", 1000, 1000, 8.61, 45.5, 10000, false, 250, 0],
+    ["abc123", "AZ123", "Italy", 1000, 1000, 8.7, 45.0, 10000, false, 200, 90],
+    ["gone", "OLD1", "X", 1, 1, 8.6, 45.1, 9000, false, 200, 0]]);
+  assert.strictEqual(os[0].hex, "8851ec");
+  assert.strictEqual(Math.round(os[0].alt), 32808, "m -> ft");
+  assert.strictEqual(Math.round(os[0].gs), 486, "m/s -> kt");
+  const m = P.mergePlanes([{ hex: "abc123", flight: "AZ123", lat: 45.0, lon: 8.7, alt: 34000, type: "A20N" }], os, 1000 + 600, { "8851ec": "A320" });
+  assert.deepStrictEqual(m.map((a) => a.hex), ["abc123", "8851ec"], "adsb.lol wins a plane both see; a 26-minute-old position is dropped");
+  assert.ok(Math.abs(m[1].lat - (45.5 + 486 * 600 / 3600 / 60)) < 0.01, "10 minutes on at 486 kt due north: " + m[1].lat);
+  assert.strictEqual(m[1].type, "A320");
+
+  const t = { v: 1794243552 };
+  const asked = [];
+  const answers = {
+    "opensky-network.org": { states: [["8851ec", "THA222  ", "Thailand", t.v - 60, t.v - 60, 8.61, 45.2, 10000, false, 230, 180]] },
+    "adsbdb.com/v0/aircraft/8851ec": { response: { aircraft: { icao_type: "B788" } } } };
+  const net = (u) => { asked.push(u); for (const k of Object.keys(answers)) if (u.indexOf(k) >= 0) return Promise.resolve(answers[k]); return Promise.reject(new Error("offline")); };
+  const h = P.create({ lat: 44.91, lon: 8.61, city: "Alessandria", planesNm: 200, opensky: true }, net, () => t.v);
+  h._tick.sky(); h._tick.opensky();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(asked.some((u) => /opensky-network\.org\/api\/states\/all\?lamin=41\.58&lamax=48\.24&lomin=3\.90&lomax=13\.32/.test(u)), asked.join("\n"));
+  let items = h.state().widgets.find((w) => w.id === "tv-planes").data.items;
+  assert.strictEqual(items.length, 1, "adsb.lol offline: OpenSky's plane still shows");
+  assert.strictEqual(items[0].title, "THA222");
+  h._tick.route();   // no route to look up yet... THA222's route is queued first
+  h._tick.route();   // ...then its type
+  await new Promise((r) => setImmediate(r));
+  items = h.state().widgets.find((w) => w.id === "tv-planes").data.items;
+  assert.strictEqual(items[0].title, "THA222 · 787-8");
+  assert.strictEqual(items[0].right, "32,800 ft");
+});
+
+test("OpenSky every 8 minutes anonymously, every minute when the launcher is signed in", () => {
+  const net = () => Promise.reject(new Error("offline"));
+  assert.strictEqual(P.create({ lat: 7.78, lon: 98.33 }, net, () => 1).openskyEvery, 480000);
+  assert.strictEqual(P.create({ lat: 7.78, lon: 98.33, openskyAuth: true }, net, () => 1).openskyEvery, 60000);
+  const bridge = fs.readFileSync(A + "pulse-tv.js", "utf8");
+  assert.ok(/planesNm: cfg\.planesNm, earthquakes: cfg\.earthquakes, opensky: !!cfg\.opensky, openskyAuth: !!cfg\.openskyAuth/.test(bridge), "the bridge passes the settings on");
+  const hub = fs.readFileSync(A + "pulse-tv-hub.js", "utf8");
+  assert.ok(!/clientSecret|client_secret|Bearer/.test(hub), "no OpenSky secret or token handling in the page");
+});
+
+test("defaults are unchanged: 25 nm overhead, earthquakes on, no OpenSky; the settings switch each off or on", async () => {
+  assert.deepStrictEqual([25, 50, 200, 250, 30, "x", undefined].map(P.planesNm), [25, 50, 200, 250, 25, 25, 25]);
+  const t = { v: 1794243552 };
+  let asked = [];
+  const net = (u) => { asked.push(u); return Promise.reject(new Error("offline")); };
+  const h = P.create({ lat: 44.91, lon: 8.61 }, net, () => t.v);
+  h._tick.sky(); h._tick.opensky();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(asked.some((u) => /\/dist\/25$/.test(u)), asked.join("\n"));
+  assert.ok(!asked.some((u) => u.indexOf("opensky") >= 0), "no OpenSky unless asked for");
+  assert.ok(!h.state().widgets.some((w) => w.id === "tv-planes"), "no planes in your sky: no overhead panel (as before)");
+  const timers = [];
+  const real = global.setInterval;
+  global.setInterval = (f, ms) => { timers.push(f); return 0; };
+  try {
+    asked = [];
+    const off = P.create({ lat: 44.91, lon: 8.61, earthquakes: false }, net, () => t.v);
+    off.start(); timers.forEach((f) => f());
+    await new Promise((r) => setImmediate(r));
+    assert.ok(!asked.some((u) => u.indexOf("usgs") >= 0), "earthquakes off: no USGS fetch");
+    off.stop();
+    asked = []; timers.length = 0;
+    const on = P.create({ lat: 44.91, lon: 8.61 }, net, () => t.v);
+    on.start(); timers.forEach((f) => f());
+    await new Promise((r) => setImmediate(r));
+    assert.ok(asked.some((u) => u.indexOf("usgs") >= 0), "earthquakes on by default");
+    on.stop();
+  } finally { global.setInterval = real; }
+});

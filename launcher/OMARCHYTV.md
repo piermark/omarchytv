@@ -162,6 +162,30 @@ tools/venv/bin/python -I tools/tv.py 'settings put system screen_off_timeout 900
 Or pick "OmarchyTV" in Settings → Device Preferences → Screen saver. Clock: `.ClockDream`.
 Logo (`logo` in config / JSON, used by home and screensaver): `omarchy-tv` (default: Omarchy's logo.txt + a matching pixel "TV"), `omarchy` (logo.txt unchanged), `original` (OmarchyTV's own block font, no Omarchy artwork - use this, `wallpaper: procedural` and `omarchy_icon=false` for a public build without Omarchy branding).
 
+### Pulse: planes and earthquakes (config only, Android)
+
+```json
+"screensaver": { "planesNm": 200, "earthquakes": false, "opensky": true }
+```
+
+- `planesNm`: how far the planes panel looks. `25` (default) is the planes in your sky ("overhead", shown only
+  when there is one). `50`, `100`, `150`, `200` or `250` list the nearest five with their distance
+  ("planes · 200 nm"), low and far ones included; the panel stays up, saying when there are none.
+- `earthquakes`: `false` removes the earthquakes panel and stops the USGS fetch (default `true`).
+- `opensky`: `true` adds [OpenSky](https://opensky-network.org) as a second plane feed (default `false`). It has its
+  own receivers, so where adsb.lol has few feeders it can see several times more planes. adsb.lol wins a plane both
+  see; OpenSky's are moved on along their track to now, and their type comes from adsbdb by ICAO address.
+  Anonymous: one read every 8 minutes (OpenSky allows 400 credits a day; a 200 nm box costs 2).
+- Signed in (optional): create an API client on your OpenSky account page, download its `credentials.json` and
+  push it to the TV as `opensky.json`. OpenSky is then read every minute (4,000 credits a day):
+
+  ```bash
+  adb push credentials.json /sdcard/Android/data/com.omarchytv.home/files/opensky.json
+  ```
+
+  The launcher reads the file, gets the OAuth2 token itself and adds it to OpenSky requests; the saver page is only
+  told that there is one. After "Reset credential" on OpenSky, push the new file. Delete it to go back to anonymous.
+
 ## Resolution
 
 Layouts are in dp/sp, icons are vector drawables, the wordmark and screensaver are drawn as

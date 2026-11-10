@@ -150,7 +150,7 @@ final class TteSaver {
 
     /** Minimal WebViewAssetLoader: https://appassets.androidplatform.net/assets/... -> APK assets; nothing else loads. */
     private WebResourceResponse serve(Uri u) {
-        if (PulseSaver.proxied(u)) return PulseSaver.proxy(u, "https://" + HOST);   // v2.15 Pulse's data services
+        if (PulseSaver.proxied(u)) return PulseSaver.proxy(ctx, u, "https://" + HOST);   // v2.15 Pulse's data services
         String path = u.getPath();
         if (!HOST.equals(u.getHost()) || path == null || !path.startsWith("/assets/") || path.contains("..")) {
             return new WebResourceResponse("text/plain", "utf-8", 404, "Not Found", null, null);
