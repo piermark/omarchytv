@@ -363,6 +363,7 @@
     <string name="v210_w_deploys">─ deploys · pc ─</string>
     <string name="w_racing" translatable="false">─ racing · f1 · motogp ─</string>
     <string name="w_racing_bar" translatable="false">racing countdown in the bar</string>
+    <string name="ss_pulse_graphics" translatable="false">Pulse graphics</string>
     <string name="ss_pulse_racing" translatable="false">racing panel on Pulse</string>
     <string name="v210_cast">Send to TV (cast)</string>
     <string name="wp_next">Next background</string>

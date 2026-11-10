@@ -1,5 +1,36 @@
 # Changelog
 
+## [2.15.1] — unreleased
+
+### Pulse 1.8 on the TV
+
+- **Pulse on the TV is Pulse 1.8** (Android TV, LG, Samsung): the city that looks like one (towers lit by the real Sun
+  and Moon, a far skyline, mist, reflections), rain with depth, planes with a tag you can read, a rocket and a
+  Starlink train you can recognise. `pulse.js` and `pulse.css` are Pulse 1.8's, unchanged.
+- **Graphics that fit the TV** (`screensaver.pulseGraphics`, Settings → Screensaver → Pulse graphics on Android):
+  `auto` (default) gives the 1.8 look unless the TV is a small one (Android's low-RAM flag, under 1.7 GB, fewer than
+  four cores, or an old TV browser), lets Pulse choose its resolution, and goes back to the plain look by itself if
+  frames take too long; `low` is the plain look at half resolution, `medium` the 1.8 look at half resolution, `high`
+  the 1.8 look at full resolution.
+- **Two new scenes**: `mars` (a colony with its own sky: the dome is the TV or the paired PC, rovers for the PC's AI
+  agents, launch pads for its repos) and `monolith`. Each runs in its own sandboxed frame, as on the PC; on a TV
+  browser too old for that, the sphere stays.
+
+### Racing
+
+- **The countdown moved into the panel**: the racing panel on Home now starts with the next session of any series you
+  follow and its countdown. The bar no longer shows it unless you ask (`"racing": {"bar": true}`; Settings → Widgets).
+- **Racing on Pulse** (Android TV): a `racing` side panel in the screensaver, the next sessions soonest first, each
+  with its countdown, `● live` while it runs (`screensaver.racing`; on when the Home racing widget is on; Settings →
+  Screensaver → racing panel on Pulse).
+
+### From the community
+
+- **Planes** (Grant Charge, #136, #139): the planes panel shows the altitude, plain type names (737 MAX 8, A320neo),
+  no stale routes; `screensaver.planesNm` looks further out (up to 250 nm, the nearest five); `screensaver.earthquakes:
+  false` removes that panel; `screensaver.opensky` adds OpenSky as a second, opt-in plane feed.
+- Tests: the iPhone remote supervisor test is skipped where `flock` is missing (Grant Charge, #138).
+
 ## [2.15.0] — unreleased (`versionCode 27`; webOS 2.15.0, Tizen 2.15.0, PC plugins 2.15.0)
 
 ### Omarchy Pulse on the TV, the new screensaver

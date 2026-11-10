@@ -1,0 +1,344 @@
+<!doctype html><html><head><meta charset="utf-8"><!-- Omarchy Pulse: the scene "monolith" and the scene runtime, unchanged (c) 2026 Marco Porro, MIT. Written by tools/pulse-tv-scenes.py. -->
+<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden}canvas{position:fixed;top:0;left:0;width:100%;height:100%;display:block}</style></head><body>
+<canvas id="c"></canvas>
+<script>
+/* Omarchy Pulse 1.5: the runtime of a community scene. (c) 2026 Marco Porro (x.com/MarcoPorro), MIT.
+   A scene runs alone in a sandboxed frame: no network, no token, no access to Pulse or to your files. It gets a
+   read-only copy of the state, draws on its own transparent canvas between the sky and the panels, and can answer
+   a click with a line of text. See docs/SCENES.md. */
+(function () {
+  "use strict";
+  var cv = document.getElementById("c"), g = cv.getContext("2d");
+  var def = null, name = "", state = null, W = 0, H = 0, scale = 1, fps = 20, paused = false, last = 0;
+  var t0 = performance.now(), inited = false, cost = 0, n = 0, worst = 0, rep = performance.now(), errs = 0;
+  var parentWin = window.parent;
+  function post(m) { try { parentWin.postMessage(m, "*"); } catch (e) {} }
+  function fail(where, e) {
+    errs++;
+    if (errs <= 3) post({ pulseScene: "error", where: where, error: String(e && e.message || e) + (e && e.stack ? "\n" + String(e.stack).split("\n").slice(0, 3).join("\n") : "") });
+  }
+  function frozen(o) {   // the scene gets a copy it cannot change for the others
+    if (o && typeof o === "object") { Object.keys(o).forEach(function (k) { frozen(o[k]); }); Object.freeze(o); }
+    return o;
+  }
+  function resize() {
+    var r = Math.min(2, window.devicePixelRatio || 1) * scale;
+    W = Math.max(1, Math.round(innerWidth * r)); H = Math.max(1, Math.round(innerHeight * r));
+    cv.width = W; cv.height = H;
+    if (def && def.init) { try { def.init(g, { w: W, h: H, scale: r }); inited = true; } catch (e) { fail("init", e); } }
+  }
+  window.PulseScene = {
+    register: function (nm, d) {
+      if (def) return;   // one scene per frame
+      name = String(nm || "scene"); def = d || {};
+      resize(); inited = true;
+      post({ pulseScene: "ready", name: name, city: !!def.city });
+    },
+    // 1.7: ask Pulse for one of its own effects (fireworks, banner, lightning, shooting, tip, launch, flare, chime):
+    // Pulse plays it over the whole wallpaper. A few a minute at most; anything else is ignored.
+    fx: function (kind, text) { post({ pulseScene: "fx", kind: String(kind || ""), text: String(text == null ? "" : text).slice(0, 60) }); },
+    // 1.7: a line of text over the city, like a click's answer
+    say: function (text) { post({ pulseScene: "show", text: String(text == null ? "" : text).slice(0, 120) }); },
+    // little helpers every scene needs
+    rgba: function (c, a) { c = c || [255, 255, 255]; return "rgba(" + (c[0] | 0) + "," + (c[1] | 0) + "," + (c[2] | 0) + "," + (a == null ? 1 : a) + ")"; },
+    mix: function (a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; },
+    rand: function (seed) { var s = (Math.abs(seed | 0) % 2147483646) + 1; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  };
+  addEventListener("resize", resize);
+  addEventListener("error", function (e) { fail("script", e.error || e.message); });
+  addEventListener("message", function (ev) {
+    var m = ev.data || {};
+    if (ev.source !== parentWin || !m.pulse) return;
+    if (m.pulse === "state") {
+      state = frozen(m.state || {});
+      fps = Math.max(1, Math.min(60, +m.fps || 20));
+      if (m.scale && m.scale !== scale) { scale = m.scale; resize(); }
+      if (def && def.update) { try { def.update(state); } catch (e) { fail("update", e); } }
+    } else if (m.pulse === "pause") paused = !!m.on;
+    else if (m.pulse === "click" && def && def.click) {
+      var r = null;
+      try { r = def.click(m.x * W, m.y * H, state); } catch (e) { fail("click", e); }
+      if (r) post({ pulseScene: "show", text: String(typeof r === "object" ? (r.title || "") + (r.text ? " · " + r.text : "") : r).slice(0, 120) });
+    } else if (m.pulse === "snap") {
+      try { post({ pulseScene: "snap", url: cv.toDataURL("image/png") }); } catch (e) { fail("snap", e); }
+    } else if (m.pulse === "record") record(+m.secs || 6);
+  });
+  function record(secs) {   // the scene lab: a short video of the scene alone (demo data)
+    if (!cv.captureStream || !window.MediaRecorder) { post({ pulseScene: "video", error: "this browser cannot record" }); return; }
+    var chunks = [], rec = new MediaRecorder(cv.captureStream(30), { mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm" });
+    rec.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = function () { var b = new Blob(chunks, { type: "video/webm" }), fr = new FileReader(); fr.onload = function () { post({ pulseScene: "video", url: fr.result }); }; fr.readAsDataURL(b); };
+    rec.start(); setTimeout(function () { rec.stop(); }, secs * 1000);
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (!def || !state || paused) return;
+    if (now - last < 1000 / fps - 2) return;
+    last = now;
+    var a = performance.now();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, W, H);
+    try { if (def.draw) def.draw(g, (now - t0) / 1000, state, { w: W, h: H, horizon: H * (state.layout ? state.layout.horizon : 0.72) }); }
+    catch (e) { fail("draw", e); }
+    var c = performance.now() - a;
+    cost += c; n++; if (c > worst) worst = c;
+    if (now - rep > 2000) { post({ pulseScene: "perf", draw: +(cost / Math.max(1, n)).toFixed(2), worst: +worst.toFixed(1), fps: +(n / ((now - rep) / 1000)).toFixed(1), w: W, h: H }); cost = 0; n = 0; worst = 0; rep = now; }
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>
+// monolith: a scene of Omarchy Pulse 1.8 (docs/SCENES.md). (c) 2026 Marco Porro (x.com/MarcoPorro), MIT.
+// A crystal the size of a tower floats over a mirror lake: it is your machine. Each band of it is a CPU core, its heart
+// warms with the temperature, its two rings are the memory and the disk, the light it drops on the water is the load.
+// Your AI agents are the shards that orbit it; your repos are the pylons on the shore, their beams as tall as the
+// week's commits; the rows of your panels (VMs, containers) are the swarm of cubes; the lake ripples with the network.
+// It looks after itself: it measures how long a frame takes and draws in one of four ways, from a light one for an
+// old laptop to a rich one for a fast PC on a 4K screen.
+PulseScene.register("monolith", {
+  init: function (g, size) {
+    this.q = 2;            // how rich it draws: 0 light, 1 medium, 2 high, 3 ultra (a fast PC on a big screen)
+    this.cost = [];        // the last frame times, to choose q
+    this.qAt = 0;          // when q last changed (seconds of t)
+    this.orb = {};         // where each agent's shard is on its orbit, by name (or index)
+    this.rip = [];         // ripples on the lake: [x, y, born, strength]
+    this.beam = {};        // a repo whose beam just fired: name -> t
+    this.hit = [];         // what a click can find: [x, y, r, text]
+    this.prev = null;      // the state before, to see what just happened
+    this.said = {};        // when each effect was last asked, so they stay rare
+    this.seen = 0;
+    this.dust = [];
+    for (var i = 0; i < 220; i++) this.dust.push([Math.random(), Math.random(), 0.3 + Math.random() * 0.7, Math.random() * 6.28]);
+    this.ridge = [];
+    var h = 0.5; for (i = 0; i <= 64; i++) { h += (Math.random() - 0.5) * 0.22; h = Math.max(0.1, Math.min(1, h)); this.ridge.push(h); }
+  },
+
+  // what just happened: Pulse's own effects, asked rarely (Pulse limits them too)
+  update: function (st) {
+    var P = this.prev, self = this, now = st.t || Date.now() / 1000;
+    var say = function (key, kind, text, every) { if (now - (self.said[key] || 0) < every) return; self.said[key] = now; PulseScene.fx(kind, text); };
+    var rows = function (s) { var m = {}; Object.keys(s.panels || {}).forEach(function (id) { ((s.panels[id] || {}).rows || []).forEach(function (r, i) { m[id + "|" + (r.name || i)] = r; }); }); return m; };
+    if (P) {
+      var w0 = (P.agents || []).filter(function (a) { return a.state === "waiting"; }).length, w1 = (st.agents || []).filter(function (a) { return a.state === "waiting"; });
+      if (w1.length > w0) say("wait", "chime", (w1[w1.length - 1].name || "an agent") + " needs you", 30);
+      var f0 = (P.git || []).filter(function (r) { return r.ci === "fail"; }).length, f1 = (st.git || []).filter(function (r) { return r.ci === "fail"; }).length;
+      if (f1 < f0) say("green", "launch", "build green", 60);
+      var r0 = rows(P), r1 = rows(st);
+      Object.keys(r1).forEach(function (k) {
+        if (!r0[k]) return;
+        if (r1[k].level === "crit" && r0[k].level !== "crit") say("down", "lightning", (r1[k].name || "a service") + " is down", 60);
+        if (r1[k].level === "ok" && r0[k].level === "crit") say("up", "shooting", (r1[k].name || "a service") + " is back", 60);
+      });
+      var k0 = (P.space || {}).kp || 0, k1 = (st.space || {}).kp || 0;
+      if (k1 >= 6 && k0 < 6) say("kp", "tip", "aurora tonight · Kp " + k1, 3600);
+      if ((P.time || {}).hour === 23 && (st.time || {}).hour === 0) say("midnight", "fireworks", "", 3600);
+      var l1 = (st.space || {}).launchIn, l0 = (P.space || {}).launchIn;
+      if (l1 != null && l0 != null && l1 <= 0 && l0 > 0) say("launch", "launch", "liftoff", 600);
+    }
+    this.prev = st;
+  },
+
+  draw: function (g, t, st, box) {
+    var t0 = performance.now(), C = PulseScene.rgba, M = PulseScene.mix, W = box.w, H = box.h, hz = box.horizon, self = this, u = H / 1080;
+    var hex = function (h, d) { h = (h || d).slice(1); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; };
+    var th = st.theme || {}, bg = hex(th.bg, "#0b0e18"), fg = hex(th.fg, "#c9d6f2"), ac = hex(th.accent, "#39e1ff"), a2 = hex(th.accent2, "#ff3fb4");
+    var ok = hex(th.ok, "#6ff0a8"), warn = hex(th.warn, "#ffbd4a"), crit = hex(th.crit, "#ff4d6a");
+    var still = st.ui && st.ui.motion === "reduced", tt = still ? 0 : t, now = st.t || Date.now() / 1000, q = this.q;
+    var sys = st.sys || {}, cpu = sys.cpu || 0, cores = (sys.cores && sys.cores.length ? sys.cores : [cpu]).slice(0, 32), temp = sys.temp || 45;
+    var quiet = st.meeting || st.away ? 0.55 : 1;   // a meeting, or nobody there: everything a little lower
+    var sp = st.space || {}, nightK = sp.sun == null ? 1 : Math.max(0, Math.min(1, (6 - sp.sun) / 14));
+    var cx = W / 2, FONT = "'CaskaydiaMono Nerd Font', 'Cascadia Mono', ui-monospace, monospace";
+    this.hit = [];
+    var glow = function (x, y, r, col, a) {   // a soft light; a plain disc when drawing light
+      if (a <= 0.01 || r <= 0) return;
+      if (q === 0) { g.fillStyle = C(col, a * 0.35); g.beginPath(); g.arc(x, y, r * 0.5, 0, 6.2832); g.fill(); return; }
+      var gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, C(col, a)); gr.addColorStop(1, C(col, 0));
+      g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+    };
+
+    // ---- the aurora, when the Kp says there is one (high and ultra)
+    var kp = sp.kp || 0;
+    if (q >= 2 && kp >= 4 && nightK > 0.3) {
+      g.save(); g.globalCompositeOperation = "lighter";
+      for (var ab = 0; ab < 3; ab++) {
+        g.beginPath();
+        for (var ax = 0; ax <= 40; ax++) { var xx = W * (0.22 + 0.56 * ax / 40), yy = hz * (0.2 + ab * 0.07) + Math.sin(ax * 0.35 + tt * 0.25 + ab * 2) * H * 0.03; if (ax) g.lineTo(xx, yy); else g.moveTo(xx, yy); }
+        for (ax = 40; ax >= 0; ax--) g.lineTo(W * (0.22 + 0.56 * ax / 40), hz * (0.2 + ab * 0.07) + H * 0.1 + Math.sin(ax * 0.3 + tt * 0.2 + ab) * H * 0.02);
+        var ag = g.createLinearGradient(0, hz * 0.18, 0, hz * 0.55); ag.addColorStop(0, C(ab === 1 ? a2 : ok, 0)); ag.addColorStop(0.4, C(ab === 1 ? a2 : ok, 0.05 * Math.min(1, (kp - 3) / 4) * nightK)); ag.addColorStop(1, C(ok, 0));
+        g.fillStyle = ag; g.fill();
+      }
+      g.restore();
+    }
+
+    // ---- the shore: a far ridge, and the lake
+    g.fillStyle = C(M(bg, a2, 0.14), 0.96); g.beginPath(); g.moveTo(0, hz);
+    for (var i = 0; i <= 64; i++) g.lineTo(W * i / 64, hz - H * 0.012 - this.ridge[i] * H * 0.035 * (1 - 0.8 * Math.exp(-Math.pow((i - 32) / 9, 2))));
+    g.lineTo(W, hz); g.closePath(); g.fill();
+    var lake = g.createLinearGradient(0, hz, 0, H);
+    lake.addColorStop(0, C(M(bg, ac, 0.20), 0.97)); lake.addColorStop(0.35, C(M(bg, a2, 0.08), 0.98)); lake.addColorStop(1, C(M(bg, [0, 0, 0], 0.55), 1));
+    g.fillStyle = lake; g.fillRect(0, hz, W, H - hz);
+    g.fillStyle = C(ac, 0.55); g.fillRect(0, hz - u, W, Math.max(1, u * 1.5));   // the water line
+    if (q >= 1) {   // long glints, in perspective
+      g.strokeStyle = C(fg, 0.05); g.lineWidth = Math.max(1, u);
+      for (i = 1; i < (q >= 2 ? 14 : 8); i++) { var gy = hz + (H - hz) * Math.pow(i / 14, 1.8); g.beginPath(); g.moveTo(0, gy); g.lineTo(W, gy); g.stroke(); }
+    }
+
+    // ---- the monolith: where it floats, how it breathes
+    var mh = H * 0.235, mw = H * 0.07, bob = Math.sin(tt * 0.5) * H * 0.005, top = hz - H * 0.035 - mh + bob, mid = top + mh / 2;
+    var heat = Math.max(0, Math.min(1, (temp - 40) / 50)), core = heat < 0.5 ? M(ac, warn, heat * 2) : M(warn, crit, (heat - 0.5) * 2);
+    var load = Math.max(0.08, cpu / 100) * quiet, music = st.music && !still;
+    var mono = function (alpha, flip) {   // drawn twice: itself, and its image in the water
+      g.save(); if (flip) { g.translate(0, 2 * hz); g.scale(1, -1); } g.globalAlpha = alpha;
+      var n = cores.length, cap = mw * 0.75, bh = (mh - cap * 2) / n;
+      // the two points
+      g.fillStyle = C(M(bg, ac, 0.30), 1); g.beginPath(); g.moveTo(cx, top); g.lineTo(cx + mw / 2, top + cap); g.lineTo(cx, top + cap); g.closePath(); g.fill();
+      g.fillStyle = C(M(bg, ac, 0.16), 1); g.beginPath(); g.moveTo(cx, top); g.lineTo(cx - mw / 2, top + cap); g.lineTo(cx, top + cap); g.closePath(); g.fill();
+      g.fillStyle = C(M(bg, ac, 0.24), 1); g.beginPath(); g.moveTo(cx, top + mh); g.lineTo(cx + mw / 2, top + mh - cap); g.lineTo(cx, top + mh - cap); g.closePath(); g.fill();
+      g.fillStyle = C(M(bg, ac, 0.12), 1); g.beginPath(); g.moveTo(cx, top + mh); g.lineTo(cx - mw / 2, top + mh - cap); g.lineTo(cx, top + mh - cap); g.closePath(); g.fill();
+      for (var k = 0; k < n; k++) {   // a band for each core, from the top: the busier, the brighter
+        var v = Math.max(0, Math.min(1, cores[k] / 100)), y0 = top + cap + k * bh, eq = music ? 0.25 * Math.abs(Math.sin(tt * (3 + k * 0.7) + k)) : 0, lv = Math.min(1, v * quiet + eq);
+        var c1 = v > 0.9 ? crit : M(ac, core, v);
+        g.fillStyle = C(M(M(bg, ac, 0.10), c1, 0.12 + 0.55 * lv), 1); g.fillRect(cx - mw / 2, y0, mw / 2, bh - Math.max(1, u));      // the shaded side
+        g.fillStyle = C(M(M(bg, ac, 0.20), c1, 0.20 + 0.75 * lv), 1); g.fillRect(cx, y0, mw / 2, bh - Math.max(1, u));               // the lit side
+        if (q >= 1 && lv > 0.25) { g.fillStyle = C(fg, 0.25 * lv); g.fillRect(cx + mw * 0.06, y0 + bh * 0.25, mw * 0.36 * lv, Math.max(1, bh * 0.14)); }
+      }
+      g.fillStyle = C(fg, 0.5); g.fillRect(cx - Math.max(0.5, u * 0.75), top + cap * 0.3, Math.max(1, u * 1.5), mh - cap * 0.6);   // its edge, toward you
+      g.restore();
+    };
+    // the light it drops on the water, and its image there
+    glow(cx, hz + H * 0.012, H * (0.10 + 0.22 * load), core, 0.30 + 0.5 * load);
+    if (q >= 1) { g.save(); g.beginPath(); g.rect(0, hz, W, H - hz); g.clip(); mono(q >= 2 ? 0.30 : 0.18, true); g.restore(); }
+    if (q >= 1) {   // the beam under it
+      var bm = g.createLinearGradient(0, top + mh, 0, hz); bm.addColorStop(0, C(core, 0.5 * load)); bm.addColorStop(1, C(core, 0.06));
+      g.fillStyle = bm; g.beginPath(); g.moveTo(cx - u * 2, top + mh); g.lineTo(cx + u * 2, top + mh); g.lineTo(cx + mw * 0.3, hz); g.lineTo(cx - mw * 0.3, hz); g.closePath(); g.fill();
+    }
+
+    // ---- the pylons: your repos on the shore, a beam as tall as the week's commits, in the colour of its CI
+    var repos = (st.git || []).slice(0, 10);
+    (st.events || []).forEach(function (e) {
+      if (e.t <= self.seen) return; self.seen = e.t;
+      if (e.kind === "commit" || e.kind === "push") { var r = repos.filter(function (x) { return x.name && e.text.indexOf(x.name) === 0; })[0]; self.beam[r ? r.name : "#0"] = t; }
+    });
+    repos.forEach(function (r, i) {
+      var side = i % 2 ? 1 : -1, slot = Math.floor(i / 2), px = cx + side * (W * 0.085 + slot * W * 0.032), ph = H * 0.05, py = hz;
+      var col = r.ci === "fail" ? crit : r.ci === "run" ? warn : r.ci === "ok" ? ok : ac, bhh = H * (0.03 + 0.22 * Math.min(1, (r.week || 0) / 30)) * quiet;
+      var fired = self.beam[r.name || "#" + i], fk = fired != null ? Math.max(0, 1 - (t - fired) / 2.5) : 0, run = r.ci === "run" && !still ? 0.6 + 0.4 * Math.sin(tt * 5 + i) : 1;
+      g.fillStyle = C(M(bg, fg, 0.28), 1); g.beginPath(); g.moveTo(px - u * 5, py); g.lineTo(px - u * 1.5, py - ph); g.lineTo(px + u * 1.5, py - ph); g.lineTo(px + u * 5, py); g.closePath(); g.fill();
+      var bg2 = g.createLinearGradient(0, py - ph - bhh, 0, py - ph); bg2.addColorStop(0, C(col, 0)); bg2.addColorStop(1, C(col, (0.55 + 0.45 * fk) * run));
+      g.fillStyle = bg2; g.fillRect(px - Math.max(1, u * (1 + 2 * fk)), py - ph - bhh * (1 + fk * 0.6), Math.max(2, u * (2 + 4 * fk)), bhh * (1 + fk * 0.6));
+      glow(px, py - ph, H * 0.012 * (1 + fk), col, 0.9 * run);
+      if (r.dirty) { g.fillStyle = C(warn, 0.9); g.fillRect(px + u * 5, py - ph * 0.5, Math.max(2, u * 3), Math.max(2, u * 3)); }
+      if (q >= 1) { g.fillStyle = C(col, 0.16); g.fillRect(px - u, py, Math.max(1, u * 2), bhh * 0.5); }   // its beam on the water
+      self.hit.push([px, py - ph, H * 0.03, (r.name || "a repo") + " · " + (r.week || 0) + " commits this week" + (r.ci ? " · CI " + r.ci : "") + (r.dirty ? " · " + r.dirty + " changed" : "")]);
+    });
+
+    // ---- the swarm: the rows of your panels (VMs, containers, hosts), a cube each, in the colour of its state
+    var rows = [];
+    Object.keys(st.panels || {}).forEach(function (id) {   // only panels that say how their rows are (a status, a table of services): a list of news is not a swarm
+      var rr = (st.panels[id] || {}).rows || [];
+      if (rr.some(function (r) { return r.level; })) rr.forEach(function (r) { if (rows.length < 28) rows.push({ r: r, id: id }); });
+    });
+    rows.forEach(function (o, i) {
+      var side = i % 2 ? 1 : -1, k = Math.floor(i / 2), col2 = k % 7, row2 = Math.floor(k / 7), lv = o.r.level || "";
+      var x = cx + side * (W * 0.07 + col2 * H * 0.03), y = hz + H * 0.078 + row2 * H * 0.034 + Math.sin(tt * 0.9 + i) * H * 0.003, s = H * 0.011;
+      var col = lv === "crit" ? crit : lv === "warn" ? warn : lv === "ok" ? ok : ac, bl = lv === "crit" && !still ? 0.5 + 0.5 * Math.sin(tt * 6 + i) : 1;
+      g.fillStyle = C(M(bg, col, 0.55), 0.95 * bl); g.fillRect(x - s, y - s, s * 2, s * 2);
+      g.fillStyle = C(M(bg, col, 0.85), 0.95 * bl); g.beginPath(); g.moveTo(x - s, y - s); g.lineTo(x - s * 0.4, y - s * 1.6); g.lineTo(x + s * 1.6, y - s * 1.6); g.lineTo(x + s, y - s); g.closePath(); g.fill();
+      g.fillStyle = C(M(bg, col, 0.30), 0.95 * bl); g.beginPath(); g.moveTo(x + s, y - s); g.lineTo(x + s * 1.6, y - s * 1.6); g.lineTo(x + s * 1.6, y + s * 0.4); g.lineTo(x + s, y + s); g.closePath(); g.fill();
+      if (q >= 1) glow(x, y + s * 2.2, s * 2.2, col, 0.25 * bl);
+      self.hit.push([x, y, s * 2, (o.r.name || o.id) + " · " + (lv || "no state")]);
+    });
+
+    // ---- the lake moves with the network; rain is Pulse's, the rings are ours
+    var net = Math.min(1, ((sys.rx || 0) + (sys.tx || 0)) / 4e6);
+    if (!still && q >= 1 && Math.random() < 0.02 + net * 0.25) this.rip.push([cx + (Math.random() - 0.5) * W * 0.4, hz + Math.pow(Math.random(), 1.6) * (H - hz) * 0.8, t, 0.4 + net]);
+    this.rip = this.rip.filter(function (r) {
+      var age = t - r[2]; if (age > 2.5) return false;
+      var d = (r[1] - hz) / (H - hz), rr = age * H * 0.05 * r[3] * (0.3 + d);
+      g.strokeStyle = C(ac, 0.28 * (1 - age / 2.5)); g.lineWidth = Math.max(1, u); g.beginPath(); g.ellipse(r[0], r[1], rr, rr * 0.22, 0, 0, 6.2832); g.stroke(); return true;
+    });
+
+    // ---- the rings: memory and disk, turning; behind the monolith first, in front after
+    var ring = function (frac, rx, col, spd, part) {
+      var ry = rx * 0.2, a0 = tt * spd, y = mid + bob * 0.5;
+      g.lineWidth = Math.max(1.5, u * 2.4);
+      g.strokeStyle = C(col, 0.18); g.beginPath(); g.ellipse(cx, y, rx, ry, 0, part ? 0 : Math.PI, part ? Math.PI : 6.2832); g.stroke();
+      var a1 = a0 + frac * 6.2832;   // the lit arc, cut into the half we draw now
+      g.strokeStyle = C(col, 0.95);
+      for (var s = 0; s < 24; s++) { var p0 = a0 + (a1 - a0) * s / 24, p1 = a0 + (a1 - a0) * (s + 1) / 24, front = Math.sin((p0 + p1) / 2) > 0; if (front === part) { g.beginPath(); g.ellipse(cx, y, rx, ry, 0, p0, p1); g.stroke(); } }
+    };
+    var ram = (sys.ram || 0) / 100, disk = (sys.disk || 0) / 100;
+    ring(ram, mw * 1.25, a2, 0.25, false); ring(disk, mw * 1.7, ac, -0.16, false);
+
+    // ---- the shards behind it, the monolith, the shards in front
+    var agents = (st.agents || []).slice(0, 12), shards = [];
+    agents.forEach(function (ag, i) {
+      var key = ag.name || "#" + i, o = self.orb[key] || (self.orb[key] = { a: i * 2.1, r: 1 });
+      var spd = { working: 0.9, waiting: 0.12, done: 0.3, failed: 0, idle: 0.18 }[ag.state] || 0.2;
+      if (!still) o.a += spd * 0.012;
+      var wantR = ag.state === "waiting" ? 1.5 : ag.state === "failed" ? 1.25 : 1; o.r += (wantR - o.r) * 0.03;
+      var rx = mw * (2.3 + (i % 3) * 0.45) * o.r, ry = rx * 0.24, z = Math.sin(o.a), x = cx + Math.cos(o.a) * rx;
+      var y = ag.state === "failed" ? hz + H * 0.02 + (i % 3) * H * 0.01 : mid + z * ry + Math.sin(tt * 1.3 + i) * H * 0.004;
+      shards.push({ ag: ag, x: x, y: y, z: ag.state === "failed" ? 1 : z, i: i, a: o.a, rx: rx });
+    });
+    var shard = function (s) {
+      var ag = s.ag, col = { working: ac, waiting: warn, done: ok, failed: crit }[ag.state] || M(fg, bg, 0.45);
+      var sz = H * 0.012 * (0.8 + 0.35 * (s.z + 1) / 2) * (ag.state === "waiting" ? 1.5 + (still ? 0 : 0.25 * Math.sin(tt * 5)) : 1), dim = (0.55 + 0.45 * (s.z + 1) / 2) * quiet;
+      if (q >= 2 && ag.state === "working" && !still) {   // a trail along its orbit
+        g.strokeStyle = C(col, 0.35 * dim); g.lineWidth = Math.max(1, u * 1.5); g.beginPath(); g.ellipse(cx, mid, s.rx, s.rx * 0.24, 0, s.a - 0.5, s.a); g.stroke();
+      }
+      glow(s.x, s.y, sz * 3, col, 0.5 * dim);
+      g.save(); g.translate(s.x, s.y); if (ag.state === "failed") g.rotate(0.9);
+      g.fillStyle = C(M(bg, col, 0.9), dim); g.beginPath(); g.moveTo(0, -sz * 1.6); g.lineTo(sz * 0.8, 0); g.lineTo(0, sz * 1.6); g.closePath(); g.fill();
+      g.fillStyle = C(M(bg, col, 0.55), dim); g.beginPath(); g.moveTo(0, -sz * 1.6); g.lineTo(-sz * 0.8, 0); g.lineTo(0, sz * 1.6); g.closePath(); g.fill();
+      g.restore();
+      if (ag.state === "waiting") { g.fillStyle = C(warn, 1); g.font = "700 " + Math.round(H * 0.016) + "px " + FONT; g.textAlign = "center"; g.fillText("!", s.x, s.y - sz * 2.2); }
+      if (ag.name && q >= 1 && s.z > -0.2) { g.fillStyle = C(fg, 0.6 * dim); g.font = Math.round(H * 0.0105) + "px " + FONT; g.textAlign = "center"; g.fillText(String(ag.name).slice(0, 16), s.x, s.y + sz * 2.4 + H * 0.01); }
+      self.hit.push([s.x, s.y, sz * 3, (ag.name || "an agent") + " · " + ag.state + (ag.text ? " · " + String(ag.text).slice(0, 40) : "")]);
+    };
+    shards.filter(function (s) { return s.z <= 0; }).forEach(shard);
+    glow(cx, mid, mh * (0.55 + 0.25 * load), core, (0.16 + 0.3 * load) * (0.7 + 0.3 * nightK));   // its heart's light
+    mono(1, false);
+    if (q >= 2) glow(cx, mid, mw * 0.9, core, 0.35 * load + (still ? 0 : 0.08 * Math.sin(tt * 2.2)));
+    ring(ram, mw * 1.25, a2, 0.25, true); ring(disk, mw * 1.7, ac, -0.16, true);
+    shards.filter(function (s) { return s.z > 0; }).forEach(shard);
+
+    // ---- a focus session: a shield closes around it as the time goes
+    if (st.focus && st.focus.until > st.focus.start) {
+      var fp = Math.max(0, Math.min(1, (now - st.focus.start) / (st.focus.until - st.focus.start)));
+      g.strokeStyle = C(ok, 0.25); g.lineWidth = Math.max(1.5, u * 2); g.beginPath(); g.ellipse(cx, mid, mw * 2.1, mh * 0.62, 0, 0, 6.2832); g.stroke();
+      g.strokeStyle = C(ok, 0.95); g.lineWidth = Math.max(2, u * 3.5); g.beginPath(); g.ellipse(cx, mid, mw * 2.1, mh * 0.62, 0, -1.5708, -1.5708 + fp * 6.2832); g.stroke();
+    }
+
+    // ---- motes of light rising off the water: more of them, the richer it draws and the busier the machine
+    var nd = still ? 0 : [0, 40, 110, 220][q] * (0.35 + 0.65 * load);
+    g.fillStyle = C(M(fg, core, 0.5), 0.55);
+    for (i = 0; i < nd; i++) {
+      var d = this.dust[i], dy = (d[1] + tt * 0.012 * d[2]) % 1, dx = cx + (d[0] - 0.5) * W * 0.5 + Math.sin(tt * 0.3 + d[3]) * H * 0.01, sz2 = Math.max(1, u * (0.8 + d[2] * 1.4));
+      g.globalAlpha = Math.sin(dy * 3.1416) * (0.3 + 0.5 * d[2]); g.fillRect(dx, hz + H * 0.02 - dy * H * 0.42, sz2, sz2);
+    }
+    g.globalAlpha = 1;
+
+    // ---- what it is: one line under it
+    g.textAlign = "center"; g.font = Math.round(H * 0.0125) + "px " + FONT; g.fillStyle = C(fg, 0.55 * quiet);
+    g.fillText(Math.round(cpu) + "% · " + Math.round(temp) + "° · " + cores.length + " cores" + (agents.length ? " · " + agents.length + " agents" : "") + (rows.length ? " · " + rows.length + " services" : ""), cx, hz + H * 0.034);
+    g.textAlign = "start";
+    this.hit.push([cx, mid, mh * 0.5, "CPU " + Math.round(cpu) + "% · " + Math.round(temp) + "° · RAM " + Math.round(ram * 100) + "% · disk " + Math.round(disk * 100) + "% · drawing " + ["light", "medium", "high", "ultra"][q]]);
+
+    // ---- look after itself: the frame time chooses how rich to draw (an old laptop: light; a fast PC in 4K: ultra)
+    this.cost.push(performance.now() - t0); if (this.cost.length > 90) this.cost.shift();
+    if (this.cost.length === 90 && t - this.qAt > 6) {
+      var avg = this.cost.reduce(function (a, b) { return a + b; }, 0) / 90, half = st.ui && st.ui.quality === "half", maxQ = half ? 1 : 3;
+      if (avg > 7 && q > 0) { this.q = q - 1; this.qAt = t; this.cost = []; }
+      else if (avg < 2.2 && q < maxQ) { this.q = q + 1; this.qAt = t + 20; this.cost = []; }   // up slowly, down at once
+      else if (q > maxQ) { this.q = maxQ; this.cost = []; }
+    }
+  },
+
+  click: function (x, y) {
+    for (var i = this.hit.length - 1; i >= 0; i--) { var h = this.hit[i]; if (Math.abs(x - h[0]) <= h[2] && Math.abs(y - h[1]) <= h[2]) return h[3]; }
+    return "";
+  }
+});
+</script>
+</body></html>

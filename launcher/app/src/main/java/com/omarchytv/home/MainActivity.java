@@ -3360,11 +3360,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return true;
         });
         if ("pulse".equals(cfg.screensaverArt)) {   // v2.15: Pulse's scene
-            String[] scenes = {"sphere", "skyline", "orbit", "calm", "hacker", "noir"};
+            String[] scenes = {"sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith"};
             String lScene = str(R.string.ss_pulse_scene);
             p.add(lScene, cfg.pulseScene, r -> {
                 String n = next(scenes, cfg.pulseScene);
                 applyLive("screensaver", lScene, j -> screensaver(j).put("pulseScene", n));
+                return true;
+            });
+            String[] gfx = {"auto", "low", "medium", "high"};   // 2.15.1: how rich Pulse draws on this TV
+            String lGfx = str(R.string.ss_pulse_graphics);
+            p.add(lGfx, cfg.pulseGraphics, r -> {
+                String n = next(gfx, cfg.pulseGraphics);
+                applyLive("screensaver", lGfx, j -> screensaver(j).put("pulseGraphics", n));
                 return true;
             });
             String lRace = str(R.string.ss_pulse_racing);   // 2.15.1: the race weekends as one of Pulse's side panels

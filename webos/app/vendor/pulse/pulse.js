@@ -683,6 +683,11 @@
     var agents = [], drones = {}, face = "agents", typing = false;        // AI agents: drones and the face
     var parts = [], rockets = [], fxOn = true, flashFx = 0;                            // fireworks
     var focus = null, sunOn = true, phase = "night", phaseKey = "", focusK = 0, simpleMon = false;       // focus mode, the sun
+    // 1.8: the look. One light for the whole scene (the real Sun or Moon lights the sky, the towers and the floor), air
+    // between you and the far city, reflections on the floor, a sky that changes without steps. [pulse] polish = false
+    // (or a slow PC, or reduced motion for what moves) brings back the plain look.
+    var polishOn = Q.get("polish") !== "0", polishCfg = true, bgPrev = null, bgFadeAt = 0, skyW = null;
+    function polished() { return polishOn && polishCfg && !wpOn; }
     var shooting = [], camImg = null, newsText = "", weatherNow = null, clockStr = "", ledStyle = false;
     var gaze = { x: 0, y: 0 }, cursorXY = null, cursorAt = -1e9, eyesOn = true, deskEmpty = true;   // the eyes follow you
     var away = false, wakeAt = -1e9, lan = [], carsOn = true, privacyOn = false, newAt = {};
@@ -767,7 +772,19 @@
       }
       else if (m.pulseScene === "show") fxText(m.text);
       else if (m.pulseScene === "perf") plug.perf = m;
+      else if (m.pulseScene === "fx") sceneFx(m);
     });
+    // 1.7: a scene asks for one of Pulse's effects (PulseScene.fx, or an action made in the scene editor). Only these,
+    // at most one every 4 s and the same one every 15 s, never while the screen is covered or in reduced motion.
+    var SCENE_FX = { fireworks: 1, banner: 1, lightning: 1, shooting: 1, tip: 1, launch: 1, flare: 1, chime: 1 }, sceneFxAt = 0, sceneFxKind = {};
+    function sceneFx(m) {
+      var k = String(m.kind || ""), now = performance.now(), txt = String(m.text || "").slice(0, 60);
+      if (!SCENE_FX[k] || covered || now - sceneFxAt < 4000 || now - (sceneFxKind[k] || -1e9) < 15000) return;
+      sceneFxAt = now; sceneFxKind[k] = now;
+      if (k === "chime") { sound.chime([659, 784, 988]); if (txt) fxText(txt); return; }
+      if (reduced && k !== "banner" && k !== "tip") { if (txt) fxText(txt); return; }
+      Scene.fx({ kind: k === "launch" ? "launch" : k, text: k === "launch" ? (txt || "liftoff") + " · liftoff" : txt });
+    }
     cv.addEventListener("click", function (e) {   // a click on the scene: the scene may answer with a line of text
       var ex = e.clientX * W / innerWidth, ey = e.clientY * H / innerHeight;
       for (var id in infraPos) {   // 1.5: a double click on a storm acknowledges its problems on their system (if its source has ack)
@@ -795,7 +812,7 @@
       var R = rnd(42);
       stars = []; for (var i = 0; i < 130; i++) stars.push([R() * W, R() * H * 0.62, R(), 0.3 + R() * 1.1]);
       far = []; var x = 0; while (x < W) { var bw = W * (0.012 + R() * 0.03); far.push([x, bw, H * (0.03 + R() * 0.12)]); x += bw + W * 0.002; }
-      drops = []; for (i = 0; i < 180; i++) drops.push([R() * W, R() * H, 0.6 + R() * 0.8]);
+      drops = []; for (i = 0; i < 720; i++) drops.push([R() * W, R() * H, 0.6 + R() * 0.8]);   // the first 180 are the plain look's
       ridge = []; var a1 = R() * 6, a2r = R() * 6;
       for (i = 0; i <= 64; i++) { var u = i / 64; ridge.push(0.5 + 0.28 * Math.sin(u * 7.1 + a1) + 0.16 * Math.sin(u * 17.3 + a2r) + 0.08 * Math.sin(u * 41 + a1 * 2)); }
       // the free band between the side columns, where the skyline stands
@@ -1102,6 +1119,10 @@
     var bgc = document.createElement("canvas");
     function paintStatic() {
       if (!COL.bg) return;
+      if (polishOn && polishCfg && !reduced && bgc.width === W && bgc.height === H && W * H <= 2560 * 1440 && performance.now() - t0 > 3000) {   // 1.8: the old sky fades into the new one
+        if (!bgPrev) bgPrev = document.createElement("canvas");
+        bgPrev.width = W; bgPrev.height = H; bgPrev.getContext("2d").drawImage(bgc, 0, 0); bgFadeAt = performance.now();
+      } else bgFadeAt = 0;
       bgc.width = W; bgc.height = H;
       var b = bgc.getContext("2d"), hz = H * 0.745, cx = W / 2, bg = COL.bg, a2 = COL.accent2, i;
       if (wpOn && wpImg) {   // 1.5.1: your own wallpaper under the panels, filling the screen like a wallpaper does
@@ -1113,9 +1134,16 @@
       }
       var sky = b.createLinearGradient(0, 0, 0, hz);
       // the sky follows the real sun: night, a warm dawn and dusk, a (still dark enough to read) day
-      var top = mix(bg, [0, 0, 0], 0.35), midc = mix(bg, a2, 0.10), low = mix(bg, a2, 0.28);
-      if (phase === "day") { top = mix(bg, COL.accent, 0.16); midc = mix(bg, COL.accent, 0.24); low = mix(mix(bg, COL.fg, 0.22), a2, 0.2); }
-      else if (phase === "dawn" || phase === "dusk") { top = mix(bg, [20, 10, 40], 0.4); midc = mix(bg, a2, 0.22); low = mix(mix(bg, COL.warn, 0.45), a2, 0.35); }
+      var PN = [mix(bg, [0, 0, 0], 0.35), mix(bg, a2, 0.10), mix(bg, a2, 0.28)],
+        PD = [mix(bg, COL.accent, 0.16), mix(bg, COL.accent, 0.24), mix(mix(bg, COL.fg, 0.22), a2, 0.2)],
+        PT = [mix(bg, [20, 10, 40], 0.4), mix(bg, a2, 0.22), mix(mix(bg, COL.warn, 0.45), a2, 0.35)];
+      var pal = phase === "day" ? PD : phase === "dawn" || phase === "dusk" ? PT : PN;
+      var top = pal[0], midc = pal[1], low = pal[2];
+      skyW = polished() ? skyWeights() : null;
+      if (skyW) {   // 1.8: no steps: the three skies mixed by the Sun's real height
+        var mx3 = function (k) { var o = [0, 0, 0]; for (var c = 0; c < 3; c++) o[c] = PN[k][c] * skyW[0] + PT[k][c] * skyW[1] + PD[k][c] * skyW[2]; return o; };
+        top = mx3(0); midc = mx3(1); low = mx3(2);
+      }
       sky.addColorStop(0, rgba(top, 1));
       sky.addColorStop(0.7, rgba(midc, 1));
       sky.addColorStop(1, rgba(low, 1));
@@ -1132,8 +1160,203 @@
       b.strokeStyle = rgba(a2, 0.35); b.lineWidth = Math.max(1, H / 900); b.stroke();
       var R = H * (kind === "sphere" ? 0.18 : 0.15);
       b.fillStyle = rgba(mix(bg, a2, 0.18), 1);
-      for (i = 0; i < far.length; i++) { var f = far[i]; if (kind !== "sphere" && f[0] + f[1] > cx - R * 1.1 && f[0] < cx + R * 1.1) continue; b.fillRect(f[0], hz - f[2], f[1], f[2] * (CITIES[city] ? 0.6 : 1)); }
+      var farTops = [];
+      if (polished()) farTops = paintSkyline(b, hz, cx, R, low);
+      else for (i = 0; i < far.length; i++) { var f = far[i]; if (kind !== "sphere" && f[0] + f[1] > cx - R * 1.1 && f[0] < cx + R * 1.1) continue; b.fillRect(f[0], hz - f[2], f[1], f[2] * (CITIES[city] ? 0.6 : 1)); }
       drawCity(b, hz, cx, H * (kind === "sphere" ? 0.165 : kind === "orbit" ? 0.3 : 0.14));   // your city, in front of the far blocks
+      cityTops = cityTops.concat(farTops);
+      if (polished()) { paintAir(b, hz, cx, low); if (kind !== "orbit") paintMirror(b, hz); }
+    }
+    // 1.8: how much of the night, the twilight and the day is in the sky now, from the Sun's real height ([night, twilight, day])
+    function skyWeights() {
+      if (!sunOn || !night || !night.sun || typeof night.sun.el !== "number") return null;
+      var el = night.sun.el, sm = function (a, b2, x) { var u = Math.max(0, Math.min(1, (x - a) / (b2 - a))); return u * u * (3 - 2 * u); };
+      var d = sm(1, 12, el), n = sm(1, 9, -el);
+      return [n, Math.max(0, 1 - d - n), d];
+    }
+    // 1.8: a far city that looks like one: three rows of buildings, each paler with the distance, with setbacks, spires,
+    // slanted roofs and crowns, a lighter edge on the roof, and windows that come on as the Sun goes down. Painted once.
+    function paintSkyline(b, hz, cx, R, low) {
+      var nightK = skyW ? skyW[0] : phase === "night" ? 1 : 0, twiK = skyW ? skyW[1] : phase === "dawn" || phase === "dusk" ? 1 : 0;
+      var lit = 0.07 + 0.50 * nightK + 0.28 * twiK, tops = [], low2 = CITIES[city] ? 0.6 : 1;
+      var warm = mix(COL.warn, COL.fg, 0.35), hzc = mix(low, COL.fg, 0.12);
+      for (var L = 0; L < 3; L++) {
+        var Rn = rnd(211 + L * 53), dist = [0.62, 0.36, 0.12][L], sc = [0.62, 0.82, 1][L] * low2;
+        var body = mix(mix(COL.bg, COL.accent2, 0.18), hzc, dist), edge = mix(body, COL.fg, 0.22), wa = [0.38, 0.62, 0.9][L];
+        var x = -W * 0.01 * L;
+        while (x < W) {
+          var bw = W * (0.011 + Rn() * 0.024) * (0.8 + L * 0.12), tall = Rn() < 0.09, h = H * (0.028 + Rn() * 0.10) * sc * (tall ? 1.55 : 1), ty = Rn();
+          var gap = W * 0.0015 + (Rn() < 0.15 ? W * 0.012 : 0), x0 = x; x += bw + gap;
+          if (kind !== "sphere" && x0 + bw > cx - R * 1.1 && x0 < cx + R * 1.1) { Rn(); continue; }
+          var top = hz - h, parts = [[x0, top, bw, h]];   // boxes, bottom to top
+          if (ty > 0.5 && ty <= 0.72) parts.push([x0 + bw * 0.18, top - h * 0.22, bw * 0.64, h * 0.22]);                       // a setback
+          else if (ty > 0.72 && ty <= 0.84) { parts.push([x0 + bw * 0.2, top - h * 0.18, bw * 0.6, h * 0.18]); parts.push([x0 + bw * 0.38, top - h * 0.32, bw * 0.24, h * 0.14]); }   // two
+          else if (ty > 0.92) { parts.push([x0, top - h * 0.05, bw * 0.22, h * 0.05]); parts.push([x0 + bw * 0.78, top - h * 0.05, bw * 0.22, h * 0.05]); }                         // a crown
+          b.fillStyle = rgba(body, 1);
+          var roofY = top;
+          if (ty > 0.84 && ty <= 0.92) {   // a slanted roof
+            var dir = Rn() < 0.5; b.beginPath(); b.moveTo(x0, hz); b.lineTo(x0, top + (dir ? 0 : h * 0.16)); b.lineTo(x0 + bw, top + (dir ? h * 0.16 : 0)); b.lineTo(x0 + bw, hz); b.closePath(); b.fill();
+            b.strokeStyle = rgba(edge, 0.9); b.lineWidth = Math.max(1, H / 1100); b.beginPath(); b.moveTo(x0, top + (dir ? 0 : h * 0.16)); b.lineTo(x0 + bw, top + (dir ? h * 0.16 : 0)); b.stroke();
+          } else {
+            for (var q = 0; q < parts.length; q++) { var P = parts[q]; b.fillStyle = rgba(body, 1); b.fillRect(P[0], P[1], P[2], P[3] + 1); b.fillStyle = rgba(edge, 0.9); b.fillRect(P[0], P[1], P[2], Math.max(1, H / 1100)); roofY = Math.min(roofY, P[1]); }
+          }
+          var sg = b.createLinearGradient(x0, 0, x0 + bw, 0);   // one side a little darker: a volume, not a card
+          sg.addColorStop(0, "rgba(0,0,0,0)"); sg.addColorStop(0.62, "rgba(0,0,0,0)"); sg.addColorStop(1, "rgba(0,0,0,0.22)");
+          b.fillStyle = sg; b.fillRect(x0, top, bw, h);
+          if ((tall || ty > 0.72 && ty <= 0.84) && Rn() < 0.7) {   // a mast on the tall ones, with its light
+            var mh = h * (0.12 + Rn() * 0.2); b.fillStyle = rgba(edge, 0.9); b.fillRect(x0 + bw / 2 - Math.max(0.5, H / 1600), roofY - mh, Math.max(1, H / 800), mh);
+            if (L > 0) tops.push([x0 + bw / 2, roofY - mh]);
+          }
+          // windows: a grid, some lit; more when it gets dark
+          var ws = Math.max(1, H / (L === 2 ? 520 : 640)), cols = Math.floor((bw - ws * 2) / (ws * 2.3)), rows = Math.floor((h - ws * 2) / (ws * 2.9)), allLit = Rn() < 0.06;
+          for (var ry = 0; ry < rows; ry++) for (var cc = 0; cc < cols; cc++) {
+            var hsh = Rn();
+            if (hsh < (allLit ? Math.min(0.9, lit * 1.8) : lit)) {
+              var c2 = hsh * 97 % 1; b.fillStyle = rgba(c2 < 0.68 ? warm : c2 < 0.9 ? COL.accent : COL.accent2, (0.3 + (hsh * 31 % 1) * 0.6) * wa * (0.55 + 0.45 * Math.max(nightK, twiK)));
+              b.fillRect(x0 + ws * 1.4 + cc * ws * 2.3, top + ws * 1.6 + ry * ws * 2.9, ws, ws * 1.5);
+            }
+          }
+        }
+      }
+      return tops;
+    }
+    // 1.8: clouds with a body: each one is painted once as a picture (round masses, lit from the side of the Sun or the
+    // Moon, darker underneath) and painted again only when the light changes
+    var cloudSpr = [], cloudKey = "";
+    function cloudSprites(base, L, storm) {
+      var lc = L ? mix(base, L.col, L.sun ? 0.75 : 0.45) : mix(base, COL.fg, 0.25), sh = mix(base, [0, 0, 0], storm ? 0.5 : 0.3), ls = L ? (L.x < W / 2 ? -1 : 1) : 0;
+      var key = [base.map(Math.round).join(","), lc.map(Math.round).join(","), ls, storm ? 1 : 0].join("|");
+      if (key === cloudKey && cloudSpr.length) return cloudSpr;
+      cloudKey = key; cloudSpr = [];
+      for (var v = 0; v < 4; v++) {
+        var c = document.createElement("canvas"); c.width = 320; c.height = 120;
+        var x = c.getContext("2d"), Rn = rnd(900 + v * 17), n = 9 + v * 2;
+        for (var i = 0; i < n; i++) {
+          var u = i / (n - 1), px = 40 + u * 240 + (Rn() - 0.5) * 24, env = Math.sin(Math.PI * (0.08 + 0.84 * u)), r = 16 + env * (20 + Rn() * 14), py = 78 - env * (10 + Rn() * 16);
+          var gr = x.createRadialGradient(px + ls * r * 0.35, py - r * 0.4, r * 0.1, px, py, r);
+          gr.addColorStop(0, rgba(lc, 0.95)); gr.addColorStop(0.55, rgba(base, 0.85)); gr.addColorStop(1, rgba(sh, 0));
+          x.fillStyle = gr; x.beginPath(); x.arc(px, py, r, 0, Math.PI * 2); x.fill();
+        }
+        var fl = x.createLinearGradient(0, 70, 0, 104);   // a flat, darker base
+        fl.addColorStop(0, rgba(sh, 0)); fl.addColorStop(0.5, rgba(sh, 0.5)); fl.addColorStop(1, rgba(sh, 0));
+        x.globalCompositeOperation = "source-atop"; x.fillStyle = fl; x.fillRect(0, 70, 320, 40);
+        x.globalCompositeOperation = "destination-out";
+        var cut = x.createLinearGradient(0, 88, 0, 112); cut.addColorStop(0, "rgba(0,0,0,0)"); cut.addColorStop(1, "rgba(0,0,0,1)");
+        x.fillStyle = cut; x.fillRect(0, 88, 320, 32);
+        cloudSpr.push(c);
+      }
+      return cloudSpr;
+    }
+    // 1.8: mist between the buildings: two slow layers of the horizon's own colour, thicker at night, at dawn and in fog
+    var fogTex = null, fogKey = "";
+    function fogTexture(col) {
+      var key = col.map(Math.round).join(",");
+      if (fogTex && key === fogKey) return fogTex;
+      fogKey = key; fogTex = document.createElement("canvas"); fogTex.width = 1024; fogTex.height = 96;
+      var x = fogTex.getContext("2d"), Rn = rnd(4242);
+      for (var i = 0; i < 46; i++) {
+        var px = Rn() * 1024, py = 30 + Rn() * 44, r = 40 + Rn() * 90, a = 0.05 + Rn() * 0.09;
+        for (var k = -1; k <= 1; k++) {   // drawn three times, so the picture joins with itself at the sides
+          var gr = x.createRadialGradient(px + k * 1024, py, 0, px + k * 1024, py, r);
+          gr.addColorStop(0, rgba(col, a)); gr.addColorStop(1, rgba(col, 0));
+          x.save(); x.translate(0, py); x.scale(1, 0.32); x.translate(0, -py); x.fillStyle = gr; x.fillRect(px + k * 1024 - r, py - r, r * 2, r * 2); x.restore();
+        }
+      }
+      return fogTex;
+    }
+    function drawMist(t, hz, col, k) {
+      if (k < 0.03) return;
+      var tex = fogTexture(col), tw = Math.max(W * 0.9, H * 1.6), th = H * 0.12, mv = reduced ? 0 : t;
+      g.save(); g.globalAlpha = Math.min(1, k);
+      for (var L = 0; L < 2; L++) {
+        var off = ((mv * H * (L ? -0.006 : 0.009) + L * tw * 0.37) % tw + tw) % tw, y = hz - th * (L ? 0.78 : 0.6);
+        for (var x = -off; x < W; x += tw) g.drawImage(tex, x, y, tw, th);
+      }
+      g.restore();
+    }
+    // 1.8: a low Sun sends its beams across the sky
+    function drawRays(L, t) {
+      if (!L.sun || L.low < 0.25) return;
+      g.save(); g.globalCompositeOperation = "lighter";
+      var len = H * 0.75, gr = g.createRadialGradient(L.x, L.y, H * 0.02, L.x, L.y, len);
+      gr.addColorStop(0, rgba(L.col, 0.10 * L.a * L.low)); gr.addColorStop(1, rgba(L.col, 0));
+      g.fillStyle = gr;
+      for (var i = 0; i < 9; i++) {
+        var a0 = -Math.PI * (0.04 + i * 0.115) + Math.sin((reduced ? 0 : t) * 0.07 + i * 1.9) * 0.03, wd = 0.035 + (i * 37 % 5) * 0.012;
+        g.beginPath(); g.moveTo(L.x, L.y); g.lineTo(L.x + Math.cos(a0 - wd) * len, L.y + Math.sin(a0 - wd) * len); g.lineTo(L.x + Math.cos(a0 + wd) * len, L.y + Math.sin(a0 + wd) * len); g.closePath(); g.fill();
+      }
+      g.restore();
+    }
+    // 1.8: the floor is wet: the far city and the sky above it are mirrored on it, fading as they come near. Painted
+    // once with the rest of what never moves (the towers and the core add their own reflection every frame)
+    function paintMirror(b, hz) {
+      var rh = Math.min(H - hz, H * 0.2) | 0; if (rh < 8) return;
+      b.save(); b.globalAlpha = 0.42; b.translate(0, 2 * hz); b.scale(1, -1);
+      b.drawImage(bgc, 0, hz - rh, W, rh, 0, hz - rh, W, rh); b.restore();
+      var fd = b.createLinearGradient(0, hz, 0, hz + rh), fc = mix(COL.bg, COL.accent2, 0.1);
+      fd.addColorStop(0, rgba(fc, 0)); fd.addColorStop(1, rgba(fc, 0.97));
+      b.fillStyle = fd; b.fillRect(0, hz, W, rh + 1);
+    }
+    // 1.8: air. The far city fades into the colour of the sky at the horizon, the city lights the low sky at night,
+    // and a grain breaks the bands of a dark gradient. Painted once, with the rest of what never moves.
+    var grain = null, airCol = null;
+    function paintAir(b, hz, cx, low) {
+      var nightK = skyW ? skyW[0] : phase === "night" ? 1 : 0, twiK = skyW ? skyW[1] : phase === "dawn" || phase === "dusk" ? 1 : 0;
+      var hzc = mix(low, COL.fg, 0.10 + 0.10 * (1 - nightK)); airCol = hzc;
+      var hg = b.createLinearGradient(0, hz - H * 0.17, 0, hz);
+      hg.addColorStop(0, rgba(hzc, 0)); hg.addColorStop(0.75, rgba(hzc, 0.20 + 0.10 * twiK)); hg.addColorStop(1, rgba(hzc, 0.42 + 0.12 * twiK));
+      b.fillStyle = hg; b.fillRect(0, hz - H * 0.17, W, H * 0.17);
+      if (nightK > 0.05) {   // the glow of a city at night, on the low sky
+        b.save(); b.globalCompositeOperation = "lighter"; b.translate(cx, hz); b.scale(1, 0.34);
+        var cg = b.createRadialGradient(0, 0, 0, 0, 0, W * 0.5);
+        cg.addColorStop(0, rgba(mix(COL.accent2, COL.warn, 0.25), 0.16 * nightK)); cg.addColorStop(1, rgba(COL.accent2, 0));
+        b.fillStyle = cg; b.fillRect(-W / 2, -W * 0.5, W, W * 0.5); b.restore();
+      }
+      var fh = b.createLinearGradient(0, hz, 0, hz + (H - hz) * 0.5);   // and the same air over the far floor
+      fh.addColorStop(0, rgba(hzc, 0.22)); fh.addColorStop(1, rgba(hzc, 0));
+      b.fillStyle = fh; b.fillRect(0, hz, W, (H - hz) * 0.5);
+      if (!grain) {
+        grain = document.createElement("canvas"); grain.width = grain.height = 128;
+        var gc = grain.getContext("2d"), im = gc.createImageData(128, 128), R3 = rnd(7);
+        for (var i = 0; i < im.data.length; i += 4) { var v = R3() < 0.5 ? 0 : 255; im.data[i] = im.data[i + 1] = im.data[i + 2] = v; im.data[i + 3] = 3 + R3() * 4; }
+        gc.putImageData(im, 0, 0);
+      }
+      b.fillStyle = b.createPattern(grain, "repeat"); b.fillRect(0, 0, W, H);
+    }
+    // 1.8: the light of the scene: the real Sun by day, the Moon by night (as bright as it is lit), where they are in your
+    // sky; null when neither is up or the clouds hide them
+    function sceneLight(hz, dk) {
+      if (!night) return null;
+      var su = night.sun, mo = night.moon, p;
+      if (su && su.el > -1 && (p = skyXY(su.az, su.el, hz))) {
+        var a = Math.pow(1 - dk.cloud, 1.5), lowS = Math.max(0, 1 - su.el / 12);
+        if (a > 0.04) return { x: p[0], y: p[1], col: mix(COL.warn, COL.crit, lowS * 0.5), a: a * (0.55 + 0.45 * lowS), sun: true, low: lowS };
+      }
+      if (mo && mo.el > -1 && (p = skyXY(mo.az, mo.el, hz))) {
+        var am = (0.35 + 0.65 * Math.max(dk.d, 0.3)) * (1 - 0.75 * dk.cloud) * (0.25 + 0.75 * (mo.lit || 0));
+        if (am > 0.08) return { x: p[0], y: p[1], col: mix(COL.fg, [255, 244, 214], 0.5), a: am * 0.7, sun: false };
+      }
+      return null;
+    }
+    function drawLightPath(L, hz, t) {   // its light on the floor: a path of glints coming toward you
+      g.save(); g.globalCompositeOperation = "lighter";
+      if (L.sun && L.low > 0.05) {   // a low Sun: its glow lies along the horizon
+        g.save(); g.translate(L.x, hz); g.scale(1, 0.22);
+        var hb = g.createRadialGradient(0, 0, 0, 0, 0, W * 0.30);
+        hb.addColorStop(0, rgba(L.col, 0.34 * L.a * L.low)); hb.addColorStop(1, rgba(L.col, 0));
+        g.fillStyle = hb; g.fillRect(-W * 0.30, -W * 0.30, W * 0.60, W * 0.30); g.restore();
+      }
+      var wv = H * 0.05, hgt = (H - hz) * 0.9, rr = wv * 2.4;
+      g.save(); g.translate(L.x, hz); g.scale(1, hgt / rr);   // a soft pool of light, long toward you
+      var lg = g.createRadialGradient(0, 0, 0, 0, 0, rr);
+      lg.addColorStop(0, rgba(L.col, 0.55 * L.a)); lg.addColorStop(0.5, rgba(L.col, 0.18 * L.a)); lg.addColorStop(1, rgba(L.col, 0));
+      g.fillStyle = lg; g.fillRect(-rr, 0, rr * 2, rr); g.restore();
+      g.fillStyle = rgba(L.col, 0.75 * L.a);
+      for (var i = 0; i < 9; i++) {   // glints: short bright lines, wider as they come near
+        var u = (i + 0.5) / 9, yy = hz + hgt * 0.75 * u * u + H / 400, ww = wv * (0.5 + 2.6 * u) * (0.55 + 0.45 * Math.sin((reduced ? 0 : t) * (0.7 + i * 0.13) + i * 2.1));
+        g.globalAlpha = 1 - u * 0.8; g.fillRect(L.x - ww / 2, yy, ww, Math.max(1, H / 700));
+      }
+      g.restore();
     }
     function reset() { resize(); }
 
@@ -1850,7 +2073,7 @@
         tx = clearOfPanels(tx, ty, H * 0.04);
         var q = planePos[p.id] || (planePos[p.id] = [tx, ty]);
         q[0] += (tx - q[0]) * 0.03; q[1] += (ty - q[1]) * 0.03;
-        var s2 = H * (0.009 + p.el / 90 * 0.008), dir = Math.sin(p.track * Math.PI / 180) > 0 ? -1 : 1;   // heading east flies to the left (you look south)
+        var s2 = H * (0.009 + p.el / 90 * 0.008) * (polished() ? 1.25 : 1), dir = Math.sin(p.track * Math.PI / 180) > 0 ? -1 : 1;   // heading east flies to the left (you look south)
         // where it came from: a contrail that fades behind it
         var tr = q.trail || (q.trail = []);
         if (!tr.length || Math.abs(tr[tr.length - 1][0] - q[0]) + Math.abs(tr[tr.length - 1][1] - q[1]) > 2) { tr.push([q[0], q[1]]); if (tr.length > 70) tr.shift(); }
@@ -1874,14 +2097,36 @@
         });
         if (blink < 0.08) { var sg = g.createRadialGradient(q[0], q[1], 0, q[0], q[1], s2 * 2); sg.addColorStop(0, rgba(COL.fg, 0.9)); sg.addColorStop(1, rgba(COL.fg, 0)); g.fillStyle = sg; g.fillRect(q[0] - s2 * 2, q[1] - s2 * 2, s2 * 4, s2 * 4); }   // the white strobe, a short flash
         g.globalCompositeOperation = "source-over";
-        var lw = H * 0.2, lh = H * 0.034;
+        var lw = H * 0.2, lh = H * 0.034, tag = null;
+        if (polished() && !shareMode && p.flight) {   // 1.8: a tag you can read: the flight, its route, how high and how fast
+          var FN = "'CaskaydiaMono Nerd Font', 'Cascadia Mono', monospace", f1 = Math.round(H * 0.0148), f2 = Math.round(H * 0.0122);
+          var card = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"][Math.round(((p.track % 360) + 360) % 360 / 45) % 8];
+          var l2 = p.from && p.to ? p.from + " → " + p.to + (p.fromCity && p.toCity ? "   " + p.fromCity + " → " + p.toCity : "") : "";
+          var l3 = (Math.round(p.ft / 100) * 100).toLocaleString("en-US") + " ft" + (p.kt ? " · " + p.kt + " kt" : "") + " · " + card;
+          g.font = "700 " + f1 + "px " + FN; var w1 = g.measureText(p.flight).width;
+          g.font = "500 " + f2 + "px " + FN; var wT = p.type ? g.measureText("  " + p.type).width : 0, w2 = l2 ? g.measureText(l2).width : 0, w3 = g.measureText(l3).width;
+          tag = { l2: l2, l3: l3, f1: f1, f2: f2, FN: FN, w1: w1, pad: H * 0.008 };
+          lw = Math.max(w1 + wT, w2, w3) + tag.pad * 2 + H * 0.004; lh = tag.pad * 1.6 + f1 + (l2 ? f2 * 1.45 : 0) + f2 * 1.45;
+        }
         var over = function (bx, list) { return list.some(function (b) { return !(bx[0] > b[0] + b[2] || bx[0] + bx[2] < b[0] || bx[1] > b[1] + b[3] || bx[1] + bx[3] < b[1]); }); };
         var cands = [[q[0] + s2 * 2.4, q[1] - s2 * 2.6 - H * 0.013], [q[0] - s2 * 2.4 - lw, q[1] - s2 * 2.6 - H * 0.013],   // right, left,
                      [q[0] + s2 * 2.4, q[1] + s2 * 2.2], [q[0] - s2 * 2.4 - lw, q[1] + s2 * 2.2]].map(function (c) { return [c[0], c[1], lw, lh]; });   // below
         // the best place: clear of other labels and of the panels; else clear of other labels only (a panel just hides a part)
         var lb = cands.filter(function (c) { return !over(c, boxes) && !over(c, uiBoxes()); })[0] || cands.filter(function (c) { return !over(c, boxes); })[0];
         var free = !!lb;
-        if (!shareMode && p.flight && free) {   // a label only where it does not cover another one, or a panel
+        if (tag && free) {
+          boxes.push(lb);
+          var ax = lb[0] > q[0] ? lb[0] : lb[0] + lw, ay = lb[1] + lh / 2;   // a thin line from the plane to its tag
+          g.strokeStyle = rgba(COL.fg, 0.35); g.lineWidth = Math.max(1, H / 1300); g.beginPath(); g.moveTo(q[0] + (ax > q[0] ? 1 : -1) * s2 * 1.2, q[1]); g.lineTo(ax, ay); g.stroke();
+          g.fillStyle = rgba(COL.bg, 0.78); g.fillRect(lb[0], lb[1], lw, lh);
+          g.fillStyle = rgba(COL.accent, 0.9); g.fillRect(lb[0], lb[1], Math.max(2, H / 500), lh);
+          g.textAlign = "left"; var tx0 = lb[0] + tag.pad + H * 0.004, ty0 = lb[1] + tag.pad * 0.8 + tag.f1 * 0.82;
+          g.font = "700 " + tag.f1 + "px " + tag.FN; g.fillStyle = rgba(COL.fg, 0.97); g.fillText(p.flight, tx0, ty0);
+          g.font = "500 " + tag.f2 + "px " + tag.FN;
+          if (p.type) { g.fillStyle = rgba(COL.fg, 0.6); g.fillText("  " + p.type, tx0 + tag.w1, ty0); }
+          if (tag.l2) { ty0 += tag.f2 * 1.45; g.fillStyle = rgba(COL.accent2, 0.98); g.fillText(tag.l2, tx0, ty0); }
+          ty0 += tag.f2 * 1.45; g.fillStyle = rgba(COL.fg, 0.72); g.fillText(tag.l3, tx0, ty0);
+        } else if (!shareMode && p.flight && free) {   // a label only where it does not cover another one, or a panel
           boxes.push(lb);
           g.font = "600 " + Math.round(H * 0.013) + "px 'CaskaydiaMono Nerd Font', 'Cascadia Mono', monospace"; g.textAlign = "left";
           g.fillStyle = rgba(COL.fg, 0.75); var lx2 = lb[0], ly2 = lb[1] + H * 0.013;   // the flight, the aircraft, how high; then where from, where to
@@ -2059,6 +2304,84 @@
     function hubNow() { return hubT ? hubT + (performance.now() - hubAt) / 1000 : Date.now() / 1000; }
     // 1.6: the friends' neighbourhood: on the far horizon, a building for each friend of your crew who shares it, as tall
     // as their commits of the week; a floor flashes when they commit, the light on top is their CI
+    // ---------------- 1.8: your datacenter is a district of the city. [datacenter] panels = ["proxmox", "docker"]: a hall for
+    // every row of those panels (a VM, a container, a host), its lights in the colour of its state; when one goes down
+    // lightning strikes it, when it is back a few sparks. Nothing is drawn until you name a panel.
+    var dcenter = null, dcPrev = null, dcFlash = {}, dcZapAt = 0;
+    function dcSync(d) {
+      var groups = d && d.groups || [], now = performance.now(), cur = {};
+      groups.forEach(function (gp) { gp.rows.forEach(function (r, i) { cur[gp.id + "|" + (r.name || i)] = r.level || ""; }); });
+      if (dcPrev && d && d.alerts !== false) Object.keys(cur).forEach(function (k) {
+        if (!(k in dcPrev) || cur[k] === dcPrev[k]) return;
+        if (cur[k] === "crit") dcFlash[k] = { t: now, kind: "down" };
+        else if (cur[k] === "ok" && (dcPrev[k] === "crit" || dcPrev[k] === "warn")) dcFlash[k] = { t: now, kind: "up" };
+      });
+      dcPrev = cur; dcenter = groups.length ? d : null;
+    }
+    function drawDatacenter(now, t, hz) {
+      if (simpleMon || !dcenter || kind === "orbit" || kind === "noir") return;
+      var groups = dcenter.groups, n = 0; groups.forEach(function (gp) { n += gp.rows.length; });
+      if (!n) return;
+      var u = H / 1080, span = (band[1] - band[0]) * (growth && growth.recent && growth.recent.length ? 0.40 : 0.62), ggap = H * 0.022;
+      var unit = Math.min(H * 0.034, (span - ggap * (groups.length - 1)) / n), bw = unit * 0.8, y = hz + H * 0.062, x = W / 2 - (unit * n + ggap * (groups.length - 1)) / 2;
+      var font = "'CaskaydiaMono Nerd Font', 'Cascadia Mono', monospace", NKd = skyW ? Math.max(skyW[0], skyW[1]) : phase === "day" ? 0 : 1;
+      groups.forEach(function (gp) {
+        var mx = 0, gx0 = x; gp.rows.forEach(function (r) { if (typeof r.value === "number" && r.value > mx) mx = r.value; });
+        gp.rows.forEach(function (r, i) {
+          var key = gp.id + "|" + (r.name || i), lv = r.level || "", col = lv === "crit" ? COL.crit : lv === "warn" ? COL.warn : lv === "ok" ? COL.ok : lv === "info" ? COL.accent2 : COL.accent;
+          var v = typeof r.value === "number" && mx > 0 ? Math.max(0, Math.min(1, r.value / mx)) : 0.55, hh = H * (0.030 + 0.040 * v), dp = unit * 0.38, bx = x + (unit - bw) / 2;
+          var down = lv === "crit", blink = down && !reduced ? 0.55 + 0.45 * Math.sin(t * 6) : 1;
+          var fl = dcFlash[key], fk = fl ? Math.max(0, 1 - (now - fl.t) / 5000) : 0; if (fl && !fk) delete dcFlash[key];
+          // the hall: its front, its roof going back, its side
+          var body = mix(mix(COL.bg, COL.accent, 0.26), col, down ? 0.28 : 0.10);
+          g.fillStyle = rgba(mix(body, [0, 0, 0], 0.25), 1); g.fillRect(bx, y - hh, bw, hh);
+          g.beginPath(); g.moveTo(bx, y - hh); g.lineTo(bx + dp * 0.5, y - hh - dp * 0.42); g.lineTo(bx + bw + dp * 0.5, y - hh - dp * 0.42); g.lineTo(bx + bw, y - hh); g.closePath();
+          g.fillStyle = rgba(mix(body, COL.fg, 0.10), 1); g.fill();
+          g.beginPath(); g.moveTo(bx + bw, y - hh); g.lineTo(bx + bw + dp * 0.5, y - hh - dp * 0.42); g.lineTo(bx + bw + dp * 0.5, y - dp * 0.42); g.lineTo(bx + bw, y); g.closePath();
+          g.fillStyle = rgba(mix(body, [0, 0, 0], 0.5), 1); g.fill();
+          g.fillStyle = rgba(mix(body, COL.fg, 0.3), 0.9);   // the chillers on the roof
+          g.fillRect(bx + bw * 0.22, y - hh - dp * 0.42 - u * 2, bw * 0.22, u * 3); g.fillRect(bx + bw * 0.6, y - hh - dp * 0.42 - u * 2, bw * 0.22, u * 3);
+          // the racks' lights behind the glass, in the colour of its state; out when it is down
+          var rows = Math.max(1, Math.floor((hh - u * 6) / (u * 5))), cols = Math.max(2, Math.floor(bw / (u * 5.5)));
+          for (var ry = 0; ry < rows; ry++) for (var cc = 0; cc < cols; cc++) {
+            var hs = ((i * 131 + ry * 17 + cc * 7 + gp.id.length * 13) % 10) / 10, on = down ? hs < 0.25 : hs < 0.8, tw = reduced ? 1 : 0.75 + 0.25 * Math.sin(t * (1.3 + hs * 3) + hs * 40);
+            if (on) { g.fillStyle = rgba(hs > 0.55 && !down ? mix(col, COL.fg, 0.35) : col, (0.45 + 0.45 * NKd) * tw * blink); g.fillRect(bx + u * 2 + cc * (bw - u * 3.2) / cols, y - hh + u * 4.5 + ry * u * 5, Math.max(1.5, u * 2.4), Math.max(1.5, u * 2.4)); }
+          }
+          g.fillStyle = rgba(col, 0.95 * blink); g.fillRect(bx, y - hh, bw, Math.max(1.5, u * 2.2));   // the state, along the roof line
+          g.fillStyle = rgba(col, 0.10 + 0.10 * NKd); g.fillRect(bx, y, bw, hh * 0.6);                 // and on the wet floor
+          if (down) {   // a red beacon turning on the roof
+            var bg2 = g.createRadialGradient(bx + bw / 2, y - hh - dp * 0.5, 0, bx + bw / 2, y - hh - dp * 0.5, H * 0.03);
+            bg2.addColorStop(0, rgba(COL.crit, 0.55 * blink)); bg2.addColorStop(1, rgba(COL.crit, 0));
+            g.fillStyle = bg2; g.fillRect(bx + bw / 2 - H * 0.03, y - hh - dp * 0.5 - H * 0.03, H * 0.06, H * 0.06);
+          }
+          if (fl && fl.kind === "down" && !fl.done) {   // it just went down: lightning on it, and its name in the sky
+            fl.done = true;
+            if (now - dcZapAt > 20000) {
+              dcZapAt = now; var pts = [[bx + bw / 2 + (Math.random() - 0.5) * W * 0.04, H * 0.1]], py = H * 0.1;
+              while (py < y - hh) { py += H * (0.04 + Math.random() * 0.05); pts.push([py >= y - hh ? bx + bw / 2 : pts[pts.length - 1][0] + (Math.random() - 0.5) * W * 0.025, Math.min(py, y - hh)]); }
+              bolts.push({ t: now, pts: pts, x: bx + bw / 2, far: false }); flash = reduced ? 0.3 : 1;
+              try { sound.thunder(1.5, 0.5); } catch (e) {}
+              fxText((r.name || "a service") + " is down");
+            }
+          }
+          if (fl && fl.kind === "up" && !fl.done) { fl.done = true; if (!reduced) burst(bx + bw / 2, y - hh - H * 0.02, COL.ok, COL.fg, 26, 0.5); }
+          if (fk > 0) { g.strokeStyle = rgba(fl.kind === "down" ? COL.crit : COL.ok, fk); g.lineWidth = Math.max(1.5, u * 2); g.strokeRect(bx - u * 2, y - hh - dp * 0.42 - u * 3, bw + dp * 0.5 + u * 4, hh + dp * 0.42 + u * 5); }
+          if (dcenter.labels !== false && r.name && (lv === "crit" || lv === "warn" || fk > 0)) {   // a name only where you need to look
+            g.font = "600 " + Math.round(H * 0.0105) + "px " + font; g.textAlign = "center";
+            var tx = String(r.name).slice(0, 18), twd = g.measureText(tx).width + u * 10;
+            g.fillStyle = rgba(COL.bg, 0.85); g.fillRect(bx + bw / 2 - twd / 2, y - hh - dp * 0.42 - H * 0.026, twd, H * 0.017);
+            g.fillStyle = rgba(col, 1); g.fillText(tx, bx + bw / 2, y - hh - dp * 0.42 - H * 0.0135);
+          }
+          x += unit;
+        });
+        if (dcenter.labels !== false && gp.title) {   // the panel's name under its halls
+          g.font = Math.round(H * 0.0098) + "px " + font; g.textAlign = "center"; g.fillStyle = rgba(COL.fg, 0.5);
+          g.fillText(String(gp.title).toLowerCase() + " · " + gp.rows.length, (gx0 + x) / 2, y + H * 0.0155);
+        }
+        x += ggap;
+      });
+      g.textAlign = "start";
+    }
     function drawFriends(t, hz) {
       if (simpleMon || !friends.length || worldOff() || kind === "calm" || kind === "orbit" || kind === "noir") return;
       var u = H / 1080, x0 = band[1] - (band[1] - band[0]) * 0.035;
@@ -2328,7 +2651,97 @@
       }
     }
     // ---------------- liftoff: a rocket climbs from your horizon, arcs over, leaves its trail
+    // 1.8: a rocket you can recognise. A Falcon 9 (white, a black interstage, legs and grid fins, a fairing) or a Starship
+    // (steel, flaps): smoke rolls off the pad, the flame has a white heart and shock diamonds, the trail is smoke that
+    // widens and fades; in twilight the plume opens like a jellyfish, as it really does; after ten seconds the booster
+    // comes off and falls back while the second stage goes on. Its name and the time since liftoff on a tag.
+    function drawRocketBody(big, rw, rh, stage) {   // nose up, the base at 0; stage: 0 whole, 1 the booster alone, 2 the second stage alone
+      var white = mix(COL.fg, [255, 255, 255], 0.5), dark = mix(COL.bg, [0, 0, 0], 0.3), steel = mix(mix(COL.fg, COL.bg, 0.25), COL.accent, 0.12);
+      var body = big ? steel : white, y0 = stage === 2 ? -rh * 0.42 : 0, y1 = stage === 1 ? -rh * 0.58 : -rh;
+      if (stage !== 2) {   // the booster: engines, legs, the interstage and its grid fins
+        g.fillStyle = rgba(body, 1); g.fillRect(-rw / 2, -rh * 0.58, rw, rh * 0.58);
+        g.fillStyle = rgba(dark, 1); g.fillRect(-rw / 2, -rh * 0.05, rw, rh * 0.05); g.fillRect(-rw / 2, -rh * 0.62, rw, rh * 0.06);
+        if (big) { g.fillRect(-rw * 0.95, -rh * 0.16, rw * 0.45, rh * 0.14); g.fillRect(rw * 0.5, -rh * 0.16, rw * 0.45, rh * 0.14); }
+        else {
+          g.beginPath(); g.moveTo(-rw / 2, -rh * 0.14); g.lineTo(-rw * 0.85, 0); g.lineTo(-rw / 2, 0); g.closePath(); g.fill();
+          g.beginPath(); g.moveTo(rw / 2, -rh * 0.14); g.lineTo(rw * 0.85, 0); g.lineTo(rw / 2, 0); g.closePath(); g.fill();
+          g.fillRect(-rw * 0.95, -rh * 0.57, rw * 0.45, Math.max(1, rh * 0.012)); g.fillRect(rw * 0.5, -rh * 0.57, rw * 0.45, Math.max(1, rh * 0.012));
+        }
+      }
+      if (stage !== 1) {   // the second stage and what it carries
+        var fw = big ? rw : rw * 1.18;
+        g.fillStyle = rgba(body, 1); g.fillRect(-rw / 2, -rh * 0.78, rw, rh * 0.20);
+        g.beginPath(); g.moveTo(-fw / 2, -rh * 0.78); g.lineTo(-fw / 2, -rh * 0.9); g.quadraticCurveTo(-fw * 0.3, -rh * 1.0, 0, -rh * 1.02); g.quadraticCurveTo(fw * 0.3, -rh * 1.0, fw / 2, -rh * 0.9); g.lineTo(fw / 2, -rh * 0.78); g.closePath(); g.fill();
+        if (big) { g.fillStyle = rgba(dark, 1); g.fillRect(-rw * 0.95, -rh * 0.9, rw * 0.45, rh * 0.09); g.fillRect(rw * 0.5, -rh * 0.9, rw * 0.45, rh * 0.09); }
+        if (stage === 2) { g.fillStyle = rgba(dark, 1); g.fillRect(-rw * 0.28, -rh * 0.58, rw * 0.56, rh * 0.05); }   // its one engine
+      }
+      g.fillStyle = "rgba(0,0,0,0.22)"; g.fillRect(0, y1, rw / 2, y0 - y1);   // the side away from the light
+    }
+    function drawLiftoffsFine(t, hz) {
+      var keep = [], u1 = H / 1080, tw = skyW ? Math.max(skyW[1], skyW[0] * 0.6) : phase === "day" ? 0 : 0.7;
+      for (var i = 0; i < liftoffs.length; i++) {
+        var L = liftoffs[i], age = t - L.t;
+        if (age > 16) continue;
+        keep.push(L);
+        var big = L.big ? 1.5 : 1, x0 = band[0] + (band[1] - band[0]) * 0.14, climb = Math.min(1, age / 15);
+        var y = hz - H * 0.9 * Math.pow(climb, 1.6), x = x0 + W * 0.3 * Math.pow(climb, 2.4);
+        var ang = Math.atan2(W * 0.3 * 2.4 * Math.pow(climb, 1.4), H * 0.9 * 1.6 * Math.pow(climb, 0.6) + 1e-3);
+        var rw = H * 0.0095 * big, rh = H * 0.082 * big, sep = age > 9.5, fl = reduced ? 1 : 0.85 + 0.15 * Math.sin(t * 43) * Math.sin(t * 17);
+        L.trail.push([x, y, t]); if (L.trail.length > 150) L.trail.shift();
+        if (sep && !L.sep) L.sep = { x: x, y: y, ang: ang, t: t };
+        // smoke rolling off the pad
+        if (age < 7) for (var k = 0; k < 9; k++) {
+          var sa = Math.min(1, age / 3), sd = (k - 4) / 4, sr = H * (0.012 + 0.03 * sa) * (1.2 - Math.abs(sd) * 0.5) * big, sx = x0 + sd * H * 0.07 * sa * big, sy = hz - sr * 0.45;
+          var sg = g.createRadialGradient(sx, sy, 0, sx, sy, sr); sg.addColorStop(0, rgba(mix(COL.fg, COL.warn, age < 1.5 ? 0.5 : 0.1), 0.34 * (1 - age / 7))); sg.addColorStop(1, rgba(COL.fg, 0));
+          g.fillStyle = sg; g.fillRect(sx - sr, sy - sr, sr * 2, sr * 2);
+        }
+        // the trail: smoke that widens and fades with its age, lit near the engine
+        for (k = 2; k < L.trail.length; k += 2) {
+          var P = L.trail[k], ta = t - P[2], r = H * (0.004 + 0.011 * Math.min(1, ta / 5)) * big;
+          g.fillStyle = rgba(ta < 0.5 ? mix(COL.warn, COL.fg, 0.4) : mix(COL.fg, COL.accent2, 0.25), (ta < 0.5 ? 0.5 : 0.17) * Math.max(0, 1 - ta / 9));
+          g.beginPath(); g.arc(P[0] + Math.sin(k * 1.7) * r * 0.3, P[1], r, 0, Math.PI * 2); g.fill();
+        }
+        g.globalCompositeOperation = "lighter";
+        if (age < 1.6) { var pf = g.createRadialGradient(x0, hz, 0, x0, hz, H * 0.2 * big); pf.addColorStop(0, rgba(COL.warn, 0.8 * (1 - age / 1.6))); pf.addColorStop(1, rgba(COL.warn, 0)); g.fillStyle = pf; g.fillRect(x0 - H * 0.2 * big, hz - H * 0.2 * big, H * 0.4 * big, H * 0.4 * big); }
+        if (tw > 0.2 && climb > 0.5) {   // twilight: the Sun, already set for you, still lights the plume up there
+          var jk = (climb - 0.5) / 0.5, jr = H * (0.05 + 0.2 * jk) * big;
+          g.save(); g.translate(x, y); g.rotate(ang); g.scale(1, 1.7);
+          var jg = g.createRadialGradient(0, jr * 0.35, 0, 0, jr * 0.35, jr); jg.addColorStop(0, rgba(mix(COL.fg, COL.accent, 0.4), 0.30 * tw * (1 - jk * 0.4))); jg.addColorStop(0.6, rgba(COL.accent, 0.10 * tw)); jg.addColorStop(1, rgba(COL.accent, 0));
+          g.fillStyle = jg; g.fillRect(-jr, -jr * 0.2, jr * 2, jr * 1.4); g.restore();
+        }
+        g.save(); g.translate(x, y); g.rotate(ang);
+        var by = sep ? -rh * 0.42 : 0, fl2 = (sep ? 0.55 : 1) * fl, fh = rh * (sep ? 0.5 : 0.95) * fl2;   // the flame, under whatever stage is burning
+        var fg3 = g.createLinearGradient(0, by, 0, by + fh); fg3.addColorStop(0, rgba(sep ? mix(COL.accent, COL.fg, 0.6) : COL.fg, 0.95)); fg3.addColorStop(0.25, rgba(sep ? COL.accent : COL.warn, 0.8)); fg3.addColorStop(1, rgba(sep ? COL.accent : COL.crit, 0));
+        g.fillStyle = fg3; g.beginPath(); g.moveTo(-rw * 0.42, by); g.quadraticCurveTo(-rw * (sep ? 2.2 : 1.1), by + fh * 0.5, 0, by + fh); g.quadraticCurveTo(rw * (sep ? 2.2 : 1.1), by + fh * 0.5, rw * 0.42, by); g.closePath(); g.fill();
+        if (!sep) for (k = 1; k <= 3; k++) { g.fillStyle = rgba(COL.fg, 0.75 * fl / k); g.beginPath(); g.ellipse(0, by + fh * 0.17 * k, rw * 0.3 / Math.sqrt(k), rw * 0.2, 0, 0, Math.PI * 2); g.fill(); }   // shock diamonds
+        var hg = g.createRadialGradient(0, by + rw, 0, 0, by + rw, rh * 0.8); hg.addColorStop(0, rgba(sep ? COL.accent : COL.warn, 0.45 * fl)); hg.addColorStop(1, rgba(COL.warn, 0));
+        g.fillStyle = hg; g.fillRect(-rh * 0.8, by + rw - rh * 0.8, rh * 1.6, rh * 1.6);
+        g.globalCompositeOperation = "source-over";
+        drawRocketBody(L.big, rw, rh, sep ? 2 : 0);
+        g.restore(); g.globalCompositeOperation = "source-over";   // restore() brings back the "lighter" saved above
+        if (L.sep) {   // the booster, let go: it coasts up a little, turns, and falls back
+          var sa2 = t - L.sep.t, bx = L.sep.x + W * 0.012 * sa2, bY = L.sep.y - H * 0.03 * sa2 + H * 0.012 * sa2 * sa2;
+          g.save(); g.translate(bx, bY); g.rotate(L.sep.ang + sa2 * 0.35); g.globalAlpha = Math.max(0, 1 - sa2 / 6.5);
+          drawRocketBody(L.big, rw, rh, 1);
+          if (sa2 < 0.8) { g.fillStyle = rgba(COL.fg, 0.5 * (1 - sa2 / 0.8)); g.beginPath(); g.arc(0, -rh * 0.6, rw * (1 + sa2 * 5), 0, Math.PI * 2); g.fill(); }   // the puff as they part
+          g.restore(); g.globalAlpha = 1;
+        }
+        // its tag: the name, and the time since liftoff
+        if (age < 13) {
+          var FN = "'CaskaydiaMono Nerd Font', 'Cascadia Mono', monospace", f1 = Math.round(H * 0.0148), f2 = Math.round(H * 0.0122), al = Math.min(1, (13 - age) / 2);
+          var l1 = String(L.name || "liftoff").toUpperCase().slice(0, 40), sec = Math.floor(age), l2 = "T+00:" + (sec < 10 ? "0" : "") + sec + (sep ? " · stage separation" : age > 6 ? " · max Q" : " · liftoff");
+          g.font = "700 " + f1 + "px " + FN; var w1 = g.measureText(l1).width; g.font = "500 " + f2 + "px " + FN; var w2 = g.measureText(l2).width;
+          var pw = Math.max(w1, w2) + H * 0.02, ph = f1 + f2 * 1.45 + H * 0.012, px = Math.min(W - pw - H * 0.02, x + H * 0.045), py = Math.max(H * 0.02, y - rh * 0.6);
+          g.strokeStyle = rgba(COL.fg, 0.35 * al); g.lineWidth = Math.max(1, u1); g.beginPath(); g.moveTo(x + rw, y - rh * 0.4); g.lineTo(px, py + ph / 2); g.stroke();
+          g.fillStyle = rgba(COL.bg, 0.78 * al); g.fillRect(px, py, pw, ph); g.fillStyle = rgba(COL.warn, 0.95 * al); g.fillRect(px, py, Math.max(2, H / 500), ph);
+          g.textAlign = "left"; g.font = "700 " + f1 + "px " + FN; g.fillStyle = rgba(COL.fg, 0.97 * al); g.fillText(l1, px + H * 0.011, py + H * 0.006 + f1 * 0.85);
+          g.font = "500 " + f2 + "px " + FN; g.fillStyle = rgba(COL.warn, 0.95 * al); g.fillText(l2, px + H * 0.011, py + H * 0.006 + f1 * 0.85 + f2 * 1.45);
+        }
+      }
+      liftoffs = keep;
+    }
     function drawLiftoffs(t, hz) {
+      if (polished()) { drawLiftoffsFine(t, hz); return; }
       var keep = [];
       for (var i = 0; i < liftoffs.length; i++) {
         var L = liftoffs[i], age = t - L.t;
@@ -2361,7 +2774,7 @@
     }
     // ================= 1.4: the real sky (Moon, planets, stars, constellations, meteor showers), Starlink, clouds,
     // storms, the air, the soundscape. Every position comes from the hub, computed for where you are, right now.
-    var night = null, starlink = { sats: [] }, storms = null, air = null, soundCfg = null, clouds = [], pollen = [];
+    var night = null, starlink = { sats: [] }, storms = null, air = null, soundCfg = null, clouds = [], pollen = [], cloudL = null;
     var bolts = [], nextBolt = 0, lastMeteor = 0;
     // where a point of your sky is on the screen: you look south, east on the left; the low sky gets more room
     function skyXY(az, el, hz) {
@@ -2932,7 +3345,50 @@
     // horizon, hardly visible to the eye and almost still on screen, so the "train" looked parked behind the city.
     // The label goes over the highest satellite whose label is clear of the panels and the sphere (else no label).
     var STARLINK_MIN_EL = 10;
+    // 1.8: a train you can see: the satellites glide instead of jumping every few seconds, a faint thread joins those that
+    // fly in a row, each one glints, the first is the brightest, and the tag says how many and which way they go
+    var slPos = [];
+    function drawStarlinkFine(t, hz, dk) {
+      var ss = starlink && starlink.sats; if (!ss || !ss.length) { slPos = []; return; }
+      var pts = [], u1 = H / 1080, n = 0;
+      if (slPos.length > ss.length) slPos.length = ss.length;
+      for (var i = 0; i < ss.length; i++) {
+        if (!(ss[i].el >= STARLINK_MIN_EL)) { slPos[i] = null; continue; }
+        var p = skyXY(ss[i].az, ss[i].el, hz); if (!p) { slPos[i] = null; continue; }
+        var q = slPos[i]; if (!q || Math.abs(q[0] - p[0]) > W * 0.2 || reduced) q = slPos[i] = [p[0], p[1]];
+        q[0] += (p[0] - q[0]) * 0.025; q[1] += (p[1] - q[1]) * 0.025;   // it glides to where it really is
+        pts.push([q[0], q[1], i]); n++;
+      }
+      if (!pts.length) return;
+      var vis = Math.max(0.5, dk.sky), near = H * 0.09;
+      g.save(); g.globalCompositeOperation = "lighter";
+      g.strokeStyle = rgba(COL.fg, 0.20 * vis); g.lineWidth = Math.max(1, u1 * 1.2); g.beginPath();   // the thread, only between neighbours in a row
+      for (i = 1; i < pts.length; i++) { var dx = pts[i][0] - pts[i - 1][0], dy = pts[i][1] - pts[i - 1][1]; if (pts[i][2] === pts[i - 1][2] + 1 && dx * dx + dy * dy < near * near) { g.moveTo(pts[i - 1][0], pts[i - 1][1]); g.lineTo(pts[i][0], pts[i][1]); } }
+      g.stroke();
+      for (i = 0; i < pts.length; i++) {
+        var P = pts[i], lead = i === 0 ? 1.5 : 1, a = vis * (0.75 + 0.25 * Math.sin(t * 2.6 + i * 0.9)) * (i === 0 ? 1 : 0.85), s = u1 * 3.0 * lead;
+        var gl = g.createRadialGradient(P[0], P[1], 0, P[0], P[1], s * 3.2); gl.addColorStop(0, rgba(COL.fg, 0.55 * a)); gl.addColorStop(1, rgba(COL.fg, 0));
+        g.fillStyle = gl; g.fillRect(P[0] - s * 3.2, P[1] - s * 3.2, s * 6.4, s * 6.4);
+        g.fillStyle = rgba(COL.fg, a); g.beginPath(); g.arc(P[0], P[1], s * 0.55, 0, Math.PI * 2); g.fill();
+        g.fillRect(P[0] - s * 2.2, P[1] - u1 * 0.5, s * 4.4, Math.max(1, u1)); g.fillRect(P[0] - u1 * 0.5, P[1] - s * 1.5, Math.max(1, u1), s * 3);   // a glint
+      }
+      g.restore();
+      if (shareMode) return;
+      var hd = pts.length > 1 ? [pts[0][0] - pts[pts.length - 1][0], pts[0][1] - pts[pts.length - 1][1]] : [0, 0];
+      var arrow = Math.abs(hd[0]) + Math.abs(hd[1]) < H * 0.01 ? "" : " " + (Math.abs(hd[1]) > Math.abs(hd[0]) * 2 ? (hd[1] < 0 ? "↑" : "↓") : hd[1] < -Math.abs(hd[0]) * 0.4 ? (hd[0] > 0 ? "↗" : "↖") : hd[1] > Math.abs(hd[0]) * 0.4 ? (hd[0] > 0 ? "↘" : "↙") : hd[0] > 0 ? "→" : "←");
+      var FN = "'CaskaydiaMono Nerd Font', 'Cascadia Mono', monospace", f1 = Math.round(H * 0.0135), f2 = Math.round(H * 0.0118);
+      var l1 = "STARLINK" + (n > 3 ? " TRAIN" : ""), l2 = n + (n === 1 ? " satellite" : " satellites") + arrow;
+      g.font = "700 " + f1 + "px " + FN; var w1 = g.measureText(l1).width; g.font = "500 " + f2 + "px " + FN; var w2 = g.measureText(l2).width;
+      var pw = Math.max(w1, w2) + H * 0.02, ph = f1 + f2 * 1.45 + H * 0.012, sorted = pts.slice().sort(function (a2, b2) { return a2[1] - b2[1]; });
+      var at = starlinkLabelAt(sorted, pw, ph, uiBoxes());
+      if (!at) return;
+      var px = at[0], py = at[1] - ph;
+      g.fillStyle = rgba(COL.bg, 0.78); g.fillRect(px, py, pw, ph); g.fillStyle = rgba(COL.accent, 0.9); g.fillRect(px, py, Math.max(2, H / 500), ph);
+      g.textAlign = "left"; g.font = "700 " + f1 + "px " + FN; g.fillStyle = rgba(COL.fg, 0.97); g.fillText(l1, px + H * 0.011, py + H * 0.006 + f1 * 0.85);
+      g.font = "500 " + f2 + "px " + FN; g.fillStyle = rgba(COL.accent, 0.95); g.fillText(l2, px + H * 0.011, py + H * 0.006 + f1 * 0.85 + f2 * 1.45);
+    }
     function drawStarlink(t, hz, dk) {
+      if (polished()) { drawStarlinkFine(t, hz, dk); return; }
       var ss = starlink && starlink.sats; if (!ss || !ss.length) return;
       var pts = [];
       for (var i = 0; i < ss.length; i++) {
@@ -2973,6 +3429,11 @@
         c[0] += (windX || -0.05) * H * 0.0012 * c[2] + 0.02;
         if (c[0] > W + w) c[0] = -w; if (c[0] < -w * 1.2) c[0] = W + w;
         var a = (storm ? 0.55 : 0.22 + 0.25 * cov) * Math.min(1, cov * 1.4);
+        if (polished()) {
+          var spr = cloudSprites(base, cloudL, storm)[(c[3] * 7 | 0) % 4];
+          g.globalAlpha = Math.min(1, a * 1.9); g.drawImage(spr, c[0] - w * 0.72, c[1] - h * 1.5, w * 1.44, h * 2.6); g.globalAlpha = 1;
+          continue;
+        }
         g.fillStyle = rgba(base, a);
         g.beginPath();
         g.ellipse(c[0], c[1], w * 0.5, h * 0.55, 0, 0, Math.PI * 2);
@@ -3048,7 +3509,43 @@
       var w = weatherNow, c = w ? w.code : 61, mm = w && w.rain != null ? +w.rain : 1;
       var base = { 51: 0.15, 53: 0.25, 55: 0.35, 56: 0.25, 57: 0.4, 61: 0.4, 63: 0.65, 65: 1, 66: 0.5, 67: 0.9, 71: 0.35, 73: 0.65, 75: 1, 77: 0.3,
         80: 0.45, 81: 0.75, 82: 1, 85: 0.5, 86: 0.9, 95: 0.8, 96: 0.9, 99: 1 }[c] || 0.5;
-      return Math.round(drops.length * Math.min(1, Math.max(base, mm / 6)));
+      return Math.round((polished() ? drops.length : Math.min(180, drops.length)) * Math.min(1, Math.max(base, mm / 6)));
+    }
+    // 1.8: rain with depth. Far drops are thin, short and slow and end near the horizon; near ones are long and bright and
+    // reach the bottom; where they land a ring opens on the wet floor. How many there are is still the real rain.
+    var ripples = [];
+    function drawRainDeep(now, t, hz, nDrops) {
+      var sl = windX ? -windX * 0.9 : 0.22, k2 = nDrops / drops.length, u = H / 1080;
+      if (k2 > 0.3) {   // heavy rain: a veil that hides the far city a little
+        var vg = g.createLinearGradient(0, 0, 0, hz);
+        vg.addColorStop(0, rgba(COL.fg, 0)); vg.addColorStop(1, rgba(COL.fg, 0.07 * (k2 - 0.3) / 0.7));
+        g.fillStyle = vg; g.fillRect(0, 0, W, hz);
+      }
+      for (var L = 0; L < 3; L++) {   // far, middle, near: three strokes
+        var lo = [0.6, 0.86, 1.14][L], hi = [0.86, 1.14, 1.41][L];
+        g.strokeStyle = rgba(mix(COL.fg, COL.accent, 0.3), [0.22, 0.36, 0.55][L]); g.lineWidth = Math.max(1, [1, 1.5, 2.3][L] * u); g.beginPath();
+        for (var i = 0; i < nDrops; i++) {
+          var dr = drops[i]; if (dr[2] < lo || dr[2] >= hi) continue;
+          var sp = dr[2] * dr[2], dxw = H * (0.004 + 0.02 * windX) * sp;
+          dr[1] += H * 0.02 * sp; dr[0] += windX ? dxw - H * 0.004 * sp : -H * 0.004 * sp;
+          var ground = hz + (H - hz) * Math.max(0.02, (dr[2] - 0.6) / 0.8);   // the farther, the nearer the horizon it lands
+          if (dr[1] > ground || dr[0] < -W * 0.1 || dr[0] > W * 1.1) {
+            if (dr[1] > ground && ripples.length < 70 && !reduced && Math.random() < 0.5) ripples.push([dr[0], ground, now, dr[2]]);
+            dr[1] = -10 - Math.random() * H * 0.2; dr[0] = Math.random() * W * 1.2 - W * 0.1;
+          }
+          var len = H * 0.026 * sp + H * 0.008;
+          g.moveTo(dr[0], dr[1]); g.lineTo(dr[0] + len * sl, dr[1] - len);
+        }
+        g.stroke();
+      }
+      g.lineWidth = Math.max(1, u);
+      for (var r = ripples.length - 1; r >= 0; r--) {   // the rings where they land, flat like the floor
+        var rp = ripples[r], a = (now - rp[2]) / 520;
+        if (a >= 1) { ripples.splice(r, 1); continue; }
+        var rr = H * 0.016 * rp[3] * (0.25 + a);
+        g.strokeStyle = rgba(COL.fg, 0.6 * (1 - a)); g.beginPath(); g.ellipse(rp[0], rp[1], rr, rr * 0.3, 0, 0, Math.PI * 2); g.stroke();
+        if (a < 0.25) { g.fillStyle = rgba(COL.fg, 0.5 * (1 - a * 4)); g.fillRect(rp[0] - u, rp[1] - H * 0.006 * (1 - a * 2), Math.max(1, u * 1.5), H * 0.005); }   // the splash
+      }
     }
 
     // ---------------- the soundscape: rain, wind, planes, thunder, the station; off unless [sound] enabled = true
@@ -3080,7 +3577,7 @@
           if (!on) { on = start(); if (!on) return; }
           if (ctx.state === "suspended") ctx.resume();
           ramp(master, vol * 0.7, 0.8);
-          var wet = (wx === "rain" || wx === "storm" || wx === "snow") && cfg.rain ? (wx === "snow" ? 0.05 : 0.08 + 0.3 * precipCount() / Math.max(1, drops.length)) : 0;
+          var wet = (wx === "rain" || wx === "storm" || wx === "snow") && cfg.rain ? (wx === "snow" ? 0.05 : 0.08 + 0.3 * precipCount() / Math.max(1, polished() ? drops.length : Math.min(180, drops.length))) : 0;
           ramp(rainG, wet);
           ramp(windG, cfg.wind ? windK * windK * 0.45 : 0); if (windF) windF.frequency.setTargetAtTime(300 + windK * 500, ctx.currentTime, 2);
           var pg = 0;
@@ -3137,6 +3634,11 @@
       var shk = quakes.length && !reduced ? quakeShake(now) : null;
       if (shk) g.setTransform(1, 0, 0, 1, shk[0], shk[1]);   // an earthquake shakes the city (only then)
       g.drawImage(bgc, 0, 0);
+      if (bgFadeAt) {
+        var fk = (now - bgFadeAt) / 2500;
+        if (fk >= 1 || !bgPrev || bgPrev.width !== W) { bgFadeAt = 0; if (bgPrev) bgPrev.width = bgPrev.height = 1; }
+        else { g.globalAlpha = 1 - fk * fk * (3 - 2 * fk); g.drawImage(bgPrev, 0, 0); g.globalAlpha = 1; }
+      }
       if (wpOn && wpMode === "panels") { if (shk) g.setTransform(1, 0, 0, 1, 0, 0); return; }
       // the eyes: towards the pointer while it moves, then slowly back to the middle
       var gx = 0, gy = 0;
@@ -3150,6 +3652,9 @@
       if (!worldOff() && (t % 1.7) < 0.22) { g.fillStyle = rgba(COL.crit, 0.95); for (var ci = 0; ci < cityTops.length; ci++) g.fillRect(cityTops[ci][0] - H / 700, cityTops[ci][1] - H / 300, H / 350, H / 350); }
       // stars (fewer when it is cloudy, none by day)
       var dk = darkness();
+      var LT = polished() ? sceneLight(hz, dk) : null, NK = skyW ? skyW[0] : phase === "night" ? 1 : 0, TK = skyW ? skyW[1] : phase === "dawn" || phase === "dusk" ? 1 : 0;
+      var heavy = polished() && !(qSlowAt && now - qSlowAt < 600000);   // a PC that just struggled skips the mirror, the mist and the beams
+      cloudL = LT;
       var starA = night ? dk.sky * 0.35 : phase === "day" ? 0.1 : phase !== "night" ? 0.45 : wx === "clear" || wx === "part" ? 1 : 0.35;   // with the real sky, the random ones are only a faint background
       for (var i = 0; i < (wpOn ? 0 : stars.length); i++) {
         var st = stars[i], tw = 0.5 + 0.5 * Math.sin(t * st[3] * 2 + st[2] * 40);
@@ -3159,6 +3664,7 @@
       }
       if (!wpOn) {   // over your own wallpaper Pulse does not draw a sky of its own
       drawSun(t, hz, dk);       // 1.4: the real Sun, Moon, planets, stars, constellations, meteors, Starlink, clouds
+      if (LT && heavy) drawRays(LT, t);
       drawRealStars(t, hz, dk);
       drawMoon(t, hz, dk);
       drawStarlink(t, hz, dk);
@@ -3258,6 +3764,31 @@
           var tg = g.createLinearGradient(0, hz - hh, 0, hz);
           tg.addColorStop(0, rgba(mix(bg, ac, 0.16), 1)); tg.addColorStop(1, rgba(mix(bg, [0, 0, 0], 0.3), 1));
           g.fillStyle = tg; g.fillRect(bx, hz - hh, bw, hh);
+          if (polished()) {
+            var rfl = g.createLinearGradient(0, hz, 0, hz + hh * 0.75);   // 1.8: the tower on the wet floor
+            rfl.addColorStop(0, rgba(mix(bg, ac, 0.34), 0.62)); rfl.addColorStop(1, rgba(mix(bg, ac, 0.34), 0));
+            g.fillStyle = rfl; g.fillRect(bx, hz, bw, hh * 0.75);
+            // 1.8: a building, not a card: the side that looks at the middle of the city, going back toward the horizon
+            var inX = s2 > 0 ? bx : bx + bw, dw = Math.min(slot * 0.24, bw * 0.34), dir = s2 > 0 ? -1 : 1, dy = hh * Math.min(0.2, dw / Math.max(dw, Math.abs(inX - cx)) * 0.9 + 0.05);
+            var litSide = LT ? (LT.x < inX) === (dir < 0) : false;
+            g.beginPath(); g.moveTo(inX, hz - hh); g.lineTo(inX + dir * dw, hz - hh + dy); g.lineTo(inX + dir * dw, hz); g.lineTo(inX, hz); g.closePath();
+            g.fillStyle = rgba(litSide ? mix(mix(bg, ac, 0.10), LT.col, 0.30 * LT.a) : mix(bg, [0, 0, 0], 0.42), 1); g.fill();
+            g.strokeStyle = rgba(ac, 0.28); g.lineWidth = Math.max(1, H / 1200); g.beginPath(); g.moveTo(inX, hz - hh); g.lineTo(inX + dir * dw, hz - hh + dy); g.stroke();
+            if (LT) {   // the front edge on the side of the Sun or the Moon catches its light
+              var lside = LT.x < bx + bw / 2 ? 0 : 1, rw = Math.max(1.5, bw * 0.16);
+              var rg = g.createLinearGradient(lside ? bx + bw : bx, 0, lside ? bx + bw - rw * 2.4 : bx + rw * 2.4, 0);
+              rg.addColorStop(0, rgba(LT.col, 0.8 * LT.a)); rg.addColorStop(1, rgba(LT.col, 0));
+              g.fillStyle = rg; g.fillRect(lside ? bx + bw - rw * 2.4 : bx, hz - hh, rw * 2.4, hh);
+            }
+            // on the roof: a parapet, and by building a mast, a tank or the air conditioning
+            var rk = (i * 2654435761 >>> 0) % 5, ru = Math.max(1, H / 700);
+            g.fillStyle = rgba(mix(bg, ac, 0.34), 1);
+            if (rk === 0) { g.fillRect(bx + bw * 0.5 - ru / 2, hz - hh - hh * 0.16 - H / 90, ru, hh * 0.16 + H / 90); g.fillRect(bx + bw * 0.5 - ru * 2, hz - hh - hh * 0.07, ru * 4, ru); }
+            else if (rk === 1) { g.fillRect(bx + bw * 0.16, hz - hh - H / 110, bw * 0.3, H / 110); g.fillRect(bx + bw * 0.2, hz - hh - H / 110 - ru * 2, bw * 0.22, ru * 2); }
+            else if (rk === 2) { g.fillRect(bx + bw * 0.12, hz - hh - H / 190, bw * 0.2, H / 190); g.fillRect(bx + bw * 0.42, hz - hh - H / 190, bw * 0.2, H / 190); g.fillRect(bx + bw * 0.72, hz - hh - H / 150, bw * 0.14, H / 150); }
+            else if (rk === 3) { g.fillRect(bx + bw * 0.25, hz - hh - H / 70, bw * 0.5, H / 70); g.fillStyle = rgba(ac, 0.6); g.fillRect(bx + bw * 0.25, hz - hh - H / 70, bw * 0.5, ru); }
+            g.fillStyle = rgba(mix(COL.warn, COL.fg, 0.3), 0.25 + 0.5 * Math.max(NK, TK)); g.fillRect(bx + bw * 0.12, hz - Math.max(2, H / 260), bw * 0.76, Math.max(1.5, H / 520));   // the lit ground floor
+          }
           g.fillStyle = rgba(heights[i] > 90 ? COL.crit : ac, 0.85); g.fillRect(bx, hz - hh, bw, Math.max(1, H / 600));
           // windows
           var cw = Math.max(2, bw / 5), chh = Math.max(2, H / 140), cols = Math.max(1, Math.floor((bw - cw) / (cw * 1.7))), rows = Math.floor((hh - chh * 2) / (chh * 2.2));
@@ -3265,7 +3796,7 @@
             var hsh = ((i * 7919 + ry * 104729 + cxi * 1299709) % 1000) / 1000;
             if (hsh < ram / 100 * 0.75) {
               var flick = ((t * 0.07 + hsh * 13) % 1) > 0.985 ? 0.2 : 1;
-              g.fillStyle = rgba(hsh < 0.12 ? a2 : hsh < 0.5 ? ac : COL.warn, (0.35 + hsh * 0.5) * flick);
+              g.fillStyle = rgba(hsh < 0.12 ? a2 : hsh < 0.5 ? ac : COL.warn, Math.min(1, (0.35 + hsh * 0.5) * flick * (polished() ? 0.8 + 0.45 * Math.max(NK, TK * 0.7) : 1)));
               g.fillRect(bx + cw * 0.7 + cxi * cw * 1.7, hz - hh + chh * 2 + ry * chh * 2.2, cw, chh);
             }
           }
@@ -3277,6 +3808,9 @@
 
       if (kind === "sphere") drawSphere(cx, cy, R, t);
       drawDrones(t, hz);
+      if (heavy && kind !== "noir" && kind !== "orbit") {
+        if (airCol) drawMist(t, hz, airCol, 0.28 + 0.4 * NK + 0.45 * TK + (wx === "fog" ? 0.5 : 0));
+      }
       // floor: the grid runs toward you as fast as the CPU works (and with the bass)
       var speed = paused || kind === "calm" || reduced ? 0 : 0.08 + cpu / 160 + bass * 0.9;
       var off = (t * speed) % 1;
@@ -3289,10 +3823,12 @@
         g.strokeStyle = rgba(ac, 0.18 - Math.abs(k) * 0.005);
         g.beginPath(); g.moveTo(cx + k * W * 0.012, hz); g.lineTo(cx + k * W * 0.11, H); g.stroke();
       }
+      if (LT && kind !== "noir") drawLightPath(LT, hz, t);
       drawRiver(t, hz);
       drawNet(now, t, hz);
       drawCars(t, hz);
       drawGrowth(t, hz);    // 1.3: in front, on the floor: your district, the train line, the quake waves
+      drawDatacenter(now, t, hz);
       drawTrains(t, hz);
       drawCar(t, hz);
       drawTower(t, hz);
@@ -3336,7 +3872,8 @@
       // weather from the real sky
       drawAir(t, hz);
       var nDrops = precipCount(), hail = weatherNow && (weatherNow.code === 96 || weatherNow.code === 99);
-      if (wx === "rain" || wx === "storm") {
+      if ((wx === "rain" || wx === "storm") && polished()) drawRainDeep(now, t, hz, nDrops);
+      else if (wx === "rain" || wx === "storm") {
         g.strokeStyle = rgba(COL.fg, 0.22); g.lineWidth = 1; g.beginPath();
         for (i = 0; i < nDrops; i++) {
           var dr = drops[i], dxw = H * (0.004 + 0.02 * windX) * dr[2]; dr[1] += H * 0.022 * dr[2]; dr[0] += windX ? dxw - H * 0.004 * dr[2] : -H * 0.004 * dr[2];
@@ -3349,7 +3886,8 @@
         for (i = 0; i < nDrops; i++) {
           var sn = drops[i]; sn[1] += H * 0.0018 * sn[2]; sn[0] += Math.sin(t + i) * 0.3 + windX * H * 0.005 * sn[2];
           if (sn[1] > H || sn[0] < -5 || sn[0] > W + 5) { sn[1] = sn[1] > H ? -5 : Math.random() * H; sn[0] = sn[0] < -5 ? W : sn[0] > W + 5 ? 0 : Math.random() * W; }
-          g.fillRect(sn[0], sn[1], 2, 2);
+          if (polished()) { var fs = Math.max(1.5, H / 1080 * (1 + sn[2] * 2.2)); g.globalAlpha = 0.35 + 0.45 * (sn[2] - 0.6) / 0.8; g.beginPath(); g.arc(sn[0], sn[1], fs / 2, 0, Math.PI * 2); g.fill(); g.globalAlpha = 1; }
+          else g.fillRect(sn[0], sn[1], 2, 2);
         }
       } else if (wx === "fog") {
         var fgz = g.createLinearGradient(0, hz - H * 0.15, 0, hz + H * 0.1);
@@ -3508,6 +4046,7 @@
         var nw16 = (st.updates && st.updates.news) || [];
         if (nw16.length && nw16[0] !== newsSeen) { newsSeen = nw16[0]; if (!privacyOn && PRIMARY) balloons.push({ t: performance.now(), text: "read the news before you update", dir: 1, warn: true }); }   // 1.6: the warning in the sky, once
         hubT = +st.t || 0; hubAt = performance.now();
+        dcSync(st.datacenter || null);
         tower = st.tower || []; friends = st.friends || []; friendsAt = performance.now(); uptimeS = +(sys.uptime || 0); ivyOn = ui.ivy !== false; parcels = st.updates || null;
         simpleMon = !PRIMARY && ui.secondary === "simple"; document.body.classList.toggle("simplemon", simpleMon);
         tipsList = st.tips || []; tipsEvery = ui.tipsEvery != null ? +ui.tipsEvery : 40; meetingOn = !!st.meeting; wledOn = !!ui.wled;
@@ -3532,7 +4071,9 @@
         if (nq !== quality || (nq === "auto" && nAuto !== qAuto)) { quality = nq; qAuto = nAuto; resize(); }   // 10 minutes after slow frames, try sharp again
         var ph = sunOn ? sunPhase(w) : "night";
         city = window.PULSE_CITY != null ? window.PULSE_CITY : Q.get("city") || ui.skyline || "";
-        if (ph + kind + city !== phaseKey) { phaseKey = ph + kind + city; phase = ph; paintStatic(); }
+        polishCfg = ui.polish !== false;
+        var elKey = polishOn && polishCfg && sunOn && night && night.sun && typeof night.sun.el === "number" ? Math.round(Math.max(-12, Math.min(14, night.sun.el)) * 2) : "";   // 1.8: half a degree of Sun repaints the sky
+        if (ph + kind + city + elKey + polishCfg !== phaseKey) { phaseKey = ph + kind + city + elKey + polishCfg; phase = ph; paintStatic(); }
         var nw = (st.widgets || []).filter(function (x) { return x.id === "news" || x.id === "ai"; })[0];
         newsText = nw && nw.data ? (nw.data.items && nw.data.items[0] ? nw.data.items[0].title : String(nw.data.text || "").split("\n")[0]) : "";
         var cam = (st.widgets || []).filter(function (x) { return x.type === "image" && x.data && x.data.frame; })[0];

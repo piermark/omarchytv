@@ -253,6 +253,7 @@
    * How far the planes panel looks (screensaver.planesNm). 25 nm, the default, is the planes in your sky ("overhead");
    * further out it lists the nearest five with their distance, high enough to see or not.
    */
+  var SCENES = { mars: 1, monolith: 1 };   // 2.15.1 Pulse 1.8's scenes in code: each runs in its own sandboxed frame
   var PLANES_NM = [25, 50, 100, 150, 200, 250];
   function planesNm(v) { v = Number(v); return PLANES_NM.indexOf(v) >= 0 ? v : 25; }
   /**
@@ -410,6 +411,7 @@
     var groups = {}, passes = [], track = [], issUp = false, launched = {}, told = {}, routes = {}, routeQ = [], timers = [], fxCbs = [];
     var adsbRaw = [], adsbT = 0, osRaw = [], osT = 0, types = {}, typeQ = [];   // two plane feeds, types by hex
     var reach = planesNm(cfg.planesNm);
+    var polish = cfg.polish !== false;   // 2.15.1 Pulse 1.8's look; pulse-tv.js turns it off on a TV that can't keep up
     function fx(kind, text, extra) {
       S.fxSeq++;
       var f = { seq: S.fxSeq, kind: kind, text: String(text || "").slice(0, 60), small: false, t: clock() }, k;
@@ -609,18 +611,19 @@
         skyline: cityKey(city), skylineAuto: true, font: "", title: "", dim_with_windows: false, system: !!S.sys, network: !!(S.sys && S.sys.rx != null),
         face: "agents", agentsAs: "drones", banner: "OMARCHY TV · WE CAN FIX EVERYTHING", bannerEvery: 45, fireworks: true, infraWeather: true,
         wallpaper: null, musicCover: null, wled: false, tipsEvery: 40, ivy: false, secondary: "full", hackerStyle: "phosphor", nocHide: [],
-        music: false, sun: true, quality: cfg.quality || "auto", sound: null, sphere: "real", cars: false, eyes: true };
+        music: false, sun: true, polish: polish, quality: cfg.quality || "auto", sound: null, sphere: "real", cars: false, eyes: true };
       var ls = S.launches.filter(function (x) { return x.net > t - 120; }).slice(0, 3);
       var widgets = ls.length ? [{ id: "launches", title: "launches", type: "list", slot: "ticker", order: 27, icon: "󱓞",
         data: { items: ls.map(function (x) { return { title: x.rocket + " · " + x.mission, text: countdown(x.net - t) + " · " + x.status, t: x.net }; }) } }] : [];
       widgets = widgets.concat(tvPanels(t));
-      var st = { v: "1.6.0-tv", t: t, demo: false, tv: true, sys: S.sys, hist: S.hist, weather: w, widgets: widgets, alerts: [], privacy: false, screencast: false,
+      var st = { v: "1.8.0-tv", t: t, demo: false, tv: true, sys: S.sys, hist: S.hist, weather: w, widgets: widgets, alerts: [], privacy: false, screencast: false,
         mons: {}, theme: cfg.theme || { name: "", colors: {} }, agents: [], focus: null, git: [], space: { iss: S.space.iss, kp: S.space.kp, launch: S.space.launch },
         heart: null, listen: null, speaking: false, fxSeq: S.fxSeq, music: false, perfProbe: false, growth: null,
         sky: t - S.skyT < 120 ? S.sky : [], calendar: [], air: S.air, meeting: false, night: S.night, season: {}, eclipses: [], expiry: [], energy: null, net: null, bolts: [],
         term: [], noc: { on: false, incident: null }, starlink: S.starlink, storms: null, robots: [], car: null, ring: false, timelapse: false,
         timelapseEvery: 0, away: false, digest: null, tower: [], tips: TIPS, updates: null, layout: {}, layoutEdit: false, friends: [], lan: [],
         scene: null, sceneTicket: "", ui: ui };
+      if (SCENES[ui.scene] && cfg.scenes === false) ui.scene = "sphere";   // a TV browser that can't frame a scene: the sphere
       var pc = S.pc;
       if (pc) {   // the PC knows everything the TV can't: its agents, workspaces, repos, panels... the TV keeps its own sky
         ["agents", "focus", "git", "tower", "updates", "widgets", "alerts", "calendar", "meeting", "growth", "friends", "robots", "expiry",
@@ -642,7 +645,32 @@
         if (!(st.starlink.sats.length || st.starlink.next) && pc.starlink) st.starlink = pc.starlink;
         if (!st.space.launch && pc.space && pc.space.launch) st.space.launch = pc.space.launch;
       }
+      if (SCENES[ui.scene]) { st.sceneTicket = "tv"; st.scene = sceneState(st, t); }   // 2.15.1 Pulse 1.8's scenes (mars, monolith)
       return st;
+    }
+    /** What a scene sees (Pulse's docs/SCENES.md): the same read-only copy the PC's hub gives, from what the TV knows. */
+    function sceneState(st, t) {
+      var d = new Date(t * 1000), w = st.weather, c = (st.theme && st.theme.colors) || {}, n = st.night || {}, th = {};
+      [["bg", "background"], ["fg", "foreground"], ["accent", "accent"], ["accent2", "color5"], ["ok", "color2"], ["warn", "color3"], ["crit", "color1"], ["dim", "color8"]]
+        .forEach(function (k) { if (/^#[0-9a-fA-F]{6}$/.test(c[k[1]] || "")) th[k[0]] = c[k[1]]; });
+      var sy = st.sys || {}, panels = {};
+      (st.widgets || []).forEach(function (x) {   // the PC's status panels (rows with a level): a scene's services
+        var rows = x && x.data && x.data.rows;
+        if (x && x.id && rows && rows.some && rows.some(function (r) { return r && r.level; }))
+          panels[String(x.id).slice(0, 32)] = { rows: rows.slice(0, 24).map(function (r) { return { name: String(r.name || r.title || "").slice(0, 40), level: r.level || "" }; }) };
+      });
+      return { v: "1.8.0-tv", t: t, demo: false, privacy: !!st.privacy,
+        time: { hour: d.getHours(), minute: d.getMinutes(), second: d.getSeconds(), weekday: (d.getDay() + 6) % 7, day: d.getDate(), month: d.getMonth() + 1, year: d.getFullYear() },
+        sys: { cpu: sy.cpu, cores: sy.cores, ram: sy.ram, swap: sy.swap, gpu: sy.gpu, temp: sy.temp, disk: sy.disk, rx: sy.rx, tx: sy.tx, load: sy.load },
+        agents: (st.agents || []).slice(0, 24).map(function (a) { return { name: a.name || "", state: a.state || "working", since: a.since || 0, text: a.text || "" }; }),
+        git: (st.git || []).map(function (r) { return { name: r.name || "", branch: r.branch || "", week: r.week || 0, last: r.last || 0, dirty: r.dirty || 0, ci: r.ci || "" }; }),
+        weather: w && !w.error ? { code: w.code, temp: w.temp, day: w.day, wind: w.wind, windDir: w.windDir, cloud: w.cloud, rain: w.rain } : null,
+        focus: st.focus ? { start: st.focus.start, until: st.focus.until } : null, away: !!st.away, meeting: !!st.meeting, theme: th,
+        ui: { quality: st.ui.quality === "half" ? "half" : st.ui.quality === "full" ? "full" : "auto", motion: st.ui.motion === "reduced" ? "reduced" : "full", fps: st.ui.fps || 20 },
+        events: S.fx.slice(-12).map(function (x) { return { kind: x.kind, text: x.text, t: x.t }; }), season: st.season || {}, music: !!st.music,
+        space: { sun: n.sun ? n.sun.el : null, moon: n.moon && n.moon.lit != null ? Math.round(n.moon.lit * 100) : null, planes: (st.sky || []).length, kp: st.space ? st.space.kp : null,
+          launchIn: st.space && st.space.launch && st.space.launch.net ? Math.round((st.space.launch.net - t) / 60) : null },
+        panels: panels, layout: { horizon: 0.745 } };
     }
     function racingPanel(t) {
       var items = cfg.racing && cfg.racing.length ? racingItems(cfg.racing, t, 5) : [];
@@ -702,7 +730,7 @@
       if (L && L.status === "Go" && L.net - t <= 600 && L.net - t > -5) out.push({ kind: "launch", phase: "countdown", in: L.net - t, rocket: L.rocket, mission: L.mission });
       return out;
     }
-    return { start: start, stop: stop, state: state, events: events, onFx: function (cb) { fxCbs.push(cb); }, fx: fx, _S: S,
+    return { start: start, stop: stop, state: state, setPolish: function (on) { polish = !!on; }, polish: function () { return polish; }, events: events, onFx: function (cb) { fxCbs.push(cb); }, fx: fx, _S: S,
       openskyEvery: cfg.openskyAuth ? 60000 : 480000,
       _tick: { weather: weather, night: night, sky: sky, opensky: opensky, route: route, iss: iss, kp: kp, launches: launches, launchTick: launchTick,
         starlinkFetch: starlinkFetch, starlinkTick: starlinkTick, tv: tvNumbers, pc: pcState, air: airq, quakes: quakes, omarchy: omarchy } };

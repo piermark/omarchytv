@@ -164,7 +164,8 @@ final class PulseSaver {
             }
             JSONObject o = new JSONObject().put("city", cfg.weatherPlace).put("imperial", cfg.tempF)
                     .put("theme", new JSONObject().put("name", t.name).put("colors", colors))
-                    .put("scene", cfg.pulseScene).put("quality", "auto");
+                    .put("scene", cfg.pulseScene).put("quality", "auto")
+                    .put("graphics", cfg.pulseGraphics).put("lowEnd", lowEnd(c));   // 2.15.1
             o.put("planesNm", cfg.pulsePlanesNm).put("earthquakes", cfg.pulseQuakes).put("opensky", cfg.pulseOpensky);
             o.put("openskyAuth", cfg.pulseOpensky && openskyCreds(c) != null);   // signed in to OpenSky: read it every minute
             if (cfg.pulseRacing) o.put("racing", Racing.pulseRows(c, cfg.racingSeries, System.currentTimeMillis()));   // 2.15.1
@@ -172,6 +173,18 @@ final class PulseSaver {
             return o.toString();
         } catch (Exception e) {
             return "{}";
+        }
+    }
+
+    /** 2.15.1 a small TV (Android's own low-RAM flag, under 1.7 GB of memory or fewer than four cores): Pulse's plain look. */
+    static boolean lowEnd(Context c) {
+        try {
+            android.app.ActivityManager am = (android.app.ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+            android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
+            return am.isLowRamDevice() || mi.totalMem < 1700L * 1024 * 1024 || Runtime.getRuntime().availableProcessors() < 4;
+        } catch (Exception e) {
+            return false;
         }
     }
 

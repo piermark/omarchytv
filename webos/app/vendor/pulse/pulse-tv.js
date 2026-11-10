@@ -59,8 +59,27 @@
     }
     return Promise.resolve(fromParent && Date.now() - fromParentAt < 30000 ? fromParent : null);
   }
+  // 2.15.1 how rich Pulse draws on this TV (screensaver.pulseGraphics): "low" is the plain look at half resolution,
+  // "medium" Pulse 1.8's look at half resolution, "high" the 1.8 look at full resolution. "auto" (default): the 1.8
+  // look unless the TV is a small one (the launcher says so, or its browser is an old one), the resolution chosen by
+  // Pulse itself; and if frames still take too long, the plain look comes back by itself (see /api/perf below).
+  var chrome = /Chrome\/(\d+)/.exec(navigator.userAgent || ""), oldEngine = !chrome || Number(chrome[1]) < 70;
+  var gfx = { low: 1, medium: 1, high: 1 }[cfg.graphics] ? cfg.graphics : "auto";
+  var polish = gfx === "auto" ? !(cfg.lowEnd || oldEngine) : gfx !== "low";
+  var quality = gfx === "low" || gfx === "medium" ? "half" : gfx === "high" ? "full" : cfg.quality || "auto";
+  // Pulse 1.8's scenes in code (mars, monolith) run in a sandboxed frame that pulse.js asks its hub for (/scene/NAME);
+  // on the TV that frame is a page beside this one. Where the browser can't redirect it, the sphere stays.
+  var scenesOk = false;
+  try {
+    var ifd = Object.getOwnPropertyDescriptor(HTMLIFrameElement.prototype, "src");
+    if (ifd && ifd.set && ifd.configurable) {
+      Object.defineProperty(HTMLIFrameElement.prototype, "src", { configurable: true, enumerable: ifd.enumerable, get: ifd.get,
+        set: function (v) { var m = /^\/scene\/(mars|monolith)\?/.exec(String(v)); ifd.set.call(this, m ? "scene-" + m[1] + ".html" : v); } });
+      scenesOk = true;
+    }
+  } catch (e) { log("scenes " + e); }
   var hub = root.OmarchyPulseTV.create({
-    lat: cfg.lat, lon: cfg.lon, city: cfg.city || "", imperial: !!cfg.imperial, theme: cfg.theme, quality: cfg.quality || "auto",
+    lat: cfg.lat, lon: cfg.lon, city: cfg.city || "", imperial: !!cfg.imperial, theme: cfg.theme, quality: quality, polish: polish, scenes: scenesOk,
     motion: cfg.motion, scene: cfg.scene || "sphere", clock: cfg.clock, launches: cfg.launches, planes: cfg.planes, starlink: cfg.starlink,
     planesNm: cfg.planesNm, earthquakes: cfg.earthquakes, opensky: !!cfg.opensky, openskyAuth: !!cfg.openskyAuth, racing: cfg.racing,
     tv: tv, pc: pc
@@ -68,13 +87,21 @@
   root.__pulseTV = hub;
 
   // /api/* answered here. Anything else goes to the real fetch (none of Pulse's own requests do).
-  var realFetch = root.fetch;
+  var realFetch = root.fetch, slowRuns = 0;
   function resp(obj) {
     return { ok: true, status: 200, json: function () { return Promise.resolve(obj); }, text: function () { return Promise.resolve(JSON.stringify(obj)); } };
   }
   root.fetch = function (url, opts) {
     var u = String(url || "");
     if (u.indexOf("/api/state") === 0) return Promise.resolve(resp(hub.state()));
+    if (u.indexOf("/api/perf") === 0) {   // pulse.js reports how it runs: three slow reports in a row, and the plain look is back
+      try {
+        var pf = JSON.parse((opts && opts.body) || "{}"), slow = pf.draw > 16 || (pf.want && pf.fps < pf.want * 0.6);
+        slowRuns = slow ? slowRuns + 1 : 0;
+        if (gfx === "auto" && slowRuns >= 3 && hub.polish()) { hub.setPolish(false); log("slow (" + pf.fps + " fps, " + pf.draw + " ms): the plain look"); }
+      } catch (e) {}
+      return Promise.resolve(resp({ ok: true }));
+    }
     if (u.indexOf("/api/visibility") === 0) return Promise.resolve(resp({ mons: {}, pause_when_covered: false }));
     if (u.indexOf("/api/") === 0) return Promise.resolve(resp({ ok: true }));
     return realFetch ? realFetch.apply(root, arguments) : Promise.reject(new Error("no fetch"));

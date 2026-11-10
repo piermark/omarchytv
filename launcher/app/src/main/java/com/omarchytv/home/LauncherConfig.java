@@ -493,8 +493,10 @@ final class LauncherConfig {
     final int accent2;               // focus border end, "TV" gradient end
     final String logo;               // "omarchy-tv" (default), "omarchy" or "original" (see Art)
     final String screensaverArt;     // defaults to logo
-    /** v2.15 the Pulse screensaver's scene: sphere (default), skyline, orbit, calm, hacker, noir. */
+    /** v2.15 the Pulse screensaver's scene: sphere (default), skyline, orbit, calm, hacker, noir; 2.15.1 mars, monolith. */
     final String pulseScene;
+    /** 2.15.1 how rich Pulse draws (screensaver.pulseGraphics): auto (default, fits the TV), low, medium, high. */
+    final String pulseGraphics;
     /** Pulse's planes: how far the panel looks (screensaver.planesNm: 25 default, 50, 100, 150, 200, 250), the earthquakes
      *  panel (screensaver.earthquakes, default on) and OpenSky as a second plane feed (screensaver.opensky, default off). */
     final int pulsePlanesNm;
@@ -811,7 +813,9 @@ final class LauncherConfig {
         pulseNotice = j != null && j.optBoolean("pulseNotice", false);
         agentAlert = j != null && j.optBoolean("agentAlert", false);
         hasSsBefore = j != null && j.optJSONObject("ssBefore215") != null;
-        pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir").contains(ps) ? ps : "sphere";
+        pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith").contains(ps) ? ps : "sphere";
+        String pg = ss != null ? ss.optString("pulseGraphics", "auto") : "auto";
+        pulseGraphics = Arrays.asList("low", "medium", "high").contains(pg) ? pg : "auto";
         int pnm = ss != null ? ss.optInt("planesNm", 25) : 25;
         pulsePlanesNm = pnm == 50 || pnm == 100 || pnm == 150 || pnm == 200 || pnm == 250 ? pnm : 25;
         pulseQuakes = ss == null || ss.optBoolean("earthquakes", true);

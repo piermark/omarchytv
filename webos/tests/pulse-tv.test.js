@@ -1,4 +1,4 @@
-// OmarchyTV 2.15: Pulse on the TV (vendor/pulse): Pulse 1.6's page with the TV's own hub.
+// OmarchyTV 2.15: Pulse on the TV (vendor/pulse): Pulse's own page (1.8 since 2.15.1) with the TV's own hub.
 const test = require("node:test");
 const assert = require("node:assert");
 const fs = require("fs");
@@ -71,7 +71,7 @@ test("the state the page reads: TV only, then with the PC's Pulse on top", async
   const h = hubAt(t, { cfg: { tv: () => ({ cpu: 12, ram: 40, rx: 1000, tx: 10, host: "TV" }) } });
   h._tick.tv(); h._tick.night();
   let st = h.state();
-  assert.strictEqual(st.v, "1.6.0-tv");
+  assert.strictEqual(st.v, "1.8.0-tv");
   assert.strictEqual(st.ui.scene, "sphere", "the sphere is the default scene");
   assert.strictEqual(st.ui.skyline, "alessandria");
   assert.strictEqual(st.ui.system, true);
@@ -155,7 +155,7 @@ test("the page's bridge: /api/state and /api/live answered on the TV, nothing re
   assert.ok(/d\.pulseTV === "pc"/.test(src), "LG/Samsung post the PC's Pulse into the frame");
   assert.ok(/host\.pcPulse/.test(src) && /host\.tvStats/.test(src) && /host\.pulse\(\)/.test(src), "Android's OmarchySaver bridge");
   const pj = fs.readFileSync(V + "pulse.js", "utf8");
-  assert.ok(/getJSON\("\/api\/state"\)/.test(pj) && /new EventSource\("\/api\/live/.test(pj), "pulse.js as Pulse 1.6 ships it");
+  assert.ok(/getJSON\("\/api\/state"\)/.test(pj) && /new EventSource\("\/api\/live/.test(pj), "pulse.js as Pulse ships it");
 });
 
 test("the TV's own panels with no PC: the sky, space, planes, the air, earthquakes, Omarchy; the PC's panels and colours when paired", async () => {
@@ -341,4 +341,32 @@ test("2.15.1 screensaver.racing: the next sessions as a side panel, soonest firs
   assert.strictEqual(panel({ racing })[0].slot, "right");
   assert.strictEqual(panel({}).length, 0);                       // off, or LG/Samsung: no panel
   assert.strictEqual(panel({ racing: [racing[3]] }).length, 0);   // nothing left to race: no empty panel
+});
+
+test("2.15.1 Pulse 1.8 on the TV: its look, its scenes in their own frames, and graphics that fit the TV", () => {
+  const net = () => Promise.resolve(null), mk = cfg => P.create(Object.assign({ lat: 44.91, lon: 8.61 }, cfg), net, () => 1000000);
+  const pj = fs.readFileSync(V + "pulse.js", "utf8");
+  assert.ok(/function polished\(\)/.test(pj) && /drawLiftoffsFine/.test(pj) && /drawStarlinkFine/.test(pj), "pulse.js is 1.8");
+  // the look: on by default, off when asked, and it can be dropped while running
+  assert.strictEqual(mk({}).state().ui.polish, true);
+  assert.strictEqual(mk({ polish: false }).state().ui.polish, false);
+  const h = mk({}); h.setPolish(false); assert.strictEqual(h.state().ui.polish, false);
+  // the scenes: a ticket and a read-only state for mars and monolith, nothing for the built-in ones
+  let st = mk({ scene: "mars" }).state();
+  assert.strictEqual(st.ui.scene, "mars"); assert.strictEqual(st.sceneTicket, "tv");
+  assert.deepStrictEqual(Object.keys(st.scene).sort(), ["agents", "away", "demo", "events", "focus", "git", "layout", "meeting", "music", "panels", "privacy", "season", "space", "sys", "t", "theme", "time", "ui", "v", "weather"]);
+  assert.ok(!("lat" in st.scene) && !/44\.91|8\.61|Alessandria/.test(JSON.stringify(st.scene)), "a scene never gets the place");
+  st = mk({ scene: "sphere" }).state(); assert.strictEqual(st.sceneTicket, ""); assert.strictEqual(st.scene, null);
+  assert.strictEqual(mk({ scene: "mars", scenes: false }).state().ui.scene, "sphere");   // an old TV browser: the sphere
+  // the pages of the two scenes: the runtime and the scene, nothing else, no network
+  for (const n of ["mars", "monolith"]) {
+    const page = fs.readFileSync(V + "scene-" + n + ".html", "utf8");
+    assert.ok(!/src=|href=|url\(/.test(page), "one page, nothing beside it (a sandboxed frame can't load it on LG and Samsung)");
+    const src = page.replace(/\/\/.*$/gm, "");
+    assert.ok(/window\.PulseScene = /.test(src) && new RegExp('PulseScene\\.register\\("' + n + '"').test(src), n + ": the runtime and the scene");
+    assert.ok(!/=>|\blet\s|\bconst\s|`|fetch\(|XMLHttpRequest/.test(src), n + " is ES5 and offline");
+  }
+  // graphics: the bridge maps the setting and watches Pulse's own performance reports
+  const tvjs = fs.readFileSync(V + "pulse-tv.js", "utf8");
+  assert.ok(/gfx === "low" \|\| gfx === "medium" \? "half" : gfx === "high" \? "full"/.test(tvjs) && /slowRuns >= 3/.test(tvjs));
 });

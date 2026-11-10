@@ -1,0 +1,467 @@
+<!doctype html><html><head><meta charset="utf-8"><!-- Omarchy Pulse: the scene "mars" and the scene runtime, unchanged (c) 2026 Marco Porro, MIT. Written by tools/pulse-tv-scenes.py. -->
+<style>html,body{margin:0;height:100%;background:transparent;overflow:hidden}canvas{position:fixed;top:0;left:0;width:100%;height:100%;display:block}</style></head><body>
+<canvas id="c"></canvas>
+<script>
+/* Omarchy Pulse 1.5: the runtime of a community scene. (c) 2026 Marco Porro (x.com/MarcoPorro), MIT.
+   A scene runs alone in a sandboxed frame: no network, no token, no access to Pulse or to your files. It gets a
+   read-only copy of the state, draws on its own transparent canvas between the sky and the panels, and can answer
+   a click with a line of text. See docs/SCENES.md. */
+(function () {
+  "use strict";
+  var cv = document.getElementById("c"), g = cv.getContext("2d");
+  var def = null, name = "", state = null, W = 0, H = 0, scale = 1, fps = 20, paused = false, last = 0;
+  var t0 = performance.now(), inited = false, cost = 0, n = 0, worst = 0, rep = performance.now(), errs = 0;
+  var parentWin = window.parent;
+  function post(m) { try { parentWin.postMessage(m, "*"); } catch (e) {} }
+  function fail(where, e) {
+    errs++;
+    if (errs <= 3) post({ pulseScene: "error", where: where, error: String(e && e.message || e) + (e && e.stack ? "\n" + String(e.stack).split("\n").slice(0, 3).join("\n") : "") });
+  }
+  function frozen(o) {   // the scene gets a copy it cannot change for the others
+    if (o && typeof o === "object") { Object.keys(o).forEach(function (k) { frozen(o[k]); }); Object.freeze(o); }
+    return o;
+  }
+  function resize() {
+    var r = Math.min(2, window.devicePixelRatio || 1) * scale;
+    W = Math.max(1, Math.round(innerWidth * r)); H = Math.max(1, Math.round(innerHeight * r));
+    cv.width = W; cv.height = H;
+    if (def && def.init) { try { def.init(g, { w: W, h: H, scale: r }); inited = true; } catch (e) { fail("init", e); } }
+  }
+  window.PulseScene = {
+    register: function (nm, d) {
+      if (def) return;   // one scene per frame
+      name = String(nm || "scene"); def = d || {};
+      resize(); inited = true;
+      post({ pulseScene: "ready", name: name, city: !!def.city });
+    },
+    // 1.7: ask Pulse for one of its own effects (fireworks, banner, lightning, shooting, tip, launch, flare, chime):
+    // Pulse plays it over the whole wallpaper. A few a minute at most; anything else is ignored.
+    fx: function (kind, text) { post({ pulseScene: "fx", kind: String(kind || ""), text: String(text == null ? "" : text).slice(0, 60) }); },
+    // 1.7: a line of text over the city, like a click's answer
+    say: function (text) { post({ pulseScene: "show", text: String(text == null ? "" : text).slice(0, 120) }); },
+    // little helpers every scene needs
+    rgba: function (c, a) { c = c || [255, 255, 255]; return "rgba(" + (c[0] | 0) + "," + (c[1] | 0) + "," + (c[2] | 0) + "," + (a == null ? 1 : a) + ")"; },
+    mix: function (a, b, k) { return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, a[2] + (b[2] - a[2]) * k]; },
+    rand: function (seed) { var s = (Math.abs(seed | 0) % 2147483646) + 1; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
+  };
+  addEventListener("resize", resize);
+  addEventListener("error", function (e) { fail("script", e.error || e.message); });
+  addEventListener("message", function (ev) {
+    var m = ev.data || {};
+    if (ev.source !== parentWin || !m.pulse) return;
+    if (m.pulse === "state") {
+      state = frozen(m.state || {});
+      fps = Math.max(1, Math.min(60, +m.fps || 20));
+      if (m.scale && m.scale !== scale) { scale = m.scale; resize(); }
+      if (def && def.update) { try { def.update(state); } catch (e) { fail("update", e); } }
+    } else if (m.pulse === "pause") paused = !!m.on;
+    else if (m.pulse === "click" && def && def.click) {
+      var r = null;
+      try { r = def.click(m.x * W, m.y * H, state); } catch (e) { fail("click", e); }
+      if (r) post({ pulseScene: "show", text: String(typeof r === "object" ? (r.title || "") + (r.text ? " · " + r.text : "") : r).slice(0, 120) });
+    } else if (m.pulse === "snap") {
+      try { post({ pulseScene: "snap", url: cv.toDataURL("image/png") }); } catch (e) { fail("snap", e); }
+    } else if (m.pulse === "record") record(+m.secs || 6);
+  });
+  function record(secs) {   // the scene lab: a short video of the scene alone (demo data)
+    if (!cv.captureStream || !window.MediaRecorder) { post({ pulseScene: "video", error: "this browser cannot record" }); return; }
+    var chunks = [], rec = new MediaRecorder(cv.captureStream(30), { mimeType: MediaRecorder.isTypeSupported("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm" });
+    rec.ondataavailable = function (e) { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = function () { var b = new Blob(chunks, { type: "video/webm" }), fr = new FileReader(); fr.onload = function () { post({ pulseScene: "video", url: fr.result }); }; fr.readAsDataURL(b); };
+    rec.start(); setTimeout(function () { rec.stop(); }, secs * 1000);
+  }
+  function frame(now) {
+    requestAnimationFrame(frame);
+    if (!def || !state || paused) return;
+    if (now - last < 1000 / fps - 2) return;
+    last = now;
+    var a = performance.now();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, W, H);
+    try { if (def.draw) def.draw(g, (now - t0) / 1000, state, { w: W, h: H, horizon: H * (state.layout ? state.layout.horizon : 0.72) }); }
+    catch (e) { fail("draw", e); }
+    var c = performance.now() - a;
+    cost += c; n++; if (c > worst) worst = c;
+    if (now - rep > 2000) { post({ pulseScene: "perf", draw: +(cost / Math.max(1, n)).toFixed(2), worst: +worst.toFixed(1), fps: +(n / ((now - rep) / 1000)).toFixed(1), w: W, h: H }); cost = 0; n = 0; worst = 0; rep = now; }
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+<script>
+// mars: a scene of Omarchy Pulse 1.8 (docs/SCENES.md). (c) 2026 Marco Porro (x.com/MarcoPorro), MIT.
+// A colony on Mars, with its own sky and its own colours (it does not use the theme: it is another world).
+// The dome is your machine: a light on its wall for each CPU core, its reactor warms with the temperature, the two
+// tanks beside it are the memory and the disk, the antenna talks to orbit as fast as your network. Your AI agents are
+// the rovers: one that works drives and raises dust, one that waits for you stops and blinks. Your repos are the launch
+// pads: crates for the week's commits, a beacon in the colour of the CI, and when a build goes back to green the rocket
+// leaves. The rows of your panels (VMs, containers) are the habitat pods. The sky is Mars's but the hour is yours:
+// butterscotch by day, a blue sunset (it really is blue there), Phobos, Deimos and the Earth at night. Your real
+// weather arrives translated: rain is a dust storm, wind raises dust devils, snow is frost, clouds are thin ice.
+// It measures how long a frame takes and draws in one of four ways, from an old laptop to a fast PC on a 4K screen.
+PulseScene.register("mars", {
+  init: function (g, size) {
+    this.q = 2;            // how rich it draws: 0 light, 1 medium, 2 high, 3 ultra
+    this.cost = []; this.qAt = 0;
+    this.hit = [];         // what a click can find: [x, y, r, text]
+    this.prev = null; this.said = {}; this.seen = 0;
+    this.rov = {};         // each agent's rover, by name: where it is, which way it goes
+    this.lift = {};        // a pad whose rocket left: name -> t
+    this.go = [];          // rockets asked to leave by update(), started by draw() (which has the time)
+    this.flash = {};       // a pad that just got a commit: name -> t
+    this.puffs = [];       // dust behind the rovers: [x, y, born, size]
+    this.pulses = [];      // what the antenna sends: born
+    this.met = null;       // a meteor: [x, y, born]
+    var s = 20260, R = function () { s = (s * 16807) % 2147483647; return s / 2147483647; }, i;
+    this.stars = []; for (i = 0; i < 180; i++) this.stars.push([R(), R() * 0.95, 0.3 + R() * 0.7, R() * 6.28]);
+    this.far = [];         // the far line: a shield volcano with its caldera, a second cone, small noise
+    for (i = 0; i <= 96; i++) {
+      var x = i / 96, v = Math.min(0.5, 0.62 * Math.exp(-Math.pow((x - 0.33) / 0.19, 2))) + 0.26 * Math.exp(-Math.pow((x - 0.84) / 0.07, 2));
+      this.far.push(v + R() * 0.018);
+    }
+    this.mesa = [];        // the nearer buttes, never behind the colony
+    for (i = 0; i < 8; i++) { var mx = i < 4 ? 0.02 + i * 0.1 + R() * 0.03 : 0.62 + (i - 4) * 0.1 + R() * 0.03; this.mesa.push([mx, 0.035 + R() * 0.05, 0.3 + R() * 0.7, R()]); }
+    this.rocks = []; for (i = 0; i < 90; i++) this.rocks.push([R(), Math.pow(R(), 1.5), 0.5 + R(), R()]);
+    this.dust = []; for (i = 0; i < 260; i++) this.dust.push([R(), R(), 0.4 + R() * 0.6, R()]);
+    this.devil = [R(), R()];
+  },
+
+  // what just happened. Pulse's fireworks and rockets live behind this world's sky, so Mars answers with its own:
+  // a rocket leaves a pad, a pod raises the alarm; Pulse adds the sound and one line of text.
+  update: function (st) {
+    var P = this.prev, self = this, now = st.t || Date.now() / 1000;
+    var due = function (key, every) { if (now - (self.said[key] || 0) < every) return false; self.said[key] = now; return true; };
+    var rows = function (s) { var m = {}; Object.keys(s.panels || {}).forEach(function (id) { ((s.panels[id] || {}).rows || []).forEach(function (r, i) { m[id + "|" + (r.name || i)] = r; }); }); return m; };
+    if (P) {
+      var w0 = (P.agents || []).filter(function (a) { return a.state === "waiting"; }).length, w1 = (st.agents || []).filter(function (a) { return a.state === "waiting"; });
+      if (w1.length > w0 && due("wait", 30)) PulseScene.fx("chime", (w1[w1.length - 1].name || "a rover") + " needs you");
+      var was = {}; (P.git || []).forEach(function (r, i) { was[r.name || "#" + i] = r.ci; });
+      (st.git || []).forEach(function (r, i) {
+        var k = r.name || "#" + i;
+        if (r.ci === "ok" && was[k] === "fail" && due("green:" + k, 60)) { self.go.push(k); PulseScene.say((r.name || "build") + " is green · liftoff"); }
+      });
+      var r0 = rows(P), r1 = rows(st);
+      Object.keys(r1).forEach(function (k) {
+        if (!r0[k]) return;
+        if (r1[k].level === "crit" && r0[k].level !== "crit" && due("down", 60)) PulseScene.fx("chime", (r1[k].name || "a pod") + " is down");
+        if (r1[k].level === "ok" && r0[k].level === "crit" && due("up", 60)) PulseScene.say((r1[k].name || "a pod") + " is back");
+      });
+      var k0 = (P.space || {}).kp || 0, k1 = (st.space || {}).kp || 0;
+      if (k1 >= 6 && k0 < 6 && due("kp", 3600)) PulseScene.say("solar storm · Kp " + k1);
+      var l1 = (st.space || {}).launchIn, l0 = (P.space || {}).launchIn;
+      if (l1 != null && l0 != null && l1 <= 0 && l0 > 0 && due("launch", 600)) { self.go.push("*"); PulseScene.say("a launch on Earth · one here too"); }
+      if ((P.time || {}).hour === 23 && (st.time || {}).hour === 0 && due("midnight", 3600)) { self.go.push("*"); PulseScene.say("a new sol"); }
+    }
+    this.prev = st;
+  },
+
+  draw: function (g, t, st, box) {
+    var t0 = performance.now(), C = PulseScene.rgba, M = PulseScene.mix, W = box.w, H = box.h, hz = box.horizon, self = this, u = H / 1080, i;
+    var still = st.ui && st.ui.motion === "reduced", tt = still ? 0 : t, now = st.t || Date.now() / 1000, q = this.q;
+    var sys = st.sys || {}, cpu = sys.cpu || 0, cores = (sys.cores && sys.cores.length ? sys.cores : [cpu]).slice(0, 32), temp = sys.temp || 45;
+    var quiet = st.meeting || st.away ? 0.55 : 1, sp = st.space || {}, wx = st.weather || {}, tm = st.time || {};
+    var cl = function (v) { return Math.max(0, Math.min(1, v)); };
+    var cx = W / 2, FONT = "'CaskaydiaMono Nerd Font', 'Cascadia Mono', ui-monospace, monospace";
+    // this world's own colours
+    var RUST = [172, 86, 52], DEEP = [84, 40, 30], SAND = [222, 160, 108], HULL = [236, 230, 220], STEEL = [128, 134, 144], GLASS = [170, 226, 230];
+    var LAMP = [255, 232, 196], OK = [124, 227, 139], WARN = [255, 200, 87], CRIT = [255, 92, 80], TECH = [120, 220, 255], LEAF = [96, 190, 112], PANEL = [44, 74, 140];
+    this.hit = [];
+
+    // ---- the hour is yours: the Sun's real height decides day, the blue twilight, night
+    var el = sp.sun == null ? (tm.hour >= 7 && tm.hour < 19 ? 35 : -30) : sp.sun;
+    var wD = cl((el + 2) / 12), wN = cl((-el - 4) / 10), wT = Math.max(0, 1 - wD - wN);
+    var sky3 = function (d, tw, n) { return [d[0] * wD + tw[0] * wT + n[0] * wN, d[1] * wD + tw[1] * wT + n[1] * wN, d[2] * wD + tw[2] * wT + n[2] * wN]; };
+    var zen = sky3([118, 84, 62], [40, 46, 70], [6, 7, 13]), hor = sky3([216, 162, 112], [146, 122, 124], [34, 24, 27]);
+    var Lr = wD + wT * 0.62 + wN * 0.27, Lg = wD + wT * 0.59 + wN * 0.29, Lb = wD + wT * 0.74 + wN * 0.46;
+    var lit = function (c, k) { k = k == null ? 1 : k; return [Math.min(255, c[0] * Lr * k), Math.min(255, c[1] * Lg * k), Math.min(255, c[2] * Lb * k)]; };
+    var dark = 1 - wD, INK = M(HULL, lit(HULL, 1.2), 0.35);   // lamps count in the dark; INK is for the words, readable at any hour   // how much the lamps count
+    var glow = function (x, y, r, col, a) {
+      if (a <= 0.01 || r <= 0) return;
+      if (q === 0) { g.fillStyle = C(col, a * 0.35); g.beginPath(); g.arc(x, y, r * 0.5, 0, 6.2832); g.fill(); return; }
+      var gr = g.createRadialGradient(x, y, 0, x, y, r); gr.addColorStop(0, C(col, a)); gr.addColorStop(1, C(col, 0));
+      g.fillStyle = gr; g.fillRect(x - r, y - r, r * 2, r * 2);
+    };
+
+    // ---- the sky
+    var sg = g.createLinearGradient(0, 0, 0, hz); sg.addColorStop(0, C(zen, 1)); sg.addColorStop(0.7, C(M(zen, hor, 0.7), 1)); sg.addColorStop(1, C(hor, 1));
+    g.fillStyle = sg; g.fillRect(0, 0, W, hz + 1);
+    if (wN > 0.05) {   // stars, the two moons, and home
+      var ns = [50, 100, 180, 180][q];
+      for (i = 0; i < ns; i++) {
+        var s = this.stars[i], tw = still ? 1 : 0.75 + 0.25 * Math.sin(tt * (0.6 + s[2]) + s[3]), z = Math.max(1, u * (0.7 + s[2] * 1.1));
+        g.fillStyle = C([255, 244, 232], wN * s[2] * tw * (0.35 + 0.65 * (1 - s[1]))); g.fillRect(s[0] * W, s[1] * hz, z, z);
+      }
+      var ex = W * 0.618, ey = hz * 0.675;   // the Earth: a blue star with a smaller one beside it
+      glow(ex, ey, H * 0.012, [150, 200, 255], 0.8 * wN); g.fillStyle = C([210, 232, 255], wN); g.beginPath(); g.arc(ex, ey, Math.max(1.2, u * 1.9), 0, 6.2832); g.fill();
+      g.fillStyle = C([220, 220, 215], 0.8 * wN); g.fillRect(ex + u * 7, ey - u * 3, Math.max(1, u * 1.2), Math.max(1, u * 1.2));
+      if (q >= 1) { g.fillStyle = C([200, 220, 245], 0.5 * wN); g.font = Math.round(H * 0.0095) + "px " + FONT; g.textAlign = "left"; g.fillText("Earth", ex + u * 12, ey + u * 3); }
+      this.hit.push([ex, ey, H * 0.02, "Earth · the star you came from"]);
+      var px = W * (0.3 + ((tt * 0.0035) % 1) * 0.4), py = hz * (0.74 - 0.07 * Math.sin(((tt * 0.0035) % 1) * 3.1416));   // Phobos is fast, and rises in the west
+      g.fillStyle = C([196, 180, 164], wN); g.beginPath(); g.ellipse(px, py, u * 5.5, u * 4.2, 0.5, 0, 6.2832); g.fill();
+      g.fillStyle = C([120, 108, 98], wN); g.beginPath(); g.arc(px - u * 1.5, py - u, u * 1.4, 0, 6.2832); g.fill();
+      g.fillStyle = C([226, 214, 200], wN); g.beginPath(); g.arc(W * 0.41, hz * 0.69, Math.max(1.2, u * 1.6), 0, 6.2832); g.fill();   // Deimos
+      this.hit.push([px, py, H * 0.02, "Phobos · crosses the sky in four hours"]);
+      if (q >= 2 && !still) {   // a meteor, now and then
+        if (!this.met && Math.random() < 0.0015) this.met = [W * (0.3 + Math.random() * 0.4), hz * (0.1 + Math.random() * 0.3), t];
+        if (this.met) {
+          var ma = (t - this.met[2]) / 0.7; if (ma > 1) this.met = null; else {
+            var mxx = this.met[0] + ma * H * 0.16, myy = this.met[1] + ma * H * 0.07, mg = g.createLinearGradient(mxx - H * 0.06, myy - H * 0.026, mxx, myy);
+            mg.addColorStop(0, C([255, 240, 220], 0)); mg.addColorStop(1, C([255, 240, 220], 0.9 * wN * (1 - ma)));
+            g.strokeStyle = mg; g.lineWidth = Math.max(1, u * 1.5); g.beginPath(); g.moveTo(mxx - H * 0.06, myy - H * 0.026); g.lineTo(mxx, myy); g.stroke();
+          }
+        }
+      }
+    }
+    var kp = sp.kp || 0;   // a solar storm: Mars has no shield, the whole night sky glows a little
+    if (kp >= 5 && wN > 0.3 && q >= 1) { var ag = g.createLinearGradient(0, hz * 0.25, 0, hz); ag.addColorStop(0, C([90, 220, 170], 0)); ag.addColorStop(1, C([90, 220, 170], 0.10 * cl((kp - 4) / 4) * wN)); g.fillStyle = ag; g.fillRect(0, hz * 0.25, W, hz * 0.75); }
+    if (el > -6) {   // the Sun: small, and blue around it when it is low
+      var hr = (tm.hour == null ? 12 : tm.hour) + (tm.minute || 0) / 60, sx = W * (0.31 + 0.38 * cl((hr - 5) / 14)), sy = hz - Math.sin(Math.max(-6, el) * 0.01745) * hz * 0.82;
+      var low = cl(1 - el / 22);
+      glow(sx, sy, H * 0.30, [96, 150, 232], 0.55 * low * (1 - wN));
+      glow(sx, sy, H * 0.10, [150, 200, 255], 0.5 * low * (1 - wN));
+      glow(sx, sy, H * 0.07, [255, 240, 214], 0.65 * (1 - low * 0.5));
+      g.fillStyle = C([255, 250, 240], 1); g.beginPath(); g.arc(sx, sy, Math.max(2, H * 0.0085), 0, 6.2832); g.fill();
+    }
+    var cloud = cl((wx.cloud || 0) / 100);   // your clouds, as Mars has them: thin streaks of ice, high up
+    if (cloud > 0.1 && q >= 1) {
+      g.fillStyle = C(M(hor, [255, 255, 255], 0.55), 0.05 + 0.07 * cloud);
+      var nc = Math.round(3 + cloud * 7);
+      for (i = 0; i < nc; i++) { var d = this.dust[i], ccx = ((d[0] + tt * 0.0012 * d[2]) % 1.3 - 0.15) * W; g.beginPath(); g.ellipse(ccx, hz * (0.12 + d[1] * 0.42), W * (0.07 + d[3] * 0.08), H * (0.004 + d[2] * 0.005), -0.05, 0, 6.2832); g.fill(); }
+    }
+
+    // ---- the land: the far volcano in the haze, the buttes, the plain
+    g.fillStyle = C(M(lit(RUST, 0.9), hor, 0.62), 1); g.beginPath(); g.moveTo(0, hz + 1);
+    for (i = 0; i <= 96; i++) g.lineTo(W * i / 96, hz - this.far[i] * H * 0.2);
+    g.lineTo(W, hz + 1); g.closePath(); g.fill();
+    if (q >= 1) { g.strokeStyle = C(M(hor, [255, 255, 255], 0.3), 0.25 * (wD + wT)); g.lineWidth = Math.max(1, u); g.beginPath(); for (i = 14; i <= 50; i++) { var fy = hz - this.far[i] * H * 0.2; if (i === 14) g.moveTo(W * i / 96, fy); else g.lineTo(W * i / 96, fy); } g.stroke(); }
+    this.mesa.forEach(function (m) {
+      var x0 = m[0] * W, w = m[1] * W, h = H * (0.018 + 0.04 * m[2]), sl = w * 0.12;
+      g.fillStyle = C(M(lit(RUST, 0.72), hor, 0.3), 1); g.beginPath(); g.moveTo(x0 - sl, hz + 1); g.lineTo(x0 + sl * 0.4, hz - h); g.lineTo(x0 + w - sl * 0.4, hz - h * (0.85 + 0.15 * m[3])); g.lineTo(x0 + w + sl, hz + 1); g.closePath(); g.fill();
+      if (q >= 1) { g.fillStyle = C(M(lit(DEEP), hor, 0.3), 0.55); g.beginPath(); g.moveTo(x0 + w * 0.55, hz + 1); g.lineTo(x0 + w * 0.6, hz - h * 0.9); g.lineTo(x0 + w - sl * 0.4, hz - h * (0.85 + 0.15 * m[3])); g.lineTo(x0 + w + sl, hz + 1); g.closePath(); g.fill(); }
+    });
+    var wind = wx.wind || 0, nDev = still || q === 0 ? 0 : wind > 35 ? 2 : wind > 14 ? 1 : 0;   // your wind raises dust devils, far away
+    for (i = 0; i < nDev; i++) {
+      var dvx = ((this.devil[i] + tt * 0.004 * (i ? -1 : 1)) % 1 + 1) % 1, dx0 = W * (0.28 + 0.44 * dvx), dh = H * (0.07 + 0.03 * i);
+      for (var k = 0; k < 9; k++) { var kk = k / 8, wob = Math.sin(tt * 2.2 + k * 0.8 + i * 3) * H * 0.006 * kk; g.fillStyle = C(M(lit(SAND), hor, 0.4), 0.16 * (1 - kk * 0.6)); g.beginPath(); g.ellipse(dx0 + wob, hz - kk * dh, H * (0.004 + 0.012 * kk), H * 0.007, 0, 0, 6.2832); g.fill(); }
+    }
+    var gg = g.createLinearGradient(0, hz, 0, H); gg.addColorStop(0, C(M(lit(RUST, 1.05), hor, 0.28), 1)); gg.addColorStop(0.3, C(lit(RUST, 0.86), 1)); gg.addColorStop(1, C(lit(DEEP, 0.75), 1));
+    g.fillStyle = gg; g.fillRect(0, hz, W, H - hz);
+    if (q >= 1) {   // the wind's ripples in the sand, and stones
+      g.strokeStyle = C(lit(DEEP), 0.16); g.lineWidth = Math.max(1, u);
+      for (i = 1; i < (q >= 2 ? 12 : 6); i++) { var ry = hz + (H - hz) * Math.pow(i / 12, 1.7), amp = H * 0.004 * (0.4 + i / 12); g.beginPath(); for (var rx = 0; rx <= 24; rx++) { var xx = W * rx / 24, yy = ry + Math.sin(rx * 0.9 + i * 1.7) * amp; if (rx) g.lineTo(xx, yy); else g.moveTo(xx, yy); } g.stroke(); }
+      var nr = [0, 30, 60, 90][q];
+      for (i = 0; i < nr; i++) {
+        var rk = this.rocks[i], rd = rk[1], rxx = rk[0] * W, ryy = hz + H * 0.012 + rd * (H - hz) * 0.95, rs = H * (0.0025 + 0.011 * rd) * rk[2];
+        if (Math.abs(rxx - cx) < H * 0.2 && rd < 0.12) continue;
+        g.fillStyle = C(lit(DEEP, 0.55), 0.35); g.beginPath(); g.ellipse(rxx + rs * 0.5, ryy + rs * 0.1, rs * 1.5, rs * 0.3, 0, 0, 6.2832); g.fill();
+        g.fillStyle = C(lit(DEEP, 1.15), 1); g.beginPath(); g.moveTo(rxx - rs, ryy); g.lineTo(rxx - rs * 0.5, ryy - rs * (0.6 + rk[3] * 0.5)); g.lineTo(rxx + rs * 0.5, ryy - rs * 0.75); g.lineTo(rxx + rs, ryy); g.closePath(); g.fill();
+        g.fillStyle = C(lit(RUST, 1.2), 0.7); g.beginPath(); g.moveTo(rxx - rs, ryy); g.lineTo(rxx - rs * 0.5, ryy - rs * (0.6 + rk[3] * 0.5)); g.lineTo(rxx - rs * 0.1, ryy); g.closePath(); g.fill();
+      }
+    }
+
+    // ---- the colony: where things stand
+    var R = H * 0.104, y0 = hz + H * 0.02, wallH = R * 0.17;
+    var heat = cl((temp - 40) / 50), core = heat < 0.5 ? M(TECH, WARN, heat * 2) : M(WARN, CRIT, (heat - 0.5) * 2);
+    var load = Math.max(0.08, cpu / 100) * quiet, music = st.music && !still;
+
+    // ---- the launch pads: your repos. Crates for the week's commits, a beacon in the colour of the CI
+    var repos = (st.git || []).slice(0, 6);
+    (st.events || []).forEach(function (e) {
+      if (e.t <= self.seen) return; self.seen = e.t;
+      if (e.kind === "commit" || e.kind === "push") { var r = repos.filter(function (x) { return x.name && String(e.text || "").indexOf(x.name) === 0; })[0]; self.flash[r ? r.name : "#0"] = t; }
+    });
+    this.go.forEach(function (k) { if (k === "*") { if (repos.length) self.lift[repos[0].name || "#0"] = t; } else self.lift[k] = t; }); this.go = [];
+    repos.forEach(function (r, i) {
+      var key = r.name || "#" + i, side = i % 2 ? 1 : -1, slot = Math.floor(i / 2), px = cx + side * (R * 2.45 + slot * R * 0.78), py = hz + H * 0.007, rh = H * 0.058, rw = H * 0.0105;
+      var col = r.ci === "fail" ? CRIT : r.ci === "run" ? WARN : r.ci === "ok" ? OK : TECH, run = r.ci === "run" && !still ? 0.55 + 0.45 * Math.sin(tt * 5 + i) : 1;
+      var fl = self.flash[key], fk = fl != null ? cl(1 - (t - fl) / 2.5) : 0, lt = self.lift[key] != null ? t - self.lift[key] : -1;
+      g.fillStyle = C(lit(DEEP, 0.7), 0.9); g.beginPath(); g.ellipse(px, py, R * 0.3, H * 0.0045, 0, 0, 6.2832); g.fill();   // the pad
+      g.strokeStyle = C(lit(STEEL), 1); g.lineWidth = Math.max(1, u * 1.4); g.beginPath(); g.moveTo(px - rw * 2.2, py); g.lineTo(px - rw * 2.2, py - rh * 1.12); g.stroke();   // the tower
+      if (q >= 1) { g.lineWidth = Math.max(1, u * 0.8); g.beginPath(); for (var a = 0; a < 4; a++) { g.moveTo(px - rw * 2.2, py - rh * (0.2 + a * 0.25)); g.lineTo(px - rw * 1.1, py - rh * (0.3 + a * 0.25)); } g.stroke(); }
+      glow(px - rw * 2.2, py - rh * 1.14, H * 0.011 * (1 + fk), col, (0.55 + 0.4 * dark) * run + fk * 0.4);
+      g.fillStyle = C(col, run); g.fillRect(px - rw * 2.2 - Math.max(1, u * 1.3), py - rh * 1.16, Math.max(2, u * 2.6), Math.max(2, u * 2.6));
+      var away = lt >= 0 && lt < 26, ry2 = py, alpha = 1;
+      if (away) { if (lt < 8) ry2 = py - H * 0.011 * lt * lt; else if (lt < 22) alpha = 0; else { alpha = (lt - 22) / 4; } }
+      if (alpha > 0 && ry2 > -rh) {   // the rocket
+        g.globalAlpha = alpha;
+        if (away && lt < 8 && !still) {   // its fire, and the dust it lifts
+          var fh = rh * (0.7 + 0.25 * Math.sin(tt * 40)), fgad = g.createLinearGradient(0, ry2, 0, ry2 + fh); fgad.addColorStop(0, C([255, 250, 230], 0.95)); fgad.addColorStop(0.4, C([255, 190, 90], 0.8)); fgad.addColorStop(1, C([255, 120, 60], 0));
+          g.fillStyle = fgad; g.beginPath(); g.moveTo(px - rw * 0.45, ry2); g.lineTo(px + rw * 0.45, ry2); g.lineTo(px, ry2 + fh); g.closePath(); g.fill();
+          glow(px, ry2 + rh * 0.1, rh * 1.3, [255, 190, 110], 0.6);
+          if (q >= 1) for (var p2 = 0; p2 < 7; p2++) { var pa = cl(1 - lt / 6), pr = R * (0.12 + 0.07 * p2) * (0.5 + lt * 0.35); g.fillStyle = C(M(lit(SAND), [255, 255, 255], 0.2), 0.20 * pa); g.beginPath(); g.ellipse(px + (p2 - 3) * R * 0.11 * (1 + lt * 0.3), py - H * 0.003, pr, pr * 0.45, 0, 0, 6.2832); g.fill(); }
+          if (q >= 2) { var tg = g.createLinearGradient(0, ry2, 0, py); tg.addColorStop(0, C([255, 244, 230], 0.5)); tg.addColorStop(1, C([255, 244, 230], 0)); g.fillStyle = tg; g.fillRect(px - rw * 0.3, ry2 + fh * 0.5, rw * 0.6, Math.max(0, py - ry2 - fh * 0.5)); }
+        }
+        g.fillStyle = C(lit(HULL, 0.82), 1); g.fillRect(px - rw / 2, ry2 - rh * 0.8, rw / 2, rh * 0.8);
+        g.fillStyle = C(lit(HULL, 1.05), 1); g.fillRect(px, ry2 - rh * 0.8, rw / 2, rh * 0.8);
+        g.beginPath(); g.moveTo(px - rw / 2, ry2 - rh * 0.8); g.quadraticCurveTo(px, ry2 - rh * 1.15, px + rw / 2, ry2 - rh * 0.8); g.closePath(); g.fill();
+        g.fillStyle = C(lit(RUST, 1.1), 1); g.fillRect(px - rw / 2, ry2 - rh * 0.5, rw, Math.max(1, rh * 0.05));
+        g.fillStyle = C(lit(STEEL, 0.7), 1); g.beginPath(); g.moveTo(px - rw / 2, ry2 - rh * 0.16); g.lineTo(px - rw * 1.05, ry2); g.lineTo(px - rw / 2, ry2); g.closePath(); g.fill();
+        g.beginPath(); g.moveTo(px + rw / 2, ry2 - rh * 0.16); g.lineTo(px + rw * 1.05, ry2); g.lineTo(px + rw / 2, ry2); g.closePath(); g.fill();
+        g.globalAlpha = 1;
+      }
+      if (r.ci === "run" && q >= 1 && !still) { g.fillStyle = C([255, 255, 255], 0.18); g.beginPath(); g.ellipse(px + rw * 1.4 + Math.sin(tt * 1.5 + i) * rw, py - rh * 0.1 - ((tt * 0.3 + i) % 1) * rh * 0.3, rw * 1.1, rw * 0.7, 0, 0, 6.2832); g.fill(); }   // it is fuelling
+      var nb = Math.min(8, Math.ceil((r.week || 0) / 4)) * quiet, bs = Math.max(2, H * 0.0055);   // crates: the week's commits
+      for (var b = 0; b < nb; b++) { var bx = px + rw * 2 + (b % 2) * (bs + 1), by = py - (Math.floor(b / 2) + 1) * (bs + 1); g.fillStyle = C(lit(b % 3 ? SAND : STEEL, 0.9), 1); g.fillRect(bx, by, bs, bs); }
+      if (r.dirty) { g.fillStyle = C(WARN, 0.95); g.fillRect(px + rw * 2, py + u * 3, Math.max(2, u * 3), Math.max(2, u * 3)); }
+      if (r.name && q >= 1) { g.fillStyle = C(INK, 0.7 * quiet); g.font = Math.round(H * 0.0098) + "px " + FONT; g.textAlign = "center"; g.fillText(String(r.name).slice(0, 12), px, py + H * 0.019); }
+      self.hit.push([px, py - rh * 0.5, H * 0.035, (r.name || "a repo") + " · " + (r.week || 0) + " commits this week" + (r.ci ? " · CI " + r.ci : "") + (r.dirty ? " · " + r.dirty + " changed" : "")]);
+    });
+
+    // ---- the tanks: memory and disk, as full as they are
+    var ram = cl((sys.ram || 0) / 100), disk = cl((sys.disk || 0) / 100);
+    var tank = function (x, frac, col, name) {
+      var w = R * 0.24, h = R * 0.78, yb = y0 + wallH, fc = frac > 0.9 ? CRIT : col;
+      g.fillStyle = C(lit(HULL, 0.78), 1); g.fillRect(x - w / 2, yb - h, w / 2, h); g.fillStyle = C(lit(HULL, 1.02), 1); g.fillRect(x, yb - h, w / 2, h);
+      g.beginPath(); g.ellipse(x, yb - h, w / 2, w * 0.28, 0, Math.PI, 6.2832); g.fill();
+      g.fillStyle = C(lit(DEEP, 0.6), 1); g.fillRect(x - w * 0.12, yb - h * 0.92, w * 0.24, h * 0.84);
+      g.fillStyle = C(M(lit(fc, 0.8), fc, 0.4 + 0.6 * dark), 0.95 * quiet); g.fillRect(x - w * 0.12, yb - h * 0.08 - h * 0.84 * frac, w * 0.24, h * 0.84 * frac);
+      if (q >= 1) glow(x, yb - h * 0.08 - h * 0.42 * frac, w * 1.4, fc, 0.3 * dark * quiet);
+      if (q >= 1) { g.fillStyle = C(INK, 0.6); g.font = Math.round(H * 0.0085) + "px " + FONT; g.textAlign = "center"; g.fillText(name, x, yb - h - w * 0.5); }
+      self.hit.push([x, yb - h / 2, h * 0.6, name + " " + Math.round(frac * 100) + "%"]);
+    };
+    tank(cx - R * 1.72, ram, TECH, "RAM"); tank(cx - R * 1.38, disk, [255, 170, 96], "DISK");
+
+    // ---- the antenna: it talks to orbit as fast as your network
+    var net = cl(((sys.rx || 0) + (sys.tx || 0)) / 4e6), ax = cx + R * 1.5, ay = y0 + wallH, ah = R * 1.05;
+    g.strokeStyle = C(lit(STEEL), 1); g.lineWidth = Math.max(1, u * 1.6); g.beginPath(); g.moveTo(ax, ay); g.lineTo(ax, ay - ah); g.moveTo(ax - R * 0.12, ay); g.lineTo(ax, ay - ah * 0.3); g.lineTo(ax + R * 0.12, ay); g.stroke();
+    g.fillStyle = C(lit(HULL), 1); g.beginPath(); g.ellipse(ax, ay - ah, R * 0.2, R * 0.2, -0.6, 0.2, Math.PI - 0.2 + 0.4); g.fill();
+    g.strokeStyle = C(lit(STEEL), 1); g.beginPath(); g.moveTo(ax, ay - ah); g.lineTo(ax + R * 0.14, ay - ah - R * 0.2); g.stroke();
+    if (!still && q >= 1 && Math.random() < 0.01 + net * 0.12 && this.pulses.length < 8) this.pulses.push(t);
+    this.pulses = this.pulses.filter(function (b0) {
+      var age = (t - b0) / 1.8; if (age > 1) return false;
+      g.strokeStyle = C(TECH, 0.7 * (1 - age) * quiet); g.lineWidth = Math.max(1, u * 1.4); g.beginPath(); g.arc(ax + R * 0.14, ay - ah - R * 0.2, R * (0.1 + age * 0.9), -1.35, -0.55); g.stroke(); return true;
+    });
+    self.hit.push([ax, ay - ah * 0.7, R * 0.4, "network " + Math.round(net * 100) + "% of 4 MB/s"]);
+
+    // ---- the dome: your machine
+    var top = y0 - R * 0.84, dome = function () { g.beginPath(); g.ellipse(cx, y0, R, R * 0.84, 0, Math.PI, 6.2832); g.closePath(); };
+    glow(cx, y0 - R * 0.3, R * (1.7 + 0.8 * load), M(LAMP, core, 0.5), (0.10 + 0.34 * dark) * (0.5 + 0.5 * load) * quiet);
+    g.save(); dome(); g.clip();
+    var ig = g.createLinearGradient(0, top, 0, y0); ig.addColorStop(0, C(M(lit(GLASS, 0.5), zen, 0.5), 0.92)); ig.addColorStop(1, C(M(lit(GLASS, 0.75), LAMP, 0.25 * dark), 0.95));
+    g.fillStyle = ig; g.fillRect(cx - R, top, R * 2, R);
+    glow(cx, y0 - R * 0.22, R * (0.5 + 0.5 * load), core, (0.35 + 0.5 * load) * quiet);   // the reactor's light, inside
+    g.fillStyle = C(M(lit(STEEL, 0.8), core, 0.25), 1); g.fillRect(cx - R * 0.07, y0 - R * 0.52, R * 0.14, R * 0.52);
+    g.fillStyle = C(core, (0.75 + (still ? 0 : 0.2 * Math.sin(tt * (1.5 + 4 * load)))) * quiet); g.fillRect(cx - R * 0.035, y0 - R * 0.47, R * 0.07, R * 0.36);
+    for (i = 0; i < 6; i++) {   // the greenhouse: it is greener when the machine is calm
+      var gx = cx + (i < 3 ? -1 : 1) * R * (0.22 + (i % 3) * 0.2), ghh = R * (0.1 + 0.07 * ((i * 7) % 3)) * (1.1 - heat * 0.4);
+      g.fillStyle = C(M(lit(LEAF, 0.7), LEAF, 0.35 * dark), 0.95); g.beginPath(); g.ellipse(gx, y0 - ghh * 0.5, R * 0.075, ghh * 0.75, 0, 0, 6.2832); g.fill();
+      g.fillStyle = C(lit(DEEP, 0.9), 1); g.fillRect(gx - R * 0.08, y0 - R * 0.03, R * 0.16, R * 0.03);
+    }
+    g.restore();
+    g.strokeStyle = C(lit(HULL, 1.1), 0.75); g.lineWidth = Math.max(1, u * 1.3);   // the glass and its ribs
+    dome(); g.stroke();
+    if (q >= 1) {
+      g.strokeStyle = C(lit(HULL, 1.1), 0.32); g.lineWidth = Math.max(1, u);
+      [0.36, 0.72].forEach(function (f) { g.beginPath(); g.ellipse(cx, y0, R * f, R * 0.84, 0, Math.PI, 6.2832); g.stroke(); });
+      [0.45, 0.78].forEach(function (f) { var yy2 = y0 - R * 0.84 * f, hw = R * Math.sqrt(1 - f * f); g.beginPath(); g.ellipse(cx, yy2, hw, hw * 0.1, 0, 0, Math.PI); g.stroke(); });
+      var sh = g.createLinearGradient(cx - R, top, cx, y0); sh.addColorStop(0, C([255, 255, 255], 0)); sh.addColorStop(0.45, C([255, 255, 255], 0.16 * (wD + wT * 0.6))); sh.addColorStop(0.6, C([255, 255, 255], 0));
+      g.save(); dome(); g.clip(); g.fillStyle = sh; g.fillRect(cx - R, top, R * 2, R); g.restore();
+    }
+    g.fillStyle = C(lit(HULL, 0.8), 1); g.fillRect(cx - R * 1.05, y0, R * 1.05, wallH); g.fillStyle = C(lit(HULL, 1.02), 1); g.fillRect(cx, y0, R * 1.05, wallH);   // its wall
+    var n = cores.length, cw = R * 1.9 / n;
+    for (i = 0; i < n; i++) {   // a light for each core: the busier, the brighter; red above 90%
+      var v = cl(cores[i] / 100), eq = music ? 0.3 * Math.abs(Math.sin(tt * (3 + i * 0.7) + i)) : 0, lv = Math.min(1, v * quiet + eq), c1 = v > 0.9 ? CRIT : M(TECH, core, v), lx = cx - R * 0.95 + i * cw;
+      g.fillStyle = C(M(lit(DEEP, 0.7), c1, 0.15 + 0.85 * lv), 1); g.fillRect(lx + cw * 0.14, y0 + wallH * 0.28, cw * 0.72, wallH * 0.44);
+      if (q >= 2 && lv > 0.4) glow(lx + cw / 2, y0 + wallH * 0.5, cw * 1.6, c1, 0.35 * lv * (0.4 + 0.6 * dark));
+    }
+    if (q >= 1) { g.fillStyle = C(lit(DEEP, 0.6), 0.5); g.beginPath(); g.ellipse(cx + R * 0.2, y0 + wallH + H * 0.002, R * 1.25, H * 0.005, 0, 0, 6.2832); g.fill(); }
+    if (st.focus && st.focus.until > st.focus.start) {   // a focus session: a shield closes over the dome as the time goes
+      var fp = cl((now - st.focus.start) / (st.focus.until - st.focus.start));
+      g.strokeStyle = C(OK, 0.25); g.lineWidth = Math.max(1.5, u * 2); g.beginPath(); g.ellipse(cx, y0, R * 1.22, R * 1.06, 0, Math.PI, 6.2832); g.stroke();
+      g.strokeStyle = C(OK, 0.95); g.lineWidth = Math.max(2, u * 3.5); g.beginPath(); g.ellipse(cx, y0, R * 1.22, R * 1.06, 0, Math.PI, Math.PI + fp * Math.PI); g.stroke();
+    }
+    this.hit.push([cx, y0 - R * 0.35, R * 0.75, "CPU " + Math.round(cpu) + "% · " + Math.round(temp) + "° · RAM " + Math.round(ram * 100) + "% · disk " + Math.round(disk * 100) + "% · drawing " + ["light", "medium", "high", "ultra"][q]]);
+
+    // ---- the pods: the rows of your panels (VMs, containers, hosts), a window each in the colour of its state
+    var rows = [], more = 0;
+    Object.keys(st.panels || {}).forEach(function (id) {   // only panels that say how their rows are: a list of news is not a village
+      var rr = (st.panels[id] || {}).rows || [];
+      if (rr.some(function (r) { return r.level; })) rr.forEach(function (r) { if (rows.length < 12) rows.push({ r: r, id: id }); else more++; });   // twelve pods; the rest are counted
+    });
+    var py0 = y0 + wallH + H * 0.056;
+    if (rows.length && q >= 1) {   // the tubes people walk in
+      g.strokeStyle = C(lit(HULL, 0.7), 0.8); g.lineWidth = Math.max(1.5, u * 2.5); g.beginPath();
+      [-1, 1].forEach(function (sd) { var cnt = Math.min(6, Math.ceil((rows.length - (sd > 0 ? 1 : 0)) / 2)); if (cnt < 1) return; g.moveTo(cx + sd * R * 0.5, y0 + wallH); g.lineTo(cx + sd * R * 0.5, py0); g.lineTo(cx + sd * (R * 0.72 + (cnt - 1) * R * 0.5), py0); });
+      g.stroke();
+    }
+    rows.forEach(function (o, i) {
+      var side = i % 2 ? 1 : -1, k = Math.floor(i / 2), c2 = k % 6, r2 = Math.floor(k / 6), lv = o.r.level || "";
+      var x = cx + side * (R * 0.72 + c2 * R * 0.5), y = py0 + r2 * H * 0.04, pw = R * 0.19, ph = R * 0.11;
+      var col = lv === "crit" ? CRIT : lv === "warn" ? WARN : lv === "ok" ? OK : TECH, bl = lv === "crit" && !still ? 0.5 + 0.5 * Math.sin(tt * 6 + i) : 1;
+      if (q >= 1) { g.fillStyle = C(lit(DEEP, 0.55), 0.45); g.beginPath(); g.ellipse(x + pw * 0.2, y + ph * 1.05, pw * 1.2, ph * 0.3, 0, 0, 6.2832); g.fill(); }
+      g.fillStyle = C(lit(HULL, 0.95), 1); g.beginPath(); g.ellipse(x, y, pw, ph, 0, 0, 6.2832); g.fill(); g.fillRect(x - pw * 0.8, y, pw * 1.6, ph);
+      g.fillStyle = C(lit(HULL, 0.72), 1); g.fillRect(x - pw * 0.8, y + ph * 0.55, pw * 1.6, ph * 0.45);
+      g.fillStyle = C(M(lit(col, 0.85), col, 0.4 + 0.6 * dark), bl * quiet); g.fillRect(x - pw * 0.45, y - ph * 0.3, pw * 0.9, ph * 0.5);
+      if (q >= 1) glow(x, y, pw * (1.3 + (lv === "crit" ? 0.8 : 0)), col, (0.15 + 0.4 * dark) * bl * quiet);
+      self.hit.push([x, y, pw * 1.1, (o.r.name || o.id) + " · " + (lv || "no state")]);
+    });
+
+    // ---- the rovers: your AI agents
+    var agents = (st.agents || []).slice(0, 10), base = py0 + (rows.length ? H * 0.046 : 0);
+    this.puffs = this.puffs.filter(function (p) {
+      var age = (t - p[2]) / 1.6; if (age > 1) return false;
+      g.fillStyle = C(M(lit(SAND), [255, 255, 255], 0.12), 0.26 * (1 - age)); g.beginPath(); g.ellipse(p[0], p[1] - age * p[3] * 1.2, p[3] * (0.6 + age * 1.6), p[3] * (0.4 + age), 0, 0, 6.2832); g.fill(); return true;
+    });
+    agents.forEach(function (ag, i) {
+      var key = ag.name || "#" + i, o = self.rov[key] || (self.rov[key] = { x: 0.33 + ((i * 0.618 + 0.2) % 1) * 0.34, d: i % 2 ? 1 : -1 });
+      var lane = i % 3, sc = 0.85 + lane * 0.14, y = base + lane * H * 0.022 + Math.floor(i / 3) * H * 0.006, s = H * 0.0165 * sc, stt = ag.state;
+      var spd = stt === "working" ? 0.00055 : stt === "idle" ? 0.00012 : 0;
+      if (!still) { o.x += o.d * spd * sc; if (o.x > 0.69) o.d = -1; if (o.x < 0.31) o.d = 1; }
+      var x = W * o.x, col = { working: TECH, waiting: WARN, done: OK, failed: CRIT }[stt] || M(HULL, DEEP, 0.4), d = o.d, bump = spd && !still ? Math.sin(tt * 9 + i) * s * 0.05 : 0;
+      if (stt === "working" && !still && q >= 1 && Math.random() < 0.25 && self.puffs.length < 60) self.puffs.push([x - d * s * 1.2, y, t, s * 0.5]);
+      g.fillStyle = C(lit(DEEP, 0.5), 0.5); g.beginPath(); g.ellipse(x + s * 0.25, y + s * 0.3, s * 1.5, s * 0.22, 0, 0, 6.2832); g.fill();
+      if (stt === "working" && dark > 0.3 && q >= 1) { var hg = g.createLinearGradient(x, 0, x + d * s * 5, 0); hg.addColorStop(0, C(LAMP, 0.4 * dark)); hg.addColorStop(1, C(LAMP, 0)); g.fillStyle = hg; g.beginPath(); g.moveTo(x + d * s, y - s * 0.7); g.lineTo(x + d * s * 5, y - s * 1.1); g.lineTo(x + d * s * 5, y + s * 0.3); g.closePath(); g.fill(); }
+      g.save(); g.translate(x, y + bump); if (stt === "failed") g.rotate(-0.22 * d);
+      g.fillStyle = C(lit([52, 48, 50]), 1); for (var wv = -1; wv <= 1; wv++) { g.beginPath(); g.arc(wv * s * 0.82, 0, s * 0.32, 0, 6.2832); g.fill(); }
+      g.fillStyle = C(lit(HULL, 0.95), 1); g.fillRect(-s, -s * 0.95, s * 2, s * 0.55);
+      g.fillStyle = C(lit(HULL, 0.7), 1); g.fillRect(-s, -s * 0.55, s * 2, s * 0.15);
+      g.fillStyle = C(lit(PANEL, 1.1), 1); g.beginPath(); g.moveTo(-s * 1.05, -s * 1.02); g.lineTo(s * 0.6, -s * 1.02); g.lineTo(s * 0.75, -s * 1.2); g.lineTo(-s * 0.9, -s * 1.2); g.closePath(); g.fill();
+      g.strokeStyle = C(lit(STEEL), 1); g.lineWidth = Math.max(1, s * 0.12); g.beginPath(); g.moveTo(d * s * 0.75, -s * 0.95); g.lineTo(d * s * 0.75, -s * 1.95); g.stroke();
+      g.fillStyle = C(lit(HULL), 1); g.fillRect(d * s * 0.75 - s * 0.22, -s * 2.15, s * 0.44, s * 0.26);
+      var blink = stt === "waiting" && !still ? 0.5 + 0.5 * Math.sin(tt * 6) : 1;
+      g.fillStyle = C(col, blink); g.fillRect(d * s * 0.75 + d * s * 0.1 - s * 0.08, -s * 2.1, s * 0.16, s * 0.16);
+      g.restore();
+      glow(x + d * s * 0.8, y - s * 2.02, s * (stt === "waiting" ? 2.6 : 1.6), col, (0.35 + 0.45 * dark) * blink * quiet);
+      if (stt === "failed" && q >= 1 && !still) for (var sm = 0; sm < 3; sm++) { var sa = ((tt * 0.4 + sm / 3) % 1); g.fillStyle = C(lit([70, 64, 64]), 0.3 * (1 - sa)); g.beginPath(); g.arc(x + Math.sin(sa * 5 + sm) * s * 0.3, y - s * 1.2 - sa * s * 2.6, s * (0.25 + sa * 0.5), 0, 6.2832); g.fill(); }
+      if (stt === "waiting") { g.fillStyle = C(WARN, 1); g.font = "700 " + Math.round(H * 0.017) + "px " + FONT; g.textAlign = "center"; g.fillText("!", x + d * s * 0.8, y - s * 2.7); }
+      if (stt === "done") { g.strokeStyle = C(OK, 0.95); g.lineWidth = Math.max(1.5, s * 0.16); g.beginPath(); g.moveTo(x + d * s * 0.8 - s * 0.4, y - s * 2.75); g.lineTo(x + d * s * 0.8 - s * 0.1, y - s * 2.5); g.lineTo(x + d * s * 0.8 + s * 0.45, y - s * 3.05); g.stroke(); }
+      if (ag.name && q >= 1) { g.fillStyle = C(INK, 0.8 * quiet); g.font = Math.round(H * 0.0105) + "px " + FONT; g.textAlign = "center"; g.fillText(String(ag.name).slice(0, 16), x, y + s * 0.3 + H * 0.014); }
+      self.hit.push([x, y - s, s * 2.4, (ag.name || "a rover") + " · " + stt + (ag.text ? " · " + String(ag.text).slice(0, 40) : "")]);
+    });
+
+    // ---- your weather, as Mars would have it: rain is a dust storm, snow is frost falling
+    var code = wx.code || 0, snow = (code >= 71 && code <= 77) || code === 85 || code === 86;
+    var storm = snow ? 0 : Math.max(cl((wx.rain || 0) / 4) * 0.8 + (wx.rain > 0 ? 0.2 : 0), code >= 95 ? 1 : 0, cl((wind - 45) / 60));
+    if (storm > 0.02) {
+      g.fillStyle = C(M(lit(SAND), hor, 0.5), 0.34 * storm); g.fillRect(0, 0, W, H);
+      var nst = still ? 0 : Math.round([0, 60, 130, 240][q] * storm);
+      g.strokeStyle = C(M(lit(SAND, 1.15), [255, 255, 255], 0.2), 0.3); g.lineWidth = Math.max(1, u * 1.2); g.beginPath();
+      for (i = 0; i < nst; i++) { var dd = this.dust[i], dxx = ((dd[0] + tt * (0.25 + 0.3 * dd[2])) % 1.1 - 0.05) * W, dyy = (dd[1] * 0.9 + 0.08 + Math.sin(tt * 0.7 + dd[3] * 6) * 0.01) * H, len = H * 0.03 * dd[2]; g.moveTo(dxx, dyy); g.lineTo(dxx + len, dyy + len * 0.08); }
+      g.stroke();
+    }
+    if (snow && !still) {
+      var nf = [20, 60, 120, 200][q]; g.fillStyle = C([235, 240, 250], 0.75);
+      for (i = 0; i < nf; i++) { var f2 = this.dust[i], z2 = Math.max(1, u * (1 + f2[2] * 1.4)); g.fillRect(((f2[0] + Math.sin(tt * 0.4 + f2[3] * 6) * 0.01) % 1) * W, ((f2[1] + tt * 0.03 * f2[2]) % 1) * H, z2, z2); }
+    }
+
+    // ---- what it is: one line under the dome
+    g.textAlign = "center"; g.font = Math.round(H * 0.0125) + "px " + FONT; g.fillStyle = C(INK, 0.78 * quiet);
+    g.fillText(Math.round(cpu) + "% · " + Math.round(temp) + "° · " + cores.length + " cores" + (agents.length ? " · " + agents.length + " rovers" : "") + (rows.length ? " · " + (rows.length + more) + " pods" : "") + (storm > 0.3 ? " · dust storm" : ""), cx, y0 + wallH + H * 0.026);
+    g.textAlign = "start";
+
+    // ---- look after itself: the frame time chooses how rich to draw (an old laptop: light; a fast PC in 4K: ultra)
+    this.cost.push(performance.now() - t0); if (this.cost.length > 90) this.cost.shift();
+    if (this.cost.length === 90 && t - this.qAt > 6) {
+      var avg = this.cost.reduce(function (a2, b2) { return a2 + b2; }, 0) / 90, half = st.ui && st.ui.quality === "half", maxQ = half ? 1 : 3;
+      if (avg > 7 && q > 0) { this.q = q - 1; this.qAt = t; this.cost = []; }
+      else if (avg < 2.2 && q < maxQ) { this.q = q + 1; this.qAt = t + 20; this.cost = []; }   // up slowly, down at once
+      else if (q > maxQ) { this.q = maxQ; this.cost = []; }
+    }
+  },
+
+  click: function (x, y) {
+    for (var i = this.hit.length - 1; i >= 0; i--) { var h = this.hit[i]; if (Math.abs(x - h[0]) <= h[2] && Math.abs(y - h[1]) <= h[2]) return h[3]; }
+    return "";
+  }
+});
+</script>
+</body></html>

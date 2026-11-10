@@ -105,8 +105,10 @@ to keep only the bar version.
 
 `"homeWidgets": {"racing": true}` (default off; also Settings → Widgets) adds a `racing` panel as the first column of
 the top widget row, left of weather. It lists the race weekends that are not over yet for the series you follow, each
-with its race day and time, plus the next (or running) session of the current weekend. The bar then shows a countdown
-to the next session of any of them, ticking every second (`"racing": {"bar": false}` hides it; Settings → Widgets too).
+with its race day and time, plus the next (or running) session of the current weekend. Since 2.15.1 the panel starts
+with the next session of any of them and its countdown, ticking every second; the same countdown in the bar is off
+unless you ask (`"racing": {"bar": true}`; Settings → Widgets too). `"screensaver": {"racing": true}` shows the
+next sessions as a side panel of the Pulse screensaver (default: the same as the Home widget; Settings → Screensaver).
 
 ```json
 "homeWidgets": { "racing": true },
@@ -161,6 +163,21 @@ tools/venv/bin/python -I tools/tv.py 'settings put system screen_off_timeout 900
 
 Or pick "OmarchyTV" in Settings → Device Preferences → Screen saver. Clock: `.ClockDream`.
 Logo (`logo` in config / JSON, used by home and screensaver): `omarchy-tv` (default: Omarchy's logo.txt + a matching pixel "TV"), `omarchy` (logo.txt unchanged), `original` (OmarchyTV's own block font, no Omarchy artwork - use this, `wallpaper: procedural` and `omarchy_icon=false` for a public build without Omarchy branding).
+
+### Pulse: scenes and graphics (2.15.1)
+
+```json
+"screensaver": { "pulseScene": "mars", "pulseGraphics": "auto" }
+```
+
+- `pulseScene`: `sphere` (default), `skyline`, `orbit`, `calm`, `hacker`, `noir`, and Pulse 1.8's `mars` and `monolith`.
+- `pulseGraphics`: `auto` (default), `low`, `medium`, `high`. `auto` gives Pulse 1.8's look unless the TV is a small
+  one (low-RAM flag, under 1.7 GB, fewer than four cores, or an old browser), lets Pulse choose its resolution and
+  drops to the plain look by itself when frames take too long. `low`: the plain look, half resolution. `medium`: the
+  1.8 look, half resolution. `high`: the 1.8 look, full resolution. An Android TV draws its interface at 1080p even
+  on a 4K panel, so "full" is 1080p there.
+- The scenes' pages (`scene-mars.html`, `scene-monolith.html`) are written by `python3 tools/pulse-tv-scenes.py
+  /path/to/omarchy-pulse-theme`.
 
 ### Pulse: planes and earthquakes (config only, Android)
 
