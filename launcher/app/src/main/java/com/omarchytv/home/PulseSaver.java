@@ -51,35 +51,103 @@ final class PulseSaver {
     }
 
     /** GET the URL here and hand it to the page with a CORS header (the page's origin is the saver's asset host). */
-    static WebResourceResponse proxy(Uri u, String origin) {
+    static WebResourceResponse proxy(Context ctx, Uri u, String origin) {
+        Map<String, String> h = new HashMap<>();
+        h.put("Access-Control-Allow-Origin", origin);
+        try {
+            // fork: OpenSky with the owner's API client, if there is one (the token never reaches the page)
+            boolean os = OPENSKY_HOST.equals(u.getHost()) && openskyCreds(ctx) != null;
+            String tok = os ? openskyToken(ctx, false) : null;
+            Object[] r = get(u.toString(), tok);
+            if (os && (Integer) r[0] == 401) r = get(u.toString(), openskyToken(ctx, true));   // the token ran out
+            int code = (Integer) r[0];
+            h.put("Cache-Control", "no-store");
+            return new WebResourceResponse("application/json", "utf-8", code, code >= 400 ? "Error" : "OK", h,
+                    new ByteArrayInputStream((byte[]) r[1]));
+        } catch (Exception e) {
+            return new WebResourceResponse("application/json", "utf-8", 502, "Bad Gateway", h, new ByteArrayInputStream("{}".getBytes()));
+        }
+    }
+
+    /** {status, body}; `bearer` adds an Authorization header. */
+    private static Object[] get(String url, String bearer) throws java.io.IOException {
         HttpURLConnection c = null;
         try {
-            c = (HttpURLConnection) new URL(u.toString()).openConnection();
+            c = (HttpURLConnection) new URL(url).openConnection();
             c.setConnectTimeout(15000);
             c.setReadTimeout(30000);
             c.setRequestProperty("User-Agent", "OmarchyTV-Pulse");
             c.setRequestProperty("Accept", "application/json");
+            if (bearer != null) c.setRequestProperty("Authorization", "Bearer " + bearer);
             int code = c.getResponseCode();
-            InputStream in = code >= 400 ? c.getErrorStream() : c.getInputStream();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            if (in != null) {
-                byte[] b = new byte[16384];
-                int n;
-                while ((n = in.read(b)) > 0) {
-                    out.write(b, 0, n);
-                    if (out.size() > MAX_BYTES) throw new java.io.IOException("too big");
-                }
-                in.close();
+            return new Object[]{code, body(code >= 400 ? c.getErrorStream() : c.getInputStream())};
+        } finally {
+            if (c != null) c.disconnect();
+        }
+    }
+
+    private static byte[] body(InputStream in) throws java.io.IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        if (in != null) {
+            byte[] b = new byte[16384];
+            int n;
+            while ((n = in.read(b)) > 0) {
+                out.write(b, 0, n);
+                if (out.size() > MAX_BYTES) throw new java.io.IOException("too big");
             }
-            Map<String, String> h = new HashMap<>();
-            h.put("Access-Control-Allow-Origin", origin);
-            h.put("Cache-Control", "no-store");
-            return new WebResourceResponse("application/json", "utf-8", code, code >= 400 ? "Error" : "OK", h,
-                    new ByteArrayInputStream(out.toByteArray()));
+            in.close();
+        }
+        return out.toByteArray();
+    }
+
+    // ---- fork: OpenSky sign-in (OAuth2 client credentials) ----
+    // The owner's API client lives in <external files dir>/opensky.json, {"clientId": ..., "clientSecret": ...} (the
+    // credentials.json OpenSky's account page gives). Read here only; the page is told just that there is one.
+    static final String OPENSKY_HOST = "opensky-network.org";
+    static final String OPENSKY_TOKEN_URL = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token";
+    private static String osToken;
+    private static long osTokenUntil;
+
+    static String[] openskyCreds(Context c) {
+        try {
+            File f = new File(c.getExternalFilesDir(null), "opensky.json");
+            if (!f.isFile()) return null;
+            JSONObject j = new JSONObject(new String(body(new java.io.FileInputStream(f)), "UTF-8"));
+            String id = j.optString("clientId", j.optString("client_id", "")).trim();
+            String sec = j.optString("clientSecret", j.optString("client_secret", "")).trim();
+            return id.isEmpty() || sec.isEmpty() ? null : new String[]{id, sec};
         } catch (Exception e) {
-            Map<String, String> h = new HashMap<>();
-            h.put("Access-Control-Allow-Origin", origin);
-            return new WebResourceResponse("application/json", "utf-8", 502, "Bad Gateway", h, new ByteArrayInputStream("{}".getBytes()));
+            return null;
+        }
+    }
+
+    /** A token, kept until 2 minutes before it runs out (30 min); `fresh` asks for a new one. Null: none to be had. */
+    private static synchronized String openskyToken(Context ctx, boolean fresh) {
+        if (!fresh && osToken != null && SystemClock.elapsedRealtime() < osTokenUntil) return osToken;
+        osToken = null;
+        String[] cr = openskyCreds(ctx);
+        if (cr == null) return null;
+        HttpURLConnection c = null;
+        try {
+            c = (HttpURLConnection) new URL(OPENSKY_TOKEN_URL).openConnection();
+            c.setConnectTimeout(15000);
+            c.setReadTimeout(30000);
+            c.setRequestMethod("POST");
+            c.setDoOutput(true);
+            c.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            c.setRequestProperty("User-Agent", "OmarchyTV-Pulse");
+            String form = "grant_type=client_credentials&client_id=" + java.net.URLEncoder.encode(cr[0], "UTF-8")
+                    + "&client_secret=" + java.net.URLEncoder.encode(cr[1], "UTF-8");
+            c.getOutputStream().write(form.getBytes("UTF-8"));
+            if (c.getResponseCode() != 200) return null;
+            JSONObject j = new JSONObject(new String(body(c.getInputStream()), "UTF-8"));
+            String t = j.optString("access_token", "");
+            if (t.isEmpty()) return null;
+            osToken = t;
+            osTokenUntil = SystemClock.elapsedRealtime() + Math.max(60, j.optInt("expires_in", 1800) - 120) * 1000L;
+            return osToken;
+        } catch (Exception e) {
+            return null;
         } finally {
             if (c != null) c.disconnect();
         }
@@ -97,6 +165,7 @@ final class PulseSaver {
             JSONObject o = new JSONObject().put("city", cfg.weatherPlace).put("imperial", cfg.tempF)
                     .put("theme", new JSONObject().put("name", t.name).put("colors", colors))
                     .put("scene", cfg.pulseScene).put("quality", "auto");
+            o.put("openskyAuth", openskyCreds(c) != null);   // fork: signed in to OpenSky: read it every minute
             if (!Double.isNaN(cfg.weatherLat) && !Double.isNaN(cfg.weatherLon)) o.put("lat", cfg.weatherLat).put("lon", cfg.weatherLon);
             return o.toString();
         } catch (Exception e) {

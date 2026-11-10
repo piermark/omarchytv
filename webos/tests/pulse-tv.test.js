@@ -283,3 +283,13 @@ test("fork: OpenSky fills in the planes adsb.lol doesn't see, moved on to now, w
   assert.strictEqual(items[0].title, "THA222 · 787-8");
   assert.strictEqual(items[0].right, "32,800 ft");
 });
+
+test("fork: OpenSky every 8 minutes anonymously, every minute when the launcher is signed in", () => {
+  const net = () => Promise.reject(new Error("offline"));
+  assert.strictEqual(P.create({ lat: 7.78, lon: 98.33 }, net, () => 1).openskyEvery, 480000);
+  assert.strictEqual(P.create({ lat: 7.78, lon: 98.33, openskyAuth: true }, net, () => 1).openskyEvery, 60000);
+  const bridge = fs.readFileSync(A + "pulse-tv.js", "utf8");
+  assert.ok(/openskyAuth: !!cfg\.openskyAuth/.test(bridge), "the bridge passes the flag on");
+  const hub = fs.readFileSync(A + "pulse-tv-hub.js", "utf8");
+  assert.ok(!/clientSecret|client_secret|Bearer/.test(hub), "no OpenSky secret or token handling in the page");
+});

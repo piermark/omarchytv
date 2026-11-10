@@ -61,7 +61,7 @@
   }
   var hub = root.OmarchyPulseTV.create({
     lat: cfg.lat, lon: cfg.lon, city: cfg.city || "", imperial: !!cfg.imperial, theme: cfg.theme, quality: cfg.quality || "auto",
-    motion: cfg.motion, scene: cfg.scene || "sphere", clock: cfg.clock, launches: cfg.launches, planes: cfg.planes, starlink: cfg.starlink,
+    motion: cfg.motion, scene: cfg.scene || "sphere", clock: cfg.clock, launches: cfg.launches, planes: cfg.planes, starlink: cfg.starlink, openskyAuth: !!cfg.openskyAuth,
     tv: tv, pc: pc
   }, net);
   root.__pulseTV = hub;

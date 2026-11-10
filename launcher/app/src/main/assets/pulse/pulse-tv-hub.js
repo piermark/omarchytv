@@ -421,7 +421,8 @@
         mergeSky();
       });
     }
-    // fork: OpenSky, anonymous: 400 credits a day and this box costs 2, so one read every 8 minutes at most
+    // fork: OpenSky. This box costs 2 credits: anonymous (400 a day) one read every 8 minutes; signed in through the
+    // launcher (cfg.openskyAuth, 4000 a day) one a minute, which leaves room for the saver running all day and night
     function opensky() {
       if (!hasLoc || cfg.planes === false) return;
       var dLat = PLANES_NM / 60, dLon = PLANES_NM / (60 * Math.max(0.2, Math.cos(lat * Math.PI / 180)));
@@ -564,7 +565,7 @@
       every(E.weather || 900000, weather);
       every(E.night || 30000, night);
       every(E.sky || 20000, sky);
-      every(E.opensky || 480000, opensky);
+      every(E.opensky || (cfg.openskyAuth ? 60000 : 480000), opensky);
       every(E.route || 4000, route);
       every(E.iss || 5000, iss);
       every(E.kp || 900000, kp);
@@ -668,6 +669,7 @@
       return out;
     }
     return { start: start, stop: stop, state: state, events: events, onFx: function (cb) { fxCbs.push(cb); }, fx: fx, _S: S,
+      openskyEvery: cfg.openskyAuth ? 60000 : 480000,
       _tick: { weather: weather, night: night, sky: sky, opensky: opensky, route: route, iss: iss, kp: kp, launches: launches, launchTick: launchTick,
         starlinkFetch: starlinkFetch, starlinkTick: starlinkTick, tv: tvNumbers, pc: pcState, air: airq, quakes: quakes, omarchy: omarchy } };
   }
