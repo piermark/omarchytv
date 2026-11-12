@@ -61,4 +61,24 @@ public class AppSizeTest {
         assertEquals((1120 - 32) / 3, HomeV29.sideColWidth(false));
         assertEquals((1120 - 32) / 3 + 80, HomeV29.weatherColWidth(false));
     }
+
+    /** The racing column gets its full 2.15.0 width back when the row has room, so names are not cut off. */
+    @Test
+    public void racingTakesTheFullColumnWhenThereIsRoom() {
+        int full = (1120 - 32) / 3;
+        assertEquals(362, full);
+        // every panel and the term box on: the 268 slot, the row still 1200 and clear of the term box
+        assertEquals(268, HomeV29.raceColWidth(true, true, true, true));
+        assertEquals(1200, HomeV29.widgetsWidth(true, true));
+        // pc (or ai) switched off: racing uses that room, capped at the full column, row unchanged
+        assertEquals(full, HomeV29.raceColWidth(true, true, false, true));
+        assertEquals(full, HomeV29.raceColWidth(true, true, true, false));
+        // no term box: the row grows left by what racing needs, the other columns keep their widths
+        assertEquals(1200 + full - 268, HomeV29.widgetsWidth(true, false));
+        assertEquals(full, HomeV29.raceColWidth(false, true, true, true));
+        int sum = full + HomeV29.weatherColWidth(true) + 2 * HomeV29.sideColWidth(true) + 3 * HomeV29.WIDGET_GAP;
+        assertEquals(HomeV29.widgetsWidth(true, false), sum);
+        // racing off: the term setting changes nothing
+        assertEquals(1120, HomeV29.widgetsWidth(false, false));
+    }
 }

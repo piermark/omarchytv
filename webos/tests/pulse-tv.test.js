@@ -183,7 +183,7 @@ test("the TV's own panels with no PC: the sky, space, planes, the air, earthquak
   assert.strictEqual(q[0].title, "near", "a quake within 1000 km first");
   assert.ok(q[0].km < 100 && q[1].level === "crit" && q[1].right === "M6.8");
   const t = { v: 1794268800 };
-  const h = hubAt(t, { answers: {
+  const h = hubAt(t, { cfg: { pulsePanels: { omarchy: true } }, answers: {
     "air-quality": { current: { european_aqi: 18 } },
     "earthquake.usgs.gov": { features: [{ properties: { place: "Off the coast", mag: 5.1, time: 1794260000000 }, geometry: { coordinates: [10, 40] } }] },
     "api.github.com": [{ tag_name: "v3.2.0", name: "Hyprland 0.52", published_at: "2026-11-01T10:00:00Z" }, { tag_name: "v3.3.0-rc", draft: true }] } });
@@ -191,7 +191,7 @@ test("the TV's own panels with no PC: the sky, space, planes, the air, earthquak
   await new Promise((r) => setImmediate(r));
   let st = h.state();
   const ids = st.widgets.map((w) => w.id);
-  ["tv-sky", "tv-space", "tv-quakes", "tv-omarchy"].forEach((id) => assert.ok(ids.includes(id), id));
+  ["tv-sky", "tv-space", "tv-quakes", "tv-omarchy"].forEach((id) => assert.ok(ids.includes(id), id));   // omarchy only when asked for
   assert.strictEqual(st.air.level, "good", "the air row under the weather and the haze over the city");
   assert.ok(st.widgets.find((w) => w.id === "tv-sky").data.rows.some((r) => r[0] === "moon"));
   assert.deepStrictEqual(st.widgets.find((w) => w.id === "tv-omarchy").data.items.map((i) => i.title), ["Omarchy 3.2.0"]);
@@ -498,4 +498,12 @@ test("2.15.1 screensaver.pulsePanels: each side panel can be switched off; earth
 
   const bridge = fs.readFileSync(A + "pulse-tv.js", "utf8");
   assert.ok(/pulsePanels: cfg\.pulsePanels/.test(bridge) && /hubCfg\.pulsePanels = d\.pulsePanels/.test(bridge), "the bridge passes pulsePanels on");
+});
+
+test("2.15.1 the omarchy releases panel is off by default, so racing sits at the bottom of the right column", async () => {
+  const t = { v: 1794268800 };
+  const h = hubAt(t, { answers: { "api.github.com": [{ tag_name: "v3.2.0", name: "x", published_at: "2026-11-01T10:00:00Z" }] } });
+  h._tick.omarchy();
+  await new Promise((r) => setImmediate(r));
+  assert.ok(!h.state().widgets.some((w) => w.id === "tv-omarchy"));
 });

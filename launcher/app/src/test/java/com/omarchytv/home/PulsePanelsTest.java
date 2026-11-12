@@ -12,6 +12,7 @@ public class PulsePanelsTest {
         LauncherConfig def = new LauncherConfig(null, new JSONObject(), 0L);
         for (String id : LauncherConfig.PULSE_PANEL_IDS) {
             if ("racing".equals(id)) assertFalse("racing follows the Home widget, off until you ask", def.pulsePanel(id));
+            else if ("omarchy".equals(id)) assertFalse("omarchy releases are off until you ask: racing takes the bottom", def.pulsePanel(id));
             else assertTrue(id, def.pulsePanel(id));
         }
         assertTrue(def.pulseQuakes);

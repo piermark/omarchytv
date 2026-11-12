@@ -654,9 +654,9 @@ final class HomeV29 extends FrameLayout {
         wxl.leftMargin = c.wRacing ? px(16) : 0;
         wxBox.setLayoutParams(wxl);
         LayoutParams wl = (LayoutParams) widgets.getLayoutParams();
-        wl.width = px(widgetsWidth(c.wRacing));
+        wl.width = px(widgetsWidth(c.wRacing, c.wTerm));
         widgets.setLayoutParams(wl);
-        applyRaceColumns(c.wRacing);
+        applyRaceColumns(c);
         term.setVisibility(activeWs == 1 && c.wTerm ? VISIBLE : GONE);
         if (editPanel == null) post(() -> applyPanelPos(c));
         gridName.setTextColor(t.accent);
@@ -2002,7 +2002,8 @@ final class HomeV29 extends FrameLayout {
     }
 
     // Home is designed at 1920×1080. The term box is 32+640; a 16 px gutter stays between it and the widgets.
-    static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 268;
+    static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 268,
+            RACE_COL_FULL_W = (WIDGETS_W - 32) / 3;   // 362: the 2.15.0 racing column, where every name fits
 
     /** Right-aligned widgets row width in design px. With racing on, the row uses the space from the term gutter to the right margin (1200), never the term box. */
     static int widgetsWidth(boolean racing) {
@@ -2010,8 +2011,24 @@ final class HomeV29 extends FrameLayout {
         return HOME_W - HOME_MARGIN - (HOME_MARGIN + TERM_W + WIDGET_GAP);
     }
 
+    /** With the term box switched off there is nothing to keep clear of: the row may grow left until racing has
+     *  its full 2.15.0 column again (weather, pc and ai keep their widths). */
+    static int widgetsWidth(boolean racing, boolean term) {
+        if (!racing || term) return widgetsWidth(racing);
+        return widgetsWidth(true) + RACE_COL_FULL_W - RACE_COL_W;
+    }
+
     /** Racing column: a fixed slot, only when the widget is on. */
     static int raceColWidth() { return RACE_COL_W; }
+
+    /** Racing column given which panels share the row: what the others leave (a switched-off weather, pc or ai
+     *  panel, or no term box, frees room), at least the 268 slot and at most the full column, so place and
+     *  session names ("Abu Dhabi", "▸ fp1  fri 20 nov 07:30") are not cut off when there is space for them. */
+    static int raceColWidth(boolean term, boolean weather, boolean pc, boolean ai) {
+        int others = (weather ? weatherColWidth(true) + WIDGET_GAP : 0)
+                + ((pc ? 1 : 0) + (ai ? 1 : 0)) * (sideColWidth(true) + WIDGET_GAP);
+        return Math.max(RACE_COL_W, Math.min(RACE_COL_FULL_W, widgetsWidth(true, term) - others));
+    }
 
     /** PC / AI column; when racing is on, weather keeps an extra 80 px and these three share the rest. */
     static int sideColWidth(boolean racing) {
@@ -2028,8 +2045,9 @@ final class HomeV29 extends FrameLayout {
         return HOME_W - HOME_MARGIN - widgetsWidth(racing);
     }
 
-    private void applyRaceColumns(boolean racing) {
-        float raceW = raceColWidth(), side = sideColWidth(racing), weather = weatherColWidth(racing);
+    private void applyRaceColumns(LauncherConfig c) {
+        boolean racing = c.wRacing;
+        float raceW = raceColWidth(c.wTerm, c.wWeather, c.wPc, c.wAi), side = sideColWidth(racing), weather = weatherColWidth(racing);
         LinearLayout.LayoutParams rl = (LinearLayout.LayoutParams) raceBox.getLayoutParams();
         rl.width = px(raceW);
         rl.weight = 0f;
