@@ -265,6 +265,7 @@
     if (p && Object.prototype.hasOwnProperty.call(p, id) && p[id] === false) return false;
     if (id === "earthquakes" && cfg && cfg.earthquakes === false) return false;
     if (id === "planes" && cfg && cfg.planes === false) return false;
+    if (id === "omarchy") return !!(p && p.omarchy === true);   // off unless asked for: racing takes its place at the bottom
     return true;
   }
   /**
@@ -697,7 +698,7 @@
     function racingPanel(t) {
       if (!panelOn(cfg, "racing")) return null;
       var items = cfg.racing && cfg.racing.length ? racingItems(cfg.racing, t, 5) : [];
-      return items.length ? { id: "tv-racing", title: "racing", type: "list", slot: "right", order: 21, icon: "󰄶", data: { items: items } } : null;
+      return items.length ? { id: "tv-racing", title: "racing", type: "list", slot: "right", order: 40, icon: "󰄶", data: { items: items } } : null;
     }
     /** 2.15 the panels of a TV with no PC: everything it can read by itself. */
     function tvPanels(t) {

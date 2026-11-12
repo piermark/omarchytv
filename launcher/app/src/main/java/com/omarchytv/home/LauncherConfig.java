@@ -952,6 +952,7 @@ final class LauncherConfig {
         if (v != null) return v;
         if ("earthquakes".equals(id)) return pulseQuakes;
         if ("racing".equals(id)) return pulseRacing;
+        if ("omarchy".equals(id)) return false;   // off unless switched on: racing takes the bottom of the right column
         return true;
     }
 

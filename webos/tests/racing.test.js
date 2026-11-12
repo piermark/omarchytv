@@ -294,7 +294,7 @@ test("Pulse on the TV shows the Home widget's series from the bundled snapshot",
     const panel = st.widgets.filter((w) => w.id === "tv-racing");
     assert.strictEqual(panel.length, 1, "the hub renders the racing side panel on webOS");
     assert.strictEqual(panel[0].slot, "right");
-    assert.strictEqual(panel[0].order, 21);
+    assert.strictEqual(panel[0].order, 40);
     assert.ok(panel[0].data.items.length, "the panel has sessions");
     assert.ok(panel[0].data.items.some((i) => /^F1/.test(i.title)));
     assert.ok(panel[0].data.items.some((i) => /^MotoGP/.test(i.title)));
