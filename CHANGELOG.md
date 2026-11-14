@@ -36,14 +36,17 @@ Built on the published 2.15.1: everything fixed there is in here.
 - **They are drawn by the music**: the bass swells and kicks the zoom, every beat pulses the picture and lights the
   tunnel rings, the mids bend the Julia set, the highs light the kaliset; palette cycling speeds up with the music.
   On Android the analysis reads the decoded audio (no microphone, no permission) and is matched to what you hear.
-- **High resolution, fitted to the TV**: the look stays at `high` (full resolution, current iterations) when the TV
-  can hold it — that is the target, including on a Sony Mali-T860. `ultra` is full resolution with 2×2 supersampling.
-  It measures frame time and steps down only when frames run late, first by dropping iterations (still full
-  resolution), then to a 720p internal floor (`low`); a 30 fps cap applies already at `high` (about a third of one core on a
-  typical TV), and below the floor it may drop to 15–20 fps and freeze the palette, never resolution. It steps back up when there is headroom. Settings → Picture quality pins a level; pinned `low` is also
-  a static palette and low fps. GPUs without highp floats (Mali-400/450) start at `low` and draw the three scenes
-  that look right in half floats. Frame time is logged every couple of seconds (logcat tag `Radiomarchy`, or the
-  `[Radiomarchy]` console line on LG/Samsung).
+- **High resolution, fitted to the TV**: the fractal is drawn into a fixed buffer, never larger than 1080p (the
+  Home UI is 1080p; a 4K panel must not get a 4K GL surface). `high` fills that 1080p cap; `medium` and `low` use
+  a 720p floor. Mali-T8xx (the Sony KD-55XE9005's Mali-T860 among them) and TVs with 2 GB of RAM or less start at
+  `medium`/720p and climb only when there is headroom; older Mali-400/450 start at `low`. `ultra` is the 1080p
+  cap with 2×2 supersampling. The watchdog measures present cost (time between frames, including swap) and drops
+  a level within a couple of seconds on GPU backpressure. Below the 720p floor it drops iterations and fps (15–20)
+  and freezes the palette, never resolution. Home is capped at 24 fps (30 only for the screensaver, or when a frame
+  is cheap). Settings → Picture quality pins a level; pinned `low` is also a static palette and low fps. Frame time
+  is logged every couple of seconds (logcat tag `Radiomarchy`, or the `[Radiomarchy]` console line on LG/Samsung).
+  If the UI stalls (Choreographer frames over 500 ms) or the floor still overruns the budget, the fractal wallpaper
+  is turned off for the session and the normal theme background stays — never a black screen, never an ANR.
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.
@@ -52,7 +55,7 @@ Built on the published 2.15.1: everything fixed there is in here.
 
 - **Motorsport widget is wider**, so Grand Prix names and session times stay in full ("Las Vegas  sun 22 nov 05:00") instead of "Las…".
 - **Now playing no longer covers the clock**: the song in the top bar sits to the right of the date, shrinks with an ellipsis to the space left by the icons (and SpaceX, or the racing countdown), and hides if there is no room.
-- **Radiomarchy fractals is the default Home animated background** (Settings → Wallpaper): the same music-reactive fractals as the screensaver, behind the apps. OmaFire stays selectable. A wallpaper you already picked is left alone (including OmaFire, a still, or "omarchy" with random locked off). Picture quality follows the Radiomarchy setting (auto by default). The UI accent colours (top bar, widget borders and titles, app tile focus) follow the fractal palette over time, with contrast kept readable against the theme background; on `low` the palette is static and fps is capped. They pause when Home is not on screen, and if the GPU cannot draw them the still wallpaper and the normal theme stay (native OpenGL on Android, never a WebView).
+- **Radiomarchy fractals is the default Home animated background** (Settings → Wallpaper): the same music-reactive fractals as the screensaver, behind the apps. OmaFire stays selectable. A wallpaper you already picked is left alone (including OmaFire, a still, or "omarchy" with random locked off). Picture quality follows the Radiomarchy setting (auto by default). The UI accent colours (top bar, widget borders and titles, app tile focus) follow the fractal palette over time, with contrast kept readable against the theme background; on `low` the palette is static and fps is capped. They pause when Home is not on screen (or a dialog is in front) and yield briefly when the tiles change focus. If the GPU cannot draw them, or the safety net trips, the still wallpaper and the normal theme stay (native OpenGL on Android, never a WebView).
 - **SpaceX TV is off by default** (the top-bar pill from the `com.sighmon.spacex-tv` plugin). Turn it on in Settings → Plugins; a setting already saved is kept.
 
 ### Pull requests

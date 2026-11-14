@@ -1515,7 +1515,10 @@ final class HomeV29 extends FrameLayout {
         f.setBackground(bg);
         f.setForeground(new FocusRing());
         styleTile(f, false, false);
-        f.setOnFocusChangeListener((v, has) -> styleTile((FrameLayout) v, has, true));
+        f.setOnFocusChangeListener((v, has) -> {
+            styleTile((FrameLayout) v, has, true);
+            if (has) FractalLayer.yieldForUi();
+        });
         return f;
     }
 

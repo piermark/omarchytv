@@ -2237,7 +2237,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   // v2.20 default Home wallpaper: the same music-reactive Radiomarchy fractals as the screensaver (WebGL).
   // OmaFire stays selectable; an explicit saved wallpaper is left alone. Pauses when Home is not visible;
   // if WebGL fails the still wallpaper underneath stays, and the theme accents are restored.
-  var fractalUi = null, fractalCanvas = null, fractalFails = 0, fractalAccents = null;
+  var fractalUi = null, fractalCanvas = null, fractalFails = 0, fractalSessionOff = false, fractalAccents = null;
   function applyFractalAccent(pal, frozen) {
     if (!pal || !window.OmarchyFractals || !window.OmarchyFractals.ensureContrast) return;
     var th = currentThemeObj() || {}, bg = th.bg || "#111111";
@@ -2280,7 +2280,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     try { if (fractalVisible()) fractalUi.start(); else fractalUi.stop(); } catch (e) { /* context lost */ }
   }
   function fractalWall(layer) {
-    if (!fractalOn() || !layer || !window.OmarchyFractals || fractalFails >= 2) {
+    if (!fractalOn() || !layer || !window.OmarchyFractals || fractalFails >= 2 || fractalSessionOff) {
       fractalDestroy();
       clearFractalAccent();
       return;
@@ -2294,11 +2294,18 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var opt = fractalQuality(), th = currentThemeObj(), fx = null;
     try {
       fx = window.OmarchyFractals.create(cv, {
+        home: true,
+        ramGb: (navigator && navigator.deviceMemory) || 0,
         bands: function (out) { return !!(radioEng && radioEng.bands && radioEng.bands(out)); },
         palette: opt.palette,
         quality: opt.quality,
         theme: [th.accent || "#7aa2f7", th.accent2 || "#bb9af7", th.cyan || "#7dcfff", th.red || "#f7768e"],
-        onPalette: applyFractalAccent
+        onPalette: applyFractalAccent,
+        onFail: function (why) {
+          fractalSessionOff = true;
+          fractalDestroy();
+          clearFractalAccent();
+        }
       });
     } catch (e) { fx = null; }
     if (!fx) {

@@ -19,6 +19,8 @@ final class FractalLayer {
     private static final int MAX_FAILS = 2;
     private static FractalView view;
     private static int fails;
+    /** Safety net: UI stall or the floor still too slow. Stays off until the launcher restarts. */
+    private static boolean sessionOff;
 
     private FractalLayer() {
     }
@@ -35,7 +37,7 @@ final class FractalLayer {
             if (a instanceof MainActivity) ((MainActivity) a).clearFractalAccent();
             return;
         }
-        if (fails >= MAX_FAILS) {
+        if (sessionOff || fails >= MAX_FAILS) {
             drop();
             return;
         }
@@ -55,7 +57,9 @@ final class FractalLayer {
             v.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
             int q = a.getSharedPreferences("radiomarchy", Context.MODE_PRIVATE).getInt("quality", 0);
             v.setQuality(q);
+            v.prepareHome();
             v.setOnFail(() -> fail(v));
+            v.setOnSafety(why -> disableForSession(a, v, why));
             v.setOnPalette((pal, frozen) -> {
                 if (!(a instanceof MainActivity) || pal == null || pal.length < 12) return;
                 int bg = Theme.cur() != null ? Theme.cur().bg : 0xFF111111;
@@ -95,6 +99,29 @@ final class FractalLayer {
             if (v.getParent() instanceof ViewGroup) ((ViewGroup) v.getParent()).removeView(v);
         } catch (Throwable ignored) {
         }
+    }
+
+    /** Skip a couple of frames so a tile focus animation or a dialog is not fighting the wallpaper for the GPU. */
+    static void yieldForUi() {
+        FractalView v = view;
+        if (v != null) v.yieldForUi();
+    }
+
+    private static void disableForSession(Activity a, FractalView v, String why) {
+        sessionOff = true;
+        android.util.Log.w("Radiomarchy", "wallpaper off for this session: " + why);
+        if (view == v) view = null;
+        if (v != null) {
+            try {
+                v.onPause();
+            } catch (Throwable ignored) {
+            }
+            try {
+                if (v.getParent() instanceof ViewGroup) ((ViewGroup) v.getParent()).removeView(v);
+            } catch (Throwable ignored) {
+            }
+        }
+        if (a instanceof MainActivity) ((MainActivity) a).clearFractalAccent();
     }
 
     private static void fail(FractalView v) {

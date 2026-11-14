@@ -1,11 +1,13 @@
 package com.omarchytv.home;
 
+import android.app.ActivityManager;
 import android.content.Context;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.view.Choreographer;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -30,11 +32,13 @@ import javax.microedition.khronos.opengles.GL10;
  * geometry and, by default, a new random palette (harmonious hues; the Omarchy theme's colours, a Fractint
  * rainbow and fire are the other choices).
  * <p>
- * Adapts to the TV's hardware ({@link Quality}): the most it can draw smoothly (50+ fps). It starts from what the
- * GPU is (highp floats or not, the GPU's name) and then measures itself: ultra = the screen's full resolution with
- * 2x2 supersampling and 500 iterations; high = full resolution, 320 iterations; medium = full resolution, 180;
- * low = 3/4 resolution, 110 (old sticks only). It steps down when frames run late and back up when there is room.
- * GPUs without highp floats (Mali-400/450) draw the three scenes that look right in half floats.
+ * Adapts to the TV's hardware ({@link Quality}). The GL surface is always a fixed buffer
+ * ({@code SurfaceHolder.setFixedSize}), never larger than 1080p (a 4K panel with a 1080p UI must not get a 4K
+ * surface). high/ultra draw at that cap; medium and low use the 720p floor. It measures the real present cost
+ * (time between {@code onDrawFrame} starts, which includes {@code eglSwapBuffers}) and steps down within a
+ * couple of seconds on backpressure; below 720p only iterations and fps drop. Home wallpaper starts at 24 fps
+ * and, on Mali-T8xx or <= 2 GB of RAM, at the medium/720p level. GPUs without highp floats (Mali-400/450)
+ * start at low and draw the three scenes that look right in half floats.
  */
 final class FractalView extends GLSurfaceView {
     static final String[] SCENES = {"mandelbrot", "julia", "plasma", "tunnel", "kaliset"};
@@ -70,14 +74,43 @@ final class FractalView extends GLSurfaceView {
     private volatile int pinnedQuality = -1;   // -1 auto, else an index into LEVELS
     private volatile float dim = 1f;
     private float appliedScale = 1f;
+    private int appliedW, appliedH;
     private volatile Runnable onFail;
+    private volatile SafetyListener onSafety;
+    private boolean homeWallpaper;
+    private long ramBytes;
+    private boolean pumpOn;
+    private int skipFrames;
+    private long lastUiFrameNs, lastRequestNs;
 
     FractalView(Context c) {
         super(c);
+        ramBytes = totalRam(c);
         setEGLContextClientVersion(2);
         setPreserveEGLContextOnPause(true);
         setRenderer(r);
-        setRenderMode(RENDERMODE_CONTINUOUSLY);
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
+    }
+
+    /** Home wallpaper: 24 fps, start at the conservative buffer, never starve the UI. */
+    void prepareHome() {
+        homeWallpaper = true;
+        r.fpsCap = HOME_FPS;
+        r.level = firstLevel("", false, ramBytes);
+        r.applyLowPolicy();
+        applyBuffer();
+    }
+
+    void yieldForUi() {
+        skipFrames = 2;
+    }
+
+    interface SafetyListener {
+        void onSafety(String why);
+    }
+
+    void setOnSafety(SafetyListener l) {
+        onSafety = l;
     }
 
     void setScene(int s) {
@@ -136,10 +169,68 @@ final class FractalView extends GLSurfaceView {
         onPalette = l;
     }
 
-    /** 720p is the lower bound of adaptive scale. Below it, only iterations and fps drop. */
+    static final int MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30;
+    static final int WATCH_FRAMES = 16, LATE_RUSH = 4;
+    static final long TWO_GB = 2L * 1024 * 1024 * 1024;
+
+    /** Backing-store height: never above {@link #MAX_BUFFER_H}; medium/low use the 720p floor. */
+    static int bufferHeight(int level, int viewH, int maxH) {
+        if (maxH <= 0) maxH = MAX_BUFFER_H;
+        if (viewH <= 0) viewH = MAX_BUFFER_H;
+        int cap = Math.min(viewH, maxH);
+        if (level <= 1) return Math.max(1, cap);
+        return Math.max(1, Math.min(cap, FLOOR_BUFFER_H));
+    }
+
+    static int[] bufferSize(int level, int viewW, int viewH, int maxH) {
+        if (viewW <= 0) viewW = 1920;
+        if (viewH <= 0) viewH = 1080;
+        int h = bufferHeight(level, viewH, maxH);
+        int w = Math.max(1, Math.round(viewW * (h / (float) viewH)));
+        return new int[] { w, h };
+    }
+
+    /** Ratio of the backing-store height to the view. 720p is the lower bound. Never above 1080p. */
     static float scaleFor(int level, int viewH) {
-        if (level < 3) return 1f;
-        return viewH > 0 ? Math.min(1f, 720f / viewH) : 720f / 1080f;
+        if (viewH <= 0) viewH = 1080;
+        return bufferHeight(level, viewH, MAX_BUFFER_H) / (float) viewH;
+    }
+
+    /**
+     * Where to start: half-float and very old GPUs at low; Mali-T8xx/T7xx, similar modest GPUs and
+     * devices with at most 2 GB of RAM at medium (720p); the rest at high (1080p cap).
+     */
+    static int firstLevel(String gpu, boolean lowp, long ramBytes) {
+        String g = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
+        if (lowp || g.contains("mali-4") || g.contains("mali-3") || g.contains("videocore iv")) return 3;
+        boolean tightRam = ramBytes > 0 && ramBytes <= TWO_GB;
+        if (tightRam || g.contains("mali-t8") || g.contains("mali-t7") || g.contains("mali-g31")
+                || g.contains("mali-g51") || g.contains("adreno (tm) 3") || g.contains("powervr ge8"))
+            return 2;
+        return 1;
+    }
+
+    /** The interval overruns the fps-cap period: swap or the GPU held the GL thread. */
+    static boolean isBackpressured(long intervalNs, int fpsCap) {
+        long period = 1_000_000_000L / Math.max(1, fpsCap);
+        return intervalNs > period + 8_000_000L;
+    }
+
+    static boolean shouldDisableAtFloor(int level, int slowWindows) {
+        return level >= 3 && slowWindows >= 2;
+    }
+
+    static long totalRam(Context c) {
+        if (c == null) return 0;
+        try {
+            ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am == null) return 0;
+            ActivityManager.MemoryInfo mi = new ActivityManager.MemoryInfo();
+            am.getMemoryInfo(mi);
+            return mi.totalMem;
+        } catch (Throwable ignored) {
+            return 0;
+        }
     }
 
     /** WCAG-ish: push {@code color} away from {@code bg} until contrast is about 4.5:1. */
@@ -191,16 +282,97 @@ final class FractalView extends GLSurfaceView {
         if (r != null) ui.post(r);
     }
 
-    private void applyScale(float s) {
-        final float requested = s;
+    private void applyBuffer() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            ui.post(this::applyBuffer);
+            return;
+        }
+        int[] b = bufferSize(r.level, getWidth(), getHeight(), MAX_BUFFER_H);
+        if (b[0] == appliedW && b[1] == appliedH) return;
+        appliedW = b[0];
+        appliedH = b[1];
+        int vh = getHeight();
+        appliedScale = vh > 0 ? b[1] / (float) vh : scaleFor(r.level, 1080);
+        getHolder().setFixedSize(b[0], b[1]);
+    }
+
+    @Override
+    protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+        super.onSizeChanged(w, h, oldw, oldh);
+        applyBuffer();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        applyBuffer();
+        startPump();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        stopPump();
+        super.onDetachedFromWindow();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        startPump();
+    }
+
+    @Override
+    public void onPause() {
+        stopPump();
+        super.onPause();
+    }
+
+    private final Choreographer.FrameCallback pump = new Choreographer.FrameCallback() {
+        @Override
+        public void doFrame(long frameTimeNanos) {
+            if (!pumpOn) return;
+            if (lastUiFrameNs != 0 && homeWallpaper && frameTimeNanos - lastUiFrameNs > 500_000_000L) {
+                tripSafety("UI stall " + ((frameTimeNanos - lastUiFrameNs) / 1_000_000L) + "ms");
+                return;
+            }
+            lastUiFrameNs = frameTimeNanos;
+            if (skipFrames > 0) {
+                skipFrames--;
+            } else {
+                long period = 1_000_000_000L / Math.max(1, r.fpsCap);
+                if (lastRequestNs == 0 || frameTimeNanos - lastRequestNs >= period) {
+                    lastRequestNs = frameTimeNanos;
+                    requestRender();
+                }
+            }
+            if (pumpOn) Choreographer.getInstance().postFrameCallback(this);
+        }
+    };
+
+    private void startPump() {
+        if (pumpOn) return;
+        pumpOn = true;
+        lastUiFrameNs = 0;
+        lastRequestNs = 0;
+        setRenderMode(RENDERMODE_WHEN_DIRTY);
+        Choreographer.getInstance().postFrameCallback(pump);
+    }
+
+    private void stopPump() {
+        pumpOn = false;
+        Choreographer.getInstance().removeFrameCallback(pump);
+    }
+
+    private void tripSafety(String why) {
+        stopPump();
         ui.post(() -> {
-            int vh = getHeight();
-            float scale = requested;
-            if (vh > 0) scale = Math.max(scale, scaleFor(3, vh));
-            if (Math.abs(scale - appliedScale) < 0.01f) return;
-            appliedScale = scale;
-            if (scale >= 0.99f) getHolder().setSizeFromLayout();
-            else if (getWidth() > 0 && vh > 0) getHolder().setFixedSize(Math.round(getWidth() * scale), Math.round(vh * scale));
+            android.util.Log.w("Radiomarchy", "wallpaper off for this session: " + why);
+            SafetyListener safety = onSafety;
+            if (safety != null) safety.onSafety(why);
+            else {
+                Runnable f = onFail;
+                if (f != null) f.run();
+            }
         });
     }
 
@@ -324,7 +496,8 @@ final class FractalView extends GLSurfaceView {
         long frames, frameNs, lastNs, goodSince, late, lastDrawNs;
         boolean capFps = true, freezePalette;
         float iterMul = 1f;
-        int fpsCap = 30;
+        int fpsCap = SAVER_FPS;
+        int lateInWindow, slowWindows;
 
         @Override
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -332,7 +505,8 @@ final class FractalView extends GLSurfaceView {
             GLES20.glGetShaderPrecisionFormat(GLES20.GL_FRAGMENT_SHADER, GLES20.GL_HIGH_FLOAT, range, 0, precision, 0);
             lowp = precision[0] < 16;
             String gpu = String.valueOf(GLES20.glGetString(GLES20.GL_RENDERER));
-            level = firstLevel(gpu, lowp);
+            level = pinnedQuality >= 0 ? pinnedQuality : firstLevel(gpu, lowp, ramBytes);
+            applyLowPolicy();
             if (lowp && cur < 2) cur = 2;
             prog = link(VERT, (lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n") + FRAG);
             if (prog == 0) { failed(); return; }
@@ -362,21 +536,13 @@ final class FractalView extends GLSurfaceView {
             sceneSince = SystemClock.elapsedRealtime();
             for (int s = 0; s < SCENES.length; s++) randomise(s);
             cur = lowp ? 2 + rnd.nextInt(3) : rnd.nextInt(SCENES.length);
-            applyScale(scaleFor(level, h > 0 ? h : getHeight()));
+            applyBuffer();
         }
 
         private int loc(String n) {
             return GLES20.glGetUniformLocation(prog, n);
         }
 
-        /** Where to start: half-float GPUs and old Mali/Adreno 3xx at "low"/"medium", the rest at "high". */
-        private int firstLevel(String gpu, boolean lowp) {
-            if (pinnedQuality >= 0) return pinnedQuality;
-            String g = gpu.toLowerCase(java.util.Locale.ROOT);
-            if (lowp || g.contains("mali-4") || g.contains("mali-3") || g.contains("videocore iv")) return 3;
-            if (g.contains("mali-t7") || g.contains("mali-g31") || g.contains("mali-g51") || g.contains("adreno (tm) 3") || g.contains("powervr ge8")) return 2;
-            return 1;   // measured from here: ultra once it has room
-        }
 
         @Override
         public void onSurfaceChanged(GL10 gl, int width, int height) {
@@ -390,7 +556,6 @@ final class FractalView extends GLSurfaceView {
             if (prog == 0) return;
             long now = SystemClock.elapsedRealtime();
             long ns = System.nanoTime();
-            if (capFps && fpsCap > 0 && lastDrawNs != 0 && ns - lastDrawNs < 1_000_000_000L / fpsCap) return;
             lastDrawNs = ns;
             float dt = Math.min(0.1f, lastNs == 0 ? 0.016f : (ns - lastNs) / 1e9f);
             measure(ns, now);
@@ -548,20 +713,22 @@ final class FractalView extends GLSurfaceView {
         }
 
         /**
-         * Adapts to the TV: start at the current level (high on a typical TV). Every ~2 s, or sooner after a
-         * streak of late frames, if the average is over 21 ms, one level down; the last step is the 720p
-         * floor. Still stuttering there, cap fps (~30) and freeze the palette (never drop resolution further).
-         * After 20 s under 11 ms, step back up. A pinned level stays as chosen, but "low" still freezes.
+         * Adapts to the TV using the real present cost (the start-to-start interval, which includes
+         * eglSwapBuffers). A couple of seconds of backpressure drops a level; at the 720p floor, fps and
+         * iterations drop next. Home wallpaper that still cannot hold the floor is turned off for the session.
+         * After 20 s of headroom the level climbs (Home never goes above 1080p).
          */
         private void measure(long ns, long now) {
             if (qualityChanged) {
                 qualityChanged = false;
                 if (pinnedQuality >= 0) level = pinnedQuality;
                 applyLowPolicy();
-                applyScale(scaleFor(level, h > 0 ? h : getHeight()));
+                applyBuffer();
                 frames = 0;
                 frameNs = 0;
                 late = 0;
+                lateInWindow = 0;
+                slowWindows = 0;
                 goodSince = now;
             }
             if (lastNs != 0) {
@@ -569,40 +736,54 @@ final class FractalView extends GLSurfaceView {
                 if (d < 200_000_000L) {   // a pause (the app in the background) is not a slow frame
                     frameNs += d;
                     frames++;
-                    if (d > 24_000_000L) late++;
-                    else late = 0;
+                    if (isBackpressured(d, fpsCap)) {
+                        late++;
+                        lateInWindow++;
+                    } else {
+                        late = 0;
+                    }
                 }
             }
-            boolean rush = late >= 8 && pinnedQuality < 0;
-            if (frames < 120 && !rush) return;
+            boolean rush = late >= LATE_RUSH && pinnedQuality < 0;
+            if (frames < WATCH_FRAMES && !rush) return;
             double avg = frames > 0 ? frameNs / (double) frames / 1e6 : 30;
-            if (frames >= 60) {
+            boolean pressure = rush || (frames > 0 && lateInWindow * 2 >= frames);
+            if (frames >= 8) {
                 android.util.Log.i("Radiomarchy", "fps=" + String.format(java.util.Locale.US, "%.1f", 1000.0 / avg)
                         + " frame=" + String.format(java.util.Locale.US, "%.1f", avg) + "ms level=" + LEVELS[level].name
-                        + " scale=" + scaleFor(level, h) + (capFps ? " cap=" + fpsCap : "") + (freezePalette ? " pal=static" : ""));
+                        + " scale=" + scaleFor(level, h) + " buf=" + w + "x" + h
+                        + (capFps ? " cap=" + fpsCap : "") + (freezePalette ? " pal=static" : "")
+                        + (pressure ? " backpressure" : ""));
             }
             frames = 0;
             frameNs = 0;
-            late = 0;
+            lateInWindow = 0;
+            if (!rush) late = 0;
             if (pinnedQuality >= 0) { applyLowPolicy(); return; }
-            if (avg > 21) {
+            if (pressure) {
                 if (level < LEVELS.length - 1) {
                     level++;
                     goodSince = now;
+                    slowWindows = 0;
                     applyLowPolicy();
-                    applyScale(scaleFor(level, h > 0 ? h : getHeight()));
+                    applyBuffer();
                 } else {
                     capFps = true;
                     freezePalette = true;
                     if (fpsCap > 15) fpsCap = 15;
                     if (iterMul > 0.55f) iterMul = 0.7f;
                     applyLowPolicy();
+                    slowWindows++;
+                    if (homeWallpaper && shouldDisableAtFloor(level, slowWindows)) {
+                        tripSafety("GL frame " + String.format(java.util.Locale.US, "%.1f", avg) + "ms at floor");
+                    }
                 }
-            } else if (avg < 11) {
+            } else {
+                slowWindows = 0;
                 if (goodSince == 0) goodSince = now;
                 if (now - goodSince > 20000) {
-                    if (capFps || freezePalette || iterMul < 0.99f) {
-                        capFps = false;
+                    int want = homeWallpaper ? HOME_FPS : SAVER_FPS;
+                    if (fpsCap < want || freezePalette || iterMul < 0.99f) {
                         freezePalette = false;
                         iterMul = 1f;
                     } else if (level > 0) {
@@ -610,19 +791,26 @@ final class FractalView extends GLSurfaceView {
                     }
                     goodSince = now;
                     applyLowPolicy();
-                    applyScale(scaleFor(level, h > 0 ? h : getHeight()));
+                    applyBuffer();
                 }
-            } else {
-                goodSince = now;
             }
         }
 
         private void applyLowPolicy() {
             capFps = true;
-            if (level >= 3) { freezePalette = true; if (fpsCap > 20) fpsCap = 20; }
-            else if (pinnedQuality >= 0) { freezePalette = false; iterMul = 1f; fpsCap = 30; }
-            else if (fpsCap < 20) { /* kept by the watchdog after the 720p floor */ }
-            else fpsCap = 30;
+            int base = homeWallpaper ? HOME_FPS : SAVER_FPS;
+            if (level >= 3) {
+                freezePalette = true;
+                if (fpsCap > 20) fpsCap = 20;
+            } else if (pinnedQuality >= 0) {
+                freezePalette = false;
+                iterMul = 1f;
+                fpsCap = base;
+            } else if (fpsCap < 20) {
+                /* kept by the watchdog after the 720p floor */
+            } else {
+                fpsCap = base;
+            }
         }
 
         private int link(String vs, String fs) {

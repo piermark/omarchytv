@@ -31,17 +31,37 @@ test("edge points escape late: detail all the way down the zoom", () => {
   }
 });
 
-test("quality levels: start at high, 720p floor at low, old Mali starts low", () => {
+test("quality levels: 1080p cap, 720p floor, Mali-T8xx and low RAM start at medium", () => {
   assert.deepStrictEqual(Array.from(F.LEVELS, (l) => l.name), ["ultra", "high", "medium", "low"]);
   assert.strictEqual(F.LEVELS[0].aa, 2);
-  assert.ok(F.LEVELS.every((l) => l.scale === 1));
   assert.strictEqual(F.scaleFor(1, 1080), 1);
+  assert.strictEqual(F.scaleFor(2, 1080), 720 / 1080);
   assert.strictEqual(F.scaleFor(3, 1080), 720 / 1080);
   assert.strictEqual(F.scaleFor(3, 720), 1);
+  assert.strictEqual(F.scaleFor(1, 2160), 1080 / 2160);
+  const high4k = F.bufferSize(1, 3840, 2160, 1, 1080);
+  assert.strictEqual(high4k.w, 1920);
+  assert.strictEqual(high4k.h, 1080);
+  const medHome = F.bufferSize(2, 1920, 1080, 2, 1080);
+  assert.strictEqual(medHome.w, 1280);
+  assert.strictEqual(medHome.h, 720);
   assert.strictEqual(F.firstLevel("Mali-450 MP", false), 3);
   assert.strictEqual(F.firstLevel("anything", true), 3);
   assert.strictEqual(F.firstLevel("Mali-G52", false), 1);
-  assert.strictEqual(F.firstLevel("Mali-T860", false), 1);
+  assert.strictEqual(F.firstLevel("Mali-T860", false), 2);
+  assert.strictEqual(F.firstLevel("Mali-G52", false, 2), 2);
+  assert.strictEqual(F.firstLevel("Adreno (TM) 630", false, 4), 1);
+});
+
+test("present cost treats the fps cap as on time and swap delay as backpressure", () => {
+  assert.strictEqual(F.isBackpressured(1000 / 24, 24), false);
+  assert.strictEqual(F.isBackpressured(1000 / 24 + 5, 24), false);
+  assert.strictEqual(F.isBackpressured(1000 / 24 + 20, 24), true);
+  assert.strictEqual(F.shouldDisableAtFloor(2, 5), false);
+  assert.strictEqual(F.shouldDisableAtFloor(3, 1), false);
+  assert.strictEqual(F.shouldDisableAtFloor(3, 2), true);
+  assert.strictEqual(F.HOME_FPS, 24);
+  assert.strictEqual(F.SAVER_FPS, 30);
 });
 
 test("WCAG-ish contrast lifts a dark accent off a dark background", () => {
@@ -57,10 +77,14 @@ test("the palette uniform is a reused Float32Array, not allocated every frame", 
   assert.match(src, /uniform3fv\(\s*U\.uPal,\s*pal\)/);
 });
 
-test("Home and screensaver fractals start at a 30 fps cap and pause from the host when hidden", () => {
+test("Home fractals start at a 24 fps cap, pause when hidden, and can fall back for the session", () => {
   const src = fs.readFileSync(path.join(__dirname, "../app/fractals.js"), "utf8");
-  assert.match(src, /fpsCap = 30/);
+  assert.match(src, /HOME_FPS = 24/);
+  assert.match(src, /SAVER_FPS = 30/);
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
+  assert.ok(app.indexOf("home: true") > 0);
   assert.ok(app.indexOf("homeFxForSaver(true)") > 0);
   assert.ok(app.indexOf("!document.hidden") > 0);
+  assert.ok(app.indexOf("fractalSessionOff") > 0);
+  assert.ok(app.indexOf("onFail:") > 0);
 });

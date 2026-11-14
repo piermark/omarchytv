@@ -3,7 +3,8 @@
  * Mandelbrot deep zoom into a random point on the set's edge, Julia from a random c, plasma, tunnel and kaliset,
  * each with random geometry and (by default) a random palette at every scene change.
  * It adapts to the TV: it starts at "high" (full resolution) on a typical TV, measures frame time, and steps
- * down only when frames run late, to a 720p internal floor; below that it drops iterations/fps and freezes
+ * down only when present time (rAF start-to-start, including the swap) shows backpressure, to a 720p internal
+ * floor (the backing store is never larger than 1080p, even with devicePixelRatio 2); below that it drops
  * the palette, never resolution. It steps back up when there is room.
  * ES5. Host: OmarchyFractals.create(canvas, { bands: fn(out) -> bool, palette, quality, theme: [hex x4] })
  *   -> { start(), stop(), next(dir), setPalette(i), setQuality(i), scene() -> name, quality() -> name, destroy() }. */
@@ -75,18 +76,49 @@
     }
     return best;
   }
-  /** Where to start for this GPU (then it measures itself). */
-  function firstLevel(gpu, lowp) {
+  var MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30, WATCH_FRAMES = 16, LATE_RUSH = 4;
+
+  /** Where to start for this GPU (then it measures itself). ramGb <= 2 or Mali-T8xx starts at medium/720p. */
+  function firstLevel(gpu, lowp, ramGb) {
     var g = String(gpu || "").toLowerCase();
     if (lowp || /mali-[34]|videocore iv/.test(g)) return 3;
-    if (/mali-t7|mali-g31|mali-g51|adreno \(tm\) 3|powervr ge8/.test(g)) return 2;
-    return 1;   // typical TVs (and unknown GPUs): start at high, step down only on stutter
+    var tight = ramGb > 0 && ramGb <= 2;
+    if (tight || /mali-t8|mali-t7|mali-g31|mali-g51|adreno \(tm\) 3|powervr ge8/.test(g)) return 2;
+    return 1;   // capable TVs: start at high (1080p cap), step down only on backpressure
   }
 
-  /** 720p is the lower bound of adaptive scale. Below it, only iterations and fps drop. */
+  /** Backing-store height: never above 1080p; medium/low use the 720p floor. */
+  function bufferHeight(level, viewH, maxH) {
+    if (!maxH) maxH = MAX_BUFFER_H;
+    if (!viewH || viewH < 1) viewH = MAX_BUFFER_H;
+    var cap = Math.min(viewH, maxH);
+    if (level <= 1) return Math.max(1, Math.round(cap));
+    return Math.max(1, Math.round(Math.min(cap, FLOOR_BUFFER_H)));
+  }
+
+  function bufferSize(level, cssW, cssH, dpr, maxH) {
+    if (!cssW) cssW = 1920;
+    if (!cssH) cssH = 1080;
+    dpr = dpr || 1;
+    var viewW = cssW * dpr, viewH = cssH * dpr;
+    var h = bufferHeight(level, viewH, maxH || MAX_BUFFER_H);
+    var w = Math.max(1, Math.round(viewW * (h / viewH)));
+    return { w: w, h: h };
+  }
+
+  /** Ratio of the backing-store height to the CSS height (dpr=1). Never above 1080p. */
   function scaleFor(level, viewH) {
-    if (level < 3) return 1;
-    return viewH > 0 ? Math.min(1, 720 / viewH) : 720 / 1080;
+    if (!viewH || viewH < 1) viewH = 1080;
+    return bufferHeight(level, viewH, MAX_BUFFER_H) / viewH;
+  }
+
+  function isBackpressured(intervalMs, fpsCap) {
+    var period = 1000 / Math.max(1, fpsCap);
+    return intervalMs > period + 8;
+  }
+
+  function shouldDisableAtFloor(level, slowWindows) {
+    return level >= 3 && slowWindows >= 2;
   }
 
   function rgbCss(r, g, b) {
@@ -143,8 +175,10 @@
     var hp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT), lowp = !hp || hp.precision < 16;
     var dbg = gl.getExtension("WEBGL_debug_renderer_info");
     var gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    var ramGb = opts.ramGb || (root.navigator && root.navigator.deviceMemory) || 0;
+    var home = !!opts.home;
     var pinned = opts.quality > 0 ? Math.min(LEVELS.length, opts.quality) - 1 : -1;
-    var level = pinned >= 0 ? pinned : firstLevel(gpu, lowp);
+    var level = pinned >= 0 ? pinned : firstLevel(gpu, lowp, ramGb);
     var palette = opts.palette || 0;
     function sh(type, src) {
       var s = gl.createShader(type);
@@ -173,7 +207,8 @@
     var params = new Float32Array(SCENES.length * 4), pal = new Float32Array(12), palFrom = new Float32Array(12), palTo = new Float32Array(12), palStart = 0, newPal = true;
     var f = { bass: 0, mid: 0, high: 0, level: 0, beatAgeMs: 1e9, beats: 0 };
     var frames = 0, frameMs = 0, lastT = 0, goodSince = 0, late = 0, lastDraw = 0, lastPalEmit = 0, lastFpsLog = 0;
-    var capFps = true, freezePalette = false, iterMul = 1, fpsCap = 30;
+    var capFps = true, freezePalette = false, iterMul = 1, fpsCap = home ? HOME_FPS : SAVER_FPS;
+    var lateInWindow = 0, slowWindows = 0, sessionOff = false;
     for (i = 0; i < 12; i++) { pal[i] = 0; palFrom[i] = 0; }
 
     function newCenter() {
@@ -226,17 +261,26 @@
       for (var j = 0; j < 12; j++) pal[j] = palFrom[j] + (palTo[j] - palFrom[j]) * k;
     }
     function resize() {
-      var s = scaleFor(level, canvas.clientHeight || 1080), dpr = Math.min(2, root.devicePixelRatio || 1);
-      var w = Math.max(64, Math.round(canvas.clientWidth * dpr * s)), h = Math.max(36, Math.round(canvas.clientHeight * dpr * s));
-      if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+      var dpr = root.devicePixelRatio || 1;
+      var b = bufferSize(level, canvas.clientWidth || 1920, canvas.clientHeight || 1080, dpr, MAX_BUFFER_H);
+      if (canvas.width !== b.w || canvas.height !== b.h) { canvas.width = b.w; canvas.height = b.h; }
       gl.viewport(0, 0, canvas.width, canvas.height);
     }
     function applyLowPolicy() {
       capFps = true;
+      var base = home ? HOME_FPS : SAVER_FPS;
       if (level >= 3) { freezePalette = true; if (fpsCap > 20) fpsCap = 20; }
-      else if (pinned >= 0) { freezePalette = false; iterMul = 1; fpsCap = 30; }
+      else if (pinned >= 0) { freezePalette = false; iterMul = 1; fpsCap = base; }
       else if (fpsCap < 20) { /* kept by the watchdog after the 720p floor */ }
-      else fpsCap = 30;
+      else fpsCap = base;
+    }
+    function tripSafety(why) {
+      sessionOff = true;
+      running = false;
+      if (raf) root.cancelAnimationFrame(raf);
+      raf = 0;
+      if (root.console) root.console.warn("[Radiomarchy] wallpaper off for this session: " + why);
+      if (opts.onFail) try { opts.onFail(why); } catch (e) { /* host */ }
     }
     function emitPalette(now) {
       if (!opts.onPalette) return;
@@ -247,32 +291,45 @@
     function measure(now) {
       if (lastT) {
         var d = now - lastT;
-        if (d < 200) { frameMs += d; frames++; if (d > 24) late++; else late = 0; }
+        if (d < 200) {
+          frameMs += d; frames++;
+          if (isBackpressured(d, fpsCap)) { late++; lateInWindow++; } else late = 0;
+        }
       }
-      var rush = late >= 8 && pinned < 0;
-      if (frames < 120 && !rush) return;
+      var rush = late >= LATE_RUSH && pinned < 0;
+      if (frames < WATCH_FRAMES && !rush) return;
       var avg = frames ? frameMs / frames : 30;
-      if (frames >= 60 && (!lastFpsLog || now - lastFpsLog > 2000) && root.console) {
+      var pressure = rush || (frames > 0 && lateInWindow * 2 >= frames);
+      if (frames >= 8 && (!lastFpsLog || now - lastFpsLog > 2000) && root.console) {
         lastFpsLog = now;
         root.console.info("[Radiomarchy] fps=" + (1000 / avg).toFixed(1) + " frame=" + avg.toFixed(1) + "ms level=" + LEVELS[level].name
-          + " scale=" + scaleFor(level, canvas.clientHeight || 1080) + (capFps ? " cap=" + fpsCap : "") + (freezePalette ? " pal=static" : ""));
+          + " scale=" + scaleFor(level, canvas.clientHeight || 1080) + " buf=" + canvas.width + "x" + canvas.height
+          + (capFps ? " cap=" + fpsCap : "") + (freezePalette ? " pal=static" : "") + (pressure ? " backpressure" : ""));
       }
-      frames = 0; frameMs = 0; late = 0;
+      frames = 0; frameMs = 0; lateInWindow = 0;
+      if (!rush) late = 0;
       if (pinned >= 0) { applyLowPolicy(); return; }
-      if (avg > 21) {
-        if (level < LEVELS.length - 1) { level++; goodSince = now; applyLowPolicy(); resize(); }
-        else { capFps = true; freezePalette = true; if (fpsCap > 15) fpsCap = 15; if (iterMul > 0.55) iterMul = 0.7; applyLowPolicy(); }
-      } else if (avg < 11 && (level > 0 || capFps || freezePalette || iterMul < 0.99)) {
+      if (pressure) {
+        if (level < LEVELS.length - 1) { level++; goodSince = now; slowWindows = 0; applyLowPolicy(); resize(); }
+        else {
+          capFps = true; freezePalette = true; if (fpsCap > 15) fpsCap = 15; if (iterMul > 0.55) iterMul = 0.7;
+          applyLowPolicy();
+          slowWindows++;
+          if (home && shouldDisableAtFloor(level, slowWindows)) tripSafety("GL frame " + avg.toFixed(1) + "ms at floor");
+        }
+      } else {
+        slowWindows = 0;
         if (!goodSince) goodSince = now;
         if (now - goodSince > 20000) {
-          if (capFps || freezePalette || iterMul < 0.99) { capFps = false; freezePalette = false; iterMul = 1; }
+          var want = home ? HOME_FPS : SAVER_FPS;
+          if (fpsCap < want || freezePalette || iterMul < 0.99) { freezePalette = false; iterMul = 1; }
           else if (level > 0) level--;
           goodSince = now; applyLowPolicy(); resize();
         }
-      } else goodSince = now;
+      }
     }
     function frame() {
-      if (!running) return;
+      if (!running || sessionOff) return;
       raf = root.requestAnimationFrame(frame);
       var now = Date.now();
       if (capFps && fpsCap > 0 && lastDraw && now - lastDraw < 1000 / fpsCap) return;
@@ -318,7 +375,7 @@
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
     return {
-      start: function () { if (running) return; running = true; lastT = 0; frames = 0; frameMs = 0; raf = root.requestAnimationFrame(frame); },
+      start: function () { if (running || sessionOff) return; running = true; lastT = 0; frames = 0; frameMs = 0; applyLowPolicy(); resize(); raf = root.requestAnimationFrame(frame); },
       stop: function () { running = false; if (raf) root.cancelAnimationFrame(raf); raf = 0; },
       /** One frame now and no loop (previews, tests). */
       draw: function () { var was = running; running = true; frame(); if (!was) this.stop(); },
@@ -344,6 +401,9 @@
   root.OmarchyFractals = {
     SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG,
     create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel,
-    scaleFor: scaleFor, ensureContrast: ensureContrast, contrastRatio: contrastRatio, rgbCss: rgbCss
+    scaleFor: scaleFor, bufferHeight: bufferHeight, bufferSize: bufferSize, isBackpressured: isBackpressured,
+    shouldDisableAtFloor: shouldDisableAtFloor, HOME_FPS: HOME_FPS, SAVER_FPS: SAVER_FPS,
+    MAX_BUFFER_H: MAX_BUFFER_H, FLOOR_BUFFER_H: FLOOR_BUFFER_H,
+    ensureContrast: ensureContrast, contrastRatio: contrastRatio, rgbCss: rgbCss
   };
 })(typeof window !== "undefined" ? window : this);
