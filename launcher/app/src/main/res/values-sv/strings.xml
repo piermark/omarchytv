@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ inlägg · OK öppna · 1 gilla · 2 svara · 3 repost · 4 nytt inlägg · 5 sök · 0 hem · 9 aviseringar · 8 meddelanden</string>
     <string name="omafire_campfire">lägereld</string>
     <string name="omafire_embers">glöd</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy-fraktaler</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">lätt</string>
     <string name="crt_strong">stark</string>

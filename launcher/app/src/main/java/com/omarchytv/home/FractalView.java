@@ -70,6 +70,7 @@ final class FractalView extends GLSurfaceView {
     private volatile int pinnedQuality = -1;   // -1 auto, else an index into LEVELS
     private volatile float dim = 1f;
     private float appliedScale = 1f;
+    private volatile Runnable onFail;
 
     FractalView(Context c) {
         super(c);
@@ -116,6 +117,16 @@ final class FractalView extends GLSurfaceView {
     /** 0..1: how bright the picture is. */
     void setDim(float d) {
         dim = d;
+    }
+
+    /** If the shader or the EGL surface cannot be created, run this on the UI thread (Home wallpaper fallback). */
+    void setOnFail(Runnable r) {
+        onFail = r;
+    }
+
+    private void failed() {
+        Runnable r = onFail;
+        if (r != null) ui.post(r);
     }
 
     private void applyScale(float s) {
@@ -243,6 +254,7 @@ final class FractalView extends GLSurfaceView {
             level = firstLevel(gpu, lowp);
             if (lowp && cur < 2) cur = 2;
             prog = link(VERT, (lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n") + FRAG);
+            if (prog == 0) { failed(); return; }
             aPos = GLES20.glGetAttribLocation(prog, "aPos");
             uRes = loc("uRes");
             uTime = loc("uTime");
@@ -294,6 +306,7 @@ final class FractalView extends GLSurfaceView {
 
         @Override
         public void onDrawFrame(GL10 gl) {
+            if (prog == 0) return;
             long now = SystemClock.elapsedRealtime();
             long ns = System.nanoTime();
             float dt = Math.min(0.1f, lastNs == 0 ? 0.016f : (ns - lastNs) / 1e9f);
@@ -497,6 +510,12 @@ final class FractalView extends GLSurfaceView {
             GLES20.glAttachShader(p, v);
             GLES20.glAttachShader(p, f);
             GLES20.glLinkProgram(p);
+            int[] ok = new int[1];
+            GLES20.glGetProgramiv(p, GLES20.GL_LINK_STATUS, ok, 0);
+            if (ok[0] == 0) {
+                android.util.Log.w("Radiomarchy", "link: " + GLES20.glGetProgramInfoLog(p));
+                return 0;
+            }
             return p;
         }
 

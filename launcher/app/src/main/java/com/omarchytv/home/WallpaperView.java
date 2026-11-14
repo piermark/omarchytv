@@ -92,6 +92,7 @@ public class WallpaperView extends View {
         String rawWhich = cfg.wallpaper;
         boolean custom = rawWhich.startsWith("/") && cfg.syncPcWallpaper && new java.io.File(rawWhich).isFile();
         String which = (rawWhich.startsWith("/") && !custom) ? "omarchy" : rawWhich;
+        if (FractalLayer.is(which)) which = "omarchy";   // still theme wallpaper underneath, and if GL fails
         builtFrom = rawWhich;
         builtMtime = custom ? new java.io.File(rawWhich).lastModified() : 0L;
         builtScrim = scrimKey();

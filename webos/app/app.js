@@ -69,7 +69,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "X API monthly limit reached (xMonthlyUsd)",
       living_x_error: "X API not reachable right now",
       omafire_campfire: "campfire",
-      omafire_embers: "embers",
+      omafire_embers: "embers", wp_radiomarchy_fractals: "Radiomarchy fractals",
       plugin_retro_crt: "Retro CRT",
       crt_light: "light",
       crt_strong: "strong",
@@ -199,7 +199,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "Raggiunto il limite mensile dell'API di X (xMonthlyUsd)",
       living_x_error: "API di X non raggiungibile ora",
       omafire_campfire: "falò",
-      omafire_embers: "braci",
+      omafire_embers: "braci", wp_radiomarchy_fractals: "Frattali Radiomarchy",
       plugin_retro_crt: "Retro CRT",
       crt_light: "leggero",
       crt_strong: "forte",
@@ -329,7 +329,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "Monatslimit der X-API erreicht (xMonthlyUsd)",
       living_x_error: "X-API gerade nicht erreichbar",
       omafire_campfire: "Lagerfeuer",
-      omafire_embers: "Glut",
+      omafire_embers: "Glut", wp_radiomarchy_fractals: "Radiomarchy-Fraktale",
       plugin_retro_crt: "Retro CRT",
       crt_light: "leicht",
       crt_strong: "stark",
@@ -726,6 +726,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var picked = cfg.wallpaper && cfg.wallpaper !== "plain" && allWallpapers().indexOf(cfg.wallpaper) >= 0 ? cfg.wallpaper : "";
     var activeWp = "";
     omafireWall(wl);
+    fractalWall(wl);
     applyCrt();
     if (omafireModeNow()) {
       wl.style.backgroundImage = "none";   // v2.14 OmaFire draws into the layer itself
@@ -2209,6 +2210,63 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     omafireMode = m[1];
   }
 
+  // v2.20 optional Home wallpaper: the same music-reactive Radiomarchy fractals as the screensaver (WebGL).
+  // Off by default. Pauses when Home is not visible; if WebGL fails the still wallpaper underneath stays.
+  var fractalUi = null, fractalCanvas = null, fractalFails = 0;
+  function fractalOn() { return cfg.wallpaper === "radiomarchy:fractals"; }
+  function fractalQuality() {
+    var q = 0, pal = 0;
+    try {
+      var saved = window.localStorage && JSON.parse(window.localStorage.getItem("omarchytv.radio.v1") || "null");
+      if (saved) { if (saved.quality != null) q = saved.quality | 0; if (saved.palette != null) pal = saved.palette | 0; }
+    } catch (e) { /* defaults */ }
+    return { quality: q, palette: pal };
+  }
+  function fractalDestroy() {
+    if (fractalUi && fractalUi.destroy) try { fractalUi.destroy(); } catch (e) { /* already gone */ }
+    fractalUi = null;
+    if (fractalCanvas && fractalCanvas.parentNode) fractalCanvas.parentNode.removeChild(fractalCanvas);
+    fractalCanvas = null;
+  }
+  function fractalVisible() {
+    var ov = document.getElementById("saver-overlay");
+    return fractalOn() && !document.hidden && !cineUi && !radioUi && !(ov && ov.className === "active");
+  }
+  function fractalTick() {
+    if (!fractalUi) return;
+    try { if (fractalVisible()) fractalUi.start(); else fractalUi.stop(); } catch (e) { /* context lost */ }
+  }
+  function fractalWall(layer) {
+    if (!fractalOn() || !layer || !window.OmarchyFractals || fractalFails >= 2) {
+      fractalDestroy();
+      return;
+    }
+    if (fractalUi) { fractalTick(); return; }
+    var cv = document.createElement("canvas");
+    cv.setAttribute("aria-hidden", "true");
+    cv.width = 1920;
+    cv.height = 1080;
+    cv.style.cssText = "position:absolute;top:0;left:0;width:1920px;height:1080px;pointer-events:none;z-index:0;";
+    var opt = fractalQuality(), th = currentThemeObj(), fx = null;
+    try {
+      fx = window.OmarchyFractals.create(cv, {
+        bands: function (out) { return !!(radioEng && radioEng.bands && radioEng.bands(out)); },
+        palette: opt.palette,
+        quality: opt.quality,
+        theme: [th.accent || "#7aa2f7", th.accent2 || "#bb9af7", th.cyan || "#7dcfff", th.red || "#f7768e"]
+      });
+    } catch (e) { fx = null; }
+    if (!fx) {
+      fractalFails++;
+      return;   // still wallpaper already in the layer
+    }
+    layer.style.position = layer.style.position || "absolute";
+    layer.appendChild(cv);
+    fractalCanvas = cv;
+    fractalUi = fx;
+    if (fractalVisible()) fx.start();
+  }
+
   function openWallpaperModal(keepFocus) {
     var focus = state.modalIdx;
     function pick(v) { cfg.wallpaper = v; cfg.randomWallpaper = false; saveCfg(); applyTheme(); openWallpaperModal(true); }
@@ -2220,6 +2278,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("wp_plain"), right: !cfg.randomWallpaper && cfg.wallpaper === "plain" ? "✓" : "", act: function () { pick("plain"); } },
       { label: "OmaFire \u00b7 " + tr("omafire_campfire"), right: cfg.wallpaper === "omafire:campfire" ? "✓" : "", act: function () { pick("omafire:campfire"); } },
       { label: "OmaFire \u00b7 " + tr("omafire_embers"), right: cfg.wallpaper === "omafire:embers" ? "✓" : "", act: function () { pick("omafire:embers"); } },
+      { label: tr("wp_radiomarchy_fractals"), right: cfg.wallpaper === "radiomarchy:fractals" ? "✓" : "", act: function () { pick("radiomarchy:fractals"); } },
       { label: "  " + tr("omafire_sound"), right: cfg.omafireSound ? "on" : "off", act: function () {
         cfg.omafireSound = !cfg.omafireSound; saveCfg(); applyTheme(); openWallpaperModal(true);
       } }
@@ -2342,6 +2401,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       saver: document.getElementById("saver-overlay").className === "active",
       cinemarchy: !!cineUi });
     try { if (play && wv.paused) wv.play().catch(function () {}); else if (!play && !wv.paused) wv.pause(); } catch (e) {}
+    fractalTick();
   }
   setInterval(wallpaperLoopTick, 1000);
   document.addEventListener("visibilitychange", wallpaperLoopTick);

@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ bejegyzések · OK megnyitás · 1 tetszik · 2 válasz · 3 repost · 4 új bejegyzés · 5 keresés · 0 kezdőlap · 9 értesítések · 8 üzenetek</string>
     <string name="omafire_campfire">tábortűz</string>
     <string name="omafire_embers">parázs</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy-fraktálok</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">enyhe</string>
     <string name="crt_strong">erős</string>

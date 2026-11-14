@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ julkaisut · OK avaa · 1 tykkää · 2 vastaa · 3 repost · 4 uusi julkaisu · 5 haku · 0 koti · 9 ilmoitukset · 8 viestit</string>
     <string name="omafire_campfire">nuotio</string>
     <string name="omafire_embers">hiillos</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy-fraktaalit</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">kevyt</string>
     <string name="crt_strong">voimakas</string>

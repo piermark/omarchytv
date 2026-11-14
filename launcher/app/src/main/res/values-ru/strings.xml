@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ посты · OK открыть · 1 нравится · 2 ответить · 3 репост · 4 новый пост · 5 поиск · 0 главная · 9 уведомления · 8 сообщения</string>
     <string name="omafire_campfire">костёр</string>
     <string name="omafire_embers">угли</string>
+    <string name="wp_radiomarchy_fractals">Фракталы Radiomarchy</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">слабый</string>
     <string name="crt_strong">сильный</string>

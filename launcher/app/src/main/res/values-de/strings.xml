@@ -447,6 +447,7 @@
     <string name="x_keys_hint">X · ▲▼ Posts · OK öffnen · 1 Gefällt mir · 2 Antworten · 3 Repost · 4 Neuer Post · 5 Suche · 0 Start · 9 Mitteilungen · 8 Nachrichten</string>
     <string name="omafire_campfire">Lagerfeuer</string>
     <string name="omafire_embers">Glut</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy-Fraktale</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">leicht</string>
     <string name="crt_strong">stark</string>

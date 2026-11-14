@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ ポスト · OK 開く · 1 いいね · 2 返信 · 3 リポスト · 4 新規ポスト · 5 検索 · 0 ホーム · 9 通知 · 8 メッセージ</string>
     <string name="omafire_campfire">たき火</string>
     <string name="omafire_embers">熾火</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy フラクタル</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">弱</string>
     <string name="crt_strong">強</string>

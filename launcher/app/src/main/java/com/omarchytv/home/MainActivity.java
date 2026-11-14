@@ -1012,6 +1012,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         super.onResume();
         BootScreenView.onResume(this, findViewById(R.id.root));
         OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));   // v2.14 OmaFire animated wallpaper   // "wake" mode: replay after the screen came on
+        FractalLayer.onResume(this, findViewById(R.id.wallpaper));  // v2.20 Radiomarchy fractals wallpaper
         RadioPlayer rp = RadioPlayer.peek();
         if (rp != null) rp.claimSession();   // v2.20: after YouTube took audio focus, media keys on Home still resume
         bindCompanion();
@@ -1116,6 +1117,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         super.onPause();
         if (companion != null) { companion.setArmed(false); companion.stop(); }
         OmaFireLayer.onPause();
+        FractalLayer.onPause();
         resumed = false;
         OmarchyLink.setHomeVisible(false);
         handler.removeCallbacks(idle);
@@ -1137,6 +1139,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         BootScreenView.onDestroy(this);
         LiftoffView.onDestroy();
         OmaFireLayer.onPause();
+        FractalLayer.drop();
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm != null) cm.unregisterNetworkCallback(networkCallback);
         OmarchyLink.removeListener(linkListener);
@@ -3326,6 +3329,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 return true;
             });
         }
+        String lFrac = str(R.string.wp_radiomarchy_fractals);   // v2.20, off by default
+        p.add(lFrac, FractalLayer.is(cfg.wallpaper) ? str(R.string.mark_current) : "", r -> {
+            applyLive("wallpaper", lFrac, j -> LauncherConfig.lockWallpaper(j, FractalLayer.ID, 0));
+            return true;
+        });
         String lFireSnd = "  " + str(R.string.omafire_sound);
         p.add(lFireSnd, str(cfg.omafireSound ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.omafireSound;

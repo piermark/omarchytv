@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ المنشورات · OK فتح · 1 إعجاب · 2 رد · 3 إعادة نشر · 4 منشور جديد · 5 بحث · 0 الرئيسية · 9 الإشعارات · 8 الرسائل</string>
     <string name="omafire_campfire">نار المخيم</string>
     <string name="omafire_embers">جمر</string>
+    <string name="wp_radiomarchy_fractals">فركتلات Radiomarchy</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">خفيف</string>
     <string name="crt_strong">قوي</string>
