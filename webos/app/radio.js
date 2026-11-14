@@ -307,25 +307,38 @@
       return out;
     };
     /** The music as it is heard now, for the fractals; false when only make-believe (no analyser, paused). */
-    E.bands = function (out) {
-      var t = cur(), now = Date.now();
-      if (!an || !t || t.kind === "episode" || song.paused) return false;
+    var cachedOut = { bass: 0, mid: 0, high: 0, level: 0, beatAgeMs: 1e9, beats: 0 }, cachedBars = null, lastBarsAt = 0;
+    function sampleAnalyser(now) {
+      if (!an) return false;
+      if (lastAn && now - lastAn < 1000 / 24) return true;
       an.getByteFrequencyData(freq);
       var dt = lastAn ? Math.min(0.1, (now - lastAn) / 1000) : 0.016;
       lastAn = now;
-      bands(freq, ctx.sampleRate, now, dt, out);
+      bands(freq, ctx.sampleRate, now, dt, cachedOut);
+      cachedBars = null;
+      return true;
+    }
+    E.bands = function (out) {
+      var t = cur(), now = Date.now();
+      if (!an || !t || t.kind === "episode" || song.paused) return false;
+      if (!sampleAnalyser(now)) return false;
+      if (out) { out.bass = cachedOut.bass; out.mid = cachedOut.mid; out.high = cachedOut.high; out.level = cachedOut.level; out.beatAgeMs = cachedOut.beatAgeMs; out.beats = cachedOut.beats; }
       return true;
     };
     /** 16 spectrum bars (0..1) for the panel; null without the analyser. */
     E.bars = function () {
+      var now = Date.now();
       if (!an || song.paused) return null;
-      an.getByteFrequencyData(freq);
+      sampleAnalyser(now);
+      if (cachedBars && now - lastBarsAt < 1000 / 24) return cachedBars;
       var out = [], n = freq.length, hz = ctx.sampleRate / 2 / n;
       for (var b = 0; b < 16; b++) {
         var f0 = 40 * Math.pow(400, b / 16), f1 = 40 * Math.pow(400, (b + 1) / 16), m = 0;
         for (var i = Math.max(1, Math.floor(f0 / hz)); i <= Math.ceil(f1 / hz) && i < n; i++) m = Math.max(m, freq[i]);
         out.push(m / 255);
       }
+      cachedBars = out;
+      lastBarsAt = now;
       return out;
     };
     E.load = function (done) {
@@ -412,7 +425,11 @@
     el.appendChild(w);
     function q(s) { return w.querySelector(s); }
     if (api.logoHtml) { var lg = q(".logo"); lg.innerHTML = api.logoHtml; lg.style.letterSpacing = "0"; }
-    var FX = root.OmarchyFractals, fx = FX ? FX.create(q("canvas.fx"), { bands: E.bands, palette: P.palette, quality: P.quality, theme: [A, th.accent2 || "#bb9af7", C, th.red || "#f7768e"] }) : null;
+    var FX = root.OmarchyFractals, fx = FX ? FX.create(q("canvas.fx"), {
+      ramGb: (root.navigator && root.navigator.deviceMemory) || 0,
+      bands: E.bands, palette: P.palette, quality: P.quality,
+      theme: [A, th.accent2 || "#bb9af7", C, th.red || "#f7768e"]
+    }) : null;
     if (fx) { if (P.scene >= 0) fx.pin(P.scene); fx.start(); }
     var off = E.on(function () { render(); });
     var ROWS = 20;
@@ -520,7 +537,7 @@
       tick();
       if (!S.demo && !S.saver && P.autoDemo && E.playing() && Date.now() - S.lastKey > 60000) setDemo(true);
     }, 250);
-    spT = setInterval(function () { var sp = q(".np .sp"); if (sp && E.playing()) { var bars = E.bars(); if (bars) for (var i = 0; i < sp.children.length; i++) sp.children[i].style.height = Math.round(100 * Math.max(0.03, bars[i])) + "%"; } }, 50);
+    spT = setInterval(function () { var sp = q(".np .sp"); if (sp && E.playing()) { var bars = E.bars(); if (bars) for (var i = 0; i < sp.children.length; i++) sp.children[i].style.height = Math.round(100 * Math.max(0.03, bars[i])) + "%"; } }, 42);
 
     // demo mode: the fractal on its own, a sine scroller of what is playing
     var sc = q("canvas.sc"), scx = sc.getContext("2d"), scX = 0, scLast = 0, scRaf = 0, scText = "", band = { bass: 0 };
@@ -533,7 +550,9 @@
     function scroller() {
       if (!S.demo) return;
       scRaf = root.requestAnimationFrame(scroller);
-      var now = Date.now(), dt = scLast ? Math.min(0.1, (now - scLast) / 1000) : 0.016;
+      var now = Date.now();
+      if (scLast && now - scLast < 1000 / 24) return;
+      var dt = scLast ? Math.min(0.1, (now - scLast) / 1000) : 0.016;
       scLast = now;
       var W2 = sc.clientWidth, H2 = sc.clientHeight;
       if (sc.width !== W2 || sc.height !== H2) { sc.width = W2; sc.height = H2; }

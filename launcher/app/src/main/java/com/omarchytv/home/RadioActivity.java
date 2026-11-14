@@ -131,6 +131,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         fractal.setPalette(palette);
         fractal.setQuality(quality);
         if (scenePin >= 0) fractal.setScene(scenePin);
+        fractal.prepareScene();
         root.addView(fractal, new FrameLayout.LayoutParams(-1, -1));
         dimmer = new View(this);
         dimmer.setBackgroundColor(Theme.withAlpha(t.bgDarker, 0.42f));
@@ -977,8 +978,17 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
             super(c);
         }
 
+        private long lastDraw;
+
         @Override
         protected void onDraw(Canvas c) {
+            long now = SystemClock.elapsedRealtime();
+            long period = 1000L / FractalView.HOME_FPS;
+            if (lastDraw != 0 && now - lastDraw < period) {
+                if (isShown()) postInvalidateDelayed(period - (now - lastDraw));
+                return;
+            }
+            lastDraw = now;
             Theme t = Theme.cur();
             boolean live = player.frame(f) && player.playing();
             int n = AudioBands.BARS;
@@ -994,7 +1004,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                 float py = hh * (1 - peak[i]);
                 c.drawRect(x, py - dp(2), x + bw, py, p);
             }
-            if (isShown()) postInvalidateOnAnimation();
+            if (isShown()) postInvalidateDelayed(1000L / FractalView.HOME_FPS);
         }
     }
 
@@ -1028,6 +1038,11 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         protected void onDraw(Canvas c) {
             Theme t = Theme.cur();
             long now = SystemClock.elapsedRealtime();
+            long period = 1000L / FractalView.HOME_FPS;
+            if (last != 0 && now - last < period) {
+                if (isShown()) postInvalidateDelayed(period - (now - last));
+                return;
+            }
             float dt = last == 0 ? 0.016f : Math.min(0.1f, (now - last) / 1000f);
             last = now;
             player.frame(f);
@@ -1046,7 +1061,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                 p.setColor(blend(t.accent, t.cyan, 0.5f + 0.5f * (float) Math.sin(lx / getWidth() * 3.1f + sec)));
                 c.drawText(String.valueOf(text.charAt(i)), lx, y, p);
             }
-            if (isShown()) postInvalidateOnAnimation();
+            if (isShown()) postInvalidateDelayed(1000L / FractalView.HOME_FPS);
         }
     }
 }

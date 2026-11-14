@@ -57,6 +57,10 @@ public class FractalViewQualityTest {
         assertTrue(FractalView.shouldDisableAtFloor(3, 2));
         assertEquals(24, FractalView.HOME_FPS);
         assertEquals(30, FractalView.SAVER_FPS);
+        assertEquals(24, FractalView.sceneFps("Mali-T860", 0));
+        assertEquals(24, FractalView.sceneFps("Mali-G52", 2L * 1024 * 1024 * 1024));
+        assertEquals(30, FractalView.sceneFps("Mali-G52", 4L * 1024 * 1024 * 1024));
+        assertEquals(30, FractalView.sceneFps("Mali-G52", 0));
     }
 
     @Test

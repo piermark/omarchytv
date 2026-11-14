@@ -6,6 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
+
 /** The music analysis behind Radiomarchy's fractals: FFT, the three bands, beats, and media-time lookup. */
 public class AudioBandsTest {
     private static final int SR = 44100;
@@ -120,5 +123,32 @@ public class AudioBandsTest {
         assertTrue(a.bass > 0 && a.bass < 1);
         assertTrue(c.beats > a.beats);
         assertTrue(c.beatUs <= 3_000_000);
+    }
+
+    @Test
+    public void readersDoNotWaitForTheFft() throws Exception {
+        AudioBands b = new AudioBands();
+        b.flush(SR);
+        short[] pcm = music(2, 0.5, true, false);
+        AtomicBoolean done = new AtomicBoolean();
+        AtomicLong maxNs = new AtomicLong();
+        Thread reader = new Thread(() -> {
+            AudioBands.Frame f = new AudioBands.Frame();
+            while (!done.get()) {
+                long t0 = System.nanoTime();
+                b.at(Long.MAX_VALUE, f);
+                long dt = System.nanoTime() - t0;
+                if (dt > maxNs.get()) maxNs.set(dt);
+            }
+        }, "bands-reader");
+        reader.start();
+        b.pcm16(pcm, pcm.length / 2, 2);
+        done.set(true);
+        reader.join(2000);
+        assertTrue("at() blocked " + (maxNs.get() / 1_000_000L) + " ms while the FFT ran",
+                maxNs.get() < 20_000_000L);
+        AudioBands.Frame f = new AudioBands.Frame();
+        assertTrue(b.at(Long.MAX_VALUE, f));
+        assertTrue(f.bass > 0);
     }
 }

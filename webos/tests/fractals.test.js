@@ -62,6 +62,10 @@ test("present cost treats the fps cap as on time and swap delay as backpressure"
   assert.strictEqual(F.shouldDisableAtFloor(3, 2), true);
   assert.strictEqual(F.HOME_FPS, 24);
   assert.strictEqual(F.SAVER_FPS, 30);
+  assert.strictEqual(F.sceneFps("Mali-T860", 0), 24);
+  assert.strictEqual(F.sceneFps("Mali-G52", 2), 24);
+  assert.strictEqual(F.sceneFps("Mali-G52", 4), 30);
+  assert.strictEqual(F.sceneFps("Mali-G52", 0), 30);
 });
 
 test("startup stall is ignored during the grace period", () => {

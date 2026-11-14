@@ -11,6 +11,8 @@ package com.omarchytv.home;
  */
 final class AudioBands {
     static final int N = 1024, HOP = 512, BARS = 16, RING = 512;
+    /** Readers (UI / GL) only wait for this short publish, never for the FFT itself. */
+    private final Object pub = new Object();
 
     /** One analysed slice of the music, as the picture reads it. */
     static final class Frame {
@@ -73,18 +75,20 @@ final class AudioBands {
     }
 
     /** The audio sink restarted (a new track, a seek): forget the window, keep the levels. */
-    synchronized void flush(int sr) {
+    void flush(int sr) {
         if (sr != sampleRate) setRate(sr);
         fill = 0;
         samples = 0;
-        head = -1;
-        written = 0;
         java.util.Arrays.fill(prevLow, 0);
-        lastBeatUs = Long.MIN_VALUE / 4;
+        synchronized (pub) {
+            head = -1;
+            written = 0;
+            lastBeatUs = Long.MIN_VALUE / 4;
+        }
     }
 
     /** Interleaved 16-bit PCM. */
-    synchronized void pcm16(short[] data, int frames, int channels) {
+    void pcm16(short[] data, int frames, int channels) {
         channels = Math.max(1, channels);
         for (int f = 0; f < frames; f++) {
             float m = 0;
@@ -94,7 +98,7 @@ final class AudioBands {
     }
 
     /** Interleaved float PCM (-1..1). */
-    synchronized void pcmFloat(float[] data, int frames, int channels) {
+    void pcmFloat(float[] data, int frames, int channels) {
         channels = Math.max(1, channels);
         for (int f = 0; f < frames; f++) {
             float m = 0;
@@ -170,8 +174,10 @@ final class AudioBands {
             eBars[b] = env(eBars[b], v, dt);
             fr.bars[b] = eBars[b];
         }
-        head = h;
-        written++;
+        synchronized (pub) {
+            head = h;
+            written++;
+        }
     }
 
     /** Auto-levelled 0..1: against a peak that falls slowly (8 s), with a square root so the quiet parts show. */
@@ -197,10 +203,8 @@ final class AudioBands {
      * False when nothing has been analysed since the last flush.
      */
     boolean at(long nowUs, Frame out) {
-        int h = head;
-        if (h < 0) return false;
-        synchronized (this) {
-            h = head;
+        synchronized (pub) {
+            int h = head;
             if (h < 0) return false;
             Frame best = ring[h];
             int n = Math.min(written, RING);

@@ -100,7 +100,20 @@ final class FractalView extends GLSurfaceView {
     void prepareHome() {
         homeWallpaper = true;
         r.fpsCap = HOME_FPS;
-        r.level = firstLevel("", false, ramBytes);
+        r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes);
+        r.applyLowPolicy();
+        applyBuffer();
+    }
+
+    /**
+     * Full-screen Radiomarchy (the music app and its screensaver): the same 1080p cap, 720p floor
+     * and present-cost watchdog as Home. Mali-T8xx and <= 2 GB start at medium/720p; tight devices
+     * also start at 24 fps and only climb to 30 when there is headroom.
+     */
+    void prepareScene() {
+        homeWallpaper = false;
+        r.fpsCap = sceneFps("", ramBytes);
+        r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes);
         r.applyLowPolicy();
         applyBuffer();
     }
@@ -208,6 +221,16 @@ final class FractalView extends GLSurfaceView {
      * Where to start: half-float and very old GPUs at low; Mali-T8xx/T7xx, similar modest GPUs and
      * devices with at most 2 GB of RAM at medium (720p); the rest at high (1080p cap).
      */
+    /** Full-screen Radiomarchy / screensaver fps: 24 on Mali-T8xx or <= 2 GB, otherwise 30. */
+    static int sceneFps(String gpu, long ramBytes) {
+        if (ramBytes > 0 && ramBytes <= TWO_GB) return HOME_FPS;
+        String g = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
+        if (g.contains("mali-t8") || g.contains("mali-t7") || g.contains("mali-g31")
+                || g.contains("mali-g51") || g.contains("adreno (tm) 3") || g.contains("powervr ge8"))
+            return HOME_FPS;
+        return SAVER_FPS;
+    }
+
     static int firstLevel(String gpu, boolean lowp, long ramBytes) {
         String g = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
         if (lowp || g.contains("mali-4") || g.contains("mali-3") || g.contains("videocore iv")) return 3;
@@ -566,6 +589,7 @@ final class FractalView extends GLSurfaceView {
     private final class R3 implements Renderer {
         final Random rnd = new Random();
         boolean lowp;
+        String gpu = "";
         int prog, aPos, uRes, uTime, uBass, uMid, uHigh, uLevel, uPulse, uScene, uScene2, uMix, uPal, uCycle, uZoom, uCenter, uIter,
                 uRot, uDim, uAA, uP;
         FloatBuffer quad;
@@ -593,8 +617,9 @@ final class FractalView extends GLSurfaceView {
             int[] range = new int[2], precision = new int[1];
             GLES20.glGetShaderPrecisionFormat(GLES20.GL_FRAGMENT_SHADER, GLES20.GL_HIGH_FLOAT, range, 0, precision, 0);
             lowp = precision[0] < 16;
-            String gpu = String.valueOf(GLES20.glGetString(GLES20.GL_RENDERER));
+            gpu = String.valueOf(GLES20.glGetString(GLES20.GL_RENDERER));
             level = pinnedQuality >= 0 ? pinnedQuality : firstLevel(gpu, lowp, ramBytes);
+            fpsCap = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
             applyLowPolicy();
             if (lowp && cur < 2) cur = 2;
             prog = link(VERT, (lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n") + FRAG);
@@ -872,7 +897,7 @@ final class FractalView extends GLSurfaceView {
                 slowWindows = 0;
                 if (goodSince == 0) goodSince = now;
                 if (now - goodSince > 20000) {
-                    int want = homeWallpaper ? HOME_FPS : SAVER_FPS;
+                    int want = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
                     if (fpsCap < want || freezePalette || iterMul < 0.99f) {
                         freezePalette = false;
                         iterMul = 1f;
@@ -888,7 +913,7 @@ final class FractalView extends GLSurfaceView {
 
         private void applyLowPolicy() {
             capFps = true;
-            int base = homeWallpaper ? HOME_FPS : SAVER_FPS;
+            int base = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
             if (level >= 3) {
                 freezePalette = true;
                 if (fpsCap > 20) fpsCap = 20;

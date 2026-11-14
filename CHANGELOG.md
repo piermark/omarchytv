@@ -49,7 +49,9 @@ Built on the published 2.15.1: everything fixed there is in here.
   (a cold start on a Sony Mali-T860 is about 600 ms and is normal). After that, one stall drops a quality level
   or reduces iterations; only repeated stalls (three in about 20 s) already at the 720p floor with reduced
   iterations, or a floor that still overruns the budget, turn the wallpaper off for the session. The normal
-  theme background stays — never a black screen, never an ANR.
+  theme background stays — never a black screen, never an ANR. The full-screen Radiomarchy view (the music app
+  and its screensaver) uses the same FractalView path: 1080p cap, Mali-T8xx and 2 GB TVs start at medium/720p
+  and 24 fps, present-cost watchdog, and the audio analysis never blocks the UI thread.
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.

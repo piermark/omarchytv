@@ -125,3 +125,11 @@ test("media keys still resume on Home after another app took the sound (LG/Samsu
     "PLAY resumes, it does not toggle a silent-but-playing element off");
   assert.ok(/navigator.mediaSession/.test(app), "HTML Media Session so the TV keeps sending media keys");
 });
+
+test("full-screen Radiomarchy uses the same 1080p/720p fractal budget as Home", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
+  assert.match(src, /ramGb:/);
+  assert.match(src, /1000 \/ 24/);
+});

@@ -81,6 +81,13 @@
   var STALL_DEGRADE = 1, STALL_KILL = 2;
 
   /** Where to start for this GPU (then it measures itself). ramGb <= 2 or Mali-T8xx starts at medium/720p. */
+  function sceneFps(gpu, ramGb) {
+    if (ramGb > 0 && ramGb <= 2) return HOME_FPS;
+    var g = String(gpu || "").toLowerCase();
+    if (/mali-t8|mali-t7|mali-g31|mali-g51|adreno \(tm\) 3|powervr ge8/.test(g)) return HOME_FPS;
+    return SAVER_FPS;
+  }
+
   function firstLevel(gpu, lowp, ramGb) {
     var g = String(gpu || "").toLowerCase();
     if (lowp || /mali-[34]|videocore iv/.test(g)) return 3;
@@ -230,7 +237,7 @@
     var params = new Float32Array(SCENES.length * 4), pal = new Float32Array(12), palFrom = new Float32Array(12), palTo = new Float32Array(12), palStart = 0, newPal = true;
     var f = { bass: 0, mid: 0, high: 0, level: 0, beatAgeMs: 1e9, beats: 0 };
     var frames = 0, frameMs = 0, lastT = 0, goodSince = 0, late = 0, lastDraw = 0, lastPalEmit = 0, lastFpsLog = 0;
-    var capFps = true, freezePalette = false, iterMul = 1, fpsCap = home ? HOME_FPS : SAVER_FPS;
+    var capFps = true, freezePalette = false, iterMul = 1, fpsCap = home ? HOME_FPS : sceneFps(gpu, ramGb);
     var lateInWindow = 0, slowWindows = 0, sessionOff = false;
     var graceStart = 0, presented = 0, lastRaf = 0, stallTimes = [];
     for (i = 0; i < 12; i++) { pal[i] = 0; palFrom[i] = 0; }
@@ -292,7 +299,7 @@
     }
     function applyLowPolicy() {
       capFps = true;
-      var base = home ? HOME_FPS : SAVER_FPS;
+      var base = home ? HOME_FPS : sceneFps(gpu, ramGb);
       if (level >= 3) { freezePalette = true; if (fpsCap > 20) fpsCap = 20; }
       else if (pinned >= 0) { freezePalette = false; iterMul = 1; fpsCap = base; }
       else if (fpsCap < 20) { /* kept by the watchdog after the 720p floor */ }
@@ -380,7 +387,7 @@
         slowWindows = 0;
         if (!goodSince) goodSince = now;
         if (now - goodSince > 20000) {
-          var want = home ? HOME_FPS : SAVER_FPS;
+          var want = home ? HOME_FPS : sceneFps(gpu, ramGb);
           if (fpsCap < want || freezePalette || iterMul < 0.99) { freezePalette = false; iterMul = 1; }
           else if (level > 0) level--;
           goodSince = now; applyLowPolicy(); resize();
@@ -467,6 +474,7 @@
     SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG,
     create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel,
     scaleFor: scaleFor, bufferHeight: bufferHeight, bufferSize: bufferSize, isBackpressured: isBackpressured,
+    sceneFps: sceneFps,
     shouldDisableAtFloor: shouldDisableAtFloor, inGracePeriod: inGracePeriod, isUiStall: isUiStall,
     stallAction: stallAction, countStallsInWindow: countStallsInWindow,
     GRACE_FRAMES: GRACE_FRAMES, GRACE_MS: GRACE_MS, STALL_MS: STALL_MS, STALL_WINDOW_MS: STALL_WINDOW_MS,
