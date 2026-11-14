@@ -82,3 +82,26 @@ test("every language Radiomarchy speaks has every string", () => {
   const keys = Object.keys(R.T.en);
   for (const l of Object.keys(R.T)) for (const k of keys) assert.ok(R.T[l][k], l + " " + k);
 });
+
+test("now-playing label never covers the clock", () => {
+  const APP = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
+  const HTML = fs.readFileSync(path.join(__dirname, "../app/index.html"), "utf8");
+  assert.ok(/function radioBarMaxWidth\(barW, clockW, rightRestW, gap, minW\)/.test(APP), "the same width rule as Android");
+  assert.ok(/layoutRadioBar\(\)/.test(APP) && /tickRadioBar/.test(APP), "the label is fitted whenever it is drawn");
+  const src = APP.match(/function radioBarMaxWidth\(barW, clockW, rightRestW, gap, minW\) \{[\s\S]*?\n  \}/);
+  assert.ok(src, "radioBarMaxWidth can be read from app.js");
+  const fn = new Function("return " + src[0])();
+  const GAP = 16, MIN = 80, c = 260;
+  assert.strictEqual(fn(1920, c, 420, GAP, MIN), 394);
+  assert.strictEqual(fn(1920, c, 580, GAP, MIN), 234);
+  assert.strictEqual(fn(1920, c, 670, GAP, MIN), 144);
+  const m720 = fn(1280, 173, 387, 11, 53);
+  assert.ok(m720 >= 53, "room at 720p with SpaceX");
+  const m768 = fn(1366, 185, 412, 11, 57);
+  assert.ok(m768 >= 57, "room at 1366×768 with SpaceX");
+  assert.strictEqual(fn(1920, c, 900, GAP, MIN), 0, "hides when the racing countdown and SpaceX leave no gap");
+  const css = HTML.match(/#bar-radio\s*\{[^}]*\}/);
+  assert.ok(css && /text-overflow:\s*ellipsis/.test(css[0]) && !/max-width:\s*420px/.test(css[0]),
+    "ellipsis stays, the old 420 px cap is gone");
+  assert.ok(/id="bar-radio"/.test(HTML) && /id="bar-clock"/.test(HTML), "the label and the clock are both in the bar");
+});

@@ -2657,13 +2657,37 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
   }, true);
   /** The top bar: "♫ Still Licensed — Michel Krapf" while the radio plays ("❚❚" paused); gone when it stops. */
+  // Same rule as Android HomeV29.radioBarMaxWidth: the label sits to the right of the centred clock
+  // and to the left of SpaceX, the racing countdown and the icons; it hides if the gap is under 80 px.
+  function radioBarMaxWidth(barW, clockW, rightRestW, gap, minW) {
+    var avail = (barW - rightRestW) - Math.floor((barW + clockW) / 2) - gap;
+    return avail < minW ? 0 : avail;
+  }
+  function layoutRadioBar() {
+    var el = document.getElementById("bar-radio"), bar = document.getElementById("waybar");
+    var clock = document.getElementById("bar-clock"), right = document.getElementById("bar-right");
+    if (!el || !bar || !clock || !right || el.style.display === "none") return 0;
+    var rest = parseFloat((window.getComputedStyle(bar).paddingRight) || 0) || 0, i, c, cs;
+    for (i = 0; i < right.children.length; i++) {
+      c = right.children[i];
+      cs = window.getComputedStyle(c);
+      if (c === el) { rest += (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0); continue; }
+      if (cs.display === "none") continue;
+      rest += c.offsetWidth + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);
+    }
+    var max = radioBarMaxWidth(bar.offsetWidth, clock.offsetWidth, rest, 16, 80);
+    if (!max) { el.style.display = "none"; return 0; }
+    el.style.maxWidth = max + "px";
+    return max;
+  }
   function tickRadioBar() {
     var el = document.getElementById("bar-radio"), t = radioEng && radioEng.current();
     if (!el) return;
-    if (!t) { el.style.display = "none"; return; }
-    el.style.display = "inline-block";
+    if (!t) { el.style.display = "none"; el.style.maxWidth = ""; return; }
     el.innerHTML = '<span style="color:var(--t-accent2)">' + (radioEng.playing() ? "♫ " : "❚❚ ") + '</span><span style="color:var(--t-fg-bright)">' + escHtml(t.title) +
       '</span>' + (t.artist ? '<span style="color:var(--t-fg)"> — ' + escHtml(t.artist) + "</span>" : "");
+    el.style.display = "inline-block";
+    layoutRadioBar();
   }
   if (radioEng) {
     radioEng.on(tickRadioBar);
@@ -2871,16 +2895,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function tickRaceBar() {
     var bar = document.getElementById("bar-race"), R = window.OmarchyRacing;
     if (!bar) return;
-    if (!cfg.racingBar || !R) { bar.style.display = "none"; return; }
+    if (!cfg.racingBar || !R) { bar.style.display = "none"; layoutRadioBar(); return; }
     var now = Date.now(), n = racingNext;
     if (n && now >= n.session.endOrDefault()) n = racingNext = R.soonest(racingAll(now), now);
-    if (!n) { bar.style.display = "none"; return; }
+    if (!n) { bar.style.display = "none"; layoutRadioBar(); return; }
     var live = n.session.live(now);
     bar.style.display = "inline-block";
     bar.innerHTML = '<span style="color:var(--t-accent)">' + escHtml(R.label(n.series)) +
       ' </span><span style="color:var(--t-fg)">' + escHtml(String(n.session.code).toLowerCase() + " · " + R.shortName(n.meeting)) +
       '  </span><span style="color:' + (live ? "var(--t-green)" : "var(--t-fg-bright)") + '">' +
       (live ? "● live" : R.clock(n.session.start - now)) + "</span>";
+    layoutRadioBar();
   }
 
   // ---- v2.15 Pulse screensaver: Pulse's own page (1.8 since 2.15.1) (vendor/pulse), the TV's hub inside it, the PC's state on top ----
@@ -3232,6 +3257,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       pill.style.display = cfg.pluginSpacexTv ? "inline-flex" : "none";
       pill.textContent = "🚀 SpaceX TV · launches";
     }
+    layoutRadioBar();
     var gb = document.getElementById("grokbot-companion");
     if (gb) {
       gb.style.display = (cfg.pluginGrokbot && !cfg.companionHidden && state.ws === 0) ? "block" : "none";

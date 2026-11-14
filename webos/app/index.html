@@ -388,11 +388,13 @@ html, body {
   font-size: calc(15px * var(--ts, 1));
   font-weight: 700;
   white-space: nowrap;
-  max-width: 420px;
   overflow: hidden;
   text-overflow: ellipsis;
   vertical-align: middle;
   cursor: pointer;
+  flex-shrink: 1;
+  min-width: 0;
+  /* max-width is set in layoutRadioBar so the title never covers the clock */
 }
 #bar-race {
   display: none;

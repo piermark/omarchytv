@@ -44,6 +44,7 @@ Built on the published 2.15.1: everything fixed there is in here.
 ### Home
 
 - **Motorsport widget is wider**, so Grand Prix names and session times stay in full ("Las Vegas  sun 22 nov 05:00") instead of "Las…".
+- **Now playing no longer covers the clock**: the song in the top bar sits to the right of the date, shrinks with an ellipsis to the space left by the icons (and SpaceX, or the racing countdown), and hides if there is no room.
 
 ### Pull requests
 

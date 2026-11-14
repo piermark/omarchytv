@@ -206,7 +206,6 @@ final class HomeV29 extends FrameLayout {
         barRadio.setGravity(Gravity.CENTER_VERTICAL);
         barRadio.setSingleLine(true);
         barRadio.setEllipsize(TextUtils.TruncateAt.END);
-        barRadio.setMaxWidth(px(420));
         barRadio.setPadding(px(12), 0, px(12), 0);
         barRadio.setBackground(new Underline());
         barRadio.setVisibility(GONE);
@@ -862,6 +861,12 @@ final class HomeV29 extends FrameLayout {
         super.onDetachedFromWindow();
     }
 
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        if (barRadio.getText().length() != 0) layoutRadioBar();
+    }
+
     private static String raceZoneLabel(java.util.TimeZone tz) {
         return Racing.zoneLabel(tz);
     }
@@ -982,6 +987,7 @@ final class HomeV29 extends FrameLayout {
         RadioCatalog.Track tr = rp != null ? rp.current() : null;
         if (tr == null) {
             if (barRadio.getVisibility() != GONE) barRadio.setVisibility(GONE);
+            if (barRadio.getText().length() != 0) barRadio.setText("");
             return;
         }
         SpannableStringBuilder b = new SpannableStringBuilder();
@@ -989,7 +995,49 @@ final class HomeV29 extends FrameLayout {
         span(b, tr.title, t.fgBright);
         if (!tr.artist.isEmpty()) span(b, " — " + tr.artist, t.fg);
         if (!b.toString().equals(barRadio.getText().toString())) barRadio.setText(b);
+        layoutRadioBar();
+    }
+
+    /**
+     * The now-playing label sits to the right of the centred clock and to the left of SpaceX,
+     * weather and the icons. Its max width is the gap that is left; if that is below RADIO_BAR_MIN
+     * the label is hidden rather than drawn over the date.
+     */
+    private void layoutRadioBar() {
+        if (barRadio.getText().length() == 0) return;
+        int clockW = clock.getWidth() != 0 ? clock.getWidth() : measureUnspecified(clock);
+        if (bar.getWidth() == 0 || clockW == 0) {
+            if (isAttachedToWindow()) post(this::layoutRadioBar);
+            return;
+        }
+        ViewGroup right = (ViewGroup) barRadio.getParent();
+        int rest = right.getPaddingLeft() + right.getPaddingRight();
+        LinearLayout.LayoutParams rp = (LinearLayout.LayoutParams) barRadio.getLayoutParams();
+        rest += rp.leftMargin + rp.rightMargin;
+        for (int i = 0; i < right.getChildCount(); i++) {
+            View c = right.getChildAt(i);
+            if (c == barRadio || c.getVisibility() == GONE) continue;
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) c.getLayoutParams();
+            int w = c.getWidth() != 0 ? c.getWidth() : measureUnspecified(c);
+            rest += w + lp.leftMargin + lp.rightMargin;
+        }
+        int max = radioBarMaxWidth(bar.getWidth(), clockW, rest, px(RADIO_BAR_GAP), px(RADIO_BAR_MIN));
+        if (max == 0) {
+            if (barRadio.hasFocus()) {
+                View next = barSpacex.getVisibility() == VISIBLE ? barSpacex : (!barIcons.isEmpty() ? barIcons.get(0) : null);
+                if (next != null) next.requestFocus();
+            }
+            if (barRadio.getVisibility() != GONE) barRadio.setVisibility(GONE);
+            return;
+        }
+        if (barRadio.getMaxWidth() != max) barRadio.setMaxWidth(max);
         if (barRadio.getVisibility() != VISIBLE) barRadio.setVisibility(VISIBLE);
+    }
+
+    private static int measureUnspecified(View v) {
+        v.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        return v.getMeasuredWidth();
     }
 
     /** Bar: "F1 fp3 · São Paulo  02:14:09", or "● live" while it runs. Every second, from raceTick. */
@@ -2036,6 +2084,20 @@ final class HomeV29 extends FrameLayout {
     /** 16:9 tile width that fits cols tiles and cols - 1 gaps in inner px. */
     static int tileW(int inner, int gap, int cols) {
         return (inner - gap * (cols - 1)) / cols;
+    }
+
+    /** Design-px gap left between the centred clock and the now-playing label; below RADIO_BAR_MIN the label hides. */
+    static final int RADIO_BAR_GAP = 16, RADIO_BAR_MIN = 80;
+
+    /**
+     * Max width for the now-playing label to the right of the centred clock and to the left of
+     * the remaining right-hand bar (SpaceX, weather, icons; on LG/Samsung also the racing countdown).
+     * {@code rightRestW} is that cluster plus the bar's right padding and the label's own side margins.
+     * Returns 0 when the space is below {@code minW}, so the label should be hidden.
+     */
+    static int radioBarMaxWidth(int barW, int clockW, int rightRestW, int gap, int minW) {
+        int avail = (barW - rightRestW) - (barW + clockW) / 2 - gap;
+        return avail < minW ? 0 : avail;
     }
 
     // Home is designed at 1920×1080. The term box is 32+640; a 16 px gutter stays between it and the widgets.
