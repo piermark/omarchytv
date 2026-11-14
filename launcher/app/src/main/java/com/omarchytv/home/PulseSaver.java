@@ -196,8 +196,12 @@ final class PulseSaver {
     // ---- the TV's own numbers, for Pulse's system and network panels ----
     private static long lastRx = -1, lastTx = -1, lastAt;
     private static long[] lastCpu;
+    private static String tvStatsCached;
+    private static long tvStatsAt;
 
     static synchronized String tvStats(Context c) {
+        long nowMs = SystemClock.elapsedRealtime();
+        if (tvStatsCached != null && nowMs - tvStatsAt < 2000) return tvStatsCached;
         try {
             JSONObject o = new JSONObject();
             ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
@@ -229,7 +233,9 @@ final class PulseSaver {
                 lastAt = now;
             }
             o.put("uptime", SystemClock.elapsedRealtime() / 1000.0).put("host", Build.MODEL).put("user", "tv").put("ip", ip(c));
-            return o.toString();
+            tvStatsCached = o.toString();
+            tvStatsAt = nowMs;
+            return tvStatsCached;
         } catch (Exception e) {
             return "null";
         }
