@@ -1,26 +1,41 @@
 package com.omarchytv.home;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
+import android.animation.PropertyValuesHolder;
 import android.app.Activity;
-import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.LinearInterpolator;
+import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 /**
- * v2.20 Home wallpaper (default): the same music-reactive Radiomarchy fractals as the screensaver, drawn with
- * the native {@link FractalView} (OpenGL ES, never a WebView — a WebView renderer crash took the launcher down
- * on a Sony Android 9 Mali-T860). The default animated background in 2.20; OmaFire stays selectable, and a
- * wallpaper the owner already picked is left alone. Picture quality follows Radiomarchy's setting (auto by
- * default). Added only while Home is on screen (paused on {@link #onPause}); if the GPU cannot create a
- * surface the still wallpaper underneath stays.
+ * v2.20 default Home wallpaper: a slideshow of still Radiomarchy fractals (bundled JPEGs), shown in a
+ * hardware-accelerated {@link ImageView} with a slow crossfade and a very gentle Ken Burns pan. No
+ * {@link android.opengl.GLSurfaceView} on Home — live GL fractals stay on the Radiomarchy full-screen
+ * view and the screensaver. Music keeps playing underneath. Theme accents follow the current still.
+ * OmaFire and a wallpaper the owner already picked stay selectable.
  */
 final class FractalLayer {
     static final String ID = "radiomarchy:fractals";
-    /** Failures in a row: after this many the layer stays off until the launcher restarts, never a crash loop. */
-    private static final int MAX_FAILS = 2;
-    private static FractalView view;
-    private static int fails;
-    /** Safety net: repeated UI stalls at the 720p floor, or the floor still too slow. Off until the launcher restarts. */
-    private static boolean sessionOff;
+
+    private static final Handler H = new Handler(Looper.getMainLooper());
+    private static FrameLayout box;
+    private static ImageView slotA, slotB;
+    private static boolean frontIsA = true;
+    private static int index;
+    private static Activity host;
+    private static ObjectAnimator ken;
+    private static boolean running;
+    private static Bitmap heldA, heldB;
 
     private FractalLayer() {
     }
@@ -29,7 +44,7 @@ final class FractalLayer {
         return ID.equals(wallpaper);
     }
 
-    /** From onResume: show it when the wallpaper is the Radiomarchy fractals (wall = the still WallpaperView). */
+    /** From onResume: show the slideshow when the wallpaper is the Radiomarchy fractals. */
     static void onResume(Activity a, View wall) {
         if (!is(LauncherConfig.get(a).wallpaper) || wall == null || !(wall.getParent() instanceof ViewGroup)) {
             onPause();
@@ -37,107 +52,199 @@ final class FractalLayer {
             if (a instanceof MainActivity) ((MainActivity) a).clearFractalAccent();
             return;
         }
-        if (sessionOff || fails >= MAX_FAILS) {
-            drop();
-            return;
-        }
-        if (view != null) {
-            try {
-                view.onResume();
-            } catch (Throwable e) {
-                fail(view);
-            }
-            RadioPlayer.get(a).ensureWallpaperMusic();
-            return;
-        }
-        FractalView v;
-        try {
-            v = new FractalView(a);
-            v.setFocusable(false);
-            v.setClickable(false);
-            v.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
-            int q = a.getSharedPreferences("radiomarchy", Context.MODE_PRIVATE).getInt("quality", 0);
-            v.setQuality(q);
-            v.prepareHome();
-            v.setOnFail(() -> fail(v));
-            v.setOnSafety(why -> disableForSession(a, v, why));
-            v.setOnPalette((pal, frozen) -> {
-                if (!(a instanceof MainActivity) || pal == null || pal.length < 12) return;
-                int bg = Theme.cur() != null ? Theme.cur().bg : 0xFF111111;
-                int acc = FractalView.ensureContrast(FractalView.rgb(pal[0], pal[1], pal[2]), bg);
-                int acc2 = FractalView.ensureContrast(FractalView.rgb(pal[6], pal[7], pal[8]), bg);
-                ((MainActivity) a).applyFractalAccent(acc, acc2);
-            });
-        } catch (Throwable e) {
-            fails++;
-            android.util.Log.w("OmarchyTV", "fractals wallpaper: no GL (" + fails + "/" + MAX_FAILS + "), still wallpaper stays");
+        host = a;
+        RadioPlayer.get(a).ensureWallpaperMusic();
+        if (box != null) {
+            applyDim();
+            applyAccent(index);
+            start();
             return;
         }
         ViewGroup parent = (ViewGroup) wall.getParent();
-        parent.addView(v, parent.indexOfChild(wall) + 1, new ViewGroup.LayoutParams(wall.getLayoutParams()));
-        view = v;
-        RadioPlayer.get(a).ensureWallpaperMusic();
+        FrameLayout layer = new FrameLayout(a);
+        layer.setFocusable(false);
+        layer.setClickable(false);
+        layer.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        layer.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        ImageView ia = makeSlot(a);
+        ImageView ib = makeSlot(a);
+        layer.addView(ia, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        layer.addView(ib, new FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        parent.addView(layer, parent.indexOfChild(wall) + 1, new ViewGroup.LayoutParams(wall.getLayoutParams()));
+        box = layer;
+        slotA = ia;
+        slotB = ib;
+        frontIsA = true;
+        index = 0;
+        Bitmap first = FractalSlides.decode(a, 0);
+        if (first == null) {
+            drop();
+            return;
+        }
+        heldA = first;
+        slotA.setImageBitmap(first);
+        slotA.setAlpha(1f);
+        slotB.setAlpha(0f);
+        applyDim();
+        applyAccent(0);
+        start();
     }
 
-    /** From onPause: stop drawing; the view stays so a return to Home is cheap. From onDestroy: {@link #drop}. */
+    private static ImageView makeSlot(Activity a) {
+        ImageView v = new ImageView(a);
+        v.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        v.setFocusable(false);
+        v.setClickable(false);
+        v.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
+        v.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        return v;
+    }
+
+    /** From onPause: stop the timer and the pan; the views stay so a return to Home is cheap. */
     static void onPause() {
-        FractalView v = view;
-        if (v == null) return;
-        try {
-            v.onPause();
-        } catch (Throwable ignored) {
-        }
+        running = false;
+        H.removeCallbacks(tick);
+        stopKen();
     }
 
     static void drop() {
-        FractalView v = view;
-        view = null;
-        if (v == null) return;
+        onPause();
+        FrameLayout layer = box;
+        box = null;
+        slotA = slotB = null;
+        host = null;
+        recycle(heldA);
+        recycle(heldB);
+        heldA = heldB = null;
+        if (layer == null) return;
         try {
-            v.onPause();
-        } catch (Throwable ignored) {
-        }
-        try {
-            if (v.getParent() instanceof ViewGroup) ((ViewGroup) v.getParent()).removeView(v);
+            if (layer.getParent() instanceof ViewGroup) ((ViewGroup) layer.getParent()).removeView(layer);
         } catch (Throwable ignored) {
         }
     }
 
-    /** Skip a couple of frames so a tile focus animation or a dialog is not fighting the wallpaper for the GPU. */
+    /** Home tiles no longer fight a GL thread; kept so callers need not change. */
     static void yieldForUi() {
-        FractalView v = view;
-        if (v != null) v.yieldForUi();
     }
 
-    private static void disableForSession(Activity a, FractalView v, String why) {
-        sessionOff = true;
-        if (view == v) view = null;
-        if (v != null) {
-            try {
-                v.onPause();
-            } catch (Throwable ignored) {
-            }
-            try {
-                if (v.getParent() instanceof ViewGroup) ((ViewGroup) v.getParent()).removeView(v);
-            } catch (Throwable ignored) {
-            }
+    private static final Runnable tick = new Runnable() {
+        @Override
+        public void run() {
+            if (!running || box == null || host == null) return;
+            showNext();
         }
-        if (a instanceof MainActivity) ((MainActivity) a).clearFractalAccent();
+    };
+
+    private static void start() {
+        if (running) return;
+        running = true;
+        startKen(front());
+        H.removeCallbacks(tick);
+        H.postDelayed(tick, FractalSlides.INTERVAL_MS);
     }
 
-    private static void fail(FractalView v) {
+    private static ImageView front() {
+        return frontIsA ? slotA : slotB;
+    }
+
+    private static ImageView back() {
+        return frontIsA ? slotB : slotA;
+    }
+
+    private static void showNext() {
+        Activity a = host;
+        ImageView incoming = back();
+        ImageView outgoing = front();
+        if (a == null || incoming == null || outgoing == null) return;
+        int next = (index + 1) % FractalSlides.count();
+        Bitmap bm = FractalSlides.decode(a, next);
+        if (bm == null) {
+            H.postDelayed(tick, FractalSlides.INTERVAL_MS);
+            return;
+        }
+        if (frontIsA) {
+            recycle(heldB);
+            heldB = bm;
+        } else {
+            recycle(heldA);
+            heldA = bm;
+        }
+        incoming.setImageBitmap(bm);
+        incoming.setAlpha(0f);
+        incoming.animate().cancel();
+        outgoing.animate().cancel();
+        startKen(incoming);
+        incoming.animate().alpha(1f).setDuration(FractalSlides.FADE_MS).setListener(null).start();
+        outgoing.animate().alpha(0f).setDuration(FractalSlides.FADE_MS).setListener(
+                new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        stopKen(outgoing);
+                        outgoing.setScaleX(1f);
+                        outgoing.setScaleY(1f);
+                        outgoing.setTranslationX(0f);
+                        outgoing.setTranslationY(0f);
+                    }
+                }).start();
+        frontIsA = !frontIsA;
+        index = next;
+        applyAccent(index);
+        H.removeCallbacks(tick);
+        H.postDelayed(tick, FractalSlides.INTERVAL_MS);
+    }
+
+    private static void startKen(ImageView v) {
+        stopKen();
         if (v == null) return;
-        fails++;
-        android.util.Log.w("OmarchyTV", "fractals wallpaper: GL failed (" + fails + "/" + MAX_FAILS
-                + "), still wallpaper stays" + (fails >= MAX_FAILS ? ", animation off until restart" : ""));
-        if (view == v) view = null;
-        try {
-            v.onPause();
-        } catch (Throwable ignored) {
+        // Alternate a very small pan so it never looks like a video, and stays cheap on the compositor.
+        float dir = (index % 2 == 0) ? 1f : -1f;
+        v.setScaleX(1f);
+        v.setScaleY(1f);
+        v.setTranslationX(0f);
+        v.setTranslationY(0f);
+        ken = ObjectAnimator.ofPropertyValuesHolder(v,
+                PropertyValuesHolder.ofFloat(View.SCALE_X, 1f, 1.05f),
+                PropertyValuesHolder.ofFloat(View.SCALE_Y, 1f, 1.05f),
+                PropertyValuesHolder.ofFloat(View.TRANSLATION_X, 0f, dir * 18f),
+                PropertyValuesHolder.ofFloat(View.TRANSLATION_Y, 0f, -dir * 10f));
+        ken.setDuration(FractalSlides.INTERVAL_MS + FractalSlides.FADE_MS);
+        ken.setInterpolator(new LinearInterpolator());
+        ken.start();
+    }
+
+    private static void stopKen() {
+        if (ken != null) {
+            ken.cancel();
+            ken = null;
         }
-        try {
-            if (v.getParent() instanceof ViewGroup) ((ViewGroup) v.getParent()).removeView(v);
-        } catch (Throwable ignored) {
-        }
+    }
+
+    private static void stopKen(ImageView v) {
+        if (ken != null && ken.getTarget() == v) stopKen();
+    }
+
+    private static void applyAccent(int i) {
+        Activity a = host;
+        if (!(a instanceof MainActivity)) return;
+        int bg = Theme.cur() != null ? Theme.cur().bg : 0xFF111111;
+        int[] acc = FractalSlides.accents(i, bg);
+        ((MainActivity) a).applyFractalAccent(acc[0], acc[1]);
+    }
+
+    private static void applyDim() {
+        Activity a = host;
+        if (a == null) return;
+        float dim = Surfaces.globalDim(Surfaces.dimLevel(LauncherConfig.get(a).wallpaperDim));
+        PorterDuffColorFilter f = dim > 0
+                ? new PorterDuffColorFilter(Color.argb(Math.round(dim * 255f), 0, 0, 0), PorterDuff.Mode.SRC_ATOP)
+                : null;
+        if (slotA != null) slotA.setColorFilter(f);
+        if (slotB != null) slotB.setColorFilter(f);
+    }
+
+    private static void recycle(Bitmap b) {
+        if (b != null && !b.isRecycled()) b.recycle();
     }
 }

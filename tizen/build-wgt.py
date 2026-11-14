@@ -31,6 +31,7 @@ cal = main / "assets/racing_2026.json"
 if cal.is_file():
     payload["racing_2026.json"] = cal.read_bytes()
 for prefix, source in [("fonts", main / "res/font"), ("wallpapers", main / "assets/wallpapers"),
+                       ("fractals", main / "assets/fractals"),
                        ("licenses", main / "assets/licenses"), ("saver", main / "assets/saver")]:
     for path in source.rglob("*"):
         if path.is_file() and (prefix != "fonts" or path.suffix == ".ttf"):

@@ -31,6 +31,8 @@ if [ -d "$ANDROID_MAIN" ]; then
   cp -f "$ANDROID_MAIN/res/font/caskaydia_mono_bold.ttf" "$APP/fonts/"
   cp -f "$ANDROID_MAIN/assets/omarchy_themes.json" "$APP/omarchy_themes.json"
   cp -rf "$ANDROID_MAIN/assets/wallpapers/"* "$APP/wallpapers/"
+  mkdir -p "$APP/fractals"
+  cp -rf "$ANDROID_MAIN/assets/fractals/"* "$APP/fractals/"
   cp -rf "$ANDROID_MAIN/assets/licenses/"* "$APP/licenses/"
   cp -f "$ANDROID_MAIN/assets/saver/tte-bundle.js" "$APP/saver/tte-bundle.js"
   cp -f "$ANDROID_MAIN/assets/saver/screensaver-tv.txt" "$APP/saver/screensaver-tv.txt"

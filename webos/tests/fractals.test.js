@@ -163,14 +163,14 @@ test("the palette uniform is a reused Float32Array, not allocated every frame", 
   assert.match(src, /uniform3fv\(\s*U\.uPal,\s*pal\)/);
 });
 
-test("Home fractals start at a 24 fps cap, pause when hidden, and can fall back for the session", () => {
+test("live Radiomarchy keeps the 24/30 fps cap; the Home wallpaper is a still slideshow", () => {
   const src = fs.readFileSync(path.join(__dirname, "../app/fractals.js"), "utf8");
   assert.match(src, /HOME_FPS = 24/);
   assert.match(src, /SAVER_FPS = 30/);
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
-  assert.ok(app.indexOf("home: true") > 0);
   assert.ok(app.indexOf("homeFxForSaver(true)") > 0);
   assert.ok(app.indexOf("!document.hidden") > 0);
-  assert.ok(app.indexOf("fractalSessionOff") > 0);
-  assert.ok(app.indexOf("onFail:") > 0);
+  assert.ok(app.indexOf("fractal-slides") > 0);
+  assert.ok(app.indexOf("ensureWallpaperMusic") > 0);
+  assert.ok(app.indexOf("home: true") < 0);
 });

@@ -2234,21 +2234,39 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     omafireMode = m[1];
   }
 
-  // v2.20 default Home wallpaper: the same music-reactive Radiomarchy fractals as the screensaver (WebGL).
-  // OmaFire stays selectable; an explicit saved wallpaper is left alone. Pauses when Home is not visible;
-  // if WebGL fails the still wallpaper underneath stays, and the theme accents are restored.
-  var fractalUi = null, fractalCanvas = null, fractalFails = 0, fractalSessionOff = false, fractalAccents = null;
-  function applyFractalAccent(pal, frozen) {
-    if (!pal || !window.OmarchyFractals || !window.OmarchyFractals.ensureContrast) return;
+  // v2.20 default Home wallpaper: a slideshow of still Radiomarchy fractals (<img> crossfade, no canvas).
+  // OmaFire stays selectable; an explicit saved wallpaper is left alone. Pauses when Home is not visible.
+  var fractalBox = null, fractalImgs = [null, null], fractalIdx = 0, fractalFront = 0, fractalTimer = 0, fractalAccents = null;
+  function fractalSlideCatalog() {
+    return (window.OmarchyFractalSlides && window.OmarchyFractalSlides.slides && window.OmarchyFractalSlides.slides.length)
+      ? window.OmarchyFractalSlides : { intervalMs: 12000, fadeMs: 1600, slides: [] };
+  }
+  function applyFractalAccentFromPal(pal) {
+    if (!pal || !pal.length) return;
+    var flat = pal;
+    if (pal[0] && pal[0].length) {
+      flat = [];
+      for (var i = 0; i < pal.length; i++) { flat.push(pal[i][0], pal[i][1], pal[i][2]); }
+    }
+    if (flat.length < 9) return;
     var th = currentThemeObj() || {}, bg = th.bg || "#111111";
-    var a = window.OmarchyFractals.ensureContrast(window.OmarchyFractals.rgbCss(pal[0], pal[1], pal[2]), bg);
-    var a2 = window.OmarchyFractals.ensureContrast(window.OmarchyFractals.rgbCss(pal[6], pal[7], pal[8]), bg);
+    var rgbCss = (window.OmarchyFractals && window.OmarchyFractals.rgbCss)
+      ? window.OmarchyFractals.rgbCss
+      : function (r, g, b) {
+        function h(v) { v = Math.max(0, Math.min(255, Math.round(v * 255))); return (v < 16 ? "0" : "") + v.toString(16); }
+        return "#" + h(r) + h(g) + h(b);
+      };
+    var contrast = (window.OmarchyFractals && window.OmarchyFractals.ensureContrast)
+      ? window.OmarchyFractals.ensureContrast
+      : function (c) { return c; };
+    var a = contrast(rgbCss(flat[0], flat[1], flat[2]), bg);
+    var a2 = contrast(rgbCss(flat[6], flat[7], flat[8]), bg);
     if (fractalAccents && fractalAccents[0] === a && fractalAccents[1] === a2) return;
     fractalAccents = [a, a2];
     try {
-      var r = document.documentElement.style;
-      r.setProperty("--t-accent", a);
-      r.setProperty("--t-accent2", a2);
+      var st = document.documentElement.style;
+      st.setProperty("--t-accent", a);
+      st.setProperty("--t-accent2", a2);
     } catch (e) {}
   }
   function clearFractalAccent() {
@@ -2257,71 +2275,98 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     try { applyTheme(); } catch (e) {}
   }
   function fractalOn() { return cfg.wallpaper === "radiomarchy:fractals"; }
-  function fractalQuality() {
-    var q = 0, pal = 0;
-    try {
-      var saved = window.localStorage && JSON.parse(window.localStorage.getItem("omarchytv.radio.v1") || "null");
-      if (saved) { if (saved.quality != null) q = saved.quality | 0; if (saved.palette != null) pal = saved.palette | 0; }
-    } catch (e) { /* defaults */ }
-    return { quality: q, palette: pal };
-  }
-  function fractalDestroy() {
-    if (fractalUi && fractalUi.destroy) try { fractalUi.destroy(); } catch (e) { /* already gone */ }
-    fractalUi = null;
-    if (fractalCanvas && fractalCanvas.parentNode) fractalCanvas.parentNode.removeChild(fractalCanvas);
-    fractalCanvas = null;
-  }
   function fractalVisible() {
     var ov = document.getElementById("saver-overlay");
     return fractalOn() && !document.hidden && !cineUi && !radioUi && !(ov && ov.className === "active");
   }
+  function fractalStopTimer() {
+    if (fractalTimer) { clearTimeout(fractalTimer); fractalTimer = 0; }
+  }
+  function fractalDestroy() {
+    fractalStopTimer();
+    if (fractalBox && fractalBox.parentNode) fractalBox.parentNode.removeChild(fractalBox);
+    fractalBox = null;
+    fractalImgs = [null, null];
+  }
   function fractalTick() {
-    if (!fractalUi) return;
-    try { if (fractalVisible()) fractalUi.start(); else fractalUi.stop(); } catch (e) { /* context lost */ }
+    if (!fractalBox) return;
+    var on = fractalVisible();
+    var st = on ? "running" : "paused";
+    if (fractalImgs[0]) fractalImgs[0].style.animationPlayState = st;
+    if (fractalImgs[1]) fractalImgs[1].style.animationPlayState = st;
+    if (on) { if (!fractalTimer) fractalSchedule(); }
+    else fractalStopTimer();
+  }
+  function fractalEnsureStyle() {
+    if (document.getElementById("fractal-slides-css")) return;
+    var css = document.createElement("style");
+    css.id = "fractal-slides-css";
+    css.textContent =
+      "#fractal-slides{position:absolute;top:0;left:0;width:1920px;height:1080px;overflow:hidden;pointer-events:none;z-index:0;}"
+      + "#fractal-slides img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border:0;opacity:0;"
+      + "transition:opacity 1.6s ease;will-change:opacity,transform;transform-origin:center center;}"
+      + "#fractal-slides img.on{opacity:1;}"
+      + "@keyframes fractal-kb{from{transform:scale(1) translate(0,0);}to{transform:scale(1.05) translate(0.7%,-0.5%);}}"
+      + "#fractal-slides img.kb{animation:fractal-kb 13.6s linear forwards;}";
+    document.head.appendChild(css);
+  }
+  function fractalShow(i, animate) {
+    var cat = fractalSlideCatalog(), slides = cat.slides;
+    if (!slides.length || !fractalImgs[0]) return;
+    var incoming = fractalImgs[1 - fractalFront], outgoing = fractalImgs[fractalFront];
+    var slide = slides[((i % slides.length) + slides.length) % slides.length];
+    incoming.src = slide.file;
+    incoming.className = animate ? "kb" : "on kb";
+    if (animate) {
+      incoming.offsetWidth;
+      incoming.className = "on kb";
+      if (outgoing) outgoing.className = "";
+    } else if (outgoing && outgoing !== incoming) {
+      outgoing.className = "";
+    }
+    fractalFront = 1 - fractalFront;
+    fractalIdx = ((i % slides.length) + slides.length) % slides.length;
+    applyFractalAccentFromPal(slide.pal);
+  }
+  function fractalSchedule() {
+    fractalStopTimer();
+    if (!fractalVisible()) return;
+    var ms = (window.OmarchyFractalSlides && window.OmarchyFractalSlides.intervalMs) || 12000;
+    fractalTimer = setTimeout(function () {
+      fractalTimer = 0;
+      fractalShow(fractalIdx + 1, true);
+      fractalSchedule();
+    }, ms);
   }
   function fractalWall(layer) {
-    if (!fractalOn() || !layer || !window.OmarchyFractals || fractalFails >= 2 || fractalSessionOff) {
+    if (!fractalOn() || !layer || !fractalSlideCatalog().slides.length) {
       fractalDestroy();
       clearFractalAccent();
       return;
     }
-    if (fractalUi) {
+    if (fractalBox) {
       fractalTick();
       if (fractalVisible() && radioEng && radioEng.ensureWallpaperMusic) radioEng.ensureWallpaperMusic();
       return;
     }
-    var cv = document.createElement("canvas");
-    cv.setAttribute("aria-hidden", "true");
-    cv.width = 1920;
-    cv.height = 1080;
-    cv.style.cssText = "position:absolute;top:0;left:0;width:1920px;height:1080px;pointer-events:none;z-index:0;";
-    var opt = fractalQuality(), th = currentThemeObj(), fx = null;
-    try {
-      fx = window.OmarchyFractals.create(cv, {
-        home: true,
-        ramGb: (navigator && navigator.deviceMemory) || 0,
-        bands: function (out) { return !!(radioEng && radioEng.bands && radioEng.bands(out)); },
-        palette: opt.palette,
-        quality: opt.quality,
-        theme: [th.accent || "#7aa2f7", th.accent2 || "#bb9af7", th.cyan || "#7dcfff", th.red || "#f7768e"],
-        onPalette: applyFractalAccent,
-        onFail: function (why) {
-          fractalSessionOff = true;
-          fractalDestroy();
-          clearFractalAccent();
-        }
-      });
-    } catch (e) { fx = null; }
-    if (!fx) {
-      fractalFails++;
-      return;   // still wallpaper already in the layer
-    }
+    fractalEnsureStyle();
+    var box = document.createElement("div");
+    box.id = "fractal-slides";
+    box.setAttribute("aria-hidden", "true");
+    var a = document.createElement("img"), b = document.createElement("img");
+    a.alt = b.alt = "";
+    a.draggable = b.draggable = false;
+    box.appendChild(a);
+    box.appendChild(b);
     layer.style.position = layer.style.position || "absolute";
-    layer.appendChild(cv);
-    fractalCanvas = cv;
-    fractalUi = fx;
+    layer.appendChild(box);
+    fractalBox = box;
+    fractalImgs = [a, b];
+    fractalFront = 0;
+    fractalIdx = 0;
+    fractalShow(0, false);
     if (fractalVisible()) {
-      fx.start();
+      fractalSchedule();
       if (radioEng && radioEng.ensureWallpaperMusic) radioEng.ensureWallpaperMusic();
     }
   }
