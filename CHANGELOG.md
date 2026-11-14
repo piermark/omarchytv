@@ -14,6 +14,8 @@ Built on the published 2.15.1: everything fixed there is in here.
 - **The start screen fits 720p and 1080p TVs**: a column of half the panel (at least 560dp). The title
   "GrokBot Office" stays on one line (it shrinks if it must), the ask field fills that column, and the
   mic stays visible. The office, the answer, the hire card and the usage card use the same rule.
+- **The usage card sits above the ask bar** on 720p and 1080p (mdpi, tvdpi and xhdpi), so it never
+  covers "Anything else?" or the answer. The same stack is used on LG and Samsung.
 - **Only real data**: the bots come from the PC (`omarchy-tv office push bots.json`) or from Grok Bot's own reply;
   no bots means an empty office with a hint, no numbers means no usage card.
 - **Ask and Hire** through Grok Bot diretto (the same webhook, key and reply server): the request carries an

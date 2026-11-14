@@ -184,7 +184,9 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         spendList.setOrientation(LinearLayout.VERTICAL);
         uc.addView(spendList);
         usageCard = uc;
-        root.addView(uc, at(Office.Chrome.usage(screenW, density), -2, Gravity.BOTTOM | Gravity.START, 36, 0, 0, 40));
+        FrameLayout.LayoutParams ulp = at(Office.Chrome.usage(screenW, density), -2, Gravity.BOTTOM | Gravity.START, Office.Chrome.USAGE_LEFT_DP, 0, 0, 0);
+        ulp.bottomMargin = Office.Chrome.usageBottom(density);
+        root.addView(uc, ulp);
 
         hint = text(getString(R.string.office_empty), 16, t.fgBright, false);
         hint.setGravity(Gravity.CENTER);
@@ -200,7 +202,9 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         reply.setVisibility(View.GONE);
         reply.setHorizontallyScrolling(false);
         reply.setEllipsize(TextUtils.TruncateAt.END);
-        root.addView(reply, at(Office.Chrome.reply(screenW, density), -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 104));
+        FrameLayout.LayoutParams rlp = at(Office.Chrome.reply(screenW, density), -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 0);
+        rlp.bottomMargin = Office.Chrome.replyBottom(screenW, density);
+        root.addView(reply, rlp);
 
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);

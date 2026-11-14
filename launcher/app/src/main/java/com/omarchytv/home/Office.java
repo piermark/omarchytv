@@ -540,6 +540,43 @@ public final class Office {
             return Math.max(1, Math.round(0.70f * screenPx));
         }
 
+        /** Ask bar bottom margin, in dp (OfficeActivity.at() takes dp). */
+        static final int BAR_BOTTOM_DP = 36;
+        /** Reserved ask-bar height (17sp field, padding, stroke), in dp. */
+        static final int BAR_HEIGHT_DP = 56;
+        static final int GAP_DP = 12;
+        static final int USAGE_LEFT_DP = 36;
+        /** Reserved usage-card height so the reply can sit above it when they share a column. */
+        static final int USAGE_RESERVE_DP = 100;
+
+        /** Bottom margin of the usage card, in px: always just above the ask bar. */
+        static int usageBottom(float density) {
+            return dp(BAR_BOTTOM_DP, density) + dp(BAR_HEIGHT_DP, density) + dp(GAP_DP, density);
+        }
+
+        /**
+         * Bottom margin of the reply, in px. Same as the usage card when they sit side by side;
+         * stacked above the reserved usage height when the card would collide with the column.
+         */
+        static int replyBottom(int screenPx, float density) {
+            int aboveBar = usageBottom(density);
+            return usageCollidesWithColumn(screenPx, density)
+                    ? aboveBar + dp(USAGE_RESERVE_DP, density) + dp(GAP_DP, density)
+                    : aboveBar;
+        }
+
+        /** dp form of {@link #usageBottom(float)}, for docs and density-1 checks. */
+        static int usageBottomDp() {
+            return BAR_BOTTOM_DP + BAR_HEIGHT_DP + GAP_DP;
+        }
+
+        /** True when the usage card's right edge (plus a gap) crosses the centered ask/reply column. */
+        static boolean usageCollidesWithColumn(int screenPx, float density) {
+            int usageRight = dp(USAGE_LEFT_DP, density) + usage(screenPx, density);
+            int colLeft = (screenPx - column(screenPx, density)) / 2;
+            return usageRight + dp(GAP_DP, density) > colLeft;
+        }
+
         private static int dp(int v, float density) {
             return Math.round(v * density);
         }

@@ -236,6 +236,52 @@ public class OfficeTest {
         assertTrue("title is one line on a 1080p mdpi Sony", textPx("GrokBot Office", 34, 1f) <= sony);
     }
 
+    @Test
+    public void usageCardSitsAboveTheAskBarAtEveryTvDensity() {
+        float tvdpi = 213f / 160f, xhdpi = 2f;
+        for (int screen : new int[] {1280, 1920}) {
+            int screenH = Math.round(screen * 9f / 16f);
+            for (float d : new float[] {tvdpi, xhdpi, 1f}) {
+                int barBottom = dp(Office.Chrome.BAR_BOTTOM_DP, d);
+                int barTop = barBottom + dp(Office.Chrome.BAR_HEIGHT_DP, d);
+                int gap = dp(Office.Chrome.GAP_DP, d);
+                int usageBottom = Office.Chrome.usageBottom(d);
+                int usageTop = usageBottom + dp(Office.Chrome.USAGE_RESERVE_DP, d);
+                int usageLeft = dp(Office.Chrome.USAGE_LEFT_DP, d);
+                int usageRight = usageLeft + Office.Chrome.usage(screen, d);
+                int col = Office.Chrome.column(screen, d);
+                int colLeft = (screen - col) / 2;
+                int colRight = colLeft + col;
+                int replyBottom = Office.Chrome.replyBottom(screen, d);
+                int replyTop = replyBottom + dp(100, d);   // 4 lines of 15sp + padding
+                String tag = screen + "x" + screenH + "@" + d;
+                assertTrue("usage is above the ask bar " + tag, usageBottom >= barTop + gap);
+                assertTrue("usage still on the 720p/1080p panel " + tag, usageTop < screenH);
+                assertTrue("reply is above the ask bar " + tag, replyBottom >= barTop + gap);
+                boolean hit = usageRight + gap > colLeft && usageLeft < colRight;
+                if (hit) {
+                    assertTrue("usage and the ask/reply column stack " + tag, replyBottom >= usageTop + gap);
+                } else {
+                    assertEquals("side by side, reply sits just above the bar " + tag,
+                            Office.Chrome.usageBottom(d), Office.Chrome.replyBottom(screen, d));
+                }
+                assertTrue("reply stays on the panel " + tag, replyTop <= screenH);
+                // long de/fr usage copy still fits the card width (wrapping is allowed)
+                assertTrue("Wöchentliche Nutzung · zurück am Mon 09:00 can wrap in the card " + tag,
+                        textPx("Wöchentliche Nutzung", 13, d) <= Office.Chrome.usage(screen, d)
+                                || Office.Chrome.usage(screen, d) >= dp(200, d));
+            }
+        }
+        // 1080p mdpi Sony: the card sits beside the 50% column, just above the bar
+        assertFalse(Office.Chrome.usageCollidesWithColumn(1920, 1f));
+        assertEquals(104, Office.Chrome.usageBottomDp());
+        assertEquals(104, Office.Chrome.usageBottom(1f));
+        assertEquals(104, Office.Chrome.replyBottom(1920, 1f));
+        // 720p xhdpi: the 560dp column fills the panel, so the card stacks above the bar
+        assertTrue(Office.Chrome.usageCollidesWithColumn(1280, 2f));
+        assertEquals(432, Office.Chrome.replyBottom(1280, 2f));   // 216dp at xhdpi
+    }
+
     private static int dp(int v, float density) {
         return Math.round(v * density);
     }

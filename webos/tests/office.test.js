@@ -207,3 +207,47 @@ test("start screen chrome fits 1280x720 and 1920x1080, and the title stays on on
     }
   }
 });
+
+test("usage card sits above the ask bar at 720p and 1080p, and does not cover the reply", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const src = fs.readFileSync(path.join(__dirname, "../app/office.js"), "utf8");
+  const us = src.match(/\.office \.us\{[^}]*bottom:(\d+)vh/);
+  const bar = src.match(/\.office \.bar\{[^}]*bottom:(\d+)vh/);
+  const rp = src.match(/\.office \.rp\{[^}]*bottom:(\d+)vh/);
+  assert.ok(us && bar && rp, "us/bar/rp bottoms are in the CSS");
+  const usB = Number(us[1]), barB = Number(bar[1]), rpB = Number(rp[1]);
+  // bar is ~5–6vh tall (1.3vh padding × 2 + 1.25vw type); 14vh clears it on 16:9
+  assert.ok(usB >= barB + 8, "CSS usage bottom " + usB + "vh is above the " + barB + "vh ask bar");
+  assert.ok(rpB >= usB + 10, "CSS reply bottom " + rpB + "vh is above the usage card");
+  const tvdpi = 213 / 160, xhdpi = 2;
+  for (const screen of [1280, 1920]) {
+    const screenH = Math.round(screen * 9 / 16);
+    for (const d of [tvdpi, xhdpi, 1]) {
+      const c = O.chrome(screen, d);
+      const tag = screen + "x" + screenH + "@" + d;
+      assert.ok(c.usageBottom >= c.barBottom + c.barHeight + c.gap, "usage above bar " + tag);
+      const usageRight = Math.round(36 * d) + c.usage;
+      const colLeft = Math.round((screen - c.column) / 2);
+      const reserve = Math.round(100 * d);
+      if (usageRight + c.gap > colLeft) {
+        assert.ok(c.replyBottom >= c.usageBottom + reserve + c.gap, "stacked reply " + tag);
+      } else {
+        assert.strictEqual(c.replyBottom, c.usageBottom, "side by side " + tag);
+      }
+      assert.ok(c.replyBottom + reserve <= screenH, "reply on panel " + tag);
+    }
+  }
+  assert.strictEqual(O.chrome(1920, 1).usageBottom, 104);
+  assert.strictEqual(O.chrome(1920, 1).replyBottom, 104);
+  assert.strictEqual(O.chrome(1280, 2).replyBottom, 432);   // 216dp at xhdpi
+  // long de/fr/es/it strings still fit the 22vw usage box (wrapping is allowed)
+  for (const lang of ["en", "it", "de", "fr", "es"]) {
+    const label = O.T[lang].usage + " · " + O.T[lang].resets.replace("%s", "Mon 09:00");
+    for (const w of [1280, 1920]) {
+      const box = 0.22 * w;
+      const line = label.length * (0.0125 * w * 0.85) * 0.62;
+      assert.ok(line <= box * 3, lang + " usage label wraps in 3 lines at " + w);
+    }
+  }
+});

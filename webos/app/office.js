@@ -422,7 +422,7 @@
     st.textContent = ".office{position:absolute;left:0;top:0;right:0;bottom:0;z-index:57;background:" + B + ";color:" + F + ";font-family:CaskaydiaMono,monospace;font-size:1.25vw;overflow:hidden}" +
       ".office canvas{position:absolute;left:0;top:0;width:100%;height:100%}" +
       ".office .hd{position:absolute;left:2.4vw;top:3vh;color:" + WH + ";font-size:1.6vw;font-weight:bold;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70vw}.office .hd b{color:" + A + "}.office .hd i{font-style:normal;color:" + F + ";font-weight:normal}" +
-      ".office .us{position:absolute;left:2.4vw;bottom:4vh;width:22vw;min-width:12em;max-width:32vw;box-sizing:border-box;padding:1.4vh 1vw;border:.14vw solid " + A + "88;border-radius:.8vw;background:" + B + "e6;display:none}" +
+      ".office .us{position:absolute;left:2.4vw;bottom:14vh;width:22vw;min-width:12em;max-width:32vw;box-sizing:border-box;padding:1.4vh 1vw;border:.14vw solid " + A + "88;border-radius:.8vw;background:" + B + "e6;display:none}" +
       ".office .us .n{font-size:2.6vw;color:" + WH + ";font-weight:bold}.office .us .b{height:1vh;background:" + F + "33;border-radius:1vh;margin-top:.8vh;overflow:hidden}.office .us .b i{display:block;height:100%;background:" + A + "}" +
       ".office .us .s{color:" + F + ";font-size:.85em;margin-top:.6vh}" +
       ".office .us .sp div{margin-top:1vh;font-size:.9em;color:" + WH + "}.office .us .sp em{font-style:normal;font-weight:bold;margin-right:.5vw}.office .us .sp u{text-decoration:none;color:" + F + ";font-size:.85em}" +
@@ -432,7 +432,7 @@
       ".office .in{flex:1;min-width:0;font:inherit;font-size:1.25vw;color:" + WH + ";background:" + B + "f0;border:.14vw solid " + F + "55;border-radius:3vw;padding:1.3vh 1.4vw;outline:none}" +
       ".office .bt{margin-left:.8vw;padding:1.3vh 1.2vw;border:.14vw solid " + F + "55;border-radius:3vw;background:" + B + "f0;color:" + WH + ";white-space:nowrap}" +
       ".office .f{border-color:" + A + ";box-shadow:0 0 1.2vw " + A + "66}.office .bt.f{background:" + A + ";color:" + B + "}" +
-      ".office .rp{position:absolute;left:50%;bottom:13vh;width:50vw;margin-left:-25vw;max-width:90vw;box-sizing:border-box;padding:1.4vh 1.2vw;border-radius:.8vw;background:" + B + "ee;border:.14vw solid " + A + "66;color:" + WH + ";display:none;max-height:22vh;overflow:hidden}" +
+      ".office .rp{position:absolute;left:50%;bottom:28vh;width:50vw;margin-left:-25vw;max-width:90vw;box-sizing:border-box;padding:1.4vh 1.2vw;border-radius:.8vw;background:" + B + "ee;border:.14vw solid " + A + "66;color:" + WH + ";display:none;max-height:22vh;overflow:hidden}" +
       ".office .hint{position:absolute;left:25vw;right:25vw;top:40vh;box-sizing:border-box;padding:2vh 1.5vw;border-radius:.8vw;background:" + B + "ee;border:.14vw dashed " + A + ";color:" + WH + ";display:none;line-height:1.45;text-align:center;overflow-wrap:break-word;word-wrap:break-word}" +
       ".office .hc{position:absolute;right:4vw;top:22vh;width:28vw;min-width:18em;max-width:48vw;box-sizing:border-box;padding:2.4vh 1.6vw;border-radius:1vw;background:" + B + "f4;border:.16vw solid " + A + ";display:none}" +
       ".office .hc h2{margin:0 0 1.6vh;color:" + WH + ";font-size:1.5vw;word-wrap:break-word}.office .hc .k{color:" + F + ";font-size:.85em;margin-top:1.2vh}.office .hc .v{color:" + WH + ";font-size:1.15em}" +
@@ -733,12 +733,20 @@
     function clamp(v, max) { return Math.max(1, Math.min(max, v)); }
     var col = clamp(Math.max(dp(560), Math.round(0.50 * screenW)), Math.round(0.90 * screenW));
     var hireCap = Math.min(Math.round(0.48 * screenW), Math.max(1, screenW - dp(80)));
+    var usageW = clamp(Math.max(dp(240), Math.round(0.20 * screenW)), Math.round(0.32 * screenW));
+    var barBottom = dp(36), barHeight = dp(56), gap = dp(12);
+    var usageBottom = barBottom + barHeight + gap;   // same stack as Office.Chrome
+    var usageRight = dp(36) + usageW;
+    var colLeft = Math.round((screenW - col) / 2);
+    var replyBottom = usageRight + gap > colLeft ? usageBottom + dp(100) + gap : usageBottom;
     return {
       column: col, hint: col, reply: col,
       hire: clamp(Math.max(dp(360), Math.round(0.28 * screenW)), hireCap),
-      usage: clamp(Math.max(dp(240), Math.round(0.20 * screenW)), Math.round(0.32 * screenW)),
+      usage: usageW,
       keys: clamp(Math.round(0.46 * screenW), Math.round(0.60 * screenW)),
-      header: Math.max(1, Math.round(0.70 * screenW))
+      header: Math.max(1, Math.round(0.70 * screenW)),
+      barBottom: dp(36), barHeight: dp(56), gap: dp(12),
+      usageBottom: usageBottom, replyBottom: replyBottom
     };
   }
 
