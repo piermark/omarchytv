@@ -79,6 +79,7 @@ final class FractalView extends GLSurfaceView {
     private int appliedW, appliedH;
     private volatile Runnable onFail;
     private volatile SafetyListener onSafety;
+    private volatile Runnable onFirstPresent;
     private boolean homeWallpaper;
     private boolean preferLight;
     private long ramBytes;
@@ -134,6 +135,10 @@ final class FractalView extends GLSurfaceView {
 
     void setOnSafety(SafetyListener l) {
         onSafety = l;
+    }
+
+    void setOnFirstPresent(Runnable r) {
+        onFirstPresent = r;
     }
 
     void setScene(int s) {
@@ -208,6 +213,9 @@ final class FractalView extends GLSurfaceView {
     /** Light bake: a small still of the fractal; per-frame cost is a palette/zoom blit at 720p. */
     static final int BAKE_H = 160, BAKE_ITERS = 20;
     static final String PREF_LIGHT = "fractals.prefer_light";
+    static final String PREF_GPU = "fractals.gpu";
+    /** 2 GB-class devices often report a little over 2 GiB. */
+    static final long TIGHT_RAM = TWO_GB + 512L * 1024 * 1024;
 
     /** Backing-store height: never above {@link #MAX_BUFFER_H}; medium/low use the 720p floor. */
     static int bufferHeight(int level, int viewH, int maxH) {
@@ -262,6 +270,65 @@ final class FractalView extends GLSurfaceView {
         return 1;
     }
 
+    /** 2 GB-class RAM, including a little over 2 GiB as some TVs report. */
+    static boolean tightRam(long ramBytes) {
+        return ramBytes > 0 && ramBytes <= TIGHT_RAM;
+    }
+
+    static boolean weakGpu(String gpu) {
+        String g = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
+        return g.contains("mali-t8") || g.contains("mali-t7") || g.contains("mali-g31")
+                || g.contains("mali-g51") || g.contains("adreno (tm) 3") || g.contains("powervr ge8")
+                || g.contains("mali-4") || g.contains("mali-3") || g.contains("videocore iv");
+    }
+
+    /**
+     * Radiomarchy full-screen and the fractals screensaver: on a weak TV (Mali-T8xx / T7xx,
+     * Mali-400/450, &le; 2 GB, a low-RAM flag, or after a kill) do not create a GL surface at all.
+     * A plain static theme background opens instantly, like Cinemarchy. Live GL stays on capable GPUs.
+     */
+    static boolean preferPlain(String gpu, long ramBytes, boolean preferLight, boolean lowRamDevice) {
+        return preferLight || lowRamDevice || tightRam(ramBytes) || weakGpu(gpu);
+    }
+
+    static boolean preferPlain(Context c) {
+        if (c == null) return false;
+        boolean prefer = false, low = false;
+        try {
+            prefer = c.getApplicationContext()
+                    .getSharedPreferences("omarchytv", Context.MODE_PRIVATE)
+                    .getBoolean(PREF_LIGHT, false);
+        } catch (Throwable ignored) {
+        }
+        try {
+            ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) low = am.isLowRamDevice();
+        } catch (Throwable ignored) {
+        }
+        return preferPlain(cachedGpu(c), totalRam(c), prefer, low);
+    }
+
+    static String cachedGpu(Context c) {
+        if (c == null) return "";
+        try {
+            return c.getApplicationContext()
+                    .getSharedPreferences("omarchytv", Context.MODE_PRIVATE)
+                    .getString(PREF_GPU, "");
+        } catch (Throwable ignored) {
+            return "";
+        }
+    }
+
+    static void rememberGpu(Context c, String gpu) {
+        if (c == null || gpu == null || gpu.isEmpty()) return;
+        try {
+            c.getApplicationContext()
+                    .getSharedPreferences("omarchytv", Context.MODE_PRIVATE)
+                    .edit().putString(PREF_GPU, gpu).apply();
+        } catch (Throwable ignored) {
+        }
+    }
+
     static boolean isLight(int level) {
         return level >= LIGHT_LEVEL;
     }
@@ -301,9 +368,18 @@ final class FractalView extends GLSurfaceView {
      * turns the wallpaper off. Otherwise the usual stall-count rule.
      */
     static int afterGraceAction(int level, long gapMs, int consecutiveSlow, int stallsInWindow) {
-        if (isCheapest(level) && isLongStall(gapMs)) return STALL_KILL;
-        if (isCheapest(level) && consecutiveSlow >= SLOW_PRESENTS_TO_KILL) return STALL_KILL;
-        return stallAction(level, stallsInWindow);
+        return afterGraceAction(level, gapMs, consecutiveSlow, stallsInWindow, level < 3);
+    }
+
+    /**
+     * {@code canDrop} is false when quality is pinned or we already took the "floor" path.
+     * Sony Radiomarchy-open log (fix7/integ): "UI stall 6xx-1416ms: floor, reduce iters/fps cap=24 cheap=1"
+     * repeated and never killed, because a pinned mid-level is not {@link #isCheapest}.
+     */
+    static int afterGraceAction(int level, long gapMs, int consecutiveSlow, int stallsInWindow, boolean canDrop) {
+        if ((isCheapest(level) || !canDrop) && isLongStall(gapMs)) return STALL_KILL;
+        if ((isCheapest(level) || !canDrop) && consecutiveSlow >= SLOW_PRESENTS_TO_KILL) return STALL_KILL;
+        return stallAction(level, stallsInWindow, canDrop);
     }
 
     static boolean isUiStall(long intervalNs) {
@@ -321,7 +397,11 @@ final class FractalView extends GLSurfaceView {
     }
 
     static int stallAction(int level, int stallsInWindow) {
-        if (level >= 3 && stallsInWindow >= STALLS_TO_KILL) return STALL_KILL;
+        return stallAction(level, stallsInWindow, level < 3);
+    }
+
+    static int stallAction(int level, int stallsInWindow, boolean canDrop) {
+        if ((!canDrop || level >= 3) && stallsInWindow >= STALLS_TO_KILL) return STALL_KILL;
         return STALL_DEGRADE;
     }
 
@@ -502,7 +582,8 @@ final class FractalView extends GLSurfaceView {
         if (kept < stallAt.length) stallAt[kept] = now;
         else stallAt[stallAt.length - 1] = now;
         stallCount = Math.min(kept + 1, stallAt.length);
-        int action = afterGraceAction(r.level, gapMs, r.consecutiveSlow, stallCount);
+        boolean canDrop = pinnedQuality < 0 && r.level < LEVELS.length - 1;
+        int action = afterGraceAction(r.level, gapMs, r.consecutiveSlow, stallCount, canDrop);
         if (action == STALL_KILL) {
             tripSafety("UI stall " + gapMs + "ms (" + stallCount + " in 20s at " + LEVELS[r.level].name + ")");
             return;
@@ -708,6 +789,7 @@ final class FractalView extends GLSurfaceView {
             GLES20.glGetShaderPrecisionFormat(GLES20.GL_FRAGMENT_SHADER, GLES20.GL_HIGH_FLOAT, range, 0, precision, 0);
             lowp = precision[0] < 16;
             gpu = String.valueOf(GLES20.glGetString(GLES20.GL_RENDERER));
+            rememberGpu(getContext(), gpu);
             level = pinnedQuality >= 0 ? pinnedQuality : firstLevel(gpu, lowp, ramBytes, preferLight);
             fpsCap = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
             dropFbo();
@@ -767,6 +849,10 @@ final class FractalView extends GLSurfaceView {
             if (lastDrawStartNs != 0) lastPresentCostNs = ns - lastDrawStartNs;
             lastDrawStartNs = ns;
             presentedFrames++;
+            if (presentedFrames == 1) {
+                Runnable first = onFirstPresent;
+                if (first != null) ui.post(first);
+            }
             long elapsed = now - graceStartMs;
             boolean laid = w > 0 && h > 0;
             if (lastPresentCostNs > 0 && !inGracePeriod(laid, presentedFrames, elapsed)) {

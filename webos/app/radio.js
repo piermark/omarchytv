@@ -409,11 +409,16 @@
     var L = T[(api.lang || "en").slice(0, 2)] || T.en;
     function t(k, a) { var v = L[k] || T.en[k] || k; return a == null ? v : v.replace("%s", a); }
     var A = th.accent || "#7aa2f7", F = th.fg || "#a9b1d6", D = th.dim || "#565f89", B = th.bg || "#1a1b26", G = th.green || "#9ece6a", C = th.cyan || "#7dcfff", W = th.bright || "#c0caf5";
+    var BG = th.bgDarker || B;
+    var openedAt = Date.now();
+    var ramGb = (root.navigator && root.navigator.deviceMemory) || 0;
+    var FX0 = root.OmarchyFractals;
+    var plain = FX0 && FX0.preferPlainHere ? !!FX0.preferPlainHere(ramGb) : (ramGb > 0 && ramGb <= 2.5);
     var SRC = [t("songs"), "Omarchy Stories", t("queue"), t("demo"), t("settings")];
     var S = { src: 0, pane: "list", idx: [0, 0, 0, 0, 0], items: [], demo: false, saver: !!api.saver, lastKey: Date.now(), sheetFor: "", sheet: [] };
     var w = doc.createElement("div"), st = doc.createElement("style");
     w.className = "radio";
-    st.textContent = ".radio{position:absolute;left:0;top:0;right:0;bottom:0;z-index:56;background:#000;color:" + F + ";font-family:CaskaydiaMono,monospace;font-size:1.32vw;line-height:1.35;overflow:hidden}" +
+    st.textContent = ".radio{position:absolute;left:0;top:0;right:0;bottom:0;z-index:56;background:" + BG + ";color:" + F + ";font-family:CaskaydiaMono,monospace;font-size:1.32vw;line-height:1.35;overflow:hidden}" +
       ".radio canvas.fx{position:absolute;left:0;top:0;width:100%;height:100%}" +
       ".radio .dim{position:absolute;left:0;top:0;right:0;bottom:0;background:" + B + ";opacity:.42;-webkit-transition:opacity .6s;transition:opacity .6s}" +
       ".radio .ui{position:absolute;left:0;top:0;right:0;bottom:0;-webkit-transition:opacity .6s;transition:opacity .6s}" +
@@ -429,7 +434,7 @@
       ".radio .np .bar{color:" + G + "}.radio .np .ly{margin-top:1.4vh;white-space:pre-wrap;color:" + D + ";max-height:30vh;overflow:hidden}.radio .np .ly b{color:" + W + ";font-weight:normal}" +
       ".radio .ft{position:absolute;left:2vw;right:2vw;bottom:2.4vh;color:" + D + ";white-space:nowrap;overflow:hidden}" +
       ".radio canvas.sc{position:absolute;left:0;right:0;bottom:6vh;width:100%;height:18vh;display:none}.radio .corner{position:absolute;right:2vw;top:3vh;color:" + W + ";text-shadow:0 0 .5vw #000;display:none;text-align:right}";
-    w.innerHTML = '<canvas class="fx"></canvas><div class="dim"></div><div class="ui">' +
+    w.innerHTML = (plain ? "" : '<canvas class="fx"></canvas><div class="dim"></div>') + '<div class="ui">' +
       '<div class="hd"><span class="logo">RADIOMARCHY</span><div class="st"></div></div>' +
       '<div class="bx p0" style="left:2vw;top:13.5vh;width:17vw;bottom:8vh"><span class="lg">radio</span><div class="rows"></div></div>' +
       '<div class="bx p1" style="left:22vw;top:13.5vh;width:43vw;bottom:8vh"><span class="lg"></span><div class="rows"></div></div>' +
@@ -439,12 +444,33 @@
     el.appendChild(w);
     function q(s) { return w.querySelector(s); }
     if (api.logoHtml) { var lg = q(".logo"); lg.innerHTML = api.logoHtml; lg.style.letterSpacing = "0"; }
-    var FX = root.OmarchyFractals, fx = FX ? FX.create(q("canvas.fx"), {
-      ramGb: (root.navigator && root.navigator.deviceMemory) || 0,
-      bands: E.bands, palette: P.palette, quality: P.quality,
-      theme: [A, th.accent2 || "#bb9af7", C, th.red || "#f7768e"]
-    }) : null;
-    if (fx) { if (P.scene >= 0) fx.pin(P.scene); fx.start(); }
+    var FX = root.OmarchyFractals, fx = null;
+    function logStart(renderer, gpu) {
+      var ttf = Date.now() - openedAt;
+      if (root.console) root.console.info("[Radiomarchy] start renderer=" + renderer
+        + " gpu=" + (gpu || "-") + " ram=" + (ramGb || 0) + "GB ttf=" + ttf + "ms");
+    }
+    function dropToPlain() {
+      plain = true;
+      if (fx) { try { fx.destroy(); } catch (e) { /* gone */ } fx = null; }
+      var c = q("canvas.fx"), d = q(".dim");
+      if (c && c.parentNode) c.parentNode.removeChild(c);
+      if (d && d.parentNode) d.parentNode.removeChild(d);
+      w.style.background = BG;
+      logStart("plain", "-");
+    }
+    if (!plain && FX && q("canvas.fx")) {
+      fx = FX.create(q("canvas.fx"), {
+        ramGb: ramGb,
+        bands: E.bands, palette: P.palette, quality: P.quality,
+        theme: [A, th.accent2 || "#bb9af7", C, th.red || "#f7768e"],
+        onFail: dropToPlain
+      });
+      if (fx) { if (P.scene >= 0) fx.pin(P.scene); fx.start(); }
+      else dropToPlain();
+    }
+    if (root.requestAnimationFrame) root.requestAnimationFrame(function () { logStart(plain || !fx ? "plain" : "live", "-"); });
+    else logStart(plain || !fx ? "plain" : "live", "-");
     var off = E.on(function () { render(); });
     var ROWS = 20;
 

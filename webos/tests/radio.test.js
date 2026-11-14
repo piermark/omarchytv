@@ -140,3 +140,19 @@ test("Home fractals wallpaper can start or keep the music audible", () => {
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
   assert.match(app, /ensureWallpaperMusic/);
 });
+
+test("weak TVs open Radiomarchy on a plain theme background, no WebGL at start", () => {
+  const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
+  assert.ok(src.indexOf("preferPlainHere") > 0);
+  assert.ok(src.indexOf("dropToPlain") > 0);
+  const prefer = src.indexOf("preferPlainHere");
+  const create = src.indexOf("FX.create");
+  assert.ok(prefer > 0 && create > prefer, "must decide preferPlain before FX.create");
+  assert.ok(src.indexOf("onFail: dropToPlain") > 0 || src.indexOf("onFail: dropToPlain") >= 0);
+  assert.match(src, /start renderer=/);
+  assert.match(src, /ttf=/);
+  assert.ok(src.indexOf("bgDarker") > 0);
+  // no still-decode / slideshow at open — a solid theme colour only
+  assert.ok(src.indexOf("OmarchyFractalSlides.mount") < 0);
+  assert.ok(src.indexOf("FractalSlides") < 0);
+});

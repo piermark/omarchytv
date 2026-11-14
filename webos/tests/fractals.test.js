@@ -174,3 +174,37 @@ test("live Radiomarchy keeps the 24/30 fps cap; the Home wallpaper is a still sl
   assert.ok(app.indexOf("ensureWallpaperMusic") > 0);
   assert.ok(app.indexOf("home: true") < 0);
 });
+
+test("preferPlain: Mali-T8xx, 2 GB and a previous kill skip WebGL", () => {
+  assert.strictEqual(F.tightRam(2), true);
+  assert.strictEqual(F.tightRam(2.2), true);
+  assert.strictEqual(F.tightRam(0), false);
+  assert.strictEqual(F.tightRam(4), false);
+  assert.strictEqual(F.weakGpu("Mali-T860"), true);
+  assert.strictEqual(F.weakGpu("Mali-450 MP"), true);
+  assert.strictEqual(F.weakGpu("Mali-G52"), false);
+  assert.strictEqual(F.preferPlain("Mali-T860", 0, false), true);
+  assert.strictEqual(F.preferPlain("", 2, false), true);
+  assert.strictEqual(F.preferPlain("Mali-G52", 2.2, false), true);
+  assert.strictEqual(F.preferPlain("Mali-G52", 4, true), true);
+  assert.strictEqual(F.preferPlain("Mali-G52", 4, false), false);
+  assert.strictEqual(F.preferPlain("", 0, false), false);
+});
+
+test("Sony Radiomarchy-open floor stalls (cap=24 cheap=1) kill when they cannot drop", () => {
+  // Exact Sony log when opening Radiomarchy: 1416, 716, 650, 633, 649, 600 ms, all "floor".
+  const gaps = [1416, 716, 650, 633, 649, 600];
+  let t = 0, times = [], last = F.STALL_DEGRADE;
+  for (let i = 0; i < gaps.length; i++) {
+    t += 1;
+    const count = F.countStallsInWindow(times, t, F.STALL_WINDOW_MS);
+    times.push(t);
+    last = F.afterGraceAction(1, gaps[i], 0, count, false);
+    if (i < 2) assert.strictEqual(last, F.STALL_DEGRADE);
+    else { assert.strictEqual(last, F.STALL_KILL); break; }
+  }
+  assert.strictEqual(last, F.STALL_KILL);
+  assert.strictEqual(F.afterGraceAction(1, 1416, 0, 1, false), F.STALL_DEGRADE);
+  assert.strictEqual(F.afterGraceAction(1, 2000, 0, 1, false), F.STALL_KILL);
+  assert.strictEqual(F.afterGraceAction(1, 716, 0, 5, true), F.STALL_DEGRADE);
+});

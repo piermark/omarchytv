@@ -50,11 +50,17 @@ Built on the published 2.15.1: everything fixed there is in here.
   shown is ignored (a cold start on a Sony Mali-T860 is about 600 ms and is normal), but grace always ends
   after 8 s even if almost no frames were presented. After that, one stall drops a quality level; a stall
   over 2 s, or three consecutive presents over 1 s, already at the cheapest level (`light`, or `low` with
-  the cheap FBO), or three stalls in about 20 s at that floor, turn the wallpaper off for the session (and
-  the next session starts at `light`). The normal theme background stays — never a black screen, never an
-  ANR. The full-screen Radiomarchy view and the fractals screensaver use the same path, and the audio
-  analysis never blocks the UI thread. The Home fractals wallpaper starts the music (or keeps a current
-  unpaused track audible), as the screensaver already did.
+  the cheap FBO), or three stalls in about 20 s at that floor (including when quality is pinned and the
+  live path cannot drop — the Sony "floor, reduce iters/fps cap=24 cheap=1" loop when opening Radiomarchy),
+  fall back to a plain static theme background for the session (and the next session on that TV stays
+  off live GL). Never a black screen, never an ANR.
+  The full-screen Radiomarchy view and the fractals screensaver on a weak TV (Mali-T8xx, Mali-400/450,
+  2 GB of RAM or less, or after a kill) never create a GL surface at all: they open on a plain static
+  theme background, like Cinemarchy, so the app appears at once. Capable GPUs keep the live shader. Opening
+  Radiomarchy does not parse the playlist or decode images on the UI thread; a `Radiomarchy start renderer=…`
+  line logs the chosen path, the GPU if known, RAM, and time-to-first-frame. The audio analysis never
+  blocks the UI thread. The Home fractals wallpaper starts the music (or keeps a current unpaused track
+  audible), as the screensaver already did.
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.

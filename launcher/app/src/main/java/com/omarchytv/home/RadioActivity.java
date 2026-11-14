@@ -60,8 +60,11 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
     private final Handler h = new Handler(Looper.getMainLooper());
     private RadioPlayer player;
     private Typeface mono, monoBold;
+    private FrameLayout root;
     private FractalView fractal;
     private View dimmer;
+    private boolean plainBackdrop;
+    private long openedAt;
     private LinearLayout main, listBox;
     private ScrollView listScroll;
     private TextView status, npBadge, npTitle, npBy, npAlbum, npTime, npBar, lyricsView, npLink, hint, listHeader;
@@ -106,6 +109,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        openedAt = SystemClock.elapsedRealtime();
         super.onCreate(savedInstanceState);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         player = RadioPlayer.get(this);
@@ -125,16 +129,12 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
             monoBold = Typeface.DEFAULT_BOLD;
         }
 
-        FrameLayout root = new FrameLayout(this);
-        root.setBackgroundColor(0xFF000000);
-        fractal = new FractalView(this);
-        fractal.setPalette(palette);
-        fractal.setQuality(quality);
-        if (scenePin >= 0) fractal.setScene(scenePin);
-        fractal.prepareScene();
-        root.addView(fractal, new FrameLayout.LayoutParams(-1, -1));
+        root = new FrameLayout(this);
+        // Instant open: a plain static theme background, like Cinemarchy. No GL, no stills to decode.
+        root.setBackgroundColor(0xFF000000 | (t.bgDarker & 0xFFFFFF));
+        plainBackdrop = FractalView.preferPlain(this);
         dimmer = new View(this);
-        dimmer.setBackgroundColor(Theme.withAlpha(t.bgDarker, 0.42f));
+        if (!plainBackdrop) dimmer.setBackgroundColor(Theme.withAlpha(t.bgDarker, 0.42f));
         root.addView(dimmer, new FrameLayout.LayoutParams(-1, -1));
 
         main = new LinearLayout(this);
@@ -309,19 +309,81 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
 
         setContentView(root);
         wm.reveal();
-        loadCached();
+        loading = true;
         selectSource(player.current() != null && player.current().episode() ? SRC_STORIES : SRC_SONGS, false);
         refresh(true);
+        root.post(this::onFirstUiFrame);
+        loadCachedAsync();
         boolean demoNow = saver || (getIntent() != null && getIntent().getBooleanExtra(EXTRA_DEMO, false));
         if (demoNow) setDemo(true);
         if (saver) startSaverMusic();
         fetch();
     }
 
+    /** UI is on screen: log time-to-first-frame, and only then (on a capable GPU) start live GL. */
+    private void onFirstUiFrame() {
+        if (isFinishing()) return;
+        String gpu = FractalView.cachedGpu(this);
+        if (plainBackdrop || fractal == null && FractalView.preferPlain(this)) {
+            plainBackdrop = true;
+            logStart("plain", gpu);
+            return;
+        }
+        logStart("live", gpu);
+        startLiveGl();
+    }
+
+    private void startLiveGl() {
+        if (isFinishing() || fractal != null || plainBackdrop) return;
+        FractalView v = new FractalView(this);
+        v.setPalette(palette);
+        v.setQuality(quality);
+        if (scenePin >= 0) v.setScene(scenePin);
+        v.setOnSafety(why -> dropToPlain());
+        v.setOnFirstPresent(() -> {
+            if (isFinishing() || fractal == null) return;
+            android.util.Log.i("Radiomarchy", "start renderer=live/" + fractal.quality()
+                    + " gpu=" + gpuName() + " ram=" + (FractalView.totalRam(this) / (1024 * 1024)) + "MB"
+                    + " ttf=" + (SystemClock.elapsedRealtime() - openedAt) + "ms");
+        });
+        v.prepareScene();
+        root.addView(v, 0, new FrameLayout.LayoutParams(-1, -1));
+        fractal = v;
+        v.onResume();
+    }
+
+    private void dropToPlain() {
+        plainBackdrop = true;
+        FractalView v = fractal;
+        fractal = null;
+        if (v != null) {
+            try { v.onPause(); } catch (Throwable ignored) {}
+            try { root.removeView(v); } catch (Throwable ignored) {}
+        }
+        if (dimmer != null) dimmer.setBackgroundColor(0);
+        Theme t = Theme.cur();
+        root.setBackgroundColor(0xFF000000 | (t.bgDarker & 0xFFFFFF));
+        android.util.Log.i("Radiomarchy", "start renderer=plain gpu=" + gpuName()
+                + " ram=" + (FractalView.totalRam(this) / (1024 * 1024)) + "MB (fallback after kill)");
+    }
+
+    private String gpuName() {
+        String g = FractalView.cachedGpu(this);
+        return g == null || g.isEmpty() ? "-" : g;
+    }
+
+    private void logStart(String renderer, String gpu) {
+        long ramMb = FractalView.totalRam(this) / (1024 * 1024);
+        long ttf = SystemClock.elapsedRealtime() - openedAt;
+        if (gpu == null || gpu.isEmpty()) gpu = "-";
+        android.util.Log.i("Radiomarchy", "start renderer=" + renderer + " gpu=" + gpu
+                + " ram=" + ramMb + "MB ttf=" + ttf + "ms");
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
-        fractal.onResume();
+        if (fractal != null) fractal.onResume();
         player.addListener(this);
         h.removeCallbacks(tick);
         h.post(tick);
@@ -339,7 +401,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         player.removeListener(this);
         h.removeCallbacks(tick);
         h.removeCallbacks(startSaverMusicAgain);
-        fractal.onPause();
+        if (fractal != null) fractal.onPause();
         super.onPause();
         if (saver && !isFinishing()) finish();   // the screensaver never stays behind
     }
@@ -356,11 +418,21 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         return new File(getFilesDir(), name);
     }
 
-    private void loadCached() {
-        String a = RadioCatalog.readCache(cache("radio-playlist.json")), b = RadioCatalog.readCache(cache("radio-stories.rss"));
-        if (a != null) songs = RadioCatalog.parseSongs(a);
-        if (b != null) episodes = RadioCatalog.parseFeed(b);
-        loading = songs.isEmpty();
+    private void loadCachedAsync() {
+        final File fa = cache("radio-playlist.json"), fb = cache("radio-stories.rss");
+        com.omarchytv.home.lights.Lights.run(() -> {
+            String a = RadioCatalog.readCache(fa), b = RadioCatalog.readCache(fb);
+            final List<RadioCatalog.Track> s = a != null ? RadioCatalog.parseSongs(a) : new ArrayList<RadioCatalog.Track>();
+            final List<RadioCatalog.Track> e = b != null ? RadioCatalog.parseFeed(b) : new ArrayList<RadioCatalog.Track>();
+            runOnUiThread(() -> {
+                if (isFinishing()) return;
+                songs = s;
+                episodes = e;
+                loading = songs.isEmpty();
+                selectSource(player.current() != null && player.current().episode() ? SRC_STORIES : SRC_SONGS, false);
+                refresh(true);
+            });
+        });
     }
 
     private void fetch() {
@@ -613,17 +685,17 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         setting(getString(R.string.radio_colours), palette == 1 ? "Omarchy · " + t.name : palette == 0 ? getString(R.string.radio_random) : FractalView.PALETTES[palette], () -> {
             palette = (palette + 1) % FractalView.PALETTES.length;
             player.prefs().edit().putInt("palette", palette).apply();
-            fractal.setPalette(palette);
+            if (fractal != null) fractal.setPalette(palette);
         });
-        setting(getString(R.string.radio_quality), quality == 0 ? getString(R.string.radio_quality_auto, fractal.quality()) : FractalView.QUALITIES[quality], () -> {
+        setting(getString(R.string.radio_quality), quality == 0 ? getString(R.string.radio_quality_auto, fractal != null ? fractal.quality() : "plain") : FractalView.QUALITIES[quality], () -> {
             quality = (quality + 1) % FractalView.QUALITIES.length;
             player.prefs().edit().putInt("quality", quality).apply();
-            fractal.setQuality(quality);
+            if (fractal != null) fractal.setQuality(quality);
         });
         setting(getString(R.string.radio_fractal), scenePin < 0 ? getString(R.string.radio_auto) : FractalView.SCENES[scenePin], () -> {
             scenePin = scenePin + 1 >= FractalView.SCENES.length ? -1 : scenePin + 1;
             player.prefs().edit().putInt("scene", scenePin).apply();
-            fractal.setScene(scenePin);
+            if (fractal != null) fractal.setScene(scenePin);
         });
         setting(getString(R.string.radio_auto_demo), getString(autoDemo ? R.string.on : R.string.off), () -> {
             autoDemo = !autoDemo;
@@ -800,7 +872,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         main.animate().alpha(on ? 0f : 1f).setDuration(600).withEndAction(() -> main.setVisibility(demo ? View.INVISIBLE : View.VISIBLE)).start();
         if (!on) main.setVisibility(View.VISIBLE);
         dimmer.animate().alpha(on ? 0f : 1f).setDuration(600).start();
-        fractal.setDim(1f);
+        if (fractal != null) fractal.setDim(1f);
         scroller.setVisibility(on ? View.VISIBLE : View.GONE);
         demoCorner.setVisibility(on ? View.VISIBLE : View.GONE);
         if (on) updateDemo();
@@ -818,7 +890,8 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                 : "RADIOMARCHY  ·  OMARCHY RADIO ON YOUR TV";
         scroller.setText("★  NOW PLAYING  ·  " + what + "  ·  RADIO.OMARCHY.ORG  ·  EVERY SONG A PULL REQUEST FROM THE OMARCHY COMMUNITY  ·  "
                 + "FRACTALS: MANDELBROT  JULIA  PLASMA  TUNNEL  KALISET  ·  GREETZ TO EVERY DOTFILE TWEAKER OUT THERE  ★          ");
-        demoCorner.setText("RADIOMARCHY  ·  " + FractalView.SCENES[fractal.scene()] + " · " + fractal.quality() + (saver ? "" : "\n◀ ▶ fractal  ·  ▲ ▼ colours  ·  BACK"));
+        String fx = fractal != null ? (FractalView.SCENES[fractal.scene()] + " · " + fractal.quality()) : "plain";
+        demoCorner.setText("RADIOMARCHY  ·  " + fx + (saver ? "" : "\n◀ ▶ fractal  ·  ▲ ▼ colours  ·  BACK"));
     }
 
     // ---- keys -----------------------------------------------------------------------------------------
@@ -837,18 +910,18 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         if (demo) {
             switch (kc) {
                 case KeyEvent.KEYCODE_DPAD_LEFT:
-                    fractal.nextScene(-1);
+                    if (fractal != null) fractal.nextScene(-1);
                     h.postDelayed(this::updateDemo, 100);
                     return true;
                 case KeyEvent.KEYCODE_DPAD_RIGHT:
-                    fractal.nextScene(1);
+                    if (fractal != null) fractal.nextScene(1);
                     h.postDelayed(this::updateDemo, 100);
                     return true;
                 case KeyEvent.KEYCODE_DPAD_UP:
                 case KeyEvent.KEYCODE_DPAD_DOWN:
                     palette = (palette + (kc == KeyEvent.KEYCODE_DPAD_UP ? 1 : FractalView.PALETTES.length - 1)) % FractalView.PALETTES.length;
                     player.prefs().edit().putInt("palette", palette).apply();
-                    fractal.setPalette(palette);
+                    if (fractal != null) fractal.setPalette(palette);
                     return true;
                 case KeyEvent.KEYCODE_DPAD_CENTER:
                 case KeyEvent.KEYCODE_ENTER:

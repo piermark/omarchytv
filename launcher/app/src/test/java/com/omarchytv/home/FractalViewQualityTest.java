@@ -179,6 +179,61 @@ public class FractalViewQualityTest {
     }
 
     @Test
+    public void preferPlainUsesWeakGpuAndTightRam() {
+        long two = 2L * 1024 * 1024 * 1024;
+        long over = two + 200L * 1024 * 1024;   // a 2 GB Sony may report a little over 2 GiB
+        assertTrue(FractalView.tightRam(two));
+        assertTrue(FractalView.tightRam(over));
+        assertFalse(FractalView.tightRam(0));
+        assertFalse(FractalView.tightRam(4L * 1024 * 1024 * 1024));
+        assertTrue(FractalView.weakGpu("Mali-T860"));
+        assertTrue(FractalView.weakGpu("Mali-450 MP"));
+        assertFalse(FractalView.weakGpu("Mali-G52"));
+        assertTrue(FractalView.preferPlain("Mali-T860", 0, false, false));
+        assertTrue(FractalView.preferPlain("", two, false, false));
+        assertTrue(FractalView.preferPlain("Mali-G52", over, false, false));
+        assertTrue(FractalView.preferPlain("Mali-G52", 0, true, false));
+        assertTrue(FractalView.preferPlain("Mali-G52", 0, false, true));
+        assertFalse(FractalView.preferPlain("Mali-G52", 4L * 1024 * 1024 * 1024, false, false));
+        assertFalse(FractalView.preferPlain("", 0, false, false));
+    }
+
+    @Test
+    public void sonyRadiomarchyOpenFloorStallsKillEvenIfPinned() {
+        // Exact Sony KD-55XE9005 log when opening Radiomarchy (17:57 Europe/Rome), integ+fix7:
+        //   17:57:47 Choreographer Skipped 64 frames
+        //   17:58:11 UI stall 1416ms: floor, reduce iters/fps cap=24 cheap=1
+        //   17:58:12 716ms, 13 650ms, 15 633ms, 16 649ms, 18 600ms
+        // Light was not selected (cheap=1 live floor path). Kill never fired because the
+        // floor branch is taken when quality is pinned (canDrop=false) at a mid level.
+        long[] gaps = { 1416, 716, 650, 633, 649, 600 };
+        long t = 0;
+        long[] times = new long[16];
+        int n = 0;
+        int last = FractalView.STALL_DEGRADE;
+        for (int i = 0; i < gaps.length; i++) {
+            t += (i == 0 ? 0 : (gaps[i] < 700 ? 1500 : 2000));
+            t += 1;
+            int count = FractalView.countStallsInWindow(times, n, t, FractalView.STALL_WINDOW_MS);
+            if (n < times.length) times[n++] = t;
+            last = FractalView.afterGraceAction(1, gaps[i], 0, count, false);
+            if (i < 2) assertEquals("stall " + (i + 1) + " (" + gaps[i] + "ms) must only degrade",
+                    FractalView.STALL_DEGRADE, last);
+            else {
+                assertEquals("stall " + (i + 1) + " (" + gaps[i] + "ms) at a floor that cannot drop must kill",
+                        FractalView.STALL_KILL, last);
+                break;
+            }
+        }
+        assertEquals(FractalView.STALL_KILL, last);
+        // a single 1416 ms stall is under 2 s, so it still only degrades
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.afterGraceAction(1, 1416, 0, 1, false));
+        assertEquals(FractalView.STALL_KILL, FractalView.afterGraceAction(1, 2000, 0, 1, false));
+        // when we can still drop, a mid-level stall does not kill on count alone
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.afterGraceAction(1, 716, 0, 5, true));
+    }
+
+    @Test
     public void contrastPushesADarkAccentOffADarkBackground() {
         int bg = 0xFF111111;
         int dark = 0xFF1A1A1A;

@@ -123,6 +123,32 @@
     return 1;   // capable TVs: start at high (1080p cap), step down only on backpressure
   }
 
+  /** 2 GB-class, including deviceMemory that reports a little over 2. */
+  function tightRam(ramGb) { return ramGb > 0 && ramGb <= 2.5; }
+  function weakGpu(gpu) {
+    return /mali-t8|mali-t7|mali-g31|mali-g51|adreno \(tm\) 3|powervr ge8|mali-[34]|videocore iv/.test(String(gpu || "").toLowerCase());
+  }
+  /** Radiomarchy / fractals screensaver: no WebGL on a weak TV — a plain theme background, like Cinemarchy. */
+  function preferPlain(gpu, ramGb, preferLight) {
+    if (preferLight) return true;
+    if (tightRam(ramGb) || weakGpu(gpu)) return true;
+    return false;
+  }
+  function preferPlainHere(ramGb) {
+    var prefer = !!preferLightFromStore();
+    var gpu = "";
+    try { if (root.localStorage) gpu = root.localStorage.getItem("omarchytv.fractals.gpu") || ""; } catch (e) { /* private */ }
+    ramGb = ramGb || (root.navigator && root.navigator.deviceMemory) || 0;
+    return preferPlain(gpu, ramGb, prefer);
+  }
+  function preferLightFromStore() {
+    try { return !!(root.localStorage && root.localStorage.getItem("omarchytv.fractals.prefer_light") === "1"); } catch (e) { return false; }
+  }
+  function rememberGpu(gpu) {
+    if (!gpu) return;
+    try { if (root.localStorage) root.localStorage.setItem("omarchytv.fractals.gpu", String(gpu)); } catch (e) { /* private */ }
+  }
+
   function isLight(level) { return level >= LIGHT_LEVEL; }
   function isCheapest(level) { return level >= 3; }
 
@@ -171,10 +197,11 @@
   function isLongStall(gapMs) { return gapMs >= FATAL_STALL_MS; }
   function isSlowPresent(intervalMs) { return intervalMs >= SLOW_PRESENT_MS; }
 
-  function afterGraceAction(level, gapMs, consecutiveSlow, stallsInWindow) {
-    if (isCheapest(level) && isLongStall(gapMs)) return STALL_KILL;
-    if (isCheapest(level) && consecutiveSlow >= SLOW_PRESENTS_TO_KILL) return STALL_KILL;
-    return stallAction(level, stallsInWindow);
+  function afterGraceAction(level, gapMs, consecutiveSlow, stallsInWindow, canDrop) {
+    if (canDrop == null) canDrop = level < 3;
+    if ((isCheapest(level) || !canDrop) && isLongStall(gapMs)) return STALL_KILL;
+    if ((isCheapest(level) || !canDrop) && consecutiveSlow >= SLOW_PRESENTS_TO_KILL) return STALL_KILL;
+    return stallActionAt(level, stallsInWindow, canDrop);
   }
 
   function isUiStall(intervalMs) {
@@ -186,6 +213,11 @@
   function stallAction(level, a, b) {
     var n = b == null ? a : b;
     if (level >= 3 && n >= STALLS_TO_KILL) return STALL_KILL;
+    return STALL_DEGRADE;
+  }
+  function stallActionAt(level, stallsInWindow, canDrop) {
+    if (canDrop == null) canDrop = level < 3;
+    if ((!canDrop || level >= 3) && stallsInWindow >= STALLS_TO_KILL) return STALL_KILL;
     return STALL_DEGRADE;
   }
 
@@ -260,6 +292,7 @@
     var hp = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl.HIGH_FLOAT), lowp = !hp || hp.precision < 16;
     var dbg = gl.getExtension("WEBGL_debug_renderer_info");
     var gpu = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+    rememberGpu(gpu);
     var ramGb = opts.ramGb || (root.navigator && root.navigator.deviceMemory) || 0;
     var home = !!opts.home;
     var preferLight = !!opts.preferLight;
@@ -486,7 +519,8 @@
       }
       stallTimes = stallTimes.filter(function (t) { return now - t <= STALL_WINDOW_MS; });
       stallTimes.push(now);
-      var action = afterGraceAction(level, gap, consecutiveSlow, stallTimes.length);
+      var canDrop = pinned < 0 && level < LEVELS.length - 1;
+      var action = afterGraceAction(level, gap, consecutiveSlow, stallTimes.length, canDrop);
       if (action === STALL_KILL) {
         tripSafety("UI stall " + gap + "ms (" + stallTimes.length + " in 20s at " + LEVELS[level].name + ")");
         return;
@@ -667,6 +701,7 @@
   root.OmarchyFractals = {
     SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG,
     create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel,
+    tightRam: tightRam, weakGpu: weakGpu, preferPlain: preferPlain, preferPlainHere: preferPlainHere, stallActionAt: stallActionAt,
     scaleFor: scaleFor, bufferHeight: bufferHeight, bufferSize: bufferSize, isBackpressured: isBackpressured,
     sceneFps: sceneFps, internalHeight: internalHeight, cheapScaleFor: cheapScaleFor,
     shouldDisableAtFloor: shouldDisableAtFloor, inGracePeriod: inGracePeriod, isUiStall: isUiStall,
