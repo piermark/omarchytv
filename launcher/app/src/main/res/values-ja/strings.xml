@@ -560,4 +560,8 @@
     <string name="radio_random">ランダム</string>
     <string name="radio_quality">画質</string>
     <string name="radio_quality_auto" formatted="true">自動、このテレビに合わせる（現在 %1$s）</string>
+    <string name="radio_animated">アニメーション・フラクタル</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">はい</string>
+    <string name="radio_animated_off">いいえ</string>
 </resources>

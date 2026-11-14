@@ -560,4 +560,8 @@
     <string name="radio_random">satunnaiset</string>
     <string name="radio_quality">Kuvanlaatu</string>
     <string name="radio_quality_auto" formatted="true">auto, sopeutuu tähän televisioon (nyt %1$s)</string>
+    <string name="radio_animated">Animoidut fraktaalit</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">kyllä</string>
+    <string name="radio_animated_off">ei</string>
 </resources>

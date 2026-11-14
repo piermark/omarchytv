@@ -564,4 +564,8 @@
     <string name="radio_random">zufällig</string>
     <string name="radio_quality">Bildqualität</string>
     <string name="radio_quality_auto" formatted="true">auto, passend zu diesem TV (jetzt %1$s)</string>
+    <string name="radio_animated">Animierte Fraktale</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ja</string>
+    <string name="radio_animated_off">nein</string>
 </resources>

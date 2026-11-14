@@ -560,4 +560,8 @@
     <string name="radio_random">rastgele</string>
     <string name="radio_quality">Görüntü kalitesi</string>
     <string name="radio_quality_auto" formatted="true">otomatik, bu TV\'ye uyar (şu an %1$s)</string>
+    <string name="radio_animated">Animasyonlu fraktaller</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">evet</string>
+    <string name="radio_animated_off">hayır</string>
 </resources>

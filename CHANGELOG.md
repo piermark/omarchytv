@@ -90,8 +90,15 @@ Built on the published 2.15.1: everything fixed there is in here.
   line logs the chosen path, the GPU if known, RAM, and time-to-first-frame. The audio analysis never
   blocks the UI thread. The Home fractals wallpaper starts the music (or keeps a current unpaused track
   audible), as the screensaver already did.
-- **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
-  with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
+- **Demo mode**: RED (or a minute without keys while music plays) hides the panels: live fractals fill the screen
+  with a sine scroller of what is playing, on every TV (weak ones included). On a weak TV the shader stays the
+  full one, drawn at 720p (~18 fps, linear upscale, smooth time) so the picture stays rich; stalls step down,
+  and a kill falls back to the high-quality still slideshow, never a black or text-only screen. ◀ ▶ another
+  fractal, ▲ ▼ the colours. The normal Radiomarchy view stays a plain theme background on a weak TV (instant
+  open), unless **Animated fractals** is set to yes. **Animated fractals** (auto / yes / no; default auto) lives
+  in Radiomarchy settings and in Settings › Wallpaper: auto is plain on a weak TV and live on a capable one;
+  yes turns live GL on even on a weak TV; no keeps the normal view plain and uses the still slideshow in demo.
+  On a weak TV the equaliser bars and the progress redraw run at 12 fps (the audio analysis is unchanged).
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.
 
 ### Home

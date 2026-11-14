@@ -69,7 +69,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "X API monthly limit reached (xMonthlyUsd)",
       living_x_error: "X API not reachable right now",
       omafire_campfire: "campfire",
-      omafire_embers: "embers", wp_radiomarchy_fractals: "Radiomarchy fractals",
+      omafire_embers: "embers", wp_radiomarchy_fractals: "Radiomarchy fractals", radio_animated: "Animated fractals", radio_animated_auto: "auto", radio_animated_on: "yes", radio_animated_off: "no",
       plugin_retro_crt: "Retro CRT",
       crt_light: "light",
       crt_strong: "strong",
@@ -199,7 +199,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "Raggiunto il limite mensile dell'API di X (xMonthlyUsd)",
       living_x_error: "API di X non raggiungibile ora",
       omafire_campfire: "falò",
-      omafire_embers: "braci", wp_radiomarchy_fractals: "Frattali Radiomarchy",
+      omafire_embers: "braci", wp_radiomarchy_fractals: "Frattali Radiomarchy", radio_animated: "Frattali animati", radio_animated_auto: "auto", radio_animated_on: "sì", radio_animated_off: "no",
       plugin_retro_crt: "Retro CRT",
       crt_light: "leggero",
       crt_strong: "forte",
@@ -329,7 +329,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "Monatslimit der X-API erreicht (xMonthlyUsd)",
       living_x_error: "X-API gerade nicht erreichbar",
       omafire_campfire: "Lagerfeuer",
-      omafire_embers: "Glut", wp_radiomarchy_fractals: "Radiomarchy-Fraktale",
+      omafire_embers: "Glut", wp_radiomarchy_fractals: "Radiomarchy-Fraktale", radio_animated: "Animierte Fraktale", radio_animated_auto: "auto", radio_animated_on: "ja", radio_animated_off: "nein",
       plugin_retro_crt: "Retro CRT",
       crt_light: "leicht",
       crt_strong: "stark",
@@ -429,6 +429,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     wallpaperDim: 0,
     wallpaperIdx: 0,
     wallpaper: "radiomarchy:fractals",  // 2.20 default Home animated background; OmaFire and stills stay selectable
+    radiomarchyAnimated: "auto",  // auto / on / off — same key as Radiomarchy prefs
     proceduralBg: false,
     tempUnit: "C",
     weatherCity: "Alessandria",
@@ -487,9 +488,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var saved = localStorage.getItem("omarchytv_cfg_2110");
     if (saved) cfg = Object.assign({}, DEFAULT_CFG, JSON.parse(saved));
   } catch (e) {}
+  try {
+    var radioPrefs = JSON.parse(localStorage.getItem("omarchytv.radio.v1") || "null");
+    if (radioPrefs && radioPrefs.animated) cfg.radiomarchyAnimated = radioPrefs.animated;
+  } catch (e) {}
 
   function saveCfg() {
     try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(cfg)); } catch (e) {}
+    try {
+      var raw = localStorage.getItem("omarchytv.radio.v1");
+      var rp = raw ? JSON.parse(raw) : {};
+      rp.animated = cfg.radiomarchyAnimated || "auto";
+      localStorage.setItem("omarchytv.radio.v1", JSON.stringify(rp));
+    } catch (e) {}
   }
   // v2.15: Pulse becomes everyone's screensaver, once; the previous one is kept for "Previous screensaver" (as on Android).
   if (!cfg.pulseDefault215) {
@@ -2384,6 +2395,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "OmaFire \u00b7 " + tr("omafire_campfire"), right: cfg.wallpaper === "omafire:campfire" ? "✓" : "", act: function () { pick("omafire:campfire"); } },
       { label: "OmaFire \u00b7 " + tr("omafire_embers"), right: cfg.wallpaper === "omafire:embers" ? "✓" : "", act: function () { pick("omafire:embers"); } },
       { label: tr("wp_radiomarchy_fractals"), right: cfg.wallpaper === "radiomarchy:fractals" ? "✓" : "", act: function () { pick("radiomarchy:fractals"); } },
+      { label: tr("radio_animated"), right: tr("radio_animated_" + (cfg.radiomarchyAnimated === "on" || cfg.radiomarchyAnimated === "off" ? cfg.radiomarchyAnimated : "auto")), act: function () {
+        var cur = cfg.radiomarchyAnimated === "on" ? "on" : cfg.radiomarchyAnimated === "off" ? "off" : "auto";
+        cfg.radiomarchyAnimated = cur === "auto" ? "on" : cur === "on" ? "off" : "auto";
+        saveCfg(); openWallpaperModal(true);
+      } },
       { label: "  " + tr("omafire_sound"), right: cfg.omafireSound ? "on" : "off", act: function () {
         cfg.omafireSound = !cfg.omafireSound; saveCfg(); applyTheme(); openWallpaperModal(true);
       } }

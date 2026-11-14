@@ -560,4 +560,8 @@
     <string name="radio_random">aleatórias</string>
     <string name="radio_quality">Qualidade da imagem</string>
     <string name="radio_quality_auto" formatted="true">auto, se adapta a esta TV (agora %1$s)</string>
+    <string name="radio_animated">Fractais animados</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">sim</string>
+    <string name="radio_animated_off">não</string>
 </resources>

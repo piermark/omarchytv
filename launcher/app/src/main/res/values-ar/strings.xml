@@ -560,4 +560,8 @@
     <string name="radio_random">عشوائية</string>
     <string name="radio_quality">جودة الصورة</string>
     <string name="radio_quality_auto" formatted="true">تلقائي، يتكيف مع هذا التلفاز (الآن %1$s)</string>
+    <string name="radio_animated">فركتلات متحركة</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">نعم</string>
+    <string name="radio_animated_off">لا</string>
 </resources>

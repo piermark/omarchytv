@@ -560,4 +560,8 @@
     <string name="radio_random">náhodné</string>
     <string name="radio_quality">Kvalita obrazu</string>
     <string name="radio_quality_auto" formatted="true">auto, podle této TV (nyní %1$s)</string>
+    <string name="radio_animated">Animované fraktály</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ano</string>
+    <string name="radio_animated_off">ne</string>
 </resources>

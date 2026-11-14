@@ -131,7 +131,7 @@ test("full-screen Radiomarchy uses the same 1080p/720p fractal budget as Home", 
   const path = require("path");
   const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
   assert.match(src, /ramGb:/);
-  assert.match(src, /1000 \/ 24/);
+  assert.match(src, /1000 \/ uiFps\(\)/);
 });
 
 test("Home fractals wallpaper can start or keep the music audible", () => {
@@ -144,15 +144,41 @@ test("Home fractals wallpaper can start or keep the music audible", () => {
 test("weak TVs open Radiomarchy on a plain theme background, no WebGL at start", () => {
   const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
   assert.ok(src.indexOf("preferPlainHere") > 0);
-  assert.ok(src.indexOf("dropToPlain") > 0);
-  const prefer = src.indexOf("preferPlainHere");
-  const create = src.indexOf("FX.create");
-  assert.ok(prefer > 0 && create > prefer, "must decide preferPlain before FX.create");
-  assert.ok(src.indexOf("onFail: dropToPlain") > 0 || src.indexOf("onFail: dropToPlain") >= 0);
+  assert.ok(src.indexOf("wantLiveNormal") > 0);
+  assert.ok(src.indexOf("dropToSlideshow") > 0);
+  const prefer = src.indexOf("var plain = !wantLiveNormal()");
+  const create = src.indexOf("startLiveFx(false)");
+  assert.ok(prefer > 0 && create > prefer, "must decide wantLiveNormal before starting GL");
+  assert.match(src, /onFail:\s*dropToSlideshow/);
   assert.match(src, /start renderer=/);
   assert.match(src, /ttf=/);
   assert.ok(src.indexOf("bgDarker") > 0);
-  // no still-decode / slideshow at open — a solid theme colour only
-  assert.ok(src.indexOf("OmarchyFractalSlides.mount") < 0);
-  assert.ok(src.indexOf("FractalSlides") < 0);
+  // no still-decode / slideshow / GL at open — a solid theme colour only
+  const openCreate = src.slice(src.indexOf("function open("), src.indexOf("function startLiveFx"));
+  assert.ok(openCreate.indexOf("startLiveFx(false)") > 0 || src.indexOf("if (!plain && FX) startLiveFx(false)") > 0);
+});
+
+test("demo starts live beauty fractals unless the setting is off, then the still slideshow", () => {
+  const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
+  assert.match(src, /function wantLiveDemo\(\) \{ return animatedMode\(\) !== "off"; \}/);
+  assert.match(src, /beautyDemo:\s*beauty/);
+  assert.match(src, /function startDemoVisuals/);
+  assert.match(src, /requestAnimationFrame\(startDemoVisuals\)/);
+  assert.match(src, /showSlides/);
+  assert.match(src, /Sl\.mount\(w\)/);
+  assert.match(src, /animated:\s*"auto"/);
+  assert.ok(src.indexOf('t("animated")') > 0);
+  assert.strictEqual(R.T.en.animated, "Animated fractals");
+  assert.strictEqual(R.T.it.animated, "Frattali animati");
+  assert.strictEqual(R.T.de.animated, "Animierte Fraktale");
+  assert.strictEqual(R.T.fr.animated, "Fractales animées");
+  assert.strictEqual(R.T.es.animated, "Fractales animados");
+  assert.strictEqual(R.T.it.animated_on, "sì");
+});
+
+test("weak TVs throttle the equalizer and scroller to about 12 fps", () => {
+  const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
+  assert.match(src, /function uiFps\(\) \{ return \(FX0 && FX0\.preferPlainHere && FX0\.preferPlainHere\(ramGb\)\) \? 12 : 24; \}/);
+  assert.match(src, /1000 \/ uiFps\(\)/);
+  assert.ok(src.indexOf("}, 42)") < 0);
 });

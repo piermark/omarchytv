@@ -3367,6 +3367,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("wallpaper", lFrac, j -> LauncherConfig.lockWallpaper(j, FractalLayer.ID, 0));
             return true;
         });
+        String lAnim = str(R.string.radio_animated);
+        String anim = RadioPlayer.animatedMode(this);
+        int animLab = "on".equals(anim) ? R.string.radio_animated_on : "off".equals(anim) ? R.string.radio_animated_off : R.string.radio_animated_auto;
+        p.add(lAnim, str(animLab), r -> {
+            RadioPlayer.setAnimatedMode(this, RadioPlayer.nextAnimatedMode(RadioPlayer.animatedMode(this)));
+            return true;
+        });
         String lFireSnd = "  " + str(R.string.omafire_sound);
         p.add(lFireSnd, str(cfg.omafireSound ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.omafireSound;

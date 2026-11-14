@@ -69,9 +69,24 @@ final class FractalSlides {
         return new int[] { a, a2 };
     }
 
+    /** inSampleSize for the 1280×720 stills: 2 on a 2 GB-class TV, 1 otherwise (keeps the fallback sharp). */
+    static int sampleSize(long ramBytes) {
+        return FractalView.tightRam(ramBytes) ? 2 : 1;
+    }
+
     static Bitmap decode(Context c, int i) {
+        long ram = 0;
+        try {
+            ram = FractalView.totalRam(c);
+        } catch (Throwable ignored) {
+        }
+        return decode(c, i, sampleSize(ram));
+    }
+
+    static Bitmap decode(Context c, int i, int sample) {
         BitmapFactory.Options o = new BitmapFactory.Options();
         o.inPreferredConfig = Bitmap.Config.RGB_565;
+        o.inSampleSize = Math.max(1, sample);
         try (InputStream in = c.getAssets().open(asset(i))) {
             return BitmapFactory.decodeStream(in, null, o);
         } catch (Exception e) {

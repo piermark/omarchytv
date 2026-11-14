@@ -166,7 +166,7 @@
 
   function engine(opts) {
     var store = opts.store || null, doc = opts.document || root.document;
-    var P = { shuffle: true, repeat: "all", explicit: true, palette: 0, scene: -1, quality: 0, autoDemo: true, pos: {} };
+    var P = { shuffle: true, repeat: "all", explicit: true, palette: 0, scene: -1, quality: 0, autoDemo: true, animated: "auto", pos: {} };
     try { var saved = store && JSON.parse(store.getItem(PREFS) || "null"); if (saved) for (var k in saved) if (Object.prototype.hasOwnProperty.call(saved, k)) P[k] = saved[k]; } catch (e) { /* defaults */ }
     function save() { try { if (store) store.setItem(PREFS, JSON.stringify(P)); } catch (e) { /* full or blocked */ } }
     var E = { songs: [], episodes: [], loading: true, offline: false, queue: [], order: [], at: -1, error: "", listeners: [], prefs: P, save: save, sheets: {} };
@@ -390,11 +390,11 @@
   // ---- the UI --------------------------------------------------------------------------------------
 
   var T = {
-    en: { songs: "Songs", queue: "Up next", demo: "Demo mode", settings: "Settings", explicit: "Explicit songs (E)", shown: "shown", hidden: "hidden", colours: "Fractal colours", random: "random", fractal: "Fractal", fractal_auto: "random (a new one each scene)", quality: "Picture quality", quality_auto: "auto, fits this TV (now %s)", auto_demo: "Demo mode after 1 minute idle", shuffle: "Shuffle", repeat: "Repeat", all: "all", one: "one", off: "off", on: "on", stop: "Stop and close the player", loading: "Loading Omarchy Radio…", offline: "radio.omarchy.org cannot be reached: showing the copy kept on this TV.", empty: "Nothing here yet.", by: "by %s", send: "Make one, send it: radio.omarchy.org", nothing: "Pick a song: OK plays it.", lyrics: "Lyrics", no_lyrics: "No lyrics for this one yet.", resume: "resume at %s", keys: "OK play · ▶❚❚ pause · ◀◀ ▶▶ · RED demo · BACK", play_all: "Play all", shuffle_all: "Shuffle all", about: "Songs from radio.omarchy.org: each one made by the person named on it and sent in as a pull request, streamed from the site. Podcast: Omarchy Stories. Fractals drawn live on this TV." },
-    it: { songs: "Brani", queue: "Prossimi", demo: "Modalità demo", settings: "Impostazioni", explicit: "Brani espliciti (E)", shown: "visibili", hidden: "nascosti", colours: "Colori dei frattali", random: "casuali", fractal: "Frattale", fractal_auto: "casuale (uno nuovo a ogni scena)", quality: "Qualità dell'immagine", quality_auto: "auto, si adatta a questa TV (ora %s)", auto_demo: "Modalità demo dopo 1 minuto senza tasti", shuffle: "Casuale", repeat: "Ripeti", all: "tutti", one: "uno", off: "off", on: "on", stop: "Ferma e chiudi il player", loading: "Carico Omarchy Radio…", offline: "radio.omarchy.org non risponde: mostro la copia salvata su questa TV.", empty: "Ancora niente qui.", by: "di %s", send: "Fanne uno e mandalo: radio.omarchy.org", nothing: "Scegli un brano: OK lo fa partire.", lyrics: "Testo", no_lyrics: "Nessun testo per questo brano, per ora.", resume: "riprendi da %s", keys: "OK play · ▶❚❚ pausa · ◀◀ ▶▶ · ROSSO demo · BACK", play_all: "Riproduci tutto", shuffle_all: "Tutto in casuale", about: "Brani da radio.omarchy.org: ognuno fatto da chi lo firma e arrivato come pull request, in streaming dal sito. Podcast: Omarchy Stories. Frattali disegnati dal vivo su questa TV." },
-    de: { songs: "Songs", queue: "Als Nächstes", demo: "Demo-Modus", settings: "Einstellungen", explicit: "Explizite Songs (E)", shown: "sichtbar", hidden: "ausgeblendet", colours: "Fraktal-Farben", random: "zufällig", fractal: "Fraktal", fractal_auto: "zufällig (jede Szene neu)", quality: "Bildqualität", quality_auto: "auto, passend zu diesem TV (jetzt %s)", auto_demo: "Demo-Modus nach 1 Minute ohne Taste", shuffle: "Zufall", repeat: "Wiederholen", all: "alle", one: "einen", off: "aus", on: "an", stop: "Stoppen und Player schließen", loading: "Omarchy Radio wird geladen…", offline: "radio.omarchy.org nicht erreichbar: die Kopie auf diesem TV wird gezeigt.", empty: "Hier ist noch nichts.", by: "von %s", send: "Mach einen, schick ihn: radio.omarchy.org", nothing: "Wähle einen Song: OK spielt ihn.", lyrics: "Songtext", no_lyrics: "Noch kein Songtext für diesen Song.", resume: "weiter bei %s", keys: "OK spielen · ▶❚❚ Pause · ◀◀ ▶▶ · ROT Demo · BACK", play_all: "Alle abspielen", shuffle_all: "Alle zufällig", about: "Songs von radio.omarchy.org: jeder von der Person, die darauf steht, als Pull Request eingereicht und von der Seite gestreamt. Podcast: Omarchy Stories. Fraktale live auf diesem TV gezeichnet." },
-    fr: { songs: "Titres", queue: "À suivre", demo: "Mode démo", settings: "Réglages", explicit: "Titres explicites (E)", shown: "affichés", hidden: "masqués", colours: "Couleurs des fractales", random: "aléatoires", fractal: "Fractale", fractal_auto: "aléatoire (une nouvelle à chaque scène)", quality: "Qualité d'image", quality_auto: "auto, adaptée à cette TV (actuellement %s)", auto_demo: "Mode démo après 1 minute sans touche", shuffle: "Aléatoire", repeat: "Répéter", all: "tout", one: "un", off: "non", on: "oui", stop: "Arrêter et fermer le lecteur", loading: "Chargement d'Omarchy Radio…", offline: "radio.omarchy.org ne répond pas : la copie gardée sur cette TV est affichée.", empty: "Rien ici pour l'instant.", by: "par %s", send: "Fais-en un, envoie-le : radio.omarchy.org", nothing: "Choisis un titre : OK le lance.", lyrics: "Paroles", no_lyrics: "Pas encore de paroles pour celui-ci.", resume: "reprendre à %s", keys: "OK lire · ▶❚❚ pause · ◀◀ ▶▶ · ROUGE démo · BACK", play_all: "Tout lire", shuffle_all: "Tout en aléatoire", about: "Titres de radio.omarchy.org : chacun fait par la personne qui le signe, envoyé en pull request et lu en streaming depuis le site. Podcast : Omarchy Stories. Fractales dessinées en direct sur cette TV." },
-    es: { songs: "Canciones", queue: "A continuación", demo: "Modo demo", settings: "Ajustes", explicit: "Canciones explícitas (E)", shown: "visibles", hidden: "ocultas", colours: "Colores de los fractales", random: "aleatorios", fractal: "Fractal", fractal_auto: "aleatorio (uno nuevo en cada escena)", quality: "Calidad de imagen", quality_auto: "auto, se adapta a esta TV (ahora %s)", auto_demo: "Modo demo tras 1 minuto sin teclas", shuffle: "Aleatorio", repeat: "Repetir", all: "todas", one: "una", off: "no", on: "sí", stop: "Parar y cerrar el reproductor", loading: "Cargando Omarchy Radio…", offline: "radio.omarchy.org no responde: se muestra la copia guardada en esta TV.", empty: "Todavía no hay nada aquí.", by: "de %s", send: "Haz una y envíala: radio.omarchy.org", nothing: "Elige una canción: OK la reproduce.", lyrics: "Letra", no_lyrics: "Aún no hay letra para esta.", resume: "seguir en %s", keys: "OK reproducir · ▶❚❚ pausa · ◀◀ ▶▶ · ROJO demo · BACK", play_all: "Reproducir todo", shuffle_all: "Todo aleatorio", about: "Canciones de radio.omarchy.org: cada una hecha por quien la firma, enviada como pull request y escuchada en streaming desde el sitio. Podcast: Omarchy Stories. Fractales dibujados en directo en esta TV." }
+    en: { songs: "Songs", queue: "Up next", demo: "Demo mode", settings: "Settings", explicit: "Explicit songs (E)", shown: "shown", hidden: "hidden", colours: "Fractal colours", random: "random", fractal: "Fractal", fractal_auto: "random (a new one each scene)", quality: "Picture quality", quality_auto: "auto, fits this TV (now %s)", animated: "Animated fractals", animated_auto: "auto", animated_on: "yes", animated_off: "no", auto_demo: "Demo mode after 1 minute idle", shuffle: "Shuffle", repeat: "Repeat", all: "all", one: "one", off: "off", on: "on", stop: "Stop and close the player", loading: "Loading Omarchy Radio…", offline: "radio.omarchy.org cannot be reached: showing the copy kept on this TV.", empty: "Nothing here yet.", by: "by %s", send: "Make one, send it: radio.omarchy.org", nothing: "Pick a song: OK plays it.", lyrics: "Lyrics", no_lyrics: "No lyrics for this one yet.", resume: "resume at %s", keys: "OK play · ▶❚❚ pause · ◀◀ ▶▶ · RED demo · BACK", play_all: "Play all", shuffle_all: "Shuffle all", about: "Songs from radio.omarchy.org: each one made by the person named on it and sent in as a pull request, streamed from the site. Podcast: Omarchy Stories. Fractals drawn live on this TV." },
+    it: { songs: "Brani", queue: "Prossimi", demo: "Modalità demo", settings: "Impostazioni", explicit: "Brani espliciti (E)", shown: "visibili", hidden: "nascosti", colours: "Colori dei frattali", random: "casuali", fractal: "Frattale", fractal_auto: "casuale (uno nuovo a ogni scena)", quality: "Qualità dell'immagine", quality_auto: "auto, si adatta a questa TV (ora %s)", animated: "Frattali animati", animated_auto: "auto", animated_on: "sì", animated_off: "no", auto_demo: "Modalità demo dopo 1 minuto senza tasti", shuffle: "Casuale", repeat: "Ripeti", all: "tutti", one: "uno", off: "off", on: "on", stop: "Ferma e chiudi il player", loading: "Carico Omarchy Radio…", offline: "radio.omarchy.org non risponde: mostro la copia salvata su questa TV.", empty: "Ancora niente qui.", by: "di %s", send: "Fanne uno e mandalo: radio.omarchy.org", nothing: "Scegli un brano: OK lo fa partire.", lyrics: "Testo", no_lyrics: "Nessun testo per questo brano, per ora.", resume: "riprendi da %s", keys: "OK play · ▶❚❚ pausa · ◀◀ ▶▶ · ROSSO demo · BACK", play_all: "Riproduci tutto", shuffle_all: "Tutto in casuale", about: "Brani da radio.omarchy.org: ognuno fatto da chi lo firma e arrivato come pull request, in streaming dal sito. Podcast: Omarchy Stories. Frattali disegnati dal vivo su questa TV." },
+    de: { songs: "Songs", queue: "Als Nächstes", demo: "Demo-Modus", settings: "Einstellungen", explicit: "Explizite Songs (E)", shown: "sichtbar", hidden: "ausgeblendet", colours: "Fraktal-Farben", random: "zufällig", fractal: "Fraktal", fractal_auto: "zufällig (jede Szene neu)", quality: "Bildqualität", quality_auto: "auto, passend zu diesem TV (jetzt %s)", animated: "Animierte Fraktale", animated_auto: "auto", animated_on: "ja", animated_off: "nein", auto_demo: "Demo-Modus nach 1 Minute ohne Taste", shuffle: "Zufall", repeat: "Wiederholen", all: "alle", one: "einen", off: "aus", on: "an", stop: "Stoppen und Player schließen", loading: "Omarchy Radio wird geladen…", offline: "radio.omarchy.org nicht erreichbar: die Kopie auf diesem TV wird gezeigt.", empty: "Hier ist noch nichts.", by: "von %s", send: "Mach einen, schick ihn: radio.omarchy.org", nothing: "Wähle einen Song: OK spielt ihn.", lyrics: "Songtext", no_lyrics: "Noch kein Songtext für diesen Song.", resume: "weiter bei %s", keys: "OK spielen · ▶❚❚ Pause · ◀◀ ▶▶ · ROT Demo · BACK", play_all: "Alle abspielen", shuffle_all: "Alle zufällig", about: "Songs von radio.omarchy.org: jeder von der Person, die darauf steht, als Pull Request eingereicht und von der Seite gestreamt. Podcast: Omarchy Stories. Fraktale live auf diesem TV gezeichnet." },
+    fr: { songs: "Titres", queue: "À suivre", demo: "Mode démo", settings: "Réglages", explicit: "Titres explicites (E)", shown: "affichés", hidden: "masqués", colours: "Couleurs des fractales", random: "aléatoires", fractal: "Fractale", fractal_auto: "aléatoire (une nouvelle à chaque scène)", quality: "Qualité d'image", quality_auto: "auto, adaptée à cette TV (actuellement %s)", animated: "Fractales animées", animated_auto: "auto", animated_on: "oui", animated_off: "non", auto_demo: "Mode démo après 1 minute sans touche", shuffle: "Aléatoire", repeat: "Répéter", all: "tout", one: "un", off: "non", on: "oui", stop: "Arrêter et fermer le lecteur", loading: "Chargement d'Omarchy Radio…", offline: "radio.omarchy.org ne répond pas : la copie gardée sur cette TV est affichée.", empty: "Rien ici pour l'instant.", by: "par %s", send: "Fais-en un, envoie-le : radio.omarchy.org", nothing: "Choisis un titre : OK le lance.", lyrics: "Paroles", no_lyrics: "Pas encore de paroles pour celui-ci.", resume: "reprendre à %s", keys: "OK lire · ▶❚❚ pause · ◀◀ ▶▶ · ROUGE démo · BACK", play_all: "Tout lire", shuffle_all: "Tout en aléatoire", about: "Titres de radio.omarchy.org : chacun fait par la personne qui le signe, envoyé en pull request et lu en streaming depuis le site. Podcast : Omarchy Stories. Fractales dessinées en direct sur cette TV." },
+    es: { songs: "Canciones", queue: "A continuación", demo: "Modo demo", settings: "Ajustes", explicit: "Canciones explícitas (E)", shown: "visibles", hidden: "ocultas", colours: "Colores de los fractales", random: "aleatorios", fractal: "Fractal", fractal_auto: "aleatorio (uno nuevo en cada escena)", quality: "Calidad de imagen", quality_auto: "auto, se adapta a esta TV (ahora %s)", animated: "Fractales animados", animated_auto: "auto", animated_on: "sí", animated_off: "no", auto_demo: "Modo demo tras 1 minuto sin teclas", shuffle: "Aleatorio", repeat: "Repetir", all: "todas", one: "una", off: "no", on: "sí", stop: "Parar y cerrar el reproductor", loading: "Cargando Omarchy Radio…", offline: "radio.omarchy.org no responde: se muestra la copia guardada en esta TV.", empty: "Todavía no hay nada aquí.", by: "de %s", send: "Haz una y envíala: radio.omarchy.org", nothing: "Elige una canción: OK la reproduce.", lyrics: "Letra", no_lyrics: "Aún no hay letra para esta.", resume: "seguir en %s", keys: "OK reproducir · ▶❚❚ pausa · ◀◀ ▶▶ · ROJO demo · BACK", play_all: "Reproducir todo", shuffle_all: "Todo aleatorio", about: "Canciones de radio.omarchy.org: cada una hecha por quien la firma, enviada como pull request y escuchada en streaming desde el sitio. Podcast: Omarchy Stories. Fractales dibujados en directo en esta TV." }
   };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function clock(s) {
@@ -413,7 +413,30 @@
     var openedAt = Date.now();
     var ramGb = (root.navigator && root.navigator.deviceMemory) || 0;
     var FX0 = root.OmarchyFractals;
-    var plain = FX0 && FX0.preferPlainHere ? !!FX0.preferPlainHere(ramGb) : (ramGb > 0 && ramGb <= 2.5);
+    function animatedMode() {
+      var v = (P && P.animated) || "auto";
+      if (v === "on" || v === "yes" || v === "si") return "on";
+      if (v === "off" || v === "no") return "off";
+      return "auto";
+    }
+    function wantLiveNormal() {
+      var m = animatedMode();
+      if (m === "off") return false;
+      if (m === "on") return true;
+      var hw = FX0 && FX0.preferPlainHere ? !!FX0.preferPlainHere(ramGb) : (ramGb > 0 && ramGb <= 2.5);
+      return !hw;
+    }
+    function wantLiveDemo() { return animatedMode() !== "off"; }
+    function weakHw() {
+      if (FX0 && FX0.weakHardware) {
+        var g = "";
+        try { if (root.localStorage) g = root.localStorage.getItem("omarchytv.fractals.gpu") || ""; } catch (e) {}
+        return !!FX0.weakHardware(g, ramGb);
+      }
+      return ramGb > 0 && ramGb <= 2.5;
+    }
+    function uiFps() { return (FX0 && FX0.preferPlainHere && FX0.preferPlainHere(ramGb)) ? 12 : 24; }
+    var plain = !wantLiveNormal();
     var SRC = [t("songs"), "Omarchy Stories", t("queue"), t("demo"), t("settings")];
     var S = { src: 0, pane: "list", idx: [0, 0, 0, 0, 0], items: [], demo: false, saver: !!api.saver, lastKey: Date.now(), sheetFor: "", sheet: [] };
     var w = doc.createElement("div"), st = doc.createElement("style");
@@ -450,25 +473,55 @@
       if (root.console) root.console.info("[Radiomarchy] start renderer=" + renderer
         + " gpu=" + (gpu || "-") + " ram=" + (ramGb || 0) + "GB ttf=" + ttf + "ms");
     }
-    function dropToPlain() {
+    var slides = null;
+    function hideSlides() { if (slides) { try { slides.destroy(); } catch (e) {} slides = null; } }
+    function showSlides() {
+      if (slides) return;
+      var Sl = root.OmarchyFractalSlides;
+      if (Sl && Sl.mount) slides = Sl.mount(w);
+    }
+    function dropToSlideshow() {
       plain = true;
       if (fx) { try { fx.destroy(); } catch (e) { /* gone */ } fx = null; }
-      var c = q("canvas.fx"), d = q(".dim");
+      var c = q("canvas.fx");
       if (c && c.parentNode) c.parentNode.removeChild(c);
-      if (d && d.parentNode) d.parentNode.removeChild(d);
+      if (S.demo || wantLiveNormal()) showSlides();
       w.style.background = BG;
-      logStart("plain", "-");
+      logStart("slides", "-");
     }
-    if (!plain && FX && q("canvas.fx")) {
-      fx = FX.create(q("canvas.fx"), {
-        ramGb: ramGb,
+    function startLiveFx(forDemo) {
+      hideSlides();
+      if (fx) {
+        var existing = q("canvas.fx");
+        if (existing) existing.style.display = "";
+        try { if (fx.start) fx.start(); } catch (e) {}
+        plain = false;
+        return;
+      }
+      var canvas = q("canvas.fx");
+      if (!canvas) {
+        canvas = doc.createElement("canvas");
+        canvas.className = "fx";
+        w.insertBefore(canvas, w.firstChild);
+        if (!q(".dim")) {
+          var dimEl = doc.createElement("div");
+          dimEl.className = "dim";
+          if (canvas.nextSibling) w.insertBefore(dimEl, canvas.nextSibling);
+          else w.appendChild(dimEl);
+        }
+      }
+      if (!FX) return;
+      var beauty = !!(forDemo || wantLiveNormal()) && weakHw();
+      fx = FX.create(canvas, {
+        ramGb: ramGb, beautyDemo: beauty,
         bands: E.bands, palette: P.palette, quality: P.quality,
         theme: [A, th.accent2 || "#bb9af7", C, th.red || "#f7768e"],
-        onFail: dropToPlain
+        onFail: dropToSlideshow
       });
-      if (fx) { if (P.scene >= 0) fx.pin(P.scene); fx.start(); }
-      else dropToPlain();
+      if (fx) { canvas.style.display = ""; if (P.scene >= 0) fx.pin(P.scene); fx.start(); plain = false; }
+      else dropToSlideshow();
     }
+    if (!plain && FX) startLiveFx(false);
     if (root.requestAnimationFrame) root.requestAnimationFrame(function () { logStart(plain || !fx ? "plain" : "live", "-"); });
     else logStart(plain || !fx ? "plain" : "live", "-");
     var off = E.on(function () { render(); });
@@ -493,6 +546,7 @@
         out.push({ num: "›", label: t("explicit"), sub: t(P.explicit ? "shown" : "hidden"), act: function () { P.explicit = !P.explicit; E.save(); } });
         out.push({ num: "›", label: t("colours"), sub: P.palette === 0 ? t("random") : ["", "Omarchy theme", "rainbow", "fire"][P.palette], act: function () { P.palette = (P.palette + 1) % 4; E.save(); if (fx) fx.setPalette(P.palette); } });
         out.push({ num: "›", label: t("quality"), sub: P.quality === 0 ? t("quality_auto", fx ? fx.quality() : "-") : ["", "ultra", "high", "medium", "low"][P.quality], act: function () { P.quality = (P.quality + 1) % 5; E.save(); if (fx) fx.setQuality(P.quality); } });
+        out.push({ num: "›", label: t("animated"), sub: t("animated_" + animatedMode()), act: function () { P.animated = animatedMode() === "auto" ? "on" : animatedMode() === "on" ? "off" : "auto"; E.save(); } });
         out.push({ num: "›", label: t("fractal"), sub: P.scene < 0 ? t("fractal_auto") : FX.SCENES[P.scene], act: function () { P.scene = P.scene + 1 >= 5 ? -1 : P.scene + 1; E.save(); if (fx) fx.pin(P.scene); } });
         out.push({ num: "›", label: t("auto_demo"), sub: t(P.autoDemo ? "on" : "off"), act: function () { P.autoDemo = !P.autoDemo; E.save(); } });
         out.push({ num: "›", label: t("shuffle"), sub: t(P.shuffle ? "on" : "off"), act: function () { E.setShuffle(!P.shuffle); } });
@@ -577,7 +631,7 @@
       tick();
       if (!S.demo && !S.saver && P.autoDemo && E.playing() && Date.now() - S.lastKey > 60000) setDemo(true);
     }, 250);
-    spT = setInterval(function () { var sp = q(".np .sp"); if (sp && E.playing()) { var bars = E.bars(); if (bars) for (var i = 0; i < sp.children.length; i++) sp.children[i].style.height = Math.round(100 * Math.max(0.03, bars[i])) + "%"; } }, 42);
+    spT = setInterval(function () { var sp = q(".np .sp"); if (sp && E.playing()) { var bars = E.bars(); if (bars) for (var i = 0; i < sp.children.length; i++) sp.children[i].style.height = Math.round(100 * Math.max(0.03, bars[i])) + "%"; } }, 1000 / uiFps());
 
     // demo mode: the fractal on its own, a sine scroller of what is playing
     var sc = q("canvas.sc"), scx = sc.getContext("2d"), scX = 0, scLast = 0, scRaf = 0, scText = "", band = { bass: 0 };
@@ -585,13 +639,13 @@
       var cur = E.current();
       scText = "★  NOW PLAYING  ·  " + (cur ? (cur.kind === "episode" ? "OMARCHY STORIES  ·  " + cur.title : cur.title.toUpperCase() + "  BY  " + String(cur.artist).toUpperCase()) : "RADIOMARCHY  ·  OMARCHY RADIO ON YOUR TV") +
         "  ·  RADIO.OMARCHY.ORG  ·  EVERY SONG A PULL REQUEST FROM THE OMARCHY COMMUNITY  ·  FRACTALS: MANDELBROT  JULIA  PLASMA  TUNNEL  KALISET  ·  GREETZ TO EVERY DOTFILE TWEAKER OUT THERE  ★          ";
-      q(".corner").textContent = "RADIOMARCHY  ·  " + (fx ? fx.scene() + " · " + fx.quality() : "") + (S.saver ? "" : "  ·  ◀ ▶ fractal · ▲ ▼ colours");
+      q(".corner").textContent = "RADIOMARCHY  ·  " + (fx ? fx.scene() + " · " + fx.quality() : (slides ? "slides" : "plain")) + (S.saver ? "" : "  ·  ◀ ▶ fractal · ▲ ▼ colours");
     }
     function scroller() {
       if (!S.demo) return;
       scRaf = root.requestAnimationFrame(scroller);
       var now = Date.now();
-      if (scLast && now - scLast < 1000 / 24) return;
+      if (scLast && now - scLast < 1000 / uiFps()) return;
       var dt = scLast ? Math.min(0.1, (now - scLast) / 1000) : 0.016;
       scLast = now;
       var W2 = sc.clientWidth, H2 = sc.clientHeight;
@@ -616,10 +670,28 @@
     function setDemo(on) {
       S.demo = on;
       q(".ui").style.opacity = on ? "0" : "1";
-      q(".dim").style.opacity = on ? "0" : ".42";
+      var dim = q(".dim");
+      if (dim) dim.style.opacity = on ? "0" : ".42";
       sc.style.display = on ? "block" : "none";
       q(".corner").style.display = on ? "block" : "none";
-      if (on) { updateDemo(); scLast = 0; scroller(); } else if (scRaf) { root.cancelAnimationFrame(scRaf); scRaf = 0; }
+      if (on) {
+        updateDemo(); scLast = 0; scroller();
+        function startDemoVisuals() {
+          if (!S.demo) return;
+          if (wantLiveDemo()) startLiveFx(true);
+          else { if (fx) { try { fx.stop && fx.stop(); } catch (e) {} } hideFxCanvas(); showSlides(); }
+        }
+        if (root.requestAnimationFrame) root.requestAnimationFrame(startDemoVisuals);
+        else startDemoVisuals();
+      } else {
+        if (scRaf) { root.cancelAnimationFrame(scRaf); scRaf = 0; }
+        if (!wantLiveNormal()) { hideFxCanvas(); hideSlides(); w.style.background = BG; plain = true; }
+      }
+    }
+    function hideFxCanvas() {
+      if (fx) { try { fx.stop && fx.stop(); } catch (e) {} }
+      var c = q("canvas.fx");
+      if (c) c.style.display = "none";
     }
 
     function key(k) {
@@ -678,6 +750,7 @@
       off();
       if (offSaver) offSaver();
       if (fx) fx.destroy();
+      hideSlides();
       if (w.parentNode) w.parentNode.removeChild(w);
     }
     render();

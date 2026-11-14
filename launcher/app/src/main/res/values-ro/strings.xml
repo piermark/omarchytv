@@ -560,4 +560,8 @@
     <string name="radio_random">aleatorii</string>
     <string name="radio_quality">Calitatea imaginii</string>
     <string name="radio_quality_auto" formatted="true">auto, se adaptează acestui TV (acum %1$s)</string>
+    <string name="radio_animated">Fractali animați</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">da</string>
+    <string name="radio_animated_off">nu</string>
 </resources>

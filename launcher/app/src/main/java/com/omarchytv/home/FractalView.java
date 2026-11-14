@@ -81,6 +81,8 @@ final class FractalView extends GLSurfaceView {
     private volatile SafetyListener onSafety;
     private volatile Runnable onFirstPresent;
     private boolean homeWallpaper;
+    /** Demo (or live-on-weak): 720p full shader, 18 fps, never the light bake. */
+    private boolean beautyDemo;
     private boolean preferLight;
     private long ramBytes;
     private boolean pumpOn;
@@ -119,10 +121,61 @@ final class FractalView extends GLSurfaceView {
      */
     void prepareScene() {
         homeWallpaper = false;
+        beautyDemo = false;
         r.fpsCap = sceneFps("", ramBytes);
         r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes, preferLight);
         r.applyLowPolicy();
         applyBuffer();
+    }
+
+    /**
+     * Demo (and live-on-weak): on a weak TV keep the full shader at 720p, ~18 fps, linear upscale,
+     * smooth time — not the crude light bake. Stalls step down high→medium→low, then the still slideshow.
+     */
+    void prepareDemo(boolean weakBeauty) {
+        homeWallpaper = false;
+        beautyDemo = weakBeauty;
+        if (weakBeauty) {
+            preferLight = false;
+            r.level = BEAUTY_LEVEL;
+            r.fpsCap = BEAUTY_FPS;
+            r.cheapScale = 1;
+            r.iterMul = 1f;
+            r.freezePalette = false;
+        } else {
+            r.fpsCap = sceneFps("", ramBytes);
+            r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes, preferLight);
+        }
+        r.applyLowPolicy();
+        applyBuffer();
+    }
+
+    /** Even time steps at 15–20 fps so motion does not jump when a frame is late. */
+    static float smoothDt(float prev, float raw) {
+        float dt = Math.min(0.08f, Math.max(0f, raw));
+        if (prev <= 0f) return dt;
+        return prev * 0.8f + dt * 0.2f;
+    }
+
+    private float smoothPrev, animTime;
+
+    private float smoothStep(float raw) {
+        float dt = smoothDt(smoothPrev, raw);
+        smoothPrev = dt;
+        animTime += dt;
+        return dt;
+    }
+
+    /** Weak GPU / ≤2 GB / low-RAM flag, ignoring a previous kill so demo can still try the full shader. */
+    static boolean weakHardware(Context c) {
+        if (c == null) return false;
+        boolean low = false;
+        try {
+            ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+            if (am != null) low = am.isLowRamDevice();
+        } catch (Throwable ignored) {
+        }
+        return preferPlain(cachedGpu(c), totalRam(c), false, low);
     }
 
     void yieldForUi() {
@@ -198,6 +251,8 @@ final class FractalView extends GLSurfaceView {
     }
 
     static final int MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30;
+    /** Demo on a weak TV: 720p full shader (not the light bake), 15–20 fps, linear upscale. */
+    static final int BEAUTY_FPS = 18, BEAUTY_MIN_FPS = 15, BEAUTY_LEVEL = 1;
     static final int WATCH_FRAMES = 16, LATE_RUSH = 4;
     static final long TWO_GB = 2L * 1024 * 1024 * 1024;
     /** Ignore short Choreographer stalls until first layout, N presented frames, and this long after attach/resume/focus.
@@ -219,17 +274,27 @@ final class FractalView extends GLSurfaceView {
 
     /** Backing-store height: never above {@link #MAX_BUFFER_H}; medium/low use the 720p floor. */
     static int bufferHeight(int level, int viewH, int maxH) {
+        return bufferHeight(level, viewH, maxH, false);
+    }
+
+    /** {@code beauty720}: lock the buffer at 720p even for high, then upscale with linear filtering. */
+    static int bufferHeight(int level, int viewH, int maxH, boolean beauty720) {
         if (maxH <= 0) maxH = MAX_BUFFER_H;
         if (viewH <= 0) viewH = MAX_BUFFER_H;
         int cap = Math.min(viewH, maxH);
+        if (beauty720) return Math.max(1, Math.min(cap, FLOOR_BUFFER_H));
         if (level <= 1) return Math.max(1, cap);
         return Math.max(1, Math.min(cap, FLOOR_BUFFER_H));
     }
 
     static int[] bufferSize(int level, int viewW, int viewH, int maxH) {
+        return bufferSize(level, viewW, viewH, maxH, false);
+    }
+
+    static int[] bufferSize(int level, int viewW, int viewH, int maxH, boolean beauty720) {
         if (viewW <= 0) viewW = 1920;
         if (viewH <= 0) viewH = 1080;
-        int h = bufferHeight(level, viewH, maxH);
+        int h = bufferHeight(level, viewH, maxH, beauty720);
         int w = Math.max(1, Math.round(viewW * (h / (float) viewH)));
         return new int[] { w, h };
     }
@@ -491,7 +556,7 @@ final class FractalView extends GLSurfaceView {
             ui.post(this::applyBuffer);
             return;
         }
-        int[] b = bufferSize(r.level, getWidth(), getHeight(), MAX_BUFFER_H);
+        int[] b = bufferSize(r.level, getWidth(), getHeight(), MAX_BUFFER_H, beautyDemo);
         if (b[0] == appliedW && b[1] == appliedH) return;
         appliedW = b[0];
         appliedH = b[1];
@@ -586,6 +651,23 @@ final class FractalView extends GLSurfaceView {
         int action = afterGraceAction(r.level, gapMs, r.consecutiveSlow, stallCount, canDrop);
         if (action == STALL_KILL) {
             tripSafety("UI stall " + gapMs + "ms (" + stallCount + " in 20s at " + LEVELS[r.level].name + ")");
+            return;
+        }
+        if (beautyDemo) {
+            if (r.level < 3) {
+                r.level++;
+                r.applyLowPolicy();
+                applyBuffer();
+                android.util.Log.i("Radiomarchy", "UI stall " + gapMs + "ms: beauty drop to " + LEVELS[r.level].name
+                        + " cap=" + r.fpsCap);
+            } else if (r.fpsCap > BEAUTY_MIN_FPS) {
+                r.fpsCap = BEAUTY_MIN_FPS;
+                android.util.Log.i("Radiomarchy", "UI stall " + gapMs + "ms: beauty fps=" + r.fpsCap);
+            } else {
+                tripSafety("UI stall " + gapMs + "ms (" + stallCount + " in 20s at beauty " + LEVELS[r.level].name + ")");
+                return;
+            }
+            skipFrames = 4;
             return;
         }
         if (isLight(r.level)) {
@@ -864,7 +946,8 @@ final class FractalView extends GLSurfaceView {
                     return;
                 }
             }
-            float dt = Math.min(0.1f, lastNs == 0 ? 0.016f : (ns - lastNs) / 1e9f);
+            float rawDt = Math.min(0.1f, lastNs == 0 ? 0.016f : (ns - lastNs) / 1e9f);
+            float dt = beautyDemo ? FractalView.this.smoothStep(rawDt) : rawDt;
             measure(ns, now);
             lastNs = ns;
             RadioPlayer rp = RadioPlayer.peek();
@@ -892,7 +975,7 @@ final class FractalView extends GLSurfaceView {
                 newCenter();
             }
             float zoom = (float) (2.6 * Math.exp(-dive));
-            float t = (now - t0) / 1000f;
+            float t = beautyDemo ? animTime : (now - t0) / 1000f;
             Quality q = LEVELS[level];
             if (isLight(level)) {
                 drawLight(now, pulse, t0);
@@ -1142,6 +1225,18 @@ final class FractalView extends GLSurfaceView {
         private void applyLowPolicy() {
             capFps = true;
             int base = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
+            if (beautyDemo) {
+                freezePalette = false;
+                cheapScale = 1;
+                if (level >= 3) {
+                    if (fpsCap > BEAUTY_MIN_FPS) fpsCap = BEAUTY_MIN_FPS;
+                    if (iterMul > 0.7f) iterMul = 0.7f;
+                } else {
+                    fpsCap = BEAUTY_FPS;
+                    iterMul = 1f;
+                }
+                return;
+            }
             if (isLight(level)) {
                 freezePalette = false;
                 cheapScale = 1;

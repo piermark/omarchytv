@@ -560,4 +560,8 @@
     <string name="radio_random">véletlen</string>
     <string name="radio_quality">Képminőség</string>
     <string name="radio_quality_auto" formatted="true">auto, ehhez a TV-hez igazodik (most %1$s)</string>
+    <string name="radio_animated">Animált fraktálok</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">igen</string>
+    <string name="radio_animated_off">nem</string>
 </resources>

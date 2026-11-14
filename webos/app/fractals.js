@@ -100,6 +100,7 @@
     return best;
   }
   var MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30, WATCH_FRAMES = 16, LATE_RUSH = 4;
+  var BEAUTY_FPS = 18, BEAUTY_MIN_FPS = 15, BEAUTY_LEVEL = 1;
   var GRACE_FRAMES = 8, GRACE_MS = 5000, GRACE_MAX_MS = 8000, STALL_MS = 500, STALL_WINDOW_MS = 20000, STALLS_TO_KILL = 3;
   var FATAL_STALL_MS = 2000, SLOW_PRESENT_MS = 1000, SLOW_PRESENTS_TO_KILL = 3;
   var STALL_DEGRADE = 1, STALL_KILL = 2;
@@ -153,22 +154,33 @@
   function isCheapest(level) { return level >= 3; }
 
   /** Backing-store height: never above 1080p; medium/low use the 720p floor. */
-  function bufferHeight(level, viewH, maxH) {
+  function bufferHeight(level, viewH, maxH, beauty720) {
     if (!maxH) maxH = MAX_BUFFER_H;
     if (!viewH || viewH < 1) viewH = MAX_BUFFER_H;
     var cap = Math.min(viewH, maxH);
+    if (beauty720) return Math.max(1, Math.round(Math.min(cap, FLOOR_BUFFER_H)));
     if (level <= 1) return Math.max(1, Math.round(cap));
     return Math.max(1, Math.round(Math.min(cap, FLOOR_BUFFER_H)));
   }
 
-  function bufferSize(level, cssW, cssH, dpr, maxH) {
+  function bufferSize(level, cssW, cssH, dpr, maxH, beauty720) {
     if (!cssW) cssW = 1920;
     if (!cssH) cssH = 1080;
     dpr = dpr || 1;
     var viewW = cssW * dpr, viewH = cssH * dpr;
-    var h = bufferHeight(level, viewH, maxH || MAX_BUFFER_H);
+    var h = bufferHeight(level, viewH, maxH || MAX_BUFFER_H, beauty720);
     var w = Math.max(1, Math.round(viewW * (h / viewH)));
     return { w: w, h: h };
+  }
+
+  function smoothDt(prev, raw) {
+    var dt = Math.min(0.08, Math.max(0, raw));
+    if (!prev) return dt;
+    return prev * 0.8 + dt * 0.2;
+  }
+
+  function weakHardware(gpu, ramGb) {
+    return preferPlain(gpu, ramGb, false);
   }
 
   /** Ratio of the backing-store height to the CSS height (dpr=1). Never above 1080p. */
@@ -295,10 +307,11 @@
     rememberGpu(gpu);
     var ramGb = opts.ramGb || (root.navigator && root.navigator.deviceMemory) || 0;
     var home = !!opts.home;
+    var beautyDemo = !!opts.beautyDemo;
     var preferLight = !!opts.preferLight;
-    try { if (!preferLight && root.localStorage && root.localStorage.getItem("omarchytv.fractals.prefer_light") === "1") preferLight = true; } catch (e) { /* private */ }
+    try { if (!beautyDemo && !preferLight && root.localStorage && root.localStorage.getItem("omarchytv.fractals.prefer_light") === "1") preferLight = true; } catch (e) { /* private */ }
     var pinned = opts.quality > 0 ? Math.min(4, opts.quality) - 1 : -1;
-    var level = pinned >= 0 ? pinned : firstLevel(gpu, lowp, ramGb, preferLight);
+    var level = beautyDemo ? BEAUTY_LEVEL : (pinned >= 0 ? pinned : firstLevel(gpu, lowp, ramGb, preferLight));
     var palette = opts.palette || 0;
     function sh(type, src) {
       var s = gl.createShader(type);
@@ -327,7 +340,8 @@
     var params = new Float32Array(SCENES.length * 4), pal = new Float32Array(12), palFrom = new Float32Array(12), palTo = new Float32Array(12), palStart = 0, newPal = true;
     var f = { bass: 0, mid: 0, high: 0, level: 0, beatAgeMs: 1e9, beats: 0 };
     var frames = 0, frameMs = 0, lastT = 0, goodSince = 0, late = 0, lastDraw = 0, lastPalEmit = 0, lastFpsLog = 0;
-    var capFps = true, freezePalette = false, iterMul = 1, fpsCap = home ? HOME_FPS : sceneFps(gpu, ramGb);
+    var capFps = true, freezePalette = false, iterMul = 1, fpsCap = beautyDemo ? BEAUTY_FPS : (home ? HOME_FPS : sceneFps(gpu, ramGb));
+    var smoothPrev = 0, animTime = 0;
     var lateInWindow = 0, slowWindows = 0, sessionOff = false;
     var graceStart = 0, presented = 0, lastRaf = 0, stallTimes = [], consecutiveSlow = 0;
     var bakeDirty = true, bakeFb = null, bakeTex = null, bakeW = 0, bakeH = 0, lightProg = null, lightProcedural = false;
@@ -388,7 +402,7 @@
     var cheapScale = cheapScaleFor(level, 1);
     function resize() {
       var dpr = root.devicePixelRatio || 1;
-      var b = bufferSize(level, canvas.clientWidth || 1920, canvas.clientHeight || 1080, dpr, MAX_BUFFER_H);
+      var b = bufferSize(level, canvas.clientWidth || 1920, canvas.clientHeight || 1080, dpr, MAX_BUFFER_H, beautyDemo);
       // Output/CSS stays at least 720p; the drawing buffer can be 1/2 or 1/3 and is linearly upscaled.
       var ih = internalHeight(b.h, cheapScale), iw = Math.max(1, Math.round(b.w * (ih / b.h)));
       if (canvas.width !== iw || canvas.height !== ih) { canvas.width = iw; canvas.height = ih; }
@@ -397,6 +411,12 @@
     function applyLowPolicy() {
       capFps = true;
       var base = home ? HOME_FPS : sceneFps(gpu, ramGb);
+      if (beautyDemo) {
+        freezePalette = false; cheapScale = 1;
+        if (level >= 3) { if (fpsCap > BEAUTY_MIN_FPS) fpsCap = BEAUTY_MIN_FPS; if (iterMul > 0.7) iterMul = 0.7; }
+        else { fpsCap = BEAUTY_FPS; iterMul = 1; }
+        return;
+      }
       if (isLight(level)) {
         freezePalette = false; cheapScale = 1; iterMul = 1; fpsCap = base;
       } else if (level >= 3) {
@@ -525,6 +545,12 @@
         tripSafety("UI stall " + gap + "ms (" + stallTimes.length + " in 20s at " + LEVELS[level].name + ")");
         return;
       }
+      if (beautyDemo) {
+        if (level < 3) { level++; applyLowPolicy(); resize(); if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: beauty drop to " + LEVELS[level].name + " cap=" + fpsCap); }
+        else if (fpsCap > BEAUTY_MIN_FPS) { fpsCap = BEAUTY_MIN_FPS; if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: beauty fps=" + fpsCap); }
+        else tripSafety("UI stall " + gap + "ms (" + stallTimes.length + " in 20s at beauty " + LEVELS[level].name + ")");
+        return;
+      }
       if (isLight(level)) {
         if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: light cap=" + fpsCap);
         return;
@@ -582,7 +608,11 @@
       if (!rush) late = 0;
       if (pinned >= 0) { applyLowPolicy(); return; }
       if (pressure) {
-        if (!isLight(level) && level < LIGHT_LEVEL) { level++; goodSince = now; slowWindows = 0; bakeDirty = true; applyLowPolicy(); resize(); }
+        if (beautyDemo) {
+          if (level < 3) { level++; goodSince = now; slowWindows = 0; applyLowPolicy(); resize(); }
+          else if (fpsCap > BEAUTY_MIN_FPS) { fpsCap = BEAUTY_MIN_FPS; applyLowPolicy(); }
+          else { tripSafety("GL frame " + avg.toFixed(1) + "ms at beauty " + LEVELS[level].name); }
+        } else if (!isLight(level) && level < LIGHT_LEVEL) { level++; goodSince = now; slowWindows = 0; bakeDirty = true; applyLowPolicy(); resize(); }
         else {
           capFps = true;
           if (!isLight(level)) {
@@ -632,7 +662,9 @@
       }
       lastDraw = now;
       presented++;
-      var dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0.016;
+      var rawDt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0.016;
+      var dt = rawDt;
+      if (beautyDemo) { dt = smoothDt(smoothPrev, rawDt); smoothPrev = dt; animTime += dt; }
       measure(now);
       lastT = now;
       var music = opts.bands ? !!opts.bands(f) : false;
@@ -649,9 +681,9 @@
       zoomKick *= Math.exp(-dt * 3);
       dive += dt * diveSpeed * (0.09 + 0.22 * f.bass + 0.25 * zoomKick);
       if (dive > (lowp ? 4 : Math.log(2.6 / (2.4e-7 * canvas.height)))) { dive = 0.8 + 1.7 * rnd(); newCenter(); }
-      var q = LEVELS[level], t = (now - t0) / 1000;
+      var q = LEVELS[level], t = beautyDemo ? animTime : (now - t0) / 1000;
       resize();
-      if (isLight(level)) { drawLight(now, pulse, t); return; }
+      if (!beautyDemo && isLight(level)) { drawLight(now, pulse, t); return; }
       gl.uniform2f(U.uRes, canvas.width, canvas.height);
       gl.uniform1f(U.uTime, t);
       gl.uniform1f(U.uBass, f.bass);
@@ -713,6 +745,8 @@
     LIGHT_LEVEL: LIGHT_LEVEL, BAKE_H: BAKE_H, BAKE_ITERS: BAKE_ITERS,
     CHEAP_FPS: CHEAP_FPS, FBO_SCALE_FLOOR: FBO_SCALE_FLOOR, FBO_SCALE_CHEAP: FBO_SCALE_CHEAP,
     HOME_FPS: HOME_FPS, SAVER_FPS: SAVER_FPS,
+    BEAUTY_FPS: BEAUTY_FPS, BEAUTY_MIN_FPS: BEAUTY_MIN_FPS, BEAUTY_LEVEL: BEAUTY_LEVEL,
+    smoothDt: smoothDt, weakHardware: weakHardware,
     MAX_BUFFER_H: MAX_BUFFER_H, FLOOR_BUFFER_H: FLOOR_BUFFER_H,
     ensureContrast: ensureContrast, contrastRatio: contrastRatio, rgbCss: rgbCss
   };

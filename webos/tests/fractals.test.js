@@ -208,3 +208,22 @@ test("Sony Radiomarchy-open floor stalls (cap=24 cheap=1) kill when they cannot 
   assert.strictEqual(F.afterGraceAction(1, 2000, 0, 1, false), F.STALL_KILL);
   assert.strictEqual(F.afterGraceAction(1, 716, 0, 5, true), F.STALL_DEGRADE);
 });
+
+test("beauty demo renders at 720p with the full shader, not the light bake", () => {
+  assert.strictEqual(F.BEAUTY_FPS, 18);
+  assert.strictEqual(F.BEAUTY_MIN_FPS, 15);
+  assert.strictEqual(F.BEAUTY_LEVEL, 1);
+  assert.strictEqual(F.LEVELS[F.BEAUTY_LEVEL].name, "high");
+  const b = F.bufferSize(1, 1920, 1080, 1, 1080, true);
+  assert.strictEqual(b.w, 1280);
+  assert.strictEqual(b.h, 720);
+  const normalHigh = F.bufferSize(1, 1920, 1080, 1, 1080, false);
+  assert.strictEqual(normalHigh.h, 1080);
+  assert.ok(F.smoothDt(0, 0.2) <= 0.08);
+  assert.ok(Math.abs(F.smoothDt(0.016, 0.016) - 0.016) < 1e-9);
+  const src = fs.readFileSync(path.join(__dirname, "../app/fractals.js"), "utf8");
+  assert.match(src, /var beautyDemo = !!opts\.beautyDemo/);
+  assert.match(src, /level = beautyDemo \? BEAUTY_LEVEL/);
+  assert.match(src, /if \(!beautyDemo && isLight\(level\)\)/);
+  assert.ok(!/if \(beautyDemo && isLight/.test(src));
+});

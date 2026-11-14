@@ -560,4 +560,8 @@
     <string name="radio_random">willekeurig</string>
     <string name="radio_quality">Beeldkwaliteit</string>
     <string name="radio_quality_auto" formatted="true">auto, past zich aan deze tv aan (nu %1$s)</string>
+    <string name="radio_animated">Geanimeerde fractals</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ja</string>
+    <string name="radio_animated_off">nee</string>
 </resources>

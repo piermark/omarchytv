@@ -560,4 +560,8 @@
     <string name="radio_random">випадкові</string>
     <string name="radio_quality">Якість зображення</string>
     <string name="radio_quality_auto" formatted="true">авто, під цей ТВ (зараз %1$s)</string>
+    <string name="radio_animated">Анімовані фрактали</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">так</string>
+    <string name="radio_animated_off">ні</string>
 </resources>

@@ -37,8 +37,10 @@ test("Home is a still-fractal slideshow: CSS crossfade, no canvas loop, accents 
   assert.ok(html.indexOf('src="fractal-slides.js"') > 0);
   const cat = fs.readFileSync(path.join(APP, "fractal-slides.js"), "utf8");
   const mark = "OmarchyFractalSlides =";
-  const json = cat.slice(cat.indexOf(mark) + mark.length).replace(/;\s*\}\)\(this\);?\s*$/, "").trim();
+  const start = cat.indexOf(mark) + mark.length;
+  const json = cat.slice(start, cat.indexOf("})(this);", start)).replace(/;\s*$/, "").trim();
   const slides = JSON.parse(json);
+  assert.ok(cat.indexOf("api.mount") > 0, "radio demo can mount a separate slideshow box");
   assert.strictEqual(slides.intervalMs, 12000);
   assert.ok(slides.slides.length >= 8 && slides.slides.length <= 12);
   assert.strictEqual(slides.fadeMs, 1600);

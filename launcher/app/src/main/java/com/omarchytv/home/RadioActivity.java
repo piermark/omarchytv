@@ -62,8 +62,10 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
     private Typeface mono, monoBold;
     private FrameLayout root;
     private FractalView fractal;
+    private FractalSlideView slides;
     private View dimmer;
     private boolean plainBackdrop;
+    private boolean liveForDemoOnly;
     private long openedAt;
     private LinearLayout main, listBox;
     private ScrollView listScroll;
@@ -320,51 +322,103 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         fetch();
     }
 
-    /** UI is on screen: log time-to-first-frame, and only then (on a capable GPU) start live GL. */
+    /** UI is on screen: log time-to-first-frame, then start live GL only if the normal view wants it. Demo starts after that. */
     private void onFirstUiFrame() {
         if (isFinishing()) return;
         String gpu = FractalView.cachedGpu(this);
-        if (plainBackdrop || fractal == null && FractalView.preferPlain(this)) {
+        if (RadioPlayer.wantLiveNormal(this)) {
+            plainBackdrop = false;
+            logStart("live", gpu);
+            startLiveGl(false);
+        } else {
             plainBackdrop = true;
             logStart("plain", gpu);
-            return;
         }
-        logStart("live", gpu);
-        startLiveGl();
+        if (demo) startDemoVisuals();
     }
 
-    private void startLiveGl() {
-        if (isFinishing() || fractal != null || plainBackdrop) return;
+    /**
+     * @param forDemo if true on a weak TV, start the 720p full-shader beauty path (not the light bake).
+     */
+    private void startLiveGl(boolean forDemo) {
+        if (isFinishing() || fractal != null) return;
+        boolean weak = FractalView.weakHardware(this);
         FractalView v = new FractalView(this);
         v.setPalette(palette);
         v.setQuality(quality);
         if (scenePin >= 0) v.setScene(scenePin);
-        v.setOnSafety(why -> dropToPlain());
+        v.setOnSafety(why -> dropToSlideshow());
         v.setOnFirstPresent(() -> {
             if (isFinishing() || fractal == null) return;
             android.util.Log.i("Radiomarchy", "start renderer=live/" + fractal.quality()
+                    + (weak && (forDemo || RadioPlayer.wantLiveNormal(this)) ? "/beauty720" : "")
                     + " gpu=" + gpuName() + " ram=" + (FractalView.totalRam(this) / (1024 * 1024)) + "MB"
                     + " ttf=" + (SystemClock.elapsedRealtime() - openedAt) + "ms");
         });
-        v.prepareScene();
+        if (weak && (forDemo || RadioPlayer.wantLiveNormal(this))) v.prepareDemo(true);
+        else v.prepareScene();
         root.addView(v, 0, new FrameLayout.LayoutParams(-1, -1));
         fractal = v;
+        plainBackdrop = false;
+        liveForDemoOnly = forDemo && !RadioPlayer.wantLiveNormal(this);
         v.onResume();
     }
 
-    private void dropToPlain() {
-        plainBackdrop = true;
+    private void dropToSlideshow() {
         FractalView v = fractal;
         fractal = null;
+        liveForDemoOnly = false;
         if (v != null) {
             try { v.onPause(); } catch (Throwable ignored) {}
             try { root.removeView(v); } catch (Throwable ignored) {}
         }
-        if (dimmer != null) dimmer.setBackgroundColor(0);
+        if (demo || RadioPlayer.wantLiveNormal(this)) showSlides();
+        else hideSlides();
+        if (dimmer != null && !demo) dimmer.setBackgroundColor(0);
         Theme t = Theme.cur();
         root.setBackgroundColor(0xFF000000 | (t.bgDarker & 0xFFFFFF));
-        android.util.Log.i("Radiomarchy", "start renderer=plain gpu=" + gpuName()
+        plainBackdrop = true;
+        if (demo) updateDemo();
+        android.util.Log.i("Radiomarchy", "start renderer=slides gpu=" + gpuName()
                 + " ram=" + (FractalView.totalRam(this) / (1024 * 1024)) + "MB (fallback after kill)");
+    }
+
+    private void showSlides() {
+        if (isFinishing()) return;
+        if (slides == null) {
+            slides = new FractalSlideView(this);
+            root.addView(slides, 0, new FrameLayout.LayoutParams(-1, -1));
+        }
+        slides.setVisibility(View.VISIBLE);
+        slides.start();
+    }
+
+    private void hideSlides() {
+        if (slides == null) return;
+        slides.stop();
+        slides.setVisibility(View.GONE);
+    }
+
+    private void pauseLiveForPlainUi() {
+        if (fractal == null) return;
+        try { fractal.onPause(); } catch (Throwable ignored) {}
+        fractal.setVisibility(View.GONE);
+    }
+
+    private void startDemoVisuals() {
+        if (!demo || isFinishing()) return;
+        if (RadioPlayer.wantLiveDemo(this)) {
+            hideSlides();
+            if (fractal == null) startLiveGl(true);
+            else {
+                fractal.setVisibility(View.VISIBLE);
+                try { fractal.onResume(); } catch (Throwable ignored) {}
+            }
+        } else {
+            pauseLiveForPlainUi();
+            showSlides();
+        }
+        updateDemo();
     }
 
     private String gpuName() {
@@ -383,7 +437,8 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
     @Override
     protected void onResume() {
         super.onResume();
-        if (fractal != null) fractal.onResume();
+        if (fractal != null && fractal.getVisibility() == View.VISIBLE) fractal.onResume();
+        if (slides != null && slides.getVisibility() == View.VISIBLE) slides.start();
         player.addListener(this);
         h.removeCallbacks(tick);
         h.post(tick);
@@ -402,6 +457,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         h.removeCallbacks(tick);
         h.removeCallbacks(startSaverMusicAgain);
         if (fractal != null) fractal.onPause();
+        if (slides != null) slides.stop();
         super.onPause();
         if (saver && !isFinishing()) finish();   // the screensaver never stays behind
     }
@@ -692,6 +748,11 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
             player.prefs().edit().putInt("quality", quality).apply();
             if (fractal != null) fractal.setQuality(quality);
         });
+        String anim = RadioPlayer.animatedMode(this);
+        int animLab = "on".equals(anim) ? R.string.radio_animated_on : "off".equals(anim) ? R.string.radio_animated_off : R.string.radio_animated_auto;
+        setting(getString(R.string.radio_animated), getString(animLab), () -> {
+            RadioPlayer.setAnimatedMode(this, RadioPlayer.nextAnimatedMode(RadioPlayer.animatedMode(this)));
+        });
         setting(getString(R.string.radio_fractal), scenePin < 0 ? getString(R.string.radio_auto) : FractalView.SCENES[scenePin], () -> {
             scenePin = scenePin + 1 >= FractalView.SCENES.length ? -1 : scenePin + 1;
             player.prefs().edit().putInt("scene", scenePin).apply();
@@ -871,12 +932,19 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         demo = on;
         main.animate().alpha(on ? 0f : 1f).setDuration(600).withEndAction(() -> main.setVisibility(demo ? View.INVISIBLE : View.VISIBLE)).start();
         if (!on) main.setVisibility(View.VISIBLE);
-        dimmer.animate().alpha(on ? 0f : 1f).setDuration(600).start();
+        if (dimmer != null) dimmer.animate().alpha(on ? 0f : 1f).setDuration(600).start();
         if (fractal != null) fractal.setDim(1f);
         scroller.setVisibility(on ? View.VISIBLE : View.GONE);
         demoCorner.setVisibility(on ? View.VISIBLE : View.GONE);
-        if (on) updateDemo();
+        if (on) startDemoVisuals();
         else {
+            if (!RadioPlayer.wantLiveNormal(this)) {
+                pauseLiveForPlainUi();
+                hideSlides();
+                Theme th = Theme.cur();
+                root.setBackgroundColor(0xFF000000 | (th.bgDarker & 0xFFFFFF));
+                plainBackdrop = true;
+            }
             View f = getCurrentFocus();
             if (f == null || !f.isShown()) {
                 if (listBox.getChildCount() > 0) listBox.getChildAt(0).requestFocus();
@@ -890,7 +958,8 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                 : "RADIOMARCHY  ·  OMARCHY RADIO ON YOUR TV";
         scroller.setText("★  NOW PLAYING  ·  " + what + "  ·  RADIO.OMARCHY.ORG  ·  EVERY SONG A PULL REQUEST FROM THE OMARCHY COMMUNITY  ·  "
                 + "FRACTALS: MANDELBROT  JULIA  PLASMA  TUNNEL  KALISET  ·  GREETZ TO EVERY DOTFILE TWEAKER OUT THERE  ★          ");
-        String fx = fractal != null ? (FractalView.SCENES[fractal.scene()] + " · " + fractal.quality()) : "plain";
+        String fx = fractal != null ? (FractalView.SCENES[fractal.scene()] + " · " + fractal.quality())
+                : (slides != null && slides.getVisibility() == View.VISIBLE ? "slides" : "plain");
         demoCorner.setText("RADIOMARCHY  ·  " + fx + (saver ? "" : "\n◀ ▶ fractal  ·  ▲ ▼ colours  ·  BACK"));
     }
 
@@ -1056,7 +1125,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         @Override
         protected void onDraw(Canvas c) {
             long now = SystemClock.elapsedRealtime();
-            long period = 1000L / FractalView.HOME_FPS;
+            long period = 1000L / Math.max(1, RadioPlayer.uiFps(getContext()));
             if (lastDraw != 0 && now - lastDraw < period) {
                 if (isShown()) postInvalidateDelayed(period - (now - lastDraw));
                 return;
@@ -1077,7 +1146,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                 float py = hh * (1 - peak[i]);
                 c.drawRect(x, py - dp(2), x + bw, py, p);
             }
-            if (isShown()) postInvalidateDelayed(1000L / FractalView.HOME_FPS);
+            if (isShown()) postInvalidateDelayed(1000L / Math.max(1, RadioPlayer.uiFps(getContext())));
         }
     }
 
@@ -1111,7 +1180,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         protected void onDraw(Canvas c) {
             Theme t = Theme.cur();
             long now = SystemClock.elapsedRealtime();
-            long period = 1000L / FractalView.HOME_FPS;
+            long period = 1000L / Math.max(1, RadioPlayer.uiFps(getContext()));
             if (last != 0 && now - last < period) {
                 if (isShown()) postInvalidateDelayed(period - (now - last));
                 return;
@@ -1134,7 +1203,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                 p.setColor(blend(t.accent, t.cyan, 0.5f + 0.5f * (float) Math.sin(lx / getWidth() * 3.1f + sec)));
                 c.drawText(String.valueOf(text.charAt(i)), lx, y, p);
             }
-            if (isShown()) postInvalidateDelayed(1000L / FractalView.HOME_FPS);
+            if (isShown()) postInvalidateDelayed(1000L / Math.max(1, RadioPlayer.uiFps(getContext())));
         }
     }
 }

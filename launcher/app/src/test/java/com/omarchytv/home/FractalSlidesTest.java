@@ -44,4 +44,25 @@ public class FractalSlidesTest {
         assertTrue(src.contains("applyFractalAccent"));
         assertTrue(src.contains("Ken Burns") || src.contains("SCALE_X"));
     }
+
+    @Test
+    public void sampleSizeIs2OnTightRamAndDecodeUsesRgb565() throws Exception {
+        assertEquals(1, FractalSlides.sampleSize(0));
+        assertEquals(1, FractalSlides.sampleSize(4L * 1024 * 1024 * 1024));
+        assertEquals(2, FractalSlides.sampleSize(2L * 1024 * 1024 * 1024));
+        java.nio.file.Path srcPath = java.nio.file.Path.of("src/main/java/com/omarchytv/home/FractalSlides.java");
+        if (!java.nio.file.Files.isRegularFile(srcPath)) {
+            srcPath = java.nio.file.Path.of("app/src/main/java/com/omarchytv/home/FractalSlides.java");
+        }
+        String src = new String(java.nio.file.Files.readAllBytes(srcPath), java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(src.contains("RGB_565"));
+        assertTrue(src.contains("inSampleSize"));
+        String view = "";
+        java.nio.file.Path vp = java.nio.file.Path.of("src/main/java/com/omarchytv/home/FractalSlideView.java");
+        if (!java.nio.file.Files.isRegularFile(vp)) {
+            vp = java.nio.file.Path.of("app/src/main/java/com/omarchytv/home/FractalSlideView.java");
+        }
+        view = new String(java.nio.file.Files.readAllBytes(vp), java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue("decode runs off the UI thread", view.contains("Lights.run"));
+    }
 }

@@ -560,4 +560,8 @@
     <string name="radio_random">τυχαία</string>
     <string name="radio_quality">Ποιότητα εικόνας</string>
     <string name="radio_quality_auto" formatted="true">αυτόματη, προσαρμόζεται στην τηλεόραση (τώρα %1$s)</string>
+    <string name="radio_animated">Κινούμενα φράκταλ</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ναι</string>
+    <string name="radio_animated_off">όχι</string>
 </resources>

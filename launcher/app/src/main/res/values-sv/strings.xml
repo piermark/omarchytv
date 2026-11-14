@@ -560,4 +560,8 @@
     <string name="radio_random">slumpade</string>
     <string name="radio_quality">Bildkvalitet</string>
     <string name="radio_quality_auto" formatted="true">auto, anpassad till den här tv:n (nu %1$s)</string>
+    <string name="radio_animated">Animerade fraktaler</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ja</string>
+    <string name="radio_animated_off">nej</string>
 </resources>

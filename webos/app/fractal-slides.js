@@ -308,4 +308,58 @@
     }
   ]
 };
+
+})(this);
+
+(function (root) {
+  var api = root.OmarchyFractalSlides;
+  api.mount = function (parent) {
+    if (!parent || !api.slides || !api.slides.length) return null;
+    var box = parent.ownerDocument.createElement("div");
+    box.className = "radio-fractal-slides";
+    box.setAttribute("aria-hidden", "true");
+    box.style.cssText = "position:absolute;left:0;top:0;right:0;bottom:0;overflow:hidden;pointer-events:none;z-index:0;";
+    var cssId = "radio-fractal-slides-css";
+    var doc = parent.ownerDocument;
+    if (!doc.getElementById(cssId)) {
+      var css = doc.createElement("style");
+      css.id = cssId;
+      css.textContent = ".radio-fractal-slides img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;border:0;opacity:0;transition:opacity 1.6s ease;will-change:opacity,transform;transform-origin:center center;}"
+        + ".radio-fractal-slides img.on{opacity:1;}"
+        + "@keyframes radio-fractal-kb{from{transform:scale(1) translate(0,0);}to{transform:scale(1.05) translate(0.7%,-0.5%);}}"
+        + ".radio-fractal-slides img.kb{animation:radio-fractal-kb 13.6s linear forwards;}";
+      (doc.head || parent).appendChild(css);
+    }
+    var a = doc.createElement("img"), b = doc.createElement("img");
+    a.alt = b.alt = "";
+    a.draggable = b.draggable = false;
+    box.appendChild(a); box.appendChild(b);
+    parent.insertBefore(box, parent.firstChild);
+    var front = 0, idx = 0, timer = 0, imgs = [a, b];
+    function show(i, animate) {
+      var slides = api.slides;
+      var incoming = imgs[1 - front], outgoing = imgs[front];
+      var slide = slides[((i % slides.length) + slides.length) % slides.length];
+      incoming.src = slide.file;
+      incoming.className = animate ? "kb" : "on kb";
+      if (animate) { incoming.offsetWidth; incoming.className = "on kb"; if (outgoing) outgoing.className = ""; }
+      else if (outgoing && outgoing !== incoming) outgoing.className = "";
+      front = 1 - front;
+      idx = ((i % slides.length) + slides.length) % slides.length;
+    }
+    function schedule() {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(function () { timer = 0; show(idx + 1, true); schedule(); }, api.intervalMs || 12000);
+    }
+    show(0, false);
+    schedule();
+    return {
+      box: box,
+      destroy: function () {
+        if (timer) clearTimeout(timer);
+        if (box && box.parentNode) box.parentNode.removeChild(box);
+      }
+    };
+  };
+
 })(this);

@@ -560,4 +560,8 @@
     <string name="radio_random">随机</string>
     <string name="radio_quality">画面质量</string>
     <string name="radio_quality_auto" formatted="true">自动，适配这台电视（当前 %1$s）</string>
+    <string name="radio_animated">动态分形</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">是</string>
+    <string name="radio_animated_off">否</string>
 </resources>

@@ -657,4 +657,49 @@ final class RadioPlayer {
     private void stopService() {
         RadioService.stop(app);
     }
+
+    /** Auto / on / off: live fractals in the normal Radiomarchy view. Default auto. */
+    static final String PREF_ANIMATED = "animated";
+
+    static String animatedMode(Context c) {
+        try {
+            String v = get(c).prefs().getString(PREF_ANIMATED, "auto");
+            if ("on".equals(v) || "yes".equals(v) || "si".equals(v)) return "on";
+            if ("off".equals(v) || "no".equals(v)) return "off";
+        } catch (Throwable ignored) {
+        }
+        return "auto";
+    }
+
+    static void setAnimatedMode(Context c, String mode) {
+        String v = "on".equals(mode) || "off".equals(mode) ? mode : "auto";
+        try {
+            get(c).prefs().edit().putString(PREF_ANIMATED, v).apply();
+        } catch (Throwable ignored) {
+        }
+    }
+
+    static String nextAnimatedMode(String cur) {
+        if ("auto".equals(cur)) return "on";
+        if ("on".equals(cur)) return "off";
+        return "auto";
+    }
+
+    /** Live GL behind the panes: on even on a weak TV; off never; auto = live only on a capable GPU. */
+    static boolean wantLiveNormal(Context c) {
+        String m = animatedMode(c);
+        if ("off".equals(m)) return false;
+        if ("on".equals(m)) return true;
+        return !FractalView.preferPlain(c);
+    }
+
+    /** Demo (and the fractals screensaver): live on every TV unless the setting is off (then the still slideshow). */
+    static boolean wantLiveDemo(Context c) {
+        return !"off".equals(animatedMode(c));
+    }
+
+    /** Equaliser / progress redraws: 12 fps on a weak TV, 24 on a capable one. Does not change audio analysis. */
+    static int uiFps(Context c) {
+        return FractalView.preferPlain(c) ? 12 : FractalView.HOME_FPS;
+    }
 }

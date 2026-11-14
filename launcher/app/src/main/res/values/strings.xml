@@ -614,4 +614,8 @@
     <string name="radio_random">random</string>
     <string name="radio_quality">Picture quality</string>
     <string name="radio_quality_auto" formatted="true">auto, fits this TV (now %1$s)</string>
+    <string name="radio_animated">Animated fractals</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">yes</string>
+    <string name="radio_animated_off">no</string>
 </resources>

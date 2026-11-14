@@ -243,4 +243,25 @@ public class FractalViewQualityTest {
         int already = 0xFF7AA2F7;
         assertEquals(already, FractalView.ensureContrast(already, bg));
     }
+
+    @Test
+    public void beautyDemoIs720pFullShaderNotLight() {
+        assertEquals(18, FractalView.BEAUTY_FPS);
+        assertTrue(FractalView.BEAUTY_FPS >= 15 && FractalView.BEAUTY_FPS <= 20);
+        assertEquals(15, FractalView.BEAUTY_MIN_FPS);
+        assertEquals(1, FractalView.BEAUTY_LEVEL);
+        assertFalse(FractalView.isLight(FractalView.BEAUTY_LEVEL));
+        assertEquals("high", FractalView.LEVELS[FractalView.BEAUTY_LEVEL].name);
+        assertTrue(FractalView.LEVELS[FractalView.BEAUTY_LEVEL].iter >= 180);
+        int[] b = FractalView.bufferSize(FractalView.BEAUTY_LEVEL, 1920, 1080, 1080, true);
+        assertArrayEquals(new int[] { 1280, 720 }, b);
+        // high without beauty is 1080p; with beauty it stays 720p and is linearly upscaled
+        assertEquals(1080, FractalView.bufferHeight(1, 1080, 1080, false));
+        assertEquals(720, FractalView.bufferHeight(1, 1080, 1080, true));
+        assertEquals(720, FractalView.bufferHeight(0, 1080, 1080, true));
+        float s = FractalView.smoothDt(0, 0.1f);
+        assertTrue(s <= 0.08f);
+        float s2 = FractalView.smoothDt(0.016f, 0.05f);
+        assertTrue(s2 > 0.016f && s2 < 0.05f);
+    }
 }
