@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -70,19 +72,31 @@ final class LinkBoot {
         }
     }
 
-    /** Pairings changed: promote when a PC is paired, stop the service when none is left. Never throws. */
-    static void pcsChanged(Context c, boolean anyPaired) {
-        if (anyPaired) startService(c);
-        else stopService(c);
-    }
+    /** The keep-alive instance once it is in the foreground; main thread only. */
+    static OmarchyLink.KeepAlive promoted;
+    private static Handler main;
 
-    /** Stops the keep-alive (always allowed, also from the background). Never throws. */
-    static void stopService(Context c) {
-        try {
-            c.stopService(new Intent(c, OmarchyLink.KeepAlive.class));
-        } catch (RuntimeException e) {
-            Log.w(TAG, "stop keep-alive", e);
+    /**
+     * Pairings or the Link switch changed: start or stop the keep-alive to match the current state. Runs on the main
+     * thread, the same thread as the service callbacks, so concurrent pairing callbacks are applied in order, and it
+     * re-reads link.json and the config there instead of trusting a value computed earlier. It never calls
+     * stopService: a service started with startForegroundService and stopped before its startForeground crashes
+     * the app on Android 9+. A promoted instance stops itself; a start still pending stops itself in
+     * onStartCommand, which promotes first and then re-checks {@link #wanted}. Never throws.
+     */
+    static void reconcile(Context c) {
+        Context app = c.getApplicationContext();
+        synchronized (LinkBoot.class) {
+            if (main == null) main = new Handler(Looper.getMainLooper());
         }
+        main.post(() -> {
+            if (wanted(app)) {
+                startService(app);
+                return;
+            }
+            OmarchyLink.KeepAlive s = promoted;
+            if (s != null) s.retire();
+        });
     }
 
     /** startForegroundService on API 26+, startService below. Never throws. */

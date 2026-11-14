@@ -109,9 +109,8 @@ public final class OmarchyLink implements LinkServer.Host {
     static void start(Context c) {
         ensure(c.getApplicationContext());
         // Never throws: a refused start leaves the in-process server running. Link switched off (or the last PC
-        // gone) since the service started: stop it, so the off switch takes effect without a reboot.
-        if (LinkBoot.wanted(c)) LinkBoot.startService(c);
-        else LinkBoot.stopService(c);
+        // gone) since the service started: it stops, so the off switch takes effect without a reboot.
+        LinkBoot.reconcile(c);
     }
 
     /** Returns at once: the store load, socket bind and mDNS run on the Link worker, never on the UI thread. */
@@ -415,19 +414,38 @@ public final class OmarchyLink implements LinkServer.Host {
             ensure(getApplicationContext());
         }
 
+        private int lastStartId;
+
         @Override
         public int onStartCommand(Intent intent, int flags, int startId) {
+            lastStartId = startId;
             // Always first, even for a sticky restart with a null intent: a startForegroundService call must be answered.
             if (!LinkBoot.promote(this)) {
-                stopSelf();
+                stopSelf(startId);
                 return START_NOT_STICKY;
             }
             if (!LinkBoot.wanted(getApplicationContext())) {   // Link off, or no PC paired: no resident service
-                stopForeground(Service.STOP_FOREGROUND_REMOVE);
-                stopSelf();
+                retire();
                 return START_NOT_STICKY;
             }
+            LinkBoot.promoted = this;
             return START_STICKY;
+        }
+
+        /**
+         * Main thread. stopSelf(lastStartId) does nothing when a newer start is already queued; that start's
+         * onStartCommand promotes and decides again, so a pending start is never stopped before startForeground.
+         */
+        void retire() {
+            if (LinkBoot.promoted == this) LinkBoot.promoted = null;
+            stopForeground(Service.STOP_FOREGROUND_REMOVE);
+            stopSelf(lastStartId);
+        }
+
+        @Override
+        public void onDestroy() {
+            if (LinkBoot.promoted == this) LinkBoot.promoted = null;
+            super.onDestroy();
         }
 
         @Override
@@ -898,7 +916,7 @@ public final class OmarchyLink implements LinkServer.Host {
         } catch (Exception ignored) {
         }
         emit("pcs", d);
-        LinkBoot.pcsChanged(app, !server.store().list().isEmpty());
+        LinkBoot.reconcile(app);   // re-reads link.json on the main thread: concurrent callbacks can't race
     }
 
     // --------------------------------------------------------------- cast (PROTOCOL.md §6 Cast)
