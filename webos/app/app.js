@@ -414,6 +414,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     pluginSpacexTv: false,   // 2.20: off until turned on in Settings
     embedPlayer: true,     // Cinemarchy: YouTube plays inside (official embed) by default; an explicit false stays off
     pluginGrokbot: true,   // the Grok Bot companion: on by default, the default assistant
+    officeEnabled: false,  // v2.20 GrokBot Office (office.js): optional, off by default
     grokbotMessage: "",
     companionShape: "",    // "" follows the PC bot; else one of Tom's 14 shapes
     companionColor: "",    // "" follows the PC bot; else one of his 11 colours
@@ -2896,11 +2897,78 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (barRadio) barRadio.addEventListener("click", function () { openRadio(); });
   }
 
+  // ---- v2.20 GrokBot Office (office.js): the bots at their desks, optional (Companion settings) ----
+  // Data: what the PC pushed (omarchy-tv office push -> GET /v1/office on the bridge) or the "office" field of a
+  // Grok Bot diretto reply, kept in localStorage. Asks and hires go through Grok Bot diretto (grokdirect.js).
+  var OFF = window.OmarchyOffice || null, officeUi = null, officeTimer = null, OFFICE_KEY = "omarchytv.office.v1";
+  function officeData() { try { return OFF.parse(window.localStorage.getItem(OFFICE_KEY) || "null"); } catch (e) { return OFF.parse(null); } }
+  function officeSave(d) { try { window.localStorage.setItem(OFFICE_KEY, JSON.stringify(OFF.toJson(d))); } catch (e) {} }
+  function officeFetch() {
+    var base = pcBase();
+    if (!base || typeof fetch !== "function" || !officeUi || document.hidden) return;
+    fetch(base + "/v1/office").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j || !officeUi || j.available === false) return;
+      var d = OFF.parse(j);
+      officeSave(d); officeUi.setData(d);
+    }, function () {});
+  }
+  function officeListen(cb) {
+    var Ctor = speechCtor();
+    if (!Ctor) { cb("unsupported"); return; }
+    try {
+      var r = new Ctor(), done = false;
+      r.lang = speechLang(); r.interimResults = false; r.maxAlternatives = 1;
+      r.onresult = function (ev) { if (done) return; done = true; var a = ev.results && ev.results[0] && ev.results[0][0]; cb(null, a ? a.transcript : ""); };
+      r.onerror = function () { if (!done) { done = true; cb("error"); } };
+      r.onend = function () { if (!done) { done = true; cb("error"); } };
+      r.start();
+    } catch (e) { cb("unsupported"); }
+  }
+  function openOffice() {
+    if (officeUi || !OFF) return;
+    if (!cfg.officeEnabled) { showToast("GrokBot Office is off · Blue › Companion settings"); return; }
+    if (state.modalOpen) closeModal();
+    if (cineUi) closeCinemarchy();
+    if (radioUi) closeRadio();
+    var th = currentThemeObj();
+    officeUi = OFF.open(document.getElementById("stage") || document.body, {
+      lang: getLang(), data: officeData(), store: window.localStorage,
+      theme: { bg: th.bg, fg: th.fg, bright: th.fgBright, accent: th.accent, accent2: th.accent2, magenta: th.magenta, green: th.green, yellow: th.yellow, red: th.red, cyan: th.cyan },
+      speak: function (text, lang) { if (GBD) gbdSpeak(text, lang); },
+      listen: speechCtor() ? officeListen : null,
+      ask: GBD ? function (q, office, cb) {
+        var apps = visibleApps().map(function (a) { return a.name; });
+        OFF.ask(GBD, GBD.load(window.localStorage), q, askLang(), apps,
+          (window.OMARCHY_PLATFORM === "tizen" ? "OmarchyTV on Samsung Tizen" : "OmarchyTV on LG webOS") + " · GrokBot Office", office, function (err, rep, payload) {
+            if (payload) officeSave(OFF.applyReply(officeData(), payload));
+            cb(err, rep, payload);
+          });
+      } : null,
+      onExit: closeOffice
+    });
+    officeFetch();
+    officeTimer = setInterval(officeFetch, 30000);   // only while the office is open (and the page visible)
+  }
+  function closeOffice() {
+    if (officeTimer) { clearInterval(officeTimer); officeTimer = null; }
+    if (officeUi) { var u = officeUi; officeUi = null; u.destroy(); markInput(); renderAll(); }
+  }
+  window.OMARCHY_OPEN_OFFICE = openOffice;
+  window.addEventListener("keydown", function (e) {
+    if (!officeUi) return;
+    var n = window.OmarchyCinemarchy ? window.OmarchyCinemarchy.keyName(e) : "";
+    var tgt = e.target, typing = tgt && /INPUT/.test(tgt.tagName);
+    if (typing && (n === "red" || n === "green" || n === "yellow" || n === "blue" || /^[1-8]$/.test(n))) n = "";   // letters are text here
+    if (officeUi.key(n, e)) e.preventDefault();
+    e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }, true);
+
   function openOmarchyMenu() {
     openModal("Omarchy", "", [
       { icon: "󰕼", label: "Cinemarchy", right: "C ›", act: function () { openCinemarchyModal(0); } },
       { icon: "🎮", label: "OmarchyTV Arcade", right: "V-HOLD · RICE WARS · FORK BOMB ›", act: openArcade },
       { icon: "♫", label: "Radiomarchy", right: "Omarchy Radio · R ›", act: function () { openRadio(); } },
+    ].concat(cfg.officeEnabled && OFF ? [{ icon: "󰚩", label: "GrokBot Office", right: "O ›", act: openOffice }] : []).concat([
       { icon: "", label: tr("menu_plugins"), right: "›", act: openPluginsModal },
       { icon: "󰀻", label: tr("menu_apps"), right: "›", act: openWalkerModal },
       { icon: "󰸌", label: tr("sys_themes"), right: "›", act: openThemesModal },
@@ -2920,7 +2988,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         renderModalList();
       } },
       { label: tr("sys_about"), right: APP_VERSION, act: openAboutModal }
-    ]);
+    ]));
   }
 
   var saverStatusOverride = "";
@@ -3229,7 +3297,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   });
   document.addEventListener("visibilitychange", markInput);
   setInterval(function () {
-    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi || cineUi || radioUi) return;
+    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi || cineUi || radioUi || officeUi) return;
     if (document.getElementById("saver-overlay").className === "active") return;
     if (Date.now() - lastInput >= cfg.saverIdleMin * 60000) startScreensaver();
   }, 5000);
@@ -4141,6 +4209,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cfg.companionOffsetX = nx; cfg.companionOffsetY = nx / 2; saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(offIdx);
     } });
     items.push({ label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui });   // last, so the indices above stay
+    if (OFF) {   // v2.20 GrokBot Office: optional, off by default; it asks and hires through Grok Bot diretto above
+      var offIdx = items.length;
+      items.push(
+        { label: "GrokBot Office (optional)", right: cfg.officeEnabled ? "on" : "off", act: function () { cfg.officeEnabled = !cfg.officeEnabled; saveCfg(); openGrokbotCompanionModal(offIdx); } },
+        { label: "Open GrokBot Office", right: cfg.officeEnabled ? "O ›" : "turn it on first", act: function () { if (cfg.officeEnabled) openOffice(); else showToast("Turn GrokBot Office on first"); } });
+    }
     openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.2.0 (MIT) · Blue: chat · hold Blue: voice · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
@@ -4280,6 +4354,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
     if ((k === "r" || k === "R" || code === 82) && !state.modalOpen && !cineUi) {   // v2.20 Radiomarchy
       openRadio();
+      e.preventDefault();
+      return;
+    }
+
+    if ((k === "o" || k === "O" || code === 79) && !state.modalOpen && !cineUi && cfg.officeEnabled && OFF) {   // v2.20 GrokBot Office (when on)
+      openOffice();
       e.preventDefault();
       return;
     }
