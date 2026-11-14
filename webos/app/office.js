@@ -4,11 +4,16 @@
  * field of a Grok Bot diretto reply): nothing is made up. No bots: an empty office and how to connect Grok Bot.
  * No usage numbers: no usage card. "Ask GrokBot" and "Hire" go through Grok Bot diretto (grokdirect.js: the user's
  * own webhook routine, the reply through ntfy); this file only adds an "office" object to the same request.
+ * 2.20 multi-provider: every bot has a provider tag (grok by default; claude, chatgpt, ...). The Ask box picks who
+ * answers: Grok Bot (the webhook) or an AI on the PC (omarchy-link's assistant: POST /v1/ai/ask on the bridge, the
+ * key stays on the PC). Hire for Claude / ChatGPT goes to the PC (POST /v1/office/hire), which checks the key and
+ * saves the bot before saying yes. "providers_usage" shows each provider's real spend (Admin API keys on the PC).
  * Light on old TVs: at most 30 frames a second, the room is drawn once into an offscreen canvas, and nothing runs
  * while the page is hidden or the office is closed. Same rules as the Android launcher's Office.java.
  * ES5. Host:
  *   var ui = OmarchyOffice.open(el, { lang, theme, data, store, speak(text, lang), ask(q, office, cb(err, reply, officePayload)),
- *     listen(cb(err, text)) | null, onExit }) -> { key(name, e) -> handled, setData(d), destroy() } */
+ *     listen(cb(err, text)) | null, onExit, providers() -> [{id, name, provider}], pcAsk(id, q, cb(err, text)),
+ *     pcHire({name, provider, role, description}, cb(err, res {bot, office})) }) -> { key(name, e) -> handled, setData(d), destroy() } */
 (function (root) {
   "use strict";
   var MAX_BOTS = 24, SHOWN = 16, FRAME_MS = 1000 / 30, PENDING_KEY = "omarchytv.office.pending", PENDING_TTL = 24 * 3600 * 1000;
@@ -32,13 +37,22 @@
     }
     return PALETTE[hash(name) % PALETTE.length];
   }
+  /** Which AI the bot runs on: a short lowercase word ("grok", "claude", "chatgpt", anything else); default "grok".
+      Only a label on the nameplate: Ask and Hire always go to Grok Bot. */
+  function provider(v) {
+    var p = String(v == null ? "" : v).toLowerCase().replace(/[^a-z0-9._-]+/g, "").slice(0, 16);
+    return p || "grok";
+  }
+  var PROVIDER_COLORS = { grok: "#7aa2f7", claude: "#ff9e64", anthropic: "#ff9e64", chatgpt: "#9ece6a", openai: "#9ece6a", gemini: "#bb9af7", google: "#bb9af7" };
+  function providerColor(p) { return PROVIDER_COLORS[p] || "#a9b1d6"; }
   function bot(b) {
     if (!b || typeof b !== "object") return null;
     var name = clean(b.name || b.shortName, 24);
     if (!name) return null;
     var st = String(b.status || "").toLowerCase();
     return { id: slug(b.id || name) || slug(name) || "bot", name: name, role: clean(b.role, 40), color: colorOf(b.color || b.fill, name),
-      status: STATUS.indexOf(st) >= 0 ? st : "idle", task: clean(b.task, 60) };
+      status: STATUS.indexOf(st) >= 0 ? st : "idle", task: clean(b.task, 60), provider: provider(b.provider),
+      assistant: String(b.assistant || "").toLowerCase().replace(/[^a-z0-9._-]/g, "").slice(0, 32) };
   }
   function pct(u) {
     if (!u || typeof u !== "object") return null;
@@ -50,10 +64,24 @@
     var p = pct(u);
     return p == null ? null : { pct: p, label: clean(u.label, 24), resets: clean(u.resets || u.resets_at, 32) };
   }
-  /** Untrusted JSON (string or object) -> { title, bots, usage, at }; never throws. */
+  /** One providers_usage row: real numbers only (spent >= 0; pct only with a budget), else null. */
+  function spend(u) {
+    if (!u || typeof u !== "object" || typeof u.spent !== "number" || !isFinite(u.spent) || u.spent < 0) return null;
+    var r = { provider: provider(u.provider), spent: Math.round(u.spent * 100) / 100, unit: clean(u.unit || "$", 4) || "$", label: clean(u.label, 24),
+      budget: typeof u.budget === "number" && isFinite(u.budget) && u.budget > 0 ? Math.round(u.budget * 100) / 100 : null, pct: null, resets: clean(u.resets, 32) };
+    if (r.budget) r.pct = Math.max(0, Math.min(100, Math.round(u.spent / r.budget * 1000) / 10));
+    return r;
+  }
+  function spends(a) {
+    var out = [];
+    if (Object.prototype.toString.call(a) !== "[object Array]") return out;
+    for (var i = 0; i < a.length && out.length < 6; i++) { var r = spend(a[i]); if (r) out.push(r); }
+    return out;
+  }
+  /** Untrusted JSON (string or object) -> { title, bots, usage, spend, at }; never throws. */
   function parse(j) {
     if (typeof j === "string") { try { j = JSON.parse(j); } catch (e) { j = null; } }
-    var out = { title: "", bots: [], usage: null, at: "" };
+    var out = { title: "", bots: [], usage: null, spend: [], at: "" };
     if (!j || typeof j !== "object") return out;
     out.title = clean(j.title, 32);
     out.at = clean(j.updated_at || j.at, 32);
@@ -64,13 +92,14 @@
       seen[b.id] = true; out.bots.push(b);
     }
     out.usage = usage(j.usage);
+    out.spend = spends(j.providers_usage || j.spend);   // j.spend: already parsed data handed back in
     return out;
   }
   /** A Grok Bot reply's "office" payload on top of the data: "bots" replaces the list, "hired" adds one, "usage" updates. */
   function applyReply(data, office) {
     data = data || parse(null);
     if (!office || typeof office !== "object") return data;
-    var out = { title: data.title, bots: data.bots.slice(), usage: data.usage, at: data.at };
+    var out = { title: data.title, bots: data.bots.slice(), usage: data.usage, spend: data.spend || [], at: data.at };
     if (Object.prototype.toString.call(office.bots) === "[object Array]") out.bots = parse({ bots: office.bots }).bots;
     var h = bot(office.hired);
     if (h && !out.bots.some(function (b) { return b.id === h.id; }) && out.bots.length < MAX_BOTS) out.bots.push(h);
@@ -80,8 +109,10 @@
     return out;
   }
   function toJson(d) {
-    return { title: d.title || undefined, bots: d.bots.map(function (b) { return { id: b.id, name: b.name, role: b.role, color: b.color, status: b.status, task: b.task }; }),
-      usage: d.usage ? { weekly_pct: d.usage.pct, label: d.usage.label, resets: d.usage.resets } : undefined, updated_at: d.at || undefined };
+    return { title: d.title || undefined, bots: d.bots.map(function (b) { return { id: b.id, name: b.name, role: b.role, color: b.color, status: b.status, task: b.task, provider: b.provider, assistant: b.assistant || undefined }; }),
+      usage: d.usage ? { weekly_pct: d.usage.pct, label: d.usage.label, resets: d.usage.resets } : undefined,
+      providers_usage: d.spend && d.spend.length ? d.spend.map(function (r) { return { provider: r.provider, spent: r.spent, unit: r.unit, label: r.label || undefined, budget: r.budget || undefined, resets: r.resets || undefined }; }) : undefined,
+      updated_at: d.at || undefined };
   }
 
   // ---- what the user asked -------------------------------------------------------------------------
@@ -99,7 +130,9 @@
         .replace(/^\s*(please|per favore|bitte|s'il te plaît|por favor|grokbot|grok bot|ok|hey)[\s,]+/i, " ")
         .replace(/^[\s,.:;!-]*(a|an|un|una|uno|ein|eine|einen|une|me)?\s*(new|nuovo|nuova|neuen|nouveau|nuevo)?\s*(bot|agent|agente)?\s*(that|who|to|for|che|per|a|der|die|qui|pour|que|para)?\s+/i, "")
         .replace(/[\s.!?]+$/, "");
-      return { type: "hire", name: name, role: clean(role, 60) };
+      var pv = /\b(claude|anthropic)\b/i.test(s) ? "claude" : /\b(chat\s?gpt|openai|gpt)\b/i.test(s) ? "chatgpt" : "grok";
+      if (pv !== "grok") role = role.replace(/\b(on|with|su|con|mit|avec|sur)?\s*(claude|anthropic|chat\s?gpt|openai|gpt)\b/ig, " ").replace(/^[\s,.:;!-]*(bot|agent|agente)?\s*(that|who|to|for|che|per|der|die|qui|pour|que|para)?\s+/i, "").replace(/\s+/g, " ").trim();
+      return { type: "hire", name: name, role: clean(role, 60), provider: pv };
     }
     if (OPEN.test(s) && s.length < 60 && !/\?\s*$/.test(s)) return { type: "open" };
     return { type: "ask" };
@@ -304,10 +337,12 @@
     c.restore();
     return cy - ry;
   }
-  function plate(c, x, y, txt, col, th, tag) {
+  function plate(c, x, y, txt, col, th, tag, prov) {
     c.save();
+    c.font = "bold 11px CaskaydiaMono, monospace";
+    var pl = prov ? prov.slice(0, 10) : "", pw = pl ? c.measureText(pl).width + 10 : 0;
     c.font = "bold 15px CaskaydiaMono, monospace"; c.textAlign = "left"; c.textBaseline = "middle";
-    var nw = c.measureText(txt).width, tw = tag ? c.measureText(tag).width + 12 : 0, w = Math.min(230, nw + tw + 34), h = 24, l = x - w / 2;
+    var nw = c.measureText(txt).width, tw = tag ? c.measureText(tag).width + 12 : 0, w = Math.min(270, nw + tw + pw + (pw ? 6 : 0) + 34), h = 24, l = x - w / 2;
     c.fillStyle = rgba(th.bg, 0.86); rrect(c, l, y - h, w, h, 8); c.fill();
     c.strokeStyle = col; c.lineWidth = 1.5;
     if (tag && c.setLineDash) c.setLineDash([4, 3]);
@@ -315,6 +350,12 @@
     if (c.setLineDash) c.setLineDash([]);
     c.fillStyle = col; c.beginPath(); c.arc(l + 13, y - h / 2, 4, 0, Math.PI * 2); c.fill();
     c.fillStyle = th.bright || "#c0caf5"; c.fillText(txt, l + 23, y - h / 2 + 1);
+    if (pl) {   // the provider: a small generic text tag, no logos
+      var pc = providerColor(prov), px = l + 23 + nw + 6;
+      c.fillStyle = rgba(pc, 0.2); rrect(c, px, y - h / 2 - 7, pw, 14, 4); c.fill();
+      c.font = "bold 11px CaskaydiaMono, monospace"; c.fillStyle = pc; c.fillText(pl, px + 5, y - h / 2 + 1);
+      c.font = "bold 15px CaskaydiaMono, monospace";
+    }
     if (tag) { c.fillStyle = th.yellow || "#e0af68"; c.fillText(tag, l + w - tw - 2, y - h / 2 + 1); }
     c.restore();
   }
@@ -327,31 +368,31 @@
       pending: "pending", sent: "Sent. %s walks in when Grok Bot confirms.", someone: "The new bot", welcome: "%s joined the office.",
       empty: "No bots here yet. Connect Grok Bot: turn on Grok Bot diretto (Companion settings), push your bots from the PC with omarchy-tv office push bots.json, or say: hire a bot called Trimmer to trim my tokens.",
       not_set: "Grok Bot diretto is off: turn it on and set the webhook in Companion settings.", mic: "Mic", enter: "Enter the office", no_mic: "No voice on this TV: type instead.",
-      keys: "OK talk · ◀▶ choose · type to ask · BACK exit", heard: "I didn't catch that. Try again or type.", more: "+%s more" },
+      keys: "OK talk · ◀▶ choose · type to ask · BACK exit", heard: "I didn't catch that. Try again or type.", more: "+%s more", ai: "AI", pc_off: "Claude and ChatGPT answer from the PC: pair the PC and set the ask code (Companion settings).", hired_pc: "%s is hired on the PC and joined the office.", hiring: "Asking the PC to hire %s…", month: "this month", spend: "Spend" },
     it: { ask: "Chiedi a GrokBot", listening: "Ti ascolto…", thinking: "Ci penso…", anything: "Altro?", bots: "%s bot", one_bot: "1 bot", usage: "Uso settimanale", resets: "si azzera %s",
       opening: "Ci penso io. Apro il tuo ufficio…", hire: "Assumi", hire_title: "Assumi un nuovo bot", name: "Nome", role: "Ruolo", picked: "lo sceglie Grok Bot", cancel: "Annulla",
       pending: "in arrivo", sent: "Inviato. %s entra quando Grok Bot conferma.", someone: "Il nuovo bot", welcome: "%s è entrato in ufficio.",
       empty: "Ancora nessun bot. Collega Grok Bot: attiva Grok Bot diretto (impostazioni del Companion), manda i tuoi bot dal PC con omarchy-tv office push bots.json, oppure di': assumi un bot chiamato Trimmer per tagliare i token.",
       not_set: "Grok Bot diretto è spento: attivalo e imposta il webhook nelle impostazioni del Companion.", mic: "Microfono", enter: "Entra in ufficio", no_mic: "Niente voce su questa TV: scrivi.",
-      keys: "OK parla · ◀▶ scegli · scrivi per chiedere · BACK esci", heard: "Non ho capito. Riprova o scrivi.", more: "+%s altri" },
+      keys: "OK parla · ◀▶ scegli · scrivi per chiedere · BACK esci", heard: "Non ho capito. Riprova o scrivi.", more: "+%s altri", ai: "AI", pc_off: "Claude e ChatGPT rispondono dal PC: abbina il PC e imposta il codice (impostazioni del Companion).", hired_pc: "%s è assunto sul PC ed è entrato in ufficio.", hiring: "Chiedo al PC di assumere %s…", month: "questo mese", spend: "Spesa" },
     de: { ask: "Frag GrokBot", listening: "Ich höre…", thinking: "Ich denke…", anything: "Sonst noch etwas?", bots: "%s Bots", one_bot: "1 Bot", usage: "Wöchentliche Nutzung", resets: "zurück am %s",
       opening: "Mach ich. Ich öffne dein Büro…", hire: "Einstellen", hire_title: "Neuen Bot einstellen", name: "Name", role: "Rolle", picked: "Grok Bot wählt", cancel: "Abbrechen",
       pending: "kommt", sent: "Gesendet. %s kommt, sobald Grok Bot bestätigt.", someone: "Der neue Bot", welcome: "%s ist jetzt im Büro.",
       empty: "Noch keine Bots. Verbinde Grok Bot: schalte Grok Bot diretto ein (Companion-Einstellungen), schick deine Bots vom PC mit omarchy-tv office push bots.json, oder sag: stell einen Bot namens Trimmer ein, der Tokens spart.",
       not_set: "Grok Bot diretto ist aus: schalte es ein und setze den Webhook in den Companion-Einstellungen.", mic: "Mikro", enter: "Ins Büro", no_mic: "Keine Sprache auf diesem TV: tippe.",
-      keys: "OK sprechen · ◀▶ wählen · tippen zum Fragen · BACK schließen", heard: "Nicht verstanden. Nochmal oder tippen.", more: "+%s weitere" },
+      keys: "OK sprechen · ◀▶ wählen · tippen zum Fragen · BACK schließen", heard: "Nicht verstanden. Nochmal oder tippen.", more: "+%s weitere", ai: "KI", pc_off: "Claude und ChatGPT antworten vom PC: koppel den PC und setze den Code (Companion-Einstellungen).", hired_pc: "%s ist auf dem PC eingestellt und im Büro.", hiring: "Der PC stellt %s ein…", month: "diesen Monat", spend: "Kosten" },
     fr: { ask: "Demande à GrokBot", listening: "J'écoute…", thinking: "Je réfléchis…", anything: "Autre chose ?", bots: "%s bots", one_bot: "1 bot", usage: "Usage hebdo", resets: "remise à zéro %s",
       opening: "C'est parti. J'ouvre ton bureau…", hire: "Embaucher", hire_title: "Embaucher un bot", name: "Nom", role: "Rôle", picked: "Grok Bot choisit", cancel: "Annuler",
       pending: "en route", sent: "Envoyé. %s arrive quand Grok Bot confirme.", someone: "Le nouveau bot", welcome: "%s a rejoint le bureau.",
       empty: "Pas encore de bots. Connecte Grok Bot : active Grok Bot diretto (réglages du Companion), envoie tes bots depuis le PC avec omarchy-tv office push bots.json, ou dis : embauche un bot appelé Trimmer pour réduire mes tokens.",
       not_set: "Grok Bot diretto est désactivé : active-le et règle le webhook dans les réglages du Companion.", mic: "Micro", enter: "Entrer au bureau", no_mic: "Pas de voix sur cette TV : tape.",
-      keys: "OK parler · ◀▶ choisir · tape pour demander · BACK quitter", heard: "Pas compris. Réessaie ou tape.", more: "+%s autres" },
+      keys: "OK parler · ◀▶ choisir · tape pour demander · BACK quitter", heard: "Pas compris. Réessaie ou tape.", more: "+%s autres", ai: "IA", pc_off: "Claude et ChatGPT répondent depuis le PC : associe le PC et règle le code (réglages du Companion).", hired_pc: "%s est embauché sur le PC et a rejoint le bureau.", hiring: "Le PC embauche %s…", month: "ce mois-ci", spend: "Dépenses" },
     es: { ask: "Pregunta a GrokBot", listening: "Te escucho…", thinking: "Pensando…", anything: "¿Algo más?", bots: "%s bots", one_bot: "1 bot", usage: "Uso semanal", resets: "se reinicia %s",
       opening: "Hecho. Abro tu oficina…", hire: "Contratar", hire_title: "Contratar un bot", name: "Nombre", role: "Rol", picked: "lo elige Grok Bot", cancel: "Cancelar",
       pending: "llegando", sent: "Enviado. %s entra cuando Grok Bot confirme.", someone: "El nuevo bot", welcome: "%s se unió a la oficina.",
       empty: "Aún no hay bots. Conecta Grok Bot: activa Grok Bot diretto (ajustes del Companion), envía tus bots desde el PC con omarchy-tv office push bots.json, o di: contrata un bot llamado Trimmer para recortar mis tokens.",
       not_set: "Grok Bot diretto está apagado: actívalo y pon el webhook en los ajustes del Companion.", mic: "Micro", enter: "Entrar a la oficina", no_mic: "Sin voz en esta TV: escribe.",
-      keys: "OK hablar · ◀▶ elegir · escribe para preguntar · BACK salir", heard: "No te entendí. Repite o escribe.", more: "+%s más" }
+      keys: "OK hablar · ◀▶ elegir · escribe para preguntar · BACK salir", heard: "No te entendí. Repite o escribe.", more: "+%s más", ai: "IA", pc_off: "Claude y ChatGPT responden desde el PC: empareja el PC y pon el código (ajustes del Companion).", hired_pc: "%s está contratado en el PC y se unió a la oficina.", hiring: "El PC contrata a %s…", month: "este mes", spend: "Gasto" }
   };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 
@@ -366,7 +407,15 @@
     function t(k, a) { var v = L[k] || T.en[k] || k; return a == null ? v : v.replace("%s", a); }
     var data = parse(api.data);
     var store = api.store || null, pending = loadPending();
-    var S = { mode: api.skipStart ? "office" : "start", focus: 0, hire: null, busy: false, reply: "", listening: false, walkers: {}, t0: Date.now(), welcome: "" };
+    var S = { mode: api.skipStart ? "office" : "start", focus: 0, hire: null, busy: false, reply: "", listening: false, walkers: {}, t0: Date.now(), welcome: "", prov: 0 };
+    var HIRE_PROVIDERS = ["grok", "claude", "chatgpt"], PNAME = { grok: "Grok Bot", claude: "Claude", chatgpt: "ChatGPT" };
+    /** Who answers the Ask box: Grok Bot (the webhook) first, then the AIs on the PC (omarchy-link), hired bots too. */
+    function provs() {
+      var out = [{ id: "grok", name: "Grok Bot", provider: "grok" }], l = api.providers ? api.providers() || [] : [];
+      for (var i = 0; i < l.length && out.length < 17; i++) if (l[i] && l[i].id) out.push({ id: "pc:" + l[i].id, name: clean(l[i].name || l[i].id, 24), provider: provider(l[i].provider || l[i].id) });
+      return out;
+    }
+    function prov() { var l = provs(); if (S.prov >= l.length) S.prov = 0; return l[S.prov]; }
     var w = doc.createElement("div"), st = doc.createElement("style");
     w.className = "office";
     var A = th.accent, B = th.bg, F = th.fg, WH = th.bright;
@@ -376,6 +425,9 @@
       ".office .us{position:absolute;left:2.4vw;bottom:4vh;width:19vw;padding:1.4vh 1vw;border:.14vw solid " + A + "88;border-radius:.8vw;background:" + B + "e6;display:none}" +
       ".office .us .n{font-size:2.6vw;color:" + WH + ";font-weight:bold}.office .us .b{height:1vh;background:" + F + "33;border-radius:1vh;margin-top:.8vh;overflow:hidden}.office .us .b i{display:block;height:100%;background:" + A + "}" +
       ".office .us .s{color:" + F + ";font-size:.85em;margin-top:.6vh}" +
+      ".office .us .sp div{margin-top:1vh;font-size:.9em;color:" + WH + "}.office .us .sp em{font-style:normal;font-weight:bold;margin-right:.5vw}.office .us .sp u{text-decoration:none;color:" + F + ";font-size:.85em}" +
+      ".office .us .sp .b{height:.6vh;margin-top:.4vh}" +
+      ".office .bt.pv{font-size:.9em}.office .bt.pv b{font-weight:normal}" +
       ".office .bar{position:absolute;left:50%;bottom:4vh;width:40vw;margin-left:-20vw;display:flex;align-items:center}" +
       ".office .in{flex:1;font:inherit;font-size:1.25vw;color:" + WH + ";background:" + B + "f0;border:.14vw solid " + F + "55;border-radius:3vw;padding:1.3vh 1.4vw;outline:none}" +
       ".office .bt{margin-left:.8vw;padding:1.3vh 1.2vw;border:.14vw solid " + F + "55;border-radius:3vw;background:" + B + "f0;color:" + WH + ";white-space:nowrap}" +
@@ -389,13 +441,14 @@
       ".office .start{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 42%," + B + " 0%," + "#000 85%)}" +
       ".office .start .wm{color:" + WH + ";font-size:2.4vw;font-weight:bold;margin:2vh 0 4vh;letter-spacing:.06em}.office .start .wm b{color:" + A + "}" +
       ".office .start .bar{position:static;margin:0;width:44vw}.office .start .ls{margin-top:3vh;color:" + th.cyan + ";height:3vh}";
-    w.innerHTML = '<canvas></canvas><div class="hd"></div><div class="hint"></div><div class="us"><div class="n"></div><div class="b"><i></i></div><div class="s"></div></div>' +
+    w.innerHTML = '<canvas></canvas><div class="hd"></div><div class="hint"></div><div class="us"><div class="uw"><div class="n"></div><div class="b"><i></i></div><div class="s"></div></div><div class="sp"></div></div>' +
       '<div class="rp"></div><div class="hc"><h2></h2><div class="k">' + esc(t("name")) + '</div><div class="v hn"></div><div class="k">' + esc(t("role")) + '</div><div class="v hr"></div>' +
+      '<div class="k">' + esc(t("ai")) + '</div><div class="row" style="justify-content:flex-start;margin-top:.6vh"><span class="bt hp" style="margin-left:0"></span></div>' +
       '<div class="row"><span class="bt hx">' + esc(t("cancel")) + '</span><span class="bt hy">' + esc(t("hire")) + "</span></div></div>" +
-      '<div class="bar ob"><input class="in" type="text" maxlength="240"><span class="bt mic">🎤 ' + esc(t("mic")) + "</span></div>" +
+      '<div class="bar ob"><input class="in" type="text" maxlength="240"><span class="bt pv"></span><span class="bt mic">🎤 ' + esc(t("mic")) + "</span></div>" +
       '<div class="ft">' + esc(t("keys")) + "</div>" +
       '<div class="start"><canvas class="mk" width="240" height="240" style="position:static;width:12vw;height:12vw"></canvas><div class="wm">GrokBot <b>Office</b></div>' +
-      '<div class="bar sb"><input class="in" type="text" maxlength="240"><span class="bt mic">🎤</span><span class="bt go">' + esc(t("enter")) + ' ›</span></div><div class="ls"></div></div>';
+      '<div class="bar sb"><input class="in" type="text" maxlength="240"><span class="bt pv"></span><span class="bt mic">🎤</span><span class="bt go">' + esc(t("enter")) + ' ›</span></div><div class="ls"></div></div>';
     w.insertBefore(st, w.firstChild);
     el.appendChild(w);
     function q(s) { return w.querySelector(s); }
@@ -435,7 +488,7 @@
       c.globalAlpha = fl; c.drawImage(signCv, 0, 0, W, H); c.globalAlpha = 1;
       var list = data.bots.slice(0, SHOWN), seats = [];
       for (i = 0; i < desks.length; i++) seats.push({ d: desks[i], b: list[i] || null });
-      if (pending) { var free = Math.min(list.length, desks.length - 1); seats[free].b = { name: pending.name || "…", color: pending.color || th.yellow, status: "idle", pending: true, id: "__pending" }; }
+      if (pending) { var free = Math.min(list.length, desks.length - 1); seats[free].b = { name: pending.name || "…", color: pending.color || th.yellow, status: "idle", pending: true, id: "__pending", provider: pending.provider || "grok" }; }
       // back to front, so the nearer desks cover the ones behind
       seats.sort(function (a, b) { return (a.d.x + a.d.y) - (b.d.x + b.d.y); });
       var plates = [];
@@ -453,17 +506,17 @@
           if (walking) {
             c.drawImage(deskCv, p.x - 70, p.y - 40, 140, 90);
             var top0 = blob(c, pos.x, seatY, 54, bt.color, tt, { phase: hash(bt.id) % 7, status: bt.status, walking: true, pending: bt.pending });
-            plates.push([pos.x, top0 - 8, bt.name, bt.color, bt.pending ? t("pending") : ""]);
+            plates.push([pos.x, top0 - 8, bt.name, bt.color, bt.pending ? t("pending") : "", bt.provider]);
           } else {
             var top = blob(c, pos.x, seatY, 54, bt.color, tt, { phase: hash(bt.id) % 7, status: bt.status, walking: false, pending: bt.pending });
             c.drawImage(deskCv, p.x - 70, p.y - 40, 140, 90);
-            plates.push([pos.x, top - 8, bt.name, bt.color, bt.pending ? t("pending") : ""]);
+            plates.push([pos.x, top - 8, bt.name, bt.color, bt.pending ? t("pending") : "", bt.provider]);
           }
         } else {
           c.globalAlpha = 0.75; c.drawImage(deskCv, p.x - 70, p.y - 40, 140, 90); c.globalAlpha = 1;
         }
       }
-      for (i = 0; i < plates.length; i++) plate(c, plates[i][0], plates[i][1], plates[i][2], plates[i][3], th, plates[i][4]);
+      for (i = 0; i < plates.length; i++) plate(c, plates[i][0], plates[i][1], plates[i][2], plates[i][3], th, plates[i][4], plates[i][5]);
       if (data.bots.length > SHOWN) { c.fillStyle = th.fg; c.font = "16px CaskaydiaMono, monospace"; c.textAlign = "right"; c.fillText(t("more", data.bots.length - SHOWN), W - 40, 120); }
     }
     var raf = win.requestAnimationFrame ? function (f) { return win.requestAnimationFrame(f); } : function (f) { return setTimeout(function () { f(Date.now()); }, FRAME_MS); };
@@ -485,13 +538,21 @@
     function render() {
       q(".start").style.display = S.mode === "start" ? "flex" : "none";
       q(".hd").innerHTML = "GrokBot <b>Office</b> <i>· " + esc(data.bots.length === 1 ? t("one_bot") : t("bots", data.bots.length)) + "</i>";
-      var us = q(".us");
+      var us = q(".us"), sp = data.spend || [];
+      us.style.display = data.usage || sp.length ? "block" : "none";
+      q(".us .uw").style.display = data.usage ? "block" : "none";
       if (data.usage) {
-        us.style.display = "block";
         q(".us .n").innerHTML = esc(data.usage.pct) + "%";
-        q(".us .b i").style.width = Math.min(100, data.usage.pct) + "%";
+        q(".us .uw .b i").style.width = Math.min(100, data.usage.pct) + "%";
         q(".us .s").textContent = (data.usage.label || t("usage")) + (data.usage.resets ? " · " + t("resets", data.usage.resets) : "");
-      } else us.style.display = "none";
+      }
+      q(".us .sp").innerHTML = sp.map(function (r) {   // real spend per provider (Admin APIs on the PC); a bar only with a budget
+        var c = providerColor(r.provider);
+        return '<div><em style="color:' + c + '">' + esc(r.provider) + "</em>" + esc(r.unit) + esc(r.spent.toFixed(2)) + (r.budget ? " / " + esc(r.unit) + esc(r.budget) : "") +
+          " <u>" + esc(t("month")) + "</u>" + (r.pct != null ? '<div class="b"><i style="display:block;height:100%;width:' + r.pct + "%;background:" + c + '"></i></div>' : "") + "</div>";
+      }).join("");
+      var pv = prov(), pvHtml = '<b style="color:' + providerColor(pv.provider) + '">◆</b> ' + esc(pv.name);
+      q(".sb .pv").innerHTML = pvHtml; q(".ob .pv").innerHTML = pvHtml;
       var hint = q(".hint");
       hint.style.display = S.mode === "office" && !data.bots.length && !pending && !S.hire && !S.reply ? "block" : "none";
       hint.textContent = t("empty");
@@ -499,16 +560,21 @@
       rp.style.display = S.reply ? "block" : "none"; rp.textContent = S.reply;
       var hc = q(".hc");
       hc.style.display = S.hire ? "block" : "none";
-      if (S.hire) { q(".hc h2").textContent = t("hire_title"); q(".hn").textContent = S.hire.name || "(" + t("picked") + ")"; q(".hr").textContent = S.hire.role || "—"; }
+      if (S.hire) {
+        var hp = S.hire.provider || "grok";
+        q(".hc h2").textContent = t("hire_title"); q(".hn").textContent = S.hire.name || "(" + t("picked") + ")"; q(".hr").textContent = S.hire.role || "—";
+        q(".hp").innerHTML = '<b style="color:' + providerColor(hp) + '">◆</b> ' + esc(PNAME[hp] || hp) + " ▸";
+      }
       q(".ls").textContent = S.listening ? "🎤 " + t("listening") : S.busy ? t("thinking") : S.reply && S.mode === "start" ? S.reply : "";
       var fs = focusables();
-      [sIn, oIn, q(".sb .mic"), q(".sb .go"), q(".ob .mic"), q(".hx"), q(".hy")].forEach(function (x) { x.className = x.className.replace(/\s*\bf\b/g, ""); });
+      [sIn, oIn, q(".sb .pv"), q(".ob .pv"), q(".sb .mic"), q(".sb .go"), q(".ob .mic"), q(".hp"), q(".hx"), q(".hy")].forEach(function (x) { x.className = x.className.replace(/\s*\bf\b/g, ""); });
       if (fs[S.focus]) fs[S.focus].className += " f";
       oIn.placeholder = S.listening ? t("listening") : S.busy ? t("thinking") : t("anything");
+      sIn.placeholder = pv.id === "grok" ? t("ask") + "…" : t("ask").replace(/GrokBot|Grok Bot/, pv.name) + "…";
     }
     function focusables() {
-      if (S.hire) return [q(".hx"), q(".hy")];
-      return S.mode === "start" ? [sIn, q(".sb .mic"), q(".sb .go")] : [oIn, q(".ob .mic")];
+      if (S.hire) return [q(".hp"), q(".hx"), q(".hy")];
+      return S.mode === "start" ? [sIn, q(".sb .pv"), q(".sb .mic"), q(".sb .go")] : [oIn, q(".ob .pv"), q(".ob .mic")];
     }
     function input() { return S.mode === "start" ? sIn : oIn; }
     function say(text) { S.reply = text; render(); if (api.speak && text) api.speak(text, ""); }
@@ -522,13 +588,29 @@
       input().value = "";
       if (input().blur) input().blur();   // the remote's arrows and OK drive the buttons again
       var it = intent(s);
-      if (it.type === "hire") { if (S.mode === "start") enter(true); S.hire = { name: it.name, role: it.role, description: s }; S.reply = ""; S.focus = 1; render(); return; }
+      if (it.type === "hire") {
+        if (S.mode === "start") enter(true);
+        var pp = prov().provider;   // "hire a claude bot…" names it; else the AI picked in the Ask box
+        S.hire = { name: it.name, role: it.role, description: s, provider: it.provider !== "grok" ? it.provider : HIRE_PROVIDERS.indexOf(pp) >= 0 ? pp : "grok" };
+        S.reply = ""; S.focus = 2; render(); return;
+      }
       if (it.type === "open") { S.reply = ""; enter(true); return; }
       if (S.mode === "start") enter(false);
       askBot(askRequest(s, data));
     }
     function askBot(rq, then, keep) {
       if (S.busy) return;
+      var pv = prov();
+      if (pv.id !== "grok" && rq.office && rq.office.action === "ask") {   // an AI on the PC answers (the key stays there)
+        if (!api.pcAsk) { say(t("pc_off")); return; }
+        S.busy = true; if (!keep) S.reply = t("thinking"); render();
+        api.pcAsk(pv.id.slice(3), rq.question, function (err, text) {
+          S.busy = false;
+          if (!alive) return;
+          say(err ? (err === "not_set" ? t("pc_off") : err) : text || "");
+        });
+        return;
+      }
       if (!api.ask) { say(t("not_set")); if (then) then(false); return; }
       S.busy = true; if (!keep) S.reply = t("thinking"); render();
       api.ask(rq.question, rq.office, function (err, rep, office) {
@@ -542,11 +624,31 @@
     }
     function hireNow() {
       var h = S.hire; S.hire = null;
-      pending = { name: h.name, role: h.role, at: Date.now(), before: data.bots.length, color: h.name ? colorOf("", h.name) : th.yellow };
+      if (h.provider && h.provider !== "grok") { hirePc(h); return; }
+      pending = { name: h.name, role: h.role, at: Date.now(), before: data.bots.length, color: h.name ? colorOf("", h.name) : th.yellow, provider: "grok" };
       savePending(); S.walkers.__pending = null; delete S.walkers.__pending;
       S.focus = 0;
       say(t("sent", h.name || t("someone")));
       askBot(hireRequest(h, data), function (ok) { if (!ok && pending && !confirmed(data, pending)) { pending = null; savePending(); render(); } }, true);   // not sent: no ghost at the door
+    }
+    /** Claude / ChatGPT: the PC checks the key with the provider and saves the bot; only its yes brings it in. */
+    function hirePc(h) {
+      S.focus = 0;
+      if (!api.pcHire) { say(t("pc_off")); return; }
+      if (S.busy) return;
+      pending = { name: h.name, role: h.role, at: Date.now(), before: data.bots.length, color: h.name ? colorOf("", h.name) : th.yellow, provider: h.provider, pc: true };
+      S.walkers.__pending = null; delete S.walkers.__pending;
+      S.busy = true; S.reply = t("hiring", h.name || t("someone")); render();
+      api.pcHire({ name: h.name, provider: h.provider, role: h.role, description: h.description }, function (err, res) {
+        S.busy = false;
+        if (!alive) return;
+        if (err || !res || !res.bot) { pending = null; render(); say(err === "not_set" ? t("pc_off") : err || "?"); return; }   // no yes, no bot
+        var name = clean(res.bot.name, 24) || h.name;
+        pending.name = name;
+        setData(res.office ? res.office : applyReply(data, { hired: res.bot }), true);
+        if (pending) { pending = null; }
+        say(t("hired_pc", name));
+      });
     }
     function setData(d, fromReply) {
       data = parse(d);
@@ -577,6 +679,8 @@
       else if (/\bmic\b/.test(f.className)) listen();
       else if (/\bgo\b/.test(f.className)) enter(true);
       else if (/\bhy\b/.test(f.className)) hireNow();
+      else if (/\bhp\b/.test(f.className)) { S.hire.provider = HIRE_PROVIDERS[(HIRE_PROVIDERS.indexOf(S.hire.provider || "grok") + 1) % HIRE_PROVIDERS.length]; render(); }
+      else if (/\bpv\b/.test(f.className)) { S.prov = (S.prov + 1) % provs().length; if (api.onProvider) api.onProvider(prov().id); render(); }
       else if (/\bhx\b/.test(f.className)) { S.hire = null; S.focus = 0; render(); }
     }
     [sIn, oIn].forEach(function (x) { x.addEventListener("keydown", function (e) { if (e.keyCode === 13) { e.preventDefault(); submit(x.value); } }); });
@@ -606,7 +710,8 @@
         return false;
       },
       setData: function (d) { setData(d, false); },
-      state: function () { return { mode: S.mode, hire: S.hire, pending: pending, bots: data.bots.length, usage: !!data.usage, running: !!handle }; },
+      state: function () { return { mode: S.mode, hire: S.hire, pending: pending, bots: data.bots.length, usage: !!data.usage, spend: (data.spend || []).length, running: !!handle, provider: prov().id, focus: S.focus }; },
+      setProvider: function (id) { var l = provs(); for (var i = 0; i < l.length; i++) if (l[i].id === id) S.prov = i; render(); },
       submit: submit,
       enter: function () { enter(false); },
       hire: function () { if (S.hire) hireNow(); },
@@ -620,7 +725,7 @@
   }
 
   var api = { parse: parse, applyReply: applyReply, toJson: toJson, colorOf: colorOf, intent: intent, hireRequest: hireRequest, askRequest: askRequest,
-    requestBody: requestBody, findOffice: findOffice, confirmed: confirmed, ask: ask, layout: layout, due: due, FRAME_MS: FRAME_MS, MAX_BOTS: MAX_BOTS,
+    requestBody: requestBody, findOffice: findOffice, spend: spend, confirmed: confirmed, ask: ask, layout: layout, due: due, FRAME_MS: FRAME_MS, MAX_BOTS: MAX_BOTS, provider: provider, providerColor: providerColor,
     PENDING_KEY: PENDING_KEY, T: T, open: open };
   root.OmarchyOffice = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

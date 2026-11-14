@@ -26,7 +26,7 @@ test("no usage numbers, no usage card: missing, text or out of range values give
   assert.strictEqual(O.parse({ usage: { weekly_pct: "lots" } }).usage, null);
   assert.strictEqual(O.parse({ usage: { weekly_pct: 140 } }).usage, null);
   assert.strictEqual(O.parse({ usage: { pct: "12%" } }).usage.pct, 12);
-  assert.deepStrictEqual(O.parse("not json"), { title: "", bots: [], usage: null, at: "" });
+  assert.deepStrictEqual(O.parse("not json"), { title: "", bots: [], usage: null, spend: [], at: "" });
   assert.strictEqual(O.parse({ bots: Array.from({ length: 40 }, (_, i) => ({ name: "b" + i })) }).bots.length, O.MAX_BOTS);
 });
 
@@ -49,9 +49,9 @@ test("a reply's office payload: bots replaces, hired adds once, usage updates; a
 test("what the user asked: open the office, hire (name and role from their words only), or a question", () => {
   assert.deepStrictEqual(O.intent("open my office"), { type: "open" });
   assert.deepStrictEqual(O.intent("apri l'ufficio"), { type: "open" });
-  assert.deepStrictEqual(O.intent("Hire a bot called Trimmer to trim my tokens"), { type: "hire", name: "Trimmer", role: "trim my tokens" });
-  assert.deepStrictEqual(O.intent("assumi un bot chiamato Ragioniere per controllare le spese"), { type: "hire", name: "Ragioniere", role: "controllare le spese" });
-  assert.deepStrictEqual(O.intent("hire someone who watches CI"), { type: "hire", name: "", role: "someone who watches CI" });
+  assert.deepStrictEqual(O.intent("Hire a bot called Trimmer to trim my tokens"), { type: "hire", name: "Trimmer", role: "trim my tokens", provider: "grok" });
+  assert.deepStrictEqual(O.intent("assumi un bot chiamato Ragioniere per controllare le spese"), { type: "hire", name: "Ragioniere", role: "controllare le spese", provider: "grok" });
+  assert.deepStrictEqual(O.intent("hire someone who watches CI"), { type: "hire", name: "", role: "someone who watches CI", provider: "grok" });
   assert.strictEqual(O.intent("what's the weather tomorrow?").type, "ask");
   assert.strictEqual(O.intent("how is my office doing?").type, "ask");
   assert.strictEqual(O.intent("   ").type, "none");
@@ -126,4 +126,35 @@ test("ask without Grok Bot diretto set up says so, and makes no request", () => 
   O.ask(G, { enabled: false }, "hi", "en", [], "", {}, (e) => { err = e; }, { fetch: () => { called = true; } });
   assert.strictEqual(err, "not_set");
   assert.ok(!called);
+});
+
+test("provider: grok by default, a short lowercase word otherwise; only a tag", () => {
+  const d = O.parse({ bots: [{ name: "A" }, { name: "B", provider: "Claude" }, { name: "C", provider: "ChatGPT" },
+    { name: "D", provider: "<b>mistral large 2 with many words</b>" }, { name: "E", provider: "   " }, { name: "F", provider: 42 }, { name: "G", assistant: "Office-G!" }] });
+  assert.deepStrictEqual(d.bots.map((b) => b.provider).slice(0, 3), ["grok", "claude", "chatgpt"]);
+  assert.match(d.bots[3].provider, /^[a-z0-9._-]{1,16}$/);
+  assert.strictEqual(d.bots[4].provider, "grok");
+  assert.strictEqual(d.bots[5].provider, "42");
+  assert.strictEqual(d.bots[6].assistant, "office-g");
+  assert.strictEqual(O.providerColor("claude"), "#ff9e64");
+  assert.strictEqual(O.providerColor("unknown-ai"), "#a9b1d6");
+  assert.strictEqual(O.toJson(d).bots[1].provider, "claude");
+  assert.strictEqual(O.applyReply(d, { hired: { name: "H", provider: "chatgpt" } }).bots[7].provider, "chatgpt");
+});
+
+test("spend per provider: real numbers only, a percentage only with a budget", () => {
+  const d = O.parse({ bots: [], providers_usage: [
+    { provider: "claude", spent: 12.345, unit: "$", budget: 50, label: "Claude API" }, { provider: "chatgpt", spent: 3.5 },
+    { provider: "x", spent: "lots" }, { provider: "y", spent: -1 }, { provider: "z" }, null, "junk"] });
+  assert.strictEqual(d.spend.length, 2);
+  assert.deepStrictEqual(d.spend[0], { provider: "claude", spent: 12.35, unit: "$", label: "Claude API", budget: 50, pct: 24.7, resets: "" });
+  assert.strictEqual(d.spend[1].pct, null);
+  assert.deepStrictEqual(O.parse({ bots: [] }).spend, []);
+  assert.strictEqual(O.toJson(d).providers_usage[0].spent, 12.35);
+});
+
+test("hire names the provider from the user's words", () => {
+  assert.deepStrictEqual(O.intent("hire a claude bot called Trimmer to trim my tokens"), { type: "hire", name: "Trimmer", role: "trim my tokens", provider: "claude" });
+  assert.strictEqual(O.intent("assumi un bot chiamato Scout su ChatGPT per cercare offerte").provider, "chatgpt");
+  assert.strictEqual(O.intent("hire an OpenAI bot named Pixel").provider, "chatgpt");
 });

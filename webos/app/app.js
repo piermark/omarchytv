@@ -414,7 +414,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     pluginSpacexTv: false,   // 2.20: off until turned on in Settings
     embedPlayer: true,     // Cinemarchy: YouTube plays inside (official embed) by default; an explicit false stays off
     pluginGrokbot: true,   // the Grok Bot companion: on by default, the default assistant
-    officeEnabled: false,  // v2.20 GrokBot Office (office.js): optional, off by default
+    officeEnabled: false, officeProvider: "",  // v2.20 GrokBot Office (office.js): optional, off by default
     grokbotMessage: "",
     companionShape: "",    // "" follows the PC bot; else one of Tom's 14 shapes
     companionColor: "",    // "" follows the PC bot; else one of his 11 colours
@@ -2912,6 +2912,39 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       officeSave(d); officeUi.setData(d);
     }, function () {});
   }
+  // 2.20 multi-provider: Claude / ChatGPT (and every AI signed in on the PC) answer through the PC bridge with the
+  // ask code; the keys stay on the PC. The list is the PC's own (POST /v1/ai/providers): nothing listed, nothing offered.
+  function officePcReady() { return !!(pcBase() && cfg.grokbotCode && typeof fetch === "function"); }
+  function officeTag(p) {
+    var s = String(p.provider || p.id || "").toLowerCase();
+    return /claude|anthropic/.test(s) ? "claude" : /codex|openai|chatgpt|gpt/.test(s) ? "chatgpt" : /grok|xai/.test(s) ? "grok" : s;
+  }
+  function officeProviders() {
+    if (!officePcReady()) return [];
+    return (cfg.tuiProviders || []).filter(function (p) { return p.id !== "grok-bot"; }).map(function (p) { return { id: p.id, name: p.name, provider: officeTag(p) }; });
+  }
+  function officeRefreshProviders() {
+    if (!officePcReady()) return;
+    fetch(pcBase() + "/v1/ai/providers", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" }, body: "{}" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.providers) return;
+        cfg.tuiProviders = j.providers.slice(0, 16).map(function (p) { return { id: String(p.id), name: String(p.name || p.id).slice(0, 32), provider: p.provider ? String(p.provider).slice(0, 16) : undefined }; });
+        saveCfg();
+        if (officeUi) officeUi.setProvider(officeUi.state().provider);
+      }, function () {});
+  }
+  function officePcPost(path, body, cb) {
+    if (!officePcReady()) { cb("not_set"); return; }
+    fetch(pcBase() + path, { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j || {} }; }); })
+      .then(function (res) {
+        var j = res.j;
+        if (res.ok) { cb(null, j); return; }
+        cb(j.error === "unauthorized" ? "Wrong ask code: check it in the Companion settings." :
+          j.error === "not found" ? "Update the omarchy-tv plugin on the PC and restart omarchy-tv webos serve." : (j.message || "The PC could not answer."));
+      }, function () { cb("The PC did not answer · is omarchy-tv webos serve running?"); });
+  }
   function officeListen(cb) {
     var Ctor = speechCtor();
     if (!Ctor) { cb("unsupported"); return; }
@@ -2944,8 +2977,21 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
             cb(err, rep, payload);
           });
       } : null,
+      providers: officeProviders,
+      pcAsk: function (id, q, cb) {
+        officePcPost("/v1/ai/ask", { text: q, provider: id, lang: speechLang() }, function (err, j) { cb(err, j && j.text); });
+      },
+      pcHire: function (h, cb) {
+        officePcPost("/v1/office/hire", h, function (err, j) {
+          if (!err && j && j.office) officeSave(OFF.parse(j.office));
+          cb(err, j);
+        });
+      },
+      onProvider: function (id) { cfg.officeProvider = id; saveCfg(); },
       onExit: closeOffice
     });
+    if (cfg.officeProvider) officeUi.setProvider(cfg.officeProvider);
+    officeRefreshProviders();
     officeFetch();
     officeTimer = setInterval(officeFetch, 30000);   // only while the office is open (and the page visible)
   }
