@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.20.0] — unreleased (`versionCode 29`; webOS 2.20.0, Tizen 2.20.0, PC plugins 2.20.0)
+## [2.20.0] — 2026-11-14 (`versionCode 29`; webOS 2.20.0, Tizen 2.20.0, PC plugins 2.20.0)
 
 Built on the published 2.15.1: everything fixed there is in here.
 
