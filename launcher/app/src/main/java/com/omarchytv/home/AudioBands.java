@@ -43,7 +43,8 @@ final class AudioBands {
     // envelopes and auto-levelling
     private float eBass, eMid, eHigh, eLevel, pBass = 1e-4f, pMid = 1e-4f, pHigh = 1e-4f, pLevel = 1e-4f;
     private final float[] eBars = new float[BARS], pBars = new float[BARS];
-    private float avgBass, prevBassRaw;
+    private float fluxAvg, fluxPeak = 1e-4f;
+    private final float[] prevLow = new float[32];   // the bass bins of the last window (under 160 Hz: < 32 bins)
     private long lastBeatUs = Long.MIN_VALUE / 4;
     private int beats;
     private final int[] barLo = new int[BARS], barHi = new int[BARS];
@@ -78,6 +79,7 @@ final class AudioBands {
         samples = 0;
         head = -1;
         written = 0;
+        java.util.Arrays.fill(prevLow, 0);
         lastBeatUs = Long.MIN_VALUE / 4;
     }
 
@@ -116,10 +118,18 @@ final class AudioBands {
             im[i] = 0;
         }
         fft(re, im);
-        float hz = sampleRate / (float) N, bass = 0, mid = 0, high = 0, all = 0;
+        float hz = sampleRate / (float) N, bass = 0, mid = 0, high = 0, all = 0, flux = 0;
+        int bassBins = 0;
         for (int k = 1; k < N / 2; k++) {
             float f = k * hz, m = (float) Math.sqrt(re[k] * re[k] + im[k] * im[k]);
-            if (f < 160) bass += m;
+            if (f < 160) {
+                bass += m;
+                if (bassBins < prevLow.length) {
+                    flux += Math.max(0, m - prevLow[bassBins]);   // onset: how much the bass bins rose
+                    prevLow[bassBins] = m;
+                }
+                bassBins++;
+            }
             else if (f < 2000) mid += m;
             else if (f < 12000) high += m * 1.6f;   // the highs carry less energy: lift them a little
             all += m;
@@ -128,12 +138,12 @@ final class AudioBands {
         // frame time = the middle of the window
         long t = baseUs + (long) ((samples - N / 2.0) * 1e6 / sampleRate);
 
-        // beat: a bass rise well above its recent average, at most ~5 per second
-        float rise = Math.max(0, bass - prevBassRaw);
-        prevBassRaw = bass;
-        avgBass += (bass - avgBass) * Math.min(1, dt / 0.6f);
-        boolean beat = bass > avgBass * 1.35f && rise > avgBass * 0.18f && t - lastBeatUs > 200_000 && bass > pBass * 0.25f
-                && bass > all * 0.12f;   // the bass carries the moment: noise and hiss alone are no beat
+        // beat: a bass onset (spectral flux of the bins under 160 Hz) well above its recent average, at most 4 a
+        // second, and only when the bass stands out of the spectrum (hiss and noise are flat: no beat)
+        fluxPeak = Math.max(fluxPeak * (1 - dt / 8f), flux);
+        boolean beat = written > 0 && flux > fluxAvg * 3f + 1e-4f && flux > fluxPeak * 0.2f && t - lastBeatUs > 250_000
+                && bass / Math.max(1, bassBins) > 2f * all / (N / 2f - 1);
+        fluxAvg += (flux - fluxAvg) * Math.min(1, dt / 0.5f);
         if (beat) {
             lastBeatUs = t;
             beats++;

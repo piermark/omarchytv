@@ -456,7 +456,8 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                     String meta = (e.durationMs > 0 ? CastUi.clock(e.durationMs / 1000.0) : "")
                             + (e.date.length() >= 16 ? "  ·  " + e.date.substring(5, 16) : "")
                             + (saved > 0 ? "  ·  " + getString(R.string.radio_resume, CastUi.clock(saved / 1000.0)) : "");
-                    row(e, String.format(Locale.ROOT, "%02d", episodes.size() - i), e.title, meta, () -> player.play(episodes, k));
+                    row(e, e.title.matches("^\\d{2,}.*") ? "🎙" : String.format(Locale.ROOT, "%02d", episodes.size() - i), e.title, meta,
+                            () -> player.play(episodes, k));   // titles that carry their own number ("009 ...") get the mic
                 }
                 break;
             }

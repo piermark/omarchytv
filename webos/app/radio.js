@@ -135,19 +135,21 @@
   // ---- the music analysis (the same idea as AudioBands.java, on WebAudio's analyser) ------------------
 
   function Bands() {
-    var pk = [1e-4, 1e-4, 1e-4, 1e-4], e = [0, 0, 0, 0], avgBass = 0, prev = 0, lastBeat = -1e9, beats = 0;
+    var pk = [1e-4, 1e-4, 1e-4, 1e-4], e = [0, 0, 0, 0], lastBeat = -1e9, beats = 0, prevLow = null, fluxAvg = 0, fluxPeak = 1e-4;
     return function (freq, sampleRate, now, dt, out) {
-      var n = freq.length, hz = sampleRate / 2 / n, b = 0, m = 0, h = 0, all = 0, i;
+      var n = freq.length, hz = sampleRate / 2 / n, b = 0, m = 0, h = 0, all = 0, nb = 0, flux = 0, first = !prevLow, i;
+      if (!prevLow) prevLow = [];
       for (i = 1; i < n; i++) {
         var f = i * hz, v = freq[i] / 255;
         v = v * v;
-        if (f < 160) b += v; else if (f < 2000) m += v; else if (f < 12000) h += v * 1.6;
+        if (f < 160) { b += v; flux += Math.max(0, v - (prevLow[nb] || 0)); prevLow[nb] = v; nb++; } else if (f < 2000) m += v; else if (f < 12000) h += v * 1.6;
         all += v;
       }
-      var rise = Math.max(0, b - prev);
-      prev = b;
-      avgBass += (b - avgBass) * Math.min(1, dt / 0.6);
-      if (b > avgBass * 1.35 && rise > avgBass * 0.18 && now - lastBeat > 200 && b > pk[0] * 0.25 && b > all * 0.12) { lastBeat = now; beats++; }
+      // beat: a bass onset (spectral flux under 160 Hz) well above its recent average, at most 4 a second, and only
+      // when the bass stands out of the spectrum (hiss is flat)
+      fluxPeak = Math.max(fluxPeak * (1 - dt / 8), flux);
+      if (!first && flux > fluxAvg * 3 + 1e-3 && flux > fluxPeak * 0.2 && now - lastBeat > 250 && b / Math.max(1, nb) > 2 * all / (n - 1)) { lastBeat = now; beats++; }
+      fluxAvg += (flux - fluxAvg) * Math.min(1, dt / 0.5);
       var raw = [b, m, h, all];
       for (i = 0; i < 4; i++) {
         pk[i] = Math.max(pk[i] * (1 - dt / 8), raw[i]);
@@ -402,7 +404,7 @@
         if (!E.episodes.length) out.push({ label: E.loading ? t("loading") : t("empty") });
         for (i = 0; i < E.episodes.length; i++) (function (k, e) {
           var saved = P.pos[e.url];
-          out.push({ tr: e, num: ("0" + (E.episodes.length - k)).slice(-2), label: e.title, sub: (e.dur ? clock(e.dur) : "") + (e.date ? "  ·  " + e.date.slice(5, 16) : "") + (saved ? "  ·  " + t("resume", clock(saved)) : ""), act: function () { E.play(E.episodes, k); } });
+          out.push({ tr: e, num: /^\d{2,}/.test(e.title) ? "🎙" : ("0" + (E.episodes.length - k)).slice(-2), label: e.title, sub: (e.dur ? clock(e.dur) : "") + (e.date ? "  ·  " + e.date.slice(5, 16) : "") + (saved ? "  ·  " + t("resume", clock(saved)) : ""), act: function () { E.play(E.episodes, k); } });
         })(i, E.episodes[i]);
       } else if (S.src === 2) {
         if (cur) out.push({ tr: cur, num: "▶", label: cur.title, sub: cur.artist, act: E.toggle });
