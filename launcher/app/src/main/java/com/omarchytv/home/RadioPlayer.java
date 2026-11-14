@@ -529,6 +529,30 @@ final class RadioPlayer {
         startService();
     }
 
+    /**
+     * The fractals screensaver (and a return to the player) must be audible: volume 1, audio focus held
+     * again, and if a track is current it is actually started. A MediaSession can say PLAYING and an
+     * AudioTrack can have started while the TV is still silent after a focus loss or a task switch.
+     */
+    void ensureAudible() {
+        if (current() == null) return;
+        ExoPlayer p = player();
+        p.setVolume(1f);
+        try {
+            p.setAudioAttributes(new AudioAttributes.Builder()
+                    .setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), true);
+        } catch (Throwable ignored) {
+        }
+        int st = p.getPlaybackState();
+        if (st == Player.STATE_IDLE || st == Player.STATE_ENDED) start(resumeAt(current()));
+        else if (!p.getPlayWhenReady()) {
+            p.setPlayWhenReady(true);
+            startService();
+        }
+        claimSession();
+        changed();
+    }
+
     /** MEDIA_* keys: true if this player has a current track and handled the key. */
     static boolean isMediaKey(int kc) {
         switch (kc) {

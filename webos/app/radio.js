@@ -268,6 +268,21 @@
       emit();
     };
     E.pause = function () { audio().pause(); };
+    /**
+     * Keep the song audible: the &lt;audio&gt; can report playing while an AudioContext left suspended
+     * (idle/screensaver) is silent, because the analyser reroutes the element through it.
+     */
+    E.ensureAudible = function () {
+      song.muted = false; plain.muted = false;
+      try { song.volume = 1; plain.volume = 1; } catch (e) { /* some TVs freeze volume */ }
+      if (cur() && audio() === song) analyser();
+      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ }
+      var a = audio();
+      if (cur() && a.paused) {
+        var pr = a.play();
+        if (pr && pr.catch) pr.catch(function () { /* the TV said no */ });
+      }
+    };
     E.seek = function (s) { var a = audio(), d = E.duration(); try { a.currentTime = Math.max(0, d ? Math.min(s, d - 0.5) : s); } catch (e) { /* not seekable */ } emit(); };
     E.seekBy = function (s) { E.seek(E.position() + s); };
     E.stop = function () { song.pause(); plain.pause(); song.removeAttribute("src"); plain.removeAttribute("src"); E.queue = []; E.order = []; E.at = -1; emit(); };
@@ -584,11 +599,21 @@
       return true;
     }
     function close() { destroy(); if (api.onExit) api.onExit(); }
+    function startSaverMusic() {
+      if (!S.saver) return;
+      if (E.ensureAudible) E.ensureAudible();
+      if (!E.current()) {
+        var l = visible(E.songs, P.explicit);
+        if (l.length) E.play(l, P.shuffle ? Math.floor(Math.random() * l.length) : 0);
+      }
+    }
+    var offSaver = null;
     function destroy() {
       clearInterval(tickT);
       clearInterval(spT);
       if (scRaf) root.cancelAnimationFrame(scRaf);
       off();
+      if (offSaver) offSaver();
       if (fx) fx.destroy();
       if (w.parentNode) w.parentNode.removeChild(w);
     }
@@ -597,6 +622,10 @@
     var cur0 = E.current();
     if (cur0 && cur0.kind === "episode") { S.src = 1; render(); }
     if (api.demo || api.saver) setDemo(true);
+    if (S.saver) {
+      startSaverMusic();
+      offSaver = E.on(startSaverMusic);
+    }
     return { key: key, destroy: destroy, demo: function () { return S.demo; }, _state: function () { return S; } };
   }
 

@@ -42,7 +42,7 @@ Built on the published 2.15.1: everything fixed there is in here.
   right in half floats.
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
-- **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music if it plays.
+- **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.
 
 ### Home
 

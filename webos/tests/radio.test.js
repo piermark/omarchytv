@@ -105,3 +105,12 @@ test("now-playing label never covers the clock", () => {
     "ellipsis stays, the old 420 px cap is gone");
   assert.ok(/id="bar-radio"/.test(HTML) && /id="bar-clock"/.test(HTML), "the label and the clock are both in the bar");
 });
+
+test("the Radiomarchy screensaver keeps the music audible", () => {
+  const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
+  assert.ok(/E\.ensureAudible\s*=/.test(src), "the engine can wake a silent but 'playing' element");
+  assert.ok(/ctx\.resume/.test(src) && /song\.muted = false/.test(src), "AudioContext resume and unmute");
+  assert.ok(/startSaverMusic/.test(src) && /api\.saver/.test(src), "the saver path starts or resumes a song");
+  const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
+  assert.match(app, /saverMode:\s*"pulse"/, "Pulse stays the default screensaver");
+});

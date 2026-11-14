@@ -313,6 +313,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         refresh(true);
         boolean demoNow = saver || (getIntent() != null && getIntent().getBooleanExtra(EXTRA_DEMO, false));
         if (demoNow) setDemo(true);
+        if (saver) startSaverMusic();
         fetch();
     }
 
@@ -325,12 +326,18 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         h.post(tick);
         lastKey = SystemClock.elapsedRealtime();
         onRadio();
+        if (saver) {
+            startSaverMusic();
+            h.removeCallbacks(startSaverMusicAgain);
+            h.postDelayed(startSaverMusicAgain, 400);   // after a task-switch focus loss on some TVs
+        }
     }
 
     @Override
     protected void onPause() {
         player.removeListener(this);
         h.removeCallbacks(tick);
+        h.removeCallbacks(startSaverMusicAgain);
         fractal.onPause();
         super.onPause();
         if (saver && !isFinishing()) finish();   // the screensaver never stays behind
@@ -379,6 +386,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
                 boolean inList = f != null && isInside(f, listBox);
                 fillList(inList || f == null);
                 refresh(true);
+                if (saver) startSaverMusic();
             });
         });
     }
@@ -765,6 +773,23 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
             b.setSpan(new ForegroundColorSpan(i == at ? t.fgBright : at < 0 ? t.fg : t.fgDim), s, b.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
         lyricsView.setText(b);
+    }
+
+    // ---- screensaver music ----------------------------------------------------------------------------
+
+    private final Runnable startSaverMusicAgain = this::startSaverMusic;
+
+    /**
+     * The fractals screensaver must be heard, not only shown: resume a current track (volume 1, audio focus
+     * held again) or start one from the catalogue if nothing is on. Pulse stays the default screensaver.
+     */
+    private void startSaverMusic() {
+        if (!saver || isFinishing()) return;
+        player.ensureAudible();
+        if (player.current() != null) return;
+        java.util.List<RadioCatalog.Track> list = shownSongs();
+        if (list.isEmpty()) return;
+        player.play(list, player.shuffle() ? (int) (Math.random() * list.size()) : 0);
     }
 
     // ---- demo mode ------------------------------------------------------------------------------------
