@@ -725,7 +725,7 @@ final class LauncherConfig {
         weatherLon = wx != null ? wx.optDouble("lon", Double.NaN) : Double.NaN;
         weatherPlace = wx != null ? wx.optString("place", "") : "";
         tempF = j != null && "F".equalsIgnoreCase(j.optString("tempUnit", "C").trim());
-        String defWp = c != null ? c.getString(R.string.wallpaper).trim() : "omarchy";
+        String defWp = c != null ? c.getString(R.string.wallpaper).trim() : FractalLayer.ID;
         wallpaper = j != null ? j.optString("wallpaper", defWp).trim() : defWp;
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
         themeToPc = j != null && j.optBoolean("themeToPc", false);
@@ -751,7 +751,8 @@ final class LauncherConfig {
         String sq = j != null ? j.optString("shareQr", "live") : "live";
         shareQr = "off".equals(sq) || "boot".equals(sq) ? sq : "live";
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
-        randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
+        // 2.20: a fresh install keeps the Radiomarchy fractals wallpaper (random off). A saved file still defaults random on unless migration locked it.
+        randomWallpaper = j != null && j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
         pluginSpacexTv = plObj != null && plObj.has("spacexTv") && plObj.optBoolean("spacexTv");   // 2.20: off unless the user (or a saved setting) turned it on
         pluginGrokbot = plObj == null || plObj.optBoolean("grokbot", true);
@@ -942,6 +943,24 @@ final class LauncherConfig {
         ss.put("art", "pulse").put("mode", "pulse");
         if (lv != null) lv.put("enabled", false);
         j.put("pulseDefault215", true);
+        return true;
+    }
+
+    /**
+     * v2.20: the default Home animated background is Radiomarchy fractals. One-time. An explicit wallpaper
+     * (random locked off, or a wallpaper other than the old factory default "omarchy" / empty) is left alone.
+     * New and implicit installs get the fractals and random_wallpaper is locked off so rotation cannot replace them.
+     */
+    static boolean fractalWallpaperDefault(JSONObject j) throws org.json.JSONException {
+        if (j == null || j.optBoolean("fractalWp220", false)) return false;
+        j.put("fractalWp220", true);
+        boolean randomOff = (j.has("random_wallpaper") && !j.optBoolean("random_wallpaper", true))
+                || (j.has("randomWallpaper") && !j.optBoolean("randomWallpaper", true));
+        String wp = j.has("wallpaper") ? j.optString("wallpaper", "").trim() : "";
+        boolean explicitWp = !wp.isEmpty() && !"omarchy".equals(wp) && !FractalLayer.ID.equals(wp);
+        if (randomOff || explicitWp) return true;
+        j.put("wallpaper", FractalLayer.ID);
+        j.put("random_wallpaper", false);
         return true;
     }
 

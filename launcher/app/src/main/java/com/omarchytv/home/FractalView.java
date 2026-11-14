@@ -60,7 +60,7 @@ final class FractalView extends GLSurfaceView {
             new Quality("ultra", 2, 500, 1f),
             new Quality("high", 1, 320, 1f),
             new Quality("medium", 1, 180, 1f),
-            new Quality("low", 1, 110, 0.75f),
+            new Quality("low", 1, 110, 1f),   // scale comes from scaleFor(): 720p floor
     };
 
     private final R3 r = new R3();
@@ -124,18 +124,96 @@ final class FractalView extends GLSurfaceView {
         onFail = r;
     }
 
+    /** Live palette (four RGB triples). Called on the UI thread, throttled, for the adaptive Home theme. */
+    interface PaletteListener {
+        void onPalette(float[] pal, boolean frozen);
+    }
+
+    private volatile PaletteListener onPalette;
+    private long lastPaletteEmit;
+
+    void setOnPalette(PaletteListener l) {
+        onPalette = l;
+    }
+
+    /** 720p is the lower bound of adaptive scale. Below it, only iterations and fps drop. */
+    static float scaleFor(int level, int viewH) {
+        if (level < 3) return 1f;
+        return viewH > 0 ? Math.min(1f, 720f / viewH) : 720f / 1080f;
+    }
+
+    /** WCAG-ish: push {@code color} away from {@code bg} until contrast is about 4.5:1. */
+    static int ensureContrast(int color, int bg) {
+        if (contrastRatio(color, bg) >= 4.5f) return color;
+        int towardWhite = mix(color, 0xFFFFFFFF, 0.12f);
+        int towardBlack = mix(color, 0xFF000000, 0.12f);
+        for (int i = 0; i < 16; i++) {
+            if (contrastRatio(towardWhite, bg) >= 4.5f) return towardWhite;
+            if (contrastRatio(towardBlack, bg) >= 4.5f) return towardBlack;
+            towardWhite = mix(towardWhite, 0xFFFFFFFF, 0.12f);
+            towardBlack = mix(towardBlack, 0xFF000000, 0.12f);
+        }
+        return contrastRatio(towardWhite, bg) >= contrastRatio(towardBlack, bg) ? towardWhite : towardBlack;
+    }
+
+    static float contrastRatio(int a, int b) {
+        float l1 = lum(a), l2 = lum(b), hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+        return (hi + 0.05f) / (lo + 0.05f);
+    }
+
+    static int rgb(float r, float g, float b) {
+        int R = Math.max(0, Math.min(255, Math.round(r * 255)));
+        int G = Math.max(0, Math.min(255, Math.round(g * 255)));
+        int B = Math.max(0, Math.min(255, Math.round(b * 255)));
+        return 0xFF000000 | (R << 16) | (G << 8) | B;
+    }
+
+    private static float lum(int c) {
+        return 0.2126f * lin(((c >> 16) & 255) / 255f) + 0.7152f * lin(((c >> 8) & 255) / 255f) + 0.0722f * lin((c & 255) / 255f);
+    }
+
+    private static float lin(float s) {
+        return s <= 0.04045f ? s / 12.92f : (float) Math.pow((s + 0.055) / 1.055, 2.4);
+    }
+
+    private static int mix(int a, int b, float k) {
+        int ar = (a >> 16) & 255, ag = (a >> 8) & 255, ab = a & 255;
+        int br = (b >> 16) & 255, bg = (b >> 8) & 255, bb = b & 255;
+        return 0xFF000000
+                | (Math.round(ar + (br - ar) * k) << 16)
+                | (Math.round(ag + (bg - ag) * k) << 8)
+                | Math.round(ab + (bb - ab) * k);
+    }
+
+
     private void failed() {
         Runnable r = onFail;
         if (r != null) ui.post(r);
     }
 
     private void applyScale(float s) {
+        final float requested = s;
         ui.post(() -> {
-            if (Math.abs(s - appliedScale) < 0.01f) return;
-            appliedScale = s;
-            if (s >= 0.99f) getHolder().setSizeFromLayout();
-            else if (getWidth() > 0 && getHeight() > 0) getHolder().setFixedSize(Math.round(getWidth() * s), Math.round(getHeight() * s));
+            int vh = getHeight();
+            float scale = requested;
+            if (vh > 0) scale = Math.max(scale, scaleFor(3, vh));
+            if (Math.abs(scale - appliedScale) < 0.01f) return;
+            appliedScale = scale;
+            if (scale >= 0.99f) getHolder().setSizeFromLayout();
+            else if (getWidth() > 0 && vh > 0) getHolder().setFixedSize(Math.round(getWidth() * scale), Math.round(vh * scale));
         });
+    }
+
+    private void emitPalette(boolean frozen) {
+        PaletteListener l = onPalette;
+        if (l == null) return;
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (!frozen && now - lastPaletteEmit < 200) return;
+        lastPaletteEmit = now;
+        final float[] copy = new float[12];
+        System.arraycopy(r.pal, 0, copy, 0, 12);
+        final boolean fr = frozen;
+        ui.post(() -> l.onPalette(copy, fr));
     }
 
     // ---- random palettes and geometry ----------------------------------------------------------------
@@ -243,7 +321,10 @@ final class FractalView extends GLSurfaceView {
         final float[] params = new float[SCENES.length * 4];   // vec4 per scene: its random geometry
         // quality
         int level = 1;
-        long frames, frameNs, lastNs, goodSince;
+        long frames, frameNs, lastNs, goodSince, late, lastDrawNs;
+        boolean capFps = true, freezePalette;
+        float iterMul = 1f;
+        int fpsCap = 30;
 
         @Override
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {
@@ -281,7 +362,7 @@ final class FractalView extends GLSurfaceView {
             sceneSince = SystemClock.elapsedRealtime();
             for (int s = 0; s < SCENES.length; s++) randomise(s);
             cur = lowp ? 2 + rnd.nextInt(3) : rnd.nextInt(SCENES.length);
-            applyScale(LEVELS[level].scale);
+            applyScale(scaleFor(level, h > 0 ? h : getHeight()));
         }
 
         private int loc(String n) {
@@ -309,6 +390,8 @@ final class FractalView extends GLSurfaceView {
             if (prog == 0) return;
             long now = SystemClock.elapsedRealtime();
             long ns = System.nanoTime();
+            if (capFps && fpsCap > 0 && lastDrawNs != 0 && ns - lastDrawNs < 1_000_000_000L / fpsCap) return;
+            lastDrawNs = ns;
             float dt = Math.min(0.1f, lastNs == 0 ? 0.016f : (ns - lastNs) / 1e9f);
             measure(ns, now);
             lastNs = ns;
@@ -324,7 +407,8 @@ final class FractalView extends GLSurfaceView {
                 lastBeats = f.beats;
             }
             pickScene(now, music);
-            updatePalette(now);
+            if (!freezePalette) updatePalette(now);
+            emitPalette(freezePalette);
             cycle += dt * (0.03f + 0.22f * f.level + 0.25f * f.high) + pulse * dt * 0.6f;
             // the Mandelbrot dive: in by e^-t, faster with the bass and on beats; then a new random edge point
             zoomKick *= (float) Math.exp(-dt * 3);
@@ -354,7 +438,7 @@ final class FractalView extends GLSurfaceView {
             GLES20.glUniform1f(uCycle, cycle);
             GLES20.glUniform1f(uZoom, zoom);
             GLES20.glUniform2f(uCenter, (float) center[0], (float) center[1]);
-            GLES20.glUniform1f(uIter, lowp ? 64 : Math.min(q.iter, q.iter * 0.55f + dive * 30));
+            GLES20.glUniform1f(uIter, lowp ? 64 : Math.min(q.iter, q.iter * 0.55f + dive * 30) * iterMul);
             GLES20.glUniform1f(uRot, rotDir * (t * 0.03f + dive * 0.15f));
             GLES20.glUniform1f(uDim, dim);
             GLES20.glUniform1f(uAA, q.aa);
@@ -464,16 +548,20 @@ final class FractalView extends GLSurfaceView {
         }
 
         /**
-         * Adapts to the TV: every 2 s, if frames average over 21 ms (under ~48 fps), one level down; after 20 s
-         * comfortably under 11 ms, one level up (ultra included). A pinned level stays as chosen.
+         * Adapts to the TV: start at the current level (high on a typical TV). Every ~2 s, or sooner after a
+         * streak of late frames, if the average is over 21 ms, one level down; the last step is the 720p
+         * floor. Still stuttering there, cap fps (~30) and freeze the palette (never drop resolution further).
+         * After 20 s under 11 ms, step back up. A pinned level stays as chosen, but "low" still freezes.
          */
         private void measure(long ns, long now) {
             if (qualityChanged) {
                 qualityChanged = false;
                 if (pinnedQuality >= 0) level = pinnedQuality;
-                applyScale(LEVELS[level].scale);
+                applyLowPolicy();
+                applyScale(scaleFor(level, h > 0 ? h : getHeight()));
                 frames = 0;
                 frameNs = 0;
+                late = 0;
                 goodSince = now;
             }
             if (lastNs != 0) {
@@ -481,27 +569,60 @@ final class FractalView extends GLSurfaceView {
                 if (d < 200_000_000L) {   // a pause (the app in the background) is not a slow frame
                     frameNs += d;
                     frames++;
+                    if (d > 24_000_000L) late++;
+                    else late = 0;
                 }
             }
-            if (frames < 120) return;
-            double avg = frameNs / (double) frames / 1e6;
+            boolean rush = late >= 8 && pinnedQuality < 0;
+            if (frames < 120 && !rush) return;
+            double avg = frames > 0 ? frameNs / (double) frames / 1e6 : 30;
+            if (frames >= 60) {
+                android.util.Log.i("Radiomarchy", "fps=" + String.format(java.util.Locale.US, "%.1f", 1000.0 / avg)
+                        + " frame=" + String.format(java.util.Locale.US, "%.1f", avg) + "ms level=" + LEVELS[level].name
+                        + " scale=" + scaleFor(level, h) + (capFps ? " cap=" + fpsCap : "") + (freezePalette ? " pal=static" : ""));
+            }
             frames = 0;
             frameNs = 0;
-            if (pinnedQuality >= 0) return;
-            if (avg > 21 && level < LEVELS.length - 1) {
-                level++;
-                goodSince = now;
-                applyScale(LEVELS[level].scale);
-            } else if (avg < 11 && level > 0) {
+            late = 0;
+            if (pinnedQuality >= 0) { applyLowPolicy(); return; }
+            if (avg > 21) {
+                if (level < LEVELS.length - 1) {
+                    level++;
+                    goodSince = now;
+                    applyLowPolicy();
+                    applyScale(scaleFor(level, h > 0 ? h : getHeight()));
+                } else {
+                    capFps = true;
+                    freezePalette = true;
+                    if (fpsCap > 15) fpsCap = 15;
+                    if (iterMul > 0.55f) iterMul = 0.7f;
+                    applyLowPolicy();
+                }
+            } else if (avg < 11) {
                 if (goodSince == 0) goodSince = now;
                 if (now - goodSince > 20000) {
-                    level--;
+                    if (capFps || freezePalette || iterMul < 0.99f) {
+                        capFps = false;
+                        freezePalette = false;
+                        iterMul = 1f;
+                    } else if (level > 0) {
+                        level--;
+                    }
                     goodSince = now;
-                    applyScale(LEVELS[level].scale);
+                    applyLowPolicy();
+                    applyScale(scaleFor(level, h > 0 ? h : getHeight()));
                 }
             } else {
                 goodSince = now;
             }
+        }
+
+        private void applyLowPolicy() {
+            capFps = true;
+            if (level >= 3) { freezePalette = true; if (fpsCap > 20) fpsCap = 20; }
+            else if (pinnedQuality >= 0) { freezePalette = false; iterMul = 1f; fpsCap = 30; }
+            else if (fpsCap < 20) { /* kept by the watchdog after the 720p floor */ }
+            else fpsCap = 30;
         }
 
         private int link(String vs, String fs) {

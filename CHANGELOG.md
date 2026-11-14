@@ -36,11 +36,14 @@ Built on the published 2.15.1: everything fixed there is in here.
 - **They are drawn by the music**: the bass swells and kicks the zoom, every beat pulses the picture and lights the
   tunnel rings, the mids bend the Julia set, the highs light the kaliset; palette cycling speeds up with the music.
   On Android the analysis reads the decoded audio (no microphone, no permission) and is matched to what you hear.
-- **High resolution, fitted to the TV**: the most the GPU can draw smoothly — `ultra` (full resolution with 2×2
-  supersampling), `high`, `medium` (full resolution, fewer iterations), `low` (3/4 resolution, old sticks only). It
-  starts from what the GPU is, measures itself, steps down when frames run late and back up when there is room.
-  Settings → Picture quality pins a level. GPUs without highp floats (Mali-400/450) draw the three scenes that look
-  right in half floats.
+- **High resolution, fitted to the TV**: the look stays at `high` (full resolution, current iterations) when the TV
+  can hold it — that is the target, including on a Sony Mali-T860. `ultra` is full resolution with 2×2 supersampling.
+  It measures frame time and steps down only when frames run late, first by dropping iterations (still full
+  resolution), then to a 720p internal floor (`low`); a 30 fps cap applies already at `high` (about a third of one core on a
+  typical TV), and below the floor it may drop to 15–20 fps and freeze the palette, never resolution. It steps back up when there is headroom. Settings → Picture quality pins a level; pinned `low` is also
+  a static palette and low fps. GPUs without highp floats (Mali-400/450) start at `low` and draw the three scenes
+  that look right in half floats. Frame time is logged every couple of seconds (logcat tag `Radiomarchy`, or the
+  `[Radiomarchy]` console line on LG/Samsung).
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.
@@ -49,7 +52,7 @@ Built on the published 2.15.1: everything fixed there is in here.
 
 - **Motorsport widget is wider**, so Grand Prix names and session times stay in full ("Las Vegas  sun 22 nov 05:00") instead of "Las…".
 - **Now playing no longer covers the clock**: the song in the top bar sits to the right of the date, shrinks with an ellipsis to the space left by the icons (and SpaceX, or the racing countdown), and hides if there is no room.
-- **Radiomarchy fractals can be the Home wallpaper** (Settings → Wallpaper, off by default): the same music-reactive fractals as the screensaver, behind the apps, as an alternative to OmaFire. Picture quality follows the Radiomarchy setting (auto by default); they pause when Home is not on screen, and if the GPU cannot draw them the still wallpaper stays (native OpenGL on Android, never a WebView).
+- **Radiomarchy fractals is the default Home animated background** (Settings → Wallpaper): the same music-reactive fractals as the screensaver, behind the apps. OmaFire stays selectable. A wallpaper you already picked is left alone (including OmaFire, a still, or "omarchy" with random locked off). Picture quality follows the Radiomarchy setting (auto by default). The UI accent colours (top bar, widget borders and titles, app tile focus) follow the fractal palette over time, with contrast kept readable against the theme background; on `low` the palette is static and fps is capped. They pause when Home is not on screen, and if the GPU cannot draw them the still wallpaper and the normal theme stay (native OpenGL on Android, never a WebView).
 - **SpaceX TV is off by default** (the top-bar pill from the `com.sighmon.spacex-tv` plugin). Turn it on in Settings → Plugins; a setting already saved is kept.
 
 ### Pull requests
@@ -67,9 +70,12 @@ Built on the published 2.15.1: everything fixed there is in here.
   train you can recognise.
 - **Graphics that fit the TV** (`screensaver.pulseGraphics`, Settings → Screensaver → Pulse graphics on Android):
   `auto` (default) starts at Pulse 1.8's look on the PC (the 1.8 polish, full pixels) on every TV, then measures
-  frame time and steps down (half pixels, then the plain look) when frames are slow, and steps back up when there
-  is headroom; it no longer guesses from the browser version or a low-RAM flag. `low` is the plain look at half
-  resolution, `medium` the 1.8 look at half resolution, `high` the 1.8 look at full resolution.
+  frame time and steps down when frames are slow, and steps back up when there is headroom; it no longer guesses
+  from the browser version or a low-RAM flag. On 2.20 the host around Pulse (not the vendored engine) keeps a 720p
+  internal floor and a 30 fps cap at the high look (full device pixels, so the scene and plane labels stay sharp;
+  logcat tag `OmarchyPulse` reports fps and this process's CPU). Capable TVs keep the high look; slower TVs render
+  at least HD and CSS-upscale, never below 720p. The Home fractals and OmaFire layers do not keep running under the saver.
+  `low` is the plain look at that floor, `medium` the 1.8 look at the floor, `high` the 1.8 look at full resolution.
 - **The plane tag is Pulse 1.8's**: the card with the route line (FCO → JFK, city names, ft/kt) fills in as soon
   as the lookup returns, and the TV page loads the same Caskaydia Mono weights the tag uses (regular and bold).
 - **Pulse panels** (Android TV, LG, Samsung): Settings › Screensaver › Pulse panels turns each side panel on or off

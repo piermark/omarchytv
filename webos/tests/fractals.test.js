@@ -31,11 +31,36 @@ test("edge points escape late: detail all the way down the zoom", () => {
   }
 });
 
-test("quality levels: full resolution down to medium, 3/4 only at low; old Mali starts low", () => {
+test("quality levels: start at high, 720p floor at low, old Mali starts low", () => {
   assert.deepStrictEqual(Array.from(F.LEVELS, (l) => l.name), ["ultra", "high", "medium", "low"]);
   assert.strictEqual(F.LEVELS[0].aa, 2);
-  assert.ok(F.LEVELS.slice(0, 3).every((l) => l.scale === 1));
+  assert.ok(F.LEVELS.every((l) => l.scale === 1));
+  assert.strictEqual(F.scaleFor(1, 1080), 1);
+  assert.strictEqual(F.scaleFor(3, 1080), 720 / 1080);
+  assert.strictEqual(F.scaleFor(3, 720), 1);
   assert.strictEqual(F.firstLevel("Mali-450 MP", false), 3);
   assert.strictEqual(F.firstLevel("anything", true), 3);
-  assert.strictEqual(F.firstLevel("Mali-G52", false), 2);
+  assert.strictEqual(F.firstLevel("Mali-G52", false), 1);
+  assert.strictEqual(F.firstLevel("Mali-T860", false), 1);
+});
+
+test("WCAG-ish contrast lifts a dark accent off a dark background", () => {
+  const bg = "#111111", dark = "#1a1a1a";
+  assert.ok(F.contrastRatio(dark, bg) < 4.5);
+  assert.ok(F.contrastRatio(F.ensureContrast(dark, bg), bg) >= 4.5);
+  assert.strictEqual(F.ensureContrast("#7aa2f7", bg), "#7aa2f7");
+});
+
+test("the palette uniform is a reused Float32Array, not allocated every frame", () => {
+  const src = fs.readFileSync(path.join(__dirname, "../app/fractals.js"), "utf8");
+  assert.ok(!/uniform3fv\(\s*U\.uPal,\s*new Float32Array/.test(src));
+  assert.match(src, /uniform3fv\(\s*U\.uPal,\s*pal\)/);
+});
+
+test("Home and screensaver fractals start at a 30 fps cap and pause from the host when hidden", () => {
+  const src = fs.readFileSync(path.join(__dirname, "../app/fractals.js"), "utf8");
+  assert.match(src, /fpsCap = 30/);
+  const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
+  assert.ok(app.indexOf("homeFxForSaver(true)") > 0);
+  assert.ok(app.indexOf("!document.hidden") > 0);
 });

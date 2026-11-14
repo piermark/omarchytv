@@ -6,11 +6,12 @@ import android.view.View;
 import android.view.ViewGroup;
 
 /**
- * v2.20 optional Home wallpaper: the same music-reactive Radiomarchy fractals as the screensaver, drawn with
+ * v2.20 Home wallpaper (default): the same music-reactive Radiomarchy fractals as the screensaver, drawn with
  * the native {@link FractalView} (OpenGL ES, never a WebView — a WebView renderer crash took the launcher down
- * on a Sony Android 9 Mali-T860). Off by default; chosen in Settings → Wallpaper next to OmaFire. Picture
- * quality follows Radiomarchy's setting (auto by default). Added only while Home is on screen (paused on
- * {@link #onPause}); if the GPU cannot create a surface the still wallpaper underneath stays.
+ * on a Sony Android 9 Mali-T860). The default animated background in 2.20; OmaFire stays selectable, and a
+ * wallpaper the owner already picked is left alone. Picture quality follows Radiomarchy's setting (auto by
+ * default). Added only while Home is on screen (paused on {@link #onPause}); if the GPU cannot create a
+ * surface the still wallpaper underneath stays.
  */
 final class FractalLayer {
     static final String ID = "radiomarchy:fractals";
@@ -31,6 +32,7 @@ final class FractalLayer {
         if (!is(LauncherConfig.get(a).wallpaper) || wall == null || !(wall.getParent() instanceof ViewGroup)) {
             onPause();
             drop();
+            if (a instanceof MainActivity) ((MainActivity) a).clearFractalAccent();
             return;
         }
         if (fails >= MAX_FAILS) {
@@ -54,6 +56,13 @@ final class FractalLayer {
             int q = a.getSharedPreferences("radiomarchy", Context.MODE_PRIVATE).getInt("quality", 0);
             v.setQuality(q);
             v.setOnFail(() -> fail(v));
+            v.setOnPalette((pal, frozen) -> {
+                if (!(a instanceof MainActivity) || pal == null || pal.length < 12) return;
+                int bg = Theme.cur() != null ? Theme.cur().bg : 0xFF111111;
+                int acc = FractalView.ensureContrast(FractalView.rgb(pal[0], pal[1], pal[2]), bg);
+                int acc2 = FractalView.ensureContrast(FractalView.rgb(pal[6], pal[7], pal[8]), bg);
+                ((MainActivity) a).applyFractalAccent(acc, acc2);
+            });
         } catch (Throwable e) {
             fails++;
             android.util.Log.w("OmarchyTV", "fractals wallpaper: no GL (" + fails + "/" + MAX_FAILS + "), still wallpaper stays");

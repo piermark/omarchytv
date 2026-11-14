@@ -93,6 +93,8 @@ final class HomeV29 extends FrameLayout {
     private final Typeface tf, tfBold;
     private Theme t;
     private LauncherConfig cfg;
+    private int uiAccent, uiAccent2;
+    private boolean liveAccent;
 
     // bar
     private final FrameLayout bar;
@@ -564,7 +566,7 @@ final class HomeV29 extends FrameLayout {
             boolean on = false;
             for (int x : st) if (x == android.R.attr.state_focused) on = true;
             if (!on) return;
-            p.setColor(t != null ? t.accent : Color.WHITE);
+            p.setColor(t != null ? accent() : Color.WHITE);
             android.graphics.Rect b = getBounds();
             c.drawRect(b.left + px(4), b.bottom - px(3), b.right - px(4), b.bottom, p);
         }
@@ -625,10 +627,61 @@ final class HomeV29 extends FrameLayout {
 
     // ---------------------------------------------------------------------------------------------------------
 
-    /** Re-reads config and theme and redraws everything (resume, theme push, settings change). */
+    private int accent() {
+        return liveAccent ? uiAccent : (t != null ? t.accent : 0xFFFFFFFF);
+    }
+
+    private int accent2() {
+        return liveAccent ? uiAccent2 : (t != null ? t.accent2 : 0xFFFFFFFF);
+    }
+
+    /** Accents from the Radiomarchy fractals wallpaper (already contrast-adjusted). */
+    void applyFractalAccent(int a, int a2) {
+        if (t == null) return;
+        if (liveAccent && a == uiAccent && a2 == uiAccent2) return;
+        liveAccent = true;
+        uiAccent = a;
+        uiAccent2 = a2;
+        colorizeAccents();
+    }
+
+    void clearFractalAccent() {
+        if (!liveAccent) return;
+        liveAccent = false;
+        if (t != null) colorizeAccents();
+    }
+
+    /** Top bar, widget borders/titles, tile focus: the live (or theme) accent. */
+    private void colorizeAccents() {
+        if (t == null || cfg == null) return;
+        float op = opacity(cfg), nb = noBlur();
+        int winBg = Theme.withAlpha(t.bg, Math.min(0.98f, op + nb));
+        int acc = accent(), acc2 = accent2();
+        if (ws != null) {
+            for (int i = 0; i < ws.length; i++) {
+                if (ws[i] == null || cfg == null) continue;
+                boolean on = cfg.workspaceAt(i + 1) == activeWs;
+                ws[i].setTextColor(on ? acc : t.fg);
+            }
+        }
+        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) {
+            if (b != null) b.setColors(winBg, t.muted, acc, t.cyan);
+        }
+        if (barSpacex != null) barSpacex.setTextColor(acc2);
+        if (grokbotEyes != null) grokbotEyes.setTextColor(acc);
+        if (remoteBox != null) for (BoxView b : remoteBox) if (b != null) b.setColors(winBg, t.muted, acc, t.cyan);
+        if (gridName != null) gridName.setTextColor(acc);
+        if (termLogo != null) termLogo.setTextColor(acc);
+        if (appName != null) appName.setTextColor(acc);
+        if (wxTemp != null) wxTemp.setTextColor(acc);
+        invalidate();
+    }
+
+        /** Re-reads config and theme and redraws everything (resume, theme push, settings change). */
     void bind(LauncherConfig c, AppAdapter apps) {
         cfg = c;
         t = Theme.cur();
+        if (c == null || !FractalLayer.is(c.wallpaper)) liveAccent = false;
         this.apps = apps;
         float op = opacity(c), nb = noBlur();
         int winBg = Theme.withAlpha(t.bg, Math.min(0.98f, op + nb));
@@ -636,7 +689,7 @@ final class HomeV29 extends FrameLayout {
         clock.setTextColor(t.fgBright);
         for (int i = 0; i < 5; i++) {
             boolean on = c.workspaceAt(i + 1) == activeWs;
-            ws[i].setTextColor(on ? t.accent : t.fg);
+            ws[i].setTextColor(on ? accent() : t.fg);
             ws[i].setTypeface(on ? tfBold : tf);
             ws[i].setPaintFlags(on ? ws[i].getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG : ws[i].getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             ws[i].setVisibility(c.workspaceAt(i + 1) > 0 ? VISIBLE : GONE);
@@ -646,10 +699,10 @@ final class HomeV29 extends FrameLayout {
         for (View b : barIcons) tint(b, t.fgBright);
         tip.setBackgroundColor(Theme.withAlpha(t.bg, 0.98f));
         tip.setTextColor(t.fgBright);
-        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, t.accent, t.cyan);
-        barSpacex.setTextColor(t.accent2);
+        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, accent(), t.cyan);
+        barSpacex.setTextColor(accent2());
         barSpacex.setVisibility(c.pluginSpacexTv ? VISIBLE : GONE);
-        grokbotEyes.setTextColor(t.accent);
+        grokbotEyes.setTextColor(accent());
         grokbotText.setTextColor(t.fgBright);
         boolean mirrored = c.grokbotBotName != null && !c.grokbotBotName.isEmpty();
         grokbotMark.setVisibility(VISIBLE);   // v2.13: Grok Bot's ball when nothing is mirrored
@@ -660,7 +713,7 @@ final class HomeV29 extends FrameLayout {
                 : gbMsg != null ? " " + gbMsg : " companion · ask");
         // The floating face is the one companion: this "companion · ask" tile only stands in when it is off.
         grokbotBox.setVisibility(activeWs == 1 && CompanionPlacement.homeTile(c.pluginGrokbot, c.companionOverlay) ? VISIBLE : GONE);
-        for (BoxView b : remoteBox) b.setColors(winBg, t.muted, t.accent, t.cyan);
+        for (BoxView b : remoteBox) b.setColors(winBg, t.muted, accent(), t.cyan);
         // v2.10: every home widget can be switched off (Settings → Widgets); the clock lives only in the bar.
         wxBox.setVisibility(c.wWeather ? VISIBLE : GONE);
         pcBox.setVisibility(c.wPc ? VISIBLE : GONE);
@@ -676,7 +729,7 @@ final class HomeV29 extends FrameLayout {
         applyRaceColumns(c.wRacing);
         term.setVisibility(activeWs == 1 && c.wTerm ? VISIBLE : GONE);
         if (editPanel == null) post(() -> applyPanelPos(c));
-        gridName.setTextColor(t.accent);
+        gridName.setTextColor(accent());
         gridHints.setTextColor(t.fg);
         gridHints.setText(gridHintsText());
         term.setLegend(null, px(18), px(22));
@@ -1064,7 +1117,7 @@ final class HomeV29 extends FrameLayout {
     }
 
     private void updateWeather() {
-        wxTemp.setTextColor(t.accent);
+        wxTemp.setTextColor(accent());
         wxLine1.setTextColor(t.fg);
         wxLine2.setTextColor(t.fg);
         for (int i = 0; i < wxForecastCells.length; i++) {
@@ -2344,7 +2397,7 @@ final class HomeV29 extends FrameLayout {
             p.setColor(0xE6000000);
             c.drawRect(b.left + o / 2, b.top + o / 2, b.right - o / 2, b.bottom - o / 2, p);
             p.setStrokeWidth(a);
-            p.setColor(t.accent);
+            p.setColor(accent());
             c.drawRect(b.left + o + a / 2, b.top + o + a / 2, b.right - o - a / 2, b.bottom - o - a / 2, p);
         }
 

@@ -307,6 +307,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     private Walker walker;
     private int workspace = 1;
 
+    /** Palette from the Radiomarchy fractals wallpaper: Home accents follow it (WCAG-ish contrast). */
+    void applyFractalAccent(int accent, int accent2) {
+        if (home != null) home.applyFractalAccent(accent, accent2);
+    }
+
+    void clearFractalAccent() {
+        if (home != null) home.clearFractalAccent();
+    }
+
     private void setupHomeV29() {
         home = new HomeV29(this, new HomeV29.Host() {
             @Override
@@ -1011,13 +1020,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     protected void onResume() {
         super.onResume();
         BootScreenView.onResume(this, findViewById(R.id.root));
+        // migrations first, then the wallpaper layers: a first launch must not attach OmaFire/fractals to the old default
+        LauncherConfig.update(this, j -> { LauncherConfig.pulseDefault(j); LauncherConfig.fractalWallpaperDefault(j); });
         OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));   // v2.14 OmaFire animated wallpaper   // "wake" mode: replay after the screen came on
         FractalLayer.onResume(this, findViewById(R.id.wallpaper));  // v2.20 Radiomarchy fractals wallpaper
         RadioPlayer rp = RadioPlayer.peek();
         if (rp != null) rp.claimSession();   // v2.20: after YouTube took audio focus, media keys on Home still resume
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
-        LauncherConfig.update(this, j -> LauncherConfig.pulseDefault(j));   // v2.15: Pulse for everyone, once
         LauncherConfig cfg = LauncherConfig.get(this);
         if (cfg.pulseNotice) {
             Toast.makeText(this, R.string.pulse_notice, Toast.LENGTH_LONG).show();
@@ -1109,6 +1119,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (keyAction != null) {
             getIntent().removeExtra(EXTRA_ACTION);
             grid.post(() -> runKeyAction(keyAction));
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        // The screensaver lives in :saver; on some TVs Home can keep running GL behind it if we only wait for onPause.
+        if (!hasFocus) {
+            OmaFireLayer.onPause();
+            FractalLayer.onPause();
+        } else if (resumed) {
+            OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));
+            FractalLayer.onResume(this, findViewById(R.id.wallpaper));
         }
     }
 
@@ -4174,6 +4197,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     private void startSaver() {
+        OmaFireLayer.onPause();
+        FractalLayer.onPause();
         saverShown = true;
         OmarchyLink.setScreensaver(true);
         try {

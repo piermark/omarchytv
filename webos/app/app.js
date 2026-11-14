@@ -410,7 +410,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     theme: "last-horizon",
     randomTheme: true,
     randomScope: "intros",   // v2.15 (#71): "all" = every bundled theme
-    randomWallpaper: true,
+    randomWallpaper: false, // 2.20: default wallpaper is Radiomarchy fractals; do not rotate it away
     pluginSpacexTv: false,   // 2.20: off until turned on in Settings
     embedPlayer: true,     // Cinemarchy: YouTube plays inside (official embed) by default; an explicit false stays off
     pluginGrokbot: true,   // the Grok Bot companion: on by default, the default assistant
@@ -427,7 +427,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     opacity: 0.75,
     wallpaperDim: 0,
     wallpaperIdx: 0,
-    wallpaper: "",        // "" follows the theme, "plain" = theme colours, else a path from DATA.wallpapers
+    wallpaper: "radiomarchy:fractals",  // 2.20 default Home animated background; OmaFire and stills stay selectable
     proceduralBg: false,
     tempUnit: "C",
     weatherCity: "Alessandria",
@@ -503,6 +503,30 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     // only these keys are written: the rest of the saved settings stays exactly as it was
     try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(pulseWas)); } catch (e) {}
   }
+
+  // v2.20: default Home wallpaper is Radiomarchy fractals, once. An explicit saved wallpaper is left alone.
+  (function fractalWallpaperDefault() {
+    if (cfg.fractalWp220) return;
+    var had = {};
+    try { had = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {}; } catch (e) { had = {}; }
+    var randomOff = had.randomWallpaper === false;
+    var wp = Object.prototype.hasOwnProperty.call(had, "wallpaper") ? String(had.wallpaper || "") : "";
+    var explicitWp = wp !== "" && wp !== "omarchy" && wp !== "radiomarchy:fractals";
+    cfg.fractalWp220 = true;
+    if (!(randomOff || explicitWp)) {
+      cfg.wallpaper = "radiomarchy:fractals";
+      cfg.randomWallpaper = false;
+    }
+    try {
+      var persist = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {};
+      persist.fractalWp220 = true;
+      if (!(randomOff || explicitWp)) {
+        persist.wallpaper = "radiomarchy:fractals";
+        persist.randomWallpaper = false;
+      }
+      localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(persist));
+    } catch (e) {}
+  })();
 
   function getLang() {
     var has = function (l) { return !!STRINGS[l]; };
@@ -702,8 +726,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     r.setProperty("--t-fg-bright", t.fgBright);
     r.setProperty("--t-fg-dim", t.fgDim);
     r.setProperty("--t-muted", t.muted);
-    r.setProperty("--t-accent", t.accent);
-    r.setProperty("--t-accent2", t.accent2);
+    r.setProperty("--t-accent", (fractalAccents && fractalAccents[0]) || t.accent);
+    r.setProperty("--t-accent2", (fractalAccents && fractalAccents[1]) || t.accent2);
     r.setProperty("--t-green", t.green);
     r.setProperty("--t-yellow", t.yellow);
     r.setProperty("--t-red", t.red);
@@ -2210,9 +2234,28 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     omafireMode = m[1];
   }
 
-  // v2.20 optional Home wallpaper: the same music-reactive Radiomarchy fractals as the screensaver (WebGL).
-  // Off by default. Pauses when Home is not visible; if WebGL fails the still wallpaper underneath stays.
-  var fractalUi = null, fractalCanvas = null, fractalFails = 0;
+  // v2.20 default Home wallpaper: the same music-reactive Radiomarchy fractals as the screensaver (WebGL).
+  // OmaFire stays selectable; an explicit saved wallpaper is left alone. Pauses when Home is not visible;
+  // if WebGL fails the still wallpaper underneath stays, and the theme accents are restored.
+  var fractalUi = null, fractalCanvas = null, fractalFails = 0, fractalAccents = null;
+  function applyFractalAccent(pal, frozen) {
+    if (!pal || !window.OmarchyFractals || !window.OmarchyFractals.ensureContrast) return;
+    var th = currentThemeObj() || {}, bg = th.bg || "#111111";
+    var a = window.OmarchyFractals.ensureContrast(window.OmarchyFractals.rgbCss(pal[0], pal[1], pal[2]), bg);
+    var a2 = window.OmarchyFractals.ensureContrast(window.OmarchyFractals.rgbCss(pal[6], pal[7], pal[8]), bg);
+    if (fractalAccents && fractalAccents[0] === a && fractalAccents[1] === a2) return;
+    fractalAccents = [a, a2];
+    try {
+      var r = document.documentElement.style;
+      r.setProperty("--t-accent", a);
+      r.setProperty("--t-accent2", a2);
+    } catch (e) {}
+  }
+  function clearFractalAccent() {
+    if (!fractalAccents) return;
+    fractalAccents = null;
+    try { applyTheme(); } catch (e) {}
+  }
   function fractalOn() { return cfg.wallpaper === "radiomarchy:fractals"; }
   function fractalQuality() {
     var q = 0, pal = 0;
@@ -2239,6 +2282,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function fractalWall(layer) {
     if (!fractalOn() || !layer || !window.OmarchyFractals || fractalFails >= 2) {
       fractalDestroy();
+      clearFractalAccent();
       return;
     }
     if (fractalUi) { fractalTick(); return; }
@@ -2253,7 +2297,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         bands: function (out) { return !!(radioEng && radioEng.bands && radioEng.bands(out)); },
         palette: opt.palette,
         quality: opt.quality,
-        theme: [th.accent || "#7aa2f7", th.accent2 || "#bb9af7", th.cyan || "#7dcfff", th.red || "#f7768e"]
+        theme: [th.accent || "#7aa2f7", th.accent2 || "#bb9af7", th.cyan || "#7dcfff", th.red || "#f7768e"],
+        onPalette: applyFractalAccent
       });
     } catch (e) { fx = null; }
     if (!fx) {
@@ -2839,6 +2884,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     log: function (m) { console.log("[OmarchySaver]", m); }
   };
 
+  function homeFxForSaver(pause) {
+    if (pause) {
+      if (omafireUi) { try { omafireUi.destroy(); } catch (e) {} omafireUi = null; omafireMode = ""; }
+      try { fractalTick(); } catch (e) {}
+    } else {
+      var wl = document.getElementById("wallpaper-layer");
+      try { omafireWall(wl); } catch (e) {}
+      try { fractalWall(wl); fractalTick(); } catch (e) {}
+    }
+  }
+
   function startScreensaver(statusText) {
     if (cfg.saverMode === "radiomarchy" && radioEng) { openRadio({ saver: true }); return; }   // v2.20: the fractals, with the music if it plays
     saverStatusOverride = typeof statusText === "string" ? statusText : "";
@@ -2853,6 +2909,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       fr.onload = function () { pulsePush(fr); };
       pulsePush(fr);
     }
+    homeFxForSaver(true);   // 2.20: no Home fractals / OmaFire work under the saver
   }
 
 
@@ -3019,7 +3076,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return c;
   }
   function pulseUrl() {
-    return "vendor/pulse/index.html#cfg=" + encodeURIComponent(JSON.stringify(pulseCfg()));
+    return "pulse-host.html#cfg=" + encodeURIComponent(JSON.stringify(pulseCfg()));   // v2.20 host wraps vendored Pulse
   }
   // The Pulse page is an iframe: webOS often drops the #cfg hash on file://, and the calendar
   // may still be loading when the URL is first built. Same path as Android: OmarchySaver.pulse()
@@ -3101,6 +3158,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
     // Keys pressed inside the saver iframe never reach this document, so restart the idle clock here.
     markInput();
+    homeFxForSaver(false);
   }
 
   // Idle timer: start the screensaver after cfg.saverIdleMin minutes without input (0 = never),

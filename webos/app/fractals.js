@@ -2,8 +2,9 @@
  * app (FractalView.java), the same fragment shader word for word, drawn with WebGL and danced by the music.
  * Mandelbrot deep zoom into a random point on the set's edge, Julia from a random c, plasma, tunnel and kaliset,
  * each with random geometry and (by default) a random palette at every scene change.
- * It adapts to the TV: it starts from what the GPU is and measures itself, from "ultra" (full resolution, 2x2
- * supersampling) down to "low" (3/4 resolution) only when frames run late; back up when there is room.
+ * It adapts to the TV: it starts at "high" (full resolution) on a typical TV, measures frame time, and steps
+ * down only when frames run late, to a 720p internal floor; below that it drops iterations/fps and freezes
+ * the palette, never resolution. It steps back up when there is room.
  * ES5. Host: OmarchyFractals.create(canvas, { bands: fn(out) -> bool, palette, quality, theme: [hex x4] })
  *   -> { start(), stop(), next(dir), setPalette(i), setQuality(i), scene() -> name, quality() -> name, destroy() }. */
 (function (root) {
@@ -15,7 +16,7 @@
     { name: "ultra", aa: 2, iter: 500, scale: 1 },
     { name: "high", aa: 1, iter: 320, scale: 1 },
     { name: "medium", aa: 1, iter: 180, scale: 1 },
-    { name: "low", aa: 1, iter: 110, scale: 0.75 }
+    { name: "low", aa: 1, iter: 110, scale: 1 }
   ];
   var VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
   var FRAG = "varying vec2 vUv;\nuniform vec2 uRes; uniform float uTime, uBass, uMid, uHigh, uLevel, uPulse, uMix, uCycle, uZoom, uIter, uRot, uDim, uAA;\nuniform int uScene, uScene2; uniform vec3 uPal[4]; uniform vec2 uCenter; uniform vec4 uP[5];\nvec3 pal(float t){ t = fract(t) * 4.0; float k = fract(t); k = k * k * (3.0 - 2.0 * k);\n  if (t < 1.0) return mix(uPal[0], uPal[1], k); if (t < 2.0) return mix(uPal[1], uPal[2], k);\n  if (t < 3.0) return mix(uPal[2], uPal[3], k); return mix(uPal[3], uPal[0], k); }\nvec2 rot(vec2 p, float a){ float c = cos(a), s = sin(a); return vec2(c * p.x - s * p.y, s * p.x + c * p.y); }\nvec3 shade(float n, float m2, float de, float px, float glow){\n  float sn = max(0.0, n - log2(max(1.0001, log2(m2))) + 4.0);\n  float t = log2(sn + 1.0) * 0.38 + uCycle;\n  float fade = clamp(log2(sn + 1.0) / 6.0, 0.0, 1.0);\n  float edge = exp(-de / (px * 2.5));\n  return pal(t) * (0.16 + 0.6 * fade) * (0.85 + 0.5 * uLevel) + pal(t + 0.25) * edge * (0.8 + glow); }\nvec3 mandel(vec2 p){\n  vec2 c = uCenter + rot(p, uRot) * uZoom; vec2 z = vec2(0.0), dz = vec2(0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n  for (int i = 0; i < 500; i++) { if (float(i) >= uIter) break;\n    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x) + vec2(1.0, 0.0);\n    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n    m2 = dot(z, z); trap = min(trap, abs(z.y)); if (m2 > 256.0) break; n += 1.0; }\n  if (m2 <= 256.0) return pal(uCycle * 2.0 + trap * 3.0) * (0.05 + 0.22 * uPulse);\n  float de = 0.25 * sqrt(m2) * log(m2) / max(length(dz), 1e-20);\n  return shade(n, m2, de, 2.0 * uZoom / uRes.y, uPulse); }\nvec3 julia(vec2 p){\n  vec4 q = uP[1]; float a = uTime * 0.21 + uMid * 1.5;\n  vec2 c = q.xy + q.z * vec2(cos(a), sin(a * 1.3)) * (1.0 + uBass);\n  float sc = q.w - 0.1 * uPulse; vec2 z = rot(p, uTime * 0.05) * sc, dz = vec2(1.0, 0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n  for (int i = 0; i < 500; i++) { if (float(i) >= uIter * 0.7) break;\n    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x);\n    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n    m2 = dot(z, z); trap = min(trap, length(z - vec2(0.0, 0.3 * sin(uTime * 0.3)))); if (m2 > 256.0) break; n += 1.0; }\n  if (m2 <= 256.0) return pal(uCycle + trap) * (0.08 + 0.2 * uPulse) + pal(uCycle + 0.5) * exp(-trap * 5.0) * (0.3 + 0.7 * uHigh);\n  float de = 0.25 * sqrt(m2) * log(m2) / max(length(dz), 1e-20);\n  return shade(n, m2, de, 2.0 * sc / uRes.y, uPulse) + pal(uCycle + 0.5) * exp(-trap * 6.0) * 0.4 * uHigh; }\nvec3 plasma(vec2 p){\n  vec4 q = uP[2]; float t = uTime * (0.6 + 0.5 * uMid); p *= 1.3 + 0.5 * uBass;\n  float v = sin(p.x * q.x + t) + sin((p.y * q.y + t) * 0.8) + sin((p.x + p.y) * q.z * 0.7 + t * 1.3)\n    + sin(length(p * q.w + vec2(sin(t * 0.3), cos(t * 0.5)) * 3.0) - t * 2.0);\n  return pal(v * 0.125 + uCycle) * (0.7 + 0.5 * uBass + 0.4 * uPulse); }\nvec3 tunnel(vec2 p){\n  vec4 q = uP[3];\n  p = rot(p, uTime * 0.2 * q.z + 0.3 * sin(uTime * 0.37)); p += 0.15 * vec2(sin(uTime * 0.5), cos(uTime * 0.4));\n  float r = max(length(p), 0.001), a = atan(p.y, p.x);\n  float u = 0.35 / r + uTime * q.w * (0.5 + 0.9 * uBass), v = a / 3.14159265 * q.y + q.z * 0.2 / r + uTime * 0.07;\n  float ch = mod(floor(u * q.x) + floor(v), 2.0);\n  vec3 c = pal(u * 0.07 + uCycle) * (0.45 + 0.55 * ch);\n  float ring = exp(-abs(fract(u * 0.5) - 0.5) * 18.0) * uPulse;\n  return c * smoothstep(0.0, 0.5, r) * (0.8 + 0.4 * uLevel) + ring * pal(uCycle + 0.5) * 1.2; }\nvec3 kali(vec2 p){\n  vec4 q = uP[4]; vec2 z = rot(p, uTime * 0.04) * q.z * (0.9 + 0.1 * sin(uTime * 0.13));\n  vec2 c = q.xy + vec2(0.1 * sin(uTime * 0.071), 0.1 * cos(uTime * 0.053)) + vec2(uMid, -uBass) * 0.035;\n  float acc = 0.0, lo = 1e9;\n  for (int i = 0; i < 16; i++) { if (float(i) >= q.w) break; z = abs(z) / max(dot(z, z), 0.0005) + c; float l = length(z); lo = min(lo, l); acc += exp(-l * 1.6); }\n  vec3 col = pal(acc * 0.08 + uCycle) * acc * 0.17;\n  return col * (0.7 + 0.6 * uHigh + 0.4 * uPulse) + pal(uCycle + 0.3) * exp(-lo * 9.0) * (0.3 + uHigh); }\nvec3 scene(int s, vec2 p){\n#ifndef LOWP\n  if (s == 0) return mandel(p); if (s == 1) return julia(p);\n#endif\n  if (s == 3) return tunnel(p); if (s == 4) return kali(p); return plasma(p); }\nvec3 frame(vec2 uv){\n  vec2 p = uv * vec2(uRes.x / uRes.y, 1.0);\n  vec3 c = scene(uScene, p);\n  if (uMix > 0.0) c = mix(c, scene(uScene2, p), smoothstep(0.0, 1.0, uMix));\n  return c; }\nvoid main(){\n  vec3 c = frame(vUv);\n  if (uAA > 1.5) {\n    vec2 px = 1.0 / uRes;\n    c += frame(vUv + vec2(px.x, 0.0)) + frame(vUv + vec2(0.0, px.y)) + frame(vUv + px);\n    c *= 0.25; }\n  c = c / (1.0 + c * 0.35);\n  float vig = 1.0 - 0.28 * dot(vUv * 0.75, vUv * 0.75);\n  float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) + uTime) * 43758.5453);\n  c = c * vig * uDim + (n - 0.5) / 255.0;\n  gl_FragColor = vec4(max(c, 0.0), 1.0); }\n";
@@ -79,7 +80,47 @@
     var g = String(gpu || "").toLowerCase();
     if (lowp || /mali-[34]|videocore iv/.test(g)) return 3;
     if (/mali-t7|mali-g31|mali-g51|adreno \(tm\) 3|powervr ge8/.test(g)) return 2;
-    return 2;   // TV browsers: start at medium, step up to high / ultra when there is room
+    return 1;   // typical TVs (and unknown GPUs): start at high, step down only on stutter
+  }
+
+  /** 720p is the lower bound of adaptive scale. Below it, only iterations and fps drop. */
+  function scaleFor(level, viewH) {
+    if (level < 3) return 1;
+    return viewH > 0 ? Math.min(1, 720 / viewH) : 720 / 1080;
+  }
+
+  function rgbCss(r, g, b) {
+    function h(v) { v = Math.max(0, Math.min(255, Math.round(v * 255))); return (v < 16 ? "0" : "") + v.toString(16); }
+    return "#" + h(r) + h(g) + h(b);
+  }
+  function lin(s) { return s <= 0.04045 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4); }
+  function lum(c) {
+    var m = /^#?([0-9a-f]{6})$/i.exec(c), n = m ? parseInt(m[1], 16) : 0;
+    return 0.2126 * lin(((n >> 16) & 255) / 255) + 0.7152 * lin(((n >> 8) & 255) / 255) + 0.0722 * lin((n & 255) / 255);
+  }
+  function contrastRatio(a, b) {
+    var l1 = lum(a), l2 = lum(b), hi = Math.max(l1, l2), lo = Math.min(l1, l2);
+    return (hi + 0.05) / (lo + 0.05);
+  }
+  function mixHex(a, b, k) {
+    function ch(h, i) { return parseInt(h.substr(i, 2), 16); }
+    a = (a || "#000000").replace("#", ""); b = (b || "#ffffff").replace("#", "");
+    var r = Math.round(ch(a, 0) + (ch(b, 0) - ch(a, 0)) * k);
+    var g = Math.round(ch(a, 2) + (ch(b, 2) - ch(a, 2)) * k);
+    var bl = Math.round(ch(a, 4) + (ch(b, 4) - ch(a, 4)) * k);
+    function h(v) { v = Math.max(0, Math.min(255, v)); return (v < 16 ? "0" : "") + v.toString(16); }
+    return "#" + h(r) + h(g) + h(bl);
+  }
+  function ensureContrast(color, bg) {
+    if (contrastRatio(color, bg) >= 4.5) return color;
+    var tw = mixHex(color, "#ffffff", 0.12), tb = mixHex(color, "#000000", 0.12), i;
+    for (i = 0; i < 16; i++) {
+      if (contrastRatio(tw, bg) >= 4.5) return tw;
+      if (contrastRatio(tb, bg) >= 4.5) return tb;
+      tw = mixHex(tw, "#ffffff", 0.12);
+      tb = mixHex(tb, "#000000", 0.12);
+    }
+    return contrastRatio(tw, bg) >= contrastRatio(tb, bg) ? tw : tb;
   }
 
   /** The no-music pulse (~100 bpm), as AudioBands.idle on Android. */
@@ -129,9 +170,10 @@
     var t0 = Date.now(), cur = lowp ? 2 + Math.floor(rnd() * 3) : Math.floor(rnd() * SCENES.length), next = -1, mix = 0, mixStart = 0;
     var forced = -1, sceneSince = Date.now(), beatCount = 0, sceneBeats = 32, lastBeats = -1;
     var cycle = 0, dive = 0, zoomKick = 0, rotDir = 1, diveSpeed = 1, center = [-0.743643887, 0.131825904];
-    var params = new Float32Array(SCENES.length * 4), pal = [], palFrom = [], palTo = [], palStart = 0, newPal = true;
+    var params = new Float32Array(SCENES.length * 4), pal = new Float32Array(12), palFrom = new Float32Array(12), palTo = new Float32Array(12), palStart = 0, newPal = true;
     var f = { bass: 0, mid: 0, high: 0, level: 0, beatAgeMs: 1e9, beats: 0 };
-    var frames = 0, frameMs = 0, lastT = 0, goodSince = 0;
+    var frames = 0, frameMs = 0, lastT = 0, goodSince = 0, late = 0, lastDraw = 0, lastPalEmit = 0, lastFpsLog = 0;
+    var capFps = true, freezePalette = false, iterMul = 1, fpsCap = 30;
     for (i = 0; i < 12; i++) { pal[i] = 0; palFrom[i] = 0; }
 
     function newCenter() {
@@ -173,37 +215,69 @@
     function updatePalette(now) {
       if (newPal) {
         newPal = false;
-        palFrom = pal.slice();
-        palTo = palette === 0 ? randomPalette(rnd) : fixedPalette(palette, opts.theme);
+        palFrom.set(pal);
+        var nxt = palette === 0 ? randomPalette(rnd) : fixedPalette(palette, opts.theme);
+        for (var pi = 0; pi < 12; pi++) palTo[pi] = nxt[pi];
         palStart = now;
-        if (palFrom[0] + palFrom[1] + palFrom[2] + palFrom[3] === 0) palFrom = palTo.slice();
+        if (palFrom[0] + palFrom[1] + palFrom[2] + palFrom[3] === 0) palFrom.set(palTo);
       }
       var k = Math.min(1, (now - palStart) / 1800);
       k = k * k * (3 - 2 * k);
       for (var j = 0; j < 12; j++) pal[j] = palFrom[j] + (palTo[j] - palFrom[j]) * k;
     }
     function resize() {
-      var s = LEVELS[level].scale, dpr = Math.min(2, root.devicePixelRatio || 1);
+      var s = scaleFor(level, canvas.clientHeight || 1080), dpr = Math.min(2, root.devicePixelRatio || 1);
       var w = Math.max(64, Math.round(canvas.clientWidth * dpr * s)), h = Math.max(36, Math.round(canvas.clientHeight * dpr * s));
       if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
       gl.viewport(0, 0, canvas.width, canvas.height);
     }
+    function applyLowPolicy() {
+      capFps = true;
+      if (level >= 3) { freezePalette = true; if (fpsCap > 20) fpsCap = 20; }
+      else if (pinned >= 0) { freezePalette = false; iterMul = 1; fpsCap = 30; }
+      else if (fpsCap < 20) { /* kept by the watchdog after the 720p floor */ }
+      else fpsCap = 30;
+    }
+    function emitPalette(now) {
+      if (!opts.onPalette) return;
+      if (!freezePalette && lastPalEmit && now - lastPalEmit < 200) return;
+      lastPalEmit = now;
+      try { opts.onPalette(pal, freezePalette); } catch (e) { /* host */ }
+    }
     function measure(now) {
-      if (lastT) { var d = now - lastT; if (d < 200) { frameMs += d; frames++; } }
-      if (frames < 120) return;
-      var avg = frameMs / frames;
-      frames = 0; frameMs = 0;
-      if (pinned >= 0) return;
-      if (avg > 21 && level < LEVELS.length - 1) { level++; goodSince = now; resize(); }
-      else if (avg < 11 && level > 0) {
+      if (lastT) {
+        var d = now - lastT;
+        if (d < 200) { frameMs += d; frames++; if (d > 24) late++; else late = 0; }
+      }
+      var rush = late >= 8 && pinned < 0;
+      if (frames < 120 && !rush) return;
+      var avg = frames ? frameMs / frames : 30;
+      if (frames >= 60 && (!lastFpsLog || now - lastFpsLog > 2000) && root.console) {
+        lastFpsLog = now;
+        root.console.info("[Radiomarchy] fps=" + (1000 / avg).toFixed(1) + " frame=" + avg.toFixed(1) + "ms level=" + LEVELS[level].name
+          + " scale=" + scaleFor(level, canvas.clientHeight || 1080) + (capFps ? " cap=" + fpsCap : "") + (freezePalette ? " pal=static" : ""));
+      }
+      frames = 0; frameMs = 0; late = 0;
+      if (pinned >= 0) { applyLowPolicy(); return; }
+      if (avg > 21) {
+        if (level < LEVELS.length - 1) { level++; goodSince = now; applyLowPolicy(); resize(); }
+        else { capFps = true; freezePalette = true; if (fpsCap > 15) fpsCap = 15; if (iterMul > 0.55) iterMul = 0.7; applyLowPolicy(); }
+      } else if (avg < 11 && (level > 0 || capFps || freezePalette || iterMul < 0.99)) {
         if (!goodSince) goodSince = now;
-        if (now - goodSince > 20000) { level--; goodSince = now; resize(); }
+        if (now - goodSince > 20000) {
+          if (capFps || freezePalette || iterMul < 0.99) { capFps = false; freezePalette = false; iterMul = 1; }
+          else if (level > 0) level--;
+          goodSince = now; applyLowPolicy(); resize();
+        }
       } else goodSince = now;
     }
     function frame() {
       if (!running) return;
       raf = root.requestAnimationFrame(frame);
-      var now = Date.now(), dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0.016;
+      var now = Date.now();
+      if (capFps && fpsCap > 0 && lastDraw && now - lastDraw < 1000 / fpsCap) return;
+      lastDraw = now;
+      var dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0.016;
       measure(now);
       lastT = now;
       var music = opts.bands ? !!opts.bands(f) : false;
@@ -214,7 +288,8 @@
         lastBeats = f.beats;
       }
       pickScene(now, music);
-      updatePalette(now);
+      if (!freezePalette) updatePalette(now);
+      emitPalette(now);
       cycle += dt * (0.03 + 0.22 * f.level + 0.25 * f.high) + pulse * dt * 0.6;
       zoomKick *= Math.exp(-dt * 3);
       dive += dt * diveSpeed * (0.09 + 0.22 * f.bass + 0.25 * zoomKick);
@@ -231,11 +306,11 @@
       gl.uniform1i(U.uScene, cur);
       gl.uniform1i(U.uScene2, next < 0 ? cur : next);
       gl.uniform1f(U.uMix, next < 0 ? 0 : mix);
-      gl.uniform3fv(U.uPal, new Float32Array(pal));
+      gl.uniform3fv(U.uPal, pal);
       gl.uniform1f(U.uCycle, cycle);
       gl.uniform1f(U.uZoom, 2.6 * Math.exp(-dive));
       gl.uniform2f(U.uCenter, center[0], center[1]);
-      gl.uniform1f(U.uIter, lowp ? 64 : Math.min(q.iter, q.iter * 0.55 + dive * 30));
+      gl.uniform1f(U.uIter, lowp ? 64 : Math.min(q.iter, q.iter * 0.55 + dive * 30) * iterMul);
       gl.uniform1f(U.uRot, rotDir * (t * 0.03 + dive * 0.15));
       gl.uniform1f(U.uDim, opts.dim == null ? 1 : opts.dim);
       gl.uniform1f(U.uAA, q.aa);
@@ -268,6 +343,7 @@
 
   root.OmarchyFractals = {
     SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG,
-    create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel
+    create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel,
+    scaleFor: scaleFor, ensureContrast: ensureContrast, contrastRatio: contrastRatio, rgbCss: rgbCss
   };
 })(typeof window !== "undefined" ? window : this);
