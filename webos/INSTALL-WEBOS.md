@@ -1,17 +1,17 @@
-# OmarchyTV for LG webOS — Installation Guide (`2.15.1`)
+# OmarchyTV for LG webOS — Installation Guide (`2.20.0`)
 
 > **Status: Experimental (`testing`, NOT beta)**
-> This is an experimental **`testing`** build of **OmarchyTV** for **LG webOS TVs** (webOS 3.x / 4.0 / 5.0 / 6.0 / 22 / 23 / 24 / 25; on webOS 3.x the bundled `compat.js` fills in the missing browser features), based on the latest Android TV release (**2.15.1**). Tested on a real LG 32LQ63006LA (webOS 22); the community reported an LG 55QNED80T6A on webOS 25 working with 2.13.9 ([#95](https://github.com/piermark/omarchytv/issues/95)).
+> This is an experimental **`testing`** build of **OmarchyTV** for **LG webOS TVs** (webOS 3.x / 4.0 / 5.0 / 6.0 / 22 / 23 / 24 / 25; on webOS 3.x the bundled `compat.js` fills in the missing browser features), based on the latest Android TV release (**2.20.0**). Tested on a real LG 32LQ63006LA (webOS 22); the community reported an LG 55QNED80T6A on webOS 25 working with 2.13.9 ([#95](https://github.com/piermark/omarchytv/issues/95)).
 > Community feedback and compatibility reports from LG webOS TV users are warmly welcome!
 
 ---
 
-## Downloads (`v2.15.1`)
+## Downloads (`v2.20.0`)
 
-- **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.15.1-testing.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.15.1/omarchytv-webos-2.15.1-testing.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1))
-  - SHA-256: `143bcd0c44aef0a265038b9920bfe36645a4dc1d4446eec1d6413f96fc99a99f`
-- **PC Plugin (Android TV + LG webOS):** [`omarchy-tv-pc-plugin-2.15.1.tar.gz`](https://github.com/piermark/omarchytv/releases/download/v2.15.1/omarchy-tv-pc-plugin-2.15.1.tar.gz) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.15.1))
-  - SHA-256: `d5af5e316cce0470fb35ec7c54bceb12ba3a6a9e4e2a6c934417b9c01f9425b0`
+- **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.20.0-testing.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.20.0/omarchytv-webos-2.20.0-testing.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.20.0))
+  - SHA-256: `7a59997bb9e718aae6686b09d0dd6955d2898e4015624552f2fce68098a18aae`
+- **PC Plugin (Android TV + LG webOS):** [`omarchy-tv-pc-plugin-2.20.0.tar.gz`](https://github.com/piermark/omarchytv/releases/download/v2.20.0/omarchy-tv-pc-plugin-2.20.0.tar.gz) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.20.0))
+  - SHA-256: `7aa341b9a22c51ec27e42fd44846186ebc4b19f54e53ae18e3018a1229cd3733`
 
 ---
 
@@ -48,7 +48,7 @@ Both run on the TV through Homebrew Channel's start-up scripts ([`app/rooted/oma
 3. **On your computer:**
    - Install and open **[webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop)** (available on Linux, macOS, and Windows; on Arch / Omarchy: `yay -S webos-dev-manager-bin` or AppImage).
    - Add your TV using its IP address and the 6-character Passphrase from the Developer Mode app.
-   - Click **Apps → Install** (top right) and select **`omarchytv-webos-2.15.1-testing.ipk`**.
+   - Click **Apps → Install** (top right) and select **`omarchytv-webos-2.20.0-testing.ipk`**.
 4. **Launch OmarchyTV** from your LG TV's Home bar!
 
 ---
@@ -78,14 +78,14 @@ ares-novacom --device lgtv --getkey
 With `ares-install` directly:
 
 ```bash
-ares-install --device lgtv omarchytv-webos-2.15.1-testing.ipk
+ares-install --device lgtv omarchytv-webos-2.20.0-testing.ipk
 ares-launch  --device lgtv com.omarchytv.home
 ```
 
-Or using the **OmarchyTV PC Plugin (`2.15.1`)**:
+Or using the **OmarchyTV PC Plugin (`2.20.0`)**:
 
 ```bash
-omarchy-tv update omarchytv-webos-2.15.1-testing.ipk --tv lgtv
+omarchy-tv update omarchytv-webos-2.20.0-testing.ipk --tv lgtv
 ```
 
 ---
@@ -117,7 +117,7 @@ ssh-copy-id root@192.168.1.50
 ### 2. Install & Launch the `.ipk`
 
 ```bash
-scp omarchytv-webos-2.15.1-testing.ipk root@192.168.1.50:/tmp/omarchytv.ipk
+scp omarchytv-webos-2.20.0-testing.ipk root@192.168.1.50:/tmp/omarchytv.ipk
 ssh -t root@192.168.1.50 'luna-send-pub -i luna://com.webos.appInstallService/dev/install "{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/omarchytv.ipk\",\"subscribe\":true}"'
 ```
 
@@ -199,13 +199,13 @@ ssh root@192.168.1.50 'rm /var/luna/preferences/configd/layers/overlay/com.webos
 
 ## Connecting Your Omarchy Linux PC (Live Stats, Themes & Wallpaper)
 
-The `2.15.1` PC plugin includes a lightweight HTTP + CORS bridge (`omarchy-tv webos-serve`) so your LG webOS TV can display live PC telemetry (CPU, RAM, uptime, GPU, active theme, and AI credit usage) without requiring native sockets on the TV.
+The `2.20.0` PC plugin includes a lightweight HTTP + CORS bridge (`omarchy-tv webos-serve`) so your LG webOS TV can display live PC telemetry (CPU, RAM, uptime, GPU, active theme, and AI credit usage) without requiring native sockets on the TV.
 
 ### 1. Start the bridge on your Omarchy PC
 
 ```bash
-# Extract and install the 2.15.1 PC plugin
-tar -xzf omarchy-tv-pc-plugin-2.15.1.tar.gz
+# Extract and install the 2.20.0 PC plugin
+tar -xzf omarchy-tv-pc-plugin-2.20.0.tar.gz
 cd pc-plugin
 mkdir -p ~/.local/share ~/.local/bin
 cp -r omarchy-link ~/.local/share/omarchy-link

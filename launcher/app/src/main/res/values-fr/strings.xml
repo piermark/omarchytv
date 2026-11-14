@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ posts · OK ouvrir · 1 j\'aime · 2 répondre · 3 repost · 4 nouveau post · 5 recherche · 0 accueil · 9 notifications · 8 messages</string>
     <string name="omafire_campfire">feu de camp</string>
     <string name="omafire_embers">braises</string>
+    <string name="wp_radiomarchy_fractals">Fractales Radiomarchy</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">léger</string>
     <string name="crt_strong">fort</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Économiseur précédent</string>
     <string name="agent_alert_row">Alertes des agents IA pendant que tu regardes</string>
     <string name="agent_alert" formatted="true">● %1$s a besoin de toi : %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Titres</string>
+    <string name="radio_queue">À suivre</string>
+    <string name="radio_demo">Mode démo</string>
+    <string name="radio_settings">Réglages</string>
+    <string name="radio_explicit">Titres explicites (E)</string>
+    <string name="radio_shown">affichés</string>
+    <string name="radio_hidden">masqués</string>
+    <string name="radio_colours">Couleurs des fractales</string>
+    <string name="radio_fractal">Fractale</string>
+    <string name="radio_auto">aléatoire (une nouvelle à chaque scène)</string>
+    <string name="radio_auto_demo">Mode démo après 1 minute sans touche</string>
+    <string name="radio_shuffle">Aléatoire</string>
+    <string name="radio_repeat">Répéter</string>
+    <string name="radio_repeat_all">tout</string>
+    <string name="radio_repeat_one">un</string>
+    <string name="radio_stop">Arrêter et fermer le lecteur</string>
+    <string name="radio_loading">Chargement d\'Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org ne répond pas : la copie gardée sur cette TV est affichée.</string>
+    <string name="radio_empty">Rien ici pour l\'instant.</string>
+    <string name="radio_by" formatted="true">par %1$s</string>
+    <string name="radio_send">Fais-en un, envoie-le : radio.omarchy.org</string>
+    <string name="radio_nothing">Choisis un titre : OK le lance.</string>
+    <string name="radio_lyrics">Paroles</string>
+    <string name="radio_no_lyrics">Pas encore de paroles pour celui-ci.</string>
+    <string name="radio_resume" formatted="true">reprendre à %1$s</string>
+    <string name="radio_keys">OK lire · ⏯ pause · ⏮ ⏭ · ROUGE démo</string>
+    <string name="radio_play_all">Tout lire</string>
+    <string name="radio_shuffle_all">Tout en aléatoire</string>
+    <string name="radio_about">Titres de radio.omarchy.org : chacun fait par la personne qui le signe, envoyé en pull request et lu en streaming depuis le site. Podcast : Omarchy Stories. Fractales dessinées en direct sur cette TV.</string>
+    <string name="radio_saver">Fractales Radiomarchy (avec la musique)</string>
+    <string name="radio_random">aléatoires</string>
+    <string name="radio_quality">Qualité d\'image</string>
+    <string name="radio_quality_auto" formatted="true">auto, adaptée à cette TV (actuellement %1$s)</string>
+    <string name="radio_animated">Fractales animées</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">oui</string>
+    <string name="radio_animated_off">non</string>
 </resources>

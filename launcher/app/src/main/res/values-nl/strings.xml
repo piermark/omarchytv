@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ posts · OK openen · 1 vind-ik-leuk · 2 reageren · 3 repost · 4 nieuwe post · 5 zoeken · 0 home · 9 meldingen · 8 berichten</string>
     <string name="omafire_campfire">kampvuur</string>
     <string name="omafire_embers">gloeiende kolen</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy-fractals</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">licht</string>
     <string name="crt_strong">sterk</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Vorige schermbeveiliging</string>
     <string name="agent_alert_row">Meldingen van AI-agents tijdens het kijken</string>
     <string name="agent_alert" formatted="true">● %1$s heeft je nodig: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Nummers</string>
+    <string name="radio_queue">Hierna</string>
+    <string name="radio_demo">Demomodus</string>
+    <string name="radio_settings">Instellingen</string>
+    <string name="radio_explicit">Expliciete nummers (E)</string>
+    <string name="radio_shown">zichtbaar</string>
+    <string name="radio_hidden">verborgen</string>
+    <string name="radio_colours">Fractalkleuren</string>
+    <string name="radio_fractal">Fractal</string>
+    <string name="radio_auto">willekeurig (elke scène een nieuwe)</string>
+    <string name="radio_auto_demo">Demomodus na 1 minuut zonder toets</string>
+    <string name="radio_shuffle">Willekeurig</string>
+    <string name="radio_repeat">Herhalen</string>
+    <string name="radio_repeat_all">alle</string>
+    <string name="radio_repeat_one">één</string>
+    <string name="radio_stop">Stoppen en speler sluiten</string>
+    <string name="radio_loading">Omarchy Radio laden…</string>
+    <string name="radio_offline">radio.omarchy.org is niet bereikbaar: de kopie op deze tv wordt getoond.</string>
+    <string name="radio_empty">Hier staat nog niets.</string>
+    <string name="radio_by" formatted="true">door %1$s</string>
+    <string name="radio_send">Maak er een, stuur hem in: radio.omarchy.org</string>
+    <string name="radio_nothing">Kies een nummer: OK speelt het.</string>
+    <string name="radio_lyrics">Songtekst</string>
+    <string name="radio_no_lyrics">Nog geen songtekst voor dit nummer.</string>
+    <string name="radio_resume" formatted="true">verder bij %1$s</string>
+    <string name="radio_keys">OK spelen · ⏯ pauze · ⏮ ⏭ · ROOD demo</string>
+    <string name="radio_play_all">Alles afspelen</string>
+    <string name="radio_shuffle_all">Alles willekeurig</string>
+    <string name="radio_about">Nummers van radio.omarchy.org: elk gemaakt door wie erop staat, ingestuurd als pull request en gestreamd vanaf de site. Podcast: Omarchy Stories. Fractals live getekend op deze tv.</string>
+    <string name="radio_saver">Radiomarchy-fractals (met de muziek)</string>
+    <string name="radio_random">willekeurig</string>
+    <string name="radio_quality">Beeldkwaliteit</string>
+    <string name="radio_quality_auto" formatted="true">auto, past zich aan deze tv aan (nu %1$s)</string>
+    <string name="radio_animated">Geanimeerde fractals</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ja</string>
+    <string name="radio_animated_off">nee</string>
 </resources>

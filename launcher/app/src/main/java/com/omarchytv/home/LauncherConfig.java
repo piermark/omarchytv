@@ -58,7 +58,7 @@ final class LauncherConfig {
     static final int LONG_PRESS = 3;
     /** OmarchyTV actions a key can run (see MainActivity.runKeyAction). */
     static final String[] KEY_ACTIONS = {"walker", "voice", "home", "ask", "menu", "screensaver", "next-theme",
-            "cinemarchy", "arcade", "grokbot", "terminal",   // v2.15 (#91): the Grok Bot companion, e.g. for Philips TVs whose Blue key opens the manual
+            "cinemarchy", "radio", "arcade", "grokbot", "terminal", "office",   // v2.15 (#91): the Grok Bot companion, e.g. for Philips TVs whose Blue key opens the manual
             "workspace-1", "workspace-2", "workspace-3", "workspace-4", "workspace-5"};
 
     /** Maps a key name without the KEYCODE_ prefix to an Android keycode; 0 or less = unknown. */
@@ -204,10 +204,17 @@ final class LauncherConfig {
 
     static final class Provider {
         final String id, name;
+        /** v2.20 GrokBot Office tag (claude, chatgpt, grok, ...); "" from an older PC plugin. */
+        final String family;
 
         Provider(String id, String name) {
+            this(id, name, "");
+        }
+
+        Provider(String id, String name, String family) {
             this.id = id;
             this.name = name;
+            this.family = family == null ? "" : family;
         }
     }
 
@@ -695,7 +702,7 @@ final class LauncherConfig {
         if (pa != null) {
             for (int i = 0; i < pa.length() && provs.size() < 16; i++) {
                 JSONObject o = pa.optJSONObject(i);
-                if (o != null && !o.optString("id").isEmpty()) provs.add(new Provider(o.optString("id"), o.optString("name", o.optString("id"))));
+                if (o != null && !o.optString("id").isEmpty()) provs.add(new Provider(o.optString("id"), o.optString("name", o.optString("id")), o.optString("provider", "")));
             }
         }
         aiProviders = Collections.unmodifiableList(provs);
@@ -725,7 +732,7 @@ final class LauncherConfig {
         weatherLon = wx != null ? wx.optDouble("lon", Double.NaN) : Double.NaN;
         weatherPlace = wx != null ? wx.optString("place", "") : "";
         tempF = j != null && "F".equalsIgnoreCase(j.optString("tempUnit", "C").trim());
-        String defWp = c != null ? c.getString(R.string.wallpaper).trim() : "omarchy";
+        String defWp = c != null ? c.getString(R.string.wallpaper).trim() : FractalLayer.ID;
         wallpaper = j != null ? j.optString("wallpaper", defWp).trim() : defWp;
         syncPcWallpaper = j != null && j.optBoolean("syncPcWallpaper", false);
         themeToPc = j != null && j.optBoolean("themeToPc", false);
@@ -751,9 +758,10 @@ final class LauncherConfig {
         String sq = j != null ? j.optString("shareQr", "live") : "live";
         shareQr = "off".equals(sq) || "boot".equals(sq) ? sq : "live";
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
-        randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
+        // 2.20: a fresh install keeps the Radiomarchy fractals wallpaper (random off). A saved file still defaults random on unless migration locked it.
+        randomWallpaper = j != null && j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
-        pluginSpacexTv = plObj == null || plObj.optBoolean("spacexTv", true);
+        pluginSpacexTv = plObj != null && plObj.has("spacexTv") && plObj.optBoolean("spacexTv");   // 2.20: off unless the user (or a saved setting) turned it on
         pluginGrokbot = plObj == null || plObj.optBoolean("grokbot", true);
         String crt = plObj != null ? plObj.optString("retroCrt", "off") : "off";
         pluginRetroCrt = "light".equals(crt) || "strong".equals(crt) ? crt : "off";
@@ -942,6 +950,24 @@ final class LauncherConfig {
         ss.put("art", "pulse").put("mode", "pulse");
         if (lv != null) lv.put("enabled", false);
         j.put("pulseDefault215", true);
+        return true;
+    }
+
+    /**
+     * v2.20: the default Home animated background is Radiomarchy fractals. One-time. An explicit wallpaper
+     * (random locked off, or a wallpaper other than the old factory default "omarchy" / empty) is left alone.
+     * New and implicit installs get the fractals and random_wallpaper is locked off so rotation cannot replace them.
+     */
+    static boolean fractalWallpaperDefault(JSONObject j) throws org.json.JSONException {
+        if (j == null || j.optBoolean("fractalWp220", false)) return false;
+        j.put("fractalWp220", true);
+        boolean randomOff = (j.has("random_wallpaper") && !j.optBoolean("random_wallpaper", true))
+                || (j.has("randomWallpaper") && !j.optBoolean("randomWallpaper", true));
+        String wp = j.has("wallpaper") ? j.optString("wallpaper", "").trim() : "";
+        boolean explicitWp = !wp.isEmpty() && !"omarchy".equals(wp) && !FractalLayer.ID.equals(wp);
+        if (randomOff || explicitWp) return true;
+        j.put("wallpaper", FractalLayer.ID);
+        j.put("random_wallpaper", false);
         return true;
     }
 

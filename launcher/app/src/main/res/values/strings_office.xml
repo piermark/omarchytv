@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GrokBot Office (2.20, optional). Kept out of strings.xml: English, Italian, German, French and Spanish for now;
+     the other languages show the English text until someone translates them (CONTRIBUTING.md). -->
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="office_ask" tools:ignore="MissingTranslation">Ask GrokBot</string>
+    <string name="office_listening" tools:ignore="MissingTranslation">Listening…</string>
+    <string name="office_thinking" tools:ignore="MissingTranslation">Thinking…</string>
+    <string name="office_anything" tools:ignore="MissingTranslation">Anything else?</string>
+    <string name="office_bots" formatted="true" tools:ignore="MissingTranslation">%1$d bots</string>
+    <string name="office_one_bot" tools:ignore="MissingTranslation">1 bot</string>
+    <string name="office_usage" tools:ignore="MissingTranslation">Weekly usage</string>
+    <string name="office_resets" formatted="true" tools:ignore="MissingTranslation">resets %1$s</string>
+    <string name="office_opening" tools:ignore="MissingTranslation">On it. Opening your office…</string>
+    <string name="office_hire" tools:ignore="MissingTranslation">Hire</string>
+    <string name="office_hire_title" tools:ignore="MissingTranslation">Hire a new bot</string>
+    <string name="office_name" tools:ignore="MissingTranslation">Name</string>
+    <string name="office_role" tools:ignore="MissingTranslation">Role</string>
+    <string name="office_picked" tools:ignore="MissingTranslation">Grok Bot picks it</string>
+    <string name="office_cancel" tools:ignore="MissingTranslation">Cancel</string>
+    <string name="office_pending" tools:ignore="MissingTranslation">pending</string>
+    <string name="office_sent" formatted="true" tools:ignore="MissingTranslation">Sent. %1$s walks in when Grok Bot confirms.</string>
+    <string name="office_someone" tools:ignore="MissingTranslation">The new bot</string>
+    <string name="office_welcome" formatted="true" tools:ignore="MissingTranslation">%1$s joined the office.</string>
+    <string name="office_empty" tools:ignore="MissingTranslation">No bots here yet. Connect Grok Bot: turn on Grok Bot diretto (Settings › Grok Bot &amp; AI), push your bots from the PC with omarchy-tv office push bots.json, or say: hire a bot called Trimmer to trim my tokens.</string>
+    <string name="office_not_set" tools:ignore="MissingTranslation">Grok Bot diretto is off: turn it on and set the webhook in Settings › Grok Bot &amp; AI.</string>
+    <string name="office_mic" tools:ignore="MissingTranslation">Mic</string>
+    <string name="office_enter" tools:ignore="MissingTranslation">Enter the office</string>
+    <string name="office_no_mic" tools:ignore="MissingTranslation">No voice on this TV: type instead.</string>
+    <string name="office_keys" tools:ignore="MissingTranslation">OK talk · ◀▶ choose · type to ask · BACK exit</string>
+    <string name="office_heard" tools:ignore="MissingTranslation">I didn\'t catch that. Try again or type.</string>
+    <string name="office_more" formatted="true" tools:ignore="MissingTranslation">+%1$d more</string>
+    <string name="office_setting" tools:ignore="MissingTranslation">GrokBot Office (optional)</string>
+    <string name="office_open" tools:ignore="MissingTranslation">Open GrokBot Office</string>
+    <string name="office_ai" tools:ignore="MissingTranslation">AI</string>
+    <string name="office_pc_off" tools:ignore="MissingTranslation">Claude and ChatGPT answer from the PC: pair it first (omarchy-link pair on the PC).</string>
+    <string name="office_hired_pc" formatted="true" tools:ignore="MissingTranslation">%1$s is hired on the PC and joined the office.</string>
+    <string name="office_hiring" formatted="true" tools:ignore="MissingTranslation">Asking the PC to hire %1$s…</string>
+    <string name="office_month" tools:ignore="MissingTranslation">this month</string>
+</resources>

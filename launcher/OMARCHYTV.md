@@ -210,6 +210,32 @@ Logo (`logo` in config / JSON, used by home and screensaver): `omarchy-tv` (defa
   The launcher reads the file, gets the OAuth2 token itself and adds it to OpenSky requests; the saver page is only
   told that there is one. After "Reset credential" on OpenSky, push the new file. Delete it to go back to anonymous.
 
+## Radiomarchy (2.20): Omarchy Radio and the fractals
+
+Open it from its banner in the TV's app row, the ♫ icon in the top bar, Walker, or a key mapped to the `radio`
+action. Panes: `[1] radio` (songs · Omarchy Stories · up next · demo mode · settings), `[2]` the list, `[3]` now
+playing (the maker's credit, a 16-band spectrum, progress, ⏮ ⏯ ⏭ 🔀 🔁, lyrics, the song's page).
+
+| Key | |
+| --- | --- |
+| OK | play the row |
+| ⏯ / ⏮ ⏭ / CH± / ⏪ ⏩ | pause, previous, next, −15 s / +15 s (everywhere in the launcher) |
+| RED (D) | demo mode: ◀ ▶ another fractal, ▲ ▼ colours, OK pause, any other key back |
+| GREEN (S) · YELLOW (R) · BLUE (E) | shuffle · repeat all/one/off · explicit songs shown/hidden |
+| 1–5 | the panes |
+
+Settings (stored on the TV, not in `omarchytv.json`): explicit songs (shown by default, with an E), fractal
+colours (random by default; Omarchy theme, rainbow, fire), picture quality (auto by default; ultra, high, medium,
+low), fractal (random by default, or one pinned), demo mode after 1 minute idle (on), shuffle (on), repeat (all).
+
+Picture quality `auto` starts from what the GPU is and measures frame time every 2 s: under ~48 fps it steps down
+(ultra → high → medium → low), with room to spare for 20 s it steps back up. Only `low` lowers the resolution (to 3/4).
+The music analysis reads the decoded audio inside the player (a tee in Media3's audio sink): no microphone, no
+RECORD_AUDIO, and it is matched to the media time you hear.
+
+Screensaver: Settings → Screensaver → art → **Radiomarchy fractals** (`"screensaver": {"art": "radiomarchy"}`).
+It opens the demo mode in the launcher's own process, so it dances to the music when the radio is playing.
+
 ## Resolution
 
 Layouts are in dp/sp, icons are vector drawables, the wordmark and screensaver are drawn as

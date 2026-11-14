@@ -184,8 +184,21 @@ def available(settings: dict) -> list[dict]:
         seen.add(p["id"])
         out.append({"id": p["id"], "name": str(p.get("name") or mod.LABEL)[:32], "kind": mod.KIND,
                     "model": info.get("model"), "streaming": bool(getattr(mod, "STREAMING", False)),
+                    "provider": family(p["type"]),   # 2.20 GrokBot Office: the tag on the TV (claude, chatgpt, grok, ...)
                     "_cfg": p, "_mod": mod})
     return out
+
+
+def family(kind: str) -> str:
+    """Which AI a provider type is, as the TV's office tags it."""
+    k = str(kind or "")
+    if k in ("anthropic_api", "claude_code"):
+        return "claude"
+    if k in ("openai_api", "codex"):
+        return "chatgpt"
+    if k.startswith("grok") or k == "xai_api":
+        return "grok"
+    return k.split("_")[0][:16]
 
 
 def public(providers: list[dict]) -> list[dict]:
@@ -256,8 +269,10 @@ class Assistant:
             ai_file = self.settings_path or ASSISTANT_FILE
             ctx = Context(ai_file_private=ai_file.exists() and config.is_private_file(ai_file),
                           timeout=float(settings.get("timeoutSeconds", 90)))
-            req = Request(text, self.memory.get(conversation), str(settings.get("systemPrompt") or SYSTEM_PROMPT)[:4000],
-                          lang, on_delta, ctx.timeout, ctx)
+            system = str(settings.get("systemPrompt") or SYSTEM_PROMPT)[:4000]
+            if chosen["_cfg"].get("system"):   # 2.20 GrokBot Office: a hired bot's name and role come first
+                system = str(chosen["_cfg"]["system"])[:1500] + "\n\n" + system
+            req = Request(text, self.memory.get(conversation), system, lang, on_delta, ctx.timeout, ctx)
             reply = clean_reply(chosen["_mod"].ask(chosen["_cfg"], req))
             if not reply:
                 raise ProviderError("empty answer")

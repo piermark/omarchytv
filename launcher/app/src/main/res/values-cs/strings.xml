@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ příspěvky · OK otevřít · 1 líbí se · 2 odpovědět · 3 repost · 4 nový příspěvek · 5 hledat · 0 domů · 9 oznámení · 8 zprávy</string>
     <string name="omafire_campfire">táborák</string>
     <string name="omafire_embers">žhavé uhlíky</string>
+    <string name="wp_radiomarchy_fractals">Fraktály Radiomarchy</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">jemný</string>
     <string name="crt_strong">silný</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Předchozí spořič</string>
     <string name="agent_alert_row">Upozornění AI agentů při sledování</string>
     <string name="agent_alert" formatted="true">● %1$s tě potřebuje: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Skladby</string>
+    <string name="radio_queue">Následuje</string>
+    <string name="radio_demo">Režim demo</string>
+    <string name="radio_settings">Nastavení</string>
+    <string name="radio_explicit">Explicitní skladby (E)</string>
+    <string name="radio_shown">zobrazeny</string>
+    <string name="radio_hidden">skryty</string>
+    <string name="radio_colours">Barvy fraktálů</string>
+    <string name="radio_fractal">Fraktál</string>
+    <string name="radio_auto">náhodný (v každé scéně nový)</string>
+    <string name="radio_auto_demo">Režim demo po 1 minutě bez kláves</string>
+    <string name="radio_shuffle">Náhodně</string>
+    <string name="radio_repeat">Opakovat</string>
+    <string name="radio_repeat_all">vše</string>
+    <string name="radio_repeat_one">jednu</string>
+    <string name="radio_stop">Zastavit a zavřít přehrávač</string>
+    <string name="radio_loading">Načítám Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org neodpovídá: zobrazuji kopii uloženou v této TV.</string>
+    <string name="radio_empty">Zatím tu nic není.</string>
+    <string name="radio_by" formatted="true">od %1$s</string>
+    <string name="radio_send">Udělej vlastní a pošli ji: radio.omarchy.org</string>
+    <string name="radio_nothing">Vyber skladbu: OK ji přehraje.</string>
+    <string name="radio_lyrics">Text</string>
+    <string name="radio_no_lyrics">K této skladbě zatím není text.</string>
+    <string name="radio_resume" formatted="true">pokračovat od %1$s</string>
+    <string name="radio_keys">OK přehrát · ⏯ pauza · ⏮ ⏭ · ČERVENÉ demo</string>
+    <string name="radio_play_all">Přehrát vše</string>
+    <string name="radio_shuffle_all">Vše náhodně</string>
+    <string name="radio_about">Skladby z radio.omarchy.org: každou vytvořil ten, kdo je pod ní podepsán, poslal ji jako pull request a hraje se streamem z webu. Podcast: Omarchy Stories. Fraktály kreslené živě na této TV.</string>
+    <string name="radio_saver">Fraktály Radiomarchy (s hudbou)</string>
+    <string name="radio_random">náhodné</string>
+    <string name="radio_quality">Kvalita obrazu</string>
+    <string name="radio_quality_auto" formatted="true">auto, podle této TV (nyní %1$s)</string>
+    <string name="radio_animated">Animované fraktály</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ano</string>
+    <string name="radio_animated_off">ne</string>
 </resources>

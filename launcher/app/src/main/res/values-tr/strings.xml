@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ gönderiler · OK aç · 1 beğen · 2 yanıtla · 3 repost · 4 yeni gönderi · 5 ara · 0 ana sayfa · 9 bildirimler · 8 mesajlar</string>
     <string name="omafire_campfire">kamp ateşi</string>
     <string name="omafire_embers">köz</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy fraktalleri</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">hafif</string>
     <string name="crt_strong">güçlü</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Önceki ekran koruyucu</string>
     <string name="agent_alert_row">İzlerken yapay zekâ ajanı uyarıları</string>
     <string name="agent_alert" formatted="true">● %1$s seni bekliyor: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Şarkılar</string>
+    <string name="radio_queue">Sıradaki</string>
+    <string name="radio_demo">Demo modu</string>
+    <string name="radio_settings">Ayarlar</string>
+    <string name="radio_explicit">Açık içerikli şarkılar (E)</string>
+    <string name="radio_shown">gösteriliyor</string>
+    <string name="radio_hidden">gizli</string>
+    <string name="radio_colours">Fraktal renkleri</string>
+    <string name="radio_fractal">Fraktal</string>
+    <string name="radio_auto">rastgele (her sahnede yeni)</string>
+    <string name="radio_auto_demo">1 dakika tuşa basılmazsa demo modu</string>
+    <string name="radio_shuffle">Karışık</string>
+    <string name="radio_repeat">Tekrarla</string>
+    <string name="radio_repeat_all">tümü</string>
+    <string name="radio_repeat_one">bir</string>
+    <string name="radio_stop">Durdur ve oynatıcıyı kapat</string>
+    <string name="radio_loading">Omarchy Radio yükleniyor…</string>
+    <string name="radio_offline">radio.omarchy.org yanıt vermiyor: bu TV\'de saklanan kopya gösteriliyor.</string>
+    <string name="radio_empty">Burada henüz bir şey yok.</string>
+    <string name="radio_by" formatted="true">%1$s</string>
+    <string name="radio_send">Bir tane yap, gönder: radio.omarchy.org</string>
+    <string name="radio_nothing">Bir şarkı seç: OK çalar.</string>
+    <string name="radio_lyrics">Şarkı sözleri</string>
+    <string name="radio_no_lyrics">Bunun için henüz şarkı sözü yok.</string>
+    <string name="radio_resume" formatted="true">%1$s noktasından devam</string>
+    <string name="radio_keys">OK çal · ⏯ duraklat · ⏮ ⏭ · KIRMIZI demo</string>
+    <string name="radio_play_all">Tümünü çal</string>
+    <string name="radio_shuffle_all">Tümü karışık</string>
+    <string name="radio_about">radio.omarchy.org şarkıları: her biri üzerinde adı yazan kişinin eseri, pull request olarak gönderildi ve siteden yayınlanıyor. Podcast: Omarchy Stories. Fraktallar bu TV\'de canlı çiziliyor.</string>
+    <string name="radio_saver">Radiomarchy fraktalları (müzikle)</string>
+    <string name="radio_random">rastgele</string>
+    <string name="radio_quality">Görüntü kalitesi</string>
+    <string name="radio_quality_auto" formatted="true">otomatik, bu TV\'ye uyar (şu an %1$s)</string>
+    <string name="radio_animated">Animasyonlu fraktaller</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">evet</string>
+    <string name="radio_animated_off">hayır</string>
 </resources>

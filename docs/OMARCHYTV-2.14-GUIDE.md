@@ -1,5 +1,8 @@
 # OmarchyTV — what's new (user guide)
 
+This guide covers **2.14**. For **2.20** (Radiomarchy, the still-fractal Home wallpaper, Pulse's sharper host,
+GrokBot Office), see [OMARCHYTV-2.20-GUIDE.md](OMARCHYTV-2.20-GUIDE.md).
+
 This guide is for people who use OmarchyTV: what each new feature does, where to turn it on, which keys to press
 and what it cannot do yet.
 

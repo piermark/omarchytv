@@ -4,7 +4,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.15.1";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.20.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)
@@ -69,7 +69,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "X API monthly limit reached (xMonthlyUsd)",
       living_x_error: "X API not reachable right now",
       omafire_campfire: "campfire",
-      omafire_embers: "embers",
+      omafire_embers: "embers", wp_radiomarchy_fractals: "Radiomarchy fractals", radio_animated: "Animated fractals", radio_animated_auto: "auto", radio_animated_on: "yes", radio_animated_off: "no",
       plugin_retro_crt: "Retro CRT",
       crt_light: "light",
       crt_strong: "strong",
@@ -199,7 +199,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "Raggiunto il limite mensile dell'API di X (xMonthlyUsd)",
       living_x_error: "API di X non raggiungibile ora",
       omafire_campfire: "falò",
-      omafire_embers: "braci",
+      omafire_embers: "braci", wp_radiomarchy_fractals: "Frattali Radiomarchy", radio_animated: "Frattali animati", radio_animated_auto: "auto", radio_animated_on: "sì", radio_animated_off: "no",
       plugin_retro_crt: "Retro CRT",
       crt_light: "leggero",
       crt_strong: "forte",
@@ -329,7 +329,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       living_x_budget: "Monatslimit der X-API erreicht (xMonthlyUsd)",
       living_x_error: "X-API gerade nicht erreichbar",
       omafire_campfire: "Lagerfeuer",
-      omafire_embers: "Glut",
+      omafire_embers: "Glut", wp_radiomarchy_fractals: "Radiomarchy-Fraktale", radio_animated: "Animierte Fraktale", radio_animated_auto: "auto", radio_animated_on: "ja", radio_animated_off: "nein",
       plugin_retro_crt: "Retro CRT",
       crt_light: "leicht",
       crt_strong: "stark",
@@ -410,10 +410,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     theme: "last-horizon",
     randomTheme: true,
     randomScope: "intros",   // v2.15 (#71): "all" = every bundled theme
-    randomWallpaper: true,
-    pluginSpacexTv: true,
+    randomWallpaper: false, // 2.20: default wallpaper is Radiomarchy fractals; do not rotate it away
+    pluginSpacexTv: false,   // 2.20: off until turned on in Settings
     embedPlayer: true,     // Cinemarchy: YouTube plays inside (official embed) by default; an explicit false stays off
     pluginGrokbot: true,   // the Grok Bot companion: on by default, the default assistant
+    officeEnabled: false, officeProvider: "",  // v2.20 GrokBot Office (office.js): optional, off by default
     grokbotMessage: "",
     companionShape: "",    // "" follows the PC bot; else one of Tom's 14 shapes
     companionColor: "",    // "" follows the PC bot; else one of his 11 colours
@@ -427,7 +428,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     opacity: 0.75,
     wallpaperDim: 0,
     wallpaperIdx: 0,
-    wallpaper: "",        // "" follows the theme, "plain" = theme colours, else a path from DATA.wallpapers
+    wallpaper: "radiomarchy:fractals",  // 2.20 default Home animated background; OmaFire and stills stay selectable
+    radiomarchyAnimated: "auto",  // auto / on / off — same key as Radiomarchy prefs
     proceduralBg: false,
     tempUnit: "C",
     weatherCity: "Alessandria",
@@ -486,9 +488,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var saved = localStorage.getItem("omarchytv_cfg_2110");
     if (saved) cfg = Object.assign({}, DEFAULT_CFG, JSON.parse(saved));
   } catch (e) {}
+  try {
+    var radioPrefs = JSON.parse(localStorage.getItem("omarchytv.radio.v1") || "null");
+    if (radioPrefs && radioPrefs.animated) cfg.radiomarchyAnimated = radioPrefs.animated;
+  } catch (e) {}
 
   function saveCfg() {
     try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(cfg)); } catch (e) {}
+    try {
+      var raw = localStorage.getItem("omarchytv.radio.v1");
+      var rp = raw ? JSON.parse(raw) : {};
+      rp.animated = cfg.radiomarchyAnimated || "auto";
+      localStorage.setItem("omarchytv.radio.v1", JSON.stringify(rp));
+    } catch (e) {}
   }
   // v2.15: Pulse becomes everyone's screensaver, once; the previous one is kept for "Previous screensaver" (as on Android).
   if (!cfg.pulseDefault215) {
@@ -503,6 +515,30 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     // only these keys are written: the rest of the saved settings stays exactly as it was
     try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(pulseWas)); } catch (e) {}
   }
+
+  // v2.20: default Home wallpaper is Radiomarchy fractals, once. An explicit saved wallpaper is left alone.
+  (function fractalWallpaperDefault() {
+    if (cfg.fractalWp220) return;
+    var had = {};
+    try { had = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {}; } catch (e) { had = {}; }
+    var randomOff = had.randomWallpaper === false;
+    var wp = Object.prototype.hasOwnProperty.call(had, "wallpaper") ? String(had.wallpaper || "") : "";
+    var explicitWp = wp !== "" && wp !== "omarchy" && wp !== "radiomarchy:fractals";
+    cfg.fractalWp220 = true;
+    if (!(randomOff || explicitWp)) {
+      cfg.wallpaper = "radiomarchy:fractals";
+      cfg.randomWallpaper = false;
+    }
+    try {
+      var persist = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {};
+      persist.fractalWp220 = true;
+      if (!(randomOff || explicitWp)) {
+        persist.wallpaper = "radiomarchy:fractals";
+        persist.randomWallpaper = false;
+      }
+      localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(persist));
+    } catch (e) {}
+  })();
 
   function getLang() {
     var has = function (l) { return !!STRINGS[l]; };
@@ -702,8 +738,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     r.setProperty("--t-fg-bright", t.fgBright);
     r.setProperty("--t-fg-dim", t.fgDim);
     r.setProperty("--t-muted", t.muted);
-    r.setProperty("--t-accent", t.accent);
-    r.setProperty("--t-accent2", t.accent2);
+    r.setProperty("--t-accent", (fractalAccents && fractalAccents[0]) || t.accent);
+    r.setProperty("--t-accent2", (fractalAccents && fractalAccents[1]) || t.accent2);
     r.setProperty("--t-green", t.green);
     r.setProperty("--t-yellow", t.yellow);
     r.setProperty("--t-red", t.red);
@@ -726,6 +762,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var picked = cfg.wallpaper && cfg.wallpaper !== "plain" && allWallpapers().indexOf(cfg.wallpaper) >= 0 ? cfg.wallpaper : "";
     var activeWp = "";
     omafireWall(wl);
+    fractalWall(wl);
     applyCrt();
     if (omafireModeNow()) {
       wl.style.backgroundImage = "none";   // v2.14 OmaFire draws into the layer itself
@@ -952,6 +989,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var raceOn = !!cfg.widgets.racing;
     var raceBox = document.getElementById("race-box");
     if (raceBox) raceBox.style.display = raceOn ? "block" : "none";
+    var wrap = document.getElementById("widgets-wrap");
+    if (wrap) wrap.classList.toggle("with-racing", raceOn);
     document.getElementById("wx-box").style.display = cfg.widgets.weather ? "block" : "none";
     document.getElementById("wx-box").style.marginLeft = raceOn ? "16px" : "0";
     document.getElementById("pc-box").style.display = cfg.widgets.pc ? "block" : "none";
@@ -1413,6 +1452,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       "󰚩": "M5 7h14v13H5z M12 3v4 M2 11v5 M22 11v5 M8 11h1 M15 11h1 M8 16h8",
       "󰖟": "M3 12h18 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 3c-5 5-5 13 0 18 M12 3c5 5 5 13 0 18",
       "󰾆": "M4 19V9 M9 19V5 M14 19v-7 M19 19V3",
+      "♫": "M9 18V5l12-2v13 M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0z M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
       "🎮": "M7 8h10a5 5 0 0 1 4.6 6.9l-1 2.6A2.5 2.5 0 0 1 16 18l-1.2-1.5H9.2L8 18a2.5 2.5 0 0 1-4.6-.5l-1-2.6A5 5 0 0 1 7 8z M8 11v3 M6.5 12.5h3 M15 11.5h.01 M17 13.5h.01"
     };
     return paths[icon] ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + paths[icon] + '"></path></svg>' : escHtml(icon);
@@ -1792,9 +1832,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var focus = state.modalIdx;
     openModal(tr("sys_saver"), "37 tte.js TerminalTextEffects or multi-layer Omarchy Cyber-TUI Aquarium", [
       { label: "Preview screensaver now", right: "▶", act: function () { closeModal(); startScreensaver(); } },
-      { label: "Screensaver mode / art", right: cfg.saverMode === "pulse" ? "Omarchy Pulse" : cfg.saverMode === "aquarium" ? (cfg.saverArt === "aquarium-classic" ? "Aquarium Classic" : "Omarchy Aquarium (homage)") : (cfg.saverArt === "cinemarchy" ? "CINEMARCHY" : "OMARCHY TV"), act: function () {
-        // cycle: Pulse (default, 2.15) -> Aquarium (homage) -> Aquarium Classic -> OMARCHY TV -> CINEMARCHY -> Pulse
-        if (cfg.saverMode === "pulse") { cfg.saverArt = "aquarium"; cfg.saverMode = "aquarium"; }
+      { label: "Screensaver mode / art", right: cfg.saverMode === "pulse" ? "Omarchy Pulse" : cfg.saverMode === "radiomarchy" ? "Radiomarchy fractals" : cfg.saverMode === "aquarium" ? (cfg.saverArt === "aquarium-classic" ? "Aquarium Classic" : "Omarchy Aquarium (homage)") : (cfg.saverArt === "cinemarchy" ? "CINEMARCHY" : "OMARCHY TV"), act: function () {
+        // cycle: Pulse (default, 2.15) -> Radiomarchy fractals (2.20) -> Aquarium (homage) -> Aquarium Classic -> OMARCHY TV -> CINEMARCHY -> Pulse
+        if (cfg.saverMode === "pulse") { cfg.saverArt = "radiomarchy"; cfg.saverMode = "radiomarchy"; }
+        else if (cfg.saverMode === "radiomarchy") { cfg.saverArt = "aquarium"; cfg.saverMode = "aquarium"; }
         else if (cfg.saverMode === "aquarium" && cfg.saverArt !== "aquarium-classic") { cfg.saverArt = "aquarium-classic"; cfg.saverMode = "aquarium"; }
         else if (cfg.saverMode === "aquarium") { cfg.saverArt = "omarchy-tv"; cfg.saverMode = "logo"; }
         else if (cfg.saverArt !== "cinemarchy") { cfg.saverArt = "cinemarchy"; cfg.saverMode = "logo"; }
@@ -2205,6 +2246,143 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     omafireMode = m[1];
   }
 
+  // v2.20 default Home wallpaper: a slideshow of still Radiomarchy fractals (<img> crossfade, no canvas).
+  // OmaFire stays selectable; an explicit saved wallpaper is left alone. Pauses when Home is not visible.
+  var fractalBox = null, fractalImgs = [null, null], fractalIdx = 0, fractalFront = 0, fractalTimer = 0, fractalAccents = null;
+  function fractalSlideCatalog() {
+    return (window.OmarchyFractalSlides && window.OmarchyFractalSlides.slides && window.OmarchyFractalSlides.slides.length)
+      ? window.OmarchyFractalSlides : { intervalMs: 12000, fadeMs: 1600, slides: [] };
+  }
+  function applyFractalAccentFromPal(pal) {
+    if (!pal || !pal.length) return;
+    var flat = pal;
+    if (pal[0] && pal[0].length) {
+      flat = [];
+      for (var i = 0; i < pal.length; i++) { flat.push(pal[i][0], pal[i][1], pal[i][2]); }
+    }
+    if (flat.length < 9) return;
+    var th = currentThemeObj() || {}, bg = th.bg || "#111111";
+    var rgbCss = (window.OmarchyFractals && window.OmarchyFractals.rgbCss)
+      ? window.OmarchyFractals.rgbCss
+      : function (r, g, b) {
+        function h(v) { v = Math.max(0, Math.min(255, Math.round(v * 255))); return (v < 16 ? "0" : "") + v.toString(16); }
+        return "#" + h(r) + h(g) + h(b);
+      };
+    var contrast = (window.OmarchyFractals && window.OmarchyFractals.ensureContrast)
+      ? window.OmarchyFractals.ensureContrast
+      : function (c) { return c; };
+    var a = contrast(rgbCss(flat[0], flat[1], flat[2]), bg);
+    var a2 = contrast(rgbCss(flat[6], flat[7], flat[8]), bg);
+    if (fractalAccents && fractalAccents[0] === a && fractalAccents[1] === a2) return;
+    fractalAccents = [a, a2];
+    try {
+      var st = document.documentElement.style;
+      st.setProperty("--t-accent", a);
+      st.setProperty("--t-accent2", a2);
+    } catch (e) {}
+  }
+  function clearFractalAccent() {
+    if (!fractalAccents) return;
+    fractalAccents = null;
+    try { applyTheme(); } catch (e) {}
+  }
+  function fractalOn() { return cfg.wallpaper === "radiomarchy:fractals"; }
+  function fractalVisible() {
+    var ov = document.getElementById("saver-overlay");
+    return fractalOn() && !document.hidden && !cineUi && !radioUi && !(ov && ov.className === "active");
+  }
+  function fractalStopTimer() {
+    if (fractalTimer) { clearTimeout(fractalTimer); fractalTimer = 0; }
+  }
+  function fractalDestroy() {
+    fractalStopTimer();
+    if (fractalBox && fractalBox.parentNode) fractalBox.parentNode.removeChild(fractalBox);
+    fractalBox = null;
+    fractalImgs = [null, null];
+  }
+  function fractalTick() {
+    if (!fractalBox) return;
+    var on = fractalVisible();
+    var st = on ? "running" : "paused";
+    if (fractalImgs[0]) fractalImgs[0].style.animationPlayState = st;
+    if (fractalImgs[1]) fractalImgs[1].style.animationPlayState = st;
+    if (on) { if (!fractalTimer) fractalSchedule(); }
+    else fractalStopTimer();
+  }
+  function fractalEnsureStyle() {
+    if (document.getElementById("fractal-slides-css")) return;
+    var css = document.createElement("style");
+    css.id = "fractal-slides-css";
+    css.textContent =
+      "#fractal-slides{position:absolute;top:0;left:0;width:1920px;height:1080px;overflow:hidden;pointer-events:none;z-index:0;}"
+      + "#fractal-slides img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border:0;opacity:0;"
+      + "transition:opacity 1.6s ease;will-change:opacity,transform;transform-origin:center center;}"
+      + "#fractal-slides img.on{opacity:1;}"
+      + "@keyframes fractal-kb{from{transform:scale(1) translate(0,0);}to{transform:scale(1.05) translate(0.7%,-0.5%);}}"
+      + "#fractal-slides img.kb{animation:fractal-kb 13.6s linear forwards;}";
+    document.head.appendChild(css);
+  }
+  function fractalShow(i, animate) {
+    var cat = fractalSlideCatalog(), slides = cat.slides;
+    if (!slides.length || !fractalImgs[0]) return;
+    var incoming = fractalImgs[1 - fractalFront], outgoing = fractalImgs[fractalFront];
+    var slide = slides[((i % slides.length) + slides.length) % slides.length];
+    incoming.src = slide.file;
+    incoming.className = animate ? "kb" : "on kb";
+    if (animate) {
+      incoming.offsetWidth;
+      incoming.className = "on kb";
+      if (outgoing) outgoing.className = "";
+    } else if (outgoing && outgoing !== incoming) {
+      outgoing.className = "";
+    }
+    fractalFront = 1 - fractalFront;
+    fractalIdx = ((i % slides.length) + slides.length) % slides.length;
+    applyFractalAccentFromPal(slide.pal);
+  }
+  function fractalSchedule() {
+    fractalStopTimer();
+    if (!fractalVisible()) return;
+    var ms = (window.OmarchyFractalSlides && window.OmarchyFractalSlides.intervalMs) || 12000;
+    fractalTimer = setTimeout(function () {
+      fractalTimer = 0;
+      fractalShow(fractalIdx + 1, true);
+      fractalSchedule();
+    }, ms);
+  }
+  function fractalWall(layer) {
+    if (!fractalOn() || !layer || !fractalSlideCatalog().slides.length) {
+      fractalDestroy();
+      clearFractalAccent();
+      return;
+    }
+    if (fractalBox) {
+      fractalTick();
+      if (fractalVisible() && radioEng && radioEng.ensureWallpaperMusic) radioEng.ensureWallpaperMusic();
+      return;
+    }
+    fractalEnsureStyle();
+    var box = document.createElement("div");
+    box.id = "fractal-slides";
+    box.setAttribute("aria-hidden", "true");
+    var a = document.createElement("img"), b = document.createElement("img");
+    a.alt = b.alt = "";
+    a.draggable = b.draggable = false;
+    box.appendChild(a);
+    box.appendChild(b);
+    layer.style.position = layer.style.position || "absolute";
+    layer.appendChild(box);
+    fractalBox = box;
+    fractalImgs = [a, b];
+    fractalFront = 0;
+    fractalIdx = 0;
+    fractalShow(0, false);
+    if (fractalVisible()) {
+      fractalSchedule();
+      if (radioEng && radioEng.ensureWallpaperMusic) radioEng.ensureWallpaperMusic();
+    }
+  }
+
   function openWallpaperModal(keepFocus) {
     var focus = state.modalIdx;
     function pick(v) { cfg.wallpaper = v; cfg.randomWallpaper = false; saveCfg(); applyTheme(); openWallpaperModal(true); }
@@ -2216,6 +2394,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("wp_plain"), right: !cfg.randomWallpaper && cfg.wallpaper === "plain" ? "✓" : "", act: function () { pick("plain"); } },
       { label: "OmaFire \u00b7 " + tr("omafire_campfire"), right: cfg.wallpaper === "omafire:campfire" ? "✓" : "", act: function () { pick("omafire:campfire"); } },
       { label: "OmaFire \u00b7 " + tr("omafire_embers"), right: cfg.wallpaper === "omafire:embers" ? "✓" : "", act: function () { pick("omafire:embers"); } },
+      { label: tr("wp_radiomarchy_fractals"), right: cfg.wallpaper === "radiomarchy:fractals" ? "✓" : "", act: function () { pick("radiomarchy:fractals"); } },
+      { label: tr("radio_animated"), right: tr("radio_animated_" + (cfg.radiomarchyAnimated === "on" || cfg.radiomarchyAnimated === "off" ? cfg.radiomarchyAnimated : "auto")), act: function () {
+        var cur = cfg.radiomarchyAnimated === "on" ? "on" : cfg.radiomarchyAnimated === "off" ? "off" : "auto";
+        cfg.radiomarchyAnimated = cur === "auto" ? "on" : cur === "on" ? "off" : "auto";
+        saveCfg(); openWallpaperModal(true);
+      } },
       { label: "  " + tr("omafire_sound"), right: cfg.omafireSound ? "on" : "off", act: function () {
         cfg.omafireSound = !cfg.omafireSound; saveCfg(); applyTheme(); openWallpaperModal(true);
       } }
@@ -2338,6 +2522,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       saver: document.getElementById("saver-overlay").className === "active",
       cinemarchy: !!cineUi });
     try { if (play && wv.paused) wv.play().catch(function () {}); else if (!play && !wv.paused) wv.pause(); } catch (e) {}
+    fractalTick();
   }
   setInterval(wallpaperLoopTick, 1000);
   document.addEventListener("visibilitychange", wallpaperLoopTick);
@@ -2618,10 +2803,234 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }, true);
 
 
+  // ---- v2.20 Radiomarchy (radio.js + fractals.js): Omarchy Radio and music-driven fractals ----
+  // One player for the whole app (the music goes on when Radiomarchy closes); the UI opens over #stage like Cinemarchy.
+  var radioEng = window.OmarchyRadio ? window.OmarchyRadio.engine({ store: window.localStorage }) : null, radioUi = null;
+  var RADIOMARCHY_VERSION = "0.1.0";
+  function openRadio(o) {
+    if (radioUi || !radioEng) return;
+    if (state.modalOpen) closeModal();
+    if (cineUi) closeCinemarchy();
+    var th = currentThemeObj();
+    radioUi = window.OmarchyRadio.open(document.getElementById("stage") || document.body, {
+      engine: radioEng, lang: getLang(), version: RADIOMARCHY_VERSION, saver: !!(o && o.saver), demo: !!(o && o.demo),
+      logoHtml: DATA.radiomarchyLogo ? blockArt(DATA.radiomarchyLogo, 1, 1, "width:auto;height:6.5vh") : "",
+      theme: { bg: th.bg, fg: th.fg, bright: th.fgBright, dim: cineMix(th.fg, th.bg, 0.5), accent: th.accent, accent2: th.accent2, green: th.green, cyan: th.cyan, red: th.red },
+      onExit: function () { radioUi = null; markInput(); renderAll(); }
+    });
+  }
+  function closeRadio() { if (radioUi) { var u = radioUi; radioUi = null; u.destroy(); renderAll(); } }
+  window.OMARCHY_OPEN_RADIO = openRadio;
+  // After YouTube (or similar) takes the sound, coming back to Home must still resume: claim the
+  // Media Session again (like Android claimSession) and PLAY / PLAY_PAUSE start the song without
+  // reopening Radiomarchy. A suspended AudioContext can look "playing" but be silent — PLAY
+  // must wake it, not toggle it off.
+  function claimRadioSession() {
+    if (!radioEng || !radioEng.current()) return;
+    if (radioEng.claimSession) radioEng.claimSession();
+    var ms = window.navigator && navigator.mediaSession;
+    if (!ms || !ms.setActionHandler) return;
+    try {
+      var t = radioEng.current();
+      if (t && ms.metadata !== undefined && window.MediaMetadata) {
+        ms.metadata = new MediaMetadata({ title: t.title || "", artist: t.artist || "Radiomarchy" });
+      }
+      ms.playbackState = radioEng.playing() ? "playing" : "paused";
+      ms.setActionHandler("play", function () { radioEng.ensureAudible(); });
+      ms.setActionHandler("pause", function () { radioEng.pause(); });
+      ms.setActionHandler("previoustrack", function () { radioEng.prev(); });
+      ms.setActionHandler("nexttrack", function () { radioEng.next(true); });
+    } catch (e) { /* older webOS / Tizen */ }
+  }
+  function radioMedia(m) {
+    if (!m || !radioEng || !radioEng.current()) return false;
+    if (m === "play") radioEng.ensureAudible();
+    else if (m === "playpause") { if (radioEng.playing()) radioEng.pause(); else radioEng.ensureAudible(); }
+    else if (m === "pause") radioEng.pause();
+    else if (m === "ff" || m === "next") radioEng.next(true);
+    else if (m === "rew" || m === "prev") radioEng.prev();
+    else return false;
+    claimRadioSession();
+    return true;
+  }
+  if (radioEng) radioEng.on(claimRadioSession);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) claimRadioSession();
+  });
+  document.addEventListener("webOSRelaunch", claimRadioSession);
+  // While Radiomarchy is open its keys are its own; media keys reach the player from anywhere in OmarchyTV.
+  window.addEventListener("keydown", function (e) {
+    if (!radioEng) return;
+    var m = window.OmarchyRadio.mediaKey(e);
+    if (!radioUi) {
+      if (!m || cineUi || !radioMedia(m)) return;
+      e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      return;
+    }
+    var n = m || (window.OmarchyCinemarchy ? window.OmarchyCinemarchy.keyName(e) : "");
+    if (e.keyCode === 427) n = "chup"; else if (e.keyCode === 428) n = "chdown";
+    if (n && radioUi.key(n, e)) { e.preventDefault(); }
+    e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }, true);
+  /** The top bar: "♫ Still Licensed — Michel Krapf" while the radio plays ("❚❚" paused); gone when it stops. */
+  // Same rule as Android HomeV29.radioBarMaxWidth: the label sits to the right of the centred clock
+  // and to the left of SpaceX, the racing countdown and the icons; it hides if the gap is under 80 px.
+  function radioBarMaxWidth(barW, clockW, rightRestW, gap, minW) {
+    var avail = (barW - rightRestW) - Math.floor((barW + clockW) / 2) - gap;
+    return avail < minW ? 0 : avail;
+  }
+  function layoutRadioBar() {
+    var el = document.getElementById("bar-radio"), bar = document.getElementById("waybar");
+    var clock = document.getElementById("bar-clock"), right = document.getElementById("bar-right");
+    if (!el || !bar || !clock || !right || el.style.display === "none") return 0;
+    if (typeof window.getComputedStyle !== "function") return 0;
+    var rest = parseFloat((window.getComputedStyle(bar).paddingRight) || 0) || 0, i, c, cs;
+    for (i = 0; i < right.children.length; i++) {
+      c = right.children[i];
+      cs = window.getComputedStyle(c);
+      if (c === el) { rest += (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0); continue; }
+      if (cs.display === "none") continue;
+      rest += c.offsetWidth + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);
+    }
+    var max = radioBarMaxWidth(bar.offsetWidth, clock.offsetWidth, rest, 16, 80);
+    if (!max) { el.style.display = "none"; return 0; }
+    el.style.maxWidth = max + "px";
+    return max;
+  }
+  function tickRadioBar() {
+    var el = document.getElementById("bar-radio"), t = radioEng && radioEng.current();
+    if (!el) return;
+    if (!t) { el.style.display = "none"; el.style.maxWidth = ""; return; }
+    el.innerHTML = '<span style="color:var(--t-accent2)">' + (radioEng.playing() ? "♫ " : "❚❚ ") + '</span><span style="color:var(--t-fg-bright)">' + escHtml(t.title) +
+      '</span>' + (t.artist ? '<span style="color:var(--t-fg)"> — ' + escHtml(t.artist) + "</span>" : "");
+    el.style.display = "inline-block";
+    layoutRadioBar();
+  }
+  if (radioEng) {
+    radioEng.on(tickRadioBar);
+    setInterval(tickRadioBar, 2000);
+    var barRadio = document.getElementById("bar-radio");
+    if (barRadio) barRadio.addEventListener("click", function () { openRadio(); });
+  }
+
+  // ---- v2.20 GrokBot Office (office.js): the bots at their desks, optional (Companion settings) ----
+  // Data: what the PC pushed (omarchy-tv office push -> GET /v1/office on the bridge) or the "office" field of a
+  // Grok Bot diretto reply, kept in localStorage. Asks and hires go through Grok Bot diretto (grokdirect.js).
+  var OFF = window.OmarchyOffice || null, officeUi = null, officeTimer = null, OFFICE_KEY = "omarchytv.office.v1";
+  function officeData() { try { return OFF.parse(window.localStorage.getItem(OFFICE_KEY) || "null"); } catch (e) { return OFF.parse(null); } }
+  function officeSave(d) { try { window.localStorage.setItem(OFFICE_KEY, JSON.stringify(OFF.toJson(d))); } catch (e) {} }
+  function officeFetch() {
+    var base = pcBase();
+    if (!base || typeof fetch !== "function" || !officeUi || document.hidden) return;
+    fetch(base + "/v1/office").then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
+      if (!j || !officeUi || j.available === false) return;
+      var d = OFF.parse(j);
+      officeSave(d); officeUi.setData(d);
+    }, function () {});
+  }
+  // 2.20 multi-provider: Claude / ChatGPT (and every AI signed in on the PC) answer through the PC bridge with the
+  // ask code; the keys stay on the PC. The list is the PC's own (POST /v1/ai/providers): nothing listed, nothing offered.
+  function officePcReady() { return !!(pcBase() && cfg.grokbotCode && typeof fetch === "function"); }
+  function officeTag(p) {
+    var s = String(p.provider || p.id || "").toLowerCase();
+    return /claude|anthropic/.test(s) ? "claude" : /codex|openai|chatgpt|gpt/.test(s) ? "chatgpt" : /grok|xai/.test(s) ? "grok" : s;
+  }
+  function officeProviders() {
+    if (!officePcReady()) return [];
+    return (cfg.tuiProviders || []).filter(function (p) { return p.id !== "grok-bot"; }).map(function (p) { return { id: p.id, name: p.name, provider: officeTag(p) }; });
+  }
+  function officeRefreshProviders() {
+    if (!officePcReady()) return;
+    fetch(pcBase() + "/v1/ai/providers", { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" }, body: "{}" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        if (!j || !j.providers) return;
+        cfg.tuiProviders = j.providers.slice(0, 16).map(function (p) { return { id: String(p.id), name: String(p.name || p.id).slice(0, 32), provider: p.provider ? String(p.provider).slice(0, 16) : undefined }; });
+        saveCfg();
+        if (officeUi) officeUi.setProvider(officeUi.state().provider);
+      }, function () {});
+  }
+  function officePcPost(path, body, cb) {
+    if (!officePcReady()) { cb("not_set"); return; }
+    fetch(pcBase() + path, { method: "POST", headers: { "X-Omarchy-Token": cfg.grokbotCode, "Content-Type": "text/plain" }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j || {} }; }); })
+      .then(function (res) {
+        var j = res.j;
+        if (res.ok) { cb(null, j); return; }
+        cb(j.error === "unauthorized" ? "Wrong ask code: check it in the Companion settings." :
+          j.error === "not found" ? "Update the omarchy-tv plugin on the PC and restart omarchy-tv webos serve." : (j.message || "The PC could not answer."));
+      }, function () { cb("The PC did not answer · is omarchy-tv webos serve running?"); });
+  }
+  function officeListen(cb) {
+    var Ctor = speechCtor();
+    if (!Ctor) { cb("unsupported"); return; }
+    try {
+      var r = new Ctor(), done = false;
+      r.lang = speechLang(); r.interimResults = false; r.maxAlternatives = 1;
+      r.onresult = function (ev) { if (done) return; done = true; var a = ev.results && ev.results[0] && ev.results[0][0]; cb(null, a ? a.transcript : ""); };
+      r.onerror = function () { if (!done) { done = true; cb("error"); } };
+      r.onend = function () { if (!done) { done = true; cb("error"); } };
+      r.start();
+    } catch (e) { cb("unsupported"); }
+  }
+  function openOffice() {
+    if (officeUi || !OFF) return;
+    if (!cfg.officeEnabled) { showToast("GrokBot Office is off · Blue › Companion settings"); return; }
+    if (state.modalOpen) closeModal();
+    if (cineUi) closeCinemarchy();
+    if (radioUi) closeRadio();
+    var th = currentThemeObj();
+    officeUi = OFF.open(document.getElementById("stage") || document.body, {
+      lang: getLang(), data: officeData(), store: window.localStorage,
+      theme: { bg: th.bg, fg: th.fg, bright: th.fgBright, accent: th.accent, accent2: th.accent2, magenta: th.magenta, green: th.green, yellow: th.yellow, red: th.red, cyan: th.cyan },
+      speak: function (text, lang) { if (GBD) gbdSpeak(text, lang); },
+      listen: speechCtor() ? officeListen : null,
+      ask: GBD ? function (q, office, cb) {
+        var apps = visibleApps().map(function (a) { return a.name; });
+        OFF.ask(GBD, GBD.load(window.localStorage), q, askLang(), apps,
+          (window.OMARCHY_PLATFORM === "tizen" ? "OmarchyTV on Samsung Tizen" : "OmarchyTV on LG webOS") + " · GrokBot Office", office, function (err, rep, payload) {
+            if (payload) officeSave(OFF.applyReply(officeData(), payload));
+            cb(err, rep, payload);
+          });
+      } : null,
+      providers: officeProviders,
+      pcAsk: function (id, q, cb) {
+        officePcPost("/v1/ai/ask", { text: q, provider: id, lang: speechLang() }, function (err, j) { cb(err, j && j.text); });
+      },
+      pcHire: function (h, cb) {
+        officePcPost("/v1/office/hire", h, function (err, j) {
+          if (!err && j && j.office) officeSave(OFF.parse(j.office));
+          cb(err, j);
+        });
+      },
+      onProvider: function (id) { cfg.officeProvider = id; saveCfg(); },
+      onExit: closeOffice
+    });
+    if (cfg.officeProvider) officeUi.setProvider(cfg.officeProvider);
+    officeRefreshProviders();
+    officeFetch();
+    officeTimer = setInterval(officeFetch, 30000);   // only while the office is open (and the page visible)
+  }
+  function closeOffice() {
+    if (officeTimer) { clearInterval(officeTimer); officeTimer = null; }
+    if (officeUi) { var u = officeUi; officeUi = null; u.destroy(); markInput(); renderAll(); }
+  }
+  window.OMARCHY_OPEN_OFFICE = openOffice;
+  window.addEventListener("keydown", function (e) {
+    if (!officeUi) return;
+    var n = window.OmarchyCinemarchy ? window.OmarchyCinemarchy.keyName(e) : "";
+    var tgt = e.target, typing = tgt && /INPUT/.test(tgt.tagName);
+    if (typing && (n === "red" || n === "green" || n === "yellow" || n === "blue" || /^[1-8]$/.test(n))) n = "";   // letters are text here
+    if (officeUi.key(n, e)) e.preventDefault();
+    e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }, true);
+
   function openOmarchyMenu() {
     openModal("Omarchy", "", [
       { icon: "󰕼", label: "Cinemarchy", right: "C ›", act: function () { openCinemarchyModal(0); } },
       { icon: "🎮", label: "OmarchyTV Arcade", right: "V-HOLD · RICE WARS · FORK BOMB ›", act: openArcade },
+      { icon: "♫", label: "Radiomarchy", right: "Omarchy Radio · R ›", act: function () { openRadio(); } },
+    ].concat(cfg.officeEnabled && OFF ? [{ icon: "󰚩", label: "GrokBot Office", right: "O ›", act: openOffice }] : []).concat([
       { icon: "", label: tr("menu_plugins"), right: "›", act: openPluginsModal },
       { icon: "󰀻", label: tr("menu_apps"), right: "›", act: openWalkerModal },
       { icon: "󰸌", label: tr("sys_themes"), right: "›", act: openThemesModal },
@@ -2641,7 +3050,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         renderModalList();
       } },
       { label: tr("sys_about"), right: APP_VERSION, act: openAboutModal }
-    ]);
+    ]));
   }
 
   var saverStatusOverride = "";
@@ -2664,7 +3073,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     log: function (m) { console.log("[OmarchySaver]", m); }
   };
 
+  function homeFxForSaver(pause) {
+    if (pause) {
+      if (omafireUi) { try { omafireUi.destroy(); } catch (e) {} omafireUi = null; omafireMode = ""; }
+      try { fractalTick(); } catch (e) {}
+    } else {
+      var wl = document.getElementById("wallpaper-layer");
+      try { omafireWall(wl); } catch (e) {}
+      try { fractalWall(wl); fractalTick(); } catch (e) {}
+    }
+  }
+
   function startScreensaver(statusText) {
+    if (cfg.saverMode === "radiomarchy" && radioEng) { openRadio({ saver: true }); return; }   // v2.20: the fractals, with the music if it plays
     saverStatusOverride = typeof statusText === "string" ? statusText : "";
     var ov = document.getElementById("saver-overlay");
     var fr = document.getElementById("saver-frame");
@@ -2677,6 +3098,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       fr.onload = function () { pulsePush(fr); };
       pulsePush(fr);
     }
+    homeFxForSaver(true);   // 2.20: no Home fractals / OmaFire work under the saver
   }
 
 
@@ -2815,16 +3237,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function tickRaceBar() {
     var bar = document.getElementById("bar-race"), R = window.OmarchyRacing;
     if (!bar) return;
-    if (!cfg.racingBar || !R) { bar.style.display = "none"; return; }
+    if (!cfg.racingBar || !R) { bar.style.display = "none"; layoutRadioBar(); return; }
     var now = Date.now(), n = racingNext;
     if (n && now >= n.session.endOrDefault()) n = racingNext = R.soonest(racingAll(now), now);
-    if (!n) { bar.style.display = "none"; return; }
+    if (!n) { bar.style.display = "none"; layoutRadioBar(); return; }
     var live = n.session.live(now);
     bar.style.display = "inline-block";
     bar.innerHTML = '<span style="color:var(--t-accent)">' + escHtml(R.label(n.series)) +
       ' </span><span style="color:var(--t-fg)">' + escHtml(String(n.session.code).toLowerCase() + " · " + R.shortName(n.meeting)) +
       '  </span><span style="color:' + (live ? "var(--t-green)" : "var(--t-fg-bright)") + '">' +
       (live ? "● live" : R.clock(n.session.start - now)) + "</span>";
+    layoutRadioBar();
   }
 
   // ---- v2.15 Pulse screensaver: Pulse's own page (1.8 since 2.15.1) (vendor/pulse), the TV's hub inside it, the PC's state on top ----
@@ -2842,7 +3265,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return c;
   }
   function pulseUrl() {
-    return "vendor/pulse/index.html#cfg=" + encodeURIComponent(JSON.stringify(pulseCfg()));
+    return "pulse-host.html#cfg=" + encodeURIComponent(JSON.stringify(pulseCfg()));   // v2.20 host wraps vendored Pulse
   }
   // The Pulse page is an iframe: webOS often drops the #cfg hash on file://, and the calendar
   // may still be loading when the URL is first built. Same path as Android: OmarchySaver.pulse()
@@ -2924,6 +3347,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
     // Keys pressed inside the saver iframe never reach this document, so restart the idle clock here.
     markInput();
+    homeFxForSaver(false);
   }
 
   // Idle timer: start the screensaver after cfg.saverIdleMin minutes without input (0 = never),
@@ -2935,7 +3359,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   });
   document.addEventListener("visibilitychange", markInput);
   setInterval(function () {
-    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi || cineUi) return;
+    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi || cineUi || radioUi || officeUi) return;
     if (document.getElementById("saver-overlay").className === "active") return;
     if (Date.now() - lastInput >= cfg.saverIdleMin * 60000) startScreensaver();
   }, 5000);
@@ -3176,6 +3600,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       pill.style.display = cfg.pluginSpacexTv ? "inline-flex" : "none";
       pill.textContent = "🚀 SpaceX TV · launches";
     }
+    layoutRadioBar();
     var gb = document.getElementById("grokbot-companion");
     if (gb) {
       gb.style.display = (cfg.pluginGrokbot && !cfg.companionHidden && state.ws === 0) ? "block" : "none";
@@ -3846,6 +4271,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cfg.companionOffsetX = nx; cfg.companionOffsetY = nx / 2; saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(offIdx);
     } });
     items.push({ label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui });   // last, so the indices above stay
+    if (OFF) {   // v2.20 GrokBot Office: optional, off by default; it asks and hires through Grok Bot diretto above
+      var offIdx = items.length;
+      items.push(
+        { label: "GrokBot Office (optional)", right: cfg.officeEnabled ? "on" : "off", act: function () { cfg.officeEnabled = !cfg.officeEnabled; saveCfg(); openGrokbotCompanionModal(offIdx); } },
+        { label: "Open GrokBot Office", right: cfg.officeEnabled ? "O ›" : "turn it on first", act: function () { if (cfg.officeEnabled) openOffice(); else showToast("Turn GrokBot Office on first"); } });
+    }
     openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.2.0 (MIT) · Blue: chat · hold Blue: voice · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
@@ -3980,6 +4411,18 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       if (state.ws !== 0) switchWorkspace(0);
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+
+    if ((k === "r" || k === "R" || code === 82) && !state.modalOpen && !cineUi) {   // v2.20 Radiomarchy
+      openRadio();
+      e.preventDefault();
+      return;
+    }
+
+    if ((k === "o" || k === "O" || code === 79) && !state.modalOpen && !cineUi && cfg.officeEnabled && OFF) {   // v2.20 GrokBot Office (when on)
+      openOffice();
+      e.preventDefault();
       return;
     }
 

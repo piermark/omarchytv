@@ -159,7 +159,7 @@ test("uninstalling the focused All Apps tile moves focus to the last remaining a
   t.press("ArrowLeft"); t.press("Enter");
   assert.deepStrictEqual(tz.calls, ["3201907018807", "111299001912"], "navigation still works after the shrink");
   const saved = JSON.parse(t.store.omarchytv_cfg_2110);
-  for (const k of ["saverMode", "saverArt", "living", "pulseDefault215", "ssBefore215", "pulseNotice"]) delete saved[k];   // v2.15: the one-time switch to Pulse
+  for (const k of ["saverMode", "saverArt", "living", "pulseDefault215", "ssBefore215", "pulseNotice", "fractalWp220", "wallpaper", "randomWallpaper"]) delete saved[k];   // one-time Pulse + 2.20 fractals default
   assert.deepStrictEqual(saved, cfg, "saved order and hidden apps are untouched");
 });
 

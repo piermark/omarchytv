@@ -99,7 +99,7 @@ Keep the key private: anyone who has it can start your routine.
 
 ## Step 3: enter them on the TV
 
-**Android TV:** Settings › Grok Bot e AI:
+**Android TV:** Settings › Grok Bot & AI (Italian: Grok Bot e AI):
 
 1. **Webhook URL** › type or paste the URL.
 2. **Sender key** › type the key. The menu only shows `crsr_••••••••` plus the last 4 characters.
@@ -136,7 +136,7 @@ ntfy server you trust) and tell the TV about it:
 
 1. It must be reachable from the internet over **https**: the routine runs in Grok Bot's cloud and publishes there.
    A server only on your home network won't work.
-2. On the TV: **Settings › Grok Bot e AI › Grok Bot diretto › Reply server** (Android), or type the address in the
+2. On the TV: **Settings › Grok Bot & AI › Grok Bot diretto › Reply server** (Android; Italian: Grok Bot e AI), or type the address in the
    companion's text field and pick **Save the reply server typed above** (LG/Samsung). For example
    `https://ntfy.example.com/`. Empty = back to ntfy.sh.
 3. If your server needs a login to read, create an access token on it (`ntfy token add <user>`, it starts with `tk_`)
@@ -160,6 +160,47 @@ Until now that text always won over the Logo picked on the TV. From this version
 PC**, which appears only once the PC has pushed a text, hands the saver back to it. The stored key is
 `"screensaver": {"pcText": false}` in `omarchytv.json`, and it defaults to `true`, so a TV that has never touched the
 Logo row keeps showing the PC's text as before.
+
+## GrokBot Office (2.20, optional)
+
+GrokBot Office shows your bots at their desks. It is **off by default**. How to turn it on and open it is in
+the [2.20 user guide](OMARCHYTV-2.20-GUIDE.md#11-grokbot-office): Android, Settings › **Grok Bot & AI** ›
+**GrokBot Office (optional)** (Italian: Grok Bot e AI), then **Open GrokBot Office**, the TV app-row banner,
+Walker, or the `office` key. LG and Samsung: Blue › Companion settings, the same on/off row, then the Omarchy
+menu or the O key. Claude and ChatGPT keys stay on the PC; see [OFFICE.md](../pc-plugin/omarchy-link/docs/OFFICE.md).
+
+When **Grok Bot** answers in it, the TV sends the same request as above with one more
+field, `office`:
+
+```json
+{ "question": "…", "office": { "action": "ask", "bots": ["Trimmer", "Scout"] } }
+{ "question": "Hire a new bot for my GrokBot Office named Pixel: draws covers. …",
+  "office": { "action": "hire", "name": "Pixel", "role": "draws covers", "description": "draws covers", "bots": ["Trimmer"] } }
+```
+
+The routine may add an `office` object to its ntfy reply (next to `id` and `text`). Everything in it is optional
+and checked by the TV:
+
+```json
+{ "id": "…", "text": "Pixel is at its desk.",
+  "office": { "hired": { "name": "Pixel", "role": "draws covers", "color": "#bb9af7", "status": "idle" },
+              "bots": [ … ],                     // replaces the whole list
+              "usage": { "weekly_pct": 46, "label": "Weekly usage", "resets": "Mon 09:00" } } }
+```
+
+A hire only shows up when the reply has `office.hired` (or a `bots` list with it): the TV never pretends. The full
+bots shape, which the PC can also push with `omarchy-tv office push bots.json`:
+
+```json
+{ "title": "My office",
+  "bots": [ { "id": "trimmer", "name": "Trimmer", "role": "Cuts token use", "color": "#ff9e64",
+              "status": "working", "task": "…", "provider": "grok" } ],
+  "usage": { "weekly_pct": 46.3, "label": "Weekly usage", "resets": "Mon 09:00" } }
+```
+
+`status` is `working`, `idle`, `done` or `error` (anything else is `idle`); `provider` is a short word (default `grok`) shown on the
+nameplate; at most 24 bots (16 at their desks). No `usage`, no usage card. Claude and ChatGPT bots are hired and
+answer through the paired PC instead: see `pc-plugin/omarchy-link/docs/OFFICE.md`.
 
 ## Privacy
 

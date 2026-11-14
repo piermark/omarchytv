@@ -166,6 +166,7 @@ class Session:
             self.last_pane = time.time()
             self.push_ai(c)
             self.push_providers(c, force=True)
+            self.push_office(c)
             self.saver_mtime = None
             self.push_home(c)
             self.grokbot_sig = None
@@ -215,6 +216,8 @@ class Session:
             threading.Thread(target=self.handle_ask, args=(self.stream, data), daemon=True).start()
         elif kind == "grokbot_ask" and self.stream:
             threading.Thread(target=self.handle_grokbot_ask, args=(self.stream, data), daemon=True).start()
+        elif kind == "office_hire" and self.stream:   # 2.20 GrokBot Office: hire a Claude/ChatGPT bot on this PC
+            threading.Thread(target=self.handle_office_hire, args=(self.stream, data), daemon=True).start()
 
     # ------------------------------------------------------------ assistant (TV -> PC "ask")
     def handle_ask(self, stream, data: dict) -> None:
@@ -407,6 +410,40 @@ class Session:
         self.log(f"TV question for Grok Bot {res['bot']} ({res['mode']})")
         send("grokbot_answer", res)
 
+    def handle_office_hire(self, stream, data: dict) -> None:
+        """TV -> PC "office_hire" {id, name, provider: claude|chatgpt, role?, description?}. The key is checked with the
+        provider, then the bot is saved in assistant.json. Replies "office_hire_result" {id, ok, bot} or {id, ok: false,
+        error, message}; on success the provider list and the office (PUT /v1/office) go to the TV again."""
+        from . import office
+        rid = str(data.get("id", ""))[:64]
+
+        def send(payload):
+            try:
+                stream.send("office_hire_result", {"id": rid, **payload})
+            except OSError:
+                pass
+        if not rid:
+            return
+        self._reload_cfg()
+        if not self.cfg.get("assistant", True):
+            return send({"ok": False, "error": "disabled", "message": "the assistant is off on the PC"})
+        try:
+            bot = office.hire(data.get("name"), data.get("provider"), data.get("role"), data.get("description"),
+                              path=self.assistant.settings_path)
+        except office.HireError as e:
+            return send({"ok": False, "error": e.code, "message": str(e)[:200]})
+        except (OSError, ValueError) as e:
+            return send({"ok": False, "error": "pc_error", "message": str(e)[:200]})
+        self.log(f"GrokBot Office: hired {bot['name']} ({bot['provider']})")
+        send({"ok": True, "bot": bot})
+        try:
+            c = self.client
+            if c is not None:
+                self.push_providers(c, force=True)
+                c.request("PUT", "/v1/office", office.tv_payload(self.assistant.settings_path))
+        except (link.LinkError, OSError, ValueError) as e:
+            self.log(f"office push after hire: {e}")
+
     def push_grokbot(self, c: link.Client) -> None:
         """Mirror the companion's current bot (name, shape, colour) on the TV tile when its files change.
         An older launcher answers 404/400: ignored."""
@@ -418,6 +455,25 @@ class Session:
         self.grokbot_sig = sig
         try:
             c.put_grokbot(grokbot.current(self.cfg))
+        except link.LinkError as e:
+            if e.status not in (400, 404, 429):
+                raise
+
+    def push_office(self, c: link.Client) -> None:
+        """2.20 GrokBot Office: hired Claude/ChatGPT bots and the per-provider spend (Admin API keys only).
+        Nothing to say (no hired bot, no admin key): nothing is sent, the office keeps what omarchy-tv pushed."""
+        from . import office
+        if not self.cfg.get("assistant", True):
+            return
+        try:
+            data = office.tv_payload(self.assistant.settings_path)
+        except (OSError, ValueError) as e:
+            self.log(f"office: {e}")
+            return
+        if not any(b.get("assistant") for b in data["bots"]) and not data.get("providers_usage"):
+            return
+        try:
+            c.request("PUT", "/v1/office", data)
         except link.LinkError as e:
             if e.status not in (400, 404, 429):
                 raise
@@ -703,6 +759,7 @@ class Session:
                 if c and time.time() - self.last_ai > minutes * 60:
                     self.push_ai(c)
                     self.push_providers(c)
+                    self.push_office(c)
             except (link.LinkError, OSError, ValueError) as e:
                 self.log(f"push failed: {e}")
 

@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ посты · OK открыть · 1 нравится · 2 ответить · 3 репост · 4 новый пост · 5 поиск · 0 главная · 9 уведомления · 8 сообщения</string>
     <string name="omafire_campfire">костёр</string>
     <string name="omafire_embers">угли</string>
+    <string name="wp_radiomarchy_fractals">Фракталы Radiomarchy</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">слабый</string>
     <string name="crt_strong">сильный</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Прежняя заставка</string>
     <string name="agent_alert_row">Оповещения ИИ-агентов во время просмотра</string>
     <string name="agent_alert" formatted="true">● %1$s ждёт тебя: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Песни</string>
+    <string name="radio_queue">Далее</string>
+    <string name="radio_demo">Демо-режим</string>
+    <string name="radio_settings">Настройки</string>
+    <string name="radio_explicit">Откровенные песни (E)</string>
+    <string name="radio_shown">показаны</string>
+    <string name="radio_hidden">скрыты</string>
+    <string name="radio_colours">Цвета фракталов</string>
+    <string name="radio_fractal">Фрактал</string>
+    <string name="radio_auto">случайный (новый в каждой сцене)</string>
+    <string name="radio_auto_demo">Демо-режим через 1 минуту без нажатий</string>
+    <string name="radio_shuffle">Перемешать</string>
+    <string name="radio_repeat">Повтор</string>
+    <string name="radio_repeat_all">все</string>
+    <string name="radio_repeat_one">одну</string>
+    <string name="radio_stop">Остановить и закрыть плеер</string>
+    <string name="radio_loading">Загрузка Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org не отвечает: показана копия, сохранённая на этом ТВ.</string>
+    <string name="radio_empty">Здесь пока ничего нет.</string>
+    <string name="radio_by" formatted="true">автор: %1$s</string>
+    <string name="radio_send">Сделай свою и отправь: radio.omarchy.org</string>
+    <string name="radio_nothing">Выбери песню: OK её включает.</string>
+    <string name="radio_lyrics">Текст</string>
+    <string name="radio_no_lyrics">Для этой песни текста пока нет.</string>
+    <string name="radio_resume" formatted="true">продолжить с %1$s</string>
+    <string name="radio_keys">OK играть · ⏯ пауза · ⏮ ⏭ · КРАСНАЯ демо</string>
+    <string name="radio_play_all">Играть всё</string>
+    <string name="radio_shuffle_all">Всё вперемешку</string>
+    <string name="radio_about">Песни с radio.omarchy.org: каждую сделал человек, чьё имя на ней, прислал как pull request, звучит потоком с сайта. Подкаст: Omarchy Stories. Фракталы рисуются вживую на этом ТВ.</string>
+    <string name="radio_saver">Фракталы Radiomarchy (под музыку)</string>
+    <string name="radio_random">случайные</string>
+    <string name="radio_quality">Качество изображения</string>
+    <string name="radio_quality_auto" formatted="true">авто, под этот ТВ (сейчас %1$s)</string>
+    <string name="radio_animated">Анимированные фракталы</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">да</string>
+    <string name="radio_animated_off">нет</string>
 </resources>

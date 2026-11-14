@@ -20,6 +20,8 @@
   omarchy-tv webos-serve [--port 8765] [--bind 0.0.0.0]
                                         LAN HTTP server for LG webOS TVs (/v1/status, /v1/themes, /v1/wallpaper)
   omarchy-tv stats                      show the stats pushed every 5 s while the TV home is visible
+  omarchy-tv office push <bots.json> | show | clear   GrokBot Office: your bots and weekly usage on the TV (2.20, optional)
+                                                       (+ Claude / ChatGPT bots: omarchy-link office hire)
   omarchy-tv mcp [--stdio|--http] [--port 8990] [--tunnel]   MCP server for Grok Bot / Claude / Hermes
 """
 import os, sys
@@ -358,6 +360,9 @@ def main(argv):
     if cmd == "send":
         from omarchy_tv import send
         return send.run(rest, client, picker=lambda: send.pick_file(ui.choose), notify=ui.notify)
+    if cmd == "office":
+        from omarchy_tv import office
+        return office.run(rest, client, say=ui.say)
     if cmd == "menu-entry":
         from omarchy_tv import menu_entry
         return menu_entry.run(rest, os.path.realpath(__file__), say=ui.say)

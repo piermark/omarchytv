@@ -97,17 +97,19 @@ test("compact root menu has icon rows and retains remote activation", () => {
   assert.strictEqual(t.byId["modal-sub"].style.display, "none");
   assert.strictEqual(t.byId["modal-box"].className, "box");
   const rows = t.byId["modal-list"].children;
-  assert.strictEqual(rows.length, 14);   // 12 icon rows + About, plus Arcade from main
+  assert.strictEqual(rows.length, 15);   // 12 icon rows + About, plus Arcade from main and Radiomarchy (2.20)
   rows.forEach((row, i) => {
-    if (i < 13) assert.match(row.innerHTML, /mi-icon.*<svg.*<path.*mi-label/);
+    if (i < 14) assert.match(row.innerHTML, /mi-icon.*<svg.*<path.*mi-label/);
     else assert.match(row.innerHTML, /mi-label.*About/);
     assert.strictEqual(row.getAttribute("role"), "option");
     assert.strictEqual(row.getAttribute("aria-selected"), i === 0 ? "true" : "false");
   });
   t.press("ArrowDown");
   assert.strictEqual(t.byId["modal-list"].children[1].getAttribute("aria-selected"), "true");
-  t.press("ArrowDown");   // row 1 is Arcade (main); Plugins sits under it
+  t.press("ArrowDown");   // row 1 is Arcade (main), row 2 Radiomarchy; Plugins sits under them
   assert.strictEqual(t.byId["modal-list"].children[2].getAttribute("aria-selected"), "true");
+  t.press("ArrowDown");
+  assert.strictEqual(t.byId["modal-list"].children[3].getAttribute("aria-selected"), "true");
   t.press("Enter");
   assert.match(t.byId["modal-title"].textContent, /Plugins/);
   assert.strictEqual(t.byId["modal-box"].className, "box");
@@ -132,7 +134,7 @@ test("compact labels and remote hints retain Italian and German localization", (
   for (const [lang, setup, hint] of [["it", "Impostazioni", "seleziona"], ["de", "Einrichtung", "auswählen"]]) {
     const t = boot({ cfg: { lang } });
     t.ctx.OmarchyTestAPI.openOmarchyMenu();
-    assert.ok(t.byId["modal-list"].children[8].innerHTML.includes(setup));
+    assert.ok(t.byId["modal-list"].children[9].innerHTML.includes(setup));
     assert.ok(t.byId["modal-hint"].textContent.includes(hint));
   }
 });

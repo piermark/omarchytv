@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ julkaisut · OK avaa · 1 tykkää · 2 vastaa · 3 repost · 4 uusi julkaisu · 5 haku · 0 koti · 9 ilmoitukset · 8 viestit</string>
     <string name="omafire_campfire">nuotio</string>
     <string name="omafire_embers">hiillos</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy-fraktaalit</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">kevyt</string>
     <string name="crt_strong">voimakas</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Edellinen näytönsäästäjä</string>
     <string name="agent_alert_row">Tekoälyagenttien ilmoitukset katsellessa</string>
     <string name="agent_alert" formatted="true">● %1$s tarvitsee sinua: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Kappaleet</string>
+    <string name="radio_queue">Seuraavaksi</string>
+    <string name="radio_demo">Demotila</string>
+    <string name="radio_settings">Asetukset</string>
+    <string name="radio_explicit">Eksplisiittiset kappaleet (E)</string>
+    <string name="radio_shown">näkyvissä</string>
+    <string name="radio_hidden">piilossa</string>
+    <string name="radio_colours">Fraktaalien värit</string>
+    <string name="radio_fractal">Fraktaali</string>
+    <string name="radio_auto">satunnainen (uusi joka kohtauksessa)</string>
+    <string name="radio_auto_demo">Demotila 1 minuutin jälkeen ilman näppäimiä</string>
+    <string name="radio_shuffle">Satunnainen</string>
+    <string name="radio_repeat">Toista</string>
+    <string name="radio_repeat_all">kaikki</string>
+    <string name="radio_repeat_one">yksi</string>
+    <string name="radio_stop">Pysäytä ja sulje soitin</string>
+    <string name="radio_loading">Ladataan Omarchy Radiota…</string>
+    <string name="radio_offline">radio.omarchy.org ei vastaa: näytetään tähän televisioon tallennettu kopio.</string>
+    <string name="radio_empty">Täällä ei ole vielä mitään.</string>
+    <string name="radio_by" formatted="true">tekijä: %1$s</string>
+    <string name="radio_send">Tee oma ja lähetä se: radio.omarchy.org</string>
+    <string name="radio_nothing">Valitse kappale: OK soittaa sen.</string>
+    <string name="radio_lyrics">Sanat</string>
+    <string name="radio_no_lyrics">Tälle kappaleelle ei vielä ole sanoja.</string>
+    <string name="radio_resume" formatted="true">jatka kohdasta %1$s</string>
+    <string name="radio_keys">OK soita · ⏯ tauko · ⏮ ⏭ · PUNAINEN demo</string>
+    <string name="radio_play_all">Soita kaikki</string>
+    <string name="radio_shuffle_all">Kaikki satunnaisesti</string>
+    <string name="radio_about">Kappaleet osoitteesta radio.omarchy.org: jokaisen on tehnyt siinä mainittu henkilö, lähettänyt pull requestina, ja ne striimataan sivustolta. Podcast: Omarchy Stories. Fraktaalit piirretään livenä tällä televisiolla.</string>
+    <string name="radio_saver">Radiomarchy-fraktaalit (musiikin mukaan)</string>
+    <string name="radio_random">satunnaiset</string>
+    <string name="radio_quality">Kuvanlaatu</string>
+    <string name="radio_quality_auto" formatted="true">auto, sopeutuu tähän televisioon (nyt %1$s)</string>
+    <string name="radio_animated">Animoidut fraktaalit</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">kyllä</string>
+    <string name="radio_animated_off">ei</string>
 </resources>

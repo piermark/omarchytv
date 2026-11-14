@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ bejegyzések · OK megnyitás · 1 tetszik · 2 válasz · 3 repost · 4 új bejegyzés · 5 keresés · 0 kezdőlap · 9 értesítések · 8 üzenetek</string>
     <string name="omafire_campfire">tábortűz</string>
     <string name="omafire_embers">parázs</string>
+    <string name="wp_radiomarchy_fractals">Radiomarchy-fraktálok</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">enyhe</string>
     <string name="crt_strong">erős</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Előző képernyővédő</string>
     <string name="agent_alert_row">MI-ügynökök értesítései tévézés közben</string>
     <string name="agent_alert" formatted="true">● %1$s rád vár: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Dalok</string>
+    <string name="radio_queue">Következik</string>
+    <string name="radio_demo">Demó mód</string>
+    <string name="radio_settings">Beállítások</string>
+    <string name="radio_explicit">Explicit dalok (E)</string>
+    <string name="radio_shown">látható</string>
+    <string name="radio_hidden">rejtett</string>
+    <string name="radio_colours">Fraktálszínek</string>
+    <string name="radio_fractal">Fraktál</string>
+    <string name="radio_auto">véletlen (minden jelenetben új)</string>
+    <string name="radio_auto_demo">Demó mód 1 perc tétlenség után</string>
+    <string name="radio_shuffle">Keverés</string>
+    <string name="radio_repeat">Ismétlés</string>
+    <string name="radio_repeat_all">mind</string>
+    <string name="radio_repeat_one">egy</string>
+    <string name="radio_stop">Leállítás és a lejátszó bezárása</string>
+    <string name="radio_loading">Omarchy Radio betöltése…</string>
+    <string name="radio_offline">A radio.omarchy.org nem érhető el: a TV-n tárolt másolat látható.</string>
+    <string name="radio_empty">Itt még nincs semmi.</string>
+    <string name="radio_by" formatted="true">előadó: %1$s</string>
+    <string name="radio_send">Készíts egyet, küldd be: radio.omarchy.org</string>
+    <string name="radio_nothing">Válassz egy dalt: OK lejátssza.</string>
+    <string name="radio_lyrics">Dalszöveg</string>
+    <string name="radio_no_lyrics">Ehhez még nincs dalszöveg.</string>
+    <string name="radio_resume" formatted="true">folytatás innen: %1$s</string>
+    <string name="radio_keys">OK lejátszás · ⏯ szünet · ⏮ ⏭ · PIROS demó</string>
+    <string name="radio_play_all">Összes lejátszása</string>
+    <string name="radio_shuffle_all">Összes keverve</string>
+    <string name="radio_about">Dalok a radio.omarchy.org-ról: mindegyiket a rajta szereplő ember készítette, pull requestként küldte be, és a webhelyről szól streamként. Podcast: Omarchy Stories. A fraktálokat élőben rajzolja ez a TV.</string>
+    <string name="radio_saver">Radiomarchy fraktálok (a zenével)</string>
+    <string name="radio_random">véletlen</string>
+    <string name="radio_quality">Képminőség</string>
+    <string name="radio_quality_auto" formatted="true">auto, ehhez a TV-hez igazodik (most %1$s)</string>
+    <string name="radio_animated">Animált fraktálok</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">igen</string>
+    <string name="radio_animated_off">nem</string>
 </resources>

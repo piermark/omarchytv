@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omarchy Pulse · OmarchyTV</title>
+<!-- OmarchyTV host for the vendored Pulse 1.8 page. pulse-adapt.js is ours; vendor/pulse/* is unchanged. -->
+<style>
+@font-face { font-family: 'CaskaydiaMono Nerd Font'; font-weight: 400; src: url('fonts/CaskaydiaMonoNerdFontMono-Regular.ttf') format('truetype'), url('fonts/caskaydia_mono_regular.ttf') format('truetype'); }
+@font-face { font-family: 'CaskaydiaMono Nerd Font'; font-weight: 500; src: url('fonts/CaskaydiaMonoNerdFontMono-Regular.ttf') format('truetype'), url('fonts/caskaydia_mono_regular.ttf') format('truetype'); }
+@font-face { font-family: 'CaskaydiaMono Nerd Font'; font-weight: 600; src: url('fonts/caskaydia_mono_bold.ttf') format('truetype'), url('fonts/caskaydia_mono_bold.ttf') format('truetype'); }
+@font-face { font-family: 'CaskaydiaMono Nerd Font'; font-weight: 700; src: url('fonts/caskaydia_mono_bold.ttf') format('truetype'), url('fonts/caskaydia_mono_bold.ttf') format('truetype'); }
+html, body { background: #000; cursor: none; margin: 0; width: 100%; height: 100%; overflow: hidden; }
+#scene, canvas#c { image-rendering: auto; image-rendering: high-quality; }
+</style>
+<link rel="stylesheet" href="vendor/pulse/pulse.css">
+<script src="pulse-adapt.js"></script>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="vig"></div>
+<div id="ui">
+  <section id="left" class="col"></section>
+  <section id="center" class="col">
+    <div id="clock">
+      <div class="time"><span class="hm">--:--</span><span class="ss">--</span></div>
+      <div class="secbar"><i></i></div>
+      <div class="date"></div>
+      <div class="who"></div>
+    </div>
+    <div id="center-w"></div>
+  </section>
+  <section id="right" class="col"></section>
+</div>
+<div id="ticker"><div class="track"></div></div>
+<div id="badge"></div>
+<div id="incoming" hidden>
+  <div class="frame">
+    <div class="tag">▲ INCOMING</div>
+    <div class="title"></div>
+    <div class="text"></div>
+  </div>
+</div>
+<script src="vendor/pulse/pulse-tv-data.js"></script>
+<script src="vendor/pulse/pulse-tv-hub.js"></script>
+<script src="vendor/pulse/pulse-tv.js"></script>
+<script>if (window.OmarchyPulseAdapt && window.OmarchyPulseAdapt.hookScenes) window.OmarchyPulseAdapt.hookScenes(); else if (window.__omarchyPulseAdapt) window.__omarchyPulseAdapt.hookScenes();</script>
+<script src="vendor/pulse/pulse.js"></script>
+<script src="vendor/pulse/pulse-tv-moments.js"></script>
+</body>
+</html>

@@ -77,7 +77,8 @@ public class ThemeTest {
             assertEquals("pulse", defCfg.screensaverMode);
             assertTrue(defCfg.saverSound);
             assertTrue(defCfg.randomTheme);
-            assertTrue(defCfg.randomWallpaper);
+            org.junit.Assert.assertFalse(defCfg.randomWallpaper);   // v2.20: default wallpaper is Radiomarchy fractals, not rotated away
+            assertEquals(FractalLayer.ID, defCfg.wallpaper);
 
             JSONObject j = new JSONObject();
             assertTrue(LauncherConfig.applyRandomRotation(j, new java.util.Random(42L)));

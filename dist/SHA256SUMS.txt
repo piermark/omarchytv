@@ -1,6 +1,6 @@
-5fb90076f1983b63f40889b3883eea7ed1547aa84f5d2547ca9b13c5da465c7a  omarchytv-release-2.15.1.apk
-143bcd0c44aef0a265038b9920bfe36645a4dc1d4446eec1d6413f96fc99a99f  omarchytv-webos-2.15.1-testing.ipk
-89a8e3c840895acb02b4861c6ef4e0af68cfa451a74b5cd69fde02fa673eef1f  OmarchyTV-tizen-2.15.1-unsigned.wgt
-d5af5e316cce0470fb35ec7c54bceb12ba3a6a9e4e2a6c934417b9c01f9425b0  omarchy-tv-pc-plugin-2.15.1.tar.gz
-1e909e029d5c7232ec1d3f3b86c0254a01948e1168fcff8a14c2e05977dfc97c  omarchy-tv-2.15.1.tar.gz
-6e0fb4a8da4b7b10e6e037b3b7be57a21e04c2d51bdbeff9dce015f0981d0fb5  omarchy-link-2.15.1.tar.gz
+d05309e2b7cde2cfaff2d180cd169cb724fec689a94d26ba3733080067a8e20a  omarchytv-release-2.20.0.apk
+7a59997bb9e718aae6686b09d0dd6955d2898e4015624552f2fce68098a18aae  omarchytv-webos-2.20.0-testing.ipk
+6668c2921a163500db1194afea23f04d0494367fadca4f78d92c140ec7483f47  OmarchyTV-tizen-2.20.0-unsigned.wgt
+7aa341b9a22c51ec27e42fd44846186ebc4b19f54e53ae18e3018a1229cd3733  omarchy-tv-pc-plugin-2.20.0.tar.gz
+72a1c4d06935a8930316b3b2233cc8de8c51b9cde98a5fd781326e509afdf2c0  omarchy-tv-2.20.0.tar.gz
+17e35d0ab135bc7f83d98365817bec2d00310321089c20e6b764918ba281edf8  omarchy-link-2.20.0.tar.gz

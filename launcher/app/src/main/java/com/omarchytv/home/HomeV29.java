@@ -93,6 +93,8 @@ final class HomeV29 extends FrameLayout {
     private final Typeface tf, tfBold;
     private Theme t;
     private LauncherConfig cfg;
+    private int uiAccent, uiAccent2;
+    private boolean liveAccent;
 
     // bar
     private final FrameLayout bar;
@@ -120,6 +122,7 @@ final class HomeV29 extends FrameLayout {
     private final LinearLayout[] remoteBody = new LinearLayout[3];
     /** "barWeather": icon + temperature in the bar, left of the status icons. */
     private final TextView barSpacex;
+    private final TextView barRadio;
     private final BoxView grokbotBox;
     private final TextView grokbotEyes, grokbotText;
     private final GrokbotMark grokbotMark;
@@ -198,6 +201,21 @@ final class HomeV29 extends FrameLayout {
         LinearLayout right = hbox();
         right.setPadding(0, 0, px(32) - px(13), 0);
         bar.addView(right, new LayoutParams(-2, -1, Gravity.END));
+        // v2.20: what Radiomarchy is playing, in the bar; OK opens the music app again
+        barRadio = text("", 18, false);
+        barRadio.setFocusable(true);
+        barRadio.setClickable(true);
+        barRadio.setGravity(Gravity.CENTER_VERTICAL);
+        barRadio.setSingleLine(true);
+        barRadio.setEllipsize(TextUtils.TruncateAt.END);
+        barRadio.setPadding(px(12), 0, px(12), 0);
+        barRadio.setBackground(new Underline());
+        barRadio.setVisibility(GONE);
+        barRadio.setOnClickListener(v -> host.sys("radio"));
+        LinearLayout.LayoutParams rdl = new LinearLayout.LayoutParams(-2, px(44));
+        rdl.gravity = Gravity.CENTER_VERTICAL;
+        rdl.rightMargin = px(8);
+        right.addView(barRadio, rdl);
         barSpacex = text("🚀 SpaceX TV", 18, true);
         barSpacex.setFocusable(true);
         barSpacex.setClickable(true);
@@ -222,22 +240,23 @@ final class HomeV29 extends FrameLayout {
         right.addView(barWx, bwl);
         barWx.setVisibility(GONE);
         // v2.10: no gear (the menu is the Omarchy logo on the left).
-        int[] icons = {R.drawable.ln_cinemarchy, R.drawable.ln_arcade, R.drawable.ln_wifi, R.drawable.ln_bt, R.drawable.ln_vol, R.drawable.ln_input, R.drawable.ln_monitor};
+        int[] icons = {R.drawable.ln_cinemarchy, R.drawable.ln_music, R.drawable.ln_arcade, R.drawable.ln_wifi, R.drawable.ln_bt, R.drawable.ln_vol, R.drawable.ln_input, R.drawable.ln_monitor};
         for (int ic : icons) {
             View b = iconButton(ic, 24 + 26, 24);
             right.addView(b);
             barIcons.add(b);
         }
         barIcons.get(0).setOnClickListener(v -> host.sys("cinemarchy"));
-        barIcons.get(1).setOnClickListener(v -> host.sys("arcade"));   // v2.14: the Arcade next to Cinemarchy
-        barIcons.get(2).setOnClickListener(v -> host.wifiClick());
-        barIcons.get(3).setOnClickListener(v -> host.openBluetooth());
-        barIcons.get(4).setOnClickListener(v -> {
+        barIcons.get(1).setOnClickListener(v -> host.sys("radio"));    // v2.20: Radiomarchy next to Cinemarchy
+        barIcons.get(2).setOnClickListener(v -> host.sys("arcade"));   // v2.14: the Arcade next to Cinemarchy
+        barIcons.get(3).setOnClickListener(v -> host.wifiClick());
+        barIcons.get(4).setOnClickListener(v -> host.openBluetooth());
+        barIcons.get(5).setOnClickListener(v -> {
             android.media.AudioManager am = act.getSystemService(android.media.AudioManager.class);
             if (am != null) am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_SAME, android.media.AudioManager.FLAG_SHOW_UI);
         });
-        barIcons.get(5).setOnClickListener(host::showInputs);
-        barIcons.get(6).setOnClickListener(host::screenPc);
+        barIcons.get(6).setOnClickListener(host::showInputs);
+        barIcons.get(7).setOnClickListener(host::screenPc);
         tip = text("", 19, false);
         tip.setVisibility(GONE);
         tip.setPadding(px(14), px(8), px(14), px(8));
@@ -547,7 +566,7 @@ final class HomeV29 extends FrameLayout {
             boolean on = false;
             for (int x : st) if (x == android.R.attr.state_focused) on = true;
             if (!on) return;
-            p.setColor(t != null ? t.accent : Color.WHITE);
+            p.setColor(t != null ? accent() : Color.WHITE);
             android.graphics.Rect b = getBounds();
             c.drawRect(b.left + px(4), b.bottom - px(3), b.right - px(4), b.bottom, p);
         }
@@ -608,10 +627,61 @@ final class HomeV29 extends FrameLayout {
 
     // ---------------------------------------------------------------------------------------------------------
 
-    /** Re-reads config and theme and redraws everything (resume, theme push, settings change). */
+    private int accent() {
+        return liveAccent ? uiAccent : (t != null ? t.accent : 0xFFFFFFFF);
+    }
+
+    private int accent2() {
+        return liveAccent ? uiAccent2 : (t != null ? t.accent2 : 0xFFFFFFFF);
+    }
+
+    /** Accents from the Radiomarchy fractals wallpaper (already contrast-adjusted). */
+    void applyFractalAccent(int a, int a2) {
+        if (t == null) return;
+        if (liveAccent && a == uiAccent && a2 == uiAccent2) return;
+        liveAccent = true;
+        uiAccent = a;
+        uiAccent2 = a2;
+        colorizeAccents();
+    }
+
+    void clearFractalAccent() {
+        if (!liveAccent) return;
+        liveAccent = false;
+        if (t != null) colorizeAccents();
+    }
+
+    /** Top bar, widget borders/titles, tile focus: the live (or theme) accent. */
+    private void colorizeAccents() {
+        if (t == null || cfg == null) return;
+        float op = opacity(cfg), nb = noBlur();
+        int winBg = Theme.withAlpha(t.bg, Math.min(0.98f, op + nb));
+        int acc = accent(), acc2 = accent2();
+        if (ws != null) {
+            for (int i = 0; i < ws.length; i++) {
+                if (ws[i] == null || cfg == null) continue;
+                boolean on = cfg.workspaceAt(i + 1) == activeWs;
+                ws[i].setTextColor(on ? acc : t.fg);
+            }
+        }
+        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) {
+            if (b != null) b.setColors(winBg, t.muted, acc, t.cyan);
+        }
+        if (barSpacex != null) barSpacex.setTextColor(acc2);
+        if (grokbotEyes != null) grokbotEyes.setTextColor(acc);
+        if (remoteBox != null) for (BoxView b : remoteBox) if (b != null) b.setColors(winBg, t.muted, acc, t.cyan);
+        if (gridName != null) gridName.setTextColor(acc);
+        if (termLogo != null) termLogo.setTextColor(acc);
+        if (appName != null) appName.setTextColor(acc);
+        if (wxTemp != null) wxTemp.setTextColor(acc);
+        invalidate();
+    }
+
+        /** Re-reads config and theme and redraws everything (resume, theme push, settings change). */
     void bind(LauncherConfig c, AppAdapter apps) {
         cfg = c;
         t = Theme.cur();
+        if (c == null || !FractalLayer.is(c.wallpaper)) liveAccent = false;
         this.apps = apps;
         float op = opacity(c), nb = noBlur();
         int winBg = Theme.withAlpha(t.bg, Math.min(0.98f, op + nb));
@@ -619,7 +689,7 @@ final class HomeV29 extends FrameLayout {
         clock.setTextColor(t.fgBright);
         for (int i = 0; i < 5; i++) {
             boolean on = c.workspaceAt(i + 1) == activeWs;
-            ws[i].setTextColor(on ? t.accent : t.fg);
+            ws[i].setTextColor(on ? accent() : t.fg);
             ws[i].setTypeface(on ? tfBold : tf);
             ws[i].setPaintFlags(on ? ws[i].getPaintFlags() | Paint.UNDERLINE_TEXT_FLAG : ws[i].getPaintFlags() & ~Paint.UNDERLINE_TEXT_FLAG);
             ws[i].setVisibility(c.workspaceAt(i + 1) > 0 ? VISIBLE : GONE);
@@ -629,10 +699,10 @@ final class HomeV29 extends FrameLayout {
         for (View b : barIcons) tint(b, t.fgBright);
         tip.setBackgroundColor(Theme.withAlpha(t.bg, 0.98f));
         tip.setTextColor(t.fgBright);
-        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, t.accent, t.cyan);
-        barSpacex.setTextColor(t.accent2);
+        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, accent(), t.cyan);
+        barSpacex.setTextColor(accent2());
         barSpacex.setVisibility(c.pluginSpacexTv ? VISIBLE : GONE);
-        grokbotEyes.setTextColor(t.accent);
+        grokbotEyes.setTextColor(accent());
         grokbotText.setTextColor(t.fgBright);
         boolean mirrored = c.grokbotBotName != null && !c.grokbotBotName.isEmpty();
         grokbotMark.setVisibility(VISIBLE);   // v2.13: Grok Bot's ball when nothing is mirrored
@@ -643,7 +713,7 @@ final class HomeV29 extends FrameLayout {
                 : gbMsg != null ? " " + gbMsg : " companion · ask");
         // The floating face is the one companion: this "companion · ask" tile only stands in when it is off.
         grokbotBox.setVisibility(activeWs == 1 && CompanionPlacement.homeTile(c.pluginGrokbot, c.companionOverlay) ? VISIBLE : GONE);
-        for (BoxView b : remoteBox) b.setColors(winBg, t.muted, t.accent, t.cyan);
+        for (BoxView b : remoteBox) b.setColors(winBg, t.muted, accent(), t.cyan);
         // v2.10: every home widget can be switched off (Settings → Widgets); the clock lives only in the bar.
         wxBox.setVisibility(c.wWeather ? VISIBLE : GONE);
         pcBox.setVisibility(c.wPc ? VISIBLE : GONE);
@@ -659,7 +729,7 @@ final class HomeV29 extends FrameLayout {
         applyRaceColumns(c.wRacing);
         term.setVisibility(activeWs == 1 && c.wTerm ? VISIBLE : GONE);
         if (editPanel == null) post(() -> applyPanelPos(c));
-        gridName.setTextColor(t.accent);
+        gridName.setTextColor(accent());
         gridHints.setTextColor(t.fg);
         gridHints.setText(gridHintsText());
         term.setLegend(null, px(18), px(22));
@@ -825,6 +895,7 @@ final class HomeV29 extends FrameLayout {
         @Override
         public void run() {
             tickRaceBar();
+            tickRadioBar();
             tickRaceNext();
             postDelayed(this, 1000 - System.currentTimeMillis() % 1000 + 5);   // on the second, like a clock
         }
@@ -841,6 +912,12 @@ final class HomeV29 extends FrameLayout {
     protected void onDetachedFromWindow() {
         removeCallbacks(raceTick);
         super.onDetachedFromWindow();
+    }
+
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        super.onLayout(changed, l, t, r, b);
+        if (barRadio.getText().length() != 0) layoutRadioBar();
     }
 
     private static String raceZoneLabel(java.util.TimeZone tz) {
@@ -957,6 +1034,65 @@ final class HomeV29 extends FrameLayout {
         raceNextClock.setTextColor(live ? t.green : t.fgBright);
     }
 
+    /** v2.20 Bar: "♫ Still Licensed — Michel Krapf" while Radiomarchy plays ("‖" paused); gone when it stops. */
+    private void tickRadioBar() {
+        RadioPlayer rp = RadioPlayer.peek();
+        RadioCatalog.Track tr = rp != null ? rp.current() : null;
+        if (tr == null) {
+            if (barRadio.getVisibility() != GONE) barRadio.setVisibility(GONE);
+            if (barRadio.getText().length() != 0) barRadio.setText("");
+            return;
+        }
+        SpannableStringBuilder b = new SpannableStringBuilder();
+        span(b, rp.playing() ? "♫ " : "‖ ", t.magenta);
+        span(b, tr.title, t.fgBright);
+        if (!tr.artist.isEmpty()) span(b, " — " + tr.artist, t.fg);
+        if (!b.toString().equals(barRadio.getText().toString())) barRadio.setText(b);
+        layoutRadioBar();
+    }
+
+    /**
+     * The now-playing label sits to the right of the centred clock and to the left of SpaceX,
+     * weather and the icons. Its max width is the gap that is left; if that is below RADIO_BAR_MIN
+     * the label is hidden rather than drawn over the date.
+     */
+    private void layoutRadioBar() {
+        if (barRadio.getText().length() == 0) return;
+        int clockW = clock.getWidth() != 0 ? clock.getWidth() : measureUnspecified(clock);
+        if (bar.getWidth() == 0 || clockW == 0) {
+            if (isAttachedToWindow()) post(this::layoutRadioBar);
+            return;
+        }
+        ViewGroup right = (ViewGroup) barRadio.getParent();
+        int rest = right.getPaddingLeft() + right.getPaddingRight();
+        LinearLayout.LayoutParams rp = (LinearLayout.LayoutParams) barRadio.getLayoutParams();
+        rest += rp.leftMargin + rp.rightMargin;
+        for (int i = 0; i < right.getChildCount(); i++) {
+            View c = right.getChildAt(i);
+            if (c == barRadio || c.getVisibility() == GONE) continue;
+            LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) c.getLayoutParams();
+            int w = c.getWidth() != 0 ? c.getWidth() : measureUnspecified(c);
+            rest += w + lp.leftMargin + lp.rightMargin;
+        }
+        int max = radioBarMaxWidth(bar.getWidth(), clockW, rest, px(RADIO_BAR_GAP), px(RADIO_BAR_MIN));
+        if (max == 0) {
+            if (barRadio.hasFocus()) {
+                View next = barSpacex.getVisibility() == VISIBLE ? barSpacex : (!barIcons.isEmpty() ? barIcons.get(0) : null);
+                if (next != null) next.requestFocus();
+            }
+            if (barRadio.getVisibility() != GONE) barRadio.setVisibility(GONE);
+            return;
+        }
+        if (barRadio.getMaxWidth() != max) barRadio.setMaxWidth(max);
+        if (barRadio.getVisibility() != VISIBLE) barRadio.setVisibility(VISIBLE);
+    }
+
+    private static int measureUnspecified(View v) {
+        v.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        return v.getMeasuredWidth();
+    }
+
     /** Bar: "F1 fp3 · São Paulo  02:14:09", or "● live" while it runs. Every second, from raceTick. */
     private void tickRaceBar() {
         if (cfg == null || !cfg.barRacing) {
@@ -981,7 +1117,7 @@ final class HomeV29 extends FrameLayout {
     }
 
     private void updateWeather() {
-        wxTemp.setTextColor(t.accent);
+        wxTemp.setTextColor(accent());
         wxLine1.setTextColor(t.fg);
         wxLine2.setTextColor(t.fg);
         for (int i = 0; i < wxForecastCells.length; i++) {
@@ -1187,11 +1323,12 @@ final class HomeV29 extends FrameLayout {
             tip.setVisibility(GONE);
             return;
         }
-        String[] labels = {"cinemarchy", "arcade", host.wifiName(), "bluetooth", act.getString(R.string.v29_volume), act.getString(R.string.inputs),
+        String[] labels = {"cinemarchy", "radiomarchy", "arcade", host.wifiName(), "bluetooth", act.getString(R.string.v29_volume), act.getString(R.string.inputs),
                 act.getString(R.string.v29_screen_pc)};
-        if (k == 4) {
+        if (k == 1 && RadioPlayer.peek() != null && RadioPlayer.peek().current() != null) labels[1] += " · " + RadioPlayer.peek().current().line();
+        if (k == 5) {
             android.media.AudioManager am = act.getSystemService(android.media.AudioManager.class);
-            if (am != null) labels[4] += " " + Math.round(100f * am.getStreamVolume(3) / Math.max(1, am.getStreamMaxVolume(3))) + "%";
+            if (am != null) labels[5] += " " + Math.round(100f * am.getStreamVolume(3) / Math.max(1, am.getStreamMaxVolume(3))) + "%";
         }
         tip.setText(labels[k]);
         tip.setVisibility(VISIBLE);
@@ -1378,7 +1515,10 @@ final class HomeV29 extends FrameLayout {
         f.setBackground(bg);
         f.setForeground(new FocusRing());
         styleTile(f, false, false);
-        f.setOnFocusChangeListener((v, has) -> styleTile((FrameLayout) v, has, true));
+        f.setOnFocusChangeListener((v, has) -> {
+            styleTile((FrameLayout) v, has, true);
+            if (has) FractalLayer.yieldForUi();
+        });
         return f;
     }
 
@@ -1751,6 +1891,7 @@ final class HomeV29 extends FrameLayout {
                 List<View> order = new ArrayList<>();
                 order.add(menuBtn);
                 for (TextView w : ws) order.add(w);
+                order.add(barRadio);
                 order.add(barSpacex);
                 order.addAll(barIcons);
                 // hidden workspaces (and SpaceX TV when off) are GONE: skip them, or focus gets stuck
@@ -2001,8 +2142,25 @@ final class HomeV29 extends FrameLayout {
         return (inner - gap * (cols - 1)) / cols;
     }
 
+    /** Design-px gap left between the centred clock and the now-playing label; below RADIO_BAR_MIN the label hides. */
+    static final int RADIO_BAR_GAP = 16, RADIO_BAR_MIN = 80;
+
+    /**
+     * Max width for the now-playing label to the right of the centred clock and to the left of
+     * the remaining right-hand bar (SpaceX, weather, icons; on LG/Samsung also the racing countdown).
+     * {@code rightRestW} is that cluster plus the bar's right padding and the label's own side margins.
+     * Returns 0 when the space is below {@code minW}, so the label should be hidden.
+     */
+    static int radioBarMaxWidth(int barW, int clockW, int rightRestW, int gap, int minW) {
+        int avail = (barW - rightRestW) - (barW + clockW) / 2 - gap;
+        return avail < minW ? 0 : avail;
+    }
+
     // Home is designed at 1920×1080. The term box is 32+640; a 16 px gutter stays between it and the widgets.
-    static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 268;
+    // Racing is wide enough for a full Grand Prix name plus the session time at 19 px Caskaydia Mono
+    // ("United States" + 10 px + "sun 22 nov 05:00", 18 px pad each side). 382 leaves a little slack;
+    // (1200 - 382 - 3*16 - 80) is divisible by 3 so weather/pc/ai still fill the 1200 row exactly.
+    static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 382;
 
     /** Right-aligned widgets row width in design px. With racing on, the row uses the space from the term gutter to the right margin (1200), never the term box. */
     static int widgetsWidth(boolean racing) {
@@ -2242,7 +2400,7 @@ final class HomeV29 extends FrameLayout {
             p.setColor(0xE6000000);
             c.drawRect(b.left + o / 2, b.top + o / 2, b.right - o / 2, b.bottom - o / 2, p);
             p.setStrokeWidth(a);
-            p.setColor(t.accent);
+            p.setColor(accent());
             c.drawRect(b.left + o + a / 2, b.top + o + a / 2, b.right - o - a / 2, b.bottom - o - a / 2, p);
         }
 

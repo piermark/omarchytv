@@ -1,5 +1,128 @@
 # Changelog
 
+## [2.20.0] — 2026-11-14 (`versionCode 29`; webOS 2.20.0, Tizen 2.20.0, PC plugins 2.20.0)
+
+Built on the published 2.15.1: everything fixed there is in here.
+
+### GrokBot Office (optional, off by default)
+
+- **Your Grok Bot bots at their desks**: a pixel-art office (our own art, no logos) where every bot you have sits
+  at a desk with its name, role and status, and walks in when it is hired. It is off until you turn it on.
+  Android TV: Settings › Grok Bot & AI › **GrokBot Office (optional)** (Italian: Grok Bot e AI), then **Open
+  GrokBot Office**, its banner in the TV's app row, Walker, or the key action `office`. LG and Samsung: Blue ›
+  Companion settings, the same on/off row, then the Omarchy menu or the O key. At most 30 frames a second, and
+  nothing is drawn while it is hidden or on its start screen.
+- **The start screen fits 720p and 1080p TVs**: a column of half the panel (at least 560dp). The title
+  "GrokBot Office" stays on one line (it shrinks if it must), the ask field fills that column, and the
+  mic stays visible. The office, the answer, the hire card and the usage card use the same rule.
+- **The usage card sits above the ask bar** on 720p and 1080p (mdpi, tvdpi and xhdpi), so it never
+  covers "Anything else?" or the answer. The same stack is used on LG and Samsung.
+- **Only real data**: the bots come from the PC (`omarchy-tv office push bots.json`) or from Grok Bot's own reply;
+  no bots means an empty office with a hint, no numbers means no usage card.
+- **Ask and Hire** through Grok Bot diretto (the same webhook, key and reply server): the request carries an
+  `office` object and the routine's reply can change the list (docs/GROKBOT-DIRECT.md). The answer is shown and
+  spoken.
+- **Claude and ChatGPT too**: a chip in the Ask box picks who answers (Grok Bot is the default). Claude and ChatGPT
+  answer from the paired PC (omarchy-link's assistant, Anthropic and OpenAI APIs); the keys stay on the PC.
+  Android TV uses the encrypted link; LG and Samsung use the PC bridge with its ask code.
+- **Hire a Claude or ChatGPT bot**: the PC checks the key with the provider, then saves the bot as an assistant
+  entry (name, model, role as a system prompt, mode 600) and the TV shows it at its desk. A wrong or missing key
+  says why; nothing is shown as hired. `omarchy-link office hire NAME --provider claude|chatgpt`, `fire`, `show`.
+- **Real spend per provider**: this month's spend from the Anthropic and OpenAI Admin APIs, only when an admin key
+  is set (`ANTHROPIC_ADMIN_KEY`, `OPENAI_ADMIN_KEY`, or ai.json); a percentage only when you set a budget.
+  `omarchy-link office usage`.
+- Every bot carries a `provider` (default `grok`), shown as a small text tag on its nameplate.
+- English, Italian, German, French and Spanish.
+
+### Radiomarchy: Omarchy Radio on the TV
+
+- **A music app of its own**, like Cinemarchy (Android TV: its own banner in the TV's app row, the ♫ icon in the
+  top bar, Walker, a remappable key action `radio`; LG and Samsung: the Omarchy menu and the R key). Omarchy's TUI
+  style, three panes: radio · the list · now playing.
+- **The community's songs** from [radio.omarchy.org](https://radio.omarchy.org): every song with the name of the
+  person who made it and sent it in as a pull request, its address on the site, and its lyrics when there is a
+  sheet (timed lines light up as they are sung). The music streams from the site; nothing is copied into the app.
+- **Explicit songs are in**, with an E badge, as their makers labelled them; Settings (or the BLUE key) hides them.
+- **Omarchy Stories**, the community podcast: every episode with its length and date, and it remembers where you
+  stopped.
+- **Random by default**: shuffle is on, "Play all" starts on a random song; repeat all / one / off.
+- **It keeps playing** when you go back to Home, open another app or the screensaver starts (Android: a media
+  playback service with a notification; LG/Samsung: one player for the whole app). Home's top bar shows what is
+  playing and opens Radiomarchy again. Play/pause, next, previous, ⏪ ⏩ work from the remote everywhere (Android:
+  a MediaSession, so TVs with a "now playing" card show it).
+- **Media keys still work after another app takes the sound**: if YouTube (or similar) steals the sound
+  and Radiomarchy pauses, coming back to Home keeps the MediaSession as the media-button receiver (Android) or
+  claims the Media Session and wakes the AudioContext (LG/Samsung), so PLAY / PLAY_PAUSE resume the song
+  without opening Radiomarchy again.
+- A live 16-band spectrum and a tiny equaliser on the song that is playing.
+
+### Fractals that dance to the music
+
+- **Five 90s demoscene fractals** drawn live on the TV's GPU (OpenGL ES 2.0 on Android, WebGL on LG/Samsung, the same
+  shader word for word): a Mandelbrot deep zoom, Julia, plasma, a tunnel and the kaliset. No video, no pictures.
+- **Always random**: every scene (each 24–48 beats, with a cross-fade) is a different fractal with new random
+  geometry — the Mandelbrot dive goes into a point picked at random on the set's edge, one that stays full of detail
+  all the way down — and a new random palette (harmonious colours; or the Omarchy theme's, a Fractint rainbow, fire).
+- **They are drawn by the music**: the bass swells and kicks the zoom, every beat pulses the picture and lights the
+  tunnel rings, the mids bend the Julia set, the highs light the kaliset; palette cycling speeds up with the music.
+  On Android the analysis reads the decoded audio (no microphone, no permission) and is matched to what you hear.
+- **High resolution, fitted to the TV**: the fractal is drawn into a fixed buffer, never larger than 1080p (the
+  Home UI is 1080p; a 4K panel must not get a 4K GL surface). `high` fills that 1080p cap; `medium` and `low` use
+  a 720p floor. Mali-T8xx (the Sony KD-55XE9005's Mali-T860 among them), TVs with 2 GB of RAM or less, and
+  older Mali-400/450 start at `light`: a small still of the fractal is baked once, then every frame only pans,
+  zooms with the beat and cycles the palette (near-zero shader cost, 24 fps at 720p, still music-reactive).
+  Capable GPUs start at `high` and keep the full live shader; Settings can still pin ultra/high/medium/low.
+  `ultra` is the 1080p cap with 2×2 supersampling. The watchdog measures present cost (time between frames,
+  including swap) and drops a level within a couple of seconds on GPU backpressure. Below the 720p floor the
+  full shader is drawn into a 1/2 or 1/3 offscreen buffer and linearly upscaled, and Home can drop to 12 fps.
+  A new GL frame is not queued while the previous swap is still owed, so the UI thread is not blocked on
+  queueBuffer. A Choreographer stall over 500 ms during the first layout or the first seconds after Home is
+  shown is ignored (a cold start on a Sony Mali-T860 is about 600 ms and is normal), but grace always ends
+  after 8 s even if almost no frames were presented. After that, one stall drops a quality level; a stall
+  over 2 s, or three consecutive presents over 1 s, already at the cheapest level (`light`, or `low` with
+  the cheap FBO), or three stalls in about 20 s at that floor (including when quality is pinned and the
+  live path cannot drop — the Sony "floor, reduce iters/fps cap=24 cheap=1" loop when opening Radiomarchy),
+  fall back to a plain static theme background for the session (and the next session on that TV stays
+  off live GL). Never a black screen, never an ANR.
+  The full-screen Radiomarchy view and the fractals screensaver on a weak TV (Mali-T8xx, Mali-400/450,
+  2 GB of RAM or less, or after a kill) never create a GL surface at all: they open on a plain static
+  theme background, like Cinemarchy, so the app appears at once. Capable GPUs keep the live shader. Opening
+  Radiomarchy does not parse the playlist or decode images on the UI thread; a `Radiomarchy start renderer=…`
+  line logs the chosen path, the GPU if known, RAM, and time-to-first-frame. The audio analysis never
+  blocks the UI thread. The Home fractals wallpaper starts the music (or keeps a current unpaused track
+  audible), as the screensaver already did.
+- **Demo mode**: RED (or a minute without keys while music plays) hides the panels: live fractals fill the screen
+  with a sine scroller of what is playing, on every TV (weak ones included). On a weak TV the shader stays the
+  full one, drawn at 720p (~18 fps, linear upscale, smooth time) so the picture stays rich; stalls step down,
+  and a kill falls back to the high-quality still slideshow, never a black or text-only screen. ◀ ▶ another
+  fractal, ▲ ▼ the colours. The normal Radiomarchy view stays a plain theme background on a weak TV (instant
+  open), unless **Animated fractals** is set to yes. **Animated fractals** (auto / yes / no; default auto) lives
+  in Radiomarchy settings and in Settings › Wallpaper: auto is plain on a weak TV and live on a capable one;
+  yes turns live GL on even on a weak TV; no keeps the normal view plain and uses the still slideshow in demo.
+  On a weak TV the equaliser bars and the progress redraw run at 12 fps (the audio analysis is unchanged).
+- **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.
+
+### Home
+
+- **Motorsport widget is wider**, so Grand Prix names and session times stay in full ("Las Vegas  sun 22 nov 05:00") instead of "Las…".
+- **Now playing no longer covers the clock**: the song in the top bar sits to the right of the date, shrinks with an ellipsis to the space left by the icons (and SpaceX, or the racing countdown), and hides if there is no room.
+- **Radiomarchy fractals is the default Home background** (Settings → Wallpaper): a slideshow of still fractal images (our own art, 12 frames at 1280×720) with a slow crossfade and a very gentle Ken Burns pan, and the music playing underneath. No live GL on Home — that stays in the Radiomarchy full-screen view and the fractals screensaver, with the adaptive budget (including `light` on Mali-T8xx). OmaFire stays selectable. A wallpaper you already picked is left alone (including OmaFire, a still, or "omarchy" with random locked off). The UI accent colours follow the current still's palette, with contrast kept readable against the theme background. The slideshow pauses when Home is not on screen (or a dialog is in front).
+- **SpaceX TV is off by default** (the top-bar pill from the `com.sighmon.spacex-tv` plugin). Turn it on in Settings → Plugins; a setting already saved is kept.
+
+### Pulse host (the vendored engine is unchanged)
+
+- **Pulse stays the default screensaver.** The 2.20 host around Pulse (not the vendored engine) starts at Pulse 1.8's
+  high look at full device pixels, so a 4K panel is not drawn at CSS size and looking soft. It measures frame time
+  and steps down (CSS-upscale, never below a 720p floor). The fps cap is 30 at high, 20 after stutter, 15 at the
+  floor (`OmarchyPulse` in logcat reports fps and this process's CPU). Home fractals and OmaFire do not keep
+  running under the saver. Settings → Screensaver → Pulse graphics can still pin `low`, `medium` or `high`. The
+  same wrapper is on Android TV, LG and Samsung.
+
+### Pull requests
+
+- #136, #138, #139 were already in 2.15.1; #140 is superseded by #139. #122 (readability tokens, draft) is rebased
+  and builds, kept out of this release until it has its 1080p/720p screenshots.
+
 ## [2.15.1] — 2026-11-11 (`versionCode 28`; webOS 2.15.1, Tizen 2.15.1, PC plugins 2.15.1)
 
 ### Pulse 1.8 on the TV
@@ -10,9 +133,10 @@
   train you can recognise.
 - **Graphics that fit the TV** (`screensaver.pulseGraphics`, Settings → Screensaver → Pulse graphics on Android):
   `auto` (default) starts at Pulse 1.8's look on the PC (the 1.8 polish, full pixels) on every TV, then measures
-  frame time and steps down (half pixels, then the plain look) when frames are slow, and steps back up when there
-  is headroom; it no longer guesses from the browser version or a low-RAM flag. `low` is the plain look at half
-  resolution, `medium` the 1.8 look at half resolution, `high` the 1.8 look at full resolution.
+  frame time and steps down when frames are slow, and steps back up when there is headroom; it no longer guesses
+  from the browser version or a low-RAM flag. `low` is the plain look at a 720p floor, `medium` the 1.8 look at
+  that floor, `high` the 1.8 look at full resolution. The 2.20 host around Pulse (not the vendored engine) is
+  what keeps that floor, the measured fps cap, and full-device-pixel sharpness; see 2.20.0.
 - **The plane tag is Pulse 1.8's**: the card with the route line (FCO → JFK, city names, ft/kt) fills in as soon
   as the lookup returns, and the TV page loads the same Caskaydia Mono weights the tag uses (regular and bold).
 - **Pulse panels** (Android TV, LG, Samsung): Settings › Screensaver › Pulse panels turns each side panel on or off

@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +43,8 @@ final class TteSaver {
     private final Context ctx;
     private final FrameLayout root;
     private final Handler h = new Handler(Looper.getMainLooper());
+    private final Runnable loadTick = this::logLoad;
+    private long lastProcTicks, lastProcAt;
     private WebView web;
     private AsciiSaverView fallback;
     /** What to do when the WebView renderer dies: the owner closes the screensaver and returns to Home. */
@@ -120,6 +123,7 @@ final class TteSaver {
             @Override
             public boolean onConsoleMessage(ConsoleMessage m) {
                 String line = "console " + m.messageLevel() + ": " + m.message() + " @" + m.sourceId() + ":" + m.lineNumber();
+                if (m.message() != null && m.message().contains("OmarchyPulse")) Log.i("OmarchyPulse", m.message());
                 if (m.messageLevel() == ConsoleMessage.MessageLevel.ERROR) Log.e(TAG, line);
                 else Log.i(TAG, line);
                 return true;
@@ -158,6 +162,7 @@ final class TteSaver {
         String rel = path.substring("/assets/".length());
         try {
             InputStream in = ctx.getAssets().open(rel);
+            if (PulseAdapt.pulseHtml(rel)) in = PulseAdapt.inject(in, ctx);   // v2.20: dpr hint + 720p-floor / fps-cap wrapper
             String mime = rel.endsWith(".js") ? "text/javascript" : rel.endsWith(".html") ? "text/html"
                     : rel.endsWith(".ttf") ? "font/ttf" : rel.endsWith(".json") ? "application/json"
                     : rel.endsWith(".css") ? "text/css" : rel.endsWith(".png") ? "image/png" : "text/plain";
@@ -271,9 +276,49 @@ final class TteSaver {
         }
         web.setAlpha(0f);
         web.loadUrl("https://" + HOST + (pulse ? "/assets/pulse/index.html" : "/assets/saver/index.html"));
+        h.removeCallbacks(loadTick);
+        lastProcTicks = 0;
+        lastProcAt = 0;
+        if (pulse) h.postDelayed(loadTick, 2000);
         h.postDelayed(() -> {
             if (!drawn) toNative("nessun disegno entro " + drawTimeoutMs + " ms");
         }, drawTimeoutMs);
+    }
+
+    /** logcat tag OmarchyPulse: this process's CPU as % of one core, plus RAM, every 2 s (Sony measurements). */
+    private void logLoad() {
+        if (stopped) return;
+        try {
+            long ticks = procTicks();
+            long now = SystemClock.elapsedRealtime();
+            if (lastProcAt > 0 && ticks >= lastProcTicks && now > lastProcAt) {
+                long clk = 100;
+                try { clk = android.system.Os.sysconf(android.system.OsConstants._SC_CLK_TCK); } catch (Throwable ignored) {}
+                if (clk <= 0) clk = 100;
+                double cpu = 100.0 * (ticks - lastProcTicks) / (clk * ((now - lastProcAt) / 1000.0));
+                android.app.ActivityManager am = (android.app.ActivityManager) ctx.getSystemService(Context.ACTIVITY_SERVICE);
+                android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+                if (am != null) am.getMemoryInfo(mi);
+                Log.i("OmarchyPulse", String.format(Locale.US, "cpu=%.1f%% of one core (this process) availMem=%dMB web=%s",
+                        cpu, mi.availMem / (1024 * 1024), web != null ? web.getWidth() + "x" + web.getHeight() : "?"));
+            }
+            lastProcTicks = ticks;
+            lastProcAt = now;
+        } catch (Throwable ignored) {
+        }
+        if (!stopped) h.postDelayed(loadTick, 2000);
+    }
+
+    private static long procTicks() {
+        try (java.io.BufferedReader in = new java.io.BufferedReader(new java.io.FileReader("/proc/self/stat"))) {
+            String line = in.readLine();
+            int r = line.lastIndexOf(')');
+            String[] p = line.substring(r + 1).trim().split("\s+");
+            // after comm: state ppid ... utime stime cutime cstime (fields 14-17 of the whole file, indexes 11-14 here)
+            return Long.parseLong(p[11]) + Long.parseLong(p[12]) + Long.parseLong(p[13]) + Long.parseLong(p[14]);
+        } catch (Exception e) {
+            return 0;
+        }
     }
 
     private void logEnv() {

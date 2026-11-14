@@ -443,6 +443,7 @@
     <string name="x_keys_hint">X · ▲▼ αναρτήσεις · OK άνοιγμα · 1 μου αρέσει · 2 απάντηση · 3 repost · 4 νέα ανάρτηση · 5 αναζήτηση · 0 αρχική · 9 ειδοποιήσεις · 8 μηνύματα</string>
     <string name="omafire_campfire">φωτιά κατασκήνωσης</string>
     <string name="omafire_embers">θράκα</string>
+    <string name="wp_radiomarchy_fractals">Φράκταλ Radiomarchy</string>
     <string name="plugin_retro_crt">Retro CRT</string>
     <string name="crt_light">ελαφρύ</string>
     <string name="crt_strong">έντονο</string>
@@ -525,4 +526,42 @@
     <string name="ss_restore_previous">Προηγούμενη προφύλαξη</string>
     <string name="agent_alert_row">Ειδοποιήσεις πρακτόρων AI ενώ βλέπεις</string>
     <string name="agent_alert" formatted="true">● Το %1$s σε χρειάζεται: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Τραγούδια</string>
+    <string name="radio_queue">Ακολουθεί</string>
+    <string name="radio_demo">Λειτουργία demo</string>
+    <string name="radio_settings">Ρυθμίσεις</string>
+    <string name="radio_explicit">Τραγούδια explicit (E)</string>
+    <string name="radio_shown">εμφανή</string>
+    <string name="radio_hidden">κρυφά</string>
+    <string name="radio_colours">Χρώματα fractal</string>
+    <string name="radio_fractal">Fractal</string>
+    <string name="radio_auto">τυχαίο (νέο σε κάθε σκηνή)</string>
+    <string name="radio_auto_demo">Λειτουργία demo μετά από 1 λεπτό αδράνειας</string>
+    <string name="radio_shuffle">Τυχαία</string>
+    <string name="radio_repeat">Επανάληψη</string>
+    <string name="radio_repeat_all">όλα</string>
+    <string name="radio_repeat_one">ένα</string>
+    <string name="radio_stop">Διακοπή και κλείσιμο του player</string>
+    <string name="radio_loading">Φόρτωση Omarchy Radio…</string>
+    <string name="radio_offline">Το radio.omarchy.org δεν απαντά: εμφανίζεται το αντίγραφο αυτής της τηλεόρασης.</string>
+    <string name="radio_empty">Τίποτα εδώ ακόμη.</string>
+    <string name="radio_by" formatted="true">από %1$s</string>
+    <string name="radio_send">Φτιάξε ένα και στείλ\' το: radio.omarchy.org</string>
+    <string name="radio_nothing">Διάλεξε τραγούδι: το OK το παίζει.</string>
+    <string name="radio_lyrics">Στίχοι</string>
+    <string name="radio_no_lyrics">Δεν υπάρχουν ακόμη στίχοι γι\' αυτό.</string>
+    <string name="radio_resume" formatted="true">συνέχεια από %1$s</string>
+    <string name="radio_keys">OK αναπαραγωγή · ⏯ παύση · ⏮ ⏭ · ΚΟΚΚΙΝΟ demo</string>
+    <string name="radio_play_all">Αναπαραγωγή όλων</string>
+    <string name="radio_shuffle_all">Όλα τυχαία</string>
+    <string name="radio_about">Τραγούδια από το radio.omarchy.org: το καθένα φτιαγμένο από όποιον το υπογράφει, σταλμένο ως pull request και με streaming από τον ιστότοπο. Podcast: Omarchy Stories. Fractal σχεδιασμένα ζωντανά σε αυτή την τηλεόραση.</string>
+    <string name="radio_saver">Fractal Radiomarchy (με τη μουσική)</string>
+    <string name="radio_random">τυχαία</string>
+    <string name="radio_quality">Ποιότητα εικόνας</string>
+    <string name="radio_quality_auto" formatted="true">αυτόματη, προσαρμόζεται στην τηλεόραση (τώρα %1$s)</string>
+    <string name="radio_animated">Κινούμενα φράκταλ</string>
+    <string name="radio_animated_auto">auto</string>
+    <string name="radio_animated_on">ναι</string>
+    <string name="radio_animated_off">όχι</string>
 </resources>
