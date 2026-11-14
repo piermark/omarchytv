@@ -158,3 +158,52 @@ test("hire names the provider from the user's words", () => {
   assert.strictEqual(O.intent("assumi un bot chiamato Scout su ChatGPT per cercare offerte").provider, "chatgpt");
   assert.strictEqual(O.intent("hire an OpenAI bot named Pixel").provider, "chatgpt");
 });
+
+test("start screen chrome fits 1280x720 and 1920x1080, and the title stays on one line", () => {
+  const fs = require("fs");
+  const path = require("path");
+  const src = fs.readFileSync(path.join(__dirname, "../app/office.js"), "utf8");
+  assert.match(src, /\.office \.start \.wm\{[^}]*white-space:nowrap/);
+  assert.match(src, /\.office \.start \.wm\{[^}]*max-width:50vw/);
+  assert.match(src, /\.office \.in\{[^}]*min-width:0/);
+  assert.match(src, /\.office \.start \.bar\{[^}]*width:50vw/);
+  assert.match(src, /\.office \.bar\{[^}]*width:50vw/);
+  const tvdpi = 213 / 160, xhdpi = 2;
+  for (const screen of [1280, 1920]) {
+    for (const d of [tvdpi, xhdpi, 1]) {
+      const c = O.chrome(screen, d);
+      assert.ok(c.column <= Math.round(0.90 * screen));
+      assert.ok(c.column <= screen);
+      const title = "GrokBot Office".length * 34 * d * 0.62;
+      assert.ok(title <= c.column, "title one line at " + screen + "@" + d);
+      const enter = "Entrer au bureau ›".length * 16 * d * 0.62 + 32 * d;
+      const mic = 16 * d * 0.62 + 42 * d;
+      const prov = "Grok Bot".length * 16 * d * 0.62 + 42 * d;
+      const leftover = c.column - enter - mic - prov;
+      assert.ok(leftover >= Math.min(200 * d, screen / 6), "pill leftover " + leftover + " at " + screen + "@" + d);
+      assert.ok(c.hire <= screen - 80 * d);
+      assert.ok("Abbrechen".length * 16 * d * 0.62 + "Einstellen".length * 16 * d * 0.62 + 80 * d <= c.hire);
+    }
+  }
+  assert.strictEqual(O.chrome(1920, 1).column, 960);
+  // CSS vw at both TV sizes: 50vw is at least 560 CSS px, title 2.4vw × 14 glyphs fits
+  for (const w of [1280, 1920]) {
+    const col = 0.50 * w;
+    assert.ok(col >= 560);
+    const titleW = "GrokBot Office".length * (0.024 * w) * 0.62 + "GrokBot Office".length * (0.06 * 0.024 * w);
+    assert.ok(titleW <= col, "CSS title at " + w);
+  }
+  // long de/fr copy fits the vw boxes at 1280 and 1920 (wrapping allowed on hint/hire/keys)
+  const T = O.T;
+  for (const lang of ["en", "it", "de", "fr", "es"]) {
+    const L = T[lang];
+    for (const w of [1280, 1920]) {
+      const hireW = 0.48 * w;   // CSS max-width
+      const hireTitle = (L.hire_title || "").length * (0.015 * w) * 0.62;
+      assert.ok(hireTitle <= hireW * 2, lang + " hire title at " + w);
+      const keysW = 0.50 * w;
+      const keys = (L.keys || "").length * (0.0125 * w * 0.75) * 0.62;
+      assert.ok(keys <= keysW * 2, lang + " keys at " + w);
+    }
+  }
+});

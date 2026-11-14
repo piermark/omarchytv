@@ -193,4 +193,54 @@ public class OfficeTest {
         assertEquals("chatgpt", Office.intent("assumi un bot chiamato Scout su ChatGPT per cercare offerte").provider);
         assertEquals("grok", Office.intent("hire a bot called Pixel to draw").provider);
     }
+
+    @Test
+    public void chromeFits720And1080AtTvDensities() {
+        // tvdpi 213 and xhdpi 320, the densities Android TV actually uses
+        float tvdpi = 213f / 160f, xhdpi = 2f;
+        int[] screens = {1280, 1920};
+        float[] densities = {tvdpi, xhdpi, 1f};
+        for (int screen : screens) {
+            for (float d : densities) {
+                int col = Office.Chrome.column(screen, d);
+                int cap = Math.round(0.90f * screen);
+                assertTrue("column fits " + screen + "@" + d, col <= cap && col <= screen);
+                assertTrue("column at least 50% or 560dp, capped", col >= Math.min(cap, Math.max(Math.round(560 * d), Math.round(0.50f * screen))) || col == cap);
+                // the start title stays on one line at 34sp in a monospace-ish 0.62em advance
+                assertTrue("GrokBot Office is one line in the column " + screen + "@" + d,
+                        textPx("GrokBot Office", 34, d) <= col);
+                // input row: longest Enter button + mic + a provider chip, leftover is the pill
+                int enter = textPx("Entrer au bureau ›", 16, d) + dp(32, d);   // padding
+                int mic = textPx("🎤", 16, d) + dp(32, d) + dp(10, d);
+                int prov = textPx("Grok Bot", 16, d) + dp(32, d) + dp(10, d);
+                int leftover = col - enter - mic - prov;
+                assertTrue("ask pill still usable after buttons " + screen + "@" + d + " leftover=" + leftover, leftover >= dp(200, d) || leftover >= screen / 6);
+                assertEquals(col, Office.Chrome.hint(screen, d));
+                assertEquals(col, Office.Chrome.reply(screen, d));
+                int hire = Office.Chrome.hire(screen, d);
+                assertTrue("hire card on screen", hire <= screen - dp(80, d));
+                assertTrue("hire title fits or wraps in 2 lines",
+                        textPx("Neuen Bot einstellen", 20, d) <= hire * 2);
+                assertTrue("hire buttons Abbrechen + Einstellen fit one row",
+                        textPx("Abbrechen", 16, d) + textPx("Einstellen", 16, d) + dp(80, d) <= hire);
+                int usage = Office.Chrome.usage(screen, d);
+                assertTrue("Wöchentliche Nutzung fits the usage card",
+                        textPx("Wöchentliche Nutzung", 13, d) <= usage || usage >= dp(200, d));
+                assertTrue("keys have a cap inside the panel", Office.Chrome.keys(screen) < screen);
+                assertTrue("header cap leaves the usage side free", Office.Chrome.header(screen) < screen);
+            }
+        }
+        // the Sony 1080p case that clipped when the column was wrap_content (~400px)
+        int sony = Office.Chrome.column(1920, 1f);
+        assertEquals(960, sony);
+        assertTrue("title is one line on a 1080p mdpi Sony", textPx("GrokBot Office", 34, 1f) <= sony);
+    }
+
+    private static int dp(int v, float density) {
+        return Math.round(v * density);
+    }
+
+    private static int textPx(String s, int sp, float density) {
+        return Math.round(s.length() * sp * density * 0.62f);
+    }
 }

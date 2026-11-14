@@ -10,6 +10,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Canvas;
 import android.graphics.Typeface;
+import android.text.TextPaint;
+import android.text.TextUtils;
+import android.util.TypedValue;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
@@ -143,13 +146,21 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         } catch (Exception e) {
             mono = Typeface.MONOSPACE;
         }
+        final int screenW = Math.max(1, getResources().getDisplayMetrics().widthPixels);
+        final float density = getResources().getDisplayMetrics().density;
+        final int colW = Office.Chrome.column(screenW, density);
         FrameLayout root = new FrameLayout(this);
+        root.setClipChildren(false);
+        root.setClipToPadding(false);
         root.setBackgroundColor(OfficeView.shade(t.bg, -0.6f));
         office = new OfficeView(this, t, mono);
         office.setLabels(getString(R.string.office_pending), getString(R.string.office_more));
         root.addView(office, new FrameLayout.LayoutParams(-1, -1));
 
         header = text("", 22, t.fgBright, true);
+        header.setMaxLines(1);
+        header.setEllipsize(TextUtils.TruncateAt.END);
+        header.setMaxWidth(Office.Chrome.header(screenW));
         root.addView(header, at(-2, -2, Gravity.TOP | Gravity.START, 36, 24, 0, 0));
 
         LinearLayout uc = new LinearLayout(this);
@@ -163,54 +174,71 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         usageFill = new View(this);
         usageFill.setBackground(box(t.accent, 0, 6, 0));
         usageBar.addView(usageFill, new LinearLayout.LayoutParams(0, dp(8)));
-        uc.addView(usageBar, new LinearLayout.LayoutParams(dp(240), dp(8)));
+        uc.addView(usageBar, new LinearLayout.LayoutParams(-1, dp(8)));
         usageLabel = text("", 13, t.fg, false);
         usageLabel.setPadding(0, dp(6), 0, 0);
+        usageLabel.setMaxLines(3);
+        usageLabel.setHorizontallyScrolling(false);
         uc.addView(usageLabel);
         spendList = new LinearLayout(this);
         spendList.setOrientation(LinearLayout.VERTICAL);
         uc.addView(spendList);
         usageCard = uc;
-        root.addView(uc, at(-2, -2, Gravity.BOTTOM | Gravity.START, 36, 0, 0, 40));
+        root.addView(uc, at(Office.Chrome.usage(screenW, density), -2, Gravity.BOTTOM | Gravity.START, 36, 0, 0, 40));
 
         hint = text(getString(R.string.office_empty), 16, t.fgBright, false);
         hint.setGravity(Gravity.CENTER);
         hint.setPadding(dp(20), dp(16), dp(20), dp(16));
         hint.setBackground(box(Theme.withAlpha(t.bg, 0.93f), t.accent, 10, 2));
-        root.addView(hint, at(dp(620), -2, Gravity.CENTER, 0, 0, 0, 0));
+        hint.setHorizontallyScrolling(false);
+        root.addView(hint, at(Office.Chrome.hint(screenW, density), -2, Gravity.CENTER, 0, 0, 0, 0));
 
         reply = text("", 15, t.fgBright, false);
         reply.setPadding(dp(16), dp(10), dp(16), dp(10));
         reply.setMaxLines(4);
         reply.setBackground(box(Theme.withAlpha(t.bg, 0.93f), Theme.withAlpha(t.accent, 0.5f), 10, 2));
         reply.setVisibility(View.GONE);
-        root.addView(reply, at(dp(640), -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 104));
+        reply.setHorizontallyScrolling(false);
+        reply.setEllipsize(TextUtils.TruncateAt.END);
+        root.addView(reply, at(Office.Chrome.reply(screenW, density), -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 104));
 
         LinearLayout bar = new LinearLayout(this);
         bar.setGravity(Gravity.CENTER_VERTICAL);
+        bar.setClipChildren(false);
         officeInput = input(getString(R.string.office_anything));
-        bar.addView(officeInput, new LinearLayout.LayoutParams(dp(470), -2));
+        bar.addView(officeInput, new LinearLayout.LayoutParams(0, -2, 1f));
         provOffice = button("");
         provOffice.setOnClickListener(v -> nextProvider());
         bar.addView(provOffice);
         TextView mic = button("🎤 " + getString(R.string.office_mic));
         mic.setOnClickListener(v -> voice());
         bar.addView(mic);
-        root.addView(bar, at(-2, -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 36));
+        root.addView(bar, at(colW, -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL, 0, 0, 0, 36));
 
         TextView keys = text(getString(R.string.office_keys), 11, Theme.withAlpha(t.fg, 0.6f), false);
+        keys.setMaxWidth(Office.Chrome.keys(screenW));
+        keys.setMaxLines(2);
+        keys.setGravity(Gravity.END);
+        keys.setHorizontallyScrolling(false);
         root.addView(keys, at(-2, -2, Gravity.BOTTOM | Gravity.END, 0, 0, 36, 12));
 
         LinearLayout hc = new LinearLayout(this);
         hc.setOrientation(LinearLayout.VERTICAL);
         hc.setPadding(dp(20), dp(18), dp(20), dp(18));
         hc.setBackground(box(Theme.withAlpha(t.bg, 0.96f), t.accent, 14, 2));
-        hc.addView(text(getString(R.string.office_hire_title), 20, t.fgBright, true));
+        TextView hireTitle = text(getString(R.string.office_hire_title), 20, t.fgBright, true);
+        hireTitle.setMaxLines(2);
+        hireTitle.setHorizontallyScrolling(false);
+        hc.addView(hireTitle);
         hc.addView(label(getString(R.string.office_name)));
         hireName = text("", 17, t.fgBright, false);
+        hireName.setMaxLines(2);
+        hireName.setHorizontallyScrolling(false);
         hc.addView(hireName);
         hc.addView(label(getString(R.string.office_role)));
         hireRole = text("", 17, t.fgBright, false);
+        hireRole.setMaxLines(3);
+        hireRole.setHorizontallyScrolling(false);
         hc.addView(hireRole);
         hc.addView(label(getString(R.string.office_ai)));
         LinearLayout prow = new LinearLayout(this);
@@ -237,14 +265,18 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         hc.addView(row, new LinearLayout.LayoutParams(-1, -2));
         hc.setVisibility(View.GONE);
         hireCard = hc;
-        root.addView(hc, at(dp(400), -2, Gravity.END | Gravity.TOP, 0, 150, 60, 0));
+        root.addView(hc, at(Office.Chrome.hire(screenW, density), -2, Gravity.END | Gravity.TOP, 0, 150, 60, 0));
 
         // the start screen: the mark, "GrokBot Office", Ask GrokBot, the mic
         start = new FrameLayout(this);
         start.setBackgroundColor(OfficeView.shade(t.bg, -0.7f));
+        start.setClipChildren(false);
+        start.setClipToPadding(false);
         LinearLayout col = new LinearLayout(this);
         col.setOrientation(LinearLayout.VERTICAL);
         col.setGravity(Gravity.CENTER_HORIZONTAL);
+        col.setClipChildren(false);
+        col.setClipToPadding(false);
         View markView = new View(this) {
             @Override
             protected void onDraw(Canvas c) {
@@ -256,27 +288,39 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         android.text.SpannableString sp = new android.text.SpannableString("GrokBot Office");
         sp.setSpan(new android.text.style.ForegroundColorSpan(t.accent), 8, 14, 0);
         wm.setText(sp);
-        wm.setPadding(0, dp(8), 0, dp(28));
-        col.addView(wm);
+        wm.setGravity(Gravity.CENTER);
+        wm.setMaxLines(1);
+        wm.setHorizontallyScrolling(false);
+        wm.setIncludeFontPadding(false);
+        LinearLayout.LayoutParams wlp = new LinearLayout.LayoutParams(-1, -2);
+        wlp.topMargin = dp(8);
+        wlp.bottomMargin = dp(28);
+        col.addView(wm, wlp);
         LinearLayout srow = new LinearLayout(this);
         srow.setGravity(Gravity.CENTER_VERTICAL);
+        srow.setClipChildren(false);
         startInput = input(getString(R.string.office_ask) + "…");
-        srow.addView(startInput, new LinearLayout.LayoutParams(dp(460), -2));
+        srow.addView(startInput, new LinearLayout.LayoutParams(0, -2, 1f));
         provStart = button("");
         provStart.setOnClickListener(v -> nextProvider());
         srow.addView(provStart);
         TextView smic = button("🎤");
+        smic.setContentDescription(getString(R.string.office_mic));
         smic.setOnClickListener(v -> voice());
         srow.addView(smic);
         TextView go = button(getString(R.string.office_enter) + " ›");
         go.setOnClickListener(v -> enter(true));
         srow.addView(go);
-        col.addView(srow);
+        col.addView(srow, new LinearLayout.LayoutParams(-1, -2));
         status = text("", 16, t.cyan, false);
         status.setPadding(0, dp(20), 0, 0);
-        col.addView(status);
-        start.addView(col, new FrameLayout.LayoutParams(-2, -2, Gravity.CENTER));
+        status.setGravity(Gravity.CENTER);
+        status.setMaxLines(3);
+        status.setHorizontallyScrolling(false);
+        col.addView(status, new LinearLayout.LayoutParams(-1, -2));
+        start.addView(col, new FrameLayout.LayoutParams(colW, -2, Gravity.CENTER));
         root.addView(start, new FrameLayout.LayoutParams(-1, -1));
+        wm.post(() -> fitOneLine(wm, Math.max(0, col.getWidth() - wm.getPaddingLeft() - wm.getPaddingRight()), 18, 34));
 
         setContentView(root);
         SharedPreferences pp = prefs(this);
@@ -368,8 +412,9 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
                 bb.setBackground(box(Theme.withAlpha(t.fg, 0.2f), 0, 4, 0));
                 View fill = new View(this);
                 fill.setBackground(box(pc, 0, 4, 0));
-                bb.addView(fill, new LinearLayout.LayoutParams(Math.round(dp(240) * (float) r.pct / 100f), dp(5)));
-                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(240), dp(5));
+                int spendW = Math.max(dp(80), Office.Chrome.usage(getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().density) - dp(28));
+                bb.addView(fill, new LinearLayout.LayoutParams(Math.round(spendW * (float) r.pct / 100f), dp(5)));
+                LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(5));
                 lp.topMargin = dp(3);
                 spendList.addView(bb, lp);
             }
@@ -377,7 +422,8 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         if (data.usage != null) {
             double p = data.usage.pct;
             usagePct.setText((p == Math.rint(p) ? String.valueOf((long) p) : String.valueOf(p)) + "%");
-            usageFill.setLayoutParams(new LinearLayout.LayoutParams(Math.round(dp(240) * (float) Math.min(100, p) / 100f), dp(8)));
+            int barW = Math.max(dp(80), Office.Chrome.usage(getResources().getDisplayMetrics().widthPixels, getResources().getDisplayMetrics().density) - dp(28));
+            usageFill.setLayoutParams(new LinearLayout.LayoutParams(Math.round(barW * (float) Math.min(100, p) / 100f), dp(8)));
             usageLabel.setText((data.usage.label.isEmpty() ? getString(R.string.office_usage) : data.usage.label)
                     + (data.usage.resets.isEmpty() ? "" : " · " + getString(R.string.office_resets, data.usage.resets)));
         }
@@ -1019,6 +1065,30 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(w, h, gravity);
         lp.setMargins(dp(l), dp(tp), dp(r), dp(b));
         return lp;
+    }
+
+    /** Shrink a title to one line inside {@code maxPx}, down to {@code minSp}. Used on 720p TVs. */
+    private void fitOneLine(TextView v, int maxPx, float minSp, float maxSp) {
+        if (v == null || maxPx <= 0) return;
+        v.setMaxLines(1);
+        v.setHorizontallyScrolling(false);
+        CharSequence cs = v.getText();
+        String s = cs == null ? "" : cs.toString();
+        if (s.isEmpty()) return;
+        float lo = minSp, hi = maxSp, ok = minSp;
+        float scaled = getResources().getDisplayMetrics().scaledDensity;
+        TextPaint p = new TextPaint(v.getPaint());
+        for (int i = 0; i < 14; i++) {
+            float mid = (lo + hi) / 2f;
+            p.setTextSize(mid * scaled);
+            if (p.measureText(s) <= maxPx) {
+                ok = mid;
+                lo = mid;
+            } else {
+                hi = mid;
+            }
+        }
+        v.setTextSize(TypedValue.COMPLEX_UNIT_SP, ok);
     }
 
     private int dp(int v) {

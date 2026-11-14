@@ -421,26 +421,26 @@
     var A = th.accent, B = th.bg, F = th.fg, WH = th.bright;
     st.textContent = ".office{position:absolute;left:0;top:0;right:0;bottom:0;z-index:57;background:" + B + ";color:" + F + ";font-family:CaskaydiaMono,monospace;font-size:1.25vw;overflow:hidden}" +
       ".office canvas{position:absolute;left:0;top:0;width:100%;height:100%}" +
-      ".office .hd{position:absolute;left:2.4vw;top:3vh;color:" + WH + ";font-size:1.6vw;font-weight:bold;letter-spacing:.04em}.office .hd b{color:" + A + "}.office .hd i{font-style:normal;color:" + F + ";font-weight:normal}" +
-      ".office .us{position:absolute;left:2.4vw;bottom:4vh;width:19vw;padding:1.4vh 1vw;border:.14vw solid " + A + "88;border-radius:.8vw;background:" + B + "e6;display:none}" +
+      ".office .hd{position:absolute;left:2.4vw;top:3vh;color:" + WH + ";font-size:1.6vw;font-weight:bold;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70vw}.office .hd b{color:" + A + "}.office .hd i{font-style:normal;color:" + F + ";font-weight:normal}" +
+      ".office .us{position:absolute;left:2.4vw;bottom:4vh;width:22vw;min-width:12em;max-width:32vw;box-sizing:border-box;padding:1.4vh 1vw;border:.14vw solid " + A + "88;border-radius:.8vw;background:" + B + "e6;display:none}" +
       ".office .us .n{font-size:2.6vw;color:" + WH + ";font-weight:bold}.office .us .b{height:1vh;background:" + F + "33;border-radius:1vh;margin-top:.8vh;overflow:hidden}.office .us .b i{display:block;height:100%;background:" + A + "}" +
       ".office .us .s{color:" + F + ";font-size:.85em;margin-top:.6vh}" +
       ".office .us .sp div{margin-top:1vh;font-size:.9em;color:" + WH + "}.office .us .sp em{font-style:normal;font-weight:bold;margin-right:.5vw}.office .us .sp u{text-decoration:none;color:" + F + ";font-size:.85em}" +
       ".office .us .sp .b{height:.6vh;margin-top:.4vh}" +
       ".office .bt.pv{font-size:.9em}.office .bt.pv b{font-weight:normal}" +
-      ".office .bar{position:absolute;left:50%;bottom:4vh;width:40vw;margin-left:-20vw;display:flex;align-items:center}" +
-      ".office .in{flex:1;font:inherit;font-size:1.25vw;color:" + WH + ";background:" + B + "f0;border:.14vw solid " + F + "55;border-radius:3vw;padding:1.3vh 1.4vw;outline:none}" +
+      ".office .bar{position:absolute;left:50%;bottom:4vh;width:50vw;margin-left:-25vw;max-width:90vw;box-sizing:border-box;display:flex;align-items:center}" +
+      ".office .in{flex:1;min-width:0;font:inherit;font-size:1.25vw;color:" + WH + ";background:" + B + "f0;border:.14vw solid " + F + "55;border-radius:3vw;padding:1.3vh 1.4vw;outline:none}" +
       ".office .bt{margin-left:.8vw;padding:1.3vh 1.2vw;border:.14vw solid " + F + "55;border-radius:3vw;background:" + B + "f0;color:" + WH + ";white-space:nowrap}" +
       ".office .f{border-color:" + A + ";box-shadow:0 0 1.2vw " + A + "66}.office .bt.f{background:" + A + ";color:" + B + "}" +
-      ".office .rp{position:absolute;left:50%;bottom:13vh;width:44vw;margin-left:-22vw;padding:1.4vh 1.2vw;border-radius:.8vw;background:" + B + "ee;border:.14vw solid " + A + "66;color:" + WH + ";display:none;max-height:22vh;overflow:hidden}" +
-      ".office .hint{position:absolute;left:28vw;right:28vw;top:40vh;padding:2vh 1.5vw;border-radius:.8vw;background:" + B + "ee;border:.14vw dashed " + A + ";color:" + WH + ";display:none;line-height:1.45;text-align:center}" +
-      ".office .hc{position:absolute;right:4vw;top:22vh;width:28vw;padding:2.4vh 1.6vw;border-radius:1vw;background:" + B + "f4;border:.16vw solid " + A + ";display:none}" +
-      ".office .hc h2{margin:0 0 1.6vh;color:" + WH + ";font-size:1.5vw}.office .hc .k{color:" + F + ";font-size:.85em;margin-top:1.2vh}.office .hc .v{color:" + WH + ";font-size:1.15em}" +
+      ".office .rp{position:absolute;left:50%;bottom:13vh;width:50vw;margin-left:-25vw;max-width:90vw;box-sizing:border-box;padding:1.4vh 1.2vw;border-radius:.8vw;background:" + B + "ee;border:.14vw solid " + A + "66;color:" + WH + ";display:none;max-height:22vh;overflow:hidden}" +
+      ".office .hint{position:absolute;left:25vw;right:25vw;top:40vh;box-sizing:border-box;padding:2vh 1.5vw;border-radius:.8vw;background:" + B + "ee;border:.14vw dashed " + A + ";color:" + WH + ";display:none;line-height:1.45;text-align:center;overflow-wrap:break-word;word-wrap:break-word}" +
+      ".office .hc{position:absolute;right:4vw;top:22vh;width:28vw;min-width:18em;max-width:48vw;box-sizing:border-box;padding:2.4vh 1.6vw;border-radius:1vw;background:" + B + "f4;border:.16vw solid " + A + ";display:none}" +
+      ".office .hc h2{margin:0 0 1.6vh;color:" + WH + ";font-size:1.5vw;word-wrap:break-word}.office .hc .k{color:" + F + ";font-size:.85em;margin-top:1.2vh}.office .hc .v{color:" + WH + ";font-size:1.15em}" +
       ".office .hc .row{display:flex;justify-content:flex-end;margin-top:2.4vh}" +
-      ".office .ft{position:absolute;right:2.4vw;bottom:1.2vh;color:" + F + "88;font-size:.75em}" +
+      ".office .ft{position:absolute;right:2.4vw;bottom:1.2vh;color:" + F + "88;font-size:.75em;max-width:50vw;text-align:right;white-space:normal}" +
       ".office .start{position:absolute;left:0;top:0;right:0;bottom:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 42%," + B + " 0%," + "#000 85%)}" +
-      ".office .start .wm{color:" + WH + ";font-size:2.4vw;font-weight:bold;margin:2vh 0 4vh;letter-spacing:.06em}.office .start .wm b{color:" + A + "}" +
-      ".office .start .bar{position:static;margin:0;width:44vw}.office .start .ls{margin-top:3vh;color:" + th.cyan + ";height:3vh}";
+      ".office .start .wm{color:" + WH + ";font-size:2.4vw;font-weight:bold;margin:2vh 0 4vh;letter-spacing:.06em;white-space:nowrap;max-width:50vw;overflow:hidden;line-height:1.2}.office .start .wm b{color:" + A + "}" +
+      ".office .start .bar{position:static;margin:0;width:50vw;max-width:90vw}.office .start .ls{margin-top:3vh;color:" + th.cyan + ";height:3vh}";
     w.innerHTML = '<canvas></canvas><div class="hd"></div><div class="hint"></div><div class="us"><div class="uw"><div class="n"></div><div class="b"><i></i></div><div class="s"></div></div><div class="sp"></div></div>' +
       '<div class="rp"></div><div class="hc"><h2></h2><div class="k">' + esc(t("name")) + '</div><div class="v hn"></div><div class="k">' + esc(t("role")) + '</div><div class="v hr"></div>' +
       '<div class="k">' + esc(t("ai")) + '</div><div class="row" style="justify-content:flex-start;margin-top:.6vh"><span class="bt hp" style="margin-left:0"></span></div>' +
@@ -724,8 +724,26 @@
     };
   }
 
+  /** Pixel widths for the Office chrome, the same policy as Office.Chrome on Android: half the panel
+   * (at least 560 CSS px at density 1, at most 90%) so the title stays on one line and the ask field is not clipped. */
+  function chrome(screenW, density) {
+    density = density > 0 ? density : 1;
+    screenW = screenW > 0 ? screenW : 1920;
+    function dp(v) { return Math.round(v * density); }
+    function clamp(v, max) { return Math.max(1, Math.min(max, v)); }
+    var col = clamp(Math.max(dp(560), Math.round(0.50 * screenW)), Math.round(0.90 * screenW));
+    var hireCap = Math.min(Math.round(0.48 * screenW), Math.max(1, screenW - dp(80)));
+    return {
+      column: col, hint: col, reply: col,
+      hire: clamp(Math.max(dp(360), Math.round(0.28 * screenW)), hireCap),
+      usage: clamp(Math.max(dp(240), Math.round(0.20 * screenW)), Math.round(0.32 * screenW)),
+      keys: clamp(Math.round(0.46 * screenW), Math.round(0.60 * screenW)),
+      header: Math.max(1, Math.round(0.70 * screenW))
+    };
+  }
+
   var api = { parse: parse, applyReply: applyReply, toJson: toJson, colorOf: colorOf, intent: intent, hireRequest: hireRequest, askRequest: askRequest,
-    requestBody: requestBody, findOffice: findOffice, spend: spend, confirmed: confirmed, ask: ask, layout: layout, due: due, FRAME_MS: FRAME_MS, MAX_BOTS: MAX_BOTS, provider: provider, providerColor: providerColor,
+    requestBody: requestBody, findOffice: findOffice, spend: spend, confirmed: confirmed, ask: ask, layout: layout, chrome: chrome, due: due, FRAME_MS: FRAME_MS, MAX_BOTS: MAX_BOTS, provider: provider, providerColor: providerColor,
     PENDING_KEY: PENDING_KEY, T: T, open: open };
   root.OmarchyOffice = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

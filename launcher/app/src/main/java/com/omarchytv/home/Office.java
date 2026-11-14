@@ -503,4 +503,49 @@ public final class Office {
     public static JSONObject get(File dir) {
         return toJson(load(new File(dir, FILE_NAME)));
     }
+
+    /**
+     * Pixel widths for the Office screens, the same policy as webos/app/office.js: a column of half the
+     * panel (at least 560dp, at most 90%) so the title stays on one line and the ask field is not clipped
+     * on 720p and 1080p TVs (tvdpi 213 and xhdpi 320).
+     */
+    static final class Chrome {
+        static int column(int screenPx, float density) {
+            return clamp(Math.max(dp(560, density), Math.round(0.50f * screenPx)), Math.round(0.90f * screenPx));
+        }
+
+        static int hint(int screenPx, float density) {
+            return column(screenPx, density);
+        }
+
+        static int reply(int screenPx, float density) {
+            return column(screenPx, density);
+        }
+
+        static int hire(int screenPx, float density) {
+            int want = Math.max(dp(360, density), Math.round(0.28f * screenPx));
+            int cap = Math.min(Math.round(0.48f * screenPx), Math.max(1, screenPx - dp(80, density)));
+            return clamp(want, cap);
+        }
+
+        static int usage(int screenPx, float density) {
+            return clamp(Math.max(dp(240, density), Math.round(0.20f * screenPx)), Math.round(0.32f * screenPx));
+        }
+
+        static int keys(int screenPx) {
+            return clamp(Math.round(0.46f * screenPx), Math.round(0.60f * screenPx));
+        }
+
+        static int header(int screenPx) {
+            return Math.max(1, Math.round(0.70f * screenPx));
+        }
+
+        private static int dp(int v, float density) {
+            return Math.round(v * density);
+        }
+
+        private static int clamp(int v, int max) {
+            return Math.max(1, Math.min(max, v));
+        }
+    }
 }
