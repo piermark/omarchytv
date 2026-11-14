@@ -99,7 +99,7 @@ Keep the key private: anyone who has it can start your routine.
 
 ## Step 3: enter them on the TV
 
-**Android TV:** Settings › Grok Bot e AI:
+**Android TV:** Settings › Grok Bot & AI (Italian: Grok Bot e AI):
 
 1. **Webhook URL** › type or paste the URL.
 2. **Sender key** › type the key. The menu only shows `crsr_••••••••` plus the last 4 characters.
@@ -136,7 +136,7 @@ ntfy server you trust) and tell the TV about it:
 
 1. It must be reachable from the internet over **https**: the routine runs in Grok Bot's cloud and publishes there.
    A server only on your home network won't work.
-2. On the TV: **Settings › Grok Bot e AI › Grok Bot diretto › Reply server** (Android), or type the address in the
+2. On the TV: **Settings › Grok Bot & AI › Grok Bot diretto › Reply server** (Android; Italian: Grok Bot e AI), or type the address in the
    companion's text field and pick **Save the reply server typed above** (LG/Samsung). For example
    `https://ntfy.example.com/`. Empty = back to ntfy.sh.
 3. If your server needs a login to read, create an access token on it (`ntfy token add <user>`, it starts with `tk_`)
@@ -163,8 +163,13 @@ Logo row keeps showing the PC's text as before.
 
 ## GrokBot Office (2.20, optional)
 
-GrokBot Office (Android: Settings › Grok Bot e AI › GrokBot Office; LG/Samsung: Blue › Companion settings) shows
-your bots at their desks. When **Grok Bot** answers in it, the TV sends the same request as above with one more
+GrokBot Office shows your bots at their desks. It is **off by default**. How to turn it on and open it is in
+the [2.20 user guide](OMARCHYTV-2.20-GUIDE.md#11-grokbot-office): Android, Settings › **Grok Bot & AI** ›
+**GrokBot Office (optional)** (Italian: Grok Bot e AI), then **Open GrokBot Office**, the TV app-row banner,
+Walker, or the `office` key. LG and Samsung: Blue › Companion settings, the same on/off row, then the Omarchy
+menu or the O key. Claude and ChatGPT keys stay on the PC; see [OFFICE.md](../pc-plugin/omarchy-link/docs/OFFICE.md).
+
+When **Grok Bot** answers in it, the TV sends the same request as above with one more
 field, `office`:
 
 ```json

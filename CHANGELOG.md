@@ -7,10 +7,11 @@ Built on the published 2.15.1: everything fixed there is in here.
 ### GrokBot Office (optional, off by default)
 
 - **Your Grok Bot bots at their desks**: a pixel-art office (our own art, no logos) where every bot you have sits
-  at a desk with its name, role and status, and walks in when it is hired. Android TV: Settings › Grok Bot e AI ›
-  GrokBot Office, then its own banner in the TV's app row, Walker, or the key action `office`; LG and Samsung: Blue ›
-  Companion settings, then the Omarchy menu or the O key. At most 30 frames a second, and nothing is drawn while it
-  is hidden or on its start screen.
+  at a desk with its name, role and status, and walks in when it is hired. It is off until you turn it on.
+  Android TV: Settings › Grok Bot & AI › **GrokBot Office (optional)** (Italian: Grok Bot e AI), then **Open
+  GrokBot Office**, its banner in the TV's app row, Walker, or the key action `office`. LG and Samsung: Blue ›
+  Companion settings, the same on/off row, then the Omarchy menu or the O key. At most 30 frames a second, and
+  nothing is drawn while it is hidden or on its start screen.
 - **The start screen fits 720p and 1080p TVs**: a column of half the panel (at least 560dp). The title
   "GrokBot Office" stays on one line (it shrinks if it must), the ask field fills that column, and the
   mic stays visible. The office, the answer, the hire card and the usage card use the same rule.
@@ -108,6 +109,15 @@ Built on the published 2.15.1: everything fixed there is in here.
 - **Radiomarchy fractals is the default Home background** (Settings → Wallpaper): a slideshow of still fractal images (our own art, 12 frames at 1280×720) with a slow crossfade and a very gentle Ken Burns pan, and the music playing underneath. No live GL on Home — that stays in the Radiomarchy full-screen view and the fractals screensaver, with the adaptive budget (including `light` on Mali-T8xx). OmaFire stays selectable. A wallpaper you already picked is left alone (including OmaFire, a still, or "omarchy" with random locked off). The UI accent colours follow the current still's palette, with contrast kept readable against the theme background. The slideshow pauses when Home is not on screen (or a dialog is in front).
 - **SpaceX TV is off by default** (the top-bar pill from the `com.sighmon.spacex-tv` plugin). Turn it on in Settings → Plugins; a setting already saved is kept.
 
+### Pulse host (the vendored engine is unchanged)
+
+- **Pulse stays the default screensaver.** The 2.20 host around Pulse (not the vendored engine) starts at Pulse 1.8's
+  high look at full device pixels, so a 4K panel is not drawn at CSS size and looking soft. It measures frame time
+  and steps down (CSS-upscale, never below a 720p floor). The fps cap is 30 at high, 20 after stutter, 15 at the
+  floor (`OmarchyPulse` in logcat reports fps and this process's CPU). Home fractals and OmaFire do not keep
+  running under the saver. Settings → Screensaver → Pulse graphics can still pin `low`, `medium` or `high`. The
+  same wrapper is on Android TV, LG and Samsung.
+
 ### Pull requests
 
 - #136, #138, #139 were already in 2.15.1; #140 is superseded by #139. #122 (readability tokens, draft) is rebased
@@ -124,11 +134,9 @@ Built on the published 2.15.1: everything fixed there is in here.
 - **Graphics that fit the TV** (`screensaver.pulseGraphics`, Settings → Screensaver → Pulse graphics on Android):
   `auto` (default) starts at Pulse 1.8's look on the PC (the 1.8 polish, full pixels) on every TV, then measures
   frame time and steps down when frames are slow, and steps back up when there is headroom; it no longer guesses
-  from the browser version or a low-RAM flag. On 2.20 the host around Pulse (not the vendored engine) keeps a 720p
-  internal floor and a 30 fps cap at the high look (full device pixels, so the scene and plane labels stay sharp;
-  logcat tag `OmarchyPulse` reports fps and this process's CPU). Capable TVs keep the high look; slower TVs render
-  at least HD and CSS-upscale, never below 720p. The Home fractals and OmaFire layers do not keep running under the saver.
-  `low` is the plain look at that floor, `medium` the 1.8 look at the floor, `high` the 1.8 look at full resolution.
+  from the browser version or a low-RAM flag. `low` is the plain look at a 720p floor, `medium` the 1.8 look at
+  that floor, `high` the 1.8 look at full resolution. The 2.20 host around Pulse (not the vendored engine) is
+  what keeps that floor, the measured fps cap, and full-device-pixel sharpness; see 2.20.0.
 - **The plane tag is Pulse 1.8's**: the card with the route line (FCO → JFK, city names, ft/kt) fills in as soon
   as the lookup returns, and the TV page loads the same Caskaydia Mono weights the tag uses (regular and bold).
 - **Pulse panels** (Android TV, LG, Samsung): Settings › Screensaver › Pulse panels turns each side panel on or off
