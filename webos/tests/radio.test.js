@@ -133,3 +133,10 @@ test("full-screen Radiomarchy uses the same 1080p/720p fractal budget as Home", 
   assert.match(src, /ramGb:/);
   assert.match(src, /1000 \/ 24/);
 });
+
+test("Home fractals wallpaper can start or keep the music audible", () => {
+  const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
+  assert.match(src, /E\.ensureWallpaperMusic/);
+  const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
+  assert.match(app, /ensureWallpaperMusic/);
+});

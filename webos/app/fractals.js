@@ -79,6 +79,7 @@
   var MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30, WATCH_FRAMES = 16, LATE_RUSH = 4;
   var GRACE_FRAMES = 8, GRACE_MS = 5000, STALL_MS = 500, STALL_WINDOW_MS = 20000, STALLS_TO_KILL = 3;
   var STALL_DEGRADE = 1, STALL_KILL = 2;
+  var CHEAP_FPS = 12, FBO_SCALE_FLOOR = 2, FBO_SCALE_CHEAP = 3;
 
   /** Where to start for this GPU (then it measures itself). ramGb <= 2 or Mali-T8xx starts at medium/720p. */
   function sceneFps(gpu, ramGb) {
@@ -139,10 +140,23 @@
     return intervalMs > STALL_MS;
   }
 
-  /** stallsInWindow includes this stall. Kill only at the 720p floor with iterations already reduced. */
-  function stallAction(level, reducedIters, stallsInWindow) {
-    if (level >= 3 && reducedIters && stallsInWindow >= STALLS_TO_KILL) return STALL_KILL;
+  /** stallsInWindow includes this stall. Persistent stalls at the floor kill, even if iters/fps were reset.
+   *  Two or three args: stallAction(level, count) or stallAction(level, reducedItersIgnored, count). */
+  function stallAction(level, a, b) {
+    var n = b == null ? a : b;
+    if (level >= 3 && n >= STALLS_TO_KILL) return STALL_KILL;
     return STALL_DEGRADE;
+  }
+
+  function internalHeight(surfaceH, cheapScale) {
+    if (!surfaceH) surfaceH = FLOOR_BUFFER_H;
+    if (cheapScale <= 1) return surfaceH;
+    return Math.max(1, Math.round(surfaceH / cheapScale));
+  }
+
+  function cheapScaleFor(level, already) {
+    if (level < 3) return 1;
+    return Math.max(FBO_SCALE_FLOOR, Math.min(FBO_SCALE_CHEAP, already <= 1 ? FBO_SCALE_FLOOR : already));
   }
 
   function countStallsInWindow(times, nowMs, windowMs) {
@@ -291,25 +305,33 @@
       k = k * k * (3 - 2 * k);
       for (var j = 0; j < 12; j++) pal[j] = palFrom[j] + (palTo[j] - palFrom[j]) * k;
     }
+    var cheapScale = cheapScaleFor(level, 1);
     function resize() {
       var dpr = root.devicePixelRatio || 1;
       var b = bufferSize(level, canvas.clientWidth || 1920, canvas.clientHeight || 1080, dpr, MAX_BUFFER_H);
-      if (canvas.width !== b.w || canvas.height !== b.h) { canvas.width = b.w; canvas.height = b.h; }
+      // Output/CSS stays at least 720p; the drawing buffer can be 1/2 or 1/3 and is linearly upscaled.
+      var ih = internalHeight(b.h, cheapScale), iw = Math.max(1, Math.round(b.w * (ih / b.h)));
+      if (canvas.width !== iw || canvas.height !== ih) { canvas.width = iw; canvas.height = ih; }
       gl.viewport(0, 0, canvas.width, canvas.height);
     }
     function applyLowPolicy() {
       capFps = true;
       var base = home ? HOME_FPS : sceneFps(gpu, ramGb);
-      if (level >= 3) { freezePalette = true; if (fpsCap > 20) fpsCap = 20; }
-      else if (pinned >= 0) { freezePalette = false; iterMul = 1; fpsCap = base; }
-      else if (fpsCap < 20) { /* kept by the watchdog after the 720p floor */ }
-      else fpsCap = base;
+      if (level >= 3) {
+        freezePalette = true;
+        cheapScale = cheapScaleFor(level, cheapScale);
+        if (fpsCap > CHEAP_FPS) fpsCap = CHEAP_FPS;
+        if (iterMul > 0.55) iterMul = 0.55;
+      } else if (pinned >= 0) {
+        freezePalette = false; iterMul = 1; cheapScale = cheapScaleFor(level, 1); fpsCap = base;
+      } else if (fpsCap < CHEAP_FPS) { /* kept by the watchdog after the 720p floor */ }
+      else { fpsCap = base; if (level < 3) cheapScale = 1; }
     }
     function resetGrace() {
       graceStart = Date.now();
       presented = 0;
       lastRaf = 0;
-      stallTimes = [];
+      // keep stallTimes: focus/resume must not wipe the Sony persistent-stall history
     }
     function onUiStall(gap, now) {
       var elapsed = now - graceStart;
@@ -320,7 +342,7 @@
       }
       stallTimes = stallTimes.filter(function (t) { return now - t <= STALL_WINDOW_MS; });
       stallTimes.push(now);
-      var action = stallAction(level, iterMul < 0.99, stallTimes.length);
+      var action = stallAction(level, stallTimes.length);
       if (action === STALL_KILL) {
         tripSafety("UI stall " + gap + "ms (" + stallTimes.length + " in 20s at floor)");
         return;
@@ -329,14 +351,15 @@
         level++;
         applyLowPolicy();
         resize();
-        if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: drop to " + LEVELS[level].name);
+        if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: drop to " + LEVELS[level].name + " cheap=" + cheapScale + " cap=" + fpsCap);
       } else {
         capFps = true;
         freezePalette = true;
-        if (fpsCap > 15) fpsCap = 15;
-        if (iterMul > 0.55) iterMul = 0.7;
+        if (cheapScale < FBO_SCALE_CHEAP) cheapScale++;
+        if (iterMul > 0.4) iterMul = 0.4;
         applyLowPolicy();
-        if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: floor, reduce iters/fps cap=" + fpsCap);
+        resize();
+        if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: floor, reduce iters/fps cap=" + fpsCap + " cheap=" + cheapScale);
       }
     }
     function tripSafety(why) {
@@ -378,17 +401,23 @@
       if (pressure) {
         if (level < LEVELS.length - 1) { level++; goodSince = now; slowWindows = 0; applyLowPolicy(); resize(); }
         else {
-          capFps = true; freezePalette = true; if (fpsCap > 15) fpsCap = 15; if (iterMul > 0.55) iterMul = 0.7;
+          capFps = true; freezePalette = true;
+          if (cheapScale < FBO_SCALE_CHEAP) cheapScale++;
+          if (iterMul > 0.4) iterMul = 0.4;
           applyLowPolicy();
+          resize();
           slowWindows++;
-          if (home && shouldDisableAtFloor(level, slowWindows)) tripSafety("GL frame " + avg.toFixed(1) + "ms at floor");
+          if (home && (shouldDisableAtFloor(level, slowWindows) || stallAction(level, slowWindows) === STALL_KILL)) {
+            tripSafety("GL frame " + avg.toFixed(1) + "ms at floor");
+          }
         }
       } else {
         slowWindows = 0;
         if (!goodSince) goodSince = now;
         if (now - goodSince > 20000) {
           var want = home ? HOME_FPS : sceneFps(gpu, ramGb);
-          if (fpsCap < want || freezePalette || iterMul < 0.99) { freezePalette = false; iterMul = 1; }
+          if (cheapScale > 1) cheapScale--;
+          else if (fpsCap < want || freezePalette || iterMul < 0.99) { freezePalette = false; iterMul = 1; }
           else if (level > 0) level--;
           goodSince = now; applyLowPolicy(); resize();
         }
@@ -474,11 +503,12 @@
     SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG,
     create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel,
     scaleFor: scaleFor, bufferHeight: bufferHeight, bufferSize: bufferSize, isBackpressured: isBackpressured,
-    sceneFps: sceneFps,
+    sceneFps: sceneFps, internalHeight: internalHeight, cheapScaleFor: cheapScaleFor,
     shouldDisableAtFloor: shouldDisableAtFloor, inGracePeriod: inGracePeriod, isUiStall: isUiStall,
     stallAction: stallAction, countStallsInWindow: countStallsInWindow,
     GRACE_FRAMES: GRACE_FRAMES, GRACE_MS: GRACE_MS, STALL_MS: STALL_MS, STALL_WINDOW_MS: STALL_WINDOW_MS,
     STALLS_TO_KILL: STALLS_TO_KILL, STALL_DEGRADE: STALL_DEGRADE, STALL_KILL: STALL_KILL,
+    CHEAP_FPS: CHEAP_FPS, FBO_SCALE_FLOOR: FBO_SCALE_FLOOR, FBO_SCALE_CHEAP: FBO_SCALE_CHEAP,
     HOME_FPS: HOME_FPS, SAVER_FPS: SAVER_FPS,
     MAX_BUFFER_H: MAX_BUFFER_H, FLOOR_BUFFER_H: FLOOR_BUFFER_H,
     ensureContrast: ensureContrast, contrastRatio: contrastRatio, rgbCss: rgbCss

@@ -32,5 +32,6 @@ test("pauses when Home is not visible, falls back if WebGL cannot start, accents
   assert.ok(app.indexOf("onPalette: applyFractalAccent") > 0);
   assert.ok(app.indexOf("clearFractalAccent") > 0);
   assert.ok(app.indexOf("home: true") > 0 && app.indexOf("fractalSessionOff") > 0);
+  assert.ok(app.indexOf("ensureWallpaperMusic") > 0);
   assert.ok(app.indexOf('src="fractals.js"') > 0 || fs.readFileSync(path.join(APP, "index.html"), "utf8").indexOf('src="fractals.js"') > 0);
 });

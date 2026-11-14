@@ -2285,7 +2285,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       clearFractalAccent();
       return;
     }
-    if (fractalUi) { fractalTick(); return; }
+    if (fractalUi) {
+      fractalTick();
+      if (fractalVisible() && radioEng && radioEng.ensureWallpaperMusic) radioEng.ensureWallpaperMusic();
+      return;
+    }
     var cv = document.createElement("canvas");
     cv.setAttribute("aria-hidden", "true");
     cv.width = 1920;
@@ -2316,7 +2320,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     layer.appendChild(cv);
     fractalCanvas = cv;
     fractalUi = fx;
-    if (fractalVisible()) fx.start();
+    if (fractalVisible()) {
+      fx.start();
+      if (radioEng && radioEng.ensureWallpaperMusic) radioEng.ensureWallpaperMusic();
+    }
   }
 
   function openWallpaperModal(keepFocus) {

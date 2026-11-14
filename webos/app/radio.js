@@ -287,6 +287,20 @@
         if (pr && pr.catch) pr.catch(function () { /* the TV said no */ });
       }
     };
+    /** Home fractals wallpaper: keep a current unpaused track audible, or start the playlist once. */
+    E.ensureWallpaperMusic = function () {
+      if (E.playing()) { if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ } E.claimSession(); return; }
+      if (cur()) return;   // the owner paused it
+      function start() {
+        if (cur() || E.playing()) return;
+        var list = visible(E.songs, P.explicit);
+        if (!list.length) return false;
+        E.play(list, P.shuffle ? Math.floor(Math.random() * list.length) : 0);
+        return true;
+      }
+      if (start()) return;
+      E.load(function () { start(); });
+    };
     E.seek = function (s) { var a = audio(), d = E.duration(); try { a.currentTime = Math.max(0, d ? Math.min(s, d - 0.5) : s); } catch (e) { /* not seekable */ } emit(); };
     E.seekBy = function (s) { E.seek(E.position() + s); };
     E.stop = function () { song.pause(); plain.pause(); song.removeAttribute("src"); plain.removeAttribute("src"); E.queue = []; E.order = []; E.at = -1; emit(); };

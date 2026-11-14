@@ -47,11 +47,14 @@ Built on the published 2.15.1: everything fixed there is in here.
   is logged every couple of seconds (logcat tag `Radiomarchy`, or the `[Radiomarchy]` console line on LG/Samsung).
   A Choreographer stall over 500 ms during the first layout or the first seconds after Home is shown is ignored
   (a cold start on a Sony Mali-T860 is about 600 ms and is normal). After that, one stall drops a quality level
-  or reduces iterations; only repeated stalls (three in about 20 s) already at the 720p floor with reduced
-  iterations, or a floor that still overruns the budget, turn the wallpaper off for the session. The normal
-  theme background stays — never a black screen, never an ANR. The full-screen Radiomarchy view (the music app
-  and its screensaver) uses the same FractalView path: 1080p cap, Mali-T8xx and 2 GB TVs start at medium/720p
-  and 24 fps, present-cost watchdog, and the audio analysis never blocks the UI thread.
+  or reduces iterations. At the 720p floor the output surface stays 720p, but the shader is drawn into a 1/2
+  or 1/3 offscreen buffer and linearly upscaled, and Home drops to 12 fps. A new GL frame is not queued while
+  the previous swap is still owed, so the UI thread is not blocked on queueBuffer. Persistent stalls at that
+  cheapest floor (three in about 20 s, even if iterations or fps were reset) or a floor that still overruns the
+  budget turn the wallpaper off for the session. The normal theme background stays — never a black screen,
+  never an ANR. The full-screen Radiomarchy view (the music app and its screensaver) uses the same path, and
+  the audio analysis never blocks the UI thread. The Home fractals wallpaper starts the music (or keeps a
+  current unpaused track audible), as the screensaver already did.
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.

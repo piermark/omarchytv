@@ -97,11 +97,39 @@ public class FractalViewQualityTest {
     public void repeatedStallsAtFloorKill() {
         assertEquals(FractalView.STALL_KILL, FractalView.stallAction(3, true, 3));
         assertEquals(FractalView.STALL_KILL, FractalView.stallAction(3, true, 4));
-        // not at the floor, or iterations not yet reduced: keep drawing
         assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(2, true, 5));
         assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(1, true, 5));
-        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(3, false, 5));
+        // at the floor, even if iterations were reset (the old reducedIters guard)
+        assertEquals(FractalView.STALL_KILL, FractalView.stallAction(3, false, 5));
         assertEquals(3, FractalView.STALLS_TO_KILL);
+    }
+
+    @Test
+    public void sonyPersistentFloorStallsWithResetItersKill() {
+        // Exact Sony KD-55XE9005 pattern (fix5 log): "UI stall 6xx-7xxms: floor, reduce iters/fps cap=24"
+        // every ~750 ms, with iterMul/fpsCap reset to the defaults after each degrade.
+        long t = 0;
+        long[] times = new long[16];
+        int n = 0;
+        int last = FractalView.STALL_DEGRADE;
+        for (int i = 0; i < 8; i++) {
+            t += 750;
+            int count = FractalView.countStallsInWindow(times, n, t, FractalView.STALL_WINDOW_MS);
+            if (n < times.length) times[n++] = t;
+            last = FractalView.stallAction(3, false, count);   // reducedIters always false: the reset bug
+            if (i < 2) assertEquals("stall " + (i + 1) + " must only degrade", FractalView.STALL_DEGRADE, last);
+            else {
+                assertEquals("stall " + (i + 1) + " at floor must kill", FractalView.STALL_KILL, last);
+                break;
+            }
+        }
+        assertEquals(FractalView.STALL_KILL, last);
+        assertEquals(360, FractalView.internalHeight(720, 2));
+        assertEquals(240, FractalView.internalHeight(720, 3));
+        assertEquals(720, FractalView.internalHeight(720, 1));
+        assertEquals(2, FractalView.cheapScaleFor(3, 1));
+        assertEquals(1, FractalView.cheapScaleFor(2, 1));
+        assertEquals(12, FractalView.CHEAP_FPS);
     }
 
     @Test

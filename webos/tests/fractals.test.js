@@ -90,13 +90,32 @@ test("a single UI stall degrades quality and does not disable the wallpaper", ()
   assert.strictEqual(F.countStallsInWindow([1000], 30000, F.STALL_WINDOW_MS), 1);
 });
 
-test("repeated UI stalls at the 720p floor with reduced iterations disable the wallpaper", () => {
+test("repeated UI stalls at the 720p floor disable the wallpaper even if iterations were reset", () => {
   assert.strictEqual(F.stallAction(3, true, 3), F.STALL_KILL);
   assert.strictEqual(F.stallAction(3, true, 4), F.STALL_KILL);
   assert.strictEqual(F.stallAction(2, true, 5), F.STALL_DEGRADE);
   assert.strictEqual(F.stallAction(1, true, 5), F.STALL_DEGRADE);
-  assert.strictEqual(F.stallAction(3, false, 5), F.STALL_DEGRADE);
+  assert.strictEqual(F.stallAction(3, false, 5), F.STALL_KILL);
   assert.strictEqual(F.STALLS_TO_KILL, 3);
+});
+
+test("Sony persistent floor stalls every 750 ms with reset iters/fps cap=24 kill", () => {
+  let t = 0, times = [], last = F.STALL_DEGRADE;
+  for (let i = 0; i < 8; i++) {
+    t += 750;
+    const count = F.countStallsInWindow(times, t, F.STALL_WINDOW_MS);
+    times.push(t);
+    last = F.stallAction(3, false, count);
+    if (i < 2) assert.strictEqual(last, F.STALL_DEGRADE);
+    else { assert.strictEqual(last, F.STALL_KILL); break; }
+  }
+  assert.strictEqual(last, F.STALL_KILL);
+  assert.strictEqual(F.internalHeight(720, 2), 360);
+  assert.strictEqual(F.internalHeight(720, 3), 240);
+  assert.strictEqual(F.internalHeight(720, 1), 720);
+  assert.strictEqual(F.cheapScaleFor(3, 1), 2);
+  assert.strictEqual(F.cheapScaleFor(2, 1), 1);
+  assert.strictEqual(F.CHEAP_FPS, 12);
 });
 
 test("WCAG-ish contrast lifts a dark accent off a dark background", () => {

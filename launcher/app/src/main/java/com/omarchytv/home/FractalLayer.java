@@ -47,6 +47,7 @@ final class FractalLayer {
             } catch (Throwable e) {
                 fail(view);
             }
+            RadioPlayer.get(a).ensureWallpaperMusic();
             return;
         }
         FractalView v;
@@ -75,6 +76,7 @@ final class FractalLayer {
         ViewGroup parent = (ViewGroup) wall.getParent();
         parent.addView(v, parent.indexOfChild(wall) + 1, new ViewGroup.LayoutParams(wall.getLayoutParams()));
         view = v;
+        RadioPlayer.get(a).ensureWallpaperMusic();
     }
 
     /** From onPause: stop drawing; the view stays so a return to Home is cheap. From onDestroy: {@link #drop}. */
