@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GrokBot Office (2.20, optional). Kept out of strings.xml: English, Italian, German, French and Spanish for now;
+     the other languages show the English text until someone translates them (CONTRIBUTING.md). -->
+<resources>
+    <string name="office_ask">Frag GrokBot</string>
+    <string name="office_listening">Ich höre…</string>
+    <string name="office_thinking">Ich denke…</string>
+    <string name="office_anything">Sonst noch etwas?</string>
+    <string name="office_bots" formatted="true">%1$d Bots</string>
+    <string name="office_one_bot">1 Bot</string>
+    <string name="office_usage">Wöchentliche Nutzung</string>
+    <string name="office_resets" formatted="true">zurück am %1$s</string>
+    <string name="office_opening">Mach ich. Ich öffne dein Büro…</string>
+    <string name="office_hire">Einstellen</string>
+    <string name="office_hire_title">Neuen Bot einstellen</string>
+    <string name="office_name">Name</string>
+    <string name="office_role">Rolle</string>
+    <string name="office_picked">Grok Bot wählt</string>
+    <string name="office_cancel">Abbrechen</string>
+    <string name="office_pending">kommt</string>
+    <string name="office_sent" formatted="true">Gesendet. %1$s kommt, sobald Grok Bot bestätigt.</string>
+    <string name="office_someone">Der neue Bot</string>
+    <string name="office_welcome" formatted="true">%1$s ist jetzt im Büro.</string>
+    <string name="office_empty">Noch keine Bots. Verbinde Grok Bot: schalte Grok Bot diretto ein (Einstellungen › Grok Bot &amp; KI), schick deine Bots vom PC mit omarchy-tv office push bots.json, oder sag: stell einen Bot namens Trimmer ein, der Tokens spart.</string>
+    <string name="office_not_set">Grok Bot diretto ist aus: schalte es ein und setze den Webhook in Einstellungen › Grok Bot &amp; KI.</string>
+    <string name="office_mic">Mikro</string>
+    <string name="office_enter">Ins Büro</string>
+    <string name="office_no_mic">Keine Sprache auf diesem TV: tippe.</string>
+    <string name="office_keys">OK sprechen · ◀▶ wählen · tippen zum Fragen · BACK schließen</string>
+    <string name="office_heard">Nicht verstanden. Nochmal oder tippen.</string>
+    <string name="office_more" formatted="true">+%1$d weitere</string>
+    <string name="office_setting">GrokBot Office (optional)</string>
+    <string name="office_open">GrokBot Office öffnen</string>
+    <string name="office_ai">KI</string>
+    <string name="office_pc_off">Claude und ChatGPT antworten vom PC: koppel ihn zuerst (omarchy-link pair auf dem PC).</string>
+    <string name="office_hired_pc" formatted="true">%1$s ist auf dem PC eingestellt und im Büro.</string>
+    <string name="office_hiring" formatted="true">Der PC stellt %1$s ein…</string>
+    <string name="office_month">diesen Monat</string>
+</resources>

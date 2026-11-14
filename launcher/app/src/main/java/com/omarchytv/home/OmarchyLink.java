@@ -215,6 +215,19 @@ public final class OmarchyLink implements LinkServer.Host {
         });
     }
 
+    /** v2.20 GrokBot Office: office_hire to the PC (Link worker); {@code done} on the UI thread with null or the error. */
+    static void officeHire(JSONObject data, java.util.function.Consumer<String> done) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live()) {
+            done.accept("not_connected");
+            return;
+        }
+        bg.execute(() -> {
+            String e = r.server.officeHire(data);
+            main.post(() -> done.accept(e));
+        });
+    }
+
     /**
      * AI-pane source switches: the full list of enabled ids, in display order. Written on the Link worker;
      * {@code done} runs on the UI thread with null when sent, else "not_connected" / "busy".

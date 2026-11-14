@@ -58,7 +58,7 @@ final class LauncherConfig {
     static final int LONG_PRESS = 3;
     /** OmarchyTV actions a key can run (see MainActivity.runKeyAction). */
     static final String[] KEY_ACTIONS = {"walker", "voice", "home", "ask", "menu", "screensaver", "next-theme",
-            "cinemarchy", "radio", "arcade", "grokbot", "terminal",   // v2.15 (#91): the Grok Bot companion, e.g. for Philips TVs whose Blue key opens the manual
+            "cinemarchy", "radio", "arcade", "grokbot", "terminal", "office",   // v2.15 (#91): the Grok Bot companion, e.g. for Philips TVs whose Blue key opens the manual
             "workspace-1", "workspace-2", "workspace-3", "workspace-4", "workspace-5"};
 
     /** Maps a key name without the KEYCODE_ prefix to an Android keycode; 0 or less = unknown. */
@@ -204,10 +204,17 @@ final class LauncherConfig {
 
     static final class Provider {
         final String id, name;
+        /** v2.20 GrokBot Office tag (claude, chatgpt, grok, ...); "" from an older PC plugin. */
+        final String family;
 
         Provider(String id, String name) {
+            this(id, name, "");
+        }
+
+        Provider(String id, String name, String family) {
             this.id = id;
             this.name = name;
+            this.family = family == null ? "" : family;
         }
     }
 
@@ -695,7 +702,7 @@ final class LauncherConfig {
         if (pa != null) {
             for (int i = 0; i < pa.length() && provs.size() < 16; i++) {
                 JSONObject o = pa.optJSONObject(i);
-                if (o != null && !o.optString("id").isEmpty()) provs.add(new Provider(o.optString("id"), o.optString("name", o.optString("id"))));
+                if (o != null && !o.optString("id").isEmpty()) provs.add(new Provider(o.optString("id"), o.optString("name", o.optString("id")), o.optString("provider", "")));
             }
         }
         aiProviders = Collections.unmodifiableList(provs);

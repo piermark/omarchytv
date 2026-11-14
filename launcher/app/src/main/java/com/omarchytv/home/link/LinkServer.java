@@ -686,6 +686,7 @@ public final class LinkServer {
             else if (themeUpload(req)) retry = limited(req.peer + "|themes", 1, 5_000);
             else if (castUpload(req)) retry = limited(req.peer + "|castfile", 2, 5_000);
             else if ("PUT".equals(req.method) && "/v1/agents".equals(path)) retry = limited(req.peer + "|agents", 2, 5_000);
+            else if ("PUT".equals(req.method) && "/v1/office".equals(path)) retry = limited(req.peer + "|office", 2, 5_000);
             else if ("PUT".equals(req.method) && "/v1/stats".equals(path)) retry = limited(req.peer + "|stats", 1, 1_500);
             else if ("PUT".equals(req.method) && "/v1/screensaver".equals(path)) retry = limited(req.peer + "|saver", 1, 5_000);
         }
@@ -988,6 +989,8 @@ public final class LinkServer {
         if ("PUT".equals(m) && "/v1/ai/providers".equals(p)) return providers(body, a.pcId);
         if ("PUT".equals(m) && "/v1/agents".equals(p)) return agentsPut(body, a.pcId);
         if ("GET".equals(m) && "/v1/agents".equals(p)) return new Response(200, agents());
+        if ("PUT".equals(m) && "/v1/office".equals(p)) return officePut(body);
+        if ("GET".equals(m) && "/v1/office".equals(p)) return new Response(200, com.omarchytv.home.Office.get(officeDir()));
         if ("GET".equals(m) && "/v1/cinemarchy/library".equals(p)) return new Response(200, cinemarchyLibrary());
         if ("PUT".equals(m) && "/v1/cinemarchy/library".equals(p)) return cinemarchyLibraryPut(body, a.pcId);
         if ("GET".equals(m) && "/v1/cinemarchy/snippets".equals(p)) return new Response(200, cinemarchySnippets());
@@ -1175,6 +1178,7 @@ public final class LinkServer {
             caps0.put("plugins");
             caps0.put("enc-a256gcm");
             caps0.put("mcp");   // v-next: PUT/DELETE /v1/banners/<package> (PNG), GET /v1/banners   // v2.10.1: PUT/DELETE /v1/themes/<name>, GET /v1/themes, POST /v1/themes/<name>/select   // §6 Agents: PUT/GET /v1/agents, agent_activity, agent_ask
+            caps0.put("office");   // v2.20 GrokBot Office: PUT/GET /v1/office, office_hire / office_hire_result
             List<String> kinds = host.castKinds();
             if (kinds != null && !kinds.isEmpty()) {
                 JSONArray caps = st.optJSONArray("capabilities");
@@ -1639,6 +1643,9 @@ public final class LinkServer {
             if (p.has("kind")) o.put("kind", printable(p.optString("kind"), 16));
             if (p.has("model")) o.put("model", p.isNull("model") ? JSONObject.NULL : printable(p.optString("model"), 64));
             if (p.has("streaming")) o.put("streaming", p.optBoolean("streaming"));
+            // 2.20 GrokBot Office: which AI it is (claude, chatgpt, grok, ...), only a tag on the TV
+            String fam = p.optString("provider", "").toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9._-]", "");
+            if (!fam.isEmpty()) o.put("provider", fam.length() > 16 ? fam.substring(0, 16) : fam);
             clean.put(o);
         }
         String def = a.isNull("default") ? "" : a.optString("default", "");
@@ -1668,6 +1675,20 @@ public final class LinkServer {
         }
         agentsNow = j;
         return j;
+    }
+
+    // v2.20 GrokBot Office: the bots (and weekly usage) the PC pushes with omarchy-tv office push. Stored next to
+    // the launcher's other files; the Office screen reads it while open. Nothing is invented: what is not sent is not shown.
+    private File officeDir() {
+        return host.wallpaperDir().getParentFile();
+    }
+
+    private Response officePut(JSONObject body) throws Exception {
+        JSONArray in = body.optJSONArray("bots");
+        if (in == null || in.length() > 24) return new Response(400, err("bad_office", "bots: a list of at most 24"));
+        if (body.toString().length() > 64 * 1024) return new Response(413, err("too_large", "at most 64 KiB"));
+        JSONObject clean = com.omarchytv.home.Office.put(officeDir(), body);
+        return new Response(200, ok().put("bots", clean.optJSONArray("bots").length()));
     }
 
     private Response agentsPut(JSONObject body, String pcId) throws Exception {
@@ -2263,6 +2284,9 @@ public final class LinkServer {
             case "grokbot_error":
                 host.onEvent(c.pcId, type, grokbotReply(type, data));
                 break;
+            case "office_hire_result":   // v2.20 GrokBot Office: what the PC really did with a hire
+                host.onEvent(c.pcId, type, officeHireResult(data));
+                break;
             case "pc_wol": {   // v2.14 the PC's MAC for Wake-on-LAN ("TV and PC power together")
                 String mac = data.optString("mac", "").toLowerCase(Locale.ROOT);
                 String bc = data.optString("broadcast", "");
@@ -2413,6 +2437,50 @@ public final class LinkServer {
             target.close();
             return "not_connected";
         }
+    }
+
+    /**
+     * v2.20 GrokBot Office: hire a Claude / ChatGPT bot on the PC. Sends {"id","name","provider","role","description"}
+     * as "office_hire" to the PC that announced the providers (else the first connected one). Returns null when sent,
+     * else "bad_request", "busy" (1 per 3 s) or "not_connected". The PC answers office_hire_result.
+     */
+    public synchronized String officeHire(JSONObject data) {
+        String prov = data.optString("provider", "");
+        if (data.optString("id", "").isEmpty() || !("claude".equals(prov) || "chatgpt".equals(prov))) return "bad_request";
+        long t = System.currentTimeMillis();
+        if (limits && t - lastAskMs < 3000) return "busy";
+        WsClient target = null;
+        for (WsClient c : clients) {
+            if (c.closed) continue;
+            if (target == null || c.pcId.equals(providersFrom)) target = c;
+        }
+        if (target == null) return "not_connected";
+        try {
+            target.send("office_hire", new JSONObject().put("id", printable(data.optString("id"), 64)).put("provider", prov)
+                    .put("name", printable(data.optString("name", ""), 24)).put("role", printable(data.optString("role", ""), 40))
+                    .put("description", printable(data.optString("description", ""), 600)));
+            lastAskMs = t;
+            return null;
+        } catch (JSONException e) {
+            return "bad_request";
+        } catch (IOException e) {
+            target.close();
+            return "not_connected";
+        }
+    }
+
+    /** office_hire_result reduced to plain fields: {id, ok, bot?{name, provider, role, color, assistant}, error?, message?}. */
+    private static JSONObject officeHireResult(JSONObject d) throws JSONException {
+        JSONObject o = new JSONObject().put("id", printable(d.optString("id", ""), 64)).put("ok", d.optBoolean("ok"));
+        JSONObject b = d.optJSONObject("bot");
+        if (d.optBoolean("ok") && b != null) {
+            JSONObject c = new JSONObject();
+            for (String k : new String[]{"id", "name", "provider", "role", "color", "assistant", "status"}) if (b.has(k)) c.put(k, printable(b.optString(k), 64));
+            o.put("bot", c);
+        }
+        if (d.has("error")) o.put("error", printable(d.optString("error"), 32));
+        if (d.has("message")) o.put("message", printable(d.optString("message"), 200));
+        return o;
     }
 
     /**

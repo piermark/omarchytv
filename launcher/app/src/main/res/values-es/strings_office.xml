@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GrokBot Office (2.20, optional). Kept out of strings.xml: English, Italian, German, French and Spanish for now;
+     the other languages show the English text until someone translates them (CONTRIBUTING.md). -->
+<resources>
+    <string name="office_ask">Pregunta a GrokBot</string>
+    <string name="office_listening">Te escucho…</string>
+    <string name="office_thinking">Pensando…</string>
+    <string name="office_anything">¿Algo más?</string>
+    <string name="office_bots" formatted="true">%1$d bots</string>
+    <string name="office_one_bot">1 bot</string>
+    <string name="office_usage">Uso semanal</string>
+    <string name="office_resets" formatted="true">se reinicia %1$s</string>
+    <string name="office_opening">Hecho. Abro tu oficina…</string>
+    <string name="office_hire">Contratar</string>
+    <string name="office_hire_title">Contratar un bot</string>
+    <string name="office_name">Nombre</string>
+    <string name="office_role">Rol</string>
+    <string name="office_picked">lo elige Grok Bot</string>
+    <string name="office_cancel">Cancelar</string>
+    <string name="office_pending">llegando</string>
+    <string name="office_sent" formatted="true">Enviado. %1$s entra cuando Grok Bot confirme.</string>
+    <string name="office_someone">El nuevo bot</string>
+    <string name="office_welcome" formatted="true">%1$s se unió a la oficina.</string>
+    <string name="office_empty">Aún no hay bots. Conecta Grok Bot: activa Grok Bot diretto (Ajustes › Grok Bot e IA), envía tus bots desde el PC con omarchy-tv office push bots.json, o di: contrata un bot llamado Trimmer para recortar mis tokens.</string>
+    <string name="office_not_set">Grok Bot diretto está apagado: actívalo y pon el webhook en Ajustes › Grok Bot e IA.</string>
+    <string name="office_mic">Micro</string>
+    <string name="office_enter">Entrar a la oficina</string>
+    <string name="office_no_mic">Sin voz en esta TV: escribe.</string>
+    <string name="office_keys">OK hablar · ◀▶ elegir · escribe para preguntar · BACK salir</string>
+    <string name="office_heard">No te entendí. Repite o escribe.</string>
+    <string name="office_more" formatted="true">+%1$d más</string>
+    <string name="office_setting">GrokBot Office (opcional)</string>
+    <string name="office_open">Abrir GrokBot Office</string>
+    <string name="office_ai">IA</string>
+    <string name="office_pc_off">Claude y ChatGPT responden desde el PC: emparéjalo primero (omarchy-link pair en el PC).</string>
+    <string name="office_hired_pc" formatted="true">%1$s está contratado en el PC y se unió a la oficina.</string>
+    <string name="office_hiring" formatted="true">El PC contrata a %1$s…</string>
+    <string name="office_month">este mes</string>
+</resources>

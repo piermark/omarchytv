@@ -625,6 +625,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "radio":   // v2.20: Radiomarchy, the top-bar icon and the now-playing tag
                 open(new Intent(this, RadioActivity.class));
                 break;
+            case "office":   // v2.20: GrokBot Office (only when turned on)
+                if (OfficeActivity.enabled(this)) OfficeActivity.open(this);
+                break;
             case "arcade":   // v2.14: top-bar icon next to Cinemarchy
                 ArcadeActivity.open(this);
                 break;
@@ -795,6 +798,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         items.add(new Walker.Item("🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", str(R.string.cinemarchy_hub), () -> open(new Intent(this, CinemarchyActivity.class))));
         items.add(new Walker.Item("♫ Radiomarchy (Omarchy Radio · songs, Omarchy Stories, fractals)", str(R.string.radio_hub), () -> open(new Intent(this, RadioActivity.class))));
         items.add(new Walker.Item("✦ Radiomarchy demo (fractals + music)", str(R.string.radio_hub), () -> RadioActivity.open(this, true, false)));
+        if (OfficeActivity.enabled(this)) items.add(new Walker.Item("󰚩 GrokBot Office (your Grok Bot bots at their desks)", str(R.string.grok_bot_hub), () -> OfficeActivity.open(this)));
         items.add(new Walker.Item("Aquarium Screensaver (Omarchy Cyber-TUI Ocean)", str(R.string.menu_screensaver), () -> {
             LauncherConfig.update(this, j -> screensaver(j).put("art", "aquarium").put("mode", "aquarium"));
             open(new Intent(this, ScreensaverPreviewActivity.class));
@@ -879,6 +883,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 if (walker != null) walker.close();
                 if (menu != null && menu.isShowing()) menu.dismiss();
                 ArcadeActivity.open(this);
+                break;
+            case "office":   // v2.20: GrokBot Office, when the user turned it on
+                if (walker != null) walker.close();
+                if (menu != null && menu.isShowing()) menu.dismiss();
+                if (OfficeActivity.enabled(this)) OfficeActivity.open(this);
                 break;
             case "grokbot":   // v2.15 (#91): a key remapper can bind any key to the Grok Bot companion (Philips: Blue)
                 if (walker != null) walker.close();
@@ -1708,6 +1717,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "radio": return "♫ Radiomarchy";
             case "arcade": return "🕹 OmarchyTV Arcade";
             case "grokbot": return "● Grok Bot";
+            case "office": return "󰚩 GrokBot Office";
             case "terminal": return "▌ Grok terminal";
             default: return id;
         }
@@ -3871,6 +3881,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         LauncherConfig gc = LauncherConfig.get(this);
         p.add("Chat with the Grok Bot companion", "OK ›", r -> {
             handler.post(() -> openCompanionChat(false));
+            return false;
+        });
+        // v2.20: GrokBot Office, off by default. On adds its tile to the TV's app row, the Walker and the "office" key.
+        p.add(str(R.string.office_setting), str(OfficeActivity.enabled(this) ? R.string.on : R.string.off), r -> {
+            boolean n = !OfficeActivity.enabled(this);
+            OfficeActivity.setEnabled(this, n);
+            r.setValue(str(n ? R.string.on : R.string.off));
+            return true;
+        });
+        p.add(str(R.string.office_open), "OK ›", r -> {
+            handler.post(() -> OfficeActivity.open(this));
             return false;
         });
         String lAgentAlert = str(R.string.agent_alert_row);   // v2.15: off by default

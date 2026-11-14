@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- GrokBot Office (2.20, optional). Kept out of strings.xml: English, Italian, German, French and Spanish for now;
+     the other languages show the English text until someone translates them (CONTRIBUTING.md). -->
+<resources>
+    <string name="office_ask">Demande à GrokBot</string>
+    <string name="office_listening">J\'écoute…</string>
+    <string name="office_thinking">Je réfléchis…</string>
+    <string name="office_anything">Autre chose ?</string>
+    <string name="office_bots" formatted="true">%1$d bots</string>
+    <string name="office_one_bot">1 bot</string>
+    <string name="office_usage">Usage hebdo</string>
+    <string name="office_resets" formatted="true">remise à zéro %1$s</string>
+    <string name="office_opening">C\'est parti. J\'ouvre ton bureau…</string>
+    <string name="office_hire">Embaucher</string>
+    <string name="office_hire_title">Embaucher un bot</string>
+    <string name="office_name">Nom</string>
+    <string name="office_role">Rôle</string>
+    <string name="office_picked">Grok Bot choisit</string>
+    <string name="office_cancel">Annuler</string>
+    <string name="office_pending">en route</string>
+    <string name="office_sent" formatted="true">Envoyé. %1$s arrive quand Grok Bot confirme.</string>
+    <string name="office_someone">Le nouveau bot</string>
+    <string name="office_welcome" formatted="true">%1$s a rejoint le bureau.</string>
+    <string name="office_empty">Pas encore de bots. Connecte Grok Bot : active Grok Bot diretto (Réglages › Grok Bot &amp; IA), envoie tes bots depuis le PC avec omarchy-tv office push bots.json, ou dis : embauche un bot appelé Trimmer pour réduire mes tokens.</string>
+    <string name="office_not_set">Grok Bot diretto est désactivé : active-le et règle le webhook dans Réglages › Grok Bot &amp; IA.</string>
+    <string name="office_mic">Micro</string>
+    <string name="office_enter">Entrer au bureau</string>
+    <string name="office_no_mic">Pas de voix sur cette TV : tape.</string>
+    <string name="office_keys">OK parler · ◀▶ choisir · tape pour demander · BACK quitter</string>
+    <string name="office_heard">Pas compris. Réessaie ou tape.</string>
+    <string name="office_more" formatted="true">+%1$d autres</string>
+    <string name="office_setting">GrokBot Office (facultatif)</string>
+    <string name="office_open">Ouvrir GrokBot Office</string>
+    <string name="office_ai">IA</string>
+    <string name="office_pc_off">Claude et ChatGPT répondent depuis le PC : associe-le d\'abord (omarchy-link pair sur le PC).</string>
+    <string name="office_hired_pc" formatted="true">%1$s est embauché sur le PC et a rejoint le bureau.</string>
+    <string name="office_hiring" formatted="true">Le PC embauche %1$s…</string>
+    <string name="office_month">ce mois-ci</string>
+</resources>

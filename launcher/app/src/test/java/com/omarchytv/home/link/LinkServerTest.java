@@ -459,6 +459,32 @@ public class LinkServerTest {
     }
 
     @Test
+    public void officeHireIsRefusedLocallyWithoutAPcOrForGrok() throws Exception {
+        assertEquals("bad_request", server.officeHire(new JSONObject().put("id", "h1").put("name", "X").put("provider", "grok")));
+        assertEquals("bad_request", server.officeHire(new JSONObject().put("name", "X").put("provider", "claude")));
+        assertEquals("not_connected", server.officeHire(new JSONObject().put("id", "h1").put("name", "X").put("provider", "claude")));
+        assertTrue(server.status().getJSONArray("capabilities").toString().contains("\"office\""));
+    }
+
+    @Test
+    public void officePushIsCleanedStoredAndReadBack() throws Exception {
+        pair("123456");
+        org.json.JSONArray many = new org.json.JSONArray();
+        for (int i = 0; i < 25; i++) many.put(new JSONObject().put("name", "b" + i));
+        assertEquals(400, signed("PUT", "/v1/office", new JSONObject().put("bots", many).toString()).status);
+        JSONObject body = new JSONObject().put("bots", new org.json.JSONArray()
+                .put(new JSONObject().put("name", "Trimmer").put("role", "trims tokens").put("status", "nonsense"))
+                .put(new JSONObject().put("role", "no name")))
+                .put("usage", new JSONObject().put("weekly_pct", 140));
+        assertEquals(200, signed("PUT", "/v1/office", body.toString()).status);
+        JSONObject got = new JSONObject(new String(signed("GET", "/v1/office", "").body, StandardCharsets.UTF_8));
+        assertEquals(1, got.getJSONArray("bots").length());   // the bot without a name is dropped
+        assertEquals("Trimmer", got.getJSONArray("bots").getJSONObject(0).getString("name"));
+        assertEquals("idle", got.getJSONArray("bots").getJSONObject(0).getString("status"));
+        assertFalse(got.has("usage"));   // 140% is not a real weekly usage: no card rather than a made-up number
+    }
+
+    @Test
     public void agentAskRefusesLocally() throws Exception {
         assertEquals("bad_request", server.agentAsk("r1", "claude-code:1", "   "));
         StringBuilder big = new StringBuilder();
