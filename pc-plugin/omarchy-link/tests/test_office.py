@@ -53,6 +53,15 @@ class OfficeHire(unittest.TestCase):
         self.assertEqual(stat.S_IMODE(self.path.stat().st_mode), 0o600)
         self.assertNotIn("key", json.dumps(office.bots(self.path)))
 
+    def test_hire_follows_your_own_entry_of_the_same_type(self):
+        config.write_json_private(self.path, {"providers": [{"type": "anthropic_api", "id": "mine", "key": "env:MY_CLAUDE_KEY",
+                                                             "baseUrl": "https://proxy.example/anthropic", "model": "claude-x"}]})
+        with mock.patch.dict(os.environ, {"MY_CLAUDE_KEY": "sk-ant-mine"}):
+            office.hire("Trimmer", "claude", path=self.path)
+        self.assertEqual(self.calls[0][1], "https://proxy.example/anthropic/v1/models")
+        e = json.loads(self.path.read_text())["providers"][1]
+        self.assertEqual((e["key"], e["model"]), ("env:MY_CLAUDE_KEY", "claude-x"))
+
     def test_chatgpt_uses_the_openai_models_endpoint(self):
         office.hire("Scout", "ChatGPT", path=self.path)
         self.assertEqual(self.calls[0][1], "https://api.openai.com/v1/models")

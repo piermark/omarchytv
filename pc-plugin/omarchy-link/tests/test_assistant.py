@@ -149,7 +149,7 @@ class AssistantUnit(Base):
         self.assertEqual(lst["default"], "claude-code")
         self.assertEqual([p["kind"] for p in lst["providers"]], ["cli", "cli", "cli", "api"])
         self.assertNotIn("TEST_XAI", json.dumps(lst))
-        self.assertTrue(all(set(p) == {"id", "name", "kind", "model", "streaming"} for p in lst["providers"]))
+        self.assertTrue(all(set(p) == {"id", "name", "kind", "model", "streaming", "provider"} for p in lst["providers"]))
 
     def test_ask_streams_remembers_and_runs_cli_safely(self):
         self.signed_in_clis()

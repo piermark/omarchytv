@@ -177,7 +177,7 @@ class OfficeTest(unittest.TestCase):
                 return e.code, json.loads(e.read())
         try:
             with mock.patch.object(webos, "_link_mod", lambda n: Lo if n == "office" else None), \
-                    mock.patch.object(webos, "ASK_GAP_S", 0):
+                    mock.patch.object(webos, "ASK_GAP_S", 0), mock.patch.object(webos, "TOKEN_FILE", Path(self.tmp.name, "tok")):
                 self.assertEqual(post({"name": "Scout", "provider": "chatgpt"}, None)[0], 401)
                 st, j = post({"name": "Scout", "provider": "chatgpt", "role": "Finds things"}, webos.bridge_token())
                 self.assertEqual((st, j["ok"], j["bot"]["name"]), (200, True, "Scout"))

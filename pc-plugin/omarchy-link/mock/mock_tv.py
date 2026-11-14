@@ -555,7 +555,7 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(p, dict) or not re.match(r"^[a-z0-9][a-z0-9._-]{0,31}$", str(p.get("id", ""))):
                 return 400, {"error": "bad_providers", "message": "bad id"}
             clean.append({"id": p["id"], "name": str(p.get("name") or p["id"])[:32],
-                          **{k: p[k] for k in ("kind", "model", "streaming") if k in p}})
+                          **{k: p[k] for k in ("kind", "model", "streaming", "provider") if k in p}})
         self.tv.update_config(lambda j: j.setdefault("link", {}).update(
             aiProviders=clean, aiDefault=a.get("default"), aiProvidersFrom=pc))
         return 200, {"ok": True}

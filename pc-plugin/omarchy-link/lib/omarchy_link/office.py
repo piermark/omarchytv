@@ -93,11 +93,12 @@ def bots(path: Path | None = None) -> list[dict]:
     return out
 
 
-def _key_ref(settings: dict, kind: str) -> str:
+def _inherit(settings: dict, kind: str) -> dict:
+    """Key reference (never the key itself), baseUrl and model of your own entry of the same type, if any."""
     for p in settings.get("providers", []):
-        if isinstance(p, dict) and p.get("type") == kind and p.get("key") and not isinstance(p.get("office"), dict):
-            return str(p["key"])
-    return assistant.load_type(kind).DEFAULTS["key"]
+        if isinstance(p, dict) and p.get("type") == kind and not isinstance(p.get("office"), dict):
+            return {k: str(p[k]) for k in ("key", "baseUrl", "model") if p.get(k)}
+    return {}
 
 
 def check_key(kind: str, cfg: dict, ctx: ai.Context) -> None:
@@ -137,7 +138,7 @@ def hire(name, provider, role="", description="", model=None, path: Path | None 
     pid = "office-" + (_slug(name) or "bot")
     if any(str(p.get("id")) == pid for p in entries):
         raise HireError("exists", f"there is already a bot called {name}")
-    cfg = {"type": kind, "id": pid, "name": name, "key": _key_ref(settings, kind)}
+    cfg = {"type": kind, "id": pid, "name": name, "key": assistant.load_type(kind).DEFAULTS["key"], **_inherit(settings, kind)}
     if model:
         cfg["model"] = _clean(model, 64)
     private = path.exists() and config.is_private_file(path)
