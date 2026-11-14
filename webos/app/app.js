@@ -2667,6 +2667,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var el = document.getElementById("bar-radio"), bar = document.getElementById("waybar");
     var clock = document.getElementById("bar-clock"), right = document.getElementById("bar-right");
     if (!el || !bar || !clock || !right || el.style.display === "none") return 0;
+    if (typeof window.getComputedStyle !== "function") return 0;
     var rest = parseFloat((window.getComputedStyle(bar).paddingRight) || 0) || 0, i, c, cs;
     for (i = 0; i < right.children.length; i++) {
       c = right.children[i];
