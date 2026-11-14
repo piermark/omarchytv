@@ -172,6 +172,7 @@
     <string name="search_prompt">Dites le nom d\'une app</string>
     <string name="link_service_on">en écoute</string>
     <string name="link_service_off">pas de réseau</string>
+    <string name="link_notification">Omarchy Link est actif</string>
     <string name="remote_service">Télécommande OmarchyTV</string>
     <string name="remote_service_desc">Permet à un PC Omarchy Linux appairé d\'appuyer sur Retour sur le téléviseur. Il ne lit rien à l\'écran.</string>
     <string name="keymap_service">Boutons de télécommande OmarchyTV</string>

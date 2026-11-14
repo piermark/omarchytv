@@ -172,6 +172,7 @@
     <string name="search_prompt">Spune numele unei aplicații</string>
     <string name="link_service_on">ascultă</string>
     <string name="link_service_off">fără rețea</string>
+    <string name="link_notification">Omarchy Link rulează</string>
     <string name="remote_service">Telecomandă OmarchyTV</string>
     <string name="remote_service_desc">Permite unui PC asociat cu Omarchy Linux să apese Înapoi pe televizor. Nu citește nimic de pe ecran.</string>
     <string name="keymap_service">Butoane telecomandă OmarchyTV</string>

@@ -172,6 +172,7 @@
     <string name="search_prompt">Diga o nome de uma app</string>
     <string name="link_service_on">à escuta</string>
     <string name="link_service_off">sem rede</string>
+    <string name="link_notification">Omarchy Link em execução</string>
     <string name="remote_service">Comando OmarchyTV</string>
     <string name="remote_service_desc">Permite que um PC Omarchy Linux emparelhado prima Voltar no televisor. Não lê nada no ecrã.</string>
     <string name="keymap_service">Botões do comando OmarchyTV</string>

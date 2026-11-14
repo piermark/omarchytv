@@ -426,6 +426,7 @@ signed requests/responses and sealed events (byte-exact against `docs/vectors.js
 - Storage: code in memory; tvId + per-PC tokens in `getFilesDir()/link.json`; `omarchytv.json` gets only
   `link.pcs[] {name,address,lastSeen}` (max 8), `theme`, `wallpaper`, `link.panes`, `link.shortcuts`,
   top-level `ai` + `aiAt` + `aiSources`, `link.aiProviders`, `link.aiDefault`.
+- Lifetime: `HomeCheck` starts `OmarchyLink$KeepAlive` as a foreground service on BOOT_COMPLETED and MY_PACKAGE_REPLACED (when `link.enabled`, default on, and at least one PC is paired in `link.json`), and `MainActivity` and pairing start it again; unpairing the last PC stops it; type connectedDevice, START_STICKY, no wakelock or timer. Screen-on and network callbacks rebind the socket after sleep.
 - Keys: home, media keys (`AudioManager.dispatchMediaKeyEvent`), volume/mute. Back needs the accessibility service:
   `adb shell settings put secure enabled_accessibility_services com.omarchytv.home/.OmarchyRemote` and
   `adb shell settings put secure accessibility_enabled 1` (this replaces the list; append if you use others).

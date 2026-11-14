@@ -172,6 +172,7 @@
     <string name="search_prompt">Řekněte název aplikace</string>
     <string name="link_service_on">naslouchá</string>
     <string name="link_service_off">žádná síť</string>
+    <string name="link_notification">Omarchy Link běží</string>
     <string name="remote_service">Dálkové ovládání OmarchyTV</string>
     <string name="remote_service_desc">Umožní spárovanému PC s Omarchy Linux stisknout na televizi Zpět. Nic nečte z obrazovky.</string>
     <string name="keymap_service">Tlačítka ovladače OmarchyTV</string>
