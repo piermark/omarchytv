@@ -753,7 +753,7 @@ final class LauncherConfig {
         randomTheme = j == null || j.optBoolean("random_theme", j.optBoolean("randomTheme", true));
         randomWallpaper = j == null || j.optBoolean("random_wallpaper", j.optBoolean("randomWallpaper", true));
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
-        pluginSpacexTv = plObj == null || plObj.optBoolean("spacexTv", true);
+        pluginSpacexTv = plObj != null && plObj.has("spacexTv") && plObj.optBoolean("spacexTv");   // 2.20: off unless the user (or a saved setting) turned it on
         pluginGrokbot = plObj == null || plObj.optBoolean("grokbot", true);
         String crt = plObj != null ? plObj.optString("retroCrt", "off") : "off";
         pluginRetroCrt = "light".equals(crt) || "strong".equals(crt) ? crt : "off";

@@ -411,7 +411,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     randomTheme: true,
     randomScope: "intros",   // v2.15 (#71): "all" = every bundled theme
     randomWallpaper: true,
-    pluginSpacexTv: true,
+    pluginSpacexTv: false,   // 2.20: off until turned on in Settings
     embedPlayer: true,     // Cinemarchy: YouTube plays inside (official embed) by default; an explicit false stays off
     pluginGrokbot: true,   // the Grok Bot companion: on by default, the default assistant
     grokbotMessage: "",

@@ -67,6 +67,9 @@ class TestPlugins(unittest.TestCase):
                 all_p = p.load_all()
                 self.assertIn("com.sighmon.spacex-tv", all_p)
                 self.assertIn("io.github.tcballard.grokbot-desktop", all_p)
+                en = p.load_enabled()
+                self.assertFalse(en["com.sighmon.spacex-tv"])  # 2.20: off until enabled
+                self.assertTrue(en["io.github.tcballard.grokbot-desktop"])
                 out = []
                 p.run(["list"], client=None, say=out.append)
                 self.assertTrue(any("com.sighmon.spacex-tv" in l and "sighmon" in l for l in out))

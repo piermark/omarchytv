@@ -65,6 +65,7 @@ def resolve_id(pid: str) -> str:
 
 def load_enabled() -> dict[str, bool]:
     defaults = {k: True for k in BUILTIN}
+    defaults["com.sighmon.spacex-tv"] = False  # 2.20: off on the TV until turned on
     sf = state_file()
     if os.path.isfile(sf):
         try:
@@ -198,7 +199,7 @@ def declarative_payload(plugins: dict | None = None, enabled: dict[str, bool] | 
         })
     return {
         "plugins": arr,
-        "spacexTv": bool(enabled.get("com.sighmon.spacex-tv", True)),
+        "spacexTv": bool(enabled.get("com.sighmon.spacex-tv", False)),
         "grokbot": bool(enabled.get("io.github.tcballard.grokbot-desktop", True)),
     }
 

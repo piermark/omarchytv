@@ -1804,12 +1804,12 @@ public final class LinkServer {
             out[0] = pl != null ? new JSONObject(pl.toString()) : new JSONObject();
         });
         JSONObject r = out[0];
-        if (!r.has("spacexTv")) r.put("spacexTv", true);
+        if (!r.has("spacexTv")) r.put("spacexTv", false);   // 2.20: off by default
         if (!r.has("grokbot")) r.put("grokbot", true);
         if (!r.has("plugins")) {
             r.put("plugins", new JSONArray()
                     .put(new JSONObject().put("id", "com.sighmon.spacex-tv").put("name", "SpaceX TV")
-                            .put("author", "sighmon").put("license", "MIT").put("enabled", r.optBoolean("spacexTv", true)))
+                            .put("author", "sighmon").put("license", "MIT").put("enabled", r.optBoolean("spacexTv", false)))
                     .put(new JSONObject().put("id", "io.github.tcballard.grokbot-desktop").put("name", "Agent Desktop")
                             .put("author", "tcballard").put("license", "MIT").put("enabled", r.optBoolean("grokbot", true))));
         }
@@ -1817,7 +1817,7 @@ public final class LinkServer {
     }
 
     private Response pluginsPut(JSONObject body, String pcId) throws Exception {
-        final boolean sx = body.optBoolean("spacexTv", true);
+        final boolean sx = body.optBoolean("spacexTv", false);
         final boolean gb = body.optBoolean("grokbot", true);
         JSONArray in = body.optJSONArray("plugins");
         final JSONArray cleanArr = new JSONArray();
@@ -1908,7 +1908,7 @@ public final class LinkServer {
         if (msg.isEmpty() && !hasBot) return new Response(400, err("bad_request", "message or bot required"));
         host.editConfig(j -> {
             JSONObject pl = j.optJSONObject("plugins");
-            if (pl == null) j.put("plugins", pl = new JSONObject().put("spacexTv", true).put("grokbot", true));
+            if (pl == null) j.put("plugins", pl = new JSONObject().put("spacexTv", false).put("grokbot", true));
             if (!msg.isEmpty()) pl.put("grokbotMessage", msg).put("grokbotAt", now());
             if (hasBot) {
                 if (bot == null) pl.remove("grokbotBot");

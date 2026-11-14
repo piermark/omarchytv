@@ -530,7 +530,7 @@ public class LinkServerTest {
 
         Resp get0 = signed("GET", "/v1/plugins", "");
         assertEquals(200, get0.status);
-        assertTrue(get0.json().getBoolean("spacexTv"));
+        assertFalse(get0.json().getBoolean("spacexTv"));   // 2.20: off by default
         assertTrue(get0.json().getBoolean("grokbot"));
 
         JSONObject putBody = new JSONObject()
