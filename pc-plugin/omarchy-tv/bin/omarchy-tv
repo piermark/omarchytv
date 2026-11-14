@@ -21,6 +21,7 @@
                                         LAN HTTP server for LG webOS TVs (/v1/status, /v1/themes, /v1/wallpaper)
   omarchy-tv stats                      show the stats pushed every 5 s while the TV home is visible
   omarchy-tv office push <bots.json> | show | clear   GrokBot Office: your bots and weekly usage on the TV (2.20, optional)
+                                                       (+ Claude / ChatGPT bots: omarchy-link office hire)
   omarchy-tv mcp [--stdio|--http] [--port 8990] [--tunnel]   MCP server for Grok Bot / Claude / Hermes
 """
 import os, sys

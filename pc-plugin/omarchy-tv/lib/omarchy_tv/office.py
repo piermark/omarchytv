@@ -7,10 +7,15 @@
 
 The file is yours (or your Grok Bot's): nothing is made up here. The same rules as the TV (webos/app/office.js and
 Office.java): at most 24 bots, a name each (24 characters), optional role, colour (#rrggbb or a name), status
-(working, idle, done, error) and task; the usage card only when "usage" has a weekly_pct between 0 and 100.
+(working, idle, done, error), task and provider (grok, claude, chatgpt or another short word; grok when missing:
+only a tag on the nameplate); the usage card only when "usage" has a weekly_pct between 0 and 100.
 
-  {"bots": [{"name": "Trimmer", "role": "Cuts token use", "color": "#ff9e64", "status": "working"}],
+  {"bots": [{"name": "Trimmer", "role": "Cuts token use", "color": "#ff9e64", "status": "working", "provider": "grok"}],
    "usage": {"weekly_pct": 46.3, "label": "Weekly usage", "resets": "Mon 09:00"}}
+
+With omarchy-link installed the office also gets the Claude / ChatGPT bots hired on this PC (omarchy-link office
+hire, or Hire on the TV) and "providers_usage", this month's real spend per provider from the Admin APIs (only
+with an admin key; see omarchy-link office usage).
 """
 import json, os, re
 from pathlib import Path
@@ -45,6 +50,34 @@ def _color(c) -> str:
         if re.fullmatch(r"#[0-9a-f]{6}", v) or v in NAMED:
             return v
     return ""
+
+
+def provider(v) -> str:
+    """The bot's AI: a short lowercase word, "grok" when missing (the same rule as the TV)."""
+    p = re.sub(r"[^a-z0-9._-]+", "", str(v or "").lower())[:16]
+    return p or "grok"
+
+
+def _usage_row(u):
+    """One providers_usage row: real numbers only, else None."""
+    if not isinstance(u, dict):
+        return None
+    spent = u.get("spent")
+    if isinstance(spent, bool) or not isinstance(spent, (int, float)) or spent < 0 or spent != spent:
+        return None
+    row = {"provider": provider(u.get("provider")), "spent": round(float(spent), 2), "unit": _clean(u.get("unit") or "$", 4) or "$",
+           "period": "month" if u.get("period") != "week" else "week"}
+    lab = _clean(u.get("label"), 24)
+    if lab:
+        row["label"] = lab
+    b = u.get("budget")
+    if isinstance(b, (int, float)) and not isinstance(b, bool) and b > 0:
+        row["budget"] = round(float(b), 2)
+        row["pct"] = max(0.0, min(100.0, round(float(spent) / float(b) * 100, 1)))
+    r = _clean(u.get("resets"), 32)
+    if r:
+        row["resets"] = r
+    return row
 
 
 def _pct(u):
@@ -82,6 +115,10 @@ def clean(j) -> dict:
         col = _color(b.get("color") or b.get("fill"))
         if col:
             out["color"] = col
+        out["provider"] = provider(b.get("provider"))
+        a = re.sub(r"[^a-z0-9._-]", "", str(b.get("assistant") or "").lower())[:32]
+        if a:
+            out["assistant"] = a   # a PC assistant id (omarchy-link): Ask can talk to this bot
         bots.append(out)
     res = {"bots": bots}
     p = _pct(j.get("usage"))
@@ -92,6 +129,10 @@ def clean(j) -> dict:
             v = _clean(u.get(k) or (u.get("resets_at") if k == "resets" else None), n)
             if v:
                 res["usage"][k] = v
+    pu = j.get("providers_usage") if isinstance(j.get("providers_usage"), list) else []
+    rows = [r for r in (_usage_row(u) for u in pu[:6]) if r]
+    if rows:
+        res["providers_usage"] = rows
     title = _clean(j.get("title"), 32)
     if title:
         res["title"] = title
@@ -117,14 +158,35 @@ def save(data: dict) -> Path:
     return p
 
 
-def payload(roster=None) -> dict:
-    """GET /v1/office on the bridge: the pushed file; else the Agent Desktop roster (names and colours only, no usage)."""
+def _link_office():
+    try:
+        from omarchy_link import office as lo   # noqa: PLC0415  optional: omarchy-link may not be installed
+        return lo
+    except Exception:
+        return None
+
+
+def with_link(d: dict, lo=None) -> dict:
+    """Adds the bots hired on this PC (Claude / ChatGPT) and their real spend, when omarchy-link is here."""
+    lo = lo if lo is not None else _link_office()
+    if not lo:
+        return d
+    try:
+        merged = clean(lo.merge(d))
+    except Exception:   # a broken assistant.json or no network must not take the office down
+        return d
+    return dict(merged, **{k: d[k] for k in ("source",) if k in d})
+
+
+def payload(roster=None, lo=None) -> dict:
+    """GET /v1/office on the bridge: the pushed file; else the Agent Desktop roster (names and colours only, no usage);
+    plus what omarchy-link adds (hired Claude / ChatGPT bots, providers_usage)."""
     d = load()
     if d is not None:
-        return dict(d, source="push")
+        return with_link(dict(d, source="push"), lo)
     if roster:
-        return dict(clean({"bots": [{"id": r.get("id"), "name": r.get("shortName") or r.get("name"), "color": r.get("fill")} for r in roster]}), source="roster")
-    return {"bots": [], "source": "none"}
+        return with_link(dict(clean({"bots": [{"id": r.get("id"), "name": r.get("shortName") or r.get("name"), "color": r.get("fill")} for r in roster]}), source="roster"), lo)
+    return with_link({"bots": [], "source": "none"}, lo)
 
 
 def run(args, client=None, say=print) -> int:
@@ -149,7 +211,7 @@ def run(args, client=None, say=print) -> int:
             except SystemExit:
                 say("  no Android TV paired: skipped (omarchy-tv pair)")
                 return 0
-            c.request("PUT", "/v1/office", data)
+            c.request("PUT", "/v1/office", with_link(data))
             say("  sent to the Android TV ✓")
         return 0
     if sub == "show":

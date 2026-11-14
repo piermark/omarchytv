@@ -8,8 +8,10 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
   GET /v1/wallpaper                -> active desktop wallpaper image (webp/png/jpg)
   GET /v1/grokbot                  -> JSON {available, bot, roster, dispatch, version}: @tcballard's Grok Bot
                                       Desktop (Agent Desktop) v0.2.0 as omarchy-link's bridge sees it (no secrets)
-  GET /v1/office                   -> JSON {bots, usage?, source}: GrokBot Office (2.20), what omarchy-tv office push saved,
+  GET /v1/office                   -> JSON {bots, usage?, providers_usage?, source}: GrokBot Office (2.20), what omarchy-tv office push saved,
                                       else the Agent Desktop roster (names and colours, never usage numbers).
+  POST /v1/office/hire             -> same token as /v1/ai/ask; {name, provider: claude|chatgpt, role?, description?}:
+                                      hire a bot on this PC (omarchy-link office) -> {ok, bot, office} or {ok:false, error, message}
   POST /v1/grokbot/ask             -> {text, bot?} with header X-Omarchy-Token: the ask code printed when the
                                       bridge starts (~/.config/omarchy-tv/webos-bridge.token, mode 0600).
                                       Answers like omarchy-link's grokbot_answer {bot, text, mode, links, note?}.
@@ -373,7 +375,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
         global _last_ask
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
-                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse"):
+                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse", "/v1/office/hire"):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -398,6 +400,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
             return
         if path == "/v1/theme/set":
             self._theme_set(body)
+            return
+        if path == "/v1/office/hire":
+            self._office_hire(body)
             return
         if path == "/v1/update/tv":
             self._update_tv(body)
@@ -481,6 +486,33 @@ class WebOSHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "not_installed", "message": "omarchy-link is not installed"}, 503)
             return
         self._send_json({"result": pw.tv_power(body.get("state"), link_cfg(), lambda m: ui.say(m))})
+
+    def _office_hire(self, body: dict) -> None:
+        """2.20 GrokBot Office: hire a Claude / ChatGPT bot on this PC (omarchy-link office). The key stays here and is
+        checked with the provider first; the answer says what really happened."""
+        global _last_ask
+        lo = _link_mod("office")
+        if not lo:
+            self._send_json({"error": "not_installed", "message": "omarchy-link is not installed on the PC"}, 503)
+            return
+        if link_cfg().get("assistant", True) is False:
+            self._send_json({"error": "disabled", "message": "the assistant is off on the PC"}, 403)
+            return
+        with _ask_lock:
+            now = time.monotonic()
+            if now - _last_ask < ASK_GAP_S:
+                self._send_json({"error": "busy", "message": "one request every 3 seconds"}, 429)
+                return
+            _last_ask = now
+        try:
+            bot = lo.hire(body.get("name"), body.get("provider"), body.get("role") or "", body.get("description") or "")
+        except lo.HireError as e:
+            self._send_json({"ok": False, "error": e.code, "message": str(e)[:200]}, 400 if e.code in ("bad_request", "bad_provider", "exists", "full") else 502)
+            return
+        except (OSError, ValueError) as e:
+            self._send_json({"ok": False, "error": "pc_error", "message": str(e)[:200]}, 500)
+            return
+        self._send_json({"ok": True, "bot": bot, "office": build_office_payload()})
 
     def _ai(self, path: str, body: dict) -> None:
         a = _assistant()
