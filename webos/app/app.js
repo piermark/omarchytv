@@ -4,7 +4,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.15.1";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.20.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)
@@ -1413,6 +1413,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       "󰚩": "M5 7h14v13H5z M12 3v4 M2 11v5 M22 11v5 M8 11h1 M15 11h1 M8 16h8",
       "󰖟": "M3 12h18 M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 3c-5 5-5 13 0 18 M12 3c5 5 5 13 0 18",
       "󰾆": "M4 19V9 M9 19V5 M14 19v-7 M19 19V3",
+      "♫": "M9 18V5l12-2v13 M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0z M21 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z",
       "🎮": "M7 8h10a5 5 0 0 1 4.6 6.9l-1 2.6A2.5 2.5 0 0 1 16 18l-1.2-1.5H9.2L8 18a2.5 2.5 0 0 1-4.6-.5l-1-2.6A5 5 0 0 1 7 8z M8 11v3 M6.5 12.5h3 M15 11.5h.01 M17 13.5h.01"
     };
     return paths[icon] ? '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="' + paths[icon] + '"></path></svg>' : escHtml(icon);
@@ -1792,9 +1793,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var focus = state.modalIdx;
     openModal(tr("sys_saver"), "37 tte.js TerminalTextEffects or multi-layer Omarchy Cyber-TUI Aquarium", [
       { label: "Preview screensaver now", right: "▶", act: function () { closeModal(); startScreensaver(); } },
-      { label: "Screensaver mode / art", right: cfg.saverMode === "pulse" ? "Omarchy Pulse" : cfg.saverMode === "aquarium" ? (cfg.saverArt === "aquarium-classic" ? "Aquarium Classic" : "Omarchy Aquarium (homage)") : (cfg.saverArt === "cinemarchy" ? "CINEMARCHY" : "OMARCHY TV"), act: function () {
-        // cycle: Pulse (default, 2.15) -> Aquarium (homage) -> Aquarium Classic -> OMARCHY TV -> CINEMARCHY -> Pulse
-        if (cfg.saverMode === "pulse") { cfg.saverArt = "aquarium"; cfg.saverMode = "aquarium"; }
+      { label: "Screensaver mode / art", right: cfg.saverMode === "pulse" ? "Omarchy Pulse" : cfg.saverMode === "radiomarchy" ? "Radiomarchy fractals" : cfg.saverMode === "aquarium" ? (cfg.saverArt === "aquarium-classic" ? "Aquarium Classic" : "Omarchy Aquarium (homage)") : (cfg.saverArt === "cinemarchy" ? "CINEMARCHY" : "OMARCHY TV"), act: function () {
+        // cycle: Pulse (default, 2.15) -> Radiomarchy fractals (2.20) -> Aquarium (homage) -> Aquarium Classic -> OMARCHY TV -> CINEMARCHY -> Pulse
+        if (cfg.saverMode === "pulse") { cfg.saverArt = "radiomarchy"; cfg.saverMode = "radiomarchy"; }
+        else if (cfg.saverMode === "radiomarchy") { cfg.saverArt = "aquarium"; cfg.saverMode = "aquarium"; }
         else if (cfg.saverMode === "aquarium" && cfg.saverArt !== "aquarium-classic") { cfg.saverArt = "aquarium-classic"; cfg.saverMode = "aquarium"; }
         else if (cfg.saverMode === "aquarium") { cfg.saverArt = "omarchy-tv"; cfg.saverMode = "logo"; }
         else if (cfg.saverArt !== "cinemarchy") { cfg.saverArt = "cinemarchy"; cfg.saverMode = "logo"; }
@@ -2618,10 +2620,61 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }, true);
 
 
+  // ---- v2.20 Radiomarchy (radio.js + fractals.js): Omarchy Radio and music-driven fractals ----
+  // One player for the whole app (the music goes on when Radiomarchy closes); the UI opens over #stage like Cinemarchy.
+  var radioEng = window.OmarchyRadio ? window.OmarchyRadio.engine({ store: window.localStorage }) : null, radioUi = null;
+  var RADIOMARCHY_VERSION = "0.1.0";
+  function openRadio(o) {
+    if (radioUi || !radioEng) return;
+    if (state.modalOpen) closeModal();
+    if (cineUi) closeCinemarchy();
+    var th = currentThemeObj();
+    radioUi = window.OmarchyRadio.open(document.getElementById("stage") || document.body, {
+      engine: radioEng, lang: getLang(), version: RADIOMARCHY_VERSION, saver: !!(o && o.saver), demo: !!(o && o.demo),
+      logoHtml: DATA.radiomarchyLogo ? blockArt(DATA.radiomarchyLogo, 1, 1, "width:auto;height:6.5vh") : "",
+      theme: { bg: th.bg, fg: th.fg, bright: th.fgBright, dim: cineMix(th.fg, th.bg, 0.5), accent: th.accent, accent2: th.accent2, green: th.green, cyan: th.cyan, red: th.red },
+      onExit: function () { radioUi = null; markInput(); renderAll(); }
+    });
+  }
+  function closeRadio() { if (radioUi) { var u = radioUi; radioUi = null; u.destroy(); renderAll(); } }
+  window.OMARCHY_OPEN_RADIO = openRadio;
+  // While Radiomarchy is open its keys are its own; media keys reach the player from anywhere in OmarchyTV.
+  window.addEventListener("keydown", function (e) {
+    if (!radioEng) return;
+    var m = window.OmarchyRadio.mediaKey(e);
+    if (!radioUi) {
+      if (!m || cineUi || !radioEng.current()) return;
+      if (m === "play" || m === "playpause") radioEng.toggle(); else if (m === "pause") radioEng.pause();
+      else if (m === "ff") radioEng.next(true); else if (m === "rew") radioEng.prev();
+      e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+      return;
+    }
+    var n = m || (window.OmarchyCinemarchy ? window.OmarchyCinemarchy.keyName(e) : "");
+    if (e.keyCode === 427) n = "chup"; else if (e.keyCode === 428) n = "chdown";
+    if (n && radioUi.key(n, e)) { e.preventDefault(); }
+    e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+  }, true);
+  /** The top bar: "♫ Still Licensed — Michel Krapf" while the radio plays ("❚❚" paused); gone when it stops. */
+  function tickRadioBar() {
+    var el = document.getElementById("bar-radio"), t = radioEng && radioEng.current();
+    if (!el) return;
+    if (!t) { el.style.display = "none"; return; }
+    el.style.display = "inline-block";
+    el.innerHTML = '<span style="color:var(--t-accent2)">' + (radioEng.playing() ? "♫ " : "❚❚ ") + '</span><span style="color:var(--t-fg-bright)">' + escHtml(t.title) +
+      '</span>' + (t.artist ? '<span style="color:var(--t-fg)"> — ' + escHtml(t.artist) + "</span>" : "");
+  }
+  if (radioEng) {
+    radioEng.on(tickRadioBar);
+    setInterval(tickRadioBar, 2000);
+    var barRadio = document.getElementById("bar-radio");
+    if (barRadio) barRadio.addEventListener("click", function () { openRadio(); });
+  }
+
   function openOmarchyMenu() {
     openModal("Omarchy", "", [
       { icon: "󰕼", label: "Cinemarchy", right: "C ›", act: function () { openCinemarchyModal(0); } },
       { icon: "🎮", label: "OmarchyTV Arcade", right: "V-HOLD · RICE WARS · FORK BOMB ›", act: openArcade },
+      { icon: "♫", label: "Radiomarchy", right: "Omarchy Radio · R ›", act: function () { openRadio(); } },
       { icon: "", label: tr("menu_plugins"), right: "›", act: openPluginsModal },
       { icon: "󰀻", label: tr("menu_apps"), right: "›", act: openWalkerModal },
       { icon: "󰸌", label: tr("sys_themes"), right: "›", act: openThemesModal },
@@ -2665,6 +2718,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   };
 
   function startScreensaver(statusText) {
+    if (cfg.saverMode === "radiomarchy" && radioEng) { openRadio({ saver: true }); return; }   // v2.20: the fractals, with the music if it plays
     saverStatusOverride = typeof statusText === "string" ? statusText : "";
     var ov = document.getElementById("saver-overlay");
     var fr = document.getElementById("saver-frame");
@@ -2935,7 +2989,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   });
   document.addEventListener("visibilitychange", markInput);
   setInterval(function () {
-    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi || cineUi) return;
+    if (!cfg.saverIdleMin || document.hidden || state.modalOpen || arcadeUi || cineUi || radioUi) return;
     if (document.getElementById("saver-overlay").className === "active") return;
     if (Date.now() - lastInput >= cfg.saverIdleMin * 60000) startScreensaver();
   }, 5000);
@@ -3980,6 +4034,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       if (state.ws !== 0) switchWorkspace(0);
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+
+    if ((k === "r" || k === "R" || code === 82) && !state.modalOpen && !cineUi) {   // v2.20 Radiomarchy
+      openRadio();
+      e.preventDefault();
       return;
     }
 

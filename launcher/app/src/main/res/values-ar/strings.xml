@@ -525,4 +525,38 @@
     <string name="ss_restore_previous">شاشة التوقف السابقة</string>
     <string name="agent_alert_row">تنبيهات وكلاء الذكاء الاصطناعي أثناء المشاهدة</string>
     <string name="agent_alert" formatted="true">● %1$s يحتاجك: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">الأغاني</string>
+    <string name="radio_queue">التالي</string>
+    <string name="radio_demo">وضع العرض</string>
+    <string name="radio_settings">الإعدادات</string>
+    <string name="radio_explicit">أغانٍ صريحة (E)</string>
+    <string name="radio_shown">ظاهرة</string>
+    <string name="radio_hidden">مخفية</string>
+    <string name="radio_colours">ألوان الفراكتلات</string>
+    <string name="radio_fractal">فراكتل</string>
+    <string name="radio_auto">عشوائي (جديد في كل مشهد)</string>
+    <string name="radio_auto_demo">وضع العرض بعد دقيقة دون ضغط</string>
+    <string name="radio_shuffle">عشوائي</string>
+    <string name="radio_repeat">تكرار</string>
+    <string name="radio_repeat_all">الكل</string>
+    <string name="radio_repeat_one">واحدة</string>
+    <string name="radio_stop">إيقاف وإغلاق المشغّل</string>
+    <string name="radio_loading">جارٍ تحميل Omarchy Radio…</string>
+    <string name="radio_offline">لا يستجيب radio.omarchy.org: تُعرض النسخة المحفوظة على هذا التلفاز.</string>
+    <string name="radio_empty">لا شيء هنا بعد.</string>
+    <string name="radio_by" formatted="true">بواسطة %1$s</string>
+    <string name="radio_send">اصنع واحدة وأرسلها: radio.omarchy.org</string>
+    <string name="radio_nothing">اختر أغنية: OK يشغّلها.</string>
+    <string name="radio_lyrics">الكلمات</string>
+    <string name="radio_no_lyrics">لا توجد كلمات لهذه الأغنية بعد.</string>
+    <string name="radio_resume" formatted="true">استئناف من %1$s</string>
+    <string name="radio_keys">OK تشغيل · ⏯ إيقاف مؤقت · ⏮ ⏭ · الأحمر عرض</string>
+    <string name="radio_play_all">تشغيل الكل</string>
+    <string name="radio_shuffle_all">الكل عشوائيًا</string>
+    <string name="radio_about">أغانٍ من radio.omarchy.org: كل واحدة من صنع صاحب الاسم عليها، أُرسلت كطلب سحب وتُبث من الموقع. البودكاست: Omarchy Stories. الفراكتلات تُرسم مباشرة على هذا التلفاز.</string>
+    <string name="radio_saver">فراكتلات Radiomarchy (مع الموسيقى)</string>
+    <string name="radio_random">عشوائية</string>
+    <string name="radio_quality">جودة الصورة</string>
+    <string name="radio_quality_auto" formatted="true">تلقائي، يتكيف مع هذا التلفاز (الآن %1$s)</string>
 </resources>

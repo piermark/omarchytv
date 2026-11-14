@@ -1,5 +1,51 @@
 # Changelog
 
+## [2.20.0] — unreleased (`versionCode 29`; webOS 2.20.0, Tizen 2.20.0, PC plugins 2.20.0)
+
+Built on the published 2.15.1: everything fixed there is in here.
+
+### Radiomarchy: Omarchy Radio on the TV
+
+- **A music app of its own**, like Cinemarchy (Android TV: its own banner in the TV's app row, the ♫ icon in the
+  top bar, Walker, a remappable key action `radio`; LG and Samsung: the Omarchy menu and the R key). Omarchy's TUI
+  style, three panes: radio · the list · now playing.
+- **The community's songs** from [radio.omarchy.org](https://radio.omarchy.org): every song with the name of the
+  person who made it and sent it in as a pull request, its address on the site, and its lyrics when there is a
+  sheet (timed lines light up as they are sung). The music streams from the site; nothing is copied into the app.
+- **Explicit songs are in**, with an E badge, as their makers labelled them; Settings (or the BLUE key) hides them.
+- **Omarchy Stories**, the community podcast: every episode with its length and date, and it remembers where you
+  stopped.
+- **Random by default**: shuffle is on, "Play all" starts on a random song; repeat all / one / off.
+- **It keeps playing** when you go back to Home, open another app or the screensaver starts (Android: a media
+  playback service with a notification; LG/Samsung: one player for the whole app). Home's top bar shows what is
+  playing and opens Radiomarchy again. Play/pause, next, previous, ⏪ ⏩ work from the remote everywhere (Android:
+  a MediaSession, so TVs with a "now playing" card show it).
+- A live 16-band spectrum and a tiny equaliser on the song that is playing.
+
+### Fractals that dance to the music
+
+- **Five 90s demoscene fractals** drawn live on the TV's GPU (OpenGL ES 2.0 on Android, WebGL on LG/Samsung, the same
+  shader word for word): a Mandelbrot deep zoom, Julia, plasma, a tunnel and the kaliset. No video, no pictures.
+- **Always random**: every scene (each 24–48 beats, with a cross-fade) is a different fractal with new random
+  geometry — the Mandelbrot dive goes into a point picked at random on the set's edge, one that stays full of detail
+  all the way down — and a new random palette (harmonious colours; or the Omarchy theme's, a Fractint rainbow, fire).
+- **They are drawn by the music**: the bass swells and kicks the zoom, every beat pulses the picture and lights the
+  tunnel rings, the mids bend the Julia set, the highs light the kaliset; palette cycling speeds up with the music.
+  On Android the analysis reads the decoded audio (no microphone, no permission) and is matched to what you hear.
+- **High resolution, fitted to the TV**: the most the GPU can draw smoothly — `ultra` (full resolution with 2×2
+  supersampling), `high`, `medium` (full resolution, fewer iterations), `low` (3/4 resolution, old sticks only). It
+  starts from what the GPU is, measures itself, steps down when frames run late and back up when there is room.
+  Settings → Picture quality pins a level. GPUs without highp floats (Mali-400/450) draw the three scenes that look
+  right in half floats.
+- **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
+  with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
+- **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music if it plays.
+
+### Pull requests
+
+- #136, #138, #139 were already in 2.15.1; #140 is superseded by #139. #122 (readability tokens, draft) is rebased
+  and builds, kept out of this release until it has its 1080p/720p screenshots.
+
 ## [2.15.1] — 2026-11-11 (`versionCode 28`; webOS 2.15.1, Tizen 2.15.1, PC plugins 2.15.1)
 
 ### Pulse 1.8 on the TV

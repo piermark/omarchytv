@@ -525,4 +525,38 @@
     <string name="ss_restore_previous">前のスクリーンセーバー</string>
     <string name="agent_alert_row">視聴中の AI エージェント通知</string>
     <string name="agent_alert" formatted="true">● %1$s があなたを待っています: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">曲</string>
+    <string name="radio_queue">次に再生</string>
+    <string name="radio_demo">デモモード</string>
+    <string name="radio_settings">設定</string>
+    <string name="radio_explicit">露骨な表現を含む曲 (E)</string>
+    <string name="radio_shown">表示</string>
+    <string name="radio_hidden">非表示</string>
+    <string name="radio_colours">フラクタルの色</string>
+    <string name="radio_fractal">フラクタル</string>
+    <string name="radio_auto">ランダム（シーンごとに新しく）</string>
+    <string name="radio_auto_demo">1 分間操作がないとデモモード</string>
+    <string name="radio_shuffle">シャッフル</string>
+    <string name="radio_repeat">リピート</string>
+    <string name="radio_repeat_all">すべて</string>
+    <string name="radio_repeat_one">1 曲</string>
+    <string name="radio_stop">停止してプレーヤーを閉じる</string>
+    <string name="radio_loading">Omarchy Radio を読み込み中…</string>
+    <string name="radio_offline">radio.omarchy.org に接続できません：このテレビに保存したコピーを表示しています。</string>
+    <string name="radio_empty">まだ何もありません。</string>
+    <string name="radio_by" formatted="true">%1$s</string>
+    <string name="radio_send">作って送ろう：radio.omarchy.org</string>
+    <string name="radio_nothing">曲を選んで OK で再生。</string>
+    <string name="radio_lyrics">歌詞</string>
+    <string name="radio_no_lyrics">この曲の歌詞はまだありません。</string>
+    <string name="radio_resume" formatted="true">%1$s から再開</string>
+    <string name="radio_keys">OK 再生 · ⏯ 一時停止 · ⏮ ⏭ · 赤 デモ</string>
+    <string name="radio_play_all">すべて再生</string>
+    <string name="radio_shuffle_all">すべてシャッフル</string>
+    <string name="radio_about">radio.omarchy.org の曲：どれも名前のある人が作り、pull request で送ったもので、サイトからストリーミング再生します。ポッドキャスト：Omarchy Stories。フラクタルはこのテレビでリアルタイムに描画。</string>
+    <string name="radio_saver">Radiomarchy フラクタル（音楽に合わせて）</string>
+    <string name="radio_random">ランダム</string>
+    <string name="radio_quality">画質</string>
+    <string name="radio_quality_auto" formatted="true">自動、このテレビに合わせる（現在 %1$s）</string>
 </resources>

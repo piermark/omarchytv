@@ -525,4 +525,38 @@
     <string name="ss_restore_previous">Protectorul de ecran anterior</string>
     <string name="agent_alert_row">Alerte de la agenții AI cât te uiți</string>
     <string name="agent_alert" formatted="true">● %1$s are nevoie de tine: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Melodii</string>
+    <string name="radio_queue">Urmează</string>
+    <string name="radio_demo">Mod demo</string>
+    <string name="radio_settings">Setări</string>
+    <string name="radio_explicit">Melodii explicite (E)</string>
+    <string name="radio_shown">afișate</string>
+    <string name="radio_hidden">ascunse</string>
+    <string name="radio_colours">Culorile fractalilor</string>
+    <string name="radio_fractal">Fractal</string>
+    <string name="radio_auto">aleatoriu (unul nou la fiecare scenă)</string>
+    <string name="radio_auto_demo">Mod demo după 1 minut fără taste</string>
+    <string name="radio_shuffle">Aleatoriu</string>
+    <string name="radio_repeat">Repetă</string>
+    <string name="radio_repeat_all">toate</string>
+    <string name="radio_repeat_one">una</string>
+    <string name="radio_stop">Oprește și închide playerul</string>
+    <string name="radio_loading">Se încarcă Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org nu răspunde: se afișează copia salvată pe acest TV.</string>
+    <string name="radio_empty">Încă nu e nimic aici.</string>
+    <string name="radio_by" formatted="true">de %1$s</string>
+    <string name="radio_send">Fă una și trimite-o: radio.omarchy.org</string>
+    <string name="radio_nothing">Alege o melodie: OK o pornește.</string>
+    <string name="radio_lyrics">Versuri</string>
+    <string name="radio_no_lyrics">Încă nu există versuri pentru aceasta.</string>
+    <string name="radio_resume" formatted="true">reia de la %1$s</string>
+    <string name="radio_keys">OK redare · ⏯ pauză · ⏮ ⏭ · ROȘU demo</string>
+    <string name="radio_play_all">Redă tot</string>
+    <string name="radio_shuffle_all">Tot aleatoriu</string>
+    <string name="radio_about">Melodii de pe radio.omarchy.org: fiecare făcută de cine o semnează, trimisă ca pull request și redată în streaming de pe site. Podcast: Omarchy Stories. Fractali desenați live pe acest TV.</string>
+    <string name="radio_saver">Fractali Radiomarchy (cu muzica)</string>
+    <string name="radio_random">aleatorii</string>
+    <string name="radio_quality">Calitatea imaginii</string>
+    <string name="radio_quality_auto" formatted="true">auto, se adaptează acestui TV (acum %1$s)</string>
 </resources>

@@ -525,4 +525,38 @@
     <string name="ss_restore_previous">Forrige skjermsparer</string>
     <string name="agent_alert_row">Varsler fra AI-agenter mens du ser på</string>
     <string name="agent_alert" formatted="true">● %1$s trenger deg: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Sanger</string>
+    <string name="radio_queue">Neste</string>
+    <string name="radio_demo">Demomodus</string>
+    <string name="radio_settings">Innstillinger</string>
+    <string name="radio_explicit">Eksplisitte sanger (E)</string>
+    <string name="radio_shown">vist</string>
+    <string name="radio_hidden">skjult</string>
+    <string name="radio_colours">Fraktalfarger</string>
+    <string name="radio_fractal">Fraktal</string>
+    <string name="radio_auto">tilfeldig (en ny for hver scene)</string>
+    <string name="radio_auto_demo">Demomodus etter 1 minutt uten tast</string>
+    <string name="radio_shuffle">Tilfeldig</string>
+    <string name="radio_repeat">Gjenta</string>
+    <string name="radio_repeat_all">alle</string>
+    <string name="radio_repeat_one">én</string>
+    <string name="radio_stop">Stopp og lukk spilleren</string>
+    <string name="radio_loading">Laster Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org svarer ikke: kopien lagret på denne TV-en vises.</string>
+    <string name="radio_empty">Ingenting her ennå.</string>
+    <string name="radio_by" formatted="true">av %1$s</string>
+    <string name="radio_send">Lag en, send den inn: radio.omarchy.org</string>
+    <string name="radio_nothing">Velg en sang: OK spiller den.</string>
+    <string name="radio_lyrics">Sangtekst</string>
+    <string name="radio_no_lyrics">Ingen sangtekst for denne ennå.</string>
+    <string name="radio_resume" formatted="true">fortsett ved %1$s</string>
+    <string name="radio_keys">OK spill · ⏯ pause · ⏮ ⏭ · RØD demo</string>
+    <string name="radio_play_all">Spill alle</string>
+    <string name="radio_shuffle_all">Alle tilfeldig</string>
+    <string name="radio_about">Sanger fra radio.omarchy.org: hver laget av personen som står på den, sendt inn som pull request og strømmet fra siden. Podkast: Omarchy Stories. Fraktaler tegnet live på denne TV-en.</string>
+    <string name="radio_saver">Radiomarchy-fraktaler (med musikken)</string>
+    <string name="radio_random">tilfeldige</string>
+    <string name="radio_quality">Bildekvalitet</string>
+    <string name="radio_quality_auto" formatted="true">auto, tilpasset denne TV-en (nå %1$s)</string>
 </resources>

@@ -613,6 +613,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "cinemarchy":
                 open(new Intent(this, CinemarchyActivity.class));
                 break;
+            case "radio":   // v2.20: Radiomarchy, the top-bar icon and the now-playing tag
+                open(new Intent(this, RadioActivity.class));
+                break;
             case "arcade":   // v2.14: top-bar icon next to Cinemarchy
                 ArcadeActivity.open(this);
                 break;
@@ -781,6 +784,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (cfg.pluginOmastorm) items.add(new Walker.Item("⛈ Omastorm (radar)", tApp, this::openOmastorm));
         items.add(new Walker.Item("🕹 OmarchyTV Arcade (V-HOLD · RICE WARS · FORK BOMB)", tApp, () -> ArcadeActivity.open(this)));
         items.add(new Walker.Item("🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", str(R.string.cinemarchy_hub), () -> open(new Intent(this, CinemarchyActivity.class))));
+        items.add(new Walker.Item("♫ Radiomarchy (Omarchy Radio · songs, Omarchy Stories, fractals)", str(R.string.radio_hub), () -> open(new Intent(this, RadioActivity.class))));
+        items.add(new Walker.Item("✦ Radiomarchy demo (fractals + music)", str(R.string.radio_hub), () -> RadioActivity.open(this, true, false)));
         items.add(new Walker.Item("Aquarium Screensaver (Omarchy Cyber-TUI Ocean)", str(R.string.menu_screensaver), () -> {
             LauncherConfig.update(this, j -> screensaver(j).put("art", "aquarium").put("mode", "aquarium"));
             open(new Intent(this, ScreensaverPreviewActivity.class));
@@ -855,6 +860,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 if (walker != null) walker.close();
                 if (menu != null && menu.isShowing()) menu.dismiss();
                 open(new Intent(this, CinemarchyActivity.class));
+                break;
+            case "radio":   // v2.20: a key (or an external tool) opens Radiomarchy
+                if (walker != null) walker.close();
+                if (menu != null && menu.isShowing()) menu.dismiss();
+                open(new Intent(this, RadioActivity.class));
                 break;
             case "arcade":
                 if (walker != null) walker.close();
@@ -1667,6 +1677,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             case "screensaver": return str(R.string.keys_action_screensaver);
             case "next-theme": return str(R.string.keys_action_next_theme);
             case "cinemarchy": return "🎬 Cinemarchy";   // product names: the same in every language
+            case "radio": return "♫ Radiomarchy";
             case "arcade": return "🕹 OmarchyTV Arcade";
             case "grokbot": return "● Grok Bot";
             case "terminal": return "▌ Grok terminal";
@@ -3369,17 +3380,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     private AsciiMenu.Page screensaverPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
-        String[] logos = {"pulse", "aquarium", "aquarium-classic", "omarchy-tv", "omarchy", "cinemarchy", "original"};
+        String[] logos = {"pulse", "radiomarchy", "aquarium", "aquarium-classic", "omarchy-tv", "omarchy", "cinemarchy", "original"};
         String[] sizes = {"small", "medium", "large"};
         String lLogo = str(R.string.set_logo), lSize = str(R.string.ss_size), lClock = str(R.string.ss_clock);
         AsciiMenu.Page p = new AsciiMenu.Page(str(R.string.menu_screensaver));
         p.add(str(R.string.ss_preview), null, r -> {
-            open(new Intent(this, ScreensaverPreviewActivity.class));
+            if ("radiomarchy".equals(LauncherConfig.get(this).screensaverArt)) RadioActivity.open(this, true, true);
+            else open(new Intent(this, ScreensaverPreviewActivity.class));
             return false;
         });
         p.add(lLogo, logoLabel(cfg.screensaverArt), r -> {
             String n = next(logos, cfg.screensaverArt);
-            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", "pulse".equals(n) ? "pulse" : n.startsWith("aquarium") ? "aquarium" : "logo")
+            applyLive("screensaver", lLogo, j -> screensaver(j).put("art", n).put("mode", "pulse".equals(n) ? "pulse" : "radiomarchy".equals(n) ? "radiomarchy" : n.startsWith("aquarium") ? "aquarium" : "logo")
                     .put("pcText", false));   // #84: a logo chosen here wins over a screensaver.txt pushed by the PC
             return true;
         });
@@ -4001,6 +4013,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if ("aquarium".equals(l)) return "Omarchy Aquarium (homage)";
         if ("aquarium-classic".equals(l)) return "Aquarium Classic";
         if ("cinemarchy".equals(l)) return "CINEMARCHY";
+        if ("radiomarchy".equals(l)) return str(R.string.radio_saver);
         return str("omarchy".equals(l) ? R.string.logo_omarchy : "original".equals(l) ? R.string.logo_original : R.string.logo_omarchy_tv);
     }
 
@@ -4154,7 +4167,9 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         saverShown = true;
         OmarchyLink.setScreensaver(true);
         try {
-            startActivity(new Intent(this, ScreensaverPreviewActivity.class));
+            // v2.20: the Radiomarchy saver is the music app's demo (in this process, so it sees the music playing)
+            if ("radiomarchy".equals(LauncherConfig.get(this).screensaverArt)) RadioActivity.open(this, true, true);
+            else startActivity(new Intent(this, ScreensaverPreviewActivity.class));
             overridePendingTransition(0, 0);
         } catch (Exception e) {
             hideSaver();

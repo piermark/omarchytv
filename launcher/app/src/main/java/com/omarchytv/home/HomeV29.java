@@ -120,6 +120,7 @@ final class HomeV29 extends FrameLayout {
     private final LinearLayout[] remoteBody = new LinearLayout[3];
     /** "barWeather": icon + temperature in the bar, left of the status icons. */
     private final TextView barSpacex;
+    private final TextView barRadio;
     private final BoxView grokbotBox;
     private final TextView grokbotEyes, grokbotText;
     private final GrokbotMark grokbotMark;
@@ -198,6 +199,22 @@ final class HomeV29 extends FrameLayout {
         LinearLayout right = hbox();
         right.setPadding(0, 0, px(32) - px(13), 0);
         bar.addView(right, new LayoutParams(-2, -1, Gravity.END));
+        // v2.20: what Radiomarchy is playing, in the bar; OK opens the music app again
+        barRadio = text("", 18, false);
+        barRadio.setFocusable(true);
+        barRadio.setClickable(true);
+        barRadio.setGravity(Gravity.CENTER_VERTICAL);
+        barRadio.setSingleLine(true);
+        barRadio.setEllipsize(TextUtils.TruncateAt.END);
+        barRadio.setMaxWidth(px(420));
+        barRadio.setPadding(px(12), 0, px(12), 0);
+        barRadio.setBackground(new Underline());
+        barRadio.setVisibility(GONE);
+        barRadio.setOnClickListener(v -> host.sys("radio"));
+        LinearLayout.LayoutParams rdl = new LinearLayout.LayoutParams(-2, px(44));
+        rdl.gravity = Gravity.CENTER_VERTICAL;
+        rdl.rightMargin = px(8);
+        right.addView(barRadio, rdl);
         barSpacex = text("🚀 SpaceX TV", 18, true);
         barSpacex.setFocusable(true);
         barSpacex.setClickable(true);
@@ -222,22 +239,23 @@ final class HomeV29 extends FrameLayout {
         right.addView(barWx, bwl);
         barWx.setVisibility(GONE);
         // v2.10: no gear (the menu is the Omarchy logo on the left).
-        int[] icons = {R.drawable.ln_cinemarchy, R.drawable.ln_arcade, R.drawable.ln_wifi, R.drawable.ln_bt, R.drawable.ln_vol, R.drawable.ln_input, R.drawable.ln_monitor};
+        int[] icons = {R.drawable.ln_cinemarchy, R.drawable.ln_music, R.drawable.ln_arcade, R.drawable.ln_wifi, R.drawable.ln_bt, R.drawable.ln_vol, R.drawable.ln_input, R.drawable.ln_monitor};
         for (int ic : icons) {
             View b = iconButton(ic, 24 + 26, 24);
             right.addView(b);
             barIcons.add(b);
         }
         barIcons.get(0).setOnClickListener(v -> host.sys("cinemarchy"));
-        barIcons.get(1).setOnClickListener(v -> host.sys("arcade"));   // v2.14: the Arcade next to Cinemarchy
-        barIcons.get(2).setOnClickListener(v -> host.wifiClick());
-        barIcons.get(3).setOnClickListener(v -> host.openBluetooth());
-        barIcons.get(4).setOnClickListener(v -> {
+        barIcons.get(1).setOnClickListener(v -> host.sys("radio"));    // v2.20: Radiomarchy next to Cinemarchy
+        barIcons.get(2).setOnClickListener(v -> host.sys("arcade"));   // v2.14: the Arcade next to Cinemarchy
+        barIcons.get(3).setOnClickListener(v -> host.wifiClick());
+        barIcons.get(4).setOnClickListener(v -> host.openBluetooth());
+        barIcons.get(5).setOnClickListener(v -> {
             android.media.AudioManager am = act.getSystemService(android.media.AudioManager.class);
             if (am != null) am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_SAME, android.media.AudioManager.FLAG_SHOW_UI);
         });
-        barIcons.get(5).setOnClickListener(host::showInputs);
-        barIcons.get(6).setOnClickListener(host::screenPc);
+        barIcons.get(6).setOnClickListener(host::showInputs);
+        barIcons.get(7).setOnClickListener(host::screenPc);
         tip = text("", 19, false);
         tip.setVisibility(GONE);
         tip.setPadding(px(14), px(8), px(14), px(8));
@@ -825,6 +843,7 @@ final class HomeV29 extends FrameLayout {
         @Override
         public void run() {
             tickRaceBar();
+            tickRadioBar();
             tickRaceNext();
             postDelayed(this, 1000 - System.currentTimeMillis() % 1000 + 5);   // on the second, like a clock
         }
@@ -955,6 +974,22 @@ final class HomeV29 extends FrameLayout {
         boolean live = n.session.live(now);
         raceNextClock.setText(live ? "● live" : Racing.clock(n.session.start - now));
         raceNextClock.setTextColor(live ? t.green : t.fgBright);
+    }
+
+    /** v2.20 Bar: "♫ Still Licensed — Michel Krapf" while Radiomarchy plays ("‖" paused); gone when it stops. */
+    private void tickRadioBar() {
+        RadioPlayer rp = RadioPlayer.peek();
+        RadioCatalog.Track tr = rp != null ? rp.current() : null;
+        if (tr == null) {
+            if (barRadio.getVisibility() != GONE) barRadio.setVisibility(GONE);
+            return;
+        }
+        SpannableStringBuilder b = new SpannableStringBuilder();
+        span(b, rp.playing() ? "♫ " : "‖ ", t.magenta);
+        span(b, tr.title, t.fgBright);
+        if (!tr.artist.isEmpty()) span(b, " — " + tr.artist, t.fg);
+        if (!b.toString().equals(barRadio.getText().toString())) barRadio.setText(b);
+        if (barRadio.getVisibility() != VISIBLE) barRadio.setVisibility(VISIBLE);
     }
 
     /** Bar: "F1 fp3 · São Paulo  02:14:09", or "● live" while it runs. Every second, from raceTick. */
@@ -1187,11 +1222,12 @@ final class HomeV29 extends FrameLayout {
             tip.setVisibility(GONE);
             return;
         }
-        String[] labels = {"cinemarchy", "arcade", host.wifiName(), "bluetooth", act.getString(R.string.v29_volume), act.getString(R.string.inputs),
+        String[] labels = {"cinemarchy", "radiomarchy", "arcade", host.wifiName(), "bluetooth", act.getString(R.string.v29_volume), act.getString(R.string.inputs),
                 act.getString(R.string.v29_screen_pc)};
-        if (k == 4) {
+        if (k == 1 && RadioPlayer.peek() != null && RadioPlayer.peek().current() != null) labels[1] += " · " + RadioPlayer.peek().current().line();
+        if (k == 5) {
             android.media.AudioManager am = act.getSystemService(android.media.AudioManager.class);
-            if (am != null) labels[4] += " " + Math.round(100f * am.getStreamVolume(3) / Math.max(1, am.getStreamMaxVolume(3))) + "%";
+            if (am != null) labels[5] += " " + Math.round(100f * am.getStreamVolume(3) / Math.max(1, am.getStreamMaxVolume(3))) + "%";
         }
         tip.setText(labels[k]);
         tip.setVisibility(VISIBLE);
@@ -1751,6 +1787,7 @@ final class HomeV29 extends FrameLayout {
                 List<View> order = new ArrayList<>();
                 order.add(menuBtn);
                 for (TextView w : ws) order.add(w);
+                order.add(barRadio);
                 order.add(barSpacex);
                 order.addAll(barIcons);
                 // hidden workspaces (and SpaceX TV when off) are GONE: skip them, or focus gets stuck

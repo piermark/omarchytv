@@ -79,6 +79,12 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ---
 
+## What's New in `2.20.0` (`versionCode 29`)
+
+- **Radiomarchy, Omarchy Radio on the TV** (Android TV, LG, Samsung): a music app of its own, like Cinemarchy. The community's songs from [radio.omarchy.org](https://radio.omarchy.org), each with the name of the person who made it and sent it in as a pull request (streamed from the site, never copied into the app), lyrics when there is a sheet, and Omarchy Stories, the community podcast. Explicit songs are in with an **E** badge (a setting hides them). Shuffle is on by default. The music keeps playing on Home, in other apps and under the screensaver; the top bar shows what is playing; the remote's media keys work everywhere.
+- **Fractals that dance to the music**: Mandelbrot deep zoom, Julia, plasma, tunnel and kaliset, the 90s demoscene drawn live on the TV's GPU. Every scene is random (a new fractal, new geometry, new colours) and the bass, the beats, the mids and the highs drive it. High resolution, fitted to the TV: from `ultra` (full resolution with 2×2 supersampling) down to what the TV can hold smoothly. **Demo mode** (RED key) gives the fractal the whole screen with a sine scroller; **Radiomarchy fractals** is also a screensaver.
+- Built on the published 2.15.1. Full details in the [CHANGELOG](CHANGELOG.md).
+
 ## What's New in `2.15.1` (`versionCode 28`)
 
 - **Pulse on the TV is Pulse 1.8** (Android TV, LG, Samsung): the same Pulse 1.8 as on the PC (`pulse.js` and `pulse.css` are unchanged). A city that looks like one (towers lit by the real Sun and Moon, a far skyline, mist, reflections), rain with depth, the 1.8 clouds, planes with Pulse 1.8's tag (the card with the route line, city names, ft/kt, in Caskaydia Mono), a rocket and a Starlink train you can recognise.

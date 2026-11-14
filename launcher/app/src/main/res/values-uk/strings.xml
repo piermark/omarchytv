@@ -525,4 +525,38 @@
     <string name="ss_restore_previous">Попередня заставка</string>
     <string name="agent_alert_row">Сповіщення ШІ-агентів під час перегляду</string>
     <string name="agent_alert" formatted="true">● %1$s чекає на тебе: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Пісні</string>
+    <string name="radio_queue">Далі</string>
+    <string name="radio_demo">Демо-режим</string>
+    <string name="radio_settings">Налаштування</string>
+    <string name="radio_explicit">Відверті пісні (E)</string>
+    <string name="radio_shown">показано</string>
+    <string name="radio_hidden">приховано</string>
+    <string name="radio_colours">Кольори фракталів</string>
+    <string name="radio_fractal">Фрактал</string>
+    <string name="radio_auto">випадковий (новий у кожній сцені)</string>
+    <string name="radio_auto_demo">Демо-режим після 1 хвилини без натискань</string>
+    <string name="radio_shuffle">Перемішати</string>
+    <string name="radio_repeat">Повтор</string>
+    <string name="radio_repeat_all">усі</string>
+    <string name="radio_repeat_one">одну</string>
+    <string name="radio_stop">Зупинити й закрити плеєр</string>
+    <string name="radio_loading">Завантаження Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org не відповідає: показано копію, збережену на цьому ТВ.</string>
+    <string name="radio_empty">Тут поки нічого немає.</string>
+    <string name="radio_by" formatted="true">автор: %1$s</string>
+    <string name="radio_send">Зроби свою й надішли: radio.omarchy.org</string>
+    <string name="radio_nothing">Обери пісню: OK її відтворює.</string>
+    <string name="radio_lyrics">Текст</string>
+    <string name="radio_no_lyrics">Для цієї пісні тексту поки немає.</string>
+    <string name="radio_resume" formatted="true">продовжити з %1$s</string>
+    <string name="radio_keys">OK грати · ⏯ пауза · ⏮ ⏭ · ЧЕРВОНА демо</string>
+    <string name="radio_play_all">Грати все</string>
+    <string name="radio_shuffle_all">Усе вперемішку</string>
+    <string name="radio_about">Пісні з radio.omarchy.org: кожну створила людина, чиє ім\'я на ній, надіслала як pull request, звучить потоком із сайту. Подкаст: Omarchy Stories. Фрактали малюються наживо на цьому ТВ.</string>
+    <string name="radio_saver">Фрактали Radiomarchy (з музикою)</string>
+    <string name="radio_random">випадкові</string>
+    <string name="radio_quality">Якість зображення</string>
+    <string name="radio_quality_auto" formatted="true">авто, під цей ТВ (зараз %1$s)</string>
 </resources>

@@ -525,4 +525,38 @@
     <string name="ss_restore_previous">Protetor de tela anterior</string>
     <string name="agent_alert_row">Avisos dos agentes de IA enquanto você assiste</string>
     <string name="agent_alert" formatted="true">● %1$s precisa de você: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Músicas</string>
+    <string name="radio_queue">A seguir</string>
+    <string name="radio_demo">Modo demo</string>
+    <string name="radio_settings">Configurações</string>
+    <string name="radio_explicit">Músicas explícitas (E)</string>
+    <string name="radio_shown">visíveis</string>
+    <string name="radio_hidden">ocultas</string>
+    <string name="radio_colours">Cores dos fractais</string>
+    <string name="radio_fractal">Fractal</string>
+    <string name="radio_auto">aleatório (um novo a cada cena)</string>
+    <string name="radio_auto_demo">Modo demo após 1 minuto sem teclas</string>
+    <string name="radio_shuffle">Aleatório</string>
+    <string name="radio_repeat">Repetir</string>
+    <string name="radio_repeat_all">todas</string>
+    <string name="radio_repeat_one">uma</string>
+    <string name="radio_stop">Parar e fechar o player</string>
+    <string name="radio_loading">Carregando o Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org não responde: mostrando a cópia salva nesta TV.</string>
+    <string name="radio_empty">Ainda não tem nada aqui.</string>
+    <string name="radio_by" formatted="true">de %1$s</string>
+    <string name="radio_send">Faça uma e envie: radio.omarchy.org</string>
+    <string name="radio_nothing">Escolha uma música: OK toca.</string>
+    <string name="radio_lyrics">Letra</string>
+    <string name="radio_no_lyrics">Ainda não tem letra para esta.</string>
+    <string name="radio_resume" formatted="true">continuar em %1$s</string>
+    <string name="radio_keys">OK tocar · ⏯ pausa · ⏮ ⏭ · VERMELHO demo</string>
+    <string name="radio_play_all">Tocar tudo</string>
+    <string name="radio_shuffle_all">Tudo aleatório</string>
+    <string name="radio_about">Músicas do radio.omarchy.org: cada uma feita por quem assina, enviada como pull request e tocada em streaming do site. Podcast: Omarchy Stories. Fractais desenhados ao vivo nesta TV.</string>
+    <string name="radio_saver">Fractais Radiomarchy (com a música)</string>
+    <string name="radio_random">aleatórias</string>
+    <string name="radio_quality">Qualidade da imagem</string>
+    <string name="radio_quality_auto" formatted="true">auto, se adapta a esta TV (agora %1$s)</string>
 </resources>

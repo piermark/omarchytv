@@ -363,6 +363,18 @@ html, body {
 .race-row { display: flex; margin-top: 6px; overflow: hidden; }
 .race-row-name { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .race-row-when { margin-left: 10px; white-space: nowrap; flex-shrink: 0; }
+#bar-radio {
+  display: none;
+  margin-right: 10px;
+  font-size: calc(15px * var(--ts, 1));
+  font-weight: 700;
+  white-space: nowrap;
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  cursor: pointer;
+}
 #bar-race {
   display: none;
   margin-right: 10px;
@@ -907,6 +919,7 @@ body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rg
     <div id="bar-clock">sat 24 oct  7:06 PM</div>
 
     <div id="bar-right">
+      <div id="bar-radio" title="Radiomarchy (R)"></div>
       <div id="bar-race"></div>
       <!-- SpaceX TV Top-Bar Countdown Pill (Sighmon MIT plugin) -->
       <div id="spacex-pill" style="display:inline-flex;align-items:center;padding:4px 12px;margin-right:10px;border:1px solid var(--t-accent);background:var(--t-bg-alt);color:var(--t-accent);font-size:calc(15px * var(--ts, 1));font-weight:700;cursor:pointer;" title="SpaceX TV (Sighmon)">🚀 Starship · T-02:14:00</div>
@@ -1163,6 +1176,8 @@ body.crt-strong #stage * { text-shadow: .08em 0 rgba(255,40,40,.35), -.08em 0 rg
 <script src="qr.js"></script>
 <script src="living.js"></script>
 <script src="cinemarchy.js"></script>
+<script src="fractals.js"></script>
+<script src="radio.js"></script>
 <script src="games/arcade.js"></script>
 <script src="games/sfx.js"></script>
 <script src="games/i18n.js"></script>

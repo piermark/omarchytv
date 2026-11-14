@@ -529,4 +529,38 @@
     <string name="ss_restore_previous">Salvaschermo precedente</string>
     <string name="agent_alert_row">Avvisi degli agenti AI mentre guardi</string>
     <string name="agent_alert" formatted="true">● %1$s ha bisogno di te: %2$s</string>
+    <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
+    <string name="radio_songs">Brani</string>
+    <string name="radio_queue">Prossimi</string>
+    <string name="radio_demo">Modalità demo</string>
+    <string name="radio_settings">Impostazioni</string>
+    <string name="radio_explicit">Brani espliciti (E)</string>
+    <string name="radio_shown">visibili</string>
+    <string name="radio_hidden">nascosti</string>
+    <string name="radio_colours">Colori dei frattali</string>
+    <string name="radio_fractal">Frattale</string>
+    <string name="radio_auto">casuale (uno nuovo a ogni scena)</string>
+    <string name="radio_auto_demo">Modalità demo dopo 1 minuto senza tasti</string>
+    <string name="radio_shuffle">Casuale</string>
+    <string name="radio_repeat">Ripeti</string>
+    <string name="radio_repeat_all">tutti</string>
+    <string name="radio_repeat_one">uno</string>
+    <string name="radio_stop">Ferma e chiudi il player</string>
+    <string name="radio_loading">Carico Omarchy Radio…</string>
+    <string name="radio_offline">radio.omarchy.org non risponde: mostro la copia salvata su questa TV.</string>
+    <string name="radio_empty">Ancora niente qui.</string>
+    <string name="radio_by" formatted="true">di %1$s</string>
+    <string name="radio_send">Fanne uno e mandalo: radio.omarchy.org</string>
+    <string name="radio_nothing">Scegli un brano: OK lo fa partire.</string>
+    <string name="radio_lyrics">Testo</string>
+    <string name="radio_no_lyrics">Nessun testo per questo brano, per ora.</string>
+    <string name="radio_resume" formatted="true">riprendi da %1$s</string>
+    <string name="radio_keys">OK play · ⏯ pausa · ⏮ ⏭ · ROSSO demo</string>
+    <string name="radio_play_all">Riproduci tutto</string>
+    <string name="radio_shuffle_all">Tutto in casuale</string>
+    <string name="radio_about">Brani da radio.omarchy.org: ognuno fatto da chi lo firma e arrivato come pull request, in streaming dal sito. Podcast: Omarchy Stories. Frattali disegnati dal vivo su questa TV.</string>
+    <string name="radio_saver">Frattali Radiomarchy (con la musica)</string>
+    <string name="radio_random">casuali</string>
+    <string name="radio_quality">Qualità dell\'immagine</string>
+    <string name="radio_quality_auto" formatted="true">auto, si adatta a questa TV (ora %1$s)</string>
 </resources>
