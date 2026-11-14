@@ -20,9 +20,10 @@ Built on the published 2.15.1: everything fixed there is in here.
   playback service with a notification; LG/Samsung: one player for the whole app). Home's top bar shows what is
   playing and opens Radiomarchy again. Play/pause, next, previous, ⏪ ⏩ work from the remote everywhere (Android:
   a MediaSession, so TVs with a "now playing" card show it).
-- **Media keys still work after another app takes the sound** (Android): if YouTube (or similar) steals audio focus
-  and Radiomarchy pauses, coming back to Home keeps the MediaSession as the media-button receiver, so PLAY /
-  PLAY_PAUSE resume the song without opening Radiomarchy again.
+- **Media keys still work after another app takes the sound**: if YouTube (or similar) steals the sound
+  and Radiomarchy pauses, coming back to Home keeps the MediaSession as the media-button receiver (Android) or
+  claims the Media Session and wakes the AudioContext (LG/Samsung), so PLAY / PLAY_PAUSE resume the song
+  without opening Radiomarchy again.
 - A live 16-band spectrum and a tiny equaliser on the song that is playing.
 
 ### Fractals that dance to the music

@@ -268,15 +268,19 @@
       emit();
     };
     E.pause = function () { audio().pause(); };
+    /** Wake the audio graph without starting a paused song (back on Home after YouTube took the sound). */
+    E.claimSession = function () {
+      song.muted = false; plain.muted = false;
+      try { song.volume = 1; plain.volume = 1; } catch (e) { /* some TVs freeze volume */ }
+      if (cur() && audio() === song) analyser();
+      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ }
+    };
     /**
      * Keep the song audible: the &lt;audio&gt; can report playing while an AudioContext left suspended
      * (idle/screensaver) is silent, because the analyser reroutes the element through it.
      */
     E.ensureAudible = function () {
-      song.muted = false; plain.muted = false;
-      try { song.volume = 1; plain.volume = 1; } catch (e) { /* some TVs freeze volume */ }
-      if (cur() && audio() === song) analyser();
-      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ }
+      E.claimSession();
       var a = audio();
       if (cur() && a.paused) {
         var pr = a.play();

@@ -2700,14 +2700,49 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   function closeRadio() { if (radioUi) { var u = radioUi; radioUi = null; u.destroy(); renderAll(); } }
   window.OMARCHY_OPEN_RADIO = openRadio;
+  // After YouTube (or similar) takes the sound, coming back to Home must still resume: claim the
+  // Media Session again (like Android claimSession) and PLAY / PLAY_PAUSE start the song without
+  // reopening Radiomarchy. A suspended AudioContext can look "playing" but be silent — PLAY
+  // must wake it, not toggle it off.
+  function claimRadioSession() {
+    if (!radioEng || !radioEng.current()) return;
+    if (radioEng.claimSession) radioEng.claimSession();
+    var ms = window.navigator && navigator.mediaSession;
+    if (!ms || !ms.setActionHandler) return;
+    try {
+      var t = radioEng.current();
+      if (t && ms.metadata !== undefined && window.MediaMetadata) {
+        ms.metadata = new MediaMetadata({ title: t.title || "", artist: t.artist || "Radiomarchy" });
+      }
+      ms.playbackState = radioEng.playing() ? "playing" : "paused";
+      ms.setActionHandler("play", function () { radioEng.ensureAudible(); });
+      ms.setActionHandler("pause", function () { radioEng.pause(); });
+      ms.setActionHandler("previoustrack", function () { radioEng.prev(); });
+      ms.setActionHandler("nexttrack", function () { radioEng.next(true); });
+    } catch (e) { /* older webOS / Tizen */ }
+  }
+  function radioMedia(m) {
+    if (!m || !radioEng || !radioEng.current()) return false;
+    if (m === "play") radioEng.ensureAudible();
+    else if (m === "playpause") { if (radioEng.playing()) radioEng.pause(); else radioEng.ensureAudible(); }
+    else if (m === "pause") radioEng.pause();
+    else if (m === "ff" || m === "next") radioEng.next(true);
+    else if (m === "rew" || m === "prev") radioEng.prev();
+    else return false;
+    claimRadioSession();
+    return true;
+  }
+  if (radioEng) radioEng.on(claimRadioSession);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) claimRadioSession();
+  });
+  document.addEventListener("webOSRelaunch", claimRadioSession);
   // While Radiomarchy is open its keys are its own; media keys reach the player from anywhere in OmarchyTV.
   window.addEventListener("keydown", function (e) {
     if (!radioEng) return;
     var m = window.OmarchyRadio.mediaKey(e);
     if (!radioUi) {
-      if (!m || cineUi || !radioEng.current()) return;
-      if (m === "play" || m === "playpause") radioEng.toggle(); else if (m === "pause") radioEng.pause();
-      else if (m === "ff") radioEng.next(true); else if (m === "rew") radioEng.prev();
+      if (!m || cineUi || !radioMedia(m)) return;
       e.preventDefault(); e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
       return;
     }

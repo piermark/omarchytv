@@ -114,3 +114,14 @@ test("the Radiomarchy screensaver keeps the music audible", () => {
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
   assert.match(app, /saverMode:\s*"pulse"/, "Pulse stays the default screensaver");
 });
+
+test("media keys still resume on Home after another app took the sound (LG/Samsung)", () => {
+  const radio = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
+  const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
+  assert.ok(/E\.claimSession\s*=/.test(radio), "claimSession wakes the graph without auto-starting a paused song");
+  assert.ok(/function claimRadioSession/.test(app) && /function radioMedia/.test(app));
+  assert.ok(/visibilitychange/.test(app) && /claimRadioSession/.test(app), "back on Home claims the session again");
+  assert.ok(/m === "play"\) radioEng.ensureAudible/.test(app) || /m === "play"\) radioEng.ensureAudible()/.test(app),
+    "PLAY resumes, it does not toggle a silent-but-playing element off");
+  assert.ok(/navigator.mediaSession/.test(app), "HTML Media Session so the TV keeps sending media keys");
+});
