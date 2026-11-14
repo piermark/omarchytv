@@ -1,9 +1,12 @@
 package com.omarchytv.home;
 
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.MediaMetadata;
+import android.view.KeyEvent;
 import android.media.session.MediaSession;
 import android.media.session.PlaybackState;
 import android.net.Uri;
@@ -487,8 +490,10 @@ final class RadioPlayer {
             //noinspection deprecation
             session.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
             Intent open = new Intent(app, RadioActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            session.setSessionActivity(android.app.PendingIntent.getActivity(app, 7, open,
-                    android.app.PendingIntent.FLAG_IMMUTABLE | android.app.PendingIntent.FLAG_UPDATE_CURRENT));
+            int pi = PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT;
+            session.setSessionActivity(PendingIntent.getActivity(app, 7, open, pi));
+            Intent mb = new Intent(Intent.ACTION_MEDIA_BUTTON).setComponent(new ComponentName(app, RadioService.Buttons.class));
+            session.setMediaButtonReceiver(PendingIntent.getBroadcast(app, 8, mb, pi));
         }
         session.setMetadata(new MediaMetadata.Builder()
                 .putString(MediaMetadata.METADATA_KEY_TITLE, t.title)
@@ -511,6 +516,64 @@ final class RadioPlayer {
 
     MediaSession.Token token() {
         return session != null ? session.getSessionToken() : null;
+    }
+
+    /**
+     * Keep the MediaSession as the media-button receiver after another app has taken audio focus
+     * (YouTube etc.): ExoPlayer pauses with {@code handleAudioFocus=true}, but the session must stay
+     * up so PLAY / PLAY_PAUSE on Home resume the song without opening Radiomarchy again.
+     */
+    void claimSession() {
+        if (current() == null || player == null) return;
+        updateSession();
+        startService();
+    }
+
+    /** MEDIA_* keys: true if this player has a current track and handled the key. */
+    static boolean isMediaKey(int kc) {
+        switch (kc) {
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_HEADSETHOOK:
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    boolean mediaKey(int kc) {
+        if (current() == null) return false;
+        switch (kc) {
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_HEADSETHOOK:
+                toggle();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+                if (!playing()) toggle();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                pause();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+                advance(1, true);
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+                advance(-1, true);
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                seekBy(15000);
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+                seekBy(-15000);
+                return true;
+            default:
+                return false;
+        }
     }
 
     private void startService() {

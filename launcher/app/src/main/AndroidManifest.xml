@@ -201,6 +201,13 @@
             android:name=".RadioService"
             android:exported="false"
             android:foregroundServiceType="mediaPlayback" />
+        <receiver
+            android:name=".RadioService$Buttons"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
 
         <!-- "> ask" voice assistant pane (answers come from the paired Omarchy Linux PC). -->
         <activity

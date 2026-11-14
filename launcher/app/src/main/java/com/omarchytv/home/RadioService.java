@@ -5,11 +5,13 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.view.KeyEvent;
 
 /**
  * v2.20 Radiomarchy: keeps the music playing while Radiomarchy is not on screen (Home, another app, the
@@ -138,5 +140,17 @@ public class RadioService extends Service {
         return Build.VERSION.SDK_INT >= 26
                 ? PendingIntent.getForegroundService(c, code, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT)
                 : PendingIntent.getService(c, code, i, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
+    /** Receives MEDIA_BUTTON when the MediaSession is not in the foreground (after YouTube took audio focus). */
+    public static final class Buttons extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context c, Intent i) {
+            if (i == null || !Intent.ACTION_MEDIA_BUTTON.equals(i.getAction())) return;
+            KeyEvent e = i.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+            if (e == null || e.getAction() != KeyEvent.ACTION_DOWN || e.getRepeatCount() != 0) return;
+            RadioPlayer p = RadioPlayer.peek();
+            if (p != null) p.mediaKey(e.getKeyCode());
+        }
     }
 }

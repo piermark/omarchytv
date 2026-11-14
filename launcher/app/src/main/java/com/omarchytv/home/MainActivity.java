@@ -1012,6 +1012,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         super.onResume();
         BootScreenView.onResume(this, findViewById(R.id.root));
         OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));   // v2.14 OmaFire animated wallpaper   // "wake" mode: replay after the screen came on
+        RadioPlayer rp = RadioPlayer.peek();
+        if (rp != null) rp.claimSession();   // v2.20: after YouTube took audio focus, media keys on Home still resume
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
         LauncherConfig.update(this, j -> LauncherConfig.pulseDefault(j));   // v2.15: Pulse for everyone, once
@@ -4209,10 +4211,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         }
     }
 
+    /** Play / pause / next on Home, even when another app has stolen the MediaSession (audio focus). */
+    private boolean radioMediaKey(KeyEvent e) {
+        RadioPlayer p = RadioPlayer.peek();
+        if (p == null || p.current() == null || !RadioPlayer.isMediaKey(e.getKeyCode())) return false;
+        if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) p.mediaKey(e.getKeyCode());
+        return true;
+    }
+
     @Override
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (BootScreenView.consumeKey(e)) return true;   // boot screen: any key skips, none reaches Home
         if (LiftoffView.consumeKey(e)) return true;      // liftoff countdown: any key hides it
+        if (radioMediaKey(e)) return true;
         if (swallowKeyUp == e.getKeyCode() && e.getAction() == KeyEvent.ACTION_UP) {
             swallowKeyUp = -1;
             return true;
