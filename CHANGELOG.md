@@ -4,6 +4,30 @@
 
 Built on the published 2.15.1: everything fixed there is in here.
 
+### GrokBot Office (optional, off by default)
+
+- **Your Grok Bot bots at their desks**: a pixel-art office (our own art, no logos) where every bot you have sits
+  at a desk with its name, role and status, and walks in when it is hired. Android TV: Settings › Grok Bot e AI ›
+  GrokBot Office, then its own banner in the TV's app row, Walker, or the key action `office`; LG and Samsung: Blue ›
+  Companion settings, then the Omarchy menu or the O key. At most 30 frames a second, and nothing is drawn while it
+  is hidden or on its start screen.
+- **Only real data**: the bots come from the PC (`omarchy-tv office push bots.json`) or from Grok Bot's own reply;
+  no bots means an empty office with a hint, no numbers means no usage card.
+- **Ask and Hire** through Grok Bot diretto (the same webhook, key and reply server): the request carries an
+  `office` object and the routine's reply can change the list (docs/GROKBOT-DIRECT.md). The answer is shown and
+  spoken.
+- **Claude and ChatGPT too**: a chip in the Ask box picks who answers (Grok Bot is the default). Claude and ChatGPT
+  answer from the paired PC (omarchy-link's assistant, Anthropic and OpenAI APIs); the keys stay on the PC.
+  Android TV uses the encrypted link; LG and Samsung use the PC bridge with its ask code.
+- **Hire a Claude or ChatGPT bot**: the PC checks the key with the provider, then saves the bot as an assistant
+  entry (name, model, role as a system prompt, mode 600) and the TV shows it at its desk. A wrong or missing key
+  says why; nothing is shown as hired. `omarchy-link office hire NAME --provider claude|chatgpt`, `fire`, `show`.
+- **Real spend per provider**: this month's spend from the Anthropic and OpenAI Admin APIs, only when an admin key
+  is set (`ANTHROPIC_ADMIN_KEY`, `OPENAI_ADMIN_KEY`, or ai.json); a percentage only when you set a budget.
+  `omarchy-link office usage`.
+- Every bot carries a `provider` (default `grok`), shown as a small text tag on its nameplate.
+- English, Italian, German, French and Spanish.
+
 ### Radiomarchy: Omarchy Radio on the TV
 
 - **A music app of its own**, like Cinemarchy (Android TV: its own banner in the TV's app row, the ♫ icon in the

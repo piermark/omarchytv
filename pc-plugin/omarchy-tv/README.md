@@ -38,6 +38,14 @@ Since **2.11.0-beta+**, you can replace any app's tile banner on the TV home scr
 2. Save a 16:9 PNG (`320×180` or `640×360`) as `~/.config/omarchy-tv/banners/<package>.png`.
 3. Push to the TV: `omarchy-tv icons push <package>` or `omarchy-tv icons push --all` (or via ADB: `adb push <pkg>.png /sdcard/Android/data/com.omarchytv.home/files/banners/<pkg>.png`).
 
+## GrokBot Office (2.20, optional)
+
+`omarchy-tv office push bots.json` sends your bots to the TV's GrokBot Office (Android: `PUT /v1/office`; LG and
+Samsung read them from `omarchy-tv webos-serve`); `office show` and `office clear` too. Bots carry an optional
+`provider` (default `grok`). The shape is in `docs/GROKBOT-DIRECT.md`; Claude and ChatGPT bots are hired with
+`omarchy-link office hire` ([OFFICE.md](../omarchy-link/docs/OFFICE.md)). Nothing is made up: no bots, an
+empty office.
+
 ## Language
 
 Menus and messages follow the system language automatically (`LC_ALL` > `LC_MESSAGES` > `LANG`, supporting English and Italian), or `"language": "en" | "it" | "auto"` in `~/.config/omarchy-link/config.json`.

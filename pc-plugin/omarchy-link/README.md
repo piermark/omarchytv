@@ -56,11 +56,16 @@ omarchy-link push-widgets [widgets.json] [--dry-run]
 omarchy-link push-ai --dry-run       # AI credits that would be sent
 omarchy-link ai providers            # AIs the TV assistant can use
 omarchy-link ai ask "a film for tonight?"
+omarchy-link office hire Trimmer --provider claude --role "cuts token use"   # GrokBot Office bot (2.20)
+omarchy-link office usage            # Claude / ChatGPT spend this month (Admin API keys only)
 omarchy-link liftoff -- make release   # rocket countdown on the TV, red alarm if it fails (exit code passed through)
 omarchy-link x setup                 # optional: X API bearer token for mentions on the TV's Living screensaver (0600)
 omarchy-link x status                # configured? estimated spend this month vs xMonthlyUsd
 omarchy-link unpair
 ```
+
+GrokBot Office (OmarchyTV 2.20): Claude and ChatGPT bots, their keys and spend are in
+[docs/OFFICE.md](docs/OFFICE.md).
 
 `omarchy-link status --waybar` prints Waybar-style JSON (`text`, `tooltip`, `class`:
 connected / screensaver / offline / unpaired) for custom bar modules. Exit code 3 means "not paired".

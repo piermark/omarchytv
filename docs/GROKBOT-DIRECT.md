@@ -161,6 +161,42 @@ PC**, which appears only once the PC has pushed a text, hands the saver back to 
 `"screensaver": {"pcText": false}` in `omarchytv.json`, and it defaults to `true`, so a TV that has never touched the
 Logo row keeps showing the PC's text as before.
 
+## GrokBot Office (2.20, optional)
+
+GrokBot Office (Android: Settings › Grok Bot e AI › GrokBot Office; LG/Samsung: Blue › Companion settings) shows
+your bots at their desks. When **Grok Bot** answers in it, the TV sends the same request as above with one more
+field, `office`:
+
+```json
+{ "question": "…", "office": { "action": "ask", "bots": ["Trimmer", "Scout"] } }
+{ "question": "Hire a new bot for my GrokBot Office named Pixel: draws covers. …",
+  "office": { "action": "hire", "name": "Pixel", "role": "draws covers", "description": "draws covers", "bots": ["Trimmer"] } }
+```
+
+The routine may add an `office` object to its ntfy reply (next to `id` and `text`). Everything in it is optional
+and checked by the TV:
+
+```json
+{ "id": "…", "text": "Pixel is at its desk.",
+  "office": { "hired": { "name": "Pixel", "role": "draws covers", "color": "#bb9af7", "status": "idle" },
+              "bots": [ … ],                     // replaces the whole list
+              "usage": { "weekly_pct": 46, "label": "Weekly usage", "resets": "Mon 09:00" } } }
+```
+
+A hire only shows up when the reply has `office.hired` (or a `bots` list with it): the TV never pretends. The full
+bots shape, which the PC can also push with `omarchy-tv office push bots.json`:
+
+```json
+{ "title": "My office",
+  "bots": [ { "id": "trimmer", "name": "Trimmer", "role": "Cuts token use", "color": "#ff9e64",
+              "status": "working", "task": "…", "provider": "grok" } ],
+  "usage": { "weekly_pct": 46.3, "label": "Weekly usage", "resets": "Mon 09:00" } }
+```
+
+`status` is `working`, `idle`, `done` or `error` (anything else is `idle`); `provider` is a short word (default `grok`) shown on the
+nameplate; at most 24 bots (16 at their desks). No `usage`, no usage card. Claude and ChatGPT bots are hired and
+answer through the paired PC instead: see `pc-plugin/omarchy-link/docs/OFFICE.md`.
+
 ## Privacy
 
 Replies travel through the public [ntfy.sh](https://ntfy.sh) service, or your own server if you set one. The topic is `otv-` plus 32 random characters,
