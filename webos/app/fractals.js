@@ -77,6 +77,8 @@
     return best;
   }
   var MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30, WATCH_FRAMES = 16, LATE_RUSH = 4;
+  var GRACE_FRAMES = 8, GRACE_MS = 5000, STALL_MS = 500, STALL_WINDOW_MS = 20000, STALLS_TO_KILL = 3;
+  var STALL_DEGRADE = 1, STALL_KILL = 2;
 
   /** Where to start for this GPU (then it measures itself). ramGb <= 2 or Mali-T8xx starts at medium/720p. */
   function firstLevel(gpu, lowp, ramGb) {
@@ -119,6 +121,27 @@
 
   function shouldDisableAtFloor(level, slowWindows) {
     return level >= 3 && slowWindows >= 2;
+  }
+
+  /** Cold start / first layout / resume: a 600 ms rAF gap is normal, not a fatal stall. */
+  function inGracePeriod(laidOut, presentedFrames, elapsedMs) {
+    return !laidOut || presentedFrames < GRACE_FRAMES || elapsedMs < GRACE_MS;
+  }
+
+  function isUiStall(intervalMs) {
+    return intervalMs > STALL_MS;
+  }
+
+  /** stallsInWindow includes this stall. Kill only at the 720p floor with iterations already reduced. */
+  function stallAction(level, reducedIters, stallsInWindow) {
+    if (level >= 3 && reducedIters && stallsInWindow >= STALLS_TO_KILL) return STALL_KILL;
+    return STALL_DEGRADE;
+  }
+
+  function countStallsInWindow(times, nowMs, windowMs) {
+    var c = 1, i;
+    for (i = 0; i < times.length; i++) if (nowMs - times[i] <= windowMs) c++;
+    return c;
   }
 
   function rgbCss(r, g, b) {
@@ -209,6 +232,7 @@
     var frames = 0, frameMs = 0, lastT = 0, goodSince = 0, late = 0, lastDraw = 0, lastPalEmit = 0, lastFpsLog = 0;
     var capFps = true, freezePalette = false, iterMul = 1, fpsCap = home ? HOME_FPS : SAVER_FPS;
     var lateInWindow = 0, slowWindows = 0, sessionOff = false;
+    var graceStart = 0, presented = 0, lastRaf = 0, stallTimes = [];
     for (i = 0; i < 12; i++) { pal[i] = 0; palFrom[i] = 0; }
 
     function newCenter() {
@@ -274,7 +298,42 @@
       else if (fpsCap < 20) { /* kept by the watchdog after the 720p floor */ }
       else fpsCap = base;
     }
+    function resetGrace() {
+      graceStart = Date.now();
+      presented = 0;
+      lastRaf = 0;
+      stallTimes = [];
+    }
+    function onUiStall(gap, now) {
+      var elapsed = now - graceStart;
+      var laid = (canvas.clientWidth || 0) > 0 && (canvas.clientHeight || 0) > 0;
+      if (inGracePeriod(laid, presented, elapsed)) {
+        if (root.console) root.console.info("[Radiomarchy] grace: ignore UI stall " + gap + "ms presented=" + presented + " elapsed=" + elapsed + "ms");
+        return;
+      }
+      stallTimes = stallTimes.filter(function (t) { return now - t <= STALL_WINDOW_MS; });
+      stallTimes.push(now);
+      var action = stallAction(level, iterMul < 0.99, stallTimes.length);
+      if (action === STALL_KILL) {
+        tripSafety("UI stall " + gap + "ms (" + stallTimes.length + " in 20s at floor)");
+        return;
+      }
+      if (pinned < 0 && level < LEVELS.length - 1) {
+        level++;
+        applyLowPolicy();
+        resize();
+        if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: drop to " + LEVELS[level].name);
+      } else {
+        capFps = true;
+        freezePalette = true;
+        if (fpsCap > 15) fpsCap = 15;
+        if (iterMul > 0.55) iterMul = 0.7;
+        applyLowPolicy();
+        if (root.console) root.console.info("[Radiomarchy] UI stall " + gap + "ms: floor, reduce iters/fps cap=" + fpsCap);
+      }
+    }
     function tripSafety(why) {
+      if (sessionOff) return;
       sessionOff = true;
       running = false;
       if (raf) root.cancelAnimationFrame(raf);
@@ -332,8 +391,14 @@
       if (!running || sessionOff) return;
       raf = root.requestAnimationFrame(frame);
       var now = Date.now();
+      if (home) {
+        if (lastRaf && isUiStall(now - lastRaf)) onUiStall(now - lastRaf, now);
+        lastRaf = now;
+        if (sessionOff) return;
+      }
       if (capFps && fpsCap > 0 && lastDraw && now - lastDraw < 1000 / fpsCap) return;
       lastDraw = now;
+      presented++;
       var dt = lastT ? Math.min(0.1, (now - lastT) / 1000) : 0.016;
       measure(now);
       lastT = now;
@@ -375,7 +440,7 @@
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
     return {
-      start: function () { if (running || sessionOff) return; running = true; lastT = 0; frames = 0; frameMs = 0; applyLowPolicy(); resize(); raf = root.requestAnimationFrame(frame); },
+      start: function () { if (running || sessionOff) return; running = true; lastT = 0; frames = 0; frameMs = 0; resetGrace(); applyLowPolicy(); resize(); raf = root.requestAnimationFrame(frame); },
       stop: function () { running = false; if (raf) root.cancelAnimationFrame(raf); raf = 0; },
       /** One frame now and no loop (previews, tests). */
       draw: function () { var was = running; running = true; frame(); if (!was) this.stop(); },
@@ -402,7 +467,11 @@
     SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG,
     create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel,
     scaleFor: scaleFor, bufferHeight: bufferHeight, bufferSize: bufferSize, isBackpressured: isBackpressured,
-    shouldDisableAtFloor: shouldDisableAtFloor, HOME_FPS: HOME_FPS, SAVER_FPS: SAVER_FPS,
+    shouldDisableAtFloor: shouldDisableAtFloor, inGracePeriod: inGracePeriod, isUiStall: isUiStall,
+    stallAction: stallAction, countStallsInWindow: countStallsInWindow,
+    GRACE_FRAMES: GRACE_FRAMES, GRACE_MS: GRACE_MS, STALL_MS: STALL_MS, STALL_WINDOW_MS: STALL_WINDOW_MS,
+    STALLS_TO_KILL: STALLS_TO_KILL, STALL_DEGRADE: STALL_DEGRADE, STALL_KILL: STALL_KILL,
+    HOME_FPS: HOME_FPS, SAVER_FPS: SAVER_FPS,
     MAX_BUFFER_H: MAX_BUFFER_H, FLOOR_BUFFER_H: FLOOR_BUFFER_H,
     ensureContrast: ensureContrast, contrastRatio: contrastRatio, rgbCss: rgbCss
   };

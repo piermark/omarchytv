@@ -19,7 +19,7 @@ final class FractalLayer {
     private static final int MAX_FAILS = 2;
     private static FractalView view;
     private static int fails;
-    /** Safety net: UI stall or the floor still too slow. Stays off until the launcher restarts. */
+    /** Safety net: repeated UI stalls at the 720p floor, or the floor still too slow. Off until the launcher restarts. */
     private static boolean sessionOff;
 
     private FractalLayer() {
@@ -109,7 +109,6 @@ final class FractalLayer {
 
     private static void disableForSession(Activity a, FractalView v, String why) {
         sessionOff = true;
-        android.util.Log.w("Radiomarchy", "wallpaper off for this session: " + why);
         if (view == v) view = null;
         if (v != null) {
             try {

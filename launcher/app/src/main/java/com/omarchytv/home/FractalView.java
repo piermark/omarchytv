@@ -81,7 +81,11 @@ final class FractalView extends GLSurfaceView {
     private long ramBytes;
     private boolean pumpOn;
     private int skipFrames;
-    private long lastUiFrameNs, lastRequestNs;
+    private long lastUiFrameNs, lastRequestNs, graceStartMs;
+    private volatile int presentedFrames;
+    private int stallCount;
+    private final long[] stallAt = new long[8];
+    private boolean safetyTripped;
 
     FractalView(Context c) {
         super(c);
@@ -172,6 +176,10 @@ final class FractalView extends GLSurfaceView {
     static final int MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30;
     static final int WATCH_FRAMES = 16, LATE_RUSH = 4;
     static final long TWO_GB = 2L * 1024 * 1024 * 1024;
+    /** Ignore Choreographer stalls until first layout, N presented frames, and this long after attach/resume/focus. */
+    static final int GRACE_FRAMES = 8;
+    static final long GRACE_MS = 5000L, STALL_MS = 500L, STALL_NS = 500_000_000L, STALL_WINDOW_MS = 20_000L;
+    static final int STALLS_TO_KILL = 3, STALL_DEGRADE = 1, STALL_KILL = 2;
 
     /** Backing-store height: never above {@link #MAX_BUFFER_H}; medium/low use the 720p floor. */
     static int bufferHeight(int level, int viewH, int maxH) {
@@ -218,6 +226,32 @@ final class FractalView extends GLSurfaceView {
 
     static boolean shouldDisableAtFloor(int level, int slowWindows) {
         return level >= 3 && slowWindows >= 2;
+    }
+
+    /** Cold-start / first-layout / resume: a 600 ms Choreographer gap is normal, not an ANR. */
+    static boolean inGracePeriod(boolean laidOut, int presentedFrames, long elapsedMs) {
+        return !laidOut || presentedFrames < GRACE_FRAMES || elapsedMs < GRACE_MS;
+    }
+
+    static boolean isUiStall(long intervalNs) {
+        return intervalNs > STALL_NS;
+    }
+
+    /**
+     * After the grace period: one stall drops a level (or reduces iters at the floor).
+     * Only repeated stalls already at the 720p floor with reduced iterations turn the wallpaper off.
+     * {@code stallsInWindow} includes this stall.
+     */
+    static int stallAction(int level, boolean reducedIters, int stallsInWindow) {
+        if (level >= 3 && reducedIters && stallsInWindow >= STALLS_TO_KILL) return STALL_KILL;
+        return STALL_DEGRADE;
+    }
+
+    /** This stall plus earlier ones still inside the window. */
+    static int countStallsInWindow(long[] times, int n, long nowMs, long windowMs) {
+        int c = 1;
+        for (int i = 0; i < n; i++) if (nowMs - times[i] <= windowMs) c++;
+        return c;
     }
 
     static long totalRam(Context c) {
@@ -331,9 +365,17 @@ final class FractalView extends GLSurfaceView {
         @Override
         public void doFrame(long frameTimeNanos) {
             if (!pumpOn) return;
-            if (lastUiFrameNs != 0 && homeWallpaper && frameTimeNanos - lastUiFrameNs > 500_000_000L) {
-                tripSafety("UI stall " + ((frameTimeNanos - lastUiFrameNs) / 1_000_000L) + "ms");
-                return;
+            if (lastUiFrameNs != 0 && homeWallpaper && isUiStall(frameTimeNanos - lastUiFrameNs)) {
+                long gapMs = (frameTimeNanos - lastUiFrameNs) / 1_000_000L;
+                long elapsed = SystemClock.elapsedRealtime() - graceStartMs;
+                boolean laid = getWidth() > 0 && getHeight() > 0;
+                if (inGracePeriod(laid, presentedFrames, elapsed)) {
+                    android.util.Log.i("Radiomarchy", "grace: ignore UI stall " + gapMs + "ms presented="
+                            + presentedFrames + " elapsed=" + elapsed + "ms");
+                } else {
+                    onUiStall(gapMs);
+                    if (safetyTripped) return;
+                }
             }
             lastUiFrameNs = frameTimeNanos;
             if (skipFrames > 0) {
@@ -349,11 +391,50 @@ final class FractalView extends GLSurfaceView {
         }
     };
 
+    private void markGraceStart() {
+        graceStartMs = SystemClock.elapsedRealtime();
+        presentedFrames = 0;
+        lastUiFrameNs = 0;
+        lastRequestNs = 0;
+        stallCount = 0;
+    }
+
+    /** First stall after grace drops a level or reduces iters; only repeated stalls at the floor disable it. */
+    private void onUiStall(long gapMs) {
+        long now = SystemClock.elapsedRealtime();
+        int kept = 0;
+        for (int i = 0; i < stallCount; i++) {
+            if (now - stallAt[i] <= STALL_WINDOW_MS) stallAt[kept++] = stallAt[i];
+        }
+        if (kept < stallAt.length) stallAt[kept] = now;
+        else stallAt[stallAt.length - 1] = now;
+        stallCount = Math.min(kept + 1, stallAt.length);
+        boolean reduced = r.iterMul < 0.99f;
+        int action = stallAction(r.level, reduced, stallCount);
+        if (action == STALL_KILL) {
+            tripSafety("UI stall " + gapMs + "ms (" + stallCount + " in 20s at floor)");
+            return;
+        }
+        if (pinnedQuality < 0 && r.level < LEVELS.length - 1) {
+            r.level++;
+            r.applyLowPolicy();
+            applyBuffer();
+            android.util.Log.i("Radiomarchy", "UI stall " + gapMs + "ms: drop to " + LEVELS[r.level].name);
+        } else {
+            r.capFps = true;
+            r.freezePalette = true;
+            if (r.fpsCap > 15) r.fpsCap = 15;
+            if (r.iterMul > 0.55f) r.iterMul = 0.7f;
+            r.applyLowPolicy();
+            android.util.Log.i("Radiomarchy", "UI stall " + gapMs + "ms: floor, reduce iters/fps cap=" + r.fpsCap);
+        }
+        skipFrames = 4;
+    }
+
     private void startPump() {
         if (pumpOn) return;
         pumpOn = true;
-        lastUiFrameNs = 0;
-        lastRequestNs = 0;
+        markGraceStart();
         setRenderMode(RENDERMODE_WHEN_DIRTY);
         Choreographer.getInstance().postFrameCallback(pump);
     }
@@ -363,7 +444,15 @@ final class FractalView extends GLSurfaceView {
         Choreographer.getInstance().removeFrameCallback(pump);
     }
 
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus && homeWallpaper) markGraceStart();
+    }
+
     private void tripSafety(String why) {
+        if (safetyTripped) return;
+        safetyTripped = true;
         stopPump();
         ui.post(() -> {
             android.util.Log.w("Radiomarchy", "wallpaper off for this session: " + why);
@@ -557,6 +646,7 @@ final class FractalView extends GLSurfaceView {
             long now = SystemClock.elapsedRealtime();
             long ns = System.nanoTime();
             lastDrawNs = ns;
+            presentedFrames++;
             float dt = Math.min(0.1f, lastNs == 0 ? 0.016f : (ns - lastNs) / 1e9f);
             measure(ns, now);
             lastNs = ns;

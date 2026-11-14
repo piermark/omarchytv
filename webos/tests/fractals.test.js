@@ -64,6 +64,37 @@ test("present cost treats the fps cap as on time and swap delay as backpressure"
   assert.strictEqual(F.SAVER_FPS, 30);
 });
 
+test("startup stall is ignored during the grace period", () => {
+  assert.strictEqual(F.inGracePeriod(false, 0, 0), true);
+  assert.strictEqual(F.inGracePeriod(false, 100, 10000), true);
+  assert.strictEqual(F.inGracePeriod(true, 0, 1000), true);
+  assert.strictEqual(F.inGracePeriod(true, F.GRACE_FRAMES - 1, 10000), true);
+  assert.strictEqual(F.inGracePeriod(true, 100, F.GRACE_MS - 1), true);
+  assert.strictEqual(F.inGracePeriod(true, 0, 600), true);
+  assert.strictEqual(F.inGracePeriod(true, F.GRACE_FRAMES, F.GRACE_MS), false);
+  assert.strictEqual(F.isUiStall(600), true);
+  assert.strictEqual(F.isUiStall(499), false);
+});
+
+test("a single UI stall degrades quality and does not disable the wallpaper", () => {
+  assert.strictEqual(F.stallAction(1, false, 1), F.STALL_DEGRADE);
+  assert.strictEqual(F.stallAction(2, false, 1), F.STALL_DEGRADE);
+  assert.strictEqual(F.stallAction(3, false, 1), F.STALL_DEGRADE);
+  assert.strictEqual(F.stallAction(3, true, 1), F.STALL_DEGRADE);
+  assert.strictEqual(F.stallAction(3, true, 2), F.STALL_DEGRADE);
+  assert.strictEqual(F.countStallsInWindow([1000], 5000, F.STALL_WINDOW_MS), 2);
+  assert.strictEqual(F.countStallsInWindow([1000], 30000, F.STALL_WINDOW_MS), 1);
+});
+
+test("repeated UI stalls at the 720p floor with reduced iterations disable the wallpaper", () => {
+  assert.strictEqual(F.stallAction(3, true, 3), F.STALL_KILL);
+  assert.strictEqual(F.stallAction(3, true, 4), F.STALL_KILL);
+  assert.strictEqual(F.stallAction(2, true, 5), F.STALL_DEGRADE);
+  assert.strictEqual(F.stallAction(1, true, 5), F.STALL_DEGRADE);
+  assert.strictEqual(F.stallAction(3, false, 5), F.STALL_DEGRADE);
+  assert.strictEqual(F.STALLS_TO_KILL, 3);
+});
+
 test("WCAG-ish contrast lifts a dark accent off a dark background", () => {
   const bg = "#111111", dark = "#1a1a1a";
   assert.ok(F.contrastRatio(dark, bg) < 4.5);

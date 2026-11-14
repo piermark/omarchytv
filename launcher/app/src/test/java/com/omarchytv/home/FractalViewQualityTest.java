@@ -60,6 +60,47 @@ public class FractalViewQualityTest {
     }
 
     @Test
+    public void startupStallIsIgnoredDuringGrace() {
+        // no layout yet
+        assertTrue(FractalView.inGracePeriod(false, 0, 0));
+        assertTrue(FractalView.inGracePeriod(false, 100, 10_000));
+        // laid out but no frames presented, even after 5 s
+        assertTrue(FractalView.inGracePeriod(true, 0, 1_000));
+        assertTrue(FractalView.inGracePeriod(true, FractalView.GRACE_FRAMES - 1, 10_000));
+        // enough frames but still inside the 5 s resume/attach window
+        assertTrue(FractalView.inGracePeriod(true, 100, FractalView.GRACE_MS - 1));
+        // the Sony cold-start 600 ms stall: first layout, no frames, a few hundred ms in
+        assertTrue(FractalView.inGracePeriod(true, 0, 600));
+        // grace over only once laid out, N frames presented, and 5 s elapsed
+        assertFalse(FractalView.inGracePeriod(true, FractalView.GRACE_FRAMES, FractalView.GRACE_MS));
+        assertFalse(FractalView.inGracePeriod(true, FractalView.GRACE_FRAMES, FractalView.GRACE_MS + 1));
+        assertTrue(FractalView.isUiStall(600_000_000L));
+        assertFalse(FractalView.isUiStall(499_000_000L));
+    }
+
+    @Test
+    public void singleStallDegradesNotKills() {
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(1, false, 1));
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(2, false, 1));
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(3, false, 1));
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(3, true, 1));
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(3, true, 2));
+        assertEquals(2, FractalView.countStallsInWindow(new long[] { 1000 }, 1, 5000, FractalView.STALL_WINDOW_MS));
+        assertEquals(1, FractalView.countStallsInWindow(new long[] { 1000 }, 1, 30_000, FractalView.STALL_WINDOW_MS));
+    }
+
+    @Test
+    public void repeatedStallsAtFloorKill() {
+        assertEquals(FractalView.STALL_KILL, FractalView.stallAction(3, true, 3));
+        assertEquals(FractalView.STALL_KILL, FractalView.stallAction(3, true, 4));
+        // not at the floor, or iterations not yet reduced: keep drawing
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(2, true, 5));
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(1, true, 5));
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.stallAction(3, false, 5));
+        assertEquals(3, FractalView.STALLS_TO_KILL);
+    }
+
+    @Test
     public void contrastPushesADarkAccentOffADarkBackground() {
         int bg = 0xFF111111;
         int dark = 0xFF1A1A1A;

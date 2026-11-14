@@ -45,8 +45,11 @@ Built on the published 2.15.1: everything fixed there is in here.
   and freezes the palette, never resolution. Home is capped at 24 fps (30 only for the screensaver, or when a frame
   is cheap). Settings → Picture quality pins a level; pinned `low` is also a static palette and low fps. Frame time
   is logged every couple of seconds (logcat tag `Radiomarchy`, or the `[Radiomarchy]` console line on LG/Samsung).
-  If the UI stalls (Choreographer frames over 500 ms) or the floor still overruns the budget, the fractal wallpaper
-  is turned off for the session and the normal theme background stays — never a black screen, never an ANR.
+  A Choreographer stall over 500 ms during the first layout or the first seconds after Home is shown is ignored
+  (a cold start on a Sony Mali-T860 is about 600 ms and is normal). After that, one stall drops a quality level
+  or reduces iterations; only repeated stalls (three in about 20 s) already at the 720p floor with reduced
+  iterations, or a floor that still overruns the budget, turn the wallpaper off for the session. The normal
+  theme background stays — never a black screen, never an ANR.
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.
