@@ -8,6 +8,8 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
   GET /v1/wallpaper                -> active desktop wallpaper image (webp/png/jpg)
   GET /v1/grokbot                  -> JSON {available, bot, roster, dispatch, version}: @tcballard's Grok Bot
                                       Desktop (Agent Desktop) v0.2.0 as omarchy-link's bridge sees it (no secrets)
+  GET /v1/office                   -> JSON {bots, usage?, source}: GrokBot Office (2.20), what omarchy-tv office push saved,
+                                      else the Agent Desktop roster (names and colours, never usage numbers).
   POST /v1/grokbot/ask             -> {text, bot?} with header X-Omarchy-Token: the ask code printed when the
                                       bridge starts (~/.config/omarchy-tv/webos-bridge.token, mode 0600).
                                       Answers like omarchy-link's grokbot_answer {bot, text, mode, links, note?}.
@@ -172,6 +174,18 @@ def link_cfg() -> dict:
         return d if isinstance(d, dict) else {}
     except (OSError, ValueError):
         return {}
+
+
+def build_office_payload() -> dict:
+    from omarchy_tv import office   # noqa: PLC0415
+    roster = None
+    if office.load() is None:
+        try:
+            g = build_grokbot_payload()
+            roster = g.get("roster") if g.get("available") else None
+        except Exception:
+            roster = None
+    return office.payload(roster)
 
 
 def build_grokbot_payload() -> dict:
@@ -503,6 +517,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
             return
         if path == "/v1/grokbot":
             self._send_json(build_grokbot_payload())
+            return
+        if path == "/v1/office":   # 2.20 GrokBot Office: the pushed bots (omarchy-tv office push), else the Agent Desktop roster
+            self._send_json(build_office_payload())
             return
         if path == "/v1/themes":
             self._send_json(build_themes_payload())
