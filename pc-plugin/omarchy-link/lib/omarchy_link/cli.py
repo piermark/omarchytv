@@ -350,6 +350,51 @@ def cmd_ai(a, cfg):
     return 0
 
 
+def cmd_office(a, cfg):
+    """GrokBot Office (OmarchyTV 2.20): Claude / ChatGPT bots on this PC, and their real spend."""
+    from . import office
+    if a.office_cmd == "hire":
+        try:
+            bot = office.hire(a.name, a.provider, a.role or "", a.description or "", model=a.model)
+        except office.HireError as e:
+            print(f"omarchy-link: {e}", file=sys.stderr)
+            return 1
+        print(f"Hired {bot['name']} ({bot['provider']}) in {assistant.ASSISTANT_FILE}.")
+    elif a.office_cmd == "fire":
+        if not office.fire(a.name):
+            print(f"omarchy-link: no hired bot called {a.name}", file=sys.stderr)
+            return 1
+        print(f"{a.name} left the office.")
+    elif a.office_cmd == "usage":
+        u = office.usage()
+        if a.json:
+            print(json.dumps(u, indent=2, ensure_ascii=False))
+        elif not u:
+            print("No usage numbers: set an admin key (ANTHROPIC_ADMIN_KEY / OPENAI_ADMIN_KEY, or an anthropic / openai\n"
+                  f"entry in {config.AI_FILE}). Without one the TV shows no usage for that provider.")
+        for x in ([] if a.json else u):
+            extra = f" of {x['budget']} ({x['pct']}%)" if x.get("budget") else ""
+            print(f"{x['provider']:<8} {x['unit']}{x['spent']}{extra} this month")
+        return 0
+    else:
+        d = office.tv_payload()
+        if a.json or a.office_cmd == "show":
+            print(json.dumps(d, indent=2, ensure_ascii=False))
+        if a.office_cmd == "push":
+            _client(cfg).request("PUT", "/v1/office", d)
+            print(f"Sent {len(d['bots'])} bots to the TV.")
+        return 0
+    if a.office_cmd in ("hire", "fire"):
+        try:
+            c = _client(cfg)
+            c.put_ai_providers(assistant.Assistant().listing())
+            c.request("PUT", "/v1/office", office.tv_payload())
+            print("The TV has the new office.")
+        except (SystemExit, Exception) as e:   # not paired / TV off: the next connection sends it
+            print(f"(the TV gets it when it connects: {str(e)[:80]})")
+    return 0
+
+
 HOOK_NAME = "omarchy-link"
 
 
@@ -771,6 +816,26 @@ def main(argv=None) -> int:
     t.add_argument("--provider")
     t.add_argument("--lang")
     s.set_defaults(fn=cmd_ai)
+    s = sub.add_parser("office", help="GrokBot Office: hire Claude / ChatGPT bots, their spend (Admin API)",
+                       description="OmarchyTV 2.20 GrokBot Office. Hired bots are assistant.json entries (mode 600): "
+                                   "the key stays on this PC (env:ANTHROPIC_API_KEY / env:OPENAI_API_KEY by default) and is "
+                                   "checked with the provider before the bot is saved. Usage needs an admin key.")
+    osub = s.add_subparsers(dest="office_cmd", required=True)
+    t = osub.add_parser("hire", help="hire a bot: name, --provider claude|chatgpt, --role, --description, --model")
+    t.add_argument("name")
+    t.add_argument("--provider", required=True, choices=["claude", "chatgpt"])
+    t.add_argument("--role")
+    t.add_argument("--description")
+    t.add_argument("--model")
+    t = osub.add_parser("fire", help="remove a hired bot")
+    t.add_argument("name")
+    t = osub.add_parser("usage", help="this month's spend per provider (Admin API keys only)")
+    t.add_argument("--json", action="store_true")
+    t = osub.add_parser("show", help="the office JSON the TV gets from this PC")
+    t.add_argument("--json", action="store_true")
+    t = osub.add_parser("push", help="send it to the paired Android TV now")
+    t.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_office)
     s = sub.add_parser("hook", help="add/remove the Omarchy theme-set hook")
     s.add_argument("action", choices=["add", "remove"])
     s.set_defaults(fn=cmd_hook)

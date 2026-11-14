@@ -256,8 +256,10 @@ class Assistant:
             ai_file = self.settings_path or ASSISTANT_FILE
             ctx = Context(ai_file_private=ai_file.exists() and config.is_private_file(ai_file),
                           timeout=float(settings.get("timeoutSeconds", 90)))
-            req = Request(text, self.memory.get(conversation), str(settings.get("systemPrompt") or SYSTEM_PROMPT)[:4000],
-                          lang, on_delta, ctx.timeout, ctx)
+            system = str(settings.get("systemPrompt") or SYSTEM_PROMPT)[:4000]
+            if chosen["_cfg"].get("system"):   # 2.20 GrokBot Office: a hired bot's name and role come first
+                system = str(chosen["_cfg"]["system"])[:1500] + "\n\n" + system
+            req = Request(text, self.memory.get(conversation), system, lang, on_delta, ctx.timeout, ctx)
             reply = clean_reply(chosen["_mod"].ask(chosen["_cfg"], req))
             if not reply:
                 raise ProviderError("empty answer")
