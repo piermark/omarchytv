@@ -34,15 +34,22 @@ public class FractalViewQualityTest {
     }
 
     @Test
-    public void firstLevelStartsMaliT8xxAndLowRamAtMedium() {
-        assertEquals(3, FractalView.firstLevel("Mali-450 MP", false, 0));
-        assertEquals(3, FractalView.firstLevel("anything", true, 8L * 1024 * 1024 * 1024));
-        assertEquals(2, FractalView.firstLevel("Mali-T860", false, 0));
-        assertEquals(2, FractalView.firstLevel("Mali-T760", false, 0));
-        assertEquals(2, FractalView.firstLevel("Mali-G52", false, 2L * 1024 * 1024 * 1024));
+    public void firstLevelStartsMaliT8xxAndLowRamAtLight() {
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Mali-450 MP", false, 0));
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("anything", true, 8L * 1024 * 1024 * 1024));
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Mali-T860", false, 0));
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Mali-T760", false, 0));
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Mali-G52", false, 2L * 1024 * 1024 * 1024));
         assertEquals(1, FractalView.firstLevel("Mali-G52", false, 0));
         assertEquals(1, FractalView.firstLevel("Mali-G52", false, 4L * 1024 * 1024 * 1024));
-        assertEquals(2, FractalView.firstLevel("Adreno (TM) 630", false, 1900L * 1024 * 1024));
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Adreno (TM) 630", false, 1900L * 1024 * 1024));
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Mali-G52", false, 4L * 1024 * 1024 * 1024, true));
+        assertEquals("light", FractalView.LEVELS[FractalView.LIGHT_LEVEL].name);
+        assertTrue(FractalView.isLight(4));
+        assertFalse(FractalView.isLight(2));
+        assertEquals(1, FractalView.cheapScaleFor(FractalView.LIGHT_LEVEL, 1));
+        assertEquals(160, FractalView.BAKE_H);
+        assertEquals(20, FractalView.BAKE_ITERS);
     }
 
     @Test
@@ -67,17 +74,21 @@ public class FractalViewQualityTest {
     public void startupStallIsIgnoredDuringGrace() {
         // no layout yet
         assertTrue(FractalView.inGracePeriod(false, 0, 0));
-        assertTrue(FractalView.inGracePeriod(false, 100, 10_000));
-        // laid out but no frames presented, even after 5 s
+        assertTrue(FractalView.inGracePeriod(false, 100, 4000));
+        // laid out but no frames presented, still inside the 5 s window
         assertTrue(FractalView.inGracePeriod(true, 0, 1_000));
-        assertTrue(FractalView.inGracePeriod(true, FractalView.GRACE_FRAMES - 1, 10_000));
         // enough frames but still inside the 5 s resume/attach window
         assertTrue(FractalView.inGracePeriod(true, 100, FractalView.GRACE_MS - 1));
         // the Sony cold-start 600 ms stall: first layout, no frames, a few hundred ms in
         assertTrue(FractalView.inGracePeriod(true, 0, 600));
-        // grace over only once laid out, N frames presented, and 5 s elapsed
+        // grace over once laid out, N frames presented, and 5 s elapsed
         assertFalse(FractalView.inGracePeriod(true, FractalView.GRACE_FRAMES, FractalView.GRACE_MS));
         assertFalse(FractalView.inGracePeriod(true, FractalView.GRACE_FRAMES, FractalView.GRACE_MS + 1));
+        // time alone ends grace, even with almost no frames (and even if not laid out)
+        assertFalse(FractalView.inGracePeriod(true, FractalView.GRACE_FRAMES - 1, FractalView.GRACE_MAX_MS));
+        assertFalse(FractalView.inGracePeriod(false, 100, FractalView.GRACE_MAX_MS));
+        assertFalse(FractalView.inGracePeriod(true, 0, FractalView.GRACE_MAX_MS));
+        assertEquals(8000, FractalView.GRACE_MAX_MS);
         assertTrue(FractalView.isUiStall(600_000_000L));
         assertFalse(FractalView.isUiStall(499_000_000L));
     }
@@ -130,6 +141,41 @@ public class FractalViewQualityTest {
         assertEquals(2, FractalView.cheapScaleFor(3, 1));
         assertEquals(1, FractalView.cheapScaleFor(2, 1));
         assertEquals(12, FractalView.CHEAP_FPS);
+    }
+
+    @Test
+    public void sonySparsePresentsEndGraceAndLongStallsKill() {
+        // Exact Sony KD-55XE9005 fix6 log with wallpaper radiomarchy:fractals (17:30 Europe/Rome):
+        //   17:30:45 grace: ignore UI stall 6499ms presented=3 elapsed=35139ms
+        //   17:30:49 grace: ignore UI stall 3533ms presented=4 elapsed=38718ms
+        //   17:30:53 grace: ignore UI stall 3805ms presented=5 elapsed=42533ms
+        //   17:30:59 grace: ignore UI stall 6016ms presented=6 elapsed=48570ms
+        //   17:31:01 grace: ignore UI stall 2349ms presented=7 elapsed=50935ms
+        // Wallpaper was presenting ~0.15 fps; grace required 8 frames so it never ended.
+        int[] presented = { 3, 4, 5, 6, 7 };
+        long[] elapsed = { 35139, 38718, 42533, 48570, 50935 };
+        long[] gap = { 6499, 3533, 3805, 6016, 2349 };
+        for (int i = 0; i < presented.length; i++) {
+            assertFalse("elapsed " + elapsed[i] + "ms presented=" + presented[i] + " must be past grace",
+                    FractalView.inGracePeriod(true, presented[i], elapsed[i]));
+            assertEquals("stall " + gap[i] + "ms at light must kill",
+                    FractalView.STALL_KILL,
+                    FractalView.afterGraceAction(FractalView.LIGHT_LEVEL, gap[i], 0, 1));
+        }
+        // still in grace early on, even with no frames
+        assertTrue(FractalView.inGracePeriod(true, 3, 4000));
+        assertTrue(FractalView.inGracePeriod(true, 0, 600));
+        // a short stall at light degrades (does not kill) until 3 in the window or a 2 s gap
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.afterGraceAction(FractalView.LIGHT_LEVEL, 600, 0, 1));
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.afterGraceAction(FractalView.LIGHT_LEVEL, 600, 2, 1));
+        assertEquals(FractalView.STALL_KILL, FractalView.afterGraceAction(FractalView.LIGHT_LEVEL, 600, 3, 1));
+        assertEquals(FractalView.STALL_KILL, FractalView.afterGraceAction(FractalView.LIGHT_LEVEL, 2000, 0, 1));
+        // not cheapest: a long stall does not by itself turn the picture off
+        assertEquals(FractalView.STALL_DEGRADE, FractalView.afterGraceAction(1, 6499, 0, 1));
+        assertTrue(FractalView.isSlowPresent(1_000_000_000L));
+        assertFalse(FractalView.isSlowPresent(999_000_000L));
+        assertTrue(FractalView.isLongStall(2000));
+        assertFalse(FractalView.isLongStall(1999));
     }
 
     @Test

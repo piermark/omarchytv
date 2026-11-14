@@ -38,23 +38,23 @@ Built on the published 2.15.1: everything fixed there is in here.
   On Android the analysis reads the decoded audio (no microphone, no permission) and is matched to what you hear.
 - **High resolution, fitted to the TV**: the fractal is drawn into a fixed buffer, never larger than 1080p (the
   Home UI is 1080p; a 4K panel must not get a 4K GL surface). `high` fills that 1080p cap; `medium` and `low` use
-  a 720p floor. Mali-T8xx (the Sony KD-55XE9005's Mali-T860 among them) and TVs with 2 GB of RAM or less start at
-  `medium`/720p and climb only when there is headroom; older Mali-400/450 start at `low`. `ultra` is the 1080p
-  cap with 2×2 supersampling. The watchdog measures present cost (time between frames, including swap) and drops
-  a level within a couple of seconds on GPU backpressure. Below the 720p floor it drops iterations and fps (15–20)
-  and freezes the palette, never resolution. Home is capped at 24 fps (30 only for the screensaver, or when a frame
-  is cheap). Settings → Picture quality pins a level; pinned `low` is also a static palette and low fps. Frame time
-  is logged every couple of seconds (logcat tag `Radiomarchy`, or the `[Radiomarchy]` console line on LG/Samsung).
-  A Choreographer stall over 500 ms during the first layout or the first seconds after Home is shown is ignored
-  (a cold start on a Sony Mali-T860 is about 600 ms and is normal). After that, one stall drops a quality level
-  or reduces iterations. At the 720p floor the output surface stays 720p, but the shader is drawn into a 1/2
-  or 1/3 offscreen buffer and linearly upscaled, and Home drops to 12 fps. A new GL frame is not queued while
-  the previous swap is still owed, so the UI thread is not blocked on queueBuffer. Persistent stalls at that
-  cheapest floor (three in about 20 s, even if iterations or fps were reset) or a floor that still overruns the
-  budget turn the wallpaper off for the session. The normal theme background stays — never a black screen,
-  never an ANR. The full-screen Radiomarchy view (the music app and its screensaver) uses the same path, and
-  the audio analysis never blocks the UI thread. The Home fractals wallpaper starts the music (or keeps a
-  current unpaused track audible), as the screensaver already did.
+  a 720p floor. Mali-T8xx (the Sony KD-55XE9005's Mali-T860 among them), TVs with 2 GB of RAM or less, and
+  older Mali-400/450 start at `light`: a small still of the fractal is baked once, then every frame only pans,
+  zooms with the beat and cycles the palette (near-zero shader cost, 24 fps at 720p, still music-reactive).
+  Capable GPUs start at `high` and keep the full live shader; Settings can still pin ultra/high/medium/low.
+  `ultra` is the 1080p cap with 2×2 supersampling. The watchdog measures present cost (time between frames,
+  including swap) and drops a level within a couple of seconds on GPU backpressure. Below the 720p floor the
+  full shader is drawn into a 1/2 or 1/3 offscreen buffer and linearly upscaled, and Home can drop to 12 fps.
+  A new GL frame is not queued while the previous swap is still owed, so the UI thread is not blocked on
+  queueBuffer. A Choreographer stall over 500 ms during the first layout or the first seconds after Home is
+  shown is ignored (a cold start on a Sony Mali-T860 is about 600 ms and is normal), but grace always ends
+  after 8 s even if almost no frames were presented. After that, one stall drops a quality level; a stall
+  over 2 s, or three consecutive presents over 1 s, already at the cheapest level (`light`, or `low` with
+  the cheap FBO), or three stalls in about 20 s at that floor, turn the wallpaper off for the session (and
+  the next session starts at `light`). The normal theme background stays — never a black screen, never an
+  ANR. The full-screen Radiomarchy view and the fractals screensaver use the same path, and the audio
+  analysis never blocks the UI thread. The Home fractals wallpaper starts the music (or keeps a current
+  unpaused track audible), as the screensaver already did.
 - **Demo mode**: RED (or a minute without keys while music plays) hides the panels: the fractal fills the screen
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music: it keeps playing, or starts a song if none is on, and stays audible (after another app or the saver itself had taken audio focus, or an AudioContext left suspended on LG/Samsung). Pulse stays the default screensaver.

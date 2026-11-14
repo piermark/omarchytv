@@ -31,8 +31,8 @@ test("edge points escape late: detail all the way down the zoom", () => {
   }
 });
 
-test("quality levels: 1080p cap, 720p floor, Mali-T8xx and low RAM start at medium", () => {
-  assert.deepStrictEqual(Array.from(F.LEVELS, (l) => l.name), ["ultra", "high", "medium", "low"]);
+test("quality levels: 1080p cap, 720p floor, Mali-T8xx and low RAM start at light", () => {
+  assert.deepStrictEqual(Array.from(F.LEVELS, (l) => l.name), ["ultra", "high", "medium", "low", "light"]);
   assert.strictEqual(F.LEVELS[0].aa, 2);
   assert.strictEqual(F.scaleFor(1, 1080), 1);
   assert.strictEqual(F.scaleFor(2, 1080), 720 / 1080);
@@ -45,12 +45,19 @@ test("quality levels: 1080p cap, 720p floor, Mali-T8xx and low RAM start at medi
   const medHome = F.bufferSize(2, 1920, 1080, 2, 1080);
   assert.strictEqual(medHome.w, 1280);
   assert.strictEqual(medHome.h, 720);
-  assert.strictEqual(F.firstLevel("Mali-450 MP", false), 3);
-  assert.strictEqual(F.firstLevel("anything", true), 3);
+  assert.strictEqual(F.firstLevel("Mali-450 MP", false), F.LIGHT_LEVEL);
+  assert.strictEqual(F.firstLevel("anything", true), F.LIGHT_LEVEL);
   assert.strictEqual(F.firstLevel("Mali-G52", false), 1);
-  assert.strictEqual(F.firstLevel("Mali-T860", false), 2);
-  assert.strictEqual(F.firstLevel("Mali-G52", false, 2), 2);
+  assert.strictEqual(F.firstLevel("Mali-T860", false), F.LIGHT_LEVEL);
+  assert.strictEqual(F.firstLevel("Mali-G52", false, 2), F.LIGHT_LEVEL);
   assert.strictEqual(F.firstLevel("Adreno (TM) 630", false, 4), 1);
+  assert.strictEqual(F.firstLevel("Mali-G52", false, 4, true), F.LIGHT_LEVEL);
+  assert.strictEqual(F.LEVELS[F.LIGHT_LEVEL].name, "light");
+  assert.strictEqual(F.isLight(4), true);
+  assert.strictEqual(F.isLight(2), false);
+  assert.strictEqual(F.cheapScaleFor(F.LIGHT_LEVEL, 1), 1);
+  assert.strictEqual(F.BAKE_H, 160);
+  assert.strictEqual(F.BAKE_ITERS, 20);
 });
 
 test("present cost treats the fps cap as on time and swap delay as backpressure", () => {
@@ -70,12 +77,15 @@ test("present cost treats the fps cap as on time and swap delay as backpressure"
 
 test("startup stall is ignored during the grace period", () => {
   assert.strictEqual(F.inGracePeriod(false, 0, 0), true);
-  assert.strictEqual(F.inGracePeriod(false, 100, 10000), true);
+  assert.strictEqual(F.inGracePeriod(false, 100, 4000), true);
   assert.strictEqual(F.inGracePeriod(true, 0, 1000), true);
-  assert.strictEqual(F.inGracePeriod(true, F.GRACE_FRAMES - 1, 10000), true);
   assert.strictEqual(F.inGracePeriod(true, 100, F.GRACE_MS - 1), true);
   assert.strictEqual(F.inGracePeriod(true, 0, 600), true);
   assert.strictEqual(F.inGracePeriod(true, F.GRACE_FRAMES, F.GRACE_MS), false);
+  assert.strictEqual(F.inGracePeriod(true, F.GRACE_FRAMES - 1, F.GRACE_MAX_MS), false);
+  assert.strictEqual(F.inGracePeriod(false, 100, F.GRACE_MAX_MS), false);
+  assert.strictEqual(F.inGracePeriod(true, 0, F.GRACE_MAX_MS), false);
+  assert.strictEqual(F.GRACE_MAX_MS, 8000);
   assert.strictEqual(F.isUiStall(600), true);
   assert.strictEqual(F.isUiStall(499), false);
 });
@@ -116,6 +126,28 @@ test("Sony persistent floor stalls every 750 ms with reset iters/fps cap=24 kill
   assert.strictEqual(F.cheapScaleFor(3, 1), 2);
   assert.strictEqual(F.cheapScaleFor(2, 1), 1);
   assert.strictEqual(F.CHEAP_FPS, 12);
+});
+
+test("Sony sparse presents end grace and long stalls at light kill", () => {
+  // Exact Sony KD-55XE9005 fix6 log: "grace: ignore UI stall 6499ms presented=3 elapsed=35139ms" …
+  const presented = [3, 4, 5, 6, 7];
+  const elapsed = [35139, 38718, 42533, 48570, 50935];
+  const gap = [6499, 3533, 3805, 6016, 2349];
+  for (let i = 0; i < presented.length; i++) {
+    assert.strictEqual(F.inGracePeriod(true, presented[i], elapsed[i]), false);
+    assert.strictEqual(F.afterGraceAction(F.LIGHT_LEVEL, gap[i], 0, 1), F.STALL_KILL);
+  }
+  assert.strictEqual(F.inGracePeriod(true, 3, 4000), true);
+  assert.strictEqual(F.inGracePeriod(true, 0, 600), true);
+  assert.strictEqual(F.afterGraceAction(F.LIGHT_LEVEL, 600, 0, 1), F.STALL_DEGRADE);
+  assert.strictEqual(F.afterGraceAction(F.LIGHT_LEVEL, 600, 2, 1), F.STALL_DEGRADE);
+  assert.strictEqual(F.afterGraceAction(F.LIGHT_LEVEL, 600, 3, 1), F.STALL_KILL);
+  assert.strictEqual(F.afterGraceAction(F.LIGHT_LEVEL, 2000, 0, 1), F.STALL_KILL);
+  assert.strictEqual(F.afterGraceAction(1, 6499, 0, 1), F.STALL_DEGRADE);
+  assert.strictEqual(F.isSlowPresent(1000), true);
+  assert.strictEqual(F.isSlowPresent(999), false);
+  assert.strictEqual(F.isLongStall(2000), true);
+  assert.strictEqual(F.isLongStall(1999), false);
 });
 
 test("WCAG-ish contrast lifts a dark accent off a dark background", () => {

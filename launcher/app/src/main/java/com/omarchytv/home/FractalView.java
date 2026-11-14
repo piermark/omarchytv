@@ -65,7 +65,9 @@ final class FractalView extends GLSurfaceView {
             new Quality("high", 1, 320, 1f),
             new Quality("medium", 1, 180, 1f),
             new Quality("low", 1, 110, 1f),   // scale comes from scaleFor(): 720p floor
+            new Quality("light", 1, 24, 1f),  // baked texture + cheap palette/zoom blit; auto on weak GPUs
     };
+    static final int LIGHT_LEVEL = 4;
 
     private final R3 r = new R3();
     private final Handler ui = new Handler(Looper.getMainLooper());
@@ -78,6 +80,7 @@ final class FractalView extends GLSurfaceView {
     private volatile Runnable onFail;
     private volatile SafetyListener onSafety;
     private boolean homeWallpaper;
+    private boolean preferLight;
     private long ramBytes;
     private boolean pumpOn;
     private int skipFrames;
@@ -90,6 +93,9 @@ final class FractalView extends GLSurfaceView {
     FractalView(Context c) {
         super(c);
         ramBytes = totalRam(c);
+        preferLight = c.getApplicationContext()
+                .getSharedPreferences("omarchytv", Context.MODE_PRIVATE)
+                .getBoolean(PREF_LIGHT, false);
         setEGLContextClientVersion(2);
         setPreserveEGLContextOnPause(true);
         setRenderer(r);
@@ -100,20 +106,20 @@ final class FractalView extends GLSurfaceView {
     void prepareHome() {
         homeWallpaper = true;
         r.fpsCap = HOME_FPS;
-        r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes);
+        r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes, preferLight);
         r.applyLowPolicy();
         applyBuffer();
     }
 
     /**
      * Full-screen Radiomarchy (the music app and its screensaver): the same 1080p cap, 720p floor
-     * and present-cost watchdog as Home. Mali-T8xx and <= 2 GB start at medium/720p; tight devices
-     * also start at 24 fps and only climb to 30 when there is headroom.
+     * and present-cost watchdog as Home. Mali-T8xx and <= 2 GB start at the light (baked) level;
+     * tight devices also start at 24 fps and only climb to 30 when there is headroom.
      */
     void prepareScene() {
         homeWallpaper = false;
         r.fpsCap = sceneFps("", ramBytes);
-        r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes);
+        r.level = pinnedQuality >= 0 ? pinnedQuality : firstLevel("", false, ramBytes, preferLight);
         r.applyLowPolicy();
         applyBuffer();
     }
@@ -158,9 +164,9 @@ final class FractalView extends GLSurfaceView {
         r.newPalette = true;
     }
 
-    /** 0 auto (adapts to this TV), else 1..4 = ultra, high, medium, low. */
+    /** 0 auto (adapts to this TV), else 1..4 = ultra, high, medium, low. Light is auto-only. */
     void setQuality(int q) {
-        pinnedQuality = q <= 0 ? -1 : Math.min(LEVELS.length - 1, q - 1);
+        pinnedQuality = q <= 0 ? -1 : Math.min(3, q - 1);
         r.qualityChanged = true;
     }
 
@@ -189,12 +195,19 @@ final class FractalView extends GLSurfaceView {
     static final int MAX_BUFFER_H = 1080, FLOOR_BUFFER_H = 720, HOME_FPS = 24, SAVER_FPS = 30;
     static final int WATCH_FRAMES = 16, LATE_RUSH = 4;
     static final long TWO_GB = 2L * 1024 * 1024 * 1024;
-    /** Ignore Choreographer stalls until first layout, N presented frames, and this long after attach/resume/focus. */
+    /** Ignore short Choreographer stalls until first layout, N presented frames, and this long after attach/resume/focus.
+     *  Grace always ends after {@link #GRACE_MAX_MS}, even if few frames have been presented
+     *  (Sony fix6: 0.15 fps never reached 8 frames, so grace never ended). */
     static final int GRACE_FRAMES = 8;
-    static final long GRACE_MS = 5000L, STALL_MS = 500L, STALL_NS = 500_000_000L, STALL_WINDOW_MS = 20_000L;
-    static final int STALLS_TO_KILL = 3, STALL_DEGRADE = 1, STALL_KILL = 2;
-    /** Home wallpaper at the floor: 12 fps, shader drawn into a smaller FBO and linearly upscaled to 720p. */
+    static final long GRACE_MS = 5000L, GRACE_MAX_MS = 8000L;
+    static final long STALL_MS = 500L, STALL_NS = 500_000_000L, STALL_WINDOW_MS = 20_000L;
+    static final long FATAL_STALL_MS = 2000L, SLOW_PRESENT_MS = 1000L, SLOW_PRESENT_NS = 1_000_000_000L;
+    static final int STALLS_TO_KILL = 3, SLOW_PRESENTS_TO_KILL = 3, STALL_DEGRADE = 1, STALL_KILL = 2;
+    /** Home wallpaper at the full-shader floor: 12 fps, shader drawn into a smaller FBO and linearly upscaled to 720p. */
     static final int CHEAP_FPS = 12, FBO_SCALE_FLOOR = 2, FBO_SCALE_CHEAP = 3;
+    /** Light bake: a small still of the fractal; per-frame cost is a palette/zoom blit at 720p. */
+    static final int BAKE_H = 160, BAKE_ITERS = 20;
+    static final String PREF_LIGHT = "fractals.prefer_light";
 
     /** Backing-store height: never above {@link #MAX_BUFFER_H}; medium/low use the 720p floor. */
     static int bufferHeight(int level, int viewH, int maxH) {
@@ -234,13 +247,27 @@ final class FractalView extends GLSurfaceView {
     }
 
     static int firstLevel(String gpu, boolean lowp, long ramBytes) {
+        return firstLevel(gpu, lowp, ramBytes, false);
+    }
+
+    /** Mali-T8xx, <= 2 GB, very old GPUs, or a previous session that had to kill the full shader: start at light. */
+    static int firstLevel(String gpu, boolean lowp, long ramBytes, boolean preferLight) {
+        if (preferLight) return LIGHT_LEVEL;
         String g = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
-        if (lowp || g.contains("mali-4") || g.contains("mali-3") || g.contains("videocore iv")) return 3;
+        if (lowp || g.contains("mali-4") || g.contains("mali-3") || g.contains("videocore iv")) return LIGHT_LEVEL;
         boolean tightRam = ramBytes > 0 && ramBytes <= TWO_GB;
         if (tightRam || g.contains("mali-t8") || g.contains("mali-t7") || g.contains("mali-g31")
                 || g.contains("mali-g51") || g.contains("adreno (tm) 3") || g.contains("powervr ge8"))
-            return 2;
+            return LIGHT_LEVEL;
         return 1;
+    }
+
+    static boolean isLight(int level) {
+        return level >= LIGHT_LEVEL;
+    }
+
+    static boolean isCheapest(int level) {
+        return level >= 3;
     }
 
     /** The interval overruns the fps-cap period: swap or the GPU held the GL thread. */
@@ -250,12 +277,33 @@ final class FractalView extends GLSurfaceView {
     }
 
     static boolean shouldDisableAtFloor(int level, int slowWindows) {
-        return level >= 3 && slowWindows >= 2;
+        return isCheapest(level) && slowWindows >= 2;
     }
 
-    /** Cold-start / first-layout / resume: a 600 ms Choreographer gap is normal, not an ANR. */
+    /** Cold-start / first-layout / resume: a 600 ms Choreographer gap is normal, not an ANR.
+     *  After {@link #GRACE_MAX_MS} grace is over even if almost no frames were presented. */
     static boolean inGracePeriod(boolean laidOut, int presentedFrames, long elapsedMs) {
-        return !laidOut || presentedFrames < GRACE_FRAMES || elapsedMs < GRACE_MS;
+        if (elapsedMs >= GRACE_MAX_MS) return false;
+        if (!laidOut) return true;
+        return presentedFrames < GRACE_FRAMES || elapsedMs < GRACE_MS;
+    }
+
+    static boolean isLongStall(long gapMs) {
+        return gapMs >= FATAL_STALL_MS;
+    }
+
+    static boolean isSlowPresent(long intervalNs) {
+        return intervalNs >= SLOW_PRESENT_NS;
+    }
+
+    /**
+     * After grace, at the cheapest level: a stall over 2 s, or 3 consecutive presents over 1 s,
+     * turns the wallpaper off. Otherwise the usual stall-count rule.
+     */
+    static int afterGraceAction(int level, long gapMs, int consecutiveSlow, int stallsInWindow) {
+        if (isCheapest(level) && isLongStall(gapMs)) return STALL_KILL;
+        if (isCheapest(level) && consecutiveSlow >= SLOW_PRESENTS_TO_KILL) return STALL_KILL;
+        return stallAction(level, stallsInWindow);
     }
 
     static boolean isUiStall(long intervalNs) {
@@ -285,7 +333,7 @@ final class FractalView extends GLSurfaceView {
     }
 
     static int cheapScaleFor(int level, int alreadyCheap) {
-        if (level < 3) return 1;
+        if (level < 3 || isLight(level)) return 1;
         return Math.max(FBO_SCALE_FLOOR, Math.min(FBO_SCALE_CHEAP, alreadyCheap <= 1 ? FBO_SCALE_FLOOR : alreadyCheap));
     }
 
@@ -407,7 +455,7 @@ final class FractalView extends GLSurfaceView {
         @Override
         public void doFrame(long frameTimeNanos) {
             if (!pumpOn) return;
-            if (lastUiFrameNs != 0 && homeWallpaper && isUiStall(frameTimeNanos - lastUiFrameNs)) {
+            if (lastUiFrameNs != 0 && isUiStall(frameTimeNanos - lastUiFrameNs)) {
                 long gapMs = (frameTimeNanos - lastUiFrameNs) / 1_000_000L;
                 long elapsed = SystemClock.elapsedRealtime() - graceStartMs;
                 boolean laid = getWidth() > 0 && getHeight() > 0;
@@ -454,9 +502,14 @@ final class FractalView extends GLSurfaceView {
         if (kept < stallAt.length) stallAt[kept] = now;
         else stallAt[stallAt.length - 1] = now;
         stallCount = Math.min(kept + 1, stallAt.length);
-        int action = stallAction(r.level, stallCount);
+        int action = afterGraceAction(r.level, gapMs, r.consecutiveSlow, stallCount);
         if (action == STALL_KILL) {
-            tripSafety("UI stall " + gapMs + "ms (" + stallCount + " in 20s at floor)");
+            tripSafety("UI stall " + gapMs + "ms (" + stallCount + " in 20s at " + LEVELS[r.level].name + ")");
+            return;
+        }
+        if (isLight(r.level)) {
+            android.util.Log.i("Radiomarchy", "UI stall " + gapMs + "ms: light cap=" + r.fpsCap);
+            skipFrames = 4;
             return;
         }
         if (pinnedQuality < 0 && r.level < LEVELS.length - 1) {
@@ -499,6 +552,13 @@ final class FractalView extends GLSurfaceView {
     private void tripSafety(String why) {
         if (safetyTripped) return;
         safetyTripped = true;
+        preferLight = true;
+        try {
+            getContext().getApplicationContext()
+                    .getSharedPreferences("omarchytv", Context.MODE_PRIVATE)
+                    .edit().putBoolean(PREF_LIGHT, true).apply();
+        } catch (Throwable ignored) {
+        }
         stopPump();
         ui.post(() -> {
             android.util.Log.w("Radiomarchy", "wallpaper off for this session: " + why);
@@ -636,6 +696,10 @@ final class FractalView extends GLSurfaceView {
         int lateInWindow, slowWindows;
         int cheapScale = 1;
         int fbo, fboTex, blitProg, blitPos, blitTex, blitW, blitH;
+        int bakeFbo, bakeTex, bakeW, bakeH, lightProg, lightPos, lightTexU;
+        int lightTime, lightPulse, lightBass, lightCycle, lightDim, lightLevel, lightPal;
+        boolean bakeDirty = true, lightProcedural;
+        int consecutiveSlow;
         volatile long lastDrawStartNs, lastPresentCostNs;
 
         @Override
@@ -644,9 +708,11 @@ final class FractalView extends GLSurfaceView {
             GLES20.glGetShaderPrecisionFormat(GLES20.GL_FRAGMENT_SHADER, GLES20.GL_HIGH_FLOAT, range, 0, precision, 0);
             lowp = precision[0] < 16;
             gpu = String.valueOf(GLES20.glGetString(GLES20.GL_RENDERER));
-            level = pinnedQuality >= 0 ? pinnedQuality : firstLevel(gpu, lowp, ramBytes);
+            level = pinnedQuality >= 0 ? pinnedQuality : firstLevel(gpu, lowp, ramBytes, preferLight);
             fpsCap = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
             dropFbo();
+            dropBake();
+            bakeDirty = true;
             applyLowPolicy();
             if (lowp && cur < 2) cur = 2;
             prog = link(VERT, (lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n") + FRAG);
@@ -701,6 +767,17 @@ final class FractalView extends GLSurfaceView {
             if (lastDrawStartNs != 0) lastPresentCostNs = ns - lastDrawStartNs;
             lastDrawStartNs = ns;
             presentedFrames++;
+            long elapsed = now - graceStartMs;
+            boolean laid = w > 0 && h > 0;
+            if (lastPresentCostNs > 0 && !inGracePeriod(laid, presentedFrames, elapsed)) {
+                if (isSlowPresent(lastPresentCostNs)) consecutiveSlow++;
+                else consecutiveSlow = 0;
+                long presentMs = lastPresentCostNs / 1_000_000L;
+                if (afterGraceAction(level, presentMs, consecutiveSlow, 0) == STALL_KILL) {
+                    tripSafety("present " + presentMs + "ms x" + consecutiveSlow + " at " + LEVELS[level].name);
+                    return;
+                }
+            }
             float dt = Math.min(0.1f, lastNs == 0 ? 0.016f : (ns - lastNs) / 1e9f);
             measure(ns, now);
             lastNs = ns;
@@ -731,6 +808,10 @@ final class FractalView extends GLSurfaceView {
             float zoom = (float) (2.6 * Math.exp(-dive));
             float t = (now - t0) / 1000f;
             Quality q = LEVELS[level];
+            if (isLight(level)) {
+                drawLight(now, pulse, t0);
+                return;
+            }
 
             int iw = w, ih = h;
             if (cheapScale > 1) {
@@ -848,13 +929,23 @@ final class FractalView extends GLSurfaceView {
                 newPalette = true;
                 sceneSince = now;
                 beatCount = 0;
+                bakeDirty = true;
                 return;
             }
             randomise(n);
+            newPalette = true;
+            if (isLight(level)) {
+                cur = n;
+                next = -1;
+                mix = 0;
+                sceneSince = now;
+                beatCount = 0;
+                bakeDirty = true;
+                return;
+            }
             next = n;
             mix = 0;
             mixStart = now;
-            newPalette = true;
         }
 
         /** A new palette blends in over the cross-fade (random each scene, or the chosen fixed one). */
@@ -920,21 +1011,24 @@ final class FractalView extends GLSurfaceView {
             if (!rush) late = 0;
             if (pinnedQuality >= 0) { applyLowPolicy(); return; }
             if (pressure) {
-                if (level < LEVELS.length - 1) {
+                if (!isLight(level) && level < LIGHT_LEVEL) {
                     level++;
                     goodSince = now;
                     slowWindows = 0;
+                    bakeDirty = true;
                     applyLowPolicy();
                     applyBuffer();
                 } else {
                     capFps = true;
-                    freezePalette = true;
-                    if (cheapScale < FBO_SCALE_CHEAP) cheapScale++;
-                    if (iterMul > 0.4f) iterMul = 0.4f;
+                    if (!isLight(level)) {
+                        freezePalette = true;
+                        if (cheapScale < FBO_SCALE_CHEAP) cheapScale++;
+                        if (iterMul > 0.4f) iterMul = 0.4f;
+                    }
                     applyLowPolicy();
                     slowWindows++;
-                    if (homeWallpaper && (shouldDisableAtFloor(level, slowWindows) || stallAction(level, slowWindows) == STALL_KILL)) {
-                        tripSafety("GL frame " + String.format(java.util.Locale.US, "%.1f", avg) + "ms at floor");
+                    if (shouldDisableAtFloor(level, slowWindows) || stallAction(level, slowWindows) == STALL_KILL) {
+                        tripSafety("GL frame " + String.format(java.util.Locale.US, "%.1f", avg) + "ms at " + LEVELS[level].name);
                     }
                 }
             } else {
@@ -942,7 +1036,9 @@ final class FractalView extends GLSurfaceView {
                 if (goodSince == 0) goodSince = now;
                 if (now - goodSince > 20000) {
                     int want = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
-                    if (cheapScale > 1) {
+                    if (isLight(level)) {
+                        goodSince = now;   // stay on light: climbing back to the full shader stutters on Mali-T8xx
+                    } else if (cheapScale > 1) {
                         cheapScale--;
                     } else if (fpsCap < want || freezePalette || iterMul < 0.99f) {
                         freezePalette = false;
@@ -960,7 +1056,12 @@ final class FractalView extends GLSurfaceView {
         private void applyLowPolicy() {
             capFps = true;
             int base = homeWallpaper ? HOME_FPS : sceneFps(gpu, ramBytes);
-            if (level >= 3) {
+            if (isLight(level)) {
+                freezePalette = false;
+                cheapScale = 1;
+                iterMul = 1f;
+                fpsCap = base;
+            } else if (level >= 3) {
                 freezePalette = true;
                 cheapScale = cheapScaleFor(level, cheapScale);
                 if (fpsCap > CHEAP_FPS) fpsCap = CHEAP_FPS;
@@ -1006,6 +1107,120 @@ final class FractalView extends GLSurfaceView {
             blitW = bw;
             blitH = bh;
             return true;
+        }
+
+        private static final float[] BAKE_PAL = {
+                0, 0, 0, 0.33f, 0.33f, 0.33f, 0.66f, 0.66f, 0.66f, 1, 1, 1
+        };
+
+        private void drawLight(long now, float pulse, long t0) {
+            if (!lightProcedural && (bakeDirty || bakeTex == 0)) {
+                if (!bakeOnce()) lightProcedural = true;
+            }
+            if (lightProg == 0) {
+                lightProg = link(LIGHT_VERT, LIGHT_FRAG);
+                if (lightProg == 0) return;
+                lightPos = GLES20.glGetAttribLocation(lightProg, "aPos");
+                lightTexU = GLES20.glGetUniformLocation(lightProg, "uTex");
+                lightTime = GLES20.glGetUniformLocation(lightProg, "uTime");
+                lightPulse = GLES20.glGetUniformLocation(lightProg, "uPulse");
+                lightBass = GLES20.glGetUniformLocation(lightProg, "uBass");
+                lightCycle = GLES20.glGetUniformLocation(lightProg, "uCycle");
+                lightDim = GLES20.glGetUniformLocation(lightProg, "uDim");
+                lightLevel = GLES20.glGetUniformLocation(lightProg, "uLevel");
+                lightPal = GLES20.glGetUniformLocation(lightProg, "uPal");
+            }
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+            GLES20.glViewport(0, 0, w, h);
+            GLES20.glUseProgram(lightProg);
+            GLES20.glUniform1f(lightTime, (now - t0) / 1000f);
+            GLES20.glUniform1f(lightPulse, pulse);
+            GLES20.glUniform1f(lightBass, f.bass);
+            GLES20.glUniform1f(lightCycle, cycle);
+            GLES20.glUniform1f(lightDim, dim);
+            GLES20.glUniform1f(lightLevel, f.level);
+            GLES20.glUniform3fv(lightPal, 4, pal, 0);
+            GLES20.glUniform1i(GLES20.glGetUniformLocation(lightProg, "uHave"), (bakeTex != 0 && !lightProcedural) ? 1 : 0);
+            if (bakeTex != 0) {
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, bakeTex);
+                GLES20.glUniform1i(lightTexU, 0);
+            }
+            GLES20.glEnableVertexAttribArray(lightPos);
+            GLES20.glVertexAttribPointer(lightPos, 2, GLES20.GL_FLOAT, false, 0, quad);
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+        }
+
+        private boolean bakeOnce() {
+            int bh = BAKE_H;
+            int bw = Math.max(1, Math.round(bh * (w / (float) Math.max(1, h))));
+            if (bakeTex == 0 || bakeW != bw || bakeH != bh) {
+                dropBake();
+                int[] t = new int[1], fb = new int[1];
+                GLES20.glGenTextures(1, t, 0);
+                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, t[0]);
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR);
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE);
+                GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE);
+                GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGB, bw, bh, 0, GLES20.GL_RGB, GLES20.GL_UNSIGNED_BYTE, null);
+                GLES20.glGenFramebuffers(1, fb, 0);
+                GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, fb[0]);
+                GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, t[0], 0);
+                if (GLES20.glCheckFramebufferStatus(GLES20.GL_FRAMEBUFFER) != GLES20.GL_FRAMEBUFFER_COMPLETE) {
+                    GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+                    GLES20.glDeleteFramebuffers(1, fb, 0);
+                    GLES20.glDeleteTextures(1, t, 0);
+                    return false;
+                }
+                bakeFbo = fb[0];
+                bakeTex = t[0];
+                bakeW = bw;
+                bakeH = bh;
+            } else {
+                GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, bakeFbo);
+            }
+            GLES20.glViewport(0, 0, bakeW, bakeH);
+            GLES20.glUseProgram(prog);
+            float t = (SystemClock.elapsedRealtime() - t0) / 1000f;
+            float zoom = (float) (2.6 * Math.exp(-dive));
+            GLES20.glUniform2f(uRes, bakeW, bakeH);
+            GLES20.glUniform1f(uTime, t);
+            GLES20.glUniform1f(uBass, 0);
+            GLES20.glUniform1f(uMid, 0);
+            GLES20.glUniform1f(uHigh, 0);
+            GLES20.glUniform1f(uLevel, 0.4f);
+            GLES20.glUniform1f(uPulse, 0);
+            GLES20.glUniform1i(uScene, cur);
+            GLES20.glUniform1i(uScene2, cur);
+            GLES20.glUniform1f(uMix, 0);
+            GLES20.glUniform3fv(uPal, 4, BAKE_PAL, 0);
+            GLES20.glUniform1f(uCycle, 0);
+            GLES20.glUniform1f(uZoom, zoom);
+            GLES20.glUniform2f(uCenter, (float) center[0], (float) center[1]);
+            GLES20.glUniform1f(uIter, BAKE_ITERS);
+            GLES20.glUniform1f(uRot, 0);
+            GLES20.glUniform1f(uDim, 1);
+            GLES20.glUniform1f(uAA, 1);
+            GLES20.glUniform4fv(uP, SCENES.length, params, 0);
+            GLES20.glEnableVertexAttribArray(aPos);
+            GLES20.glVertexAttribPointer(aPos, 2, GLES20.GL_FLOAT, false, 0, quad);
+            GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4);
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+            bakeDirty = false;
+            android.util.Log.i("Radiomarchy", "light bake " + bakeW + "x" + bakeH + " scene=" + SCENES[cur]);
+            return true;
+        }
+
+        private void dropBake() {
+            if (bakeFbo != 0) {
+                GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0);
+                int[] f = { bakeFbo }, t = { bakeTex };
+                GLES20.glDeleteFramebuffers(1, f, 0);
+                GLES20.glDeleteTextures(1, t, 0);
+                bakeFbo = bakeTex = bakeW = bakeH = 0;
+            }
+            bakeDirty = true;
         }
 
         private void dropFbo() {
@@ -1065,6 +1280,27 @@ final class FractalView extends GLSurfaceView {
     static final String VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
     static final String BLIT_VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
     static final String BLIT_FRAG = "precision mediump float;\nvarying vec2 vUv;\nuniform sampler2D uTex;\nvoid main(){ gl_FragColor = texture2D(uTex, vUv); }\n";
+    static final String LIGHT_VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
+    static final String LIGHT_FRAG = "precision mediump float;\nvarying vec2 vUv;\nuniform sampler2D uTex;\nuniform float uTime, uPulse, uBass, uCycle, uDim, uLevel;\nuniform vec3 uPal[4];\nuniform int uHave;\n"
+            + "vec3 pal(float t){ t = fract(t) * 4.0; float k = fract(t); k = k * k * (3.0 - 2.0 * k);\n"
+            + "  if (t < 1.0) return mix(uPal[0], uPal[1], k); if (t < 2.0) return mix(uPal[1], uPal[2], k);\n"
+            + "  if (t < 3.0) return mix(uPal[2], uPal[3], k); return mix(uPal[3], uPal[0], k); }\n"
+            + "void main(){\n"
+            + "  float z = 1.0 + 0.14 * uPulse + 0.08 * uBass;\n"
+            + "  vec2 pan = 0.045 * vec2(sin(uTime * 0.07), cos(uTime * 0.053));\n"
+            + "  vec2 uv = (vUv - 0.5) / z + 0.5 + pan;\n"
+            + "  uv = clamp(uv, 0.001, 0.999);\n"
+            + "  float idx;\n"
+            + "  if (uHave > 0) idx = texture2D(uTex, uv).r;\n"
+            + "  else {\n"
+            + "    vec2 p = uv * 2.0 - 1.0;\n"
+            + "    idx = 0.5 + 0.25 * sin(p.x * 6.0 + uTime * 0.3) + 0.25 * sin(p.y * 5.0 - uTime * 0.2)\n"
+            + "        + 0.2 * sin((p.x + p.y) * 4.0 + uTime * 0.15);\n"
+            + "  }\n"
+            + "  vec3 c = pal(idx + uCycle) * (0.85 + 0.4 * uLevel);\n"
+            + "  c = c / (1.0 + c * 0.35);\n"
+            + "  gl_FragColor = vec4(c * uDim, 1.0);\n"
+            + "}\n";
 
     /**
      * One fragment shader, five scenes; uScene2 + uMix cross-fade two of them; uP[s] holds scene s's random geometry;
