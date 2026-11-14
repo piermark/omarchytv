@@ -2039,7 +2039,10 @@ final class HomeV29 extends FrameLayout {
     }
 
     // Home is designed at 1920×1080. The term box is 32+640; a 16 px gutter stays between it and the widgets.
-    static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 268;
+    // Racing is wide enough for a full Grand Prix name plus the session time at 19 px Caskaydia Mono
+    // ("United States" + 10 px + "sun 22 nov 05:00", 18 px pad each side). 382 leaves a little slack;
+    // (1200 - 382 - 3*16 - 80) is divisible by 3 so weather/pc/ai still fill the 1200 row exactly.
+    static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 382;
 
     /** Right-aligned widgets row width in design px. With racing on, the row uses the space from the term gutter to the right margin (1200), never the term box. */
     static int widgetsWidth(boolean racing) {

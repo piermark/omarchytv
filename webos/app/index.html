@@ -322,6 +322,25 @@ html, body {
   flex-direction: column;
 }
 
+/* 2.20: wider Motorsport column (same 382 / 310 / 230 / 1200 as Android HomeV29).
+   The row starts 16 px after the 32+640 term box and never overlaps it. */
+#widgets-wrap.with-racing {
+  width: 1200px;
+}
+#widgets-wrap.with-racing #race-box {
+  flex: 0 0 382px;
+  width: 382px;
+}
+#widgets-wrap.with-racing #wx-box {
+  flex: 0 0 310px;
+  width: 310px;
+}
+#widgets-wrap.with-racing #pc-box,
+#widgets-wrap.with-racing #ai-box {
+  flex: 0 0 230px;
+  width: 230px;
+}
+
 #widgets-wrap > * + * {
   margin-top: 12px;
 }

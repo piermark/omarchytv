@@ -41,6 +41,10 @@ Built on the published 2.15.1: everything fixed there is in here.
   with a sine scroller of what is playing. ◀ ▶ another fractal, ▲ ▼ the colours.
 - **Screensaver**: "Radiomarchy fractals" (Settings → Screensaver), with the music if it plays.
 
+### Home
+
+- **Motorsport widget is wider**, so Grand Prix names and session times stay in full ("Las Vegas  sun 22 nov 05:00") instead of "Las…".
+
 ### Pull requests
 
 - #136, #138, #139 were already in 2.15.1; #140 is superseded by #139. #122 (readability tokens, draft) is rebased

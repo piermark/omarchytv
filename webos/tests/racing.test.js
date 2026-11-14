@@ -243,6 +243,10 @@ test("the racing panel fits the other Home widgets", () => {
   assert.ok(!/#race-body\s*\{[^}]*position:\s*absolute/.test(HTML), "the body stays in flow so the box is as tall as its lines");
   assert.ok(!/#race-box\s*\{[^}]*overflow:\s*hidden/.test(HTML), "the box is not clipped out of flow");
   assert.ok(/text-overflow:\s*ellipsis/.test(HTML), "long names ellipsize");
+  assert.ok(/#widgets-wrap\.with-racing\s*\{[^}]*width:\s*1200px/.test(HTML), "racing widens the row to 1200, 16 px after the term box");
+  assert.ok(/#widgets-wrap\.with-racing #race-box\s*\{[^}]*flex:\s*0 0 382px/.test(HTML), "the Motorsport column is 382 px, wide enough for a full GP name");
+  assert.ok(/#widgets-wrap\.with-racing #wx-box\s*\{[^}]*flex:\s*0 0 310px/.test(HTML), "weather keeps 310 px");
+  assert.ok(/wrap\.classList\.toggle\("with-racing", raceOn\)/.test(APP), "the wider slot is only on when the widget is on");
   assert.ok(/clockShort/.test(APP), "the Home countdown is the short form");
   assert.ok(/function raceSeriesLine/.test(APP) && /extraWeekend && left\[1\]/.test(APP),
     "one line per series, plus the next weekend only when a single series is on");

@@ -952,6 +952,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var raceOn = !!cfg.widgets.racing;
     var raceBox = document.getElementById("race-box");
     if (raceBox) raceBox.style.display = raceOn ? "block" : "none";
+    var wrap = document.getElementById("widgets-wrap");
+    if (wrap) wrap.classList.toggle("with-racing", raceOn);
     document.getElementById("wx-box").style.display = cfg.widgets.weather ? "block" : "none";
     document.getElementById("wx-box").style.marginLeft = raceOn ? "16px" : "0";
     document.getElementById("pc-box").style.display = cfg.widgets.pc ? "block" : "none";
