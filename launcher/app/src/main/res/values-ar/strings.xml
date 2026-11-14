@@ -172,6 +172,7 @@
     <string name="search_prompt">قل اسم تطبيق</string>
     <string name="link_service_on">في وضع الاستماع</string>
     <string name="link_service_off">لا توجد شبكة</string>
+    <string name="link_notification">Omarchy Link قيد التشغيل</string>
     <string name="remote_service">جهاز تحكم OmarchyTV</string>
     <string name="remote_service_desc">يسمح لحاسوب Omarchy Linux المقترن بالضغط على رجوع في التلفاز. لا يقرأ أي شيء على الشاشة.</string>
     <string name="keymap_service">أزرار جهاز تحكم OmarchyTV</string>

@@ -172,6 +172,7 @@
     <string name="search_prompt">Назвіть застосунок</string>
     <string name="link_service_on">очікує підключень</string>
     <string name="link_service_off">немає мережі</string>
+    <string name="link_notification">Omarchy Link працює</string>
     <string name="remote_service">Пульт OmarchyTV</string>
     <string name="remote_service_desc">Дозволяє сполученому ПК з Omarchy Linux натискати «Назад» на телевізорі. Нічого не зчитує з екрана.</string>
     <string name="keymap_service">Кнопки пульта OmarchyTV</string>

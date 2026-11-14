@@ -172,6 +172,7 @@
     <string name="search_prompt">Si et appnavn</string>
     <string name="link_service_on">lytter</string>
     <string name="link_service_off">ikke noe nettverk</string>
+    <string name="link_notification">Omarchy Link kjører</string>
     <string name="remote_service">OmarchyTV-fjernkontroll</string>
     <string name="remote_service_desc">Lar en sammenkoblet Omarchy Linux-PC trykke Tilbake på TV-en. Den leser ingenting på skjermen.</string>
     <string name="keymap_service">OmarchyTV-fjernkontrollknapper</string>

@@ -50,10 +50,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Omarchy Link, TV side (omarchy-link/docs/PROTOCOL.md): the Android {@link LinkServer.Host} plus the
  * plumbing around it (bind to the LAN address, NsdManager advert, status changes, keys).
  *
- * Lifetime: the server lives with the launcher process, which Android keeps because it is the HOME app.
- * {@link KeepAlive} is a plain started Service (no foreground notification, no wakelock) so the process
- * gets service priority while Android allows it; when Android stops it under background limits the
- * server keeps running in the process. Started from {@link MainActivity#onCreate}.
+ * Lifetime: the server lives in the launcher process. Once a PC is paired, {@link KeepAlive} is a foreground
+ * service (a quiet low-importance notification, type connectedDevice, no wakelock) started at boot and after an
+ * update by {@link HomeCheck}, from {@link MainActivity#onCreate} and on pairing, so the server stays reachable
+ * whether or not OmarchyTV is in front, and keeps network access while the TV dozes. START_STICKY brings it
+ * back if Android stops it. After sleep the existing SCREEN_ON and network-callback paths rebind the socket.
+ * With Link disabled or no PC paired there is no resident service (the in-process server still runs while
+ * the launcher is up, as before).
  */
 public final class OmarchyLink implements LinkServer.Host {
 
@@ -102,14 +105,12 @@ public final class OmarchyLink implements LinkServer.Host {
 
     // --------------------------------------------------------------- entry points used by the launcher
 
-    /** Called from MainActivity.onCreate (launcher in the foreground, so startService is allowed). */
+    /** Called from MainActivity.onCreate: runs the server in-process; promotes it to the foreground service when a PC is paired. */
     static void start(Context c) {
         ensure(c.getApplicationContext());
-        try {
-            c.startService(new Intent(c, KeepAlive.class));
-        } catch (IllegalStateException ignored) {
-            // background start refused: the in-process server already runs
-        }
+        // Never throws: a refused start leaves the in-process server running. Link switched off (or the last PC
+        // gone) since the service started: it stops, so the off switch takes effect without a reboot.
+        LinkBoot.reconcile(c);
     }
 
     /** Returns at once: the store load, socket bind and mDNS run on the Link worker, never on the UI thread. */
@@ -402,7 +403,10 @@ public final class OmarchyLink implements LinkServer.Host {
 
     // --------------------------------------------------------------- Service shell
 
-    /** Keeps the launcher process at service priority while Android allows it. Holds nothing itself. */
+    /**
+     * Foreground service (low-importance notification, connectedDevice) that keeps the launcher process, and so
+     * the Link server, alive. Holds nothing itself: no wakelock, no timer.
+     */
     public static final class KeepAlive extends Service {
         @Override
         public void onCreate() {
@@ -410,9 +414,38 @@ public final class OmarchyLink implements LinkServer.Host {
             ensure(getApplicationContext());
         }
 
+        private int lastStartId;
+
         @Override
         public int onStartCommand(Intent intent, int flags, int startId) {
+            lastStartId = startId;
+            // Always first, even for a sticky restart with a null intent: a startForegroundService call must be answered.
+            if (!LinkBoot.promote(this)) {
+                stopSelf(startId);
+                return START_NOT_STICKY;
+            }
+            if (!LinkBoot.wanted(getApplicationContext())) {   // Link off, or no PC paired: no resident service
+                retire();
+                return START_NOT_STICKY;
+            }
+            LinkBoot.promoted = this;
             return START_STICKY;
+        }
+
+        /**
+         * Main thread. stopSelf(lastStartId) does nothing when a newer start is already queued; that start's
+         * onStartCommand promotes and decides again, so a pending start is never stopped before startForeground.
+         */
+        void retire() {
+            if (LinkBoot.promoted == this) LinkBoot.promoted = null;
+            stopForeground(Service.STOP_FOREGROUND_REMOVE);
+            stopSelf(lastStartId);
+        }
+
+        @Override
+        public void onDestroy() {
+            if (LinkBoot.promoted == this) LinkBoot.promoted = null;
+            super.onDestroy();
         }
 
         @Override
@@ -883,6 +916,7 @@ public final class OmarchyLink implements LinkServer.Host {
         } catch (Exception ignored) {
         }
         emit("pcs", d);
+        LinkBoot.reconcile(app);   // re-reads link.json on the main thread: concurrent callbacks can't race
     }
 
     // --------------------------------------------------------------- cast (PROTOCOL.md §6 Cast)
