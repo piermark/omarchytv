@@ -1,11 +1,9 @@
 package com.omarchytv.home;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
 import android.text.SpannableStringBuilder;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
@@ -23,7 +21,6 @@ import org.json.JSONObject;
 
 import java.security.SecureRandom;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -39,7 +36,8 @@ import java.util.Map;
 public class AgentActivity extends Activity implements OmarchyLink.Listener {
 
     static final String EXTRA_AGENT = "agent";
-    private static final int REQ_SPEECH = 22;
+    private VoiceInput voice;
+    private CharSequence idleHint;   // the input's hint while VoiceInput shows "Listening…" in its place
 
     private TextView header, log, hint, prompt, mic;
     private EditText input;
@@ -127,6 +125,7 @@ public class AgentActivity extends Activity implements OmarchyLink.Listener {
     @Override
     protected void onPause() {
         log.removeCallbacks(tick);
+        if (voice != null && voice.listening()) stopListening(null);
         super.onPause();
     }
 
@@ -353,25 +352,46 @@ public class AgentActivity extends Activity implements OmarchyLink.Listener {
 
     // ---- asking ------------------------------------------------------------------------------------
 
+    // voice: VoiceInput (the in-app recognizer, the system dialog only as a fallback); what it has to say goes in the hint
     private void listen() {
         if (!input.isEnabled()) return;
-        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, MainActivity.speechLanguage(this))
-                .putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.ask_prompt));
-        try {
-            startActivityForResult(i, REQ_SPEECH);
-        } catch (ActivityNotFoundException e) {
-            input.requestFocus();   // no recognizer on this TV: the on-screen keyboard instead
+        if (voice == null) voice = new VoiceInput(this, getString(R.string.ask_prompt), new VoiceInput.Callback() {
+            @Override public void onListening(String partial) {
+                if (idleHint == null) idleHint = input.getHint();
+                input.setHint(partial.isEmpty() ? "🎤 Listening…" : "🎤 " + partial);
+            }
+
+            @Override public void onHeard(java.util.List<String> words) {
+                stopListening(null);
+                send(words.get(0));
+            }
+
+            @Override public void onStopped(String message) {
+                stopListening(message);
+            }
+        });
+        voice.start();
+    }
+
+    private void stopListening(String message) {
+        if (voice != null) voice.destroy();
+        if (idleHint != null) {
+            input.setHint(message != null ? message : idleHint);
+            idleHint = null;
         }
+        if (VoiceInput.NO_RECOGNIZER.equals(message)) input.requestFocus();   // the on-screen keyboard instead
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (voice != null) voice.onRequestPermissionsResult(req, res);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent d) {
         super.onActivityResult(requestCode, resultCode, d);
-        if (requestCode != REQ_SPEECH || resultCode != RESULT_OK || d == null) return;
-        List<String> r = d.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-        if (r != null && !r.isEmpty()) send(r.get(0));
+        if (voice != null) voice.onActivityResult(requestCode, resultCode, d);
     }
 
     private void send(String raw) {

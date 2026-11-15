@@ -11,7 +11,6 @@ import android.content.pm.ResolveInfo;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.ViewGroup;
@@ -31,8 +30,8 @@ import java.util.UUID;
 
 /**
  * v2.13 Grok Bot Companion (TV) session: a chat panel opened from the floating companion (the Blue key, OK on
- * it after long-press Menu, or the home tile). Type with the on-screen or a Bluetooth/USB keyboard, or speak through
- * the system recognizer (the remote's mic on Android TV). With @tcballard's Agent Desktop on
+ * it after long-press Menu, or the home tile). Type with the on-screen or a Bluetooth/USB keyboard, or speak (VoiceInput:
+ * the in-app recognizer, the remote's mic on Android TV). With @tcballard's Agent Desktop on
  * a linked PC (omarchy-link) the question goes to it; otherwise to OmarchyTV's own Ask (the AI provider
  * chosen there: Grok Bot, Claude Code, Codex, Hermes…). "open Netflix" / "apri YouTube" opens an installed app
  * first (CompanionCommands). Links in a reply become buttons: YouTube ones play in the YouTube app, others open
@@ -40,11 +39,12 @@ import java.util.UUID;
  * Agent Desktop v0.2.0 (MIT, commit b6933e5); the code here is mine.
  */
 public class CompanionChatActivity extends Activity implements OmarchyLink.Listener {
-    private static final int REQ_VOICE = 41;
     private LinearLayout log;
     private ScrollView scroll;
     private EditText input;
     private TextView mic;
+    private VoiceInput voice;
+    private TextView listening;
     private GrokbotMark mark;
     private String pendingId;
     private String botName = "Grok Bot";
@@ -192,25 +192,54 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
         }
     }
 
+    // ---- voice (VoiceInput: the in-app recognizer, the system dialog only as a fallback) ----
+
     private void voice() {
-        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, MainActivity.speechLanguage(this))
-                .putExtra(RecognizerIntent.EXTRA_PROMPT, "Ask " + botName);
-        try {
-            startActivityForResult(i, REQ_VOICE);
-        } catch (ActivityNotFoundException e) {
-            line("OmarchyTV", "No speech recognizer on this TV: type instead (the keyboard's own mic may work).", false);
-            input.requestFocus();
+        if (voice == null) voice = new VoiceInput(this, "Ask " + botName, new VoiceInput.Callback() {
+            @Override public void onListening(String partial) {
+                if (listening == null) {
+                    listening = text("🎤 Listening…", 13, t.cyan, false);
+                    listening.setPadding(0, dp(3), 0, dp(3));
+                    log.addView(listening);
+                    scroll.post(() -> scroll.fullScroll(ScrollView.FOCUS_DOWN));
+                    mark.pose("alert");
+                }
+                if (!partial.isEmpty()) listening.setText("🎤 Listening… " + partial);
+            }
+
+            @Override public void onHeard(List<String> words) {
+                stopVoice(null);
+                send(words.get(0));
+            }
+
+            @Override public void onStopped(String message) {
+                stopVoice(message);
+            }
+        });
+        voice.start();
+    }
+
+    private void stopVoice(String message) {
+        if (voice != null) voice.destroy();
+        if (listening != null) {
+            log.removeView(listening);
+            listening = null;
         }
+        mark.pose("idle");
+        if (message != null) line("OmarchyTV", message, false, false);
+        if (VoiceInput.NO_RECOGNIZER.equals(message)) input.requestFocus();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (voice != null) voice.onRequestPermissionsResult(req, res);
     }
 
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
-        if (req != REQ_VOICE || res != RESULT_OK || data == null) return;
-        List<String> r = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-        if (r != null && !r.isEmpty()) send(r.get(0));
+        if (voice != null) voice.onActivityResult(req, res, data);
     }
 
     @Override
@@ -252,6 +281,7 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
     protected void onPause() {
         visible = false;
         OmarchyLink.removeListener(this);
+        if (voice != null && voice.listening()) stopVoice(null);
         super.onPause();
     }
 
