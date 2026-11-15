@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import DEFAULT_PORT, VERSION, ai, assistant, cast, client as link, config, mdns, netcheck, panes, sync
+from . import DEFAULT_PORT, VERSION, ai, assistant, cast, client as link, config, mdns, netcheck, panes, sync, theme
 from .session import KEYS, Session
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -164,8 +164,9 @@ def cmd_sync(a, cfg):
             res = sync.sync_theme(link.Client(tv, p.pc_id, not cfg.get("allowOtherSubnets")), cfg, a.force,
                                   (lambda m: None) if a.quiet else print)
             if res is None and not a.quiet:
-                print("Nothing to send (unchanged, or themeSync is off; use --force)." if len(p.tvs) == 1 else
-                      f"{tv.get('name') or tv.get('address')}: Nothing to send (unchanged, or themeSync is off; use --force).")
+                why = ("This PC has no Omarchy theme; the TV keeps its own." if not theme.has_theme() else
+                       "Nothing to send (unchanged, or themeSync is off; use --force).")
+                print(why if len(p.tvs) == 1 else f"{tv.get('name') or tv.get('address')}: {why}")
         except (link.LinkError, OSError, RuntimeError, ValueError, subprocess.SubprocessError) as e:
             failed += 1
             if not a.quiet:
