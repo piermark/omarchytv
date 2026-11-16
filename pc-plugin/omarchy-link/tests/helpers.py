@@ -38,7 +38,7 @@ os.environ["PATH"] = os.pathsep.join(
     _hide_clis(d, n) for n, d in enumerate(os.environ.get("PATH", "/usr/bin:/bin").split(os.pathsep)) if d)
 for k in ("ANTHROPIC_API_KEY", "OPENAI_API_KEY", "XAI_API_KEY", "GROK_DEPLOYMENT_KEY", "GEMINI_API_KEY",
           "GOOGLE_API_KEY", "GOOGLE_GENAI_USE_VERTEXAI", "CLAUDE_CONFIG_DIR", "CODEX_HOME", "OLLAMA_HOST",
-          "OPENROUTER_API_KEY", "DEEPSEEK_API_KEY"):
+          "OPENROUTER_API_KEY", "DEEPSEEK_API_KEY", "T3CODE_HOME"):
     os.environ.pop(k, None)
 os.environ["OLLAMA_HOST"] = "127.0.0.1:9"  # nothing listens there
 (TMP / "run").mkdir(parents=True, exist_ok=True)
