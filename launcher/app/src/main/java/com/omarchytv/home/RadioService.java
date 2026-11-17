@@ -51,6 +51,9 @@ public class RadioService extends Service {
 
     static void refresh(Context c) {
         if (!running) return;
+        // Android 13+ drops notify() without POST_NOTIFICATIONS; the foreground notification itself still shows.
+        if (Build.VERSION.SDK_INT >= 33
+                && c.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) return;
         NotificationManager nm = c.getSystemService(NotificationManager.class);
         if (nm != null) {
             try {
