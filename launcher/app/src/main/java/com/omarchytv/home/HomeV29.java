@@ -1290,7 +1290,10 @@ final class HomeV29 extends FrameLayout {
     }
 
     private void updateAi(LinearLayout aiBody) {
+        int width = aiBody.getWidth();   // before removeAllViews: the room the rows had last time (0 the first time)
         aiBody.removeAllViews();
+        BoxView box = aiBody.getParent() instanceof BoxView ? (BoxView) aiBody.getParent() : null;
+        if (box != null) box.setLegend(AI_LEGEND + "pc", px(14), px(18));
         if (!OmarchyLink.connected() && cfg.aiAt > 0 || cfg.ai.isEmpty() && !OmarchyLink.connected()) {
             aiBody.addView(offline());
             return;
@@ -1299,22 +1302,32 @@ final class HomeV29 extends FrameLayout {
             aiBody.addView(line(act.getString(R.string.ai_empty)));
             return;
         }
-        int nameW = 4;
-        for (LauncherConfig.AiEntry a : cfg.ai) nameW = Math.max(nameW, Math.min(8, a.name.length()));
-        int shown = 0;
-        for (LauncherConfig.AiEntry a : cfg.ai) {
-            if (shown++ >= 5) break;
+        // The rows shown (at most 5). Words they all start with ("Claude" in "Claude session" / "Claude week") go to
+        // the legend, so each row keeps what tells it apart; the label column takes the room the widget has.
+        List<LauncherConfig.AiEntry> rows = cfg.ai.subList(0, Math.min(5, cfg.ai.size()));
+        List<String> names = new ArrayList<>();
+        for (LauncherConfig.AiEntry a : rows) names.add(a.name);
+        String prefix = AiLabels.commonPrefix(names);
+        if (box != null && !prefix.isEmpty()) box.setLegend(AI_LEGEND + prefix.toLowerCase(Locale.getDefault()), px(14), px(18));
+        List<String> labels = new ArrayList<>();
+        for (String n : names) labels.add(AiLabels.strip(n, prefix));
+        float cw = text("M", 19, false).getPaint().measureText("M");
+        int nameW = AiLabels.labelCols(labels, width > 0 ? (int) (width / cw) : 0);
+        for (int i = 0; i < rows.size(); i++) {
+            LauncherConfig.AiEntry a = rows.get(i);
             double f = a.fraction();
             if (f >= 0) {
                 int col = f > 0.9 ? t.red : f >= 0.7 ? t.yellow : t.green;
-                aiBody.addView(barRow(a.name, nameW, f, col, 10, Math.round(f * 100) + "%"));
+                aiBody.addView(barRow(labels.get(i), nameW, f, col, 10, Math.round(f * 100) + "%"));
             } else {
-                TextView v = line(a.name + "  " + (a.usedUnknown() ? "?" : MainActivity.amountText(a.used, a.unit)));
+                TextView v = line(labels.get(i) + "  " + (a.usedUnknown() ? "?" : MainActivity.amountText(a.used, a.unit)));
                 v.setTextColor(t.fg);
                 aiBody.addView(v);
             }
         }
     }
+
+    private static final String AI_LEGEND = "ai credits · ";
 
     // ---- bar tooltip (network name only in the menu shown while the icon is focused) ----
 
