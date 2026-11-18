@@ -777,7 +777,6 @@ final class RadioPlayer {
         return !FractalView.preferPlain(c);
     }
 
-    /** Demo (and the fractals screensaver): live on every TV unless the setting is off (then the still slideshow). */
     /** Live GL in the demo and the Radiomarchy screensaver: "on" always, "off" never, "auto" only on a capable TV
      *  (a weak one, 2 GB class or a Mali-T8xx like the Sony, gets the still slides). */
     static boolean wantLiveDemo(Context c) {
