@@ -6,6 +6,7 @@
     "pt-PT": {
       "name": "Português (Portugal)",
       "strings": {
+        "agent_asks": "pergunta", "agent_hint": "OK responde · ◀ ▶ escolher · RETROCEDER depois",
         "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Configuração", "menu_terminal": "Terminal", "menu_hint": "↑↓ selecionar   OK abrir   Retroceder fechar",
         "tip_cinemarchy": "Cinemarchy (Multimédia e TV)",
         "tip_wifi": "Wi-Fi e rede",
@@ -233,6 +234,7 @@
     "pt-BR": {
       "name": "Português (Brasil)",
       "strings": {
+        "agent_asks": "pergunta", "agent_hint": "OK responde · ◀ ▶ escolher · VOLTAR depois",
         "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Configuração", "menu_terminal": "Terminal", "menu_hint": "↑↓ selecionar   OK abrir   Voltar fechar",
         "tip_cinemarchy": "Cinemarchy (Mídia e TV)",
         "tip_wifi": "Wi-Fi e rede",
@@ -460,6 +462,7 @@
     "es": {
       "name": "Español",
       "strings": {
+        "agent_asks": "pregunta", "agent_hint": "OK responde · ◀ ▶ elegir · ATRÁS luego",
         "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Ajustes", "menu_terminal": "Terminal", "menu_hint": "↑↓ seleccionar   OK abrir   Atrás cerrar",
         "tip_cinemarchy": "Cinemarchy (Multimedia y TV)",
         "tip_wifi": "Wi-Fi y red",
@@ -687,6 +690,7 @@
     "fr": {
       "name": "Français",
       "strings": {
+        "agent_asks": "demande", "agent_hint": "OK répond · ◀ ▶ choisir · RETOUR plus tard",
         "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Réglages", "menu_terminal": "Terminal", "menu_hint": "↑↓ sélectionner   OK ouvrir   Retour fermer",
         "tip_cinemarchy": "Cinemarchy (Médias & TV)",
         "tip_wifi": "Wi-Fi & réseau",
@@ -914,6 +918,7 @@
     "nl": {
       "name": "Nederlands",
       "strings": {
+        "agent_asks": "vraagt", "agent_hint": "OK antwoordt · ◀ ▶ kiezen · TERUG later",
         "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Instellingen", "menu_terminal": "Terminal", "menu_hint": "↑↓ selecteren   OK openen   Terug sluiten",
         "tip_cinemarchy": "Cinemarchy (media & tv)",
         "tip_wifi": "Wi-Fi & netwerk",
@@ -1141,6 +1146,7 @@
     "pl": {
       "name": "Polski",
       "strings": {
+        "agent_asks": "pyta", "agent_hint": "OK odpowiada · ◀ ▶ wybierz · WSTECZ później",
         "menu_plugins": "Wtyczki", "menu_apps": "Aplikacje", "menu_setup": "Ustawienia", "menu_terminal": "Terminal", "menu_hint": "↑↓ wybierz   OK otwórz   Wstecz zamknij",
         "tip_cinemarchy": "Cinemarchy (multimedia i TV)",
         "tip_wifi": "Wi-Fi i sieć",
@@ -1368,6 +1374,7 @@
     "sv": {
       "name": "Svenska",
       "strings": {
+        "agent_asks": "frågar", "agent_hint": "OK svarar · ◀ ▶ välj · BAKÅT senare",
         "menu_plugins": "Plugin", "menu_apps": "Appar", "menu_setup": "Inställningar", "menu_terminal": "Terminal", "menu_hint": "↑↓ välj   OK öppna   Bakåt stäng",
         "tip_cinemarchy": "Cinemarchy (media & tv)",
         "tip_wifi": "Wi-Fi & nätverk",
@@ -1595,6 +1602,7 @@
     "da": {
       "name": "Dansk",
       "strings": {
+        "agent_asks": "spørger", "agent_hint": "OK svarer · ◀ ▶ vælg · TILBAGE senere",
         "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Opsætning", "menu_terminal": "Terminal", "menu_hint": "↑↓ vælg   OK åbn   Tilbage luk",
         "tip_cinemarchy": "Cinemarchy (medier & tv)",
         "tip_wifi": "Wi-Fi & netværk",
@@ -1822,6 +1830,7 @@
     "cs": {
       "name": "Čeština",
       "strings": {
+        "agent_asks": "se ptá", "agent_hint": "OK odpoví · ◀ ▶ vybrat · ZPĚT později",
         "menu_plugins": "Pluginy", "menu_apps": "Aplikace", "menu_setup": "Nastavení", "menu_terminal": "Terminál", "menu_hint": "↑↓ vybrat   OK otevřít   Zpět zavřít",
         "tip_cinemarchy": "Cinemarchy (média a TV)",
         "tip_wifi": "Wi-Fi a síť",
@@ -2049,6 +2058,7 @@
     "ro": {
       "name": "Română",
       "strings": {
+        "agent_asks": "întreabă", "agent_hint": "OK răspunde · ◀ ▶ alege · ÎNAPOI mai târziu",
         "menu_plugins": "Module", "menu_apps": "Aplicații", "menu_setup": "Setări", "menu_terminal": "Terminal", "menu_hint": "↑↓ selectează   OK deschide   Înapoi închide",
         "tip_cinemarchy": "Cinemarchy (media și TV)",
         "tip_wifi": "Wi-Fi și rețea",
@@ -2276,6 +2286,7 @@
     "el": {
       "name": "Ελληνικά",
       "strings": {
+        "agent_asks": "ρωτά", "agent_hint": "OK απαντά · ◀ ▶ επιλογή · ΠΙΣΩ αργότερα",
         "menu_plugins": "Πρόσθετα", "menu_apps": "Εφαρμογές", "menu_setup": "Ρυθμίσεις", "menu_terminal": "Τερματικό", "menu_hint": "↑↓ επιλογή   OK άνοιγμα   Πίσω κλείσιμο",
         "tip_cinemarchy": "Cinemarchy (πολυμέσα & TV)",
         "tip_wifi": "Wi-Fi & δίκτυο",
@@ -2503,6 +2514,7 @@
     "ru": {
       "name": "Русский",
       "strings": {
+        "agent_asks": "спрашивает", "agent_hint": "OK — ответ · ◀ ▶ выбор · НАЗАД — позже",
         "menu_plugins": "Плагины", "menu_apps": "Приложения", "menu_setup": "Настройки", "menu_terminal": "Терминал", "menu_hint": "↑↓ выбор   OK открыть   Назад закрыть",
         "tip_cinemarchy": "Cinemarchy (медиа и ТВ)",
         "tip_wifi": "Wi-Fi и сеть",
@@ -2730,6 +2742,7 @@
     "zh-CN": {
       "name": "简体中文",
       "strings": {
+        "agent_asks": "提问", "agent_hint": "OK 回答 · ◀ ▶ 选择 · 返回 稍后",
         "menu_plugins": "插件", "menu_apps": "应用", "menu_setup": "设置", "menu_terminal": "终端", "menu_hint": "↑↓ 选择   OK 打开   返回 关闭",
         "tip_cinemarchy": "Cinemarchy（媒体和电视）",
         "tip_wifi": "Wi-Fi 和网络",
@@ -2957,6 +2970,7 @@
     "ja": {
       "name": "日本語",
       "strings": {
+        "agent_asks": "からの質問", "agent_hint": "OK で回答 · ◀ ▶ 選択 · 戻る であとで",
         "menu_plugins": "プラグイン", "menu_apps": "アプリ", "menu_setup": "設定", "menu_terminal": "ターミナル", "menu_hint": "↑↓ 選択   OK 開く   戻る 閉じる",
         "tip_cinemarchy": "Cinemarchy（メディアとテレビ）",
         "tip_wifi": "Wi-Fi とネットワーク",
@@ -3184,6 +3198,7 @@
     "ar": {
       "name": "العربية",
       "strings": {
+        "agent_asks": "يسأل", "agent_hint": "OK للإجابة · ◀ ▶ اختيار · رجوع لاحقًا",
         "menu_plugins": "الإضافات", "menu_apps": "التطبيقات", "menu_setup": "الإعداد", "menu_terminal": "الطرفية", "menu_hint": "↑↓ اختيار   OK فتح   رجوع إغلاق",
         "tip_cinemarchy": "Cinemarchy (الوسائط والتلفاز)",
         "tip_wifi": "Wi-Fi والشبكة",
@@ -3411,6 +3426,7 @@
     "tr": {
       "name": "Türkçe",
       "strings": {
+        "agent_asks": "soruyor", "agent_hint": "OK yanıtlar · ◀ ▶ seç · GERİ sonra",
         "menu_plugins": "Eklentiler", "menu_apps": "Uygulamalar", "menu_setup": "Kurulum", "menu_terminal": "Terminal", "menu_hint": "↑↓ seç   OK aç   Geri kapat",
         "tip_cinemarchy": "Cinemarchy (Medya ve TV)",
         "tip_wifi": "Wi-Fi ve ağ",
@@ -3638,6 +3654,7 @@
     "uk": {
       "name": "Українська",
       "strings": {
+        "agent_asks": "питає", "agent_hint": "OK — відповідь · ◀ ▶ вибір · НАЗАД — пізніше",
         "menu_plugins": "Плагіни", "menu_apps": "Застосунки", "menu_setup": "Налаштування", "menu_terminal": "Термінал", "menu_hint": "↑↓ вибір   OK відкрити   Назад закрити",
         "tip_cinemarchy": "Cinemarchy (медіа і ТБ)",
         "tip_wifi": "Wi-Fi і мережа",
@@ -3865,6 +3882,7 @@
     "hu": {
       "name": "Magyar",
       "strings": {
+        "agent_asks": "kérdezi", "agent_hint": "OK válaszol · ◀ ▶ választás · VISSZA később",
         "menu_plugins": "Bővítmények", "menu_apps": "Alkalmazások", "menu_setup": "Beállítások", "menu_terminal": "Terminál", "menu_hint": "↑↓ választás   OK megnyitás   Vissza bezárás",
         "tip_cinemarchy": "Cinemarchy (média és tévé)",
         "tip_wifi": "Wi-Fi és hálózat",
@@ -4092,6 +4110,7 @@
     "fi": {
       "name": "Suomi",
       "strings": {
+        "agent_asks": "kysyy", "agent_hint": "OK vastaa · ◀ ▶ valitse · TAKAISIN myöhemmin",
         "menu_plugins": "Liitännäiset", "menu_apps": "Sovellukset", "menu_setup": "Asetukset", "menu_terminal": "Pääte", "menu_hint": "↑↓ valitse   OK avaa   Takaisin sulje",
         "tip_cinemarchy": "Cinemarchy (media ja tv)",
         "tip_wifi": "Wi-Fi ja verkko",
@@ -4319,6 +4338,7 @@
     "nb": {
       "name": "Norsk bokmål",
       "strings": {
+        "agent_asks": "spør", "agent_hint": "OK svarer · ◀ ▶ velg · TILBAKE senere",
         "menu_plugins": "Tillegg", "menu_apps": "Apper", "menu_setup": "Oppsett", "menu_terminal": "Terminal", "menu_hint": "↑↓ velg   OK åpne   Tilbake lukk",
         "tip_cinemarchy": "Cinemarchy (medier og TV)",
         "tip_wifi": "Wi-Fi og nettverk",

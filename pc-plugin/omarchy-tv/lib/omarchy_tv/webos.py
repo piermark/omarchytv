@@ -454,7 +454,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
         global _last_ask
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
-                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse", "/v1/office/hire"):
+                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse", "/v1/office/hire",
+                        "/v1/notify", "/v1/page", "/v1/ask") and not re.fullmatch(r"/v1/ask/[0-9a-f]{16}", path):
             self._send_json({"error": "not found"}, 404)
             return
         if not self._authorized():
@@ -473,6 +474,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
             body = None
         if not isinstance(body, dict):
             self._send_json({"error": "bad_request"}, 400)
+            return
+        if path in ("/v1/notify", "/v1/page", "/v1/ask") or path.startswith("/v1/ask/"):
+            self._agent_post(path, body)
             return
         if path.startswith("/v1/ai/"):
             self._ai(path, body)
@@ -621,8 +625,55 @@ class WebOSHandler(BaseHTTPRequestHandler):
         except Exception as e:   # ProviderError, timeouts: the TV shows the message
             self._send_json({"error": "provider_error", "message": str(e)[:200]}, 502)
 
+    # ---- v2.21 agents on LG / Samsung (agent_inbox) ----
+    def _agent_post(self, path: str, body: dict) -> None:
+        from .agent_inbox import INBOX
+        try:
+            if path == "/v1/notify":
+                self._send_json(INBOX.notify(body.get("text") or body.get("body") or "", body.get("title", ""),
+                                             body.get("level", "info"), body.get("from") or "PC"))
+            elif path == "/v1/page":
+                url = "" if body.get("close") else str(body.get("url") or "")
+                self._send_json(INBOX.set_page(url or None, body.get("from") or "PC"))
+            elif path == "/v1/ask":
+                self._send_json(INBOX.ask(body.get("question", ""), body.get("choices"), body.get("timeout", 120),
+                                          body.get("from") or "PC"))
+            else:   # the TV's answer: POST /v1/ask/<id> {answer}
+                ok = INBOX.answer(path.rsplit("/", 1)[1], str(body.get("answer", "")))
+                self._send_json({"ok": ok}, 200 if ok else 409)
+        except OverflowError:
+            self._send_json({"error": "busy"}, 429)
+        except ValueError as e:
+            self._send_json({"error": str(e) if str(e) == "not_lan_url" else "bad_request", "message": str(e)}, 400)
+
+    def _agent_get(self, path: str) -> bool:
+        if path != "/v1/inbox" and not re.fullmatch(r"/v1/ask/[0-9a-f]{16}", path):
+            return False
+        if not self._authorized():
+            self._send_json({"error": "unauthorized", "message": "wrong or missing ask code"}, 401)
+            return True
+        from urllib.parse import parse_qs, urlsplit
+        from .agent_inbox import INBOX
+        q = parse_qs(urlsplit(self.path).query)
+        if path == "/v1/inbox":
+            try:
+                since = int((q.get("since") or ["0"])[0])
+            except ValueError:
+                since = 0
+            self._send_json(INBOX.since(since))
+            return True
+        try:
+            wait = float((q.get("wait") or ["0"])[0])
+        except ValueError:
+            wait = 0
+        a = INBOX.get_ask(path.rsplit("/", 1)[1], wait)
+        self._send_json(a if a else {"error": "no_such_ask"}, 200 if a else 404)
+        return True
+
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if self._agent_get(path):
+            return
         if path in ("/v1/status", "/status.json", "/"):
             self._send_json(build_status_payload())
             return

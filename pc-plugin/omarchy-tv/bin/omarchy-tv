@@ -24,6 +24,8 @@
                                                        (+ Claude / ChatGPT bots: omarchy-link office hire)
   omarchy-tv mcp [--stdio|--http] [--port 8990] [--tunnel|--tailscale|--cloudflare NAME [--access | --access-team T --access-aud A]] [--scope read|notify|control]
   omarchy-tv cloudflare setup NAME HOSTNAME | service <mcp flags>   named tunnel + DNS route; systemd user unit
+  omarchy-tv notify TEXT | page URL|--close | ask QUESTION [--choice X]   LG / Samsung through webos-serve
+  omarchy-tv mcp --bridge [...]                                     MCP for an LG / Samsung TV (through webos-serve)
                                                                          MCP server for Grok Bot / Claude / Hermes
 """
 import os, sys
@@ -319,6 +321,54 @@ def cmd_webos_serve(args):
     return webos.serve(bind=bind, port=port, once=once)
 
 
+def cmd_agent_lg(cmd, rest):
+    """notify TEXT [--title T] [--level info|warn|alert] | page URL|--close | ask QUESTION [--choice X]… — via webos-serve."""
+    import time as _t
+    from omarchy_tv.bridge_client import BridgeClient, BridgeError
+
+    def opt(name, default=None):
+        return rest[rest.index(name) + 1] if name in rest and rest.index(name) + 1 < len(rest) else default
+    words, skip = [], False
+    for i, w in enumerate(rest):
+        if skip:
+            skip = False
+            continue
+        if w in ("--title", "--level", "--choice", "--from", "--timeout"):
+            skip = True
+            continue
+        if w.startswith("--"):
+            continue
+        words.append(w)
+    c = BridgeClient()
+    try:
+        if cmd == "notify":
+            c.request("POST", "/v1/notify", {"text": " ".join(words), "title": opt("--title", ""), "level": opt("--level", "info"),
+                                             "from": opt("--from", "PC")})
+            return 0
+        if cmd == "page":
+            if "--close" in rest:
+                c.request("DELETE", "/v1/page")
+            else:
+                c.request("POST", "/v1/page", {"url": words[0] if words else ""})
+            return 0
+        choices = [rest[i + 1] for i, w in enumerate(rest) if w == "--choice" and i + 1 < len(rest)]
+        timeout = int(opt("--timeout", "120"))
+        a = c.request("POST", "/v1/ask", {"question": " ".join(words), "choices": choices, "timeout": timeout, "from": opt("--from", "PC")})
+        end = _t.time() + timeout + 5
+        while _t.time() < end:
+            s = c.request("GET", f"/v1/ask/{a['id']}?wait=25", timeout=35)
+            if s.get("state") == "answered":
+                print(s["answer"])
+                return 0
+            if s.get("state") == "expired":
+                break
+        print("no answer", file=sys.stderr)
+        return 5
+    except (BridgeError, OSError) as e:
+        ui.say(f"omarchy-tv {cmd}: {e} (is omarchy-tv webos-serve running?)")
+        return 1
+
+
 def cmd_cloudflare(rest):
     """setup NAME HOSTNAME: make the named tunnel and its DNS route (asks first). service ARGS: a systemd user unit."""
     import shutil as _sh, subprocess as _sp
@@ -414,6 +464,8 @@ def main(argv):
         return cmd_icons(rest)
     if cmd in ("webos-serve", "webos"):
         return cmd_webos_serve(rest)
+    if cmd in ("notify", "ask", "page"):   # v2.21 for LG / Samsung (the bridge); on Android TV use omarchy-link
+        return cmd_agent_lg(cmd, rest)
     if cmd == "mcp":
         port = int(rest[rest.index("--port") + 1]) if "--port" in rest else 8990
         scope = rest[rest.index("--scope") + 1] if "--scope" in rest else None
@@ -423,6 +475,9 @@ def main(argv):
         cfname = rest[rest.index("--cloudflare") + 1] if "--cloudflare" in rest else None
         team = rest[rest.index("--access-team") + 1] if "--access-team" in rest else None
         aud = rest[rest.index("--access-aud") + 1] if "--access-aud" in rest else None
+        if "--bridge" in rest:   # v2.21: an LG / Samsung TV through the local bridge (omarchy-tv webos-serve)
+            from omarchy_tv.bridge_client import BridgeClient
+            client = lambda: BridgeClient()   # noqa: E731
         if any(f in rest for f in ("--http", "--tunnel", "--tailscale", "--cloudflare")):
             return mcp_server.serve_http(client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest,
                                          cloudflare=cfname, scope=scope, access="--access" in rest,
