@@ -172,6 +172,7 @@
     <string name="search_prompt">Sano sovelluksen nimi</string>
     <string name="link_service_on">kuuntelee</string>
     <string name="link_service_off">ei verkkoa</string>
+    <string name="link_notification">Omarchy Link on käynnissä</string>
     <string name="remote_service">OmarchyTV-kaukosäädin</string>
     <string name="remote_service_desc">Antaa pariliitetyn Omarchy Linux -tietokoneen painaa televisiossa Takaisin. Se ei lue näytöltä mitään.</string>
     <string name="keymap_service">OmarchyTV-kaukosäätimen painikkeet</string>

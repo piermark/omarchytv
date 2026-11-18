@@ -172,6 +172,7 @@
     <string name="search_prompt">Säg ett appnamn</string>
     <string name="link_service_on">lyssnar</string>
     <string name="link_service_off">inget nätverk</string>
+    <string name="link_notification">Omarchy Link körs</string>
     <string name="remote_service">OmarchyTV-fjärrkontroll</string>
     <string name="remote_service_desc">Låter en parkopplad Omarchy Linux-dator trycka på Bakåt på tv:n. Den läser ingenting på skärmen.</string>
     <string name="keymap_service">OmarchyTV-fjärrkontrollknappar</string>

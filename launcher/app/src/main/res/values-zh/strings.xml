@@ -172,6 +172,7 @@
     <string name="search_prompt">说出应用名称</string>
     <string name="link_service_on">监听中</string>
     <string name="link_service_off">无网络</string>
+    <string name="link_notification">Omarchy Link 正在运行</string>
     <string name="remote_service">OmarchyTV 遥控</string>
     <string name="remote_service_desc">允许已配对的 Omarchy Linux 电脑在电视上按返回键。它不读取屏幕上的任何内容。</string>
     <string name="keymap_service">OmarchyTV 遥控器按键</string>

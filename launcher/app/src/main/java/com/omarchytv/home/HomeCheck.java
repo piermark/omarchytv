@@ -13,8 +13,11 @@ import android.os.SystemClock;
  * home screen. This only notices it and asks, once per boot: it never changes the default home, never
  * disables or enables anything. "Don't ask again" turns it off for good.
  *
- * BOOT_COMPLETED: one PackageManager lookup; if OmarchyTV is not the default home, the launcher opens with the
- * prompt (Back or "Not now" returns to whatever home is set). Nothing else runs at boot.
+ * BOOT_COMPLETED: first starts Omarchy Link as a foreground service (when Link is enabled and a PC is paired,
+ * whatever the default home is, see {@link LinkBoot}). Then one PackageManager lookup; if OmarchyTV is not the default home, the
+ * launcher opens with the prompt (Back or "Not now" returns to whatever home is set).
+ *
+ * MY_PACKAGE_REPLACED: an update stops the process, so Link is started again (and nothing else).
  */
 public final class HomeCheck extends BroadcastReceiver {
     static final String EXTRA_ASK = "homeCheck";
@@ -22,7 +25,13 @@ public final class HomeCheck extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context c, Intent intent) {
-        if (!Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) return;
+        String action = intent.getAction();
+        if (Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
+            LinkBoot.startAtBoot(c);   // an update killed the process: bring Link back without waiting for Home
+            return;
+        }
+        if (!Intent.ACTION_BOOT_COMPLETED.equals(action)) return;
+        LinkBoot.startAtBoot(c);   // before the early return below: Link must not depend on the home check
         if (isDefaultHome(c) || !shouldAsk(c)) return;
         Intent i = new Intent(c, MainActivity.class).putExtra(EXTRA_ASK, true)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);

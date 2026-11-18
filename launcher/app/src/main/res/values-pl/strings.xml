@@ -172,6 +172,7 @@
     <string name="search_prompt">Powiedz nazwę aplikacji</string>
     <string name="link_service_on">nasłuchuje</string>
     <string name="link_service_off">brak sieci</string>
+    <string name="link_notification">Omarchy Link działa</string>
     <string name="remote_service">Pilot OmarchyTV</string>
     <string name="remote_service_desc">Pozwala sparowanemu PC z Omarchy Linux naciskać Wstecz na telewizorze. Niczego nie odczytuje z ekranu.</string>
     <string name="keymap_service">Przyciski pilota OmarchyTV</string>

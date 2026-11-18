@@ -172,6 +172,7 @@
     <string name="search_prompt">Bir uygulama adı söyleyin</string>
     <string name="link_service_on">dinliyor</string>
     <string name="link_service_off">ağ yok</string>
+    <string name="link_notification">Omarchy Link çalışıyor</string>
     <string name="remote_service">OmarchyTV uzaktan kumanda</string>
     <string name="remote_service_desc">Eşleştirilmiş bir Omarchy Linux bilgisayarının TV\'de Geri tuşuna basmasını sağlar. Ekranda hiçbir şey okumaz.</string>
     <string name="keymap_service">OmarchyTV kumanda tuşları</string>

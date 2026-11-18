@@ -172,6 +172,7 @@
     <string name="search_prompt">Zeg een appnaam</string>
     <string name="link_service_on">luistert</string>
     <string name="link_service_off">geen netwerk</string>
+    <string name="link_notification">Omarchy Link is actief</string>
     <string name="remote_service">OmarchyTV-afstandsbediening</string>
     <string name="remote_service_desc">Laat een gekoppelde Omarchy Linux-pc op Terug drukken op de tv. Het leest niets op het scherm.</string>
     <string name="keymap_service">OmarchyTV-afstandsbedieningsknoppen</string>

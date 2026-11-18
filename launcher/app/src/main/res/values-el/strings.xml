@@ -172,6 +172,7 @@
     <string name="search_prompt">Πείτε το όνομα μιας εφαρμογής</string>
     <string name="link_service_on">σε ακρόαση</string>
     <string name="link_service_off">χωρίς δίκτυο</string>
+    <string name="link_notification">Το Omarchy Link εκτελείται</string>
     <string name="remote_service">Τηλεχειριστήριο OmarchyTV</string>
     <string name="remote_service_desc">Επιτρέπει σε έναν συζευγμένο υπολογιστή Omarchy Linux να πατά Πίσω στην τηλεόραση. Δεν διαβάζει τίποτα στην οθόνη.</string>
     <string name="keymap_service">Κουμπιά τηλεχειριστηρίου OmarchyTV</string>

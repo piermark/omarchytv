@@ -172,6 +172,7 @@
     <string name="search_prompt">Mondjon egy alkalmazásnevet</string>
     <string name="link_service_on">figyel</string>
     <string name="link_service_off">nincs hálózat</string>
+    <string name="link_notification">Az Omarchy Link fut</string>
     <string name="remote_service">OmarchyTV távvezérlés</string>
     <string name="remote_service_desc">Lehetővé teszi, hogy egy párosított Omarchy Linux számítógép megnyomja a Vissza gombot a tévén. Semmit sem olvas a képernyőről.</string>
     <string name="keymap_service">OmarchyTV távirányító-gombok</string>

@@ -172,6 +172,7 @@
 
     <string name="link_service_on">aktiv</string>
     <string name="link_service_off">kein Netzwerk</string>
+    <string name="link_notification">Omarchy Link läuft</string>
     <string name="remote_service">OmarchyTV remote</string>
     <string name="remote_service_desc">Erlaubt einem gekoppelten Omarchy-Linux-PC, am Fernseher Zurück zu drücken. Liest nichts vom Bildschirm.</string>
     <string name="keymap_service">OmarchyTV Fernbedienungstasten</string>

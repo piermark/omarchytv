@@ -172,6 +172,7 @@
     <string name="search_prompt">アプリ名を話してください</string>
     <string name="link_service_on">待ち受け中</string>
     <string name="link_service_off">ネットワークなし</string>
+    <string name="link_notification">Omarchy Link 実行中</string>
     <string name="remote_service">OmarchyTV リモート</string>
     <string name="remote_service_desc">ペアリングした Omarchy Linux の PC からテレビの「戻る」を押せるようにします。画面の内容は一切読み取りません。</string>
     <string name="keymap_service">OmarchyTV リモコンボタン</string>
