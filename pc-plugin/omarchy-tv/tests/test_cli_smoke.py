@@ -41,7 +41,9 @@ class CliSmokeTest(unittest.TestCase):
 
     def test_mcp_flag_mistakes_are_explained(self):
         for args in (["mcp", "--tailscale", "--tunnel"], ["mcp", "--cloudflare", "x", "--access-team", "t"],
-                     ["mcp", "--scope", "everything"]):
+                     ["mcp", "--scope", "everything"], ["mcp", "--tailscale", "--cloudflare"], ["mcp", "--cloudflare"],
+                     ["mcp", "--http", "--port"], ["mcp", "--http", "--port", "abc"],
+                     ["mcp", "--cloudflare", "--access-team", "t", "--access-aud", "a"]):
             r = run(args)
             self.assertNoTraceback(r)
             self.assertEqual(r.returncode, 2, args)

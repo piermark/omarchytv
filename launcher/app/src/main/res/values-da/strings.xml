@@ -183,6 +183,7 @@
     <string name="set_home_override">Hjem-knappen åbner OmarchyTV</string>
     <string name="link_usage">Adgang til forbrug (aktuel app)</string>
     <string name="link_share_theme">Del temaet med apps på netværket</string>
+    <string name="link_keep_alive">Hold Link tilgængelig efter opstart</string>
     <string name="link_tailscale">Tillad Tailscale (tailnet)</string>
     <string name="agentq_asks">spørger</string>
     <string name="agentq_hint">Vælg et svar med fjernbetjeningen · TILBAGE: svar senere</string>

@@ -183,6 +183,7 @@
     <string name="set_home_override">Ana Ekran tuşu OmarchyTV\'yi açar</string>
     <string name="link_usage">Kullanım erişimi (mevcut uygulama)</string>
     <string name="link_share_theme">Temayı ağdaki uygulamalarla paylaş</string>
+    <string name="link_keep_alive">Açılıştan sonra Link erişilebilir kalsın</string>
     <string name="link_tailscale">Tailscale\'e izin ver (tailnet)</string>
     <string name="agentq_asks">soruyor</string>
     <string name="agentq_hint">Kumandayla bir yanıt seçin · GERİ: sonra yanıtla</string>

@@ -183,6 +183,7 @@
     <string name="set_home_override">Tlačítko Domů otevírá OmarchyTV</string>
     <string name="link_usage">Přístup k využití (aktuální aplikace)</string>
     <string name="link_share_theme">Sdílet motiv s aplikacemi v síti</string>
+    <string name="link_keep_alive">Link dostupný po spuštění</string>
     <string name="link_tailscale">Povolit Tailscale (tailnet)</string>
     <string name="agentq_asks">se ptá</string>
     <string name="agentq_hint">Vyberte odpověď dálkovým ovladačem · ZPĚT: odpovědět později</string>

@@ -55,6 +55,11 @@ The TV keeps working on the LAN at the same time. Before 2.21, having a VPN app 
 made Omarchy Link listen on the VPN address and refuse the PC next to it; now the TV always finds the Wi-Fi or
 Ethernet network under the VPN.
 
+**After a reboot.** On a TV with more than 2.5 GB of RAM, Link starts at boot and stays reachable. A 1-2 GB TV
+(the Sony class) keeps no resident service by default: Link answers once OmarchyTV is open, which is the case when
+it is your Home. To reach such a TV from far away right after it reboots, turn on Settings › Omarchy Link ›
+*Keep Link reachable after boot*.
+
 What the switch changes on the TV: Omarchy Link listens on all IPv4 interfaces instead of the LAN address only, and
 a peer is let in when it is on the LAN subnet **or** has a Tailscale address. Everything else still gets
 `403 not_lan`. Pairing, the HMAC signing and the AES-GCM bodies are exactly the same as on the LAN.

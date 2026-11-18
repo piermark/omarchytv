@@ -50,4 +50,16 @@ public class LinkBootTest {
         assertTrue(receiver.contains("android.intent.action.BOOT_COMPLETED"));
         assertTrue(receiver.contains("android.intent.action.MY_PACKAGE_REPLACED"));
     }
+
+    @org.junit.Test
+    public void keepAliveOnlyWhereItIsCheap() {
+        long gb = 1024L * 1024 * 1024;
+        org.junit.Assert.assertFalse(LinkBoot.keepAliveAllowed("auto", false, 2 * gb));          // Sony class
+        org.junit.Assert.assertFalse(LinkBoot.keepAliveAllowed("auto", false, 2 * gb + 400L * 1024 * 1024));
+        org.junit.Assert.assertFalse(LinkBoot.keepAliveAllowed("auto", true, 4 * gb));           // isLowRamDevice
+        org.junit.Assert.assertTrue(LinkBoot.keepAliveAllowed("auto", false, 3 * gb));
+        org.junit.Assert.assertTrue(LinkBoot.keepAliveAllowed("auto", false, 0));                // unknown RAM
+        org.junit.Assert.assertTrue(LinkBoot.keepAliveAllowed("on", true, gb));                  // asked for
+        org.junit.Assert.assertFalse(LinkBoot.keepAliveAllowed("off", false, 8 * gb));
+    }
 }

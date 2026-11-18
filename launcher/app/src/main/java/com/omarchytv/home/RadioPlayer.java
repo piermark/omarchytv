@@ -63,6 +63,13 @@ final class RadioPlayer {
     private final Handler h = new Handler(Looper.getMainLooper());
     private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
     final AudioBands bands = new AudioBands();
+    /** v2.21 when something last asked for the music's bands (the equaliser, a live fractal, the saver). */
+    private volatile long lastFrameAt;
+
+    /** The audio thread analyses only while a picture reads the bands: within the last 2 s. */
+    private boolean bandsWanted() {
+        return SystemClock.elapsedRealtime() - lastFrameAt < 2000;
+    }
     private ExoPlayer player;
     private MediaSession session;
     private final List<RadioCatalog.Track> queue = new ArrayList<>();
@@ -149,6 +156,12 @@ final class RadioPlayer {
 
             @Override
             public void handleBuffer(ByteBuffer buffer) {
+                hasAudio = true;
+                if (!bandsWanted()) {   // v2.21 no equaliser, fractal or saver on screen: no FFT on the audio thread
+                    int bytes = encoding == C.ENCODING_PCM_FLOAT ? 4 : 2;
+                    bands.skip(buffer.remaining() / bytes / channels);
+                    return;
+                }
                 ByteBuffer b = buffer.duplicate().order(ByteOrder.nativeOrder());
                 if (encoding == C.ENCODING_PCM_FLOAT) {
                     int n = b.remaining() / 4;
@@ -161,7 +174,6 @@ final class RadioPlayer {
                     b.asShortBuffer().get(s16, 0, n);
                     bands.pcm16(s16, n / channels, channels);
                 }
-                hasAudio = true;
             }
         });
         DefaultRenderersFactory rf = new DefaultRenderersFactory(app) {
@@ -412,6 +424,7 @@ final class RadioPlayer {
      */
     boolean frame(AudioBands.Frame out) {
         long now = SystemClock.elapsedRealtime();
+        lastFrameAt = now;
         if (player != null && hasAudio && clockRunning) {
             long pos = clockPosMs + (now - clockAtMs);
             if (bands.at(pos * 1000, out)) {
@@ -765,8 +778,14 @@ final class RadioPlayer {
     }
 
     /** Demo (and the fractals screensaver): live on every TV unless the setting is off (then the still slideshow). */
+    /** Live GL in the demo and the Radiomarchy screensaver: "on" always, "off" never, "auto" only on a capable TV
+     *  (a weak one, 2 GB class or a Mali-T8xx like the Sony, gets the still slides). */
     static boolean wantLiveDemo(Context c) {
-        return !"off".equals(animatedMode(c));
+        return liveDemo(animatedMode(c), FractalView.preferPlain(c));
+    }
+
+    static boolean liveDemo(String mode, boolean preferPlain) {
+        return "on".equals(mode) || ("auto".equals(mode) && !preferPlain);
     }
 
     /** Equaliser / progress redraws: 12 fps on a weak TV, 24 on a capable one. Does not change audio analysis. */

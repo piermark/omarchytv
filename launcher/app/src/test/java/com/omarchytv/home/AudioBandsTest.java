@@ -151,4 +151,21 @@ public class AudioBandsTest {
         assertTrue(b.at(Long.MAX_VALUE, f));
         assertTrue(f.bass > 0);
     }
+
+    @org.junit.Test
+    public void skippingKeepsTheClock() {
+        AudioBands a = new AudioBands(), b = new AudioBands();
+        a.flush(48000);
+        b.flush(48000);
+        short[] pcm = new short[48000 * 2];
+        for (int i = 0; i < pcm.length; i++) pcm[i] = (short) (Math.sin(i * 0.05) * 12000);
+        a.pcm16(pcm, 48000, 2);                 // 1 s analysed
+        b.skip(24000);                          // 0.5 s skipped (nobody drawing) ...
+        short[] half = java.util.Arrays.copyOfRange(pcm, 48000, pcm.length);
+        b.pcm16(half, 24000, 2);                // ... then 0.5 s analysed
+        AudioBands.Frame fa = new AudioBands.Frame(), fb = new AudioBands.Frame();
+        org.junit.Assert.assertTrue(a.at(1_000_000, fa));
+        org.junit.Assert.assertTrue(b.at(1_000_000, fb));
+        org.junit.Assert.assertEquals(fa.timeUs, fb.timeUs, 11_000);   // within one hop (512 samples): in step with the music
+    }
 }

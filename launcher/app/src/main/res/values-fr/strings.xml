@@ -183,6 +183,7 @@
     <string name="set_home_override">Le bouton Accueil ouvre OmarchyTV</string>
     <string name="link_usage">Accès à l\'utilisation (app en cours)</string>
     <string name="link_share_theme">Partager le thème avec les apps du réseau</string>
+    <string name="link_keep_alive">Garder Link joignable après le démarrage</string>
     <string name="link_tailscale">Autoriser Tailscale (tailnet)</string>
     <string name="agentq_asks">demande</string>
     <string name="agentq_hint">Choisissez une réponse avec la télécommande · RETOUR : répondre plus tard</string>

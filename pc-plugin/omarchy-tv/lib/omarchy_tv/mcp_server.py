@@ -245,8 +245,10 @@ def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
     req_id = req.get("id")
     params = req.get("params") if isinstance(req.get("params"), dict) else {}
 
+    if method.startswith("notifications/") and "id" not in req:
+        return None   # a notification gets no answer (HTTP: 202, no body)
     if method == "notifications/initialized":
-        return None if "id" not in req else {"jsonrpc": "2.0", "id": req_id, "result": {}}
+        return {"jsonrpc": "2.0", "id": req_id, "result": {}}
     if method == "initialize":
         return {
             "jsonrpc": "2.0",
@@ -502,11 +504,23 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
                 self._send(400, {"error": "invalid_json"})
                 return
             resp = handle_rpc(req, LazyClient(tv_client_factory), scope)
-            self._send(200, resp or {"jsonrpc": "2.0", "id": None, "result": {}})
+            if resp is None:   # a notification: accepted, no body (MCP streamable HTTP)
+                self.send_response(202)
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return
+            self._send(200, resp)
 
-        def _send(self, code: int, obj: dict):
+        def do_GET(self):   # no server-initiated stream here: JSON 405, not the stdlib's 501 HTML page
+            self._send(405, {"error": "method_not_allowed", "message": "POST JSON-RPC to /mcp"}, allow="POST")
+
+        do_DELETE = do_PUT = do_GET
+
+        def _send(self, code: int, obj: dict, allow: str | None = None):
             data = json.dumps(obj).encode("utf-8")
             self.send_response(code)
+            if allow:
+                self.send_header("Allow", allow)
             self.send_header("Content-Type", "application/json")
             self.send_header("Cache-Control", "no-store")
             self.send_header("Content-Length", str(len(data)))

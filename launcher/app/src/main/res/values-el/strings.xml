@@ -183,6 +183,7 @@
     <string name="set_home_override">Το κουμπί Αρχικής ανοίγει το OmarchyTV</string>
     <string name="link_usage">Πρόσβαση χρήσης (τρέχουσα εφαρμογή)</string>
     <string name="link_share_theme">Κοινή χρήση θέματος με εφαρμογές του δικτύου</string>
+    <string name="link_keep_alive">Link διαθέσιμο μετά την εκκίνηση</string>
     <string name="link_tailscale">Να επιτρέπεται το Tailscale (tailnet)</string>
     <string name="agentq_asks">ρωτά</string>
     <string name="agentq_hint">Επιλέξτε απάντηση με το τηλεχειριστήριο · ΠΙΣΩ: απάντηση αργότερα</string>

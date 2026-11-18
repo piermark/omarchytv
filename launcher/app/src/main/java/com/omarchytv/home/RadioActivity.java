@@ -117,7 +117,7 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
         player = RadioPlayer.get(this);
         SharedPreferences p = player.prefs();
         showExplicit = p.getBoolean("explicit", true);
-        autoDemo = p.getBoolean("autoDemo", true);
+        autoDemo = p.getBoolean("autoDemo", !FractalView.preferPlain(this));   // v2.21 off by default on weak TVs
         palette = p.getInt("palette", 0);
         scenePin = p.getInt("scene", -1);
         quality = p.getInt("quality", 0);

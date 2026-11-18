@@ -3442,6 +3442,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         return p;
     }
 
+    private String keepAliveValue(String mode) {
+        if ("on".equals(mode)) return str(R.string.on);
+        if ("off".equals(mode)) return str(R.string.off);
+        boolean yes = LinkBoot.keepAliveAllowed("auto", LinkBoot.lowRam(this), FractalView.totalRam(this));
+        return str(R.string.radio_animated_auto) + " · " + str(yes ? R.string.on : R.string.off);
+    }
+
     private AsciiMenu.Page screensaverPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
         String[] logos = {"pulse", "radiomarchy", "aquarium", "aquarium-classic", "omarchy-tv", "omarchy", "cinemarchy", "original"};
@@ -3730,6 +3737,20 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return true;
         });
         p.add(str(R.string.link_service), OmarchyLink.running() ? str(R.string.link_service_on) : str(R.string.link_service_off), r -> true);
+        // v2.21: keep Link reachable after boot (a resident service); auto = only above 2.5 GB of RAM.
+        p.add(str(R.string.link_keep_alive), keepAliveValue(LauncherConfig.get(this).keepAlive), r -> {
+            String cur = LauncherConfig.get(this).keepAlive;
+            String n = "auto".equals(cur) ? "on" : "on".equals(cur) ? "off" : "auto";
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject l = j.optJSONObject("link");
+                if (l == null) j.put("link", l = new org.json.JSONObject());
+                if ("auto".equals(n)) l.remove("keepAlive");
+                else l.put("keepAlive", "on".equals(n));
+            });
+            LinkBoot.reconcile(this);
+            r.setValue(keepAliveValue(n));
+            return true;
+        });
         // Optional extras the PC can use (PROTOCOL.md §6): Back key and the app in front.
         p.add(str(R.string.link_remote), str(OmarchyRemote.enabled() ? R.string.on : R.string.off), r -> {
             open(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));

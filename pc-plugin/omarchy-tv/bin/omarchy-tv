@@ -467,6 +467,23 @@ def main(argv):
     if cmd in ("notify", "ask", "page"):   # v2.21 for LG / Samsung (the bridge); on Android TV use omarchy-link
         return cmd_agent_lg(cmd, rest)
     if cmd == "mcp":
+        # flag mistakes first, before reading any value (a missing NAME was an IndexError)
+        if "--tailscale" in rest and ("--tunnel" in rest or "--cloudflare" in rest):
+            ui.say("--tailscale and --tunnel/--cloudflare: pick one (the tailnet never needs a public tunnel)")
+            return 2
+        if ("--access-team" in rest) != ("--access-aud" in rest):
+            ui.say("--access-team and --access-aud go together (CLOUDFLARE.md)")
+            return 2
+        for flag, what in (("--port", "a port number"), ("--scope", "read|notify|control"), ("--cloudflare", "the tunnel NAME"),
+                           ("--access-team", "your team name"), ("--access-aud", "the Application Audience tag")):
+            if flag in rest:
+                i = rest.index(flag) + 1
+                if i >= len(rest) or rest[i].startswith("--"):
+                    ui.say(f"{flag} needs {what} (omarchy-tv mcp --help, docs/CLOUDFLARE.md)")
+                    return 2
+        if "--port" in rest and not rest[rest.index("--port") + 1].isdigit():
+            ui.say("--port needs a port number")
+            return 2
         port = int(rest[rest.index("--port") + 1]) if "--port" in rest else 8990
         scope = rest[rest.index("--scope") + 1] if "--scope" in rest else None
         if scope is not None and scope not in mcp_server.SCOPES:
@@ -479,12 +496,6 @@ def main(argv):
         if "--bridge" in rest:   # v2.21: an LG / Samsung TV through the local bridge (omarchy-tv webos-serve)
             from omarchy_tv.bridge_client import BridgeClient
             tv_client = BridgeClient   # a factory, like client(); never rebind client (it is global)
-        if "--tailscale" in rest and ("--tunnel" in rest or "--cloudflare" in rest):
-            ui.say("--tailscale and --tunnel/--cloudflare: pick one (the tailnet never needs a public tunnel)")
-            return 2
-        if "--access-team" in rest and "--access-aud" not in rest or "--access-aud" in rest and "--access-team" not in rest:
-            ui.say("--access-team and --access-aud go together (CLOUDFLARE.md)")
-            return 2
         if any(f in rest for f in ("--http", "--tunnel", "--tailscale", "--cloudflare")):
             return mcp_server.serve_http(tv_client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest,
                                          cloudflare=cfname, scope=scope, access="--access" in rest,

@@ -110,6 +110,14 @@ reachable from home, from your tailnet and, carefully, from the cloud.
   instead of one big shader with all five (four times over with supersampling). Same picture, less work per pixel.
 - **Auto quality stops at "high"**: "ultra" (2x2 supersampling, 500 iterations) only when you pick it.
 - Same on Android TV, LG and Samsung.
+- **Weak TVs stay light** (2 GB class or a GPU like the Sony's): the Radiomarchy demo after a minute without keys and
+  the Radiomarchy screensaver show the still slides instead of live fractals, unless *Frattali animati* is *yes*.
+  The demo after a minute is off by default there. Every quality choice uses the same 2.5 GB line.
+- **No audio analysis nobody sees**: the music's bands are computed only while the equaliser, a live fractal or the
+  screensaver is on screen. Radiomarchy playing behind the Home costs only the decoding.
+- **Link after boot**: Settings › Omarchy Link › *Keep Link reachable after boot* (`"link": {"keepAlive": …}`).
+  *auto* keeps the resident service of #144 only on TVs with more than 2.5 GB of RAM. On a 1-2 GB TV, Link answers
+  while OmarchyTV is open. *on* forces it, *off* turns it off.
 
 ### Grok Bot diretto and GrokBot Office: replies that ntfy.sh does not block (#70)
 

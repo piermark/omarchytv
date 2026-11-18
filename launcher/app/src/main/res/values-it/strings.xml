@@ -183,6 +183,7 @@
     <string name="set_home_override">Il tasto Home apre OmarchyTV</string>
     <string name="link_usage">Accesso utilizzo (app attuale)</string>
     <string name="link_share_theme">Condividi il tema con le app della rete</string>
+    <string name="link_keep_alive">Link raggiungibile dopo l\'avvio</string>
     <string name="link_tailscale">Consenti Tailscale (tailnet)</string>
     <string name="agentq_asks">chiede</string>
     <string name="agentq_hint">Scegli la risposta col telecomando · BACK: rispondi dopo</string>

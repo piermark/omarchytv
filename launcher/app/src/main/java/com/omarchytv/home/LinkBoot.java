@@ -38,12 +38,31 @@ final class LinkBoot {
         if (wanted(c)) startService(c);
     }
 
-    /** Link enabled (omarchytv.json, default on) and at least one PC paired. False if either is unreadable. */
+    /** Link enabled (omarchytv.json, default on), at least one PC paired, and the keep-alive allowed on this TV
+     *  ({@link #keepAliveAllowed}). False if any is unreadable. */
     static boolean wanted(Context c) {
         try {
-            return LauncherConfig.get(c).linkEnabled && hasPairedPc(c);
+            LauncherConfig cfg = LauncherConfig.get(c);
+            return cfg.linkEnabled && keepAliveAllowed(cfg.keepAlive, lowRam(c), FractalView.totalRam(c)) && hasPairedPc(c);
         } catch (RuntimeException e) {
             Log.w(TAG, "Link state unreadable, keep-alive not started", e);
+            return false;
+        }
+    }
+
+    /** v2.21 "on" / "off" as set; "auto": not on a low-RAM device or a 2 GB-class TV (<= 2.5 GB), where a resident
+     *  process costs more than reaching the TV right after boot is worth. Unknown RAM counts as enough. */
+    static boolean keepAliveAllowed(String mode, boolean lowRamDevice, long ramBytes) {
+        if ("on".equals(mode)) return true;
+        if ("off".equals(mode)) return false;
+        return !lowRamDevice && !FractalView.tightRam(ramBytes);
+    }
+
+    static boolean lowRam(Context c) {
+        try {
+            android.app.ActivityManager am = (android.app.ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
+            return am != null && am.isLowRamDevice();
+        } catch (RuntimeException e) {
             return false;
         }
     }

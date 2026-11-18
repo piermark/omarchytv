@@ -183,6 +183,7 @@
     <string name="set_home_override">O botão Início abre o OmarchyTV</string>
     <string name="link_usage">Acesso de utilização (app atual)</string>
     <string name="link_share_theme">Partilhar o tema com as apps da rede</string>
+    <string name="link_keep_alive">Manter o Link acessível após o arranque</string>
     <string name="link_tailscale">Permitir Tailscale (tailnet)</string>
     <string name="agentq_asks">pergunta</string>
     <string name="agentq_hint">Escolha uma resposta com o comando · VOLTAR: responder depois</string>

@@ -183,6 +183,7 @@
     <string name="set_home_override">A Kezdőlap gomb az OmarchyTV-t nyitja meg</string>
     <string name="link_usage">Használati hozzáférés (aktuális alkalmazás)</string>
     <string name="link_share_theme">Téma megosztása a hálózat alkalmazásaival</string>
+    <string name="link_keep_alive">Link elérhető indítás után</string>
     <string name="link_tailscale">Tailscale engedélyezése (tailnet)</string>
     <string name="agentq_asks">kérdezi</string>
     <string name="agentq_hint">Válassz választ a távirányítóval · VISSZA: válasz később</string>

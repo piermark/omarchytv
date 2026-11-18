@@ -306,6 +306,9 @@ final class LauncherConfig {
     final boolean tailscale;
     /** v2.21: tones with warn / alert notifications and spoken ones ("link": {"notifySound": false} silences both). */
     final boolean notifySound;
+    /** v2.21: the keep-alive service after boot ("link": {"keepAlive": "auto" | true | false}): "auto" keeps it
+     *  only on TVs with more than 2.5 GB of RAM, so a 1-2 GB TV keeps no resident process. */
+    final String keepAlive;
     /** AI pane when no PC is connected and the data is old: "stale" (dim, "pc offline · 3h ago") or "hide". */
     final String aiOffline;
     /** Unix seconds of the last PUT /v1/ai (omarchytv.json "aiAt"), 0 if never. */
@@ -695,6 +698,9 @@ final class LauncherConfig {
         shareTheme = lkc == null || lkc.optBoolean("shareTheme", true);
         tailscale = lkc != null && lkc.optBoolean("tailscale", false);
         notifySound = lkc == null || lkc.optBoolean("notifySound", true);
+        Object ka = lkc == null ? null : lkc.opt("keepAlive");
+        keepAlive = Boolean.TRUE.equals(ka) || "on".equals(ka) ? "on"
+                : Boolean.FALSE.equals(ka) || "off".equals(ka) ? "off" : "auto";
         com.omarchytv.home.link.Tailnet.allowed = tailscale;
         JSONObject ap = j != null ? j.optJSONObject("aiPane") : null;
         aiOffline = ap != null && "hide".equals(ap.optString("offline")) ? "hide" : "stale";

@@ -183,6 +183,7 @@
     <string name="set_home_override">主页键打开 OmarchyTV</string>
     <string name="link_usage">使用情况访问权限（当前应用）</string>
     <string name="link_share_theme">与网络中的应用共享主题</string>
+    <string name="link_keep_alive">开机后保持 Link 可连接</string>
     <string name="link_tailscale">允许 Tailscale (tailnet)</string>
     <string name="agentq_asks">提问</string>
     <string name="agentq_hint">用遥控器选择答案 · 返回：稍后回答</string>

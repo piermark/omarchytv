@@ -311,7 +311,7 @@ final class FractalView extends GLSurfaceView {
      */
     /** Full-screen Radiomarchy / screensaver fps: 24 on Mali-T8xx or <= 2 GB, otherwise 30. */
     static int sceneFps(String gpu, long ramBytes) {
-        if (ramBytes > 0 && ramBytes <= TWO_GB) return HOME_FPS;
+        if (tightRam(ramBytes)) return HOME_FPS;   // the same 2.5 GB line as preferPlain
         String g = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
         if (g.contains("mali-t8") || g.contains("mali-t7") || g.contains("mali-g31")
                 || g.contains("mali-g51") || g.contains("adreno (tm) 3") || g.contains("powervr ge8"))
@@ -328,8 +328,7 @@ final class FractalView extends GLSurfaceView {
         if (preferLight) return LIGHT_LEVEL;
         String g = gpu == null ? "" : gpu.toLowerCase(java.util.Locale.ROOT);
         if (lowp || g.contains("mali-4") || g.contains("mali-3") || g.contains("videocore iv")) return LIGHT_LEVEL;
-        boolean tightRam = ramBytes > 0 && ramBytes <= TWO_GB;
-        if (tightRam || g.contains("mali-t8") || g.contains("mali-t7") || g.contains("mali-g31")
+        if (tightRam(ramBytes) || g.contains("mali-t8") || g.contains("mali-t7") || g.contains("mali-g31")
                 || g.contains("mali-g51") || g.contains("adreno (tm) 3") || g.contains("powervr ge8"))
             return LIGHT_LEVEL;
         return 1;

@@ -183,6 +183,7 @@
     <string name="set_home_override">زر الصفحة الرئيسية يفتح OmarchyTV</string>
     <string name="link_usage">الوصول إلى الاستخدام (التطبيق الحالي)</string>
     <string name="link_share_theme">مشاركة السمة مع تطبيقات الشبكة</string>
+    <string name="link_keep_alive">إبقاء Link متاحًا بعد التشغيل</string>
     <string name="link_tailscale">السماح بـ Tailscale (tailnet)</string>
     <string name="agentq_asks">يسأل</string>
     <string name="agentq_hint">اختر إجابة بجهاز التحكم · رجوع: أجب لاحقًا</string>

@@ -97,6 +97,23 @@ class TestMcpServer(unittest.TestCase):
                 data = json.loads(r.read())
                 self.assertTrue(len(data["result"]["tools"]) >= 7)
                 c.close()
+
+                # 3. v2.21 a notification: 202, no body (as openapi.yaml says)
+                c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+                c.request("POST", "/mcp", body=b'{"jsonrpc":"2.0","method":"notifications/initialized"}',
+                          headers={"Content-Type": "application/json", "Authorization": f"Bearer {tok}"})
+                r = c.getresponse()
+                self.assertEqual((r.status, r.read()), (202, b""))
+                c.close()
+
+                # 4. GET: a JSON 405 with Allow: POST, not the stdlib's 501 HTML
+                c = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
+                c.request("GET", "/mcp")
+                r = c.getresponse()
+                self.assertEqual(r.status, 405)
+                self.assertEqual(r.getheader("Allow"), "POST")
+                self.assertEqual(json.loads(r.read())["error"], "method_not_allowed")
+                c.close()
             finally:
                 srv.shutdown()
 
