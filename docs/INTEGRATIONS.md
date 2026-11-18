@@ -7,10 +7,29 @@ the simplest (read-only, no pairing) to full control (MCP).
 | What | Where | Auth | Since |
 |---|---|---|---|
 | Read the theme and the wallpaper | `GET /v1/theme`, `GET /v1/theme/wallpaper` on the TV (47800) or the LG/Samsung bridge (8765) | none, LAN / tailnet only | 2.21 |
-| Show a message on the TV | `omarchy-link notify`, `POST /v1/notify`, MCP `tv_notify` | paired PC | 2.21 |
-| Control the TV from an AI agent | MCP: on the TV (`/v1/mcp`) or on the PC (`omarchy-tv mcp`) | paired PC token / Bearer token | 2.12, more tools in 2.21 |
+| The JavaScript SDK | `GET /v1/sdk/omarchytv.js` on the TV | none | 2.21 |
+| What is on screen, live | `GET /v1/state`, `GET /v1/stream` (Server-Sent Events) | app token, `read` | 2.21 |
+| Show a message on the TV | `omarchy-link notify`, `POST /v1/notify`, MCP `tv_notify` | app token `notify`, or the paired PC | 2.21 |
+| Ask the person at the TV | `omarchy-link ask`, `POST /v1/ask`, MCP `tv_ask_user` | app token `notify`, or the paired PC | 2.21 |
+| Open a page full screen | `omarchy-link page`, `POST /v1/page`, MCP `tv_show_page` | app token `control`, or the paired PC | 2.21 |
+| Diagnostics and logs | `omarchy-link tv logs`, `GET /v1/diagnostics`, MCP `tv_diagnostics` | app token `control`, or the paired PC | 2.21 |
+| Control the TV from an AI agent | MCP: on the TV (`/v1/mcp`) or on the PC (`omarchy-tv mcp`) | app token (tools of its scope), PC token, MCP Bearer token | 2.12, more in 2.21 |
 | The same, from another box | `omarchy-tv mcp --http --tailscale` | Bearer token, tailnet peers only | 2.21 |
+| The same, from the cloud | `omarchy-tv mcp --cloudflare NAME --access` | Cloudflare Access + Bearer token; read + notify by default | 2.21 |
 | Live AI agents and PC stats on the TV | `omarchy-link agents`, widgets, Remote panes | paired PC | 2.10–2.15 |
+
+Everything that changes something on the TV needs either the paired PC or an **app token**:
+
+```sh
+omarchy-link token add "Kitchen dashboard" --scope read      # read: state, stream, MCP read tools
+omarchy-link token add "Claude Code" --scope notify          # + notify and ask
+omarchy-link token add "Hermes" --scope control              # + keys, apps, themes, pages, diagnostics
+omarchy-link token                                           # list
+omarchy-link token revoke 1a2b3c4d
+```
+
+The token (`otva_…`) is printed once; the TV keeps only its SHA-256. Settings › Omarchy Link › **App tokens** shows
+how many there are and revokes them all. At most 16. Android TV only (LG and Samsung have the theme on the bridge).
 
 ## 1. One theme for every app
 
@@ -80,23 +99,31 @@ Two MCP servers, the same tools.
 ```sh
 omarchy-tv mcp --stdio                       # for Claude Code, Claude Desktop, Cursor on this PC
 omarchy-tv mcp --http --port 8990            # http://127.0.0.1:8990/mcp, Bearer token in ~/.config/omarchy-tv/mcp-token
-omarchy-tv mcp --http --tailscale            # on this PC's tailnet address, tailnet peers only (see below)
+omarchy-tv mcp --http --tailscale            # on this PC's tailnet address, tailnet peers only (section 4)
+omarchy-tv mcp --cloudflare NAME --access    # a named Cloudflare tunnel behind Access (CLOUDFLARE.md)
+omarchy-tv mcp --stdio --scope notify        # fewer tools: read | notify | control
 ```
 
 Claude Code: `claude mcp add omarchytv -- omarchy-tv mcp --stdio`.
 
-**On the TV** (`POST /v1/mcp`, Android TV), with `Authorization: Bearer <the paired PC token>` or an OTV1-signed
-request.
+**On the TV** (`POST /v1/mcp`, Android TV), with an app token (`Authorization: Bearer otva_…`, the tools of its
+scope), the paired PC's token, or an OTV1-signed request.
 
-| Tool | Does |
-|---|---|
-| `tv_status` | theme, foreground app, capabilities |
-| `tv_get_theme` | the `GET /v1/theme` payload (2.21) |
-| `tv_notify` | a line on the TV, like `omarchy-link notify` (2.21) |
-| `tv_list_themes`, `tv_set_theme`, `tv_push_theme` | themes |
-| `tv_send_key`, `tv_list_apps`, `tv_launch_app` | the remote and the apps |
-| `tv_screensaver` | the text screensaver |
-| `tv_ai_status`, `tv_cinemarchy` | live agents and stats, the Cinemarchy library (TV server) |
+| Tool | Scope | Does |
+|---|---|---|
+| `tv_status`, `tv_get_state` | read | what is on screen, the app, the theme, the music |
+| `tv_get_theme`, `tv_list_themes`, `tv_list_apps` | read | the theme payload, the lists |
+| `tv_ai_status`, `tv_cinemarchy` | read | live agents and stats, the Cinemarchy library (TV server only) |
+| `tv_notify` | notify | a line on the TV, like `omarchy-link notify` |
+| `tv_ask_user`, `tv_ask_result` | notify | a question answered on the remote; waits for the answer |
+| `tv_set_theme`, `tv_push_theme` | control | themes (`tv_push_theme`: PC server only) |
+| `tv_send_key`, `tv_launch_app` | control | the remote and the apps |
+| `tv_screensaver` | control | the text screensaver |
+| `tv_show_page`, `tv_close_page` | control | a LAN / tailnet page full screen |
+| `tv_diagnostics` | control | version, device, network, recent log lines |
+
+A local server (`--stdio`, `--http`, `--tailscale`) offers every tool unless you pass `--scope`; one reachable from
+the internet (`--tunnel`, `--cloudflare`) offers read + notify unless you pass `--scope control`.
 
 Never: a shell, files on the PC, arbitrary intents. Tools are a fixed list.
 
@@ -118,10 +145,82 @@ checks the token. Point the agent on your always-on box (Hermes, a home server r
 For the TV itself on the tailnet (Android TV with the Tailscale app, or LG/Samsung behind a subnet router), see
 [TAILSCALE.md](TAILSCALE.md).
 
-## 5. A dashboard on a stick, the way a Hermes user built it
+## 5. The JavaScript SDK
+
+The TV serves `omarchytv.js` (ES5, no dependencies; any Android TV WebView). A page anywhere on the LAN or tailnet:
+
+```html
+<script src="http://192.168.1.50:47800/v1/sdk/omarchytv.js"></script>
+<script>
+  var tv = OmarchyTV.connect({ token: "otva_…" });         // the TV is where the script came from
+  tv.followTheme();                                           // --otv-background, --otv-accent, --otv-color4, --otv-wallpaper …
+  tv.on("state", function (s) { show(s.screen, s.app && s.app.label, s.nowPlaying); });
+  tv.on("notify", function (n) { toast(n.from + ": " + n.text); });
+  document.querySelector("#deploy").onclick = function () {
+    tv.ask("Deploy to production?", ["Yes", "Not now"]).then(function (a) { if (a === "Yes") deploy(); });
+  };
+</script>
+```
+
+| Call | Needs | Returns |
+|---|---|---|
+| `theme()`, `followTheme(el?, cb?)`, `applyTheme(t, el?)`, `wallpaperUrl()` | nothing | the theme payload; CSS variables |
+| `state()` | `read` | `{screen: home\|app\|screensaver\|off, app, theme, nowPlaying, time}` |
+| `on(type, cb)` | `read` | events `state`, `theme`, `notify`, `ask_answer`; one stream, reconnects by itself |
+| `notify(text)` | `notify` | shown on the TV (agent alerts on) |
+| `ask(question, choices?, {timeout})` | `notify` | the answer, or `null` if nobody answered |
+| `close()` | | stops the stream |
+
+## 6. Live state (`GET /v1/state`, `GET /v1/stream`)
+
+```sh
+curl -H "Authorization: Bearer otva_…" http://192.168.1.50:47800/v1/state
+# {"screen":"app","app":{"package":"com.netflix.ninja","label":"Netflix"},"theme":"tokyo-night","nowPlaying":null,…}
+curl -N "http://192.168.1.50:47800/v1/stream?token=otva_…"
+# event: state / event: theme / event: notify / event: ask_answer, a ": ping" every 20 s
+```
+
+`?token=` exists because a browser `EventSource` cannot send headers; it works only on these two read routes. At
+most 4 streams at once; each lasts an hour and the browser reconnects.
+
+## 7. Ask the person at the TV
+
+```sh
+omarchy-link ask "Merge the PR?" --choice Merge --choice Wait --from "Claude Code"   # prints the answer
+```
+
+The question opens over whatever is playing (or, if Android keeps it back, waits and opens when you go Home), in the
+theme's colours, with up to 4 answers on the remote. BACK answers later; it closes itself when it expires
+(10–300 s, default 120). Exit codes: 0 answered, 5 no answer in time, 4 agent alerts off on the TV. In an agent:
+MCP `tv_ask_user` (waits for the answer) and `tv_ask_result`.
+
+## 8. Pages full screen
+
+```sh
+omarchy-link page http://192.168.1.20:8080/        # a dashboard on the Pi
+omarchy-link page --close
+```
+
+Only `http://` to a literal LAN address (or a `100.x` tailnet address with Tailscale on): no internet pages, no
+DNS names. The page stays on its own host (links elsewhere are not followed), has no access to the TV's files and
+no JavaScript bridge; BACK closes it. With the SDK, the page itself can follow the theme and ask questions.
+
+## 9. Diagnostics
+
+```sh
+omarchy-link tv logs            # the TV's last 100 Omarchy Link log lines
+omarchy-link tv diagnostics     # + launcher version, device, GPU, RAM, LAN / tailnet address, settings
+```
+
+Nothing secret: no tokens, no keys, no file paths. Useful in a bug report, and for an agent that helps you set up
+the TV (MCP `tv_diagnostics`, scope control).
+
+## 10. A dashboard on a stick, the way a Hermes user built it
 
 1. An always-on box (a Raspberry Pi, a NAS) serves the dashboard page and its data, so the TV never goes blank when
    the laptop sleeps.
-2. The page reads its colours and wallpaper from `GET /v1/theme` on the TV (section 1): no second theme server.
-3. A tiny WebView app on the stick shows the page; OmarchyTV's Remote panes can show tiles from the same box.
-4. Agents on the box report through MCP `tv_notify` over the tailnet (section 4).
+2. The page reads its colours and wallpaper from the TV with the SDK (`followTheme()`): no second theme server.
+3. On an Android TV with OmarchyTV, `omarchy-link page http://<box>/` shows it full screen (or a tiny WebView app on
+   the stick, as before); Remote panes can show tiles from the same box.
+4. Agents on the box report with `tv_notify`, ask with `tv_ask_user`, over the tailnet (section 4) or with an app
+   token. A Raspberry Pi recipe: [RASPBERRY-PI.md](RASPBERRY-PI.md). Cloud agents: [CLOUDFLARE.md](CLOUDFLARE.md).

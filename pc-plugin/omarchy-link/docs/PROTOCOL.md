@@ -183,6 +183,8 @@ fake status or swallow commands.
 | `POST /v1/cast/control` | ✓ | `{action:"play"\|"pause"\|"stop"\|"seek", id?, position?}` → `{ok:true}` |
 | `POST /v1/notify` | ✓ (v2.21) | `{text, from?}` → `{ok:true, shown:true}` / `403 notify_off` (agent alerts off on the TV) / `400 bad_notify`. One line, 200 chars; 3 per 10 s. |
 | `POST /v1/mcp` | ✓ or `Bearer <pc token>` | MCP JSON-RPC 2.0: `tv_status`, `tv_get_theme`, `tv_notify`, themes, keys, apps… (docs/INTEGRATIONS.md) |
+| `GET/POST /v1/tokens`, `DELETE /v1/tokens/<id>` | ✓ (v2.21) | app tokens: list / `{name, scope}` → `{id, token, name, scope}` (token shown once) / revoke |
+| `GET /v1/state`, `GET /v1/stream`, `POST /v1/ask`, `GET /v1/ask/<id>`, `POST`/`DELETE /v1/page`, `GET /v1/diagnostics` | ✓ or app token (v2.21) | §6, App API |
 | `POST /v1/unpair` | ✓ | `{}` → `{ok:true}`. The TV deletes this PC. |
 | `GET /v1/events` | ✓ (on the upgrade) | WebSocket, §7 |
 
@@ -303,6 +305,31 @@ curl -s -o wall.webp http://<tv>:47800/v1/theme/wallpaper
 etag=$(curl -sI http://<tv>:47800/v1/theme | awk -F': ' 'tolower($1)=="etag"{print $2}' | tr -d '\r')
 curl -s -o /dev/null -w '%{http_code}\n' -H "If-None-Match: $etag" http://<tv>:47800/v1/theme   # 304
 ```
+
+### App API (v2.21): app tokens, state, stream, questions, pages
+
+For dashboards, agent pages and agents that are not the paired PC. Same port, same LAN/tailnet rule (`403 not_lan`).
+
+**App tokens.** Made by a paired PC (`POST /v1/tokens {name, scope}`), shown once (`otva_` + 32 base64url chars), kept
+on the TV as SHA-256 only (`link-apps.json` in internal storage, never `omarchytv.json`). At most 16. Scopes:
+`read` < `notify` < `control`. Sent as `Authorization: Bearer otva_…`; on `GET /v1/state` and `GET /v1/stream` also as
+`?token=` (a browser `EventSource` cannot send headers). App routes answer CORS (`*`, preflight without a token) and
+allow 30 requests per 10 s per token. A paired PC can do everything an app can, signed as usual. Unknown or revoked:
+`401 unauthorized`; outside the scope: `403 scope`.
+
+| Route | Scope | Body → response |
+|---|---|---|
+| `GET /v1/state` | read | `{screen: "home"\|"app"\|"screensaver"\|"off"\|"unknown", app: {package, label}\|null, theme, nowPlaying: {title, artist, source}\|null, launcherVersion, time}` |
+| `GET /v1/stream` | read | `text/event-stream`: `state` (on change, checked every 2 s), `theme` (every 5 s), `notify`, `ask_answer` (the asker's only), `: ping` every 20 s. At most 4 streams; each ends after 1 h. |
+| `POST /v1/notify` | notify | §6 table; an app's message carries the app's name as `from` |
+| `POST /v1/ask` | notify | `{question, choices?[≤4, ≤24 chars], timeout?: 10-300 (120), from?}` → `{id, state: "pending", choices, expires}` / `403 ask_off` (agent alerts off) / `429 busy` (4 waiting) |
+| `GET /v1/ask/<id>?wait=0-25` | notify | `{id, state: "pending"\|"answered"\|"expired", answer}`; waits up to `wait` s for the answer. Only the asker (or a PC). |
+| `POST /v1/page` | control | `{url}`: `http://` to a literal LAN / tailnet address → `{ok, url}` / `400 not_lan_url`. `DELETE` closes it. |
+| `GET /v1/diagnostics` | control | `{launcherVersion, device, network, settings, screen, link, log[]}`; no tokens, keys or paths |
+| `POST /v1/mcp` | any | MCP; `tools/list` and `tools/call` limited to the token's scope |
+| `GET /v1/sdk/omarchytv.js` | none | the JavaScript SDK (docs/INTEGRATIONS.md) |
+
+The answer to a question is also sent to the PCs as the event `ask_answer {id, answer}`.
 
 ### Power together and liftoff (v2.14)
 

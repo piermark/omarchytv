@@ -16,17 +16,32 @@ Built on the published 2.20.0.
 - Off switch: Settings › Omarchy Link › **Share theme with apps on the network** (on by default). The TV lists
   `theme-share` in its capabilities. Schema `omarchytv-theme/1`, documented in PROTOCOL.md with curl examples.
 
-### AI agents and scripts: MCP, notify, Tailscale
+### OmarchyTV for dashboards and AI agents (the big one)
 
-- **`omarchy-link notify "text"`**: one line on the TV over whatever is playing, from an agent hook or a script
-  (`--from "Claude Code"`, text from stdin, `--quiet` for hooks). Shown only with agent alerts on. Signed route
-  `POST /v1/notify`, 3 per 10 s.
-- **New MCP tools** on the TV and on the PC: `tv_get_theme` (the `/v1/theme` payload) and `tv_notify`.
-- **MCP over Tailscale**: `omarchy-tv mcp --http --tailscale` listens on the PC's tailnet address and answers only
-  tailnet peers (still with the Bearer token), so an agent on another box of your tailnet uses the TV without a
-  public tunnel.
-- **docs/INTEGRATIONS.md**: theme for dashboards, notify, MCP, a Claude Code hook example, the "dashboard on a
-  stick" recipe.
+- **App tokens**: a dashboard or an agent gets its own token instead of your PC's, with one scope: `read`, `notify` or
+  `control`. `omarchy-link token add "Kitchen dashboard" --scope read`, `token`, `token revoke`. The TV keeps only a
+  hash; Settings › Omarchy Link › App tokens shows how many and revokes them all.
+- **What is on screen, live**: `GET /v1/state` (home, app, screensaver or off; the app; the theme; the music) and
+  `GET /v1/stream`, Server-Sent Events for pages (`state`, `theme`, `notify`, `ask_answer`).
+- **Notify**: `omarchy-link notify "text"` puts one line on the TV over whatever is playing, from an agent hook or a
+  script (`--from "Claude Code"`, stdin, `--quiet`). Shown only with agent alerts on; 3 per 10 s.
+- **Ask**: an agent asks, you answer with the remote. `omarchy-link ask "Merge the PR?" --choice Merge --choice
+  Wait` prints the answer; MCP `tv_ask_user` waits for it. The question opens over what is playing, in the theme's
+  colours, or waits for Home.
+- **Pages full screen**: `omarchy-link page http://192.168.1.20:8080/` or MCP `tv_show_page` opens a dashboard of the
+  LAN or tailnet on the TV; BACK closes it. LAN/tailnet addresses only; the page stays on its own host.
+- **The JavaScript SDK** (`/v1/sdk/omarchytv.js`): `followTheme()`, `state()`, `on()`, `notify()`, `ask()` for any
+  page, in old TV WebViews too.
+- **Diagnostics**: `omarchy-link tv logs` / `tv diagnostics` and MCP `tv_diagnostics` (version, device, network,
+  the last 100 Link log lines; no secrets) for bug reports and for agents that help you set up.
+- **MCP**: new tools `tv_get_state`, `tv_get_theme`, `tv_notify`, `tv_ask_user`, `tv_ask_result`, `tv_show_page`,
+  `tv_close_page`, `tv_diagnostics`, on the TV and on the PC; every tool has a scope, and an app token sees only
+  its own.
+- **MCP from another box** (`omarchy-tv mcp --http --tailscale`, tailnet peers only) and **from the cloud**
+  (`omarchy-tv mcp --cloudflare NAME --access`: a named Cloudflare tunnel behind Cloudflare Access, read + notify
+  tools unless `--scope control`; the TV's own port is never exposed).
+- Guides: **docs/INTEGRATIONS.md** (everything above, a Claude Code hook, the "dashboard on a stick" recipe),
+  **docs/CLOUDFLARE.md**, **docs/RASPBERRY-PI.md** (the always-on box next to the TV), PROTOCOL.md "App API".
 
 ### Grok Bot diretto and GrokBot Office: replies that ntfy.sh does not block (#70)
 
