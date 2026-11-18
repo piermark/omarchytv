@@ -29,6 +29,16 @@ Built on the published 2.20.0.
   app wakes it, and if webOS still keeps it asleep, the song moves to a plain player at the same second: you
   hear it for sure, and the fractals dance on their own beat for the rest of that session.
 
+### Lighter fractals
+
+- **Each fractal is now its own small shader.** Before, every frame ran one big shader holding all five fractals
+  (and, with 2x2 supersampling, four copies of it); many TV GPUs size that for the heaviest one even when a light
+  plasma is on screen. Now the TV builds a program with only what is on screen (two during a cross-fade), the
+  first time it is needed. Same picture, same random geometry and colours, less work per pixel.
+- **Auto quality stops at "high"** (full resolution, 320 iterations). "Ultra" (2x2 supersampling, 500 iterations)
+  is only used when you pick it in the settings, so a strong TV no longer climbs to it and then stutters back down.
+- Same on Android TV, LG and Samsung; the shader stays the same text on both.
+
 ### Pull requests merged
 
 - #155 Radiomarchy declares POST_NOTIFICATIONS and guards the now-playing notification.

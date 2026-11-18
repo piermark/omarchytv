@@ -22,6 +22,14 @@
   ];
   var LIGHT_LEVEL = 4;
   var VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
+  /** v2.21: the defines in front of FRAG (same as Android's FractalView.header). mask: bit n = scene n, 0 = all. */
+  function header(lowp, mask, maxIter) {
+    var b = (lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n") + "#define MAXIT " + maxIter + "\n";
+    if (mask) { b += "#define ONLY 1\n"; for (var i = 0; i < 5; i++) if (mask & (1 << i)) b += "#define S" + i + " 1\n"; }
+    return b;
+  }
+  /** 500 only for ultra, which auto never picks; 320 covers high and below. */
+  function maxIterFor(level) { return level === 0 ? 500 : 320; }
   var LIGHT_VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
   var LIGHT_FRAG = "precision mediump float;\nvarying vec2 vUv;\nuniform sampler2D uTex;\nuniform float uTime, uPulse, uBass, uCycle, uDim, uLevel;\nuniform vec3 uPal[4];\nuniform int uHave;\n"
     + "vec3 pal(float t){ t = fract(t) * 4.0; float k = fract(t); k = k * k * (3.0 - 2.0 * k);\n"
@@ -43,7 +51,7 @@
     + "  c = c / (1.0 + c * 0.35);\n"
     + "  gl_FragColor = vec4(c * uDim, 1.0);\n"
     + "}\n";
-  var FRAG = "varying vec2 vUv;\nuniform vec2 uRes; uniform float uTime, uBass, uMid, uHigh, uLevel, uPulse, uMix, uCycle, uZoom, uIter, uRot, uDim, uAA;\nuniform int uScene, uScene2; uniform vec3 uPal[4]; uniform vec2 uCenter; uniform vec4 uP[5];\nvec3 pal(float t){ t = fract(t) * 4.0; float k = fract(t); k = k * k * (3.0 - 2.0 * k);\n  if (t < 1.0) return mix(uPal[0], uPal[1], k); if (t < 2.0) return mix(uPal[1], uPal[2], k);\n  if (t < 3.0) return mix(uPal[2], uPal[3], k); return mix(uPal[3], uPal[0], k); }\nvec2 rot(vec2 p, float a){ float c = cos(a), s = sin(a); return vec2(c * p.x - s * p.y, s * p.x + c * p.y); }\nvec3 shade(float n, float m2, float de, float px, float glow){\n  float sn = max(0.0, n - log2(max(1.0001, log2(m2))) + 4.0);\n  float t = log2(sn + 1.0) * 0.38 + uCycle;\n  float fade = clamp(log2(sn + 1.0) / 6.0, 0.0, 1.0);\n  float edge = exp(-de / (px * 2.5));\n  return pal(t) * (0.16 + 0.6 * fade) * (0.85 + 0.5 * uLevel) + pal(t + 0.25) * edge * (0.8 + glow); }\nvec3 mandel(vec2 p){\n  vec2 c = uCenter + rot(p, uRot) * uZoom; vec2 z = vec2(0.0), dz = vec2(0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n  for (int i = 0; i < 500; i++) { if (float(i) >= uIter) break;\n    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x) + vec2(1.0, 0.0);\n    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n    m2 = dot(z, z); trap = min(trap, abs(z.y)); if (m2 > 256.0) break; n += 1.0; }\n  if (m2 <= 256.0) return pal(uCycle * 2.0 + trap * 3.0) * (0.05 + 0.22 * uPulse);\n  float de = 0.25 * sqrt(m2) * log(m2) / max(length(dz), 1e-20);\n  return shade(n, m2, de, 2.0 * uZoom / uRes.y, uPulse); }\nvec3 julia(vec2 p){\n  vec4 q = uP[1]; float a = uTime * 0.21 + uMid * 1.5;\n  vec2 c = q.xy + q.z * vec2(cos(a), sin(a * 1.3)) * (1.0 + uBass);\n  float sc = q.w - 0.1 * uPulse; vec2 z = rot(p, uTime * 0.05) * sc, dz = vec2(1.0, 0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n  for (int i = 0; i < 500; i++) { if (float(i) >= uIter * 0.7) break;\n    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x);\n    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n    m2 = dot(z, z); trap = min(trap, length(z - vec2(0.0, 0.3 * sin(uTime * 0.3)))); if (m2 > 256.0) break; n += 1.0; }\n  if (m2 <= 256.0) return pal(uCycle + trap) * (0.08 + 0.2 * uPulse) + pal(uCycle + 0.5) * exp(-trap * 5.0) * (0.3 + 0.7 * uHigh);\n  float de = 0.25 * sqrt(m2) * log(m2) / max(length(dz), 1e-20);\n  return shade(n, m2, de, 2.0 * sc / uRes.y, uPulse) + pal(uCycle + 0.5) * exp(-trap * 6.0) * 0.4 * uHigh; }\nvec3 plasma(vec2 p){\n  vec4 q = uP[2]; float t = uTime * (0.6 + 0.5 * uMid); p *= 1.3 + 0.5 * uBass;\n  float v = sin(p.x * q.x + t) + sin((p.y * q.y + t) * 0.8) + sin((p.x + p.y) * q.z * 0.7 + t * 1.3)\n    + sin(length(p * q.w + vec2(sin(t * 0.3), cos(t * 0.5)) * 3.0) - t * 2.0);\n  return pal(v * 0.125 + uCycle) * (0.7 + 0.5 * uBass + 0.4 * uPulse); }\nvec3 tunnel(vec2 p){\n  vec4 q = uP[3];\n  p = rot(p, uTime * 0.2 * q.z + 0.3 * sin(uTime * 0.37)); p += 0.15 * vec2(sin(uTime * 0.5), cos(uTime * 0.4));\n  float r = max(length(p), 0.001), a = atan(p.y, p.x);\n  float u = 0.35 / r + uTime * q.w * (0.5 + 0.9 * uBass), v = a / 3.14159265 * q.y + q.z * 0.2 / r + uTime * 0.07;\n  float ch = mod(floor(u * q.x) + floor(v), 2.0);\n  vec3 c = pal(u * 0.07 + uCycle) * (0.45 + 0.55 * ch);\n  float ring = exp(-abs(fract(u * 0.5) - 0.5) * 18.0) * uPulse;\n  return c * smoothstep(0.0, 0.5, r) * (0.8 + 0.4 * uLevel) + ring * pal(uCycle + 0.5) * 1.2; }\nvec3 kali(vec2 p){\n  vec4 q = uP[4]; vec2 z = rot(p, uTime * 0.04) * q.z * (0.9 + 0.1 * sin(uTime * 0.13));\n  vec2 c = q.xy + vec2(0.1 * sin(uTime * 0.071), 0.1 * cos(uTime * 0.053)) + vec2(uMid, -uBass) * 0.035;\n  float acc = 0.0, lo = 1e9;\n  for (int i = 0; i < 16; i++) { if (float(i) >= q.w) break; z = abs(z) / max(dot(z, z), 0.0005) + c; float l = length(z); lo = min(lo, l); acc += exp(-l * 1.6); }\n  vec3 col = pal(acc * 0.08 + uCycle) * acc * 0.17;\n  return col * (0.7 + 0.6 * uHigh + 0.4 * uPulse) + pal(uCycle + 0.3) * exp(-lo * 9.0) * (0.3 + uHigh); }\nvec3 scene(int s, vec2 p){\n#ifndef LOWP\n  if (s == 0) return mandel(p); if (s == 1) return julia(p);\n#endif\n  if (s == 3) return tunnel(p); if (s == 4) return kali(p); return plasma(p); }\nvec3 frame(vec2 uv){\n  vec2 p = uv * vec2(uRes.x / uRes.y, 1.0);\n  vec3 c = scene(uScene, p);\n  if (uMix > 0.0) c = mix(c, scene(uScene2, p), smoothstep(0.0, 1.0, uMix));\n  return c; }\nvoid main(){\n  vec3 c = frame(vUv);\n  if (uAA > 1.5) {\n    vec2 px = 1.0 / uRes;\n    c += frame(vUv + vec2(px.x, 0.0)) + frame(vUv + vec2(0.0, px.y)) + frame(vUv + px);\n    c *= 0.25; }\n  c = c / (1.0 + c * 0.35);\n  float vig = 1.0 - 0.28 * dot(vUv * 0.75, vUv * 0.75);\n  float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) + uTime) * 43758.5453);\n  c = c * vig * uDim + (n - 0.5) / 255.0;\n  gl_FragColor = vec4(max(c, 0.0), 1.0); }\n";
+  var FRAG = "#ifndef MAXIT\n#define MAXIT 500\n#endif\nvarying vec2 vUv;\nuniform vec2 uRes; uniform float uTime, uBass, uMid, uHigh, uLevel, uPulse, uMix, uCycle, uZoom, uIter, uRot, uDim, uAA;\nuniform int uScene, uScene2; uniform vec3 uPal[4]; uniform vec2 uCenter; uniform vec4 uP[5];\nvec3 pal(float t){ t = fract(t) * 4.0; float k = fract(t); k = k * k * (3.0 - 2.0 * k);\n  if (t < 1.0) return mix(uPal[0], uPal[1], k); if (t < 2.0) return mix(uPal[1], uPal[2], k);\n  if (t < 3.0) return mix(uPal[2], uPal[3], k); return mix(uPal[3], uPal[0], k); }\nvec2 rot(vec2 p, float a){ float c = cos(a), s = sin(a); return vec2(c * p.x - s * p.y, s * p.x + c * p.y); }\nvec3 shade(float n, float m2, float de, float px, float glow){\n  float sn = max(0.0, n - log2(max(1.0001, log2(m2))) + 4.0);\n  float t = log2(sn + 1.0) * 0.38 + uCycle;\n  float fade = clamp(log2(sn + 1.0) / 6.0, 0.0, 1.0);\n  float edge = exp(-de / (px * 2.5));\n  return pal(t) * (0.16 + 0.6 * fade) * (0.85 + 0.5 * uLevel) + pal(t + 0.25) * edge * (0.8 + glow); }\nvec3 mandel(vec2 p){\n  vec2 c = uCenter + rot(p, uRot) * uZoom; vec2 z = vec2(0.0), dz = vec2(0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n  for (int i = 0; i < MAXIT; i++) { if (float(i) >= uIter) break;\n    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x) + vec2(1.0, 0.0);\n    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n    m2 = dot(z, z); trap = min(trap, abs(z.y)); if (m2 > 256.0) break; n += 1.0; }\n  if (m2 <= 256.0) return pal(uCycle * 2.0 + trap * 3.0) * (0.05 + 0.22 * uPulse);\n  float de = 0.25 * sqrt(m2) * log(m2) / max(length(dz), 1e-20);\n  return shade(n, m2, de, 2.0 * uZoom / uRes.y, uPulse); }\nvec3 julia(vec2 p){\n  vec4 q = uP[1]; float a = uTime * 0.21 + uMid * 1.5;\n  vec2 c = q.xy + q.z * vec2(cos(a), sin(a * 1.3)) * (1.0 + uBass);\n  float sc = q.w - 0.1 * uPulse; vec2 z = rot(p, uTime * 0.05) * sc, dz = vec2(1.0, 0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n  for (int i = 0; i < MAXIT; i++) { if (float(i) >= uIter * 0.7) break;\n    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x);\n    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n    m2 = dot(z, z); trap = min(trap, length(z - vec2(0.0, 0.3 * sin(uTime * 0.3)))); if (m2 > 256.0) break; n += 1.0; }\n  if (m2 <= 256.0) return pal(uCycle + trap) * (0.08 + 0.2 * uPulse) + pal(uCycle + 0.5) * exp(-trap * 5.0) * (0.3 + 0.7 * uHigh);\n  float de = 0.25 * sqrt(m2) * log(m2) / max(length(dz), 1e-20);\n  return shade(n, m2, de, 2.0 * sc / uRes.y, uPulse) + pal(uCycle + 0.5) * exp(-trap * 6.0) * 0.4 * uHigh; }\nvec3 plasma(vec2 p){\n  vec4 q = uP[2]; float t = uTime * (0.6 + 0.5 * uMid); p *= 1.3 + 0.5 * uBass;\n  float v = sin(p.x * q.x + t) + sin((p.y * q.y + t) * 0.8) + sin((p.x + p.y) * q.z * 0.7 + t * 1.3)\n    + sin(length(p * q.w + vec2(sin(t * 0.3), cos(t * 0.5)) * 3.0) - t * 2.0);\n  return pal(v * 0.125 + uCycle) * (0.7 + 0.5 * uBass + 0.4 * uPulse); }\nvec3 tunnel(vec2 p){\n  vec4 q = uP[3];\n  p = rot(p, uTime * 0.2 * q.z + 0.3 * sin(uTime * 0.37)); p += 0.15 * vec2(sin(uTime * 0.5), cos(uTime * 0.4));\n  float r = max(length(p), 0.001), a = atan(p.y, p.x);\n  float u = 0.35 / r + uTime * q.w * (0.5 + 0.9 * uBass), v = a / 3.14159265 * q.y + q.z * 0.2 / r + uTime * 0.07;\n  float ch = mod(floor(u * q.x) + floor(v), 2.0);\n  vec3 c = pal(u * 0.07 + uCycle) * (0.45 + 0.55 * ch);\n  float ring = exp(-abs(fract(u * 0.5) - 0.5) * 18.0) * uPulse;\n  return c * smoothstep(0.0, 0.5, r) * (0.8 + 0.4 * uLevel) + ring * pal(uCycle + 0.5) * 1.2; }\nvec3 kali(vec2 p){\n  vec4 q = uP[4]; vec2 z = rot(p, uTime * 0.04) * q.z * (0.9 + 0.1 * sin(uTime * 0.13));\n  vec2 c = q.xy + vec2(0.1 * sin(uTime * 0.071), 0.1 * cos(uTime * 0.053)) + vec2(uMid, -uBass) * 0.035;\n  float acc = 0.0, lo = 1e9;\n  for (int i = 0; i < 16; i++) { if (float(i) >= q.w) break; z = abs(z) / max(dot(z, z), 0.0005) + c; float l = length(z); lo = min(lo, l); acc += exp(-l * 1.6); }\n  vec3 col = pal(acc * 0.08 + uCycle) * acc * 0.17;\n  return col * (0.7 + 0.6 * uHigh + 0.4 * uPulse) + pal(uCycle + 0.3) * exp(-lo * 9.0) * (0.3 + uHigh); }\nvec3 scene(int s, vec2 p){\n#if !defined(LOWP) && (!defined(ONLY) || defined(S0))\n  if (s == 0) return mandel(p);\n#endif\n#if !defined(LOWP) && (!defined(ONLY) || defined(S1))\n  if (s == 1) return julia(p);\n#endif\n#if !defined(ONLY) || defined(S3)\n  if (s == 3) return tunnel(p);\n#endif\n#if !defined(ONLY) || defined(S4)\n  if (s == 4) return kali(p);\n#endif\n  return plasma(p); }\nvec3 frame(vec2 uv){\n  vec2 p = uv * vec2(uRes.x / uRes.y, 1.0);\n  vec3 c = scene(uScene, p);\n  if (uMix > 0.0) c = mix(c, scene(uScene2, p), smoothstep(0.0, 1.0, uMix));\n  return c; }\nvoid main(){\n  vec3 c = frame(vUv);\n  if (uAA > 1.5) {\n    vec2 px = 1.0 / uRes;\n    c += frame(vUv + vec2(px.x, 0.0)) + frame(vUv + vec2(0.0, px.y)) + frame(vUv + px);\n    c *= 0.25; }\n  c = c / (1.0 + c * 0.35);\n  float vig = 1.0 - 0.28 * dot(vUv * 0.75, vUv * 0.75);\n  float n = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233)) + uTime) * 43758.5453);\n  c = c * vig * uDim + (n - 0.5) / 255.0;\n  gl_FragColor = vec4(max(c, 0.0), 1.0); }\n";
 
   function hsv(h, s, v, out, o) {
     var c = v * s, x = c * (1 - Math.abs((h * 6) % 2 - 1)), m = v - c, k = Math.floor(h * 6) % 6;
@@ -320,13 +328,34 @@
       if (!gl.getShaderParameter(s, gl.COMPILE_STATUS) && root.console) root.console.warn("fractals: " + gl.getShaderInfoLog(s));
       return s;
     }
-    var prog = gl.createProgram();
-    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VERT));
-    gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, (lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n") + FRAG));
-    gl.linkProgram(prog);
+    function build(fs) {
+      var p = gl.createProgram();
+      gl.attachShader(p, sh(gl.VERTEX_SHADER, VERT));
+      gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+      gl.linkProgram(p);
+      return p;
+    }
+    var prog = build(header(lowp, 0, 500) + FRAG), uberProg = prog;
     gl.useProgram(prog);
     var U = {}, names = ["uRes", "uTime", "uBass", "uMid", "uHigh", "uLevel", "uPulse", "uScene", "uScene2", "uMix", "uPal", "uCycle", "uZoom", "uCenter", "uIter", "uRot", "uDim", "uAA", "uP"];
     for (var i = 0; i < names.length; i++) U[names[i]] = gl.getUniformLocation(prog, names[i]);
+    // v2.21 one small program per scene (and per pair during a cross-fade), made when first needed
+    var progs = {};
+    function use(a, b, lvl) {
+      var maxIt = maxIterFor(lvl), mask = (1 << a) | (b >= 0 ? 1 << b : 0), key = mask + ":" + maxIt, e = progs[key];
+      if (!e) {
+        var p = build(header(lowp, mask, maxIt) + FRAG);
+        if (gl.getProgramParameter && !gl.getProgramParameter(p, gl.LINK_STATUS)) p = uberProg;
+        var u = {};
+        for (var k = 0; k < names.length; k++) u[names[k]] = gl.getUniformLocation(p, names[k]);
+        e = progs[key] = { p: p, U: u, aPos: gl.getAttribLocation(p, "aPos") };
+      }
+      prog = e.p; U = e.U; aPos = e.aPos;
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.enableVertexAttribArray(aPos);
+      gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+    }
     var buf = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buf);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
@@ -479,7 +508,7 @@
         bakeW = bw; bakeH = bh;
       } else gl.bindFramebuffer(gl.FRAMEBUFFER, bakeFb);
       gl.viewport(0, 0, bakeW, bakeH);
-      gl.useProgram(prog);
+      use(cur, -1, LIGHT_LEVEL);
       gl.uniform2f(U.uRes, bakeW, bakeH);
       gl.uniform1f(U.uTime, 0);
       gl.uniform1f(U.uBass, 0); gl.uniform1f(U.uMid, 0); gl.uniform1f(U.uHigh, 0);
@@ -635,7 +664,7 @@
           if (isLight(level)) { goodSince = now; }
           else if (cheapScale > 1) cheapScale--;
           else if (fpsCap < want || freezePalette || iterMul < 0.99) { freezePalette = false; iterMul = 1; }
-          else if (level > 0) level--;
+          else if (level > 1) level--;   // v2.21: auto stops at high; ultra (2x2 AA, 500 iterations) only by hand
           goodSince = now; applyLowPolicy(); resize();
         }
       }
@@ -684,6 +713,7 @@
       var q = LEVELS[level], t = beautyDemo ? animTime : (now - t0) / 1000;
       resize();
       if (!beautyDemo && isLight(level)) { drawLight(now, pulse, t); return; }
+      use(cur, next, level);
       gl.uniform2f(U.uRes, canvas.width, canvas.height);
       gl.uniform1f(U.uTime, t);
       gl.uniform1f(U.uBass, f.bass);
@@ -731,7 +761,7 @@
   }
 
   root.OmarchyFractals = {
-    SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG,
+    SCENES: SCENES, PALETTES: PALETTES, QUALITIES: QUALITIES, LEVELS: LEVELS, FRAG: FRAG, header: header, maxIterFor: maxIterFor,
     create: create, randomPalette: randomPalette, edgePoint: edgePoint, escape: escape, idle: idle, firstLevel: firstLevel,
     tightRam: tightRam, weakGpu: weakGpu, preferPlain: preferPlain, preferPlainHere: preferPlainHere, stallActionAt: stallActionAt,
     scaleFor: scaleFor, bufferHeight: bufferHeight, bufferSize: bufferSize, isBackpressured: isBackpressured,

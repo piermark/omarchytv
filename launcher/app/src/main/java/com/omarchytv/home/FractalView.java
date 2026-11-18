@@ -879,8 +879,10 @@ final class FractalView extends GLSurfaceView {
             bakeDirty = true;
             applyLowPolicy();
             if (lowp && cur < 2) cur = 2;
-            prog = link(VERT, (lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n") + FRAG);
+            progs.clear();   // a new GL context: the old programs are gone
+            prog = link(VERT, header(lowp, 0, 500) + FRAG);
             if (prog == 0) { failed(); return; }
+            uberProg = prog;
             aPos = GLES20.glGetAttribLocation(prog, "aPos");
             uRes = loc("uRes");
             uTime = loc("uTime");
@@ -912,6 +914,30 @@ final class FractalView extends GLSurfaceView {
 
         private int loc(String n) {
             return GLES20.glGetUniformLocation(prog, n);
+        }
+
+        // v2.21 one small program per scene (and per pair during a cross-fade), made when first needed
+        private final java.util.HashMap<Integer, int[]> progs = new java.util.HashMap<>();
+        private int uberProg;
+
+        /** Point prog and the uniform fields at the program for these scenes; the full shader if it will not build. */
+        private void use(int sceneA, int sceneB, int lvl) {
+            int maxIt = maxIterFor(lvl);
+            int mask = (1 << sceneA) | (sceneB >= 0 ? 1 << sceneB : 0);
+            int key = mask | (maxIt << 8);
+            int[] e = progs.get(key);
+            if (e == null) {
+                int p = link(VERT, header(lowp, mask, maxIt) + FRAG);
+                if (p == 0) p = uberProg;
+                prog = p;
+                e = new int[]{p, GLES20.glGetAttribLocation(p, "aPos"), loc("uRes"), loc("uTime"), loc("uBass"), loc("uMid"),
+                        loc("uHigh"), loc("uLevel"), loc("uPulse"), loc("uScene"), loc("uScene2"), loc("uMix"), loc("uPal"),
+                        loc("uCycle"), loc("uZoom"), loc("uCenter"), loc("uIter"), loc("uRot"), loc("uDim"), loc("uAA"), loc("uP")};
+                progs.put(key, e);
+            }
+            prog = e[0]; aPos = e[1]; uRes = e[2]; uTime = e[3]; uBass = e[4]; uMid = e[5]; uHigh = e[6]; uLevel = e[7];
+            uPulse = e[8]; uScene = e[9]; uScene2 = e[10]; uMix = e[11]; uPal = e[12]; uCycle = e[13]; uZoom = e[14];
+            uCenter = e[15]; uIter = e[16]; uRot = e[17]; uDim = e[18]; uAA = e[19]; uP = e[20];
         }
 
 
@@ -996,6 +1022,7 @@ final class FractalView extends GLSurfaceView {
             } else {
                 GLES20.glViewport(0, 0, w, h);
             }
+            use(cur, next, level);
             GLES20.glUseProgram(prog);
             GLES20.glUniform2f(uRes, iw, ih);
             GLES20.glUniform1f(uTime, t);
@@ -1212,7 +1239,7 @@ final class FractalView extends GLSurfaceView {
                     } else if (fpsCap < want || freezePalette || iterMul < 0.99f) {
                         freezePalette = false;
                         iterMul = 1f;
-                    } else if (level > 0) {
+                    } else if (level > 1) {   // v2.21: auto stops at high; ultra (2x2 AA, 500 iterations) only by hand
                         level--;
                     }
                     goodSince = now;
@@ -1362,6 +1389,7 @@ final class FractalView extends GLSurfaceView {
                 GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, bakeFbo);
             }
             GLES20.glViewport(0, 0, bakeW, bakeH);
+            use(cur, -1, LIGHT_LEVEL);
             GLES20.glUseProgram(prog);
             float t = (SystemClock.elapsedRealtime() - t0) / 1000f;
             float zoom = (float) (2.6 * Math.exp(-dive));
@@ -1458,6 +1486,22 @@ final class FractalView extends GLSurfaceView {
         }
     }
 
+    /** v2.21: the defines in front of FRAG. mask = the scenes the program draws (bit n = scene n), 0 = all of them. */
+    static String header(boolean lowp, int mask, int maxIter) {
+        StringBuilder b = new StringBuilder(lowp ? "precision mediump float;\n#define LOWP 1\n" : "precision highp float;\n");
+        b.append("#define MAXIT ").append(maxIter).append('\n');
+        if (mask != 0) {
+            b.append("#define ONLY 1\n");
+            for (int i = 0; i < 5; i++) if ((mask & (1 << i)) != 0) b.append("#define S").append(i).append(" 1\n");
+        }
+        return b.toString();
+    }
+
+    /** Loop cap: 500 only for ultra, which auto never picks (v2.21); 320 covers high and below. */
+    static int maxIterFor(int level) {
+        return level == 0 ? 500 : 320;
+    }
+
     static final String VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
     static final String BLIT_VERT = "attribute vec2 aPos;\nvarying vec2 vUv;\nvoid main(){ vUv = aPos * 0.5 + 0.5; gl_Position = vec4(aPos, 0.0, 1.0); }\n";
     static final String BLIT_FRAG = "precision mediump float;\nvarying vec2 vUv;\nuniform sampler2D uTex;\nvoid main(){ gl_FragColor = texture2D(uTex, vUv); }\n";
@@ -1485,9 +1529,13 @@ final class FractalView extends GLSurfaceView {
 
     /**
      * One fragment shader, five scenes; uScene2 + uMix cross-fade two of them; uP[s] holds scene s's random geometry;
-     * uAA 2 = 2x2 supersampling. Shared word for word with the webOS / Tizen app (webos/app/fractals.js).
+     * uAA 2 = 2x2 supersampling. v2.21: compiled per scene (ONLY + S<n>, see header()) so a GPU only runs the code
+     * of what is on screen, and MAXIT caps the loops at 320 unless ultra is chosen by hand. Shared word for word with the webOS / Tizen app (webos/app/fractals.js).
      */
     static final String FRAG = ""
+            + "#ifndef MAXIT\n"
+            + "#define MAXIT 500\n"
+            + "#endif\n"
             + "varying vec2 vUv;\n"
             + "uniform vec2 uRes; uniform float uTime, uBass, uMid, uHigh, uLevel, uPulse, uMix, uCycle, uZoom, uIter, uRot, uDim, uAA;\n"
             + "uniform int uScene, uScene2; uniform vec3 uPal[4]; uniform vec2 uCenter; uniform vec4 uP[5];\n"
@@ -1503,7 +1551,7 @@ final class FractalView extends GLSurfaceView {
             + "  return pal(t) * (0.16 + 0.6 * fade) * (0.85 + 0.5 * uLevel) + pal(t + 0.25) * edge * (0.8 + glow); }\n"
             + "vec3 mandel(vec2 p){\n"
             + "  vec2 c = uCenter + rot(p, uRot) * uZoom; vec2 z = vec2(0.0), dz = vec2(0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n"
-            + "  for (int i = 0; i < 500; i++) { if (float(i) >= uIter) break;\n"
+            + "  for (int i = 0; i < MAXIT; i++) { if (float(i) >= uIter) break;\n"
             + "    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x) + vec2(1.0, 0.0);\n"
             + "    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n"
             + "    m2 = dot(z, z); trap = min(trap, abs(z.y)); if (m2 > 256.0) break; n += 1.0; }\n"
@@ -1514,7 +1562,7 @@ final class FractalView extends GLSurfaceView {
             + "  vec4 q = uP[1]; float a = uTime * 0.21 + uMid * 1.5;\n"
             + "  vec2 c = q.xy + q.z * vec2(cos(a), sin(a * 1.3)) * (1.0 + uBass);\n"
             + "  float sc = q.w - 0.1 * uPulse; vec2 z = rot(p, uTime * 0.05) * sc, dz = vec2(1.0, 0.0); float n = 0.0, m2 = 0.0, trap = 1e9;\n"
-            + "  for (int i = 0; i < 500; i++) { if (float(i) >= uIter * 0.7) break;\n"
+            + "  for (int i = 0; i < MAXIT; i++) { if (float(i) >= uIter * 0.7) break;\n"
             + "    dz = 2.0 * vec2(z.x * dz.x - z.y * dz.y, z.x * dz.y + z.y * dz.x);\n"
             + "    z = vec2(z.x * z.x - z.y * z.y, 2.0 * z.x * z.y) + c;\n"
             + "    m2 = dot(z, z); trap = min(trap, length(z - vec2(0.0, 0.3 * sin(uTime * 0.3)))); if (m2 > 256.0) break; n += 1.0; }\n"
@@ -1542,11 +1590,20 @@ final class FractalView extends GLSurfaceView {
             + "  for (int i = 0; i < 16; i++) { if (float(i) >= q.w) break; z = abs(z) / max(dot(z, z), 0.0005) + c; float l = length(z); lo = min(lo, l); acc += exp(-l * 1.6); }\n"
             + "  vec3 col = pal(acc * 0.08 + uCycle) * acc * 0.17;\n"
             + "  return col * (0.7 + 0.6 * uHigh + 0.4 * uPulse) + pal(uCycle + 0.3) * exp(-lo * 9.0) * (0.3 + uHigh); }\n"
-            + "vec3 scene(int s, vec2 p){\n"
-            + "#ifndef LOWP\n"
-            + "  if (s == 0) return mandel(p); if (s == 1) return julia(p);\n"
+            + "vec3 scene(int s, vec2 p){\n"                                    // ONLY + S<n>: a program with just these scenes
+            + "#if !defined(LOWP) && (!defined(ONLY) || defined(S0))\n"
+            + "  if (s == 0) return mandel(p);\n"
             + "#endif\n"
-            + "  if (s == 3) return tunnel(p); if (s == 4) return kali(p); return plasma(p); }\n"
+            + "#if !defined(LOWP) && (!defined(ONLY) || defined(S1))\n"
+            + "  if (s == 1) return julia(p);\n"
+            + "#endif\n"
+            + "#if !defined(ONLY) || defined(S3)\n"
+            + "  if (s == 3) return tunnel(p);\n"
+            + "#endif\n"
+            + "#if !defined(ONLY) || defined(S4)\n"
+            + "  if (s == 4) return kali(p);\n"
+            + "#endif\n"
+            + "  return plasma(p); }\n"
             + "vec3 frame(vec2 uv){\n"
             + "  vec2 p = uv * vec2(uRes.x / uRes.y, 1.0);\n"
             + "  vec3 c = scene(uScene, p);\n"
