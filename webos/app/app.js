@@ -408,7 +408,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   var DEFAULT_CFG = {
     theme: "last-horizon",
-    randomTheme: true,
+    randomTheme: false,     // 2.21: Last Horizon (Eyes Wide) stays; a theme picked by hand locks it too
     randomScope: "intros",   // v2.15 (#71): "all" = every bundled theme
     randomWallpaper: false, // 2.20: default wallpaper is Radiomarchy fractals; do not rotate it away
     pluginSpacexTv: false,   // 2.20: off until turned on in Settings
@@ -428,7 +428,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     opacity: 0.75,
     wallpaperDim: 0,
     wallpaperIdx: 0,
-    wallpaper: "radiomarchy:fractals",  // 2.20 default Home animated background; OmaFire and stills stay selectable
+    wallpaper: "omarchy",   // 2.21 default Home: the theme's own wallpaper, Last Horizon (Eyes Wide) looping; fractals stay selectable
     radiomarchyAnimated: "auto",  // auto / on / off — same key as Radiomarchy prefs
     proceduralBg: false,
     tempUnit: "C",
@@ -448,7 +448,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverLogoScale: 0.65,
     saverShowClock: false,
     wallpaperIntro: true,
-    wallpaperLoop: false,   // v2.14 "Always-animated wallpaper": loop the intro while Home is on screen
+    wallpaperLoop: true,    // v2.14 "Always-animated wallpaper" (2.21: on, the eyes open and close while Home is on screen)
     living: false,          // v2.14 Living screensaver: weather, GitHub, PC notifications, X in ASCII boxes (living.js)
     livingNotes: false,     // ...with every notification from the Omarchy PC (POST /v1/living)
     livingX: "off",         // ..."off" | "notify" (X notifications shown on the PC, free) | "api" (X API on the PC, paid)
@@ -515,6 +515,31 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     // only these keys are written: the rest of the saved settings stays exactly as it was
     try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(pulseWas)); } catch (e) {}
   }
+
+  // v2.21: Last Horizon (Eyes Wide) by Erik Johansson is the default Home again, looping, once. Only where nobody
+  // chose: a new install, or the fractals 2.20 set by default (a wallpaper picked by hand carries wallpaperPicked).
+  // Anything picked is left alone; a theme picked by hand (randomTheme false) is kept with its own wallpaper.
+  (function eyesWallpaperDefault() {
+    if (cfg.eyesWp221) return;
+    var had = {};
+    try { had = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {}; } catch (e) { had = {}; }
+    var set = { eyesWp221: true, fractalWp220: true };
+    var wp = Object.prototype.hasOwnProperty.call(had, "wallpaper") ? String(had.wallpaper || "") : "";
+    var fresh = wp === "" || (wp === "omarchy" && had.randomWallpaper !== false);
+    var defaultFractals = wp === "radiomarchy:fractals" && !!had.fractalWp220;
+    if (!had.wallpaperPicked && (fresh || defaultFractals)) {
+      set.wallpaper = "omarchy";
+      set.wallpaperIdx = 0;
+      set.randomWallpaper = false;
+      set.wallpaperLoop = true;
+      if (had.randomTheme !== false) { set.theme = "last-horizon"; set.randomTheme = false; }
+    }
+    try {
+      var persist = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {};
+      Object.keys(set).forEach(function (k) { cfg[k] = persist[k] = set[k]; });
+      localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(persist));   // only these keys change
+    } catch (e) { Object.keys(set).forEach(function (k) { cfg[k] = set[k]; }); }
+  })();
 
   // v2.20: default Home wallpaper is Radiomarchy fractals, once. An explicit saved wallpaper is left alone.
   (function fractalWallpaperDefault() {
@@ -777,9 +802,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
     if (wv) {
       var intro = cfg.wallpaperIntro && activeWp && DATA.wallpaperIntros && DATA.wallpaperIntros[activeWp];
+      // v2.21 a weak TV (2.5 GB or less, a Mali-T8xx-class GPU) plays the 540p / 15 fps copy where there is one
+      var FXw = window.OmarchyFractals, weakWp = !!(FXw && FXw.preferPlainHere && FXw.preferPlainHere(0));
+      if (intro && weakWp && DATA.wallpaperIntrosLight && DATA.wallpaperIntrosLight[activeWp]) intro = DATA.wallpaperIntrosLight[activeWp];
+      var loopWp = !!cfg.wallpaperLoop && !cfg.wpLoopStutter;
       if (intro) {
-        if (wv.getAttribute("src") !== intro || !cfg.wallpaperLoop) wv.src = intro;   // once: restart like before
-        wv.loop = !!cfg.wallpaperLoop;
+        if (wv.getAttribute("src") !== intro || !loopWp) { wv.src = intro; wpGuard = {}; }   // once: restart like before
+        wv.loop = loopWp;
+        wpGuardFps = weakWp ? 15 : 24;
         wv.style.display = "block";
         wv.onended = function () { if (!wv.loop) wv.style.display = "none"; };
         wv.onerror = function () { wv.style.display = "none"; };
@@ -2044,7 +2074,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.wallpaperIdx++; cfg.wallpaper = ""; saveCfg(); applyTheme(); openAllSettingsModal();
       } },
       { label: "Always-animated wallpaper", right: cfg.wallpaperLoop ? "on" : "off", act: function () {
-        cfg.wallpaperLoop = !cfg.wallpaperLoop; saveCfg(); applyTheme(); openAllSettingsModal();
+        cfg.wallpaperLoop = !cfg.wallpaperLoop; cfg.wpLoopStutter = false; saveCfg(); applyTheme(); openAllSettingsModal();
       } },
       { label: "Light wallpapers (1080p)", right: cfg.lightWallpapers === true ? "on" : cfg.lightWallpapers === false ? "off" : "auto", act: function () {
         // 2.15 (#47): auto = on a 1080p panel only; on = always (faster start on a UHD set); off = always 4K
@@ -2385,7 +2415,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function openWallpaperModal(keepFocus) {
     var focus = state.modalIdx;
-    function pick(v) { cfg.wallpaper = v; cfg.randomWallpaper = false; saveCfg(); applyTheme(); openWallpaperModal(true); }
+    function pick(v) { cfg.wallpaper = v; cfg.randomWallpaper = false; cfg.wallpaperPicked = true; saveCfg(); applyTheme(); openWallpaperModal(true); }
     var items = [
       { label: tr("random_wallpaper"), right: cfg.randomWallpaper ? "on" : "off", act: function () {
         cfg.randomWallpaper = !cfg.randomWallpaper; saveCfg(); openWallpaperModal(true);
@@ -2514,10 +2544,29 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   window.addEventListener("pagehide", lightsLeave);
   document.addEventListener("webOSRelaunch", lightsBack);
 
+  // v2.21 a loop the TV cannot keep up with settles on the still, here and from then on (wpLoopStutter);
+  // toggling "Always-animated wallpaper" gives it another try.
+  var wpGuard = {}, wpGuardFps = 24;
+  function wallpaperStutterCheck(wv, L) {
+    if (!wv.loop || !L.stutter) return;
+    var dec = 0, drop = 0, q = null;
+    try { q = wv.getVideoPlaybackQuality ? wv.getVideoPlaybackQuality() : null; } catch (e) { q = null; }
+    if (q) { dec = q.totalVideoFrames || 0; drop = q.droppedVideoFrames || 0; }
+    else if (typeof wv.webkitDecodedFrameCount === "number") { dec = wv.webkitDecodedFrameCount; drop = wv.webkitDroppedFrameCount || 0; }
+    else return;   // this browser cannot tell: keep looping
+    if (wv.paused) return;
+    if (L.stutter(wpGuard, Date.now(), dec, drop, wpGuardFps)) {
+      wv.loop = false;   // the clip finishes and the still stays
+      cfg.wpLoopStutter = true;
+      saveCfg();
+    }
+  }
+
   // v2.14 Always-animated wallpaper: pause the loop behind Cinemarchy, the screensaver or another app; resume on Home.
   function wallpaperLoopTick() {
     var wv = document.getElementById("wallpaper-video"), L = window.OmarchyWpLoop;
     if (!wv || !L || !cfg.wallpaperLoop || wv.style.display !== "block") return;
+    wallpaperStutterCheck(wv, L);
     var play = L.shouldPlay({ loop: true, hidden: document.hidden,
       saver: document.getElementById("saver-overlay").className === "active",
       cinemarchy: !!cineUi });

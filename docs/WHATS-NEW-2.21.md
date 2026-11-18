@@ -69,6 +69,8 @@ the internet. See [CLOUDFLARE.md](CLOUDFLARE.md).
 - Radiomarchy has a sleep timer, and shows the song's page as a QR code for your phone.
 - On LG, Radiomarchy no longer goes silent after the first song.
 - Fractals are lighter: each scene is its own shader, and auto quality stops at "high".
+- Home is Last Horizon "Eyes Wide" again (Erik Johansson's eyes, looping; a lighter copy on weak TVs). Only if you
+  never picked a wallpaper: your choice stays, and the fractals are one click away in Settings › Wallpaper.
 - Grok Bot diretto copes with ntfy.sh rate limits (#70).
 - Settings › System info shows the TV's state. On the PC, `omarchy-link tv logs` gives the log for bug reports,
   `tv backup` saves the TV's settings and `tv restore` puts them back.

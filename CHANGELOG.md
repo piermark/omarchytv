@@ -97,6 +97,12 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 
 ### Home and Radiomarchy
 
+- **Last Horizon "Eyes Wide" is the default Home again**: the eyes by Erik Johansson (@erikrjohansson) open and close
+  in a loop, on Android TV, LG and Samsung. Only for new installs and for anyone still on the fractals that 2.20 set
+  by default. A wallpaper or theme you picked yourself stays. The fractals remain in Settings › Wallpaper and in the
+  screensaver. Weak TVs (2.5 GB or less, or a GPU like the Sony's) play a 540p, 15 fps copy of the loop (134 KB).
+  A TV that can't keep at least half its frames goes back to the still image, and remembers it. Turning
+  *Always-animated wallpaper* off and on again gives it another try. No music on Home.
 - **Home is quiet**: the fractals wallpaper no longer starts music by itself. Radiomarchy › Settings › **Music on
   Home** brings it back for those who liked it. A song you started keeps playing and the fractals follow it.
 - **Sleep timer** in Radiomarchy (15, 30, 60, 90 minutes), and the **song's page as a QR code** for your phone.

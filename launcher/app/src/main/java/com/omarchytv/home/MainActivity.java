@@ -1040,7 +1040,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         super.onResume();
         BootScreenView.onResume(this, findViewById(R.id.root));
         // migrations first, then the wallpaper layers: a first launch must not attach OmaFire/fractals to the old default
-        LauncherConfig.update(this, j -> { LauncherConfig.pulseDefault(j); LauncherConfig.fractalWallpaperDefault(j); });
+        LauncherConfig.update(this, j -> {
+            LauncherConfig.pulseDefault(j);
+            LauncherConfig.eyesWallpaperDefault(j);     // v2.21 first: it marks the 2.20 fractals migration as done
+            LauncherConfig.fractalWallpaperDefault(j);
+        });
         OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));   // v2.14 OmaFire animated wallpaper   // "wake" mode: replay after the screen came on
         FractalLayer.onResume(this, findViewById(R.id.wallpaper));  // v2.20 Radiomarchy fractals wallpaper
         RadioPlayer rp = RadioPlayer.peek();
@@ -3127,9 +3131,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             stopWallpaperIntro();
             return;
         }
+        boolean plain = FractalView.preferPlain(this);
+        String light = mp4.substring(0, mp4.length() - 4) + "-light.mp4";
+        if (plain && WallpaperView.assetExists(this, light)) mp4 = light;   // v2.21 weak TV: 540p, 15 fps
+        boolean loop = cfg.wallpaperLoop && !WallpaperLoopGuard.stuttered(this);
         String key = Theme.cur().name + ":" + mp4;
         // Played once already: stay on the still, unless "Always-animated wallpaper" loops it on every return.
-        if (key.equals(lastIntroKey) && (!cfg.wallpaperLoop || introView != null)) return;
+        if (key.equals(lastIntroKey) && (!loop || introView != null)) return;
         lastIntroKey = key;
         stopWallpaperIntro();
         java.io.File tmp = new java.io.File(getCacheDir(), "wp_intro.mp4");
@@ -3142,6 +3150,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return;
         }
         android.view.TextureView tv = new android.view.TextureView(this);
+        WallpaperLoopGuard guard = new WallpaperLoopGuard(plain ? 15 : 24);
         tv.setFocusable(false);
         tv.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         introView = tv;
@@ -3156,7 +3165,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                     mp.setSurface(new android.view.Surface(surface));
                     mp.setDataSource(tmp.getAbsolutePath());
                     mp.setVolume(0f, 0f);
-                    mp.setLooping(cfg.wallpaperLoop);
+                    mp.setLooping(loop);
                     mp.setOnCompletionListener(m -> {
                         if (introView != null) {
                             introView.animate().alpha(0f).setDuration(300).withEndAction(MainActivity.this::stopWallpaperIntro).start();
@@ -3176,7 +3185,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
             @Override public void onSurfaceTextureSizeChanged(android.graphics.SurfaceTexture s, int w, int h) {}
             @Override public boolean onSurfaceTextureDestroyed(android.graphics.SurfaceTexture s) { stopWallpaperIntro(); return true; }
-            @Override public void onSurfaceTextureUpdated(android.graphics.SurfaceTexture s) {}
+            @Override public void onSurfaceTextureUpdated(android.graphics.SurfaceTexture s) {
+                // v2.21: a loop that cannot keep half its frame rate settles on the still, here and next time
+                if (guard.frame(android.os.SystemClock.elapsedRealtime())) {
+                    WallpaperLoopGuard.remember(MainActivity.this);
+                    android.media.MediaPlayer mp = introPlayer;
+                    if (mp != null) try { mp.setLooping(false); } catch (Throwable ignored) {}
+                }
+            }
         });
     }
 
@@ -3407,6 +3423,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         String lLoop = str(R.string.wp_loop);
         p.add(lLoop, str(cfg.wallpaperLoop ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.wallpaperLoop;
+            WallpaperLoopGuard.forget(this);   // v2.21 a new try after a stutter fallback
             applyLive("wallpaper", lLoop, j -> j.put("wallpaperLoop", n));   // recreate() replays it with the new mode
             return true;
         });

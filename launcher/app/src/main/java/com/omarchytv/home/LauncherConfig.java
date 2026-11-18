@@ -1011,6 +1011,33 @@ final class LauncherConfig {
      * (random locked off, or a wallpaper other than the old factory default "omarchy" / empty) is left alone.
      * New and implicit installs get the fractals and random_wallpaper is locked off so rotation cannot replace them.
      */
+    /**
+     * v2.21: "Last Horizon (Eyes Wide)" by Erik Johansson is the default Home again, the eyes opening and closing in
+     * a loop, once per config. Only where nobody chose: a new install, an untouched "omarchy" with random on, or the
+     * fractals the 2.20 migration set (not picked by hand: lockWallpaper marks "wallpaperPicked"). A picked
+     * wallpaper, a locked random, OmaFire or a still are left alone; a theme picked by hand (random_theme false) is
+     * kept and gets its own wallpaper. Fractals stay in Settings › Wallpaper and in the screensaver.
+     */
+    static boolean eyesWallpaperDefault(JSONObject j) throws org.json.JSONException {
+        if (j == null || j.optBoolean("eyesWp221", false)) return false;
+        j.put("eyesWp221", true);
+        boolean migrated220 = j.optBoolean("fractalWp220", false);
+        j.put("fractalWp220", true);   // the 2.20 fractals migration never runs after this one
+        if (j.optBoolean("wallpaperPicked", false)) return true;
+        boolean randomOff = (j.has("random_wallpaper") && !j.optBoolean("random_wallpaper", true))
+                || (j.has("randomWallpaper") && !j.optBoolean("randomWallpaper", true));
+        String wp = j.has("wallpaper") ? j.optString("wallpaper", "").trim() : "";
+        boolean fresh = wp.isEmpty() || ("omarchy".equals(wp) && !randomOff);
+        boolean defaultFractals = FractalLayer.ID.equals(wp) && migrated220;
+        if (!fresh && !defaultFractals) return true;
+        j.put("wallpaper", "omarchy");
+        j.put("wallpaper_bg", 0);
+        j.put("random_wallpaper", false);
+        if (!j.has("random_theme") || j.optBoolean("random_theme", true)) lockTheme(j, "last-horizon");
+        j.put("wallpaperLoop", true);   // the eyes open and close in a loop, not once (nobody chose this either)
+        return true;
+    }
+
     static boolean fractalWallpaperDefault(JSONObject j) throws org.json.JSONException {
         if (j == null || j.optBoolean("fractalWp220", false)) return false;
         j.put("fractalWp220", true);
@@ -1191,6 +1218,7 @@ final class LauncherConfig {
     }
 
     static void lockWallpaper(JSONObject j, String wallpaper, int bgIdx) throws org.json.JSONException {
+        j.put("wallpaperPicked", true);   // v2.21: a choice by hand; default migrations never touch it
         j.put("wallpaper", wallpaper);
         j.put("wallpaper_bg", bgIdx);
         j.put("random_wallpaper", false);

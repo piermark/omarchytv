@@ -267,6 +267,14 @@ public class WallpaperView extends View {
     }
 
     /** Optional MP4 video intro matching the current theme background (e.g. cumulus, last-horizon), or null. */
+    static boolean assetExists(Context c, String path) {
+        try (java.io.InputStream in = c.getAssets().open(path)) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     static String introAssetFor(Context c, String which, int idx) {
         String img = assetFor(c, which, idx);
         if (img == null || !img.endsWith(".webp")) return null;
