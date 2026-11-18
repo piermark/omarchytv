@@ -187,6 +187,7 @@
     <string name="agentq_asks">spørger</string>
     <string name="agentq_hint">Vælg et svar med fjernbetjeningen · TILBAGE: svar senere</string>
     <string name="link_app_tokens">App-tokens (dashboards, agenter)</string>
+    <string name="menu_system_info">Systeminfo</string>
     <string name="link_new_app_token">Nyt app-token</string>
     <string name="link_app_tokens_full">Allerede 16 app-tokens: tilbagekald dem først</string>
     <string name="link_app_token_once">Vises én gang. Scan eller skriv det i din app; tilbagekald her eller med omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Demotilstand efter 1 minut uden tast</string>
     <string name="radio_shuffle">Bland</string>
     <string name="radio_home_music">Musik på startskærmen</string>
+    <string name="radio_song_qr">Sangens side (QR til telefonen)</string>
     <string name="radio_sleep">Sleep-timer</string>
     <string name="radio_sleep_left" formatted="true">%d min tilbage</string>
     <string name="radio_repeat">Gentag</string>

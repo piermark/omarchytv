@@ -187,6 +187,7 @@
     <string name="agentq_asks">pregunta</string>
     <string name="agentq_hint">Elige una respuesta con el mando · ATRÁS: responder luego</string>
     <string name="link_app_tokens">Tokens de apps (paneles, agentes)</string>
+    <string name="menu_system_info">Información del sistema</string>
     <string name="link_new_app_token">Nuevo token de app</string>
     <string name="link_app_tokens_full">Ya hay 16 tokens: revócalos primero</string>
     <string name="link_app_token_once">Se muestra una sola vez. Escanéalo o escríbelo en tu app; revócalo aquí o con omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Modo demo tras 1 minuto sin teclas</string>
     <string name="radio_shuffle">Aleatorio</string>
     <string name="radio_home_music">Música en el inicio</string>
+    <string name="radio_song_qr">Página de la canción (QR para el móvil)</string>
     <string name="radio_sleep">Temporizador</string>
     <string name="radio_sleep_left" formatted="true">quedan %d min</string>
     <string name="radio_repeat">Repetir</string>

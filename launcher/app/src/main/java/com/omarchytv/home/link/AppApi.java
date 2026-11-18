@@ -164,7 +164,7 @@ final class AppApi {
             r.headers.put("Retry-After", String.valueOf(retry));
             return r;
         }
-        a.lastUsed = System.currentTimeMillis() / 1000;
+        tokens.touch(a, System.currentTimeMillis() / 1000);
         if (!"GET".equals(req.method) || "/v1/stream".equals(p) || "/v1/diagnostics".equals(p)) {
             host.log("app " + a.name + ": " + req.method + " " + p);   // v2.21: integration calls in the diagnostics
         }
@@ -256,6 +256,30 @@ final class AppApi {
         }
         if ("GET".equals(m) && "/v1/diagnostics".equals(p)) return who.can("control") ? new LinkServer.Response(200, diagnostics()) : forbidden("control");
         if ("POST".equals(m) && ("/v1/mcp".equals(p) || "/mcp".equals(p))) return s.mcp(body, who);
+        // paired PCs only
+        if (who.pc && "/v1/config".equals(p)) {   // v2.21 backup / restore of omarchytv.json (no secrets: those are in link.json)
+            if ("GET".equals(m)) {
+                JSONObject c = host.config();
+                return new LinkServer.Response(200, new JSONObject().put("config", c != null ? c : new JSONObject()));
+            }
+            if ("PUT".equals(m)) {
+                JSONObject in = body.optJSONObject("config");
+                if (in == null) return new LinkServer.Response(400, LinkServer.err("bad_config", "{\"config\": {…}}"));
+                host.editConfig(j -> {
+                    JSONObject keepLink = j.optJSONObject("link");   // this TV's pairings and panes stay as they are
+                    java.util.List<String> keys = new ArrayList<>();
+                    for (java.util.Iterator<String> it = j.keys(); it.hasNext(); ) keys.add(it.next());
+                    for (String k : keys) j.remove(k);
+                    for (java.util.Iterator<String> it = in.keys(); it.hasNext(); ) {
+                        String k = it.next();
+                        if (!"link".equals(k)) j.put(k, in.get(k));
+                    }
+                    if (keepLink != null) j.put("link", keepLink);
+                });
+                host.log("config restored from the PC");
+                return new LinkServer.Response(200, LinkServer.ok());
+            }
+        }
         // paired PCs only
         if (who.pc && "/v1/tokens".equals(p)) {
             if ("GET".equals(m)) return new LinkServer.Response(200, new JSONObject().put("apps", tokens.list()).put("max", AppTokens.MAX));

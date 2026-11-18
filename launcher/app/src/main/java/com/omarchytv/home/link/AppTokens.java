@@ -94,6 +94,17 @@ public final class AppTokens {
         return hit;
     }
 
+    private long savedAt;
+
+    /** The app was used now: kept in memory, written to disk at most once a minute. */
+    public synchronized void touch(App a, long nowS) {
+        a.lastUsed = nowS;
+        if (nowS - savedAt >= 60) {
+            savedAt = nowS;
+            save();
+        }
+    }
+
     public synchronized boolean remove(String id) {
         boolean r = apps.removeIf(a -> a.id.equals(id));
         if (r) save();

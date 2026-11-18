@@ -187,6 +187,7 @@
     <string name="agentq_asks">kysyy</string>
     <string name="agentq_hint">Valitse vastaus kaukosäätimellä · TAKAISIN: vastaa myöhemmin</string>
     <string name="link_app_tokens">Sovellustunnukset (koontinäytöt, agentit)</string>
+    <string name="menu_system_info">Järjestelmätiedot</string>
     <string name="link_new_app_token">Uusi sovellustunnus</string>
     <string name="link_app_tokens_full">Jo 16 tunnusta: peru ne ensin</string>
     <string name="link_app_token_once">Näytetään kerran. Skannaa tai kirjoita se sovellukseesi; peru täällä tai komennolla omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Demotila 1 minuutin jälkeen ilman näppäimiä</string>
     <string name="radio_shuffle">Satunnainen</string>
     <string name="radio_home_music">Musiikki aloitusnäytössä</string>
+    <string name="radio_song_qr">Kappaleen sivu (QR puhelimelle)</string>
     <string name="radio_sleep">Uniajastin</string>
     <string name="radio_sleep_left" formatted="true">%d min jäljellä</string>
     <string name="radio_repeat">Toista</string>

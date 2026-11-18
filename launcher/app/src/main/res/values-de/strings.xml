@@ -187,6 +187,7 @@
     <string name="agentq_asks">fragt</string>
     <string name="agentq_hint">Antwort mit der Fernbedienung wählen · BACK: später antworten</string>
     <string name="link_app_tokens">App-Token (Dashboards, Agenten)</string>
+    <string name="menu_system_info">Systeminfo</string>
     <string name="link_new_app_token">Neues App-Token</string>
     <string name="link_app_tokens_full">Schon 16 App-Token: zuerst widerrufen</string>
     <string name="link_app_token_once">Nur einmal angezeigt. Scannen oder in die App eintippen; widerrufen hier oder mit omarchy-link token.</string>
@@ -557,6 +558,7 @@
     <string name="radio_auto_demo">Demo-Modus nach 1 Minute ohne Taste</string>
     <string name="radio_shuffle">Zufall</string>
     <string name="radio_home_music">Musik auf dem Startbildschirm</string>
+    <string name="radio_song_qr">Songseite (QR fürs Handy)</string>
     <string name="radio_sleep">Sleep-Timer</string>
     <string name="radio_sleep_left" formatted="true">noch %d Min.</string>
     <string name="radio_repeat">Wiederholen</string>

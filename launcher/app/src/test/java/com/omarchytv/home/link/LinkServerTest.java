@@ -703,6 +703,20 @@ public class LinkServerTest {
     }
 
     @Test
+    public void configBackupAndRestoreKeepTheTvsOwnLink() throws Exception {
+        pair("123456");
+        server.limits = false;
+        JSONObject cfg = signed("GET", "/v1/config", "").json().getJSONObject("config");
+        cfg.put("wallpaper", "plain").put("link", new JSONObject().put("evil", true));
+        assertEquals(200, signed("PUT", "/v1/config", new JSONObject().put("config", cfg).toString()).status);
+        JSONObject now = host.readConfig();
+        assertEquals("plain", now.getString("wallpaper"));
+        assertFalse(now.optJSONObject("link") != null && now.getJSONObject("link").has("evil"));
+        String app = appToken("x", "control");
+        assertEquals(401, app("GET", "/v1/config", null, app).status);   // apps never read or write it
+    }
+
+    @Test
     public void askIsAnsweredOnTheRemoteAndOnlyItsAppSeesIt() throws Exception {
         pair("123456");
         server.limits = false;

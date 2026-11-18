@@ -187,6 +187,7 @@
     <string name="agentq_asks">kérdezi</string>
     <string name="agentq_hint">Válassz választ a távirányítóval · VISSZA: válasz később</string>
     <string name="link_app_tokens">Alkalmazás-tokenek (irányítópultok, ügynökök)</string>
+    <string name="menu_system_info">Rendszerinformáció</string>
     <string name="link_new_app_token">Új alkalmazás-token</string>
     <string name="link_app_tokens_full">Már 16 token van: előbb vond vissza őket</string>
     <string name="link_app_token_once">Csak egyszer jelenik meg. Olvasd be vagy írd be az alkalmazásba; itt vagy az omarchy-link token paranccsal vonhatod vissza.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Demó mód 1 perc tétlenség után</string>
     <string name="radio_shuffle">Keverés</string>
     <string name="radio_home_music">Zene a kezdőképernyőn</string>
+    <string name="radio_song_qr">A dal oldala (QR a telefonhoz)</string>
     <string name="radio_sleep">Elalváskapcsoló</string>
     <string name="radio_sleep_left" formatted="true">még %d perc</string>
     <string name="radio_repeat">Ismétlés</string>

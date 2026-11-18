@@ -187,6 +187,7 @@
     <string name="agentq_asks">يسأل</string>
     <string name="agentq_hint">اختر إجابة بجهاز التحكم · رجوع: أجب لاحقًا</string>
     <string name="link_app_tokens">رموز التطبيقات (لوحات، وكلاء)</string>
+    <string name="menu_system_info">معلومات النظام</string>
     <string name="link_new_app_token">رمز تطبيق جديد</string>
     <string name="link_app_tokens_full">يوجد 16 رمزًا بالفعل: ألغِها أولًا</string>
     <string name="link_app_token_once">يظهر مرة واحدة. امسحه أو اكتبه في تطبيقك؛ ألغِه هنا أو عبر omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">وضع العرض بعد دقيقة دون ضغط</string>
     <string name="radio_shuffle">عشوائي</string>
     <string name="radio_home_music">موسيقى في الشاشة الرئيسية</string>
+    <string name="radio_song_qr">صفحة الأغنية (رمز QR للهاتف)</string>
     <string name="radio_sleep">مؤقت النوم</string>
     <string name="radio_sleep_left" formatted="true">تبقى %d د</string>
     <string name="radio_repeat">تكرار</string>

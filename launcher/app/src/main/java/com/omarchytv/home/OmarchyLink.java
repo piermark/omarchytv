@@ -297,6 +297,28 @@ public final class OmarchyLink implements LinkServer.Host {
         a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3])));
     }
 
+    /** v2.21 Settings › System info: the same as /v1/diagnostics, with whole-server numbers when Link runs. */
+    static JSONObject systemInfo(Context c) {
+        OmarchyLink r = runtime;
+        if (r != null && r.live()) {
+            JSONObject d = r.diagnostics();
+            try {
+                d.put("link", new JSONObject().put("pcs", r.server.store().list().size()).put("events", r.server.connectedClients())
+                        .put("appTokens", r.server.appTokenCount()).put("pendingQuestions", r.server.pendingAsks().size()));
+            } catch (org.json.JSONException ignored) {
+            }
+            return d;
+        }
+        try {
+            return new JSONObject().put("launcherVersion", c.getPackageManager().getPackageInfo(c.getPackageName(), 0).versionName)
+                    .put("device", new JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL)
+                            .put("android", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT))
+                    .put("network", new JSONObject().put("listening", false));
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
     static int appTokens() {
         OmarchyLink r = runtime;
         return r != null && r.live() ? r.server.appTokenCount() : 0;

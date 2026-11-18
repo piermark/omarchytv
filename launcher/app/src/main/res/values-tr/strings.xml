@@ -187,6 +187,7 @@
     <string name="agentq_asks">soruyor</string>
     <string name="agentq_hint">Kumandayla bir yanıt seçin · GERİ: sonra yanıtla</string>
     <string name="link_app_tokens">Uygulama belirteçleri (panolar, ajanlar)</string>
+    <string name="menu_system_info">Sistem bilgisi</string>
     <string name="link_new_app_token">Yeni uygulama belirteci</string>
     <string name="link_app_tokens_full">Zaten 16 belirteç var: önce iptal edin</string>
     <string name="link_app_token_once">Yalnızca bir kez gösterilir. Tarayın ya da uygulamanıza yazın; burada veya omarchy-link token ile iptal edin.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">1 dakika tuşa basılmazsa demo modu</string>
     <string name="radio_shuffle">Karışık</string>
     <string name="radio_home_music">Ana ekranda müzik</string>
+    <string name="radio_song_qr">Şarkı sayfası (telefon için QR)</string>
     <string name="radio_sleep">Uyku zamanlayıcısı</string>
     <string name="radio_sleep_left" formatted="true">%d dk kaldı</string>
     <string name="radio_repeat">Tekrarla</string>

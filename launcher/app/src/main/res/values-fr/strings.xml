@@ -187,6 +187,7 @@
     <string name="agentq_asks">demande</string>
     <string name="agentq_hint">Choisissez une réponse avec la télécommande · RETOUR : répondre plus tard</string>
     <string name="link_app_tokens">Jetons d\'apps (tableaux de bord, agents)</string>
+    <string name="menu_system_info">Infos système</string>
     <string name="link_new_app_token">Nouveau jeton d\'app</string>
     <string name="link_app_tokens_full">Déjà 16 jetons : révoquez-les d\'abord</string>
     <string name="link_app_token_once">Affiché une seule fois. Scannez-le ou tapez-le dans votre app ; révocable ici ou avec omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Mode démo après 1 minute sans touche</string>
     <string name="radio_shuffle">Aléatoire</string>
     <string name="radio_home_music">Musique sur l\'accueil</string>
+    <string name="radio_song_qr">Page du titre (QR pour le téléphone)</string>
     <string name="radio_sleep">Minuterie de veille</string>
     <string name="radio_sleep_left" formatted="true">encore %d min</string>
     <string name="radio_repeat">Répéter</string>

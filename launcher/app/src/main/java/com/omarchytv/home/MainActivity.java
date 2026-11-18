@@ -1930,6 +1930,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                     open(new Intent(Settings.ACTION_SETTINGS));
                     return false;
                 })
+                .add(str(R.string.menu_system_info), "›", r -> push(systemInfoPage()))
                 .add(str(R.string.menu_about), null, r -> {
                     handler.post(this::showAbout);
                     return false;
@@ -3581,6 +3582,40 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
      * Connect Omarchy Linux. While this page is visible pairing is open (at most 5 minutes) and the mDNS TXT
      * says pair=1. The code lives in memory only; tokens in internal storage; omarchytv.json gets link.pcs[].
      */
+    /** v2.21 Settings › System info: version, device, network (LAN, Tailscale), Omarchy Link, the last log lines. */
+    private AsciiMenu.Page systemInfoPage() {
+        org.json.JSONObject d = OmarchyLink.systemInfo(this);
+        AsciiMenu.Page p = new AsciiMenu.Page(str(R.string.menu_system_info));
+        org.json.JSONObject dev = d.optJSONObject("device"), net = d.optJSONObject("network"), set = d.optJSONObject("settings"),
+                lk = d.optJSONObject("link");
+        p.add("OmarchyTV", d.optString("launcherVersion", "?"), r -> true);
+        if (dev != null) {
+            p.add("TV", dev.optString("manufacturer") + " " + dev.optString("model"), r -> true);
+            p.add("Android", dev.optString("android") + " (API " + dev.optInt("sdk") + ")", r -> true);
+            if (dev.has("ramMb")) p.add("RAM", dev.optLong("ramMb") + " MB" + (dev.optBoolean("lowRam") ? " · low-RAM" : ""), r -> true);
+            if (!dev.optString("gpu").isEmpty()) p.add("GPU", dev.optString("gpu"), r -> true);
+        }
+        if (net != null) {
+            p.add("LAN", net.isNull("lan") ? str(R.string.offline) : net.optString("lan", str(R.string.offline)), r -> true);
+            p.add("Tailscale", net.isNull("tailnet") || !net.has("tailnet") ? "—" : net.optString("tailnet"), r -> true);
+            p.add("Omarchy Link", str(net.optBoolean("listening") ? R.string.on : R.string.off), r -> true);
+        }
+        if (lk != null) {
+            p.add("PC", lk.optInt("pcs") + " · " + lk.optInt("events") + " online", r -> true);
+            p.add(str(R.string.link_app_tokens), String.valueOf(lk.optInt("appTokens")), r -> true);
+        }
+        if (set != null) {
+            p.add(str(R.string.link_share_theme), str(set.optBoolean("shareTheme") ? R.string.on : R.string.off), r -> true);
+            p.add(str(R.string.link_tailscale), str(set.optBoolean("tailscale") ? R.string.on : R.string.off), r -> true);
+        }
+        org.json.JSONArray log = d.optJSONArray("log");
+        for (int i = log == null ? 0 : Math.max(0, log.length() - 12); log != null && i < log.length(); i++) {
+            String l = log.optString(i);
+            p.add(l.length() > 8 ? l.substring(0, 8) : l, l.length() > 9 ? l.substring(9) : "", r -> true);
+        }
+        return p;
+    }
+
     private AsciiMenu.Page linkPage() {
         String code = OmarchyLink.currentCode();
         if (code == null) code = OmarchyLink.openPairing();

@@ -194,6 +194,15 @@ class E2E(unittest.TestCase):
         self.assertEqual(self.tv.page, "http://192.168.1.20:8080/")
         cli("pages", "remove", "dubai")
         self.assertIn("No pages", cli("pages").stdout)
+        bk = helpers.TMP / "tv-backup.json"
+        cli("tv", "backup", str(bk))
+        saved = json.loads(bk.read_text())
+        saved["wallpaper"] = "plain"
+        saved["link"] = {"evil": True}
+        bk.write_text(json.dumps(saved))
+        cli("tv", "restore", str(bk))
+        self.assertEqual(self.tvconf()["wallpaper"], "plain")
+        self.assertNotIn("evil", self.tvconf().get("link", {}))
         self.tv.watching = True
         self.assertIn("held", cli("notify", "--title", "Build", "green").stderr)
 

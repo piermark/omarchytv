@@ -187,6 +187,7 @@
     <string name="agentq_asks">提问</string>
     <string name="agentq_hint">用遥控器选择答案 · 返回：稍后回答</string>
     <string name="link_app_tokens">应用令牌（仪表板、代理）</string>
+    <string name="menu_system_info">系统信息</string>
     <string name="link_new_app_token">新建应用令牌</string>
     <string name="link_app_tokens_full">已有 16 个令牌：请先撤销</string>
     <string name="link_app_token_once">仅显示一次。扫描或输入到你的应用；可在此处或用 omarchy-link token 撤销。</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">闲置 1 分钟后进入演示模式</string>
     <string name="radio_shuffle">随机播放</string>
     <string name="radio_home_music">主屏幕音乐</string>
+    <string name="radio_song_qr">歌曲页面（手机二维码）</string>
     <string name="radio_sleep">睡眠定时</string>
     <string name="radio_sleep_left" formatted="true">剩余 %d 分钟</string>
     <string name="radio_repeat">重复</string>

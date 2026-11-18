@@ -187,6 +187,7 @@
     <string name="agentq_asks">спрашивает</string>
     <string name="agentq_hint">Выберите ответ пультом · НАЗАД: ответить позже</string>
     <string name="link_app_tokens">Токены приложений (панели, агенты)</string>
+    <string name="menu_system_info">Сведения о системе</string>
     <string name="link_new_app_token">Новый токен приложения</string>
     <string name="link_app_tokens_full">Уже 16 токенов: сначала отзовите их</string>
     <string name="link_app_token_once">Показывается один раз. Отсканируйте или введите в приложении; отзыв здесь или через omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Демо-режим через 1 минуту без нажатий</string>
     <string name="radio_shuffle">Перемешать</string>
     <string name="radio_home_music">Музыка на главном экране</string>
+    <string name="radio_song_qr">Страница песни (QR для телефона)</string>
     <string name="radio_sleep">Таймер сна</string>
     <string name="radio_sleep_left" formatted="true">осталось %d мин</string>
     <string name="radio_repeat">Повтор</string>

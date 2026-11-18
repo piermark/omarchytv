@@ -187,6 +187,7 @@
     <string name="agentq_asks">întreabă</string>
     <string name="agentq_hint">Alege un răspuns cu telecomanda · ÎNAPOI: răspunde mai târziu</string>
     <string name="link_app_tokens">Tokenuri de aplicații (panouri, agenți)</string>
+    <string name="menu_system_info">Informații sistem</string>
     <string name="link_new_app_token">Token nou de aplicație</string>
     <string name="link_app_tokens_full">Există deja 16 tokenuri: revocă-le întâi</string>
     <string name="link_app_token_once">Afișat o singură dată. Scanează-l sau scrie-l în aplicație; îl revoci aici sau cu omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Mod demo după 1 minut fără taste</string>
     <string name="radio_shuffle">Aleatoriu</string>
     <string name="radio_home_music">Muzică pe ecranul principal</string>
+    <string name="radio_song_qr">Pagina piesei (QR pentru telefon)</string>
     <string name="radio_sleep">Temporizator de oprire</string>
     <string name="radio_sleep_left" formatted="true">încă %d min</string>
     <string name="radio_repeat">Repetă</string>

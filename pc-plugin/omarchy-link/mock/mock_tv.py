@@ -420,6 +420,8 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/v1/tokens"): self._token_add, ("GET", "/v1/tokens"): self._token_list,
             ("POST", "/v1/ask"): self._ask, ("GET", "/v1/diagnostics"): self._diag,
             ("POST", "/v1/page"): self._page, ("DELETE", "/v1/page"): self._page_close,
+            ("GET", "/v1/config"): lambda pc, a, b: (200, {"config": self.tv.config()}),
+            ("PUT", "/v1/config"): self._config_put,
             ("GET", "/v1/radio"): self._radio, ("POST", "/v1/radio"): self._radio, ("POST", "/v1/open"): self._open,
         }.get((method, path))
         if not handler and path == "/v1/pages" and method == "GET":
@@ -624,6 +626,20 @@ class Handler(BaseHTTPRequestHandler):
         if getattr(self.tv, "answer_with", None):
             ask.update(state="answered", answer=self.tv.answer_with)
         return 200, dict(ask)
+
+    def _config_put(self, pc, a, body):
+        new = a.get("config")
+        if not isinstance(new, dict):
+            return 400, {"error": "bad_config"}
+
+        def edit(j):
+            link = j.get("link")
+            j.clear()
+            j.update({k: v for k, v in new.items() if k != "link"})
+            if link is not None:
+                j["link"] = link
+        self.tv.update_config(edit)
+        return 200, {"ok": True}
 
     def _radio(self, pc, a, body):
         act = a.get("action", "now")

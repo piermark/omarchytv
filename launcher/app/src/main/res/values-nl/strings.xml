@@ -187,6 +187,7 @@
     <string name="agentq_asks">vraagt</string>
     <string name="agentq_hint">Kies een antwoord met de afstandsbediening · TERUG: later antwoorden</string>
     <string name="link_app_tokens">App-tokens (dashboards, agents)</string>
+    <string name="menu_system_info">Systeeminfo</string>
     <string name="link_new_app_token">Nieuwe app-token</string>
     <string name="link_app_tokens_full">Al 16 app-tokens: trek ze eerst in</string>
     <string name="link_app_token_once">Eén keer getoond. Scan of typ hem in je app; intrekken hier of met omarchy-link token.</string>
@@ -553,6 +554,7 @@
     <string name="radio_auto_demo">Demomodus na 1 minuut zonder toets</string>
     <string name="radio_shuffle">Willekeurig</string>
     <string name="radio_home_music">Muziek op het startscherm</string>
+    <string name="radio_song_qr">Nummerpagina (QR voor je telefoon)</string>
     <string name="radio_sleep">Slaaptimer</string>
     <string name="radio_sleep_left" formatted="true">nog %d min</string>
     <string name="radio_repeat">Herhalen</string>

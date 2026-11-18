@@ -318,6 +318,26 @@ def cmd_pages(a, cfg):
 
 def cmd_tv(a, cfg):
     """v2.21 tv logs | tv diagnostics: what a bug report needs (no tokens, no keys)."""
+    if a.what == "backup":   # v2.21: the TV's omarchytv.json (settings, layout, themes chosen; no secrets)
+        c = _call(cfg, "GET", "/v1/config").get("config", {})
+        text = json.dumps(c, indent=2, ensure_ascii=False)
+        if a.file:
+            Path(a.file).write_text(text + "\n", encoding="utf-8")
+            print(f"saved {a.file}")
+        else:
+            print(text)
+        return 0
+    if a.what == "restore":
+        if not a.file:
+            print("omarchy-link tv restore FILE", file=sys.stderr)
+            return 2
+        data = json.loads(Path(a.file).read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            print("not an omarchytv.json backup", file=sys.stderr)
+            return 2
+        _call(cfg, "PUT", "/v1/config", {"config": data})
+        print("restored (this TV's pairings and panes were kept)")
+        return 0
     d = _call(cfg, "GET", "/v1/diagnostics")
     if a.json or a.what == "diagnostics":
         print(json.dumps(d, indent=2))
@@ -1042,8 +1062,9 @@ def main(argv=None) -> int:
     s = sub.add_parser("mcp", help="the TV's MCP tools on stdio for AI agents (claude mcp add omarchytv -- omarchy-link mcp)")
     s.add_argument("--scope", choices=["read", "notify", "control"], default="control")
     s.set_defaults(fn=cmd_mcp)
-    s = sub.add_parser("tv", help="tv logs | tv diagnostics (for bug reports)")
-    s.add_argument("what", nargs="?", choices=["logs", "diagnostics"], default="logs")
+    s = sub.add_parser("tv", help="tv logs | diagnostics (bug reports) | backup [FILE] | restore FILE")
+    s.add_argument("what", nargs="?", choices=["logs", "diagnostics", "backup", "restore"], default="logs")
+    s.add_argument("file", nargs="?")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_tv)
     s = sub.add_parser("tailscale", help="reach the TV over Tailscale: on | off | status (off by default)")

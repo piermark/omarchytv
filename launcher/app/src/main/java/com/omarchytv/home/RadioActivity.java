@@ -762,6 +762,11 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
             autoDemo = !autoDemo;
             player.prefs().edit().putBoolean("autoDemo", autoDemo).apply();
         });
+        RadioCatalog.Track now = player.current();
+        if (now != null && now.page != null && now.page.startsWith("https://")) {   // v2.21: the song's page, for the phone
+            row(null, "▣", getString(R.string.radio_song_qr), now.page.replaceFirst("^https://", ""),
+                    () -> startActivity(QrActivity.intent(this, now.title, now.page, now.artist, true)));
+        }
         setting(getString(R.string.radio_home_music), getString(player.homeMusic() ? R.string.on : R.string.off),
                 () -> player.setHomeMusic(!player.homeMusic()));   // v2.21: Home is silent unless this is on
         setting(getString(R.string.radio_sleep), player.sleepLeft() == 0 ? getString(R.string.off)
