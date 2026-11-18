@@ -21,6 +21,21 @@ reachable from home, from your tailnet and, carefully, from the cloud.
   three; 1-4 or the colour keys switch windows, BACK closes. Walker opens all your agent pages tiled in one go.
 - **Live state and events**: `GET /v1/state` (home, app, screensaver or off; the app; the theme; the music) and
   `GET /v1/stream`, Server-Sent Events for pages (`state`, `theme`, `notify`, `ask_answer`).
+- **The TV speaks and chimes**: `--speak` (and `"speak": true`, MCP `speak`) reads a notification aloud with the
+  TV's voice; *warn* plays one short tone and *alert* two (`"link": {"notifySound": false}` silences them). LG and
+  Samsung too, where the browser can.
+- **`omarchy-link watch -- make release`**: runs any command and tells the TV how it went: ✓ or ✗ with the exit
+  code, how long it took and the last line (an alert when it fails; `--speak` to hear it).
+- **Hooks for every agent**: Claude Code (Stop, Notification), Codex (`notify = ["omarchy-link", "notify", …]`, its
+  JSON event is understood), any script or cron job with an app token.
+- **Hermes Agent, fully supported**: `docs/examples/hermes.md` has the `mcp_servers` entries for Hermes on the PC
+  (`omarchy-link mcp`), on an always-on box straight to the TV (`/v1/mcp` with an app token: the token's scope is the
+  set of tools), or over Tailscale; and an `omarchytv` skill that teaches it when to notify, when to ask before acting,
+  and how to publish its pages as Home tiles in your theme. The dashboard a Hermes user built by hand is now three
+  calls.
+- **Ready-made examples** in `docs/examples/`: a GitHub Actions job that tells the TV when CI fails (over Tailscale),
+  Home Assistant (doorbell → Radiomarchy paused, alert spoken aloud, camera full screen; washing machine done), agent
+  hooks, and a dashboard page for the TV that follows the theme and the remote.
 - **Radiomarchy and OmarchyTV for agents**: `tv_radio` (play, pause, next, previous, stop), `tv_radio_now`, `tv_open`
   (home, radiomarchy, cinemarchy, arcade, office); `omarchy-link radio …`, `omarchy-link open …`.
 - **MCP everywhere**: new tools on the TV and on the PC, each with a scope; `omarchy-link mcp` gives desktop agents

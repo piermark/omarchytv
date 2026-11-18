@@ -304,6 +304,8 @@ final class LauncherConfig {
     final boolean shareTheme;
     /** v2.21: Tailscale peers (100.64.0.0/10, fd7a:115c:a1e0::/48) may use Omarchy Link, casts and panes; default off. */
     final boolean tailscale;
+    /** v2.21: a short tone with warn / alert notifications ("link": {"notifySound": false} silences it). */
+    final boolean notifySound;
     /** AI pane when no PC is connected and the data is old: "stale" (dim, "pc offline · 3h ago") or "hide". */
     final String aiOffline;
     /** Unix seconds of the last PUT /v1/ai (omarchytv.json "aiAt"), 0 if never. */
@@ -692,6 +694,7 @@ final class LauncherConfig {
         linkEnabled = lkc == null || lkc.optBoolean("enabled", true);
         shareTheme = lkc == null || lkc.optBoolean("shareTheme", true);
         tailscale = lkc != null && lkc.optBoolean("tailscale", false);
+        notifySound = lkc == null || lkc.optBoolean("notifySound", true);
         com.omarchytv.home.link.Tailnet.allowed = tailscale;
         JSONObject ap = j != null ? j.optJSONObject("aiPane") : null;
         aiOffline = ap != null && "hide".equals(ap.optString("offline")) ? "hide" : "stale";

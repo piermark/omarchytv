@@ -343,7 +343,7 @@ def cmd_agent_lg(cmd, rest):
     try:
         if cmd == "notify":
             c.request("POST", "/v1/notify", {"text": " ".join(words), "title": opt("--title", ""), "level": opt("--level", "info"),
-                                             "from": opt("--from", "PC")})
+                                             "from": opt("--from", "PC"), "speak": "--speak" in rest})
             return 0
         if cmd == "page":
             if "--close" in rest:

@@ -1,0 +1,30 @@
+# OmarchyTV 2.21: a GitHub Actions job that tells your TV when CI fails (or passes), over Tailscale.
+# Put it in .github/workflows/ of your repo. Secrets:
+#   TS_OAUTH_CLIENT_ID, TS_OAUTH_SECRET  a Tailscale OAuth client allowed to create tag:ci devices
+#   OMARCHYTV_TOKEN                       an app token with scope notify: omarchy-link token add "CI" --scope notify
+#   OMARCHYTV_ADDR                        the TV's tailnet address, e.g. 100.101.2.3 (Settings › Omarchy Link)
+# On the TV: Allow Tailscale and agent alerts on. Your tailnet ACL must let tag:ci reach the TV on port 47800.
+name: tell-the-tv
+on:
+  workflow_run:
+    workflows: ["CI"]          # the name of your CI workflow
+    types: [completed]
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tailscale/github-action@v3
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+      - name: Notify OmarchyTV
+        env:
+          OK: ${{ github.event.workflow_run.conclusion == 'success' }}
+          REPO: ${{ github.repository }}
+          BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          if [ "$OK" = "true" ]; then level=info; title="✓ $REPO"; else level=alert; title="✗ $REPO"; fi
+          curl -fsS -m 10 -X POST "http://${{ secrets.OMARCHYTV_ADDR }}:47800/v1/notify" \
+            -H "Authorization: Bearer ${{ secrets.OMARCHYTV_TOKEN }}" -H "Content-Type: application/json" \
+            -d "{\"title\":\"$title\",\"text\":\"CI on $BRANCH: ${{ github.event.workflow_run.conclusion }}\",\"level\":\"$level\",\"speak\":$([ "$OK" = "true" ] && echo false || echo true)}"

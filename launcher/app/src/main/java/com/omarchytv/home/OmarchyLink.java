@@ -1192,7 +1192,55 @@ public final class OmarchyLink implements LinkServer.Host {
             return "deferred";
         }
         main.post(() -> android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show());
+        if (!"info".equals(level) && LauncherConfig.get(app).notifySound) chime("alert".equals(level));
         return "shown";
+    }
+
+    /** v2.21 warn: one short tone; alert: two. On the notification stream, so the TV's own volume rules apply. */
+    private void chime(boolean twice) {
+        bg.execute(() -> {
+            android.media.ToneGenerator tg = null;
+            try {
+                tg = new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 70);
+                tg.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 160);
+                if (twice) {
+                    Thread.sleep(260);
+                    tg.startTone(android.media.ToneGenerator.TONE_PROP_BEEP2, 220);
+                }
+                Thread.sleep(300);
+            } catch (Exception ignored) {
+                // no tone on this TV: the toast is enough
+            } finally {
+                if (tg != null) tg.release();
+            }
+        });
+    }
+
+    private android.speech.tts.TextToSpeech tts;
+    private boolean ttsReady;
+    private String ttsPending;
+
+    /** v2.21 notify "speak": read it aloud in the TV's language; the engine starts on first use. */
+    @Override
+    public void speak(String text) {
+        if (text == null || text.isEmpty()) return;
+        String say = text.length() > 300 ? text.substring(0, 300) : text;
+        main.post(() -> {
+            if (tts == null) {
+                ttsPending = say;
+                tts = new android.speech.tts.TextToSpeech(app, st -> {
+                    ttsReady = st == android.speech.tts.TextToSpeech.SUCCESS;
+                    if (ttsReady && ttsPending != null) {
+                        tts.speak(ttsPending, android.speech.tts.TextToSpeech.QUEUE_ADD, null, "otv-notify");
+                        ttsPending = null;
+                    }
+                });
+            } else if (ttsReady) {
+                tts.speak(say, android.speech.tts.TextToSpeech.QUEUE_ADD, null, "otv-notify");
+            } else {
+                ttsPending = say;
+            }
+        });
     }
 
     /** Home is back: the notifications that waited, one toast (the last three lines). */

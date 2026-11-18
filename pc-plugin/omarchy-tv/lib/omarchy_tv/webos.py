@@ -631,7 +631,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
         try:
             if path == "/v1/notify":
                 self._send_json(INBOX.notify(body.get("text") or body.get("body") or "", body.get("title", ""),
-                                             body.get("level", "info"), body.get("from") or "PC"))
+                                             body.get("level", "info"), body.get("from") or "PC", body.get("speak") is True))
             elif path == "/v1/page":
                 urls = body.get("urls") or []   # LG / Samsung show one page: the first
                 url = "" if body.get("close") else str(body.get("url") or (urls[0] if urls else ""))

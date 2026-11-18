@@ -149,6 +149,7 @@ paths:
                 text: { type: string, maxLength: 200 }
                 title: { type: string, maxLength: 60 }
                 level: { type: string, enum: [info, warn, alert], default: info }
+                speak: { type: boolean, default: false, description: Also read it aloud on the TV }
       responses:
         "200":
           description: Shown, or held until Home (level info while an app is on screen)

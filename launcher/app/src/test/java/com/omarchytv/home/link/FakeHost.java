@@ -80,6 +80,12 @@ class FakeHost implements LinkServer.Host {
     final java.util.List<String> notes = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     volatile boolean watching;   // an app is on screen: "info" waits
+    final List<String> spoken = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    @Override
+    public void speak(String text) {
+        spoken.add(text);
+    }
 
     @Override
     public String notify(String from, String title, String text, String level) {

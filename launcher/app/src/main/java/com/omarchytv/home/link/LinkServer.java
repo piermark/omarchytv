@@ -137,6 +137,10 @@ public final class LinkServer {
             return null;
         }
 
+        /** v2.21 notify {"speak": true}: the TV reads the message aloud (Android TextToSpeech). */
+        default void speak(String text) {
+        }
+
         /** v2.21 GET /v1/state: what is playing ({title, artist, source}), or null. */
         default JSONObject nowPlaying() {
             return null;
@@ -506,10 +510,10 @@ public final class LinkServer {
     static void write(OutputStream out, Response r) throws IOException {
         StringBuilder h = new StringBuilder();
         h.append("HTTP/1.1 ").append(r.status).append(' ').append(reason(r.status)).append("\r\n");
-        if (r.status != 101 && r.status != 204 && r.status != 304) {
+        if (r.status != 101 && r.status != 202 && r.status != 204 && r.status != 304) {
             h.append("Content-Type: ").append(r.contentType).append("\r\n");
             h.append("Content-Length: ").append(r.body.length).append("\r\n");
-        } else if (r.status == 204 || r.status == 304) {
+        } else if (r.status == 202 || r.status == 204 || r.status == 304) {
             h.append("Content-Length: 0\r\n");
         }
         if (!r.headers.containsKey("Cache-Control")) h.append("Cache-Control: no-store\r\n");
@@ -526,6 +530,7 @@ public final class LinkServer {
         switch (s) {
             case 101: return "Switching Protocols";
             case 200: return "OK";
+            case 202: return "Accepted";
             case 204: return "No Content";
             case 304: return "Not Modified";
             case 400: return "Bad Request";
@@ -1254,9 +1259,15 @@ public final class LinkServer {
                         .put("serverInfo", new JSONObject().put("name", "omarchytv-mcp").put("version", launcherVersion()));
                 return new Response(200, res.put("result", r));
             }
-            case "notifications/initialized":
             case "ping":
                 return new Response(200, res.put("result", new JSONObject()));
+            default:
+                break;
+        }
+        if (method.startsWith("notifications/") && !req.has("id")) {
+            return new Response(202, (JSONObject) null);   // MCP Streamable HTTP: a notification gets 202, no body
+        }
+        switch (method) {
             case "tools/list": {
                 JSONArray tools = new JSONArray();
                 for (Object[] t : mcpTools()) if (who.can((String) t[3])) tools.put(mcpTool((String) t[0], (String) t[1], (JSONObject) t[2]));
@@ -1433,6 +1444,7 @@ public final class LinkServer {
                 new JSONObject().put("text", prop("string", "The message, one line, at most 200 characters"))
                         .put("title", prop("string", "Optional title, at most 60 characters"))
                         .put("level", prop("string", "info (default) | warn | alert"))
+                        .put("speak", prop("boolean", "Also read it aloud on the TV"))
                         .put("from", prop("string", "Who is talking, e.g. Claude Code (at most 40 characters)")), "notify"});
         t.add(new Object[]{"tv_ask_user", "Ask the person in front of the TV a question; they pick an answer with the remote. Waits for the answer (up to 'wait' seconds).",
                 new JSONObject().put("question", prop("string", "One line, at most 200 characters"))
@@ -1898,6 +1910,7 @@ public final class LinkServer {
         if (from.isEmpty()) from = "PC";
         String r = host.notify(from, title, text, level);
         if (r == null) return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Omarchy Link)"));
+        if (b.optBoolean("speak") && "shown".equals(r)) host.speak(title.isEmpty() ? text : title + ". " + text);
         host.log("notify from " + from + " (" + level + ", " + r + ")");
         app.event("notify", new JSONObject().put("from", from).put("title", title).put("text", text).put("level", level));
         return new Response(200, ok().put("shown", "shown".equals(r)).put("deferred", "deferred".equals(r)));

@@ -46,14 +46,14 @@ class Inbox:
         self.page = None
         self.asks: dict = {}
 
-    def notify(self, text: str, title: str = "", level: str = "info", source: str = "PC") -> dict:
+    def notify(self, text: str, title: str = "", level: str = "info", source: str = "PC", speak: bool = False) -> dict:
         text, title = clean(text, 200), clean(title, 60)
         if not text and not title:
             raise ValueError("text is required")
         with self._lock:
             self.seq += 1
             self.notes.append({"seq": self.seq, "from": clean(source, 40) or "PC", "title": title, "text": text,
-                               "level": level if level in LEVELS else "info", "at": int(self._now())})
+                               "level": level if level in LEVELS else "info", "speak": bool(speak), "at": int(self._now())})
             self.notes = self.notes[-self.MAX_NOTES:]
             self._lock.notify_all()
             return {"ok": True, "shown": True}

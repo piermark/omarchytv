@@ -205,6 +205,14 @@ class E2E(unittest.TestCase):
         cli("tv", "restore", str(bk))
         self.assertEqual(self.tvconf()["wallpaper"], "plain")
         self.assertNotIn("evil", self.tvconf().get("link", {}))
+        self.tv.notes = []
+        r = cli("watch", "--", "sh", "-c", "echo building; echo done-ok", check=False)
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("done-ok", r.stdout)
+        self.assertIn("done-ok", self.tv.notes[-1][1])
+        self.assertEqual(cli("watch", "--", "sh", "-c", "exit 3", check=False).returncode, 3)
+        cli("notify", '{"type":"agent-turn-complete","last-assistant-message":"Refactor finished"}', "--from", "Codex")
+        self.assertEqual(self.tv.notes[-1], ("Codex", "Refactor finished"))
         self.tv.watching = True
         self.assertIn("held", cli("notify", "--title", "Build", "green").stderr)
 

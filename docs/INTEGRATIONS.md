@@ -79,6 +79,17 @@ omarchy-link notify --title Deploy --level alert "prod is down"   # shows at onc
 Levels: `info` (default) waits while a film or an app is on screen and shows when you are back on Home, so a busy
 agent never interrupts a film; `warn` and `alert` show at once. The TV prints `held` on stderr when it waited.
 
+`--speak` reads it aloud with the TV's voice (Android TextToSpeech; LG/Samsung where the browser has
+speechSynthesis). *warn* plays one short tone, *alert* two; `"link": {"notifySound": false}` in `omarchytv.json`
+silences them.
+
+```sh
+omarchy-link watch -- make release      # runs it, then ✓ / ✗, the time and the last line on the TV (alert on failure)
+```
+
+Codex: `notify = ["omarchy-link", "notify", "-q", "--from", "Codex"]` in `~/.codex/config.toml` (its JSON event is
+understood). More in [examples/agent-hooks.md](examples/agent-hooks.md).
+
 It needs **agent alerts** on the TV (Settings › Omarchy Link, off by default). Exit codes: 0 shown, 4 alerts off on
 the TV, 3 not paired. `--quiet` never fails, for hooks. At most 3 messages per 10 s, one line, 200 characters.
 
@@ -259,7 +270,18 @@ omarchy-tv ask "Merge?" --choice Merge --choice Wait
 omarchy-tv mcp --stdio --bridge                 # the same MCP tools for agents (the ones LG/Samsung can do)
 ```
 
-## 11. A dashboard on a stick, the way a Hermes user built it
+## 11. Ready-made examples
+
+| File | What |
+|---|---|
+| [examples/agent-hooks.md](examples/agent-hooks.md) | Claude Code, Codex, `omarchy-link watch`, a cron job with curl |
+| [examples/github-actions-notify-tv.yml](examples/github-actions-notify-tv.yml) | CI failed → an alert on the TV, read aloud, over Tailscale |
+| [examples/home-assistant.yaml](examples/home-assistant.yaml) | doorbell → Radiomarchy paused, alert spoken, camera full screen; laundry done |
+| [examples/dashboard.html](examples/dashboard.html) | a dashboard page: theme, live state, now playing, notifications, ask, the remote |
+| [examples/hermes.md](examples/hermes.md) | Hermes Agent: `mcp_servers` on the PC, on a box (straight to the TV with an app token), over Tailscale; the "studio dubai" dashboard |
+| [examples/hermes-skill/omarchytv/SKILL.md](examples/hermes-skill/omarchytv/SKILL.md) | a skill that teaches Hermes (and any agent with skills) when and how to use the TV |
+
+## 12. A dashboard on a stick, the way a Hermes user built it
 
 1. An always-on box (a Raspberry Pi, a NAS) serves the dashboard page and its data, so the TV never goes blank when
    the laptop sleeps.

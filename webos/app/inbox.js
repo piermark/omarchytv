@@ -60,7 +60,37 @@
       s.appendChild(box);
       while (s.children.length > 4) s.removeChild(s.firstChild);
       setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, n.level === "alert" ? 15000 : 7000);
+      if (n.level === "warn" || n.level === "alert") chime(n.level === "alert");
+      if (n.speak) say((n.title ? n.title + ". " : "") + (n.text || ""));
       return box;
+    }
+
+    /** A short tone (two for alert), WebAudio; silent where the TV has none. */
+    function chime(twice) {
+      var AC = root.AudioContext || root.webkitAudioContext;
+      if (!AC || opts.sound === false) return;
+      try {
+        var ctx = chime.ctx || (chime.ctx = new AC()), t = ctx.currentTime;
+        if (ctx.resume) ctx.resume();
+        for (var i = 0; i < (twice ? 2 : 1); i++) {
+          var o = ctx.createOscillator(), g = ctx.createGain();
+          o.frequency.value = i ? 1320 : 880;
+          g.gain.setValueAtTime(0.0001, t + i * 0.26);
+          g.gain.exponentialRampToValueAtTime(0.18, t + i * 0.26 + 0.02);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.26 + 0.2);
+          o.connect(g); g.connect(ctx.destination);
+          o.start(t + i * 0.26); o.stop(t + i * 0.26 + 0.22);
+        }
+      } catch (e) { /* no audio */ }
+    }
+
+    /** Read it aloud where the TV's browser can (speechSynthesis). */
+    function say(text) {
+      try {
+        if (!root.speechSynthesis || !root.SpeechSynthesisUtterance || !text) return false;
+        root.speechSynthesis.speak(new root.SpeechSynthesisUtterance(String(text).slice(0, 300)));
+        return true;
+      } catch (e) { return false; }
     }
 
     // ---- full-screen layer: a page or a question ---------------------------------------------------------

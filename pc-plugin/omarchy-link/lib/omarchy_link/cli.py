@@ -175,6 +175,54 @@ def cmd_key(a, cfg):
     return 0
 
 
+def codex_text(text: str) -> str:
+    """Codex's notify hook passes a JSON event as the last argument: keep its last assistant message."""
+    t = text.strip()
+    if not t.startswith("{"):
+        return text
+    try:
+        ev = json.loads(t)
+    except ValueError:
+        return text
+    if not isinstance(ev, dict):
+        return text
+    msg = ev.get("last-assistant-message") or ev.get("message") or ""
+    kind = str(ev.get("type", "")).replace("-", " ")
+    return str(msg or kind or text)
+
+
+def cmd_watch(a, cfg):
+    """v2.21 run a command, then tell the TV how it went: omarchy-link watch -- make build."""
+    import subprocess as sp
+    import time as _t
+    argv = list(a.argv)
+    if argv[:1] == ["--"]:
+        argv = argv[1:]
+    if not argv:
+        print("omarchy-link watch [--speak] -- COMMAND …", file=sys.stderr)
+        return 2
+    t0 = _t.monotonic()
+    last = ""
+    try:
+        p = sp.Popen(argv, stdout=sp.PIPE, stderr=sp.STDOUT, text=True, errors="replace")
+    except OSError as e:
+        print(f"omarchy-link watch: {e}", file=sys.stderr)
+        return 127
+    for line in p.stdout:
+        sys.stdout.write(line)
+        if line.strip():
+            last = line.strip()
+    rc = p.wait()
+    secs = int(_t.monotonic() - t0)
+    took = f"{secs // 60}m{secs % 60:02d}s" if secs >= 60 else f"{secs}s"
+    name = " ".join(argv)[:50]
+    title = ("✓ " if rc == 0 else f"✗ exit {rc} · ") + name
+    ns = argparse.Namespace(text=[f"{took} · {last}"[:200] if last else took], source=a.source or "watch",
+                            title=title, level="info" if rc == 0 else "alert", speak=a.speak, quiet=True)
+    cmd_notify(ns, cfg)
+    return rc
+
+
 def cmd_notify(a, cfg):
     """v2.21: a short message on the TV over whatever is playing, for agent hooks and scripts.
 
@@ -182,7 +230,7 @@ def cmd_notify(a, cfg):
     200 characters. Never fails a hook loudly: --quiet prints nothing and always exits 0.
     """
     text = " ".join(a.text) if a.text else ("" if sys.stdin.isatty() else sys.stdin.read(4096))
-    text = " ".join(text.split())[:200]
+    text = " ".join(codex_text(text).split())[:200]
     if not text:
         print("omarchy-link notify: nothing to say", file=sys.stderr)
         return 0 if a.quiet else 2
@@ -191,7 +239,7 @@ def cmd_notify(a, cfg):
         return 0 if a.quiet else EXIT_NOT_PAIRED
     try:
         r = link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets")).request(
-            "POST", "/v1/notify", {"text": text, "title": (a.title or "")[:60], "level": a.level,
+            "POST", "/v1/notify", {"text": text, "title": (a.title or "")[:60], "level": a.level, "speak": bool(a.speak),
                                    "from": (a.source or "PC")[:40]}, timeout=4)
         if r.get("deferred") and not a.quiet:
             print("held: shown when the TV is back on Home (use --level warn to show it now)", file=sys.stderr)
@@ -1045,6 +1093,7 @@ def main(argv=None) -> int:
     s.add_argument("--title")
     s.add_argument("--level", choices=["info", "warn", "alert"], default="info",
                    help="info waits while a film is on; warn and alert show at once")
+    s.add_argument("--speak", action="store_true", help="also read it aloud on the TV")
     s.add_argument("--quiet", "-q", action="store_true", help="never fail (for hooks)")
     s.set_defaults(fn=cmd_notify)
     s = sub.add_parser("token", help="app tokens for dashboards and agents: list | add NAME --scope | revoke ID")
@@ -1053,6 +1102,11 @@ def main(argv=None) -> int:
     s.add_argument("--scope", choices=["read", "notify", "control"], default="read")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_token)
+    s = sub.add_parser("watch", help="run a command, then tell the TV how it went (✓ / ✗, time, last line)")
+    s.add_argument("--from", dest="source")
+    s.add_argument("--speak", action="store_true")
+    s.add_argument("argv", nargs=argparse.REMAINDER)
+    s.set_defaults(fn=cmd_watch)
     s = sub.add_parser("ask", help="ask the person at the TV, print the answer (agent hooks, scripts)")
     s.add_argument("question", nargs="*")
     s.add_argument("--choice", action="append", help="an answer (up to 4; default Yes / No)")

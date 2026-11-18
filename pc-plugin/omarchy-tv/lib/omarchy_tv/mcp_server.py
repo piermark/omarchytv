@@ -106,6 +106,7 @@ ALLOWED_TOOLS = (
                 "from": {"type": "string", "description": "Who is talking, e.g. Claude Code (at most 40 characters)"},
                 "title": {"type": "string", "description": "Optional title, at most 60 characters"},
                 "level": {"type": "string", "enum": ["info", "warn", "alert"], "description": "info waits while a film is on; warn and alert show at once"},
+                "speak": {"type": "boolean", "description": "Also read it aloud on the TV"},
             },
             "required": ["text"],
         },
@@ -313,7 +314,7 @@ def _call_tool(name: str, args: dict, c) -> dict:
             raise ValueError("text is required")
         level = args.get("level") if args.get("level") in ("info", "warn", "alert") else "info"
         return c.request("POST", "/v1/notify", {"text": text[:200], "title": str(args.get("title") or "")[:60], "level": level,
-                                                 "from": str(args.get("from") or "AI agent")[:40]})
+                                                 "speak": args.get("speak") is True, "from": str(args.get("from") or "AI agent")[:40]})
     if name == "tv_get_state":
         return c.request("GET", "/v1/state")
     if name == "tv_ask_user":

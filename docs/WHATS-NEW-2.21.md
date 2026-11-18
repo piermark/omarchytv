@@ -13,7 +13,14 @@ omarchy-link ask "Merge the PR?" --choice Merge --choice Wait       # you answer
 claude mcp add omarchytv -- omarchy-link mcp                        # Claude Code gets every TV tool
 ```
 
-A Claude Code hook that tells you on the TV when it is done is in [INTEGRATIONS.md](INTEGRATIONS.md#claude-code-hook).
+```sh
+omarchy-link watch -- make release                                  # ✓ / ✗ on the TV when it ends
+omarchy-link notify --level alert --speak "prod is down"            # with a chime, read aloud
+```
+
+Hermes Agent: one `mcp_servers` entry and a skill ([examples/hermes.md](examples/hermes.md)). Ready-made hooks for
+Claude Code and Codex, a GitHub Actions job that tells the TV when CI fails, Home Assistant
+(doorbell → camera full screen, alert spoken aloud) and a dashboard page are in [examples/](examples/).
 
 ## Dashboards on the TV, Hyprland style
 
@@ -43,7 +50,7 @@ omarchy-link discover
 omarchy-link pair living-tv
 ```
 
-Everything then works from the office or the beach house. LG and Samsung need a Raspberry Pi as a bridge:
+Everything then works from the office or the beach house, over IPv4 and IPv6. LG and Samsung need a Raspberry Pi as a bridge:
 [TAILSCALE.md](TAILSCALE.md), [RASPBERRY-PI.md](RASPBERRY-PI.md).
 
 ## Agents in the cloud: Cloudflare Tunnel

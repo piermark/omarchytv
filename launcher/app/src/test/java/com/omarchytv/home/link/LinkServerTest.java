@@ -604,6 +604,11 @@ public class LinkServerTest {
         Resp now = signed("POST", "/v1/notify", "{\"text\":\"prod is down\",\"level\":\"alert\"}");
         assertTrue(now.json().getBoolean("shown"));
         assertEquals("PC: Build · green", host.notes.get(2));
+        assertTrue(host.spoken.isEmpty());
+        signed("POST", "/v1/notify", "{\"title\":\"Deploy\",\"text\":\"done\",\"level\":\"warn\",\"speak\":true}");
+        assertEquals("Deploy. done", host.spoken.get(0));
+        signed("POST", "/v1/notify", "{\"text\":\"quiet\",\"speak\":true}");   // held while watching: not spoken
+        assertEquals(1, host.spoken.size());
         host.watching = false;
         Resp th = signed("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 3).put("method", "tools/call")
                 .put("params", new JSONObject().put("name", "tv_get_theme")).toString());
@@ -658,6 +663,10 @@ public class LinkServerTest {
         // v2.21 tiled: up to 4, LAN only, no duplicates
         Resp tiled = app("POST", "/v1/page", "{\"urls\":[\"http://192.168.1.9:1/\",\"https://x.example/\",\"http://192.168.1.9:1/\",\"http://192.168.1.2/\",\"http://192.168.1.3/\",\"http://192.168.1.4/\",\"http://192.168.1.5/\"]}", ctl);
         assertEquals(4, tiled.json().getJSONArray("urls").length());
+        // MCP Streamable HTTP: a notification gets 202 and no body (Hermes, the MCP SDKs)
+        Resp nt = app("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}", read);
+        assertEquals(202, nt.status);
+        assertEquals(0, nt.body.length);
         // MCP: a read token sees read tools only
         Resp tl = app("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}", read);
         String tools = tl.json().getJSONObject("result").getJSONArray("tools").toString();
