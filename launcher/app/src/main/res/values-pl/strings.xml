@@ -188,6 +188,8 @@
     <string name="agentq_hint">Wybierz odpowiedź pilotem · WSTECZ: odpowiedz później</string>
     <string name="link_app_tokens">Tokeny aplikacji (panele, agenci)</string>
     <string name="menu_system_info">Informacje o systemie</string>
+    <string name="walker_agent_tile">Strony agentów obok siebie</string>
+    <string name="walker_agent_questions">Pytania od agentów</string>
     <string name="link_new_app_token">Nowy token aplikacji</string>
     <string name="link_app_tokens_full">Już 16 tokenów: najpierw je unieważnij</string>
     <string name="link_app_token_once">Pokazywany tylko raz. Zeskanuj lub wpisz w aplikacji; unieważnij tutaj lub przez omarchy-link token.</string>

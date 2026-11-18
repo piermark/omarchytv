@@ -188,6 +188,8 @@
     <string name="agentq_hint">リモコンで答えを選択 · 戻る: あとで答える</string>
     <string name="link_app_tokens">アプリトークン (ダッシュボード、エージェント)</string>
     <string name="menu_system_info">システム情報</string>
+    <string name="walker_agent_tile">エージェントのページを並べて表示</string>
+    <string name="walker_agent_questions">エージェントからの質問</string>
     <string name="link_new_app_token">新しいアプリトークン</string>
     <string name="link_app_tokens_full">すでに16個あります：先に取り消してください</string>
     <string name="link_app_token_once">表示は一度だけ。スキャンするかアプリに入力。ここか omarchy-link token で取り消せます。</string>

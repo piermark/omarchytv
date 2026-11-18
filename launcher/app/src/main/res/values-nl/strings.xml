@@ -188,6 +188,8 @@
     <string name="agentq_hint">Kies een antwoord met de afstandsbediening · TERUG: later antwoorden</string>
     <string name="link_app_tokens">App-tokens (dashboards, agents)</string>
     <string name="menu_system_info">Systeeminfo</string>
+    <string name="walker_agent_tile">Agentpagina\'s, naast elkaar</string>
+    <string name="walker_agent_questions">Vragen van agents</string>
     <string name="link_new_app_token">Nieuwe app-token</string>
     <string name="link_app_tokens_full">Al 16 app-tokens: trek ze eerst in</string>
     <string name="link_app_token_once">Eén keer getoond. Scan of typ hem in je app; intrekken hier of met omarchy-link token.</string>

@@ -319,6 +319,11 @@ public final class OmarchyLink implements LinkServer.Host {
         }
     }
 
+    static int pendingAsks() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.pendingAsks().size() : 0;
+    }
+
     static int appTokens() {
         OmarchyLink r = runtime;
         return r != null && r.live() ? r.server.appTokenCount() : 0;
@@ -1233,6 +1238,22 @@ public final class OmarchyLink implements LinkServer.Host {
             }
         });
         log("page from " + from + ": " + android.net.Uri.parse(url).getHost());
+        return null;
+    }
+
+    @Override
+    public String openPages(java.util.List<String> urls, String from) {
+        java.util.List<String> ok = new java.util.ArrayList<>();
+        for (String u : urls) if (AgentPageActivity.allowed(u)) ok.add(u);
+        if (ok.isEmpty()) return "not_lan_url";
+        main.post(() -> {
+            try {
+                app.startActivity(AgentPageActivity.intent(app, ok));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "pages: " + e);
+            }
+        });
+        log("pages from " + from + ": " + ok.size());
         return null;
     }
 

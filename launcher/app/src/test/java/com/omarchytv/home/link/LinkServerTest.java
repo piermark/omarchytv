@@ -655,6 +655,9 @@ public class LinkServerTest {
         assertEquals(200, app("POST", "/v1/page", "{\"url\":\"http://192.168.1.9:8080/\"}", ctl).status);
         assertEquals(400, app("POST", "/v1/page", "{\"url\":\"https://evil.example/\"}", ctl).status);
         assertEquals("http://192.168.1.9:8080/", host.pages.get(0));
+        // v2.21 tiled: up to 4, LAN only, no duplicates
+        Resp tiled = app("POST", "/v1/page", "{\"urls\":[\"http://192.168.1.9:1/\",\"https://x.example/\",\"http://192.168.1.9:1/\",\"http://192.168.1.2/\",\"http://192.168.1.3/\",\"http://192.168.1.4/\",\"http://192.168.1.5/\"]}", ctl);
+        assertEquals(4, tiled.json().getJSONArray("urls").length());
         // MCP: a read token sees read tools only
         Resp tl = app("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}", read);
         String tools = tl.json().getJSONObject("result").getJSONArray("tools").toString();

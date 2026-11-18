@@ -188,6 +188,8 @@
     <string name="agentq_hint">Kumandayla bir yanıt seçin · GERİ: sonra yanıtla</string>
     <string name="link_app_tokens">Uygulama belirteçleri (panolar, ajanlar)</string>
     <string name="menu_system_info">Sistem bilgisi</string>
+    <string name="walker_agent_tile">Ajan sayfaları yan yana</string>
+    <string name="walker_agent_questions">Ajanlardan sorular</string>
     <string name="link_new_app_token">Yeni uygulama belirteci</string>
     <string name="link_app_tokens_full">Zaten 16 belirteç var: önce iptal edin</string>
     <string name="link_app_token_once">Yalnızca bir kez gösterilir. Tarayın ya da uygulamanıza yazın; burada veya omarchy-link token ile iptal edin.</string>

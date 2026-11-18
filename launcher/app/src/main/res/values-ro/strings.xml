@@ -188,6 +188,8 @@
     <string name="agentq_hint">Alege un răspuns cu telecomanda · ÎNAPOI: răspunde mai târziu</string>
     <string name="link_app_tokens">Tokenuri de aplicații (panouri, agenți)</string>
     <string name="menu_system_info">Informații sistem</string>
+    <string name="walker_agent_tile">Paginile agenților, alăturate</string>
+    <string name="walker_agent_questions">Întrebări de la agenți</string>
     <string name="link_new_app_token">Token nou de aplicație</string>
     <string name="link_app_tokens_full">Există deja 16 tokenuri: revocă-le întâi</string>
     <string name="link_app_token_once">Afișat o singură dată. Scanează-l sau scrie-l în aplicație; îl revoci aici sau cu omarchy-link token.</string>

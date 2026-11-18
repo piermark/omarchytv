@@ -148,8 +148,9 @@ ALLOWED_TOOLS = (
     {
         "name": "tv_show_page",
         "description": "Open a web page of the LAN or tailnet full screen on the TV (http:// and an IP address, e.g. a "
-                       "dashboard). BACK closes it.",
-        "inputSchema": {"type": "object", "properties": {"url": {"type": "string"}}, "required": ["url"]},
+                       "dashboard), or up to 4 tiled like Hyprland windows (Android TV). BACK closes it.",
+        "inputSchema": {"type": "object", "properties": {"url": {"type": "string"},
+                                                         "urls": {"type": "array", "items": {"type": "string"}}}},
     },
     {
         "name": "tv_close_page",
@@ -329,7 +330,8 @@ def _call_tool(name: str, args: dict, c) -> dict:
             raise ValueError("bad id")
         return c.request("GET", f"/v1/ask/{aid}?wait={max(0, min(25, int(args.get('wait', 0) or 0)))}", timeout=35)
     if name == "tv_show_page":
-        return c.request("POST", "/v1/page", {"url": str(args.get("url", ""))})
+        urls = [str(u) for u in (args.get("urls") or [])][:4]
+        return c.request("POST", "/v1/page", {"urls": urls} if urls else {"url": str(args.get("url", ""))})
     if name == "tv_close_page":
         return c.request("DELETE", "/v1/page")
     if name in ("tv_publish_page", "tv_page_badge", "tv_remove_page"):

@@ -188,6 +188,8 @@
     <string name="agentq_hint">Επιλέξτε απάντηση με το τηλεχειριστήριο · ΠΙΣΩ: απάντηση αργότερα</string>
     <string name="link_app_tokens">Διακριτικά εφαρμογών (πίνακες, πράκτορες)</string>
     <string name="menu_system_info">Πληροφορίες συστήματος</string>
+    <string name="walker_agent_tile">Σελίδες πρακτόρων δίπλα-δίπλα</string>
+    <string name="walker_agent_questions">Ερωτήσεις πρακτόρων</string>
     <string name="link_new_app_token">Νέο διακριτικό εφαρμογής</string>
     <string name="link_app_tokens_full">Υπάρχουν ήδη 16: ανακαλέστε τα πρώτα</string>
     <string name="link_app_token_once">Εμφανίζεται μία φορά. Σαρώστε ή πληκτρολογήστε το στην εφαρμογή· ανάκληση εδώ ή με omarchy-link token.</string>

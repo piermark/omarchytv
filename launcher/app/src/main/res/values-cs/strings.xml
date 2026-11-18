@@ -188,6 +188,8 @@
     <string name="agentq_hint">Vyberte odpověď dálkovým ovladačem · ZPĚT: odpovědět později</string>
     <string name="link_app_tokens">Tokeny aplikací (přehledy, agenti)</string>
     <string name="menu_system_info">Informace o systému</string>
+    <string name="walker_agent_tile">Stránky agentů vedle sebe</string>
+    <string name="walker_agent_questions">Otázky od agentů</string>
     <string name="link_new_app_token">Nový token aplikace</string>
     <string name="link_app_tokens_full">Už je 16 tokenů: nejdřív je zrušte</string>
     <string name="link_app_token_once">Zobrazí se jen jednou. Naskenujte nebo zadejte do aplikace; zrušíte zde nebo přes omarchy-link token.</string>

@@ -188,6 +188,8 @@
     <string name="agentq_hint">Valitse vastaus kaukosäätimellä · TAKAISIN: vastaa myöhemmin</string>
     <string name="link_app_tokens">Sovellustunnukset (koontinäytöt, agentit)</string>
     <string name="menu_system_info">Järjestelmätiedot</string>
+    <string name="walker_agent_tile">Agenttien sivut rinnakkain</string>
+    <string name="walker_agent_questions">Agenttien kysymykset</string>
     <string name="link_new_app_token">Uusi sovellustunnus</string>
     <string name="link_app_tokens_full">Jo 16 tunnusta: peru ne ensin</string>
     <string name="link_app_token_once">Näytetään kerran. Skannaa tai kirjoita se sovellukseesi; peru täällä tai komennolla omarchy-link token.</string>

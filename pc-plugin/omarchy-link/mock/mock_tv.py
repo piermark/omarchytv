@@ -683,8 +683,9 @@ class Handler(BaseHTTPRequestHandler):
         return 200, {"launcherVersion": "2.21.0", "log": ["12:00:00 listening", "12:00:01 question from PC"]}
 
     def _page(self, pc, a, body):
-        self.tv.page = a.get("url")
-        return 200, {"ok": True, "url": a.get("url")}
+        urls = a.get("urls") or ([a["url"]] if a.get("url") else [])
+        self.tv.page, self.tv.pages = urls[0] if urls else None, urls
+        return 200, {"ok": True, "url": self.tv.page, "urls": urls}
 
     def _page_close(self, pc, a, body):
         was = bool(getattr(self.tv, "page", None))

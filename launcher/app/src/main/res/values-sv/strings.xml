@@ -188,6 +188,8 @@
     <string name="agentq_hint">Välj ett svar med fjärrkontrollen · BAKÅT: svara senare</string>
     <string name="link_app_tokens">App-token (instrumentpaneler, agenter)</string>
     <string name="menu_system_info">Systeminfo</string>
+    <string name="walker_agent_tile">Agentsidor, sida vid sida</string>
+    <string name="walker_agent_questions">Frågor från agenter</string>
     <string name="link_new_app_token">Ny app-token</string>
     <string name="link_app_tokens_full">Redan 16 app-token: återkalla dem först</string>
     <string name="link_app_token_once">Visas en gång. Skanna eller skriv in i din app; återkalla här eller med omarchy-link token.</string>

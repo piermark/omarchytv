@@ -155,6 +155,11 @@ public final class LinkServer {
             return "no_page";
         }
 
+        /** v2.21 up to four pages tiled (Hyprland style). Null when opened, else an error code. */
+        default String openPages(List<String> urls, String from) {
+            return urls.isEmpty() ? "not_lan_url" : openPage(urls.get(0), from);
+        }
+
         default boolean closePage() {
             return false;
         }
@@ -1347,9 +1352,10 @@ public final class LinkServer {
                         isError = r == null;
                         break;
                     }
-                    case "tv_show_page": {
-                        String e = host.openPage(args.optString("url", ""), who.name);
-                        out = e == null ? ok().put("url", args.optString("url", "")) : err(e, "a http:// page on the LAN or tailnet, by IP address");
+                    case "tv_show_page": {   // v2.21: "url", or "urls" (up to 4, tiled)
+                        List<String> us = AppApi.urls(args);
+                        String e = host.openPages(us, who.name);
+                        out = e == null ? ok().put("urls", new JSONArray(us)) : err(e, "http:// pages on the LAN or tailnet, by IP address");
                         isError = e != null;
                         break;
                     }
@@ -1449,8 +1455,9 @@ public final class LinkServer {
                 new JSONObject().put("package", prop("string", "Android package name")), "control"});
         t.add(new Object[]{"tv_screensaver", "Set or reset custom ASCII screensaver text on the TV.",
                 new JSONObject().put("text", prop("string", "ASCII text (empty string resets to default)")), "control"});
-        t.add(new Object[]{"tv_show_page", "Open a web page of the LAN or tailnet full screen on the TV (http:// and an IP address, e.g. a dashboard). BACK closes it.",
-                new JSONObject().put("url", prop("string", "http://<LAN or 100.x address>[:port]/path")), "control"});
+        t.add(new Object[]{"tv_show_page", "Open a web page of the LAN or tailnet full screen on the TV (http:// and an IP address, e.g. a dashboard), or up to 4 tiled like Hyprland windows (1-4 or the colour keys switch). BACK closes it.",
+                new JSONObject().put("url", prop("string", "http://<LAN or 100.x address>[:port]/path"))
+                        .put("urls", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "2-4 pages to tile")), "control"});
         t.add(new Object[]{"tv_close_page", "Close the page opened with tv_show_page.", new JSONObject(), "control"});
         t.add(new Object[]{"tv_list_pages", "The agent pages published as tiles on the TV's Home.", new JSONObject(), "read"});
         t.add(new Object[]{"tv_publish_page", "Publish (or update) a LAN / tailnet page as a tile on the TV's Home, with a name, a one-letter icon and an optional badge count. At most 16.",

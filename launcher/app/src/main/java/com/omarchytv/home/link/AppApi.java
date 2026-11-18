@@ -224,9 +224,10 @@ final class AppApi {
         if ("/v1/page".equals(p) && ("POST".equals(m) || "DELETE".equals(m))) {
             if (!who.can("control")) return forbidden("control");
             if ("DELETE".equals(m)) return new LinkServer.Response(200, LinkServer.ok().put("closed", host.closePage()));
-            String url = body.optString("url", "");
-            String e = host.openPage(url, who.name);
-            return e == null ? new LinkServer.Response(200, LinkServer.ok().put("url", url))
+            List<String> us = urls(body);
+            String url = us.isEmpty() ? "" : us.get(0);
+            String e = host.openPages(us, who.name);
+            return e == null ? new LinkServer.Response(200, LinkServer.ok().put("url", url).put("urls", new JSONArray(us)))
                     : new LinkServer.Response("not_lan_url".equals(e) ? 400 : 409, LinkServer.err(e, "a http:// page on the LAN or tailnet, by IP address"));
         }
         if ("/v1/radio".equals(p) && ("GET".equals(m) || "POST".equals(m))) {   // v2.21 Radiomarchy
@@ -325,6 +326,19 @@ final class AppApi {
             if (o != null && id.equals(o.optString("id"))) return o;
         }
         return null;
+    }
+
+    /** "url" and / or "urls" (at most 4, no duplicates, LAN / tailnet only). */
+    static List<String> urls(JSONObject b) {
+        List<String> out = new ArrayList<>();
+        JSONArray a = b.optJSONArray("urls");
+        for (int i = 0; a != null && i < a.length() && out.size() < 4; i++) {
+            String u = a.optString(i, "").trim();
+            if (lanUrl(u) && !out.contains(u)) out.add(u);
+        }
+        String one = b.optString("url", "").trim();
+        if (lanUrl(one) && !out.contains(one) && out.size() < 4) out.add(0, one);
+        return out;
     }
 
     static boolean lanUrl(String url) {

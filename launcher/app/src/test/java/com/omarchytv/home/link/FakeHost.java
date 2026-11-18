@@ -55,6 +55,16 @@ class FakeHost implements LinkServer.Host {
     }
 
     @Override
+    public String openPages(List<String> urls, String from) {
+        if (urls.isEmpty()) return "not_lan_url";
+        for (String u : urls) {
+            String e = openPage(u, from);
+            if (e != null) return e;
+        }
+        return null;
+    }
+
+    @Override
     public JSONObject diagnostics() {
         try {
             return new JSONObject().put("launcherVersion", "2.21.0").put("log", new JSONArray().put("12:00:00 hello"));

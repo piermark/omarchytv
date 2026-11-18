@@ -793,6 +793,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
         }
         items.add(new Walker.Item("X (x.com)", tApp, () -> WebAppActivity.open(this, LauncherConfig.X_WEBAPP)));
+        // v2.21 agents: their pages (all of them tiled, Hyprland style) and the questions waiting for you
+        if (!cfg.agentPages.isEmpty()) {
+            java.util.List<String> all = new java.util.ArrayList<>();
+            for (LauncherConfig.AgentPage pg : cfg.agentPages) if (all.size() < 4) all.add(pg.url);
+            if (all.size() > 1) items.add(new Walker.Item("▦ " + str(R.string.walker_agent_tile), tApp, () -> open(AgentPageActivity.intent(this, all))));
+        }
+        if (OmarchyLink.pendingAsks() > 0) {
+            items.add(new Walker.Item("● " + str(R.string.walker_agent_questions) + " (" + OmarchyLink.pendingAsks() + ")", tApp,
+                    () -> OmarchyLink.showPendingAsk(this)));
+        }
         if (cfg.pluginOmastorm) items.add(new Walker.Item("⛈ Omastorm (radar)", tApp, this::openOmastorm));
         items.add(new Walker.Item("🕹 OmarchyTV Arcade (V-HOLD · RICE WARS · FORK BOMB)", tApp, () -> ArcadeActivity.open(this)));
         items.add(new Walker.Item("🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", str(R.string.cinemarchy_hub), () -> open(new Intent(this, CinemarchyActivity.class))));

@@ -188,6 +188,8 @@
     <string name="agentq_hint">Escolha uma resposta com o controle · VOLTAR: responder depois</string>
     <string name="link_app_tokens">Tokens de apps (painéis, agentes)</string>
     <string name="menu_system_info">Informações do sistema</string>
+    <string name="walker_agent_tile">Páginas dos agentes, lado a lado</string>
+    <string name="walker_agent_questions">Perguntas dos agentes</string>
     <string name="link_new_app_token">Novo token de app</string>
     <string name="link_app_tokens_full">Já existem 16 tokens: revogue-os primeiro</string>
     <string name="link_app_token_once">Mostrado uma só vez. Escaneie ou digite no seu app; revogue aqui ou com omarchy-link token.</string>

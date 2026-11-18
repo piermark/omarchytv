@@ -188,6 +188,8 @@
     <string name="agentq_hint">Velg et svar med fjernkontrollen · TILBAKE: svar senere</string>
     <string name="link_app_tokens">App-tokener (dashbord, agenter)</string>
     <string name="menu_system_info">Systeminfo</string>
+    <string name="walker_agent_tile">Agentsider, side om side</string>
+    <string name="walker_agent_questions">Spørsmål fra agenter</string>
     <string name="link_new_app_token">Nytt app-token</string>
     <string name="link_app_tokens_full">Allerede 16 app-tokener: tilbakekall dem først</string>
     <string name="link_app_token_once">Vises én gang. Skann eller skriv det inn i appen; tilbakekall her eller med omarchy-link token.</string>

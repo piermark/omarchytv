@@ -221,6 +221,8 @@
     <string name="agentq_hint">Pick an answer with the remote · BACK: answer later</string>
     <string name="link_app_tokens">App tokens (dashboards, agents)</string>
     <string name="menu_system_info">System info</string>
+    <string name="walker_agent_tile">Agent pages, tiled</string>
+    <string name="walker_agent_questions">Questions from agents</string>
     <string name="link_new_app_token">New app token</string>
     <string name="link_app_tokens_full">16 app tokens already: revoke them first</string>
     <string name="link_app_token_once">Shown once. Scan it or type it into your app; revoke it here or with omarchy-link token.</string>

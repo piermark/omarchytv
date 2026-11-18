@@ -188,6 +188,8 @@
     <string name="agentq_hint">اختر إجابة بجهاز التحكم · رجوع: أجب لاحقًا</string>
     <string name="link_app_tokens">رموز التطبيقات (لوحات، وكلاء)</string>
     <string name="menu_system_info">معلومات النظام</string>
+    <string name="walker_agent_tile">صفحات الوكلاء متجاورة</string>
+    <string name="walker_agent_questions">أسئلة من الوكلاء</string>
     <string name="link_new_app_token">رمز تطبيق جديد</string>
     <string name="link_app_tokens_full">يوجد 16 رمزًا بالفعل: ألغِها أولًا</string>
     <string name="link_app_token_once">يظهر مرة واحدة. امسحه أو اكتبه في تطبيقك؛ ألغِه هنا أو عبر omarchy-link token.</string>

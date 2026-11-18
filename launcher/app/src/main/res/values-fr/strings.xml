@@ -188,6 +188,8 @@
     <string name="agentq_hint">Choisissez une réponse avec la télécommande · RETOUR : répondre plus tard</string>
     <string name="link_app_tokens">Jetons d\'apps (tableaux de bord, agents)</string>
     <string name="menu_system_info">Infos système</string>
+    <string name="walker_agent_tile">Pages des agents, en mosaïque</string>
+    <string name="walker_agent_questions">Questions des agents</string>
     <string name="link_new_app_token">Nouveau jeton d\'app</string>
     <string name="link_app_tokens_full">Déjà 16 jetons : révoquez-les d\'abord</string>
     <string name="link_app_token_once">Affiché une seule fois. Scannez-le ou tapez-le dans votre app ; révocable ici ou avec omarchy-link token.</string>

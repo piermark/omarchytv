@@ -260,9 +260,9 @@ def cmd_page(a, cfg):
         print("closed" if r.get("closed") else "no page was open")
         return 0
     if not a.url:
-        print("omarchy-link page http://192.168.1.20:8080/  (or --close)", file=sys.stderr)
+        print("omarchy-link page http://192.168.1.20:8080/ [up to 3 more, tiled]  (or --close)", file=sys.stderr)
         return 2
-    _call(cfg, "POST", "/v1/page", {"url": a.url})
+    _call(cfg, "POST", "/v1/page", {"urls": a.url[:4]} if len(a.url) > 1 else {"url": a.url[0]})
     return 0
 
 
@@ -1043,8 +1043,8 @@ def main(argv=None) -> int:
     s.add_argument("--timeout", type=int, default=120)
     s.add_argument("--from", dest="source")
     s.set_defaults(fn=cmd_ask)
-    s = sub.add_parser("page", help="open a LAN / tailnet page full screen on the TV (or --close)")
-    s.add_argument("url", nargs="?")
+    s = sub.add_parser("page", help="open a LAN / tailnet page full screen on the TV, or up to 4 tiled (or --close)")
+    s.add_argument("url", nargs="*")
     s.add_argument("--close", action="store_true")
     s.set_defaults(fn=cmd_page)
     s = sub.add_parser("pages", help="agent pages as tiles on the TV's Home: list | add | badge | show | remove")

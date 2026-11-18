@@ -188,6 +188,8 @@
     <string name="agentq_hint">用遥控器选择答案 · 返回：稍后回答</string>
     <string name="link_app_tokens">应用令牌（仪表板、代理）</string>
     <string name="menu_system_info">系统信息</string>
+    <string name="walker_agent_tile">代理页面平铺</string>
+    <string name="walker_agent_questions">来自代理的问题</string>
     <string name="link_new_app_token">新建应用令牌</string>
     <string name="link_app_tokens_full">已有 16 个令牌：请先撤销</string>
     <string name="link_app_token_once">仅显示一次。扫描或输入到你的应用；可在此处或用 omarchy-link token 撤销。</string>

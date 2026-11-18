@@ -188,6 +188,8 @@
     <string name="agentq_hint">Scegli la risposta col telecomando · BACK: rispondi dopo</string>
     <string name="link_app_tokens">Token delle app (dashboard, agenti)</string>
     <string name="menu_system_info">Info sistema</string>
+    <string name="walker_agent_tile">Pagine degli agenti, affiancate</string>
+    <string name="walker_agent_questions">Domande degli agenti</string>
     <string name="link_new_app_token">Nuovo token app</string>
     <string name="link_app_tokens_full">Ci sono già 16 token: prima revocali</string>
     <string name="link_app_token_once">Mostrato una sola volta. Scansionalo o scrivilo nella tua app; lo revochi qui o con omarchy-link token.</string>

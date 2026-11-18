@@ -633,7 +633,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
                 self._send_json(INBOX.notify(body.get("text") or body.get("body") or "", body.get("title", ""),
                                              body.get("level", "info"), body.get("from") or "PC"))
             elif path == "/v1/page":
-                url = "" if body.get("close") else str(body.get("url") or "")
+                urls = body.get("urls") or []   # LG / Samsung show one page: the first
+                url = "" if body.get("close") else str(body.get("url") or (urls[0] if urls else ""))
                 self._send_json(INBOX.set_page(url or None, body.get("from") or "PC"))
             elif path == "/v1/ask":
                 self._send_json(INBOX.ask(body.get("question", ""), body.get("choices"), body.get("timeout", 120),

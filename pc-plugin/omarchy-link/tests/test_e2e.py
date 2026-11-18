@@ -181,6 +181,8 @@ class E2E(unittest.TestCase):
         self.assertEqual(r.stdout.strip(), "Not now")
         cli("page", "http://192.168.1.20:8080/")
         self.assertEqual(self.tv.page, "http://192.168.1.20:8080/")
+        cli("page", "http://192.168.1.20:8080/", "http://192.168.1.21:3000/")
+        self.assertEqual(self.tv.pages, ["http://192.168.1.20:8080/", "http://192.168.1.21:3000/"])
         self.assertEqual(cli("page", "--close").stdout.strip(), "closed")
         self.assertIn("question from PC", cli("tv", "logs").stdout)
         self.assertEqual(cli("radio").stdout.strip(), "nothing playing")

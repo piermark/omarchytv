@@ -188,6 +188,8 @@
     <string name="agentq_hint">Оберіть відповідь пультом · НАЗАД: відповісти пізніше</string>
     <string name="link_app_tokens">Токени застосунків (панелі, агенти)</string>
     <string name="menu_system_info">Відомості про систему</string>
+    <string name="walker_agent_tile">Сторінки агентів поруч</string>
+    <string name="walker_agent_questions">Запитання від агентів</string>
     <string name="link_new_app_token">Новий токен застосунку</string>
     <string name="link_app_tokens_full">Уже 16 токенів: спершу відкличте їх</string>
     <string name="link_app_token_once">Показується один раз. Відскануйте або введіть у застосунку; відкликати тут або через omarchy-link token.</string>

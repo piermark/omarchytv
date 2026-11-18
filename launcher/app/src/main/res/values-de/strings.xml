@@ -188,6 +188,8 @@
     <string name="agentq_hint">Antwort mit der Fernbedienung wählen · BACK: später antworten</string>
     <string name="link_app_tokens">App-Token (Dashboards, Agenten)</string>
     <string name="menu_system_info">Systeminfo</string>
+    <string name="walker_agent_tile">Agenten-Seiten, gekachelt</string>
+    <string name="walker_agent_questions">Fragen von Agenten</string>
     <string name="link_new_app_token">Neues App-Token</string>
     <string name="link_app_tokens_full">Schon 16 App-Token: zuerst widerrufen</string>
     <string name="link_app_token_once">Nur einmal angezeigt. Scannen oder in die App eintippen; widerrufen hier oder mit omarchy-link token.</string>
