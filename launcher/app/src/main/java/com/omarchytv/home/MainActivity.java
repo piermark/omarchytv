@@ -1168,6 +1168,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (voiceSearch != null) voiceSearch.destroy();
         BootScreenView.onDestroy(this);
         LiftoffView.onDestroy();
         OmaFireLayer.onPause();
@@ -5095,7 +5096,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     // ---- v2.3: web apps, voice search, > ask --------------------------------------------------------
 
-    private static final int REQ_VOICE_SEARCH = 11;
+    private VoiceInput voiceSearch;
 
     private AsciiMenu.Page webAppsPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
@@ -5296,18 +5297,36 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         return super.onKeyDown(keyCode, event);
     }
 
-    /** "> search": the system speech recognizer (Google's on Android TV), Italian or English. */
+    /** "> search": VoiceInput (the in-app recognizer, Google's dialog as a fallback), in the launcher's language. */
     private void startVoiceSearch() {
-        Intent i = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, speechLanguage(this))
-                .putExtra(android.speech.RecognizerIntent.EXTRA_MAX_RESULTS, 5)
-                .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, getString(R.string.search_prompt));
-        try {
-            startActivityForResult(i, REQ_VOICE_SEARCH);
-        } catch (ActivityNotFoundException e) {
-            typedSearch();   // no recognizer: type instead (the TV keyboard may still offer its mic)
-        }
+        if (voiceSearch == null) voiceSearch = new VoiceInput(this, getString(R.string.search_prompt), new VoiceInput.Callback() {
+            @Override public void onListening(String partial) {
+                if (partial.isEmpty()) Toast.makeText(MainActivity.this, "🎤 " + getString(R.string.search_prompt), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override public void onHeard(List<String> alts) {
+                if (walkerVoice && walker != null) {
+                    walkerVoice = false;
+                    walker.setQuery(alts.get(0));
+                    return;
+                }
+                walkerVoice = false;
+                runSearch(alts);
+            }
+
+            @Override public void onStopped(String message) {
+                walkerVoice = false;
+                if (VoiceInput.NO_RECOGNIZER.equals(message)) typedSearch();   // type instead (the TV keyboard may still offer its mic)
+                else if (message != null) Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+        voiceSearch.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (voiceSearch != null) voiceSearch.onRequestPermissionsResult(req, res);
     }
 
     static String speechLanguage(Context c) {
@@ -5325,15 +5344,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != REQ_VOICE_SEARCH || resultCode != RESULT_OK || data == null) return;
-        List<String> alts = data.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS);
-        if (walkerVoice && walker != null && alts != null && !alts.isEmpty()) {
-            walkerVoice = false;
-            walker.setQuery(alts.get(0));
-            return;
-        }
-        walkerVoice = false;
-        if (alts != null && !alts.isEmpty()) runSearch(alts);
+        if (voiceSearch != null) voiceSearch.onActivityResult(requestCode, resultCode, data);
     }
 
     /** Fuzzy-matches apps, web apps and channels; launches a clear winner, else shows the matches. */

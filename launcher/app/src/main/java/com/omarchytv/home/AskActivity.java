@@ -1,7 +1,6 @@
 package com.omarchytv.home;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -16,7 +15,6 @@ import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -70,7 +68,8 @@ import java.util.Locale;
 public class AskActivity extends Activity implements OmarchyLink.Listener {
 
     private static final long ANSWER_TIMEOUT_MS = 100_000L;
-    private static final int REQ_SPEECH = 21;
+    private VoiceInput voice;
+    private CharSequence idleHint;   // the input's hint while VoiceInput shows "Listening…" in its place
 
     private float s;
     private Typeface tf, tfBold;
@@ -964,14 +963,35 @@ public class AskActivity extends Activity implements OmarchyLink.Listener {
         scroll.post(() -> scroll.fullScroll(View.FOCUS_DOWN));
     }
 
+    // ---- voice (VoiceInput: the in-app recognizer, the system dialog only as a fallback) ----
+
     private void listen() {
-        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, MainActivity.speechLanguage(this))
-                .putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.ask_prompt));
-        try {
-            startActivityForResult(i, REQ_SPEECH);
-        } catch (ActivityNotFoundException e) {
+        if (voice == null) voice = new VoiceInput(this, getString(R.string.ask_prompt), new VoiceInput.Callback() {
+            @Override public void onListening(String partial) {
+                if (idleHint == null) idleHint = input.getHint();
+                input.setHint(partial.isEmpty() ? "🎤 Listening…" : "🎤 " + partial);
+            }
+
+            @Override public void onHeard(List<String> words) {
+                stopListening(null);
+                runCommand(words.get(0));
+            }
+
+            @Override public void onStopped(String message) {
+                stopListening(message);
+            }
+        });
+        voice.start();
+    }
+
+    private void stopListening(String message) {
+        if (voice != null) voice.destroy();
+        if (idleHint != null) {
+            input.setHint(idleHint);
+            idleHint = null;
+        }
+        if (message != null) line("sys", message, Theme.cur().yellow);
+        if (VoiceInput.NO_RECOGNIZER.equals(message)) {   // no recognizer on this TV: the on-screen keyboard instead
             input.requestFocus();
             InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) imm.showSoftInput(input, InputMethodManager.SHOW_IMPLICIT);
@@ -979,11 +999,15 @@ public class AskActivity extends Activity implements OmarchyLink.Listener {
     }
 
     @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (voice != null) voice.onRequestPermissionsResult(req, res);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != REQ_SPEECH || resultCode != RESULT_OK || data == null) return;
-        List<String> r = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-        if (r != null && !r.isEmpty()) runCommand(r.get(0));
+        if (voice != null) voice.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override
@@ -1020,6 +1044,7 @@ public class AskActivity extends Activity implements OmarchyLink.Listener {
 
     @Override
     protected void onDestroy() {
+        if (voice != null) voice.destroy();
         if (tts != null) tts.shutdown();
         super.onDestroy();
     }
