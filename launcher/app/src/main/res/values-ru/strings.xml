@@ -187,6 +187,13 @@
     <string name="agentq_asks">спрашивает</string>
     <string name="agentq_hint">Выберите ответ пультом · НАЗАД: ответить позже</string>
     <string name="link_app_tokens">Токены приложений (панели, агенты)</string>
+    <string name="link_new_app_token">Новый токен приложения</string>
+    <string name="link_app_tokens_full">Уже 16 токенов: сначала отзовите их</string>
+    <string name="link_app_token_once">Показывается один раз. Отсканируйте или введите в приложении; отзыв здесь или через omarchy-link token.</string>
+    <string name="link_tailscale_app">Приложение Tailscale</string>
+    <string name="link_tailscale_open">открыть</string>
+    <string name="link_tailscale_get">установить</string>
+    <string name="link_tailscale_qr">Отсканируйте телефоном, чтобы открыть Tailscale в Google Play</string>
     <string name="link_paired_toast">Сопряжено с %1$s</string>
     <string name="link_online">подключено</string>
     <string name="ai_settings">Кредиты ИИ</string>

@@ -406,7 +406,8 @@ public final class LinkServer {
             InputStream in = new BufferedInputStream(sock.getInputStream());
             OutputStream out = sock.getOutputStream();
             if (!host.allowPeer(peer)) {
-                Response r = new Response(403, err("not_lan", "LAN clients only"));
+                Response r = new Response(403, err("not_lan", Tailnet.isTailnet(peer)
+                        ? "a Tailscale address: turn on Settings > Omarchy Link > Allow Tailscale on the TV" : "LAN clients only"));
                 r.close = true;
                 write(out, r);
                 return;
@@ -2734,6 +2735,13 @@ public final class LinkServer {
 
     public int revokeAppTokens() {
         return app.tokens.clear();
+    }
+
+    /** v2.21 a token made on the TV itself (Settings): {id, token}, or null when 16 exist. */
+    public String[] newAppToken(String name, String scope) {
+        String[] t = app.tokens.add(printable(name, 40), scope, System.currentTimeMillis() / 1000);
+        if (t != null) host.log("app token added on the TV: " + name + " (" + scope + ")");
+        return t;
     }
 
     boolean isRunning() {

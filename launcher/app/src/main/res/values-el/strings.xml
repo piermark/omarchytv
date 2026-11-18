@@ -187,6 +187,13 @@
     <string name="agentq_asks">ρωτά</string>
     <string name="agentq_hint">Επιλέξτε απάντηση με το τηλεχειριστήριο · ΠΙΣΩ: απάντηση αργότερα</string>
     <string name="link_app_tokens">Διακριτικά εφαρμογών (πίνακες, πράκτορες)</string>
+    <string name="link_new_app_token">Νέο διακριτικό εφαρμογής</string>
+    <string name="link_app_tokens_full">Υπάρχουν ήδη 16: ανακαλέστε τα πρώτα</string>
+    <string name="link_app_token_once">Εμφανίζεται μία φορά. Σαρώστε ή πληκτρολογήστε το στην εφαρμογή· ανάκληση εδώ ή με omarchy-link token.</string>
+    <string name="link_tailscale_app">Εφαρμογή Tailscale</string>
+    <string name="link_tailscale_open">άνοιγμα</string>
+    <string name="link_tailscale_get">εγκατάσταση</string>
+    <string name="link_tailscale_qr">Σαρώστε με το κινητό για το Tailscale στο Google Play</string>
     <string name="link_paired_toast">Σύζευξη με %1$s</string>
     <string name="link_online">συνδεδεμένο</string>
     <string name="ai_settings">Μονάδες AI</string>

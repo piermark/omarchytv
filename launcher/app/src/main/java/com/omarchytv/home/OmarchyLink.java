@@ -302,6 +302,11 @@ public final class OmarchyLink implements LinkServer.Host {
         return r != null && r.live() ? r.server.appTokenCount() : 0;
     }
 
+    static String[] newAppToken(String name, String scope) {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.newAppToken(name, scope) : null;
+    }
+
     static int revokeAppTokens() {
         OmarchyLink r = runtime;
         return r != null && r.live() ? r.server.revokeAppTokens() : 0;

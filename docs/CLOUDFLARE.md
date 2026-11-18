@@ -27,17 +27,20 @@ by default). Stop it with CTRL+C.
 
 You need a domain on Cloudflare and `cloudflared` on the PC.
 
-1. Create the tunnel and its hostname (once):
+1. Create the tunnel and its hostname (once). `omarchy-tv cloudflare setup` shows the two commands and runs them
+   after you say yes:
 
    ```sh
    cloudflared tunnel login
-   cloudflared tunnel create omarchytv-mcp
-   cloudflared tunnel route dns omarchytv-mcp tv-mcp.example.com
+   omarchy-tv cloudflare setup omarchytv-mcp tv-mcp.example.com
+   # = cloudflared tunnel create omarchytv-mcp
+   #   cloudflared tunnel route dns omarchytv-mcp tv-mcp.example.com
    ```
 
 2. Put **Cloudflare Access** in front: Zero Trust › Access › Applications › *Add* › *Self-hosted*, domain
    `tv-mcp.example.com`. Add a policy with the action **Service Auth** and a **service token** (Access › Service
-   auth › Create). The agent sends the token's two headers on every request:
+   auth › Create). Copy the application's **AUD tag** (Overview tab) and note your team name (the `TEAM` in
+   `TEAM.cloudflareaccess.com`). The agent sends the token's two headers on every request:
 
    ```
    CF-Access-Client-Id: <id>.access
@@ -45,17 +48,27 @@ You need a domain on Cloudflare and `cloudflared` on the PC.
    Authorization: Bearer <the token omarchy-tv mcp prints>
    ```
 
-3. Run the server with the tunnel and say that Access is in front:
+3. Run the server with the tunnel and let it **verify** Access:
 
    ```sh
-   omarchy-tv mcp --cloudflare omarchytv-mcp --access              # tools: read + notify
-   omarchy-tv mcp --cloudflare omarchytv-mcp --access --scope read  # even less
+   omarchy-tv mcp --cloudflare omarchytv-mcp --access-team TEAM --access-aud <AUD tag>          # read + notify
+   omarchy-tv mcp --cloudflare omarchytv-mcp --access-team TEAM --access-aud <AUD> --scope read  # even less
    ```
 
-   With `--access`, a request that did not come through Access (no `Cf-Access-Jwt-Assertion` header) is refused
-   with `403 access_required`. The server listens on `127.0.0.1` only, so only `cloudflared` can reach it.
+   Every request must carry the JWT that Access adds (`Cf-Access-Jwt-Assertion`): the server checks its RS256
+   signature against your team's public keys, the audience, the issuer and the expiry, and refuses anything else with
+   `403 access_denied`, before it looks at the Bearer token. It needs `python-cryptography`. Without the team and
+   AUD, `--access` only requires that header to be present (weaker; the origin is still `127.0.0.1`, reachable
+   only by `cloudflared`).
 
-4. Point the agent at `https://tv-mcp.example.com/mcp` with the three headers above.
+4. Keep it running with a systemd user service:
+
+   ```sh
+   omarchy-tv cloudflare service --cloudflare omarchytv-mcp --access-team TEAM --access-aud <AUD>
+   systemctl --user daemon-reload && systemctl --user enable --now omarchytv-mcp
+   ```
+
+5. Point the agent at `https://tv-mcp.example.com/mcp` with the three headers above.
 
 ## What a cloud agent can do (default scope: notify)
 
@@ -65,8 +78,10 @@ You need a domain on Cloudflare and `cloudflared` on the PC.
 | `tv_get_theme`, `tv_list_themes`, `tv_list_apps` | the theme and the lists |
 | `tv_notify` | one line on the TV over whatever is playing |
 | `tv_ask_user`, `tv_ask_result` | a question you answer with the remote ("Deploy to production?") |
+| `tv_radio_now` | what Radiomarchy is playing |
 
-`--scope control` adds the remote, apps, themes, the screensaver, pages and diagnostics. Use it only when Access is in
+`--scope control` adds the remote, apps, themes, the screensaver, pages, Radiomarchy control (`tv_radio`),
+opening parts of OmarchyTV (`tv_open`) and diagnostics. Use it only when Access is in
 front, and preferably with a service token for that one agent.
 
 ## Notes

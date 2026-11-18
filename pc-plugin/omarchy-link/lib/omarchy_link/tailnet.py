@@ -88,3 +88,21 @@ def discover(st: dict | None, probe, port: int = 47800, workers: int = 8) -> lis
         return []
     with ThreadPoolExecutor(max_workers=min(workers, len(cands))) as ex:
         return [d for d in ex.map(one, cands) if d]
+
+
+def relayed(st: dict | None, address: str) -> bool:
+    """True when tailscaled reaches this tailnet peer only through a DERP relay (no direct path yet)."""
+    for p in ((st or {}).get("Peer") or {}).values():
+        if isinstance(p, dict) and address in (p.get("TailscaleIPs") or []):
+            return bool(p.get("Relay")) and not p.get("CurAddr")
+    return False
+
+
+def acl_example() -> dict:
+    """Tailscale policy: PCs tagged omarchy-pc reach the Omarchy Link port (47800) of TVs tagged omarchytv."""
+    return {
+        "tagOwners": {"tag:omarchy-pc": ["autogroup:admin"], "tag:omarchytv": ["autogroup:admin"]},
+        "acls": [
+            {"action": "accept", "src": ["tag:omarchy-pc"], "dst": ["tag:omarchytv:47800"]},
+        ],
+    }

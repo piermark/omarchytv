@@ -3619,13 +3619,26 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             r.setValue(str(n ? R.string.on : R.string.off));
             return true;
         });
-        // v2.21: app tokens are made on the PC (omarchy-link token add); here only how many, and revoke them all.
+        // v2.21: app tokens for dashboards and agents (also omarchy-link token add on the PC): how many, revoke them all,
+        // or make one here; it is shown once, as a QR code and as text.
         int apps = OmarchyLink.appTokens();
         p.add(str(R.string.link_app_tokens), apps == 0 ? "0" : apps + " · " + str(R.string.link_forget_short), r -> {
             if (OmarchyLink.appTokens() > 0) OmarchyLink.revokeAppTokens();
             r.setValue("0");
             return true;
         });
+        for (String scope : new String[]{"read", "notify", "control"}) {
+            p.add(str(R.string.link_new_app_token) + " · " + scope, "›", r -> {
+                String name = "TV " + new java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.ROOT).format(new java.util.Date());
+                String[] t = OmarchyLink.newAppToken(name, scope);
+                if (t == null) {
+                    android.widget.Toast.makeText(this, R.string.link_app_tokens_full, android.widget.Toast.LENGTH_LONG).show();
+                    return true;
+                }
+                startActivity(QrActivity.intent(this, name + " · " + scope, t[1], getString(R.string.link_app_token_once), true));
+                return true;
+            });
+        }
         // v2.21: Tailscale (off by default). On: the TV also answers its tailnet address; the value shows it.
         p.add(str(R.string.link_tailscale), tailscaleValue(LauncherConfig.get(this).tailscale), r -> {
             boolean n = !LauncherConfig.get(this).tailscale;
@@ -3636,6 +3649,23 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             });
             OmarchyLink.tailscaleChanged();
             r.setValue(tailscaleValue(n));
+            return true;
+        });
+        // v2.21: the official Tailscale app: open it, or install it (Play Store, or a QR code for the phone)
+        boolean tsApp = installed("com.tailscale.ipn");
+        p.add(str(R.string.link_tailscale_app), str(tsApp ? R.string.link_tailscale_open : R.string.link_tailscale_get), r -> {
+            if (installed("com.tailscale.ipn")) {
+                Intent li = getPackageManager().getLeanbackLaunchIntentForPackage("com.tailscale.ipn");
+                if (li == null) li = getPackageManager().getLaunchIntentForPackage("com.tailscale.ipn");
+                if (li != null) startActivity(li);
+                return true;
+            }
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=com.tailscale.ipn")));
+            } catch (RuntimeException e) {
+                startActivity(QrActivity.intent(this, "Tailscale", "https://play.google.com/store/apps/details?id=com.tailscale.ipn",
+                        getString(R.string.link_tailscale_qr), false));
+            }
             return true;
         });
         // v2.21: GET /v1/theme, the theme for dashboards and agent pages on the network (on by default).
@@ -3828,6 +3858,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (!on) return str(R.string.off);
         String ip = OmarchyLink.tailnetIp();
         return str(R.string.on) + " · " + (ip != null ? ip + ":" + LINK_PORT : str(R.string.offline));
+    }
+
+    private boolean installed(String pkg) {
+        try {
+            getPackageManager().getPackageInfo(pkg, 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private String tvAddress() {

@@ -629,6 +629,17 @@ def _link_client(cfg, to):
         raise cast.CastError(str(e), "not_lan") from e
 
 
+def _warn_relay(cfg, item, say) -> None:
+    p = config.Pairing.load()
+    addr = (p.tv or {}).get("address", "") if p.paired else ""
+    if cfg.get("tailscale") is not True or not netcheck.is_tailnet(addr):
+        return
+    if item.get("kind") in ("video", "audio", "image", "file") or item.get("screen") or item.get("path"):
+        if tailnet.relayed(tailnet.status(), addr):
+            say("Tailscale reaches the TV through a relay (DERP), not directly: a file or the screen may stutter. "
+                "`tailscale ping <tv>` shows when the direct path is up.")
+
+
 def cmd_cast(a, cfg):
     """Send a link, a file, the clipboard, text or (experimental) the screen to the TV."""
     say = (lambda m: None) if a.json else print
@@ -685,6 +696,7 @@ def cmd_cast(a, cfg):
             return 2
         if a.at and "position" not in item and item["kind"] in ("youtube", "video", "audio"):
             item["position"] = cast.seconds(a.at)
+        _warn_relay(cfg, item, say)   # v2.21: a tailnet TV reached only through DERP: big files and screens crawl
         serve_ok = bool(a.serve or cfg.get("castServe") or item.get("screen"))
         errors, result = [], None
         for route in cast.choose(item, a.via, cfg, serve_ok):
@@ -921,6 +933,9 @@ def cmd_session(a, cfg):
 
 def cmd_tailscale(a, cfg):
     """v2.21: on | off | status. On lets this PC talk to TVs on its tailnet; the TV has its own switch."""
+    if a.action == "acl":   # a tailnet policy that lets only tagged PCs reach the TVs' Omarchy Link port
+        print(json.dumps(tailnet.acl_example(), indent=2))
+        return 0
     if a.action in ("on", "off"):
         config.save_config({"tailscale": a.action == "on"})
         if a.action == "on":
@@ -944,7 +959,8 @@ def cmd_tailscale(a, cfg):
     if not on:
         print("turn it on: omarchy-link tailscale on")
     for d in out["tvs"]:
-        print(f"TV: {d['name']}\t{d['address']}:{d['port']}\t{d['dns']}\t{'pairing open' if d['txt']['pair'] == '1' else ''}")
+        path = "relay (DERP)" if tailnet.relayed(st, d["address"]) else "direct"
+        print(f"TV: {d['name']}\t{d['address']}:{d['port']}\t{d['dns']}\t{path}\t{'pairing open' if d['txt']['pair'] == '1' else ''}")
     if on and not out["tvs"]:
         print("no OmarchyTV answered on the tailnet (is Tailscale allowed on the TV, and the TV on the tailnet?)")
     return 0
@@ -1000,7 +1016,7 @@ def main(argv=None) -> int:
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_tv)
     s = sub.add_parser("tailscale", help="reach the TV over Tailscale: on | off | status (off by default)")
-    s.add_argument("action", nargs="?", choices=["on", "off", "status"], default="status")
+    s.add_argument("action", nargs="?", choices=["on", "off", "status", "acl"], default="status")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_tailscale)
     sub.add_parser("unpair", help="forget the TV (and tell it)").set_defaults(fn=cmd_unpair)

@@ -187,6 +187,13 @@
     <string name="agentq_asks">spørger</string>
     <string name="agentq_hint">Vælg et svar med fjernbetjeningen · TILBAGE: svar senere</string>
     <string name="link_app_tokens">App-tokens (dashboards, agenter)</string>
+    <string name="link_new_app_token">Nyt app-token</string>
+    <string name="link_app_tokens_full">Allerede 16 app-tokens: tilbagekald dem først</string>
+    <string name="link_app_token_once">Vises én gang. Scan eller skriv det i din app; tilbagekald her eller med omarchy-link token.</string>
+    <string name="link_tailscale_app">Tailscale-appen</string>
+    <string name="link_tailscale_open">åbn</string>
+    <string name="link_tailscale_get">installér</string>
+    <string name="link_tailscale_qr">Scan med telefonen for at åbne Tailscale på Google Play</string>
     <string name="link_paired_toast">Parret med %1$s</string>
     <string name="link_online">forbundet</string>
     <string name="ai_settings">AI-kreditter</string>

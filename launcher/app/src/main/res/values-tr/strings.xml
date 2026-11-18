@@ -187,6 +187,13 @@
     <string name="agentq_asks">soruyor</string>
     <string name="agentq_hint">Kumandayla bir yanıt seçin · GERİ: sonra yanıtla</string>
     <string name="link_app_tokens">Uygulama belirteçleri (panolar, ajanlar)</string>
+    <string name="link_new_app_token">Yeni uygulama belirteci</string>
+    <string name="link_app_tokens_full">Zaten 16 belirteç var: önce iptal edin</string>
+    <string name="link_app_token_once">Yalnızca bir kez gösterilir. Tarayın ya da uygulamanıza yazın; burada veya omarchy-link token ile iptal edin.</string>
+    <string name="link_tailscale_app">Tailscale uygulaması</string>
+    <string name="link_tailscale_open">aç</string>
+    <string name="link_tailscale_get">yükle</string>
+    <string name="link_tailscale_qr">Google Play\'de Tailscale için telefonla tarayın</string>
     <string name="link_paired_toast">%1$s ile eşleştirildi</string>
     <string name="link_online">bağlı</string>
     <string name="ai_settings">AI kredileri</string>

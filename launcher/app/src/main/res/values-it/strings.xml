@@ -187,6 +187,13 @@
     <string name="agentq_asks">chiede</string>
     <string name="agentq_hint">Scegli la risposta col telecomando · BACK: rispondi dopo</string>
     <string name="link_app_tokens">Token delle app (dashboard, agenti)</string>
+    <string name="link_new_app_token">Nuovo token app</string>
+    <string name="link_app_tokens_full">Ci sono già 16 token: prima revocali</string>
+    <string name="link_app_token_once">Mostrato una sola volta. Scansionalo o scrivilo nella tua app; lo revochi qui o con omarchy-link token.</string>
+    <string name="link_tailscale_app">App Tailscale</string>
+    <string name="link_tailscale_open">apri</string>
+    <string name="link_tailscale_get">installa</string>
+    <string name="link_tailscale_qr">Inquadra con il telefono per aprire Tailscale su Google Play</string>
     <string name="link_paired_toast">Associato a %1$s</string>
     <string name="link_online">connesso</string>
     <string name="ai_settings">Crediti AI</string>

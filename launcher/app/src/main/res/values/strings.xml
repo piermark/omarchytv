@@ -220,6 +220,13 @@
     <string name="agentq_asks">asks</string>
     <string name="agentq_hint">Pick an answer with the remote · BACK: answer later</string>
     <string name="link_app_tokens">App tokens (dashboards, agents)</string>
+    <string name="link_new_app_token">New app token</string>
+    <string name="link_app_tokens_full">16 app tokens already: revoke them first</string>
+    <string name="link_app_token_once">Shown once. Scan it or type it into your app; revoke it here or with omarchy-link token.</string>
+    <string name="link_tailscale_app">Tailscale app</string>
+    <string name="link_tailscale_open">open</string>
+    <string name="link_tailscale_get">install</string>
+    <string name="link_tailscale_qr">Scan with your phone to open the Tailscale page on Google Play</string>
     <string name="agent_note" formatted="true" translatable="false">● %1$s: %2$s</string>
     <string name="link_paired_toast">Paired with %1$s</string>
     <string name="link_online">connected</string>

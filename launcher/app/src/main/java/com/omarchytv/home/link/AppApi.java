@@ -501,6 +501,18 @@ final class AppApi {
     JSONObject diagnostics() throws JSONException {
         JSONObject d = host.diagnostics();
         if (d == null) d = new JSONObject();
+        JSONArray pcs = new JSONArray();
+        for (LinkStore.Pc pc : s.store().list()) {
+            String at = pc.lastAddress;
+            boolean ts = false;
+            try {
+                ts = at != null && Tailnet.isTailnet(java.net.InetAddress.getByName(at));
+            } catch (Exception ignored) {
+            }
+            pcs.put(new JSONObject().put("name", pc.name).put("online", s.connected(pc.id))
+                    .put("lastAddress", at == null ? JSONObject.NULL : at).put("via", at == null ? JSONObject.NULL : ts ? "tailscale" : "lan"));
+        }
+        d.put("pcs", pcs);
         d.put("link", new JSONObject().put("pcs", s.store().list().size()).put("events", s.connectedClients())
                 .put("streams", streams.size()).put("appTokens", tokens.size()).put("pendingQuestions", pending().size()));
         return d;

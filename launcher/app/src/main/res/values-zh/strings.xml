@@ -187,6 +187,13 @@
     <string name="agentq_asks">提问</string>
     <string name="agentq_hint">用遥控器选择答案 · 返回：稍后回答</string>
     <string name="link_app_tokens">应用令牌（仪表板、代理）</string>
+    <string name="link_new_app_token">新建应用令牌</string>
+    <string name="link_app_tokens_full">已有 16 个令牌：请先撤销</string>
+    <string name="link_app_token_once">仅显示一次。扫描或输入到你的应用；可在此处或用 omarchy-link token 撤销。</string>
+    <string name="link_tailscale_app">Tailscale 应用</string>
+    <string name="link_tailscale_open">打开</string>
+    <string name="link_tailscale_get">安装</string>
+    <string name="link_tailscale_qr">用手机扫描，在 Google Play 打开 Tailscale</string>
     <string name="link_paired_toast">已与 %1$s 配对</string>
     <string name="link_online">已连接</string>
     <string name="ai_settings">AI 额度</string>

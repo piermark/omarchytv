@@ -187,6 +187,13 @@
     <string name="agentq_asks">vraagt</string>
     <string name="agentq_hint">Kies een antwoord met de afstandsbediening · TERUG: later antwoorden</string>
     <string name="link_app_tokens">App-tokens (dashboards, agents)</string>
+    <string name="link_new_app_token">Nieuwe app-token</string>
+    <string name="link_app_tokens_full">Al 16 app-tokens: trek ze eerst in</string>
+    <string name="link_app_token_once">Eén keer getoond. Scan of typ hem in je app; intrekken hier of met omarchy-link token.</string>
+    <string name="link_tailscale_app">Tailscale-app</string>
+    <string name="link_tailscale_open">openen</string>
+    <string name="link_tailscale_get">installeren</string>
+    <string name="link_tailscale_qr">Scan met je telefoon om Tailscale op Google Play te openen</string>
     <string name="link_paired_toast">Gekoppeld met %1$s</string>
     <string name="link_online">verbonden</string>
     <string name="ai_settings">AI-tegoed</string>

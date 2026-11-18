@@ -84,5 +84,21 @@ class TailnetTest(unittest.TestCase):
             tailnet.shutil.which = orig
 
 
+class AclTest(unittest.TestCase):
+    def test_acl_example_is_narrow(self):
+        a = tailnet.acl_example()
+        self.assertEqual([r["dst"] for r in a["acls"]], [["tag:omarchytv:47800"]])
+
+
+class RelayTest(unittest.TestCase):
+    def test_relayed_only_without_a_direct_path(self):
+        st = {"Peer": {"a": {"TailscaleIPs": ["100.101.2.3"], "Relay": "fra", "CurAddr": ""},
+                       "b": {"TailscaleIPs": ["100.101.2.4"], "Relay": "fra", "CurAddr": "192.0.2.7:41641"}}}
+        self.assertTrue(tailnet.relayed(st, "100.101.2.3"))
+        self.assertFalse(tailnet.relayed(st, "100.101.2.4"))
+        self.assertFalse(tailnet.relayed(st, "100.101.9.9"))
+        self.assertFalse(tailnet.relayed(None, "100.101.2.3"))
+
+
 if __name__ == "__main__":
     unittest.main()

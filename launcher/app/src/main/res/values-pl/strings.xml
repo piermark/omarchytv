@@ -187,6 +187,13 @@
     <string name="agentq_asks">pyta</string>
     <string name="agentq_hint">Wybierz odpowiedź pilotem · WSTECZ: odpowiedz później</string>
     <string name="link_app_tokens">Tokeny aplikacji (panele, agenci)</string>
+    <string name="link_new_app_token">Nowy token aplikacji</string>
+    <string name="link_app_tokens_full">Już 16 tokenów: najpierw je unieważnij</string>
+    <string name="link_app_token_once">Pokazywany tylko raz. Zeskanuj lub wpisz w aplikacji; unieważnij tutaj lub przez omarchy-link token.</string>
+    <string name="link_tailscale_app">Aplikacja Tailscale</string>
+    <string name="link_tailscale_open">otwórz</string>
+    <string name="link_tailscale_get">zainstaluj</string>
+    <string name="link_tailscale_qr">Zeskanuj telefonem, aby otworzyć Tailscale w Google Play</string>
     <string name="link_paired_toast">Sparowano z %1$s</string>
     <string name="link_online">połączono</string>
     <string name="ai_settings">Kredyty AI</string>

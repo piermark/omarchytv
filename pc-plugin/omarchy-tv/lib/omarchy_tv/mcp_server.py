@@ -395,7 +395,8 @@ def serve_stdio(tv_client_factory, scope: str = "control") -> int:
 
 
 def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", port: int = 8990,
-                       tailnet_only: bool = False, scope: str = "control", require_access: bool = False) -> ThreadingHTTPServer:
+                       tailnet_only: bool = False, scope: str = "control", require_access: bool = False,
+                       verifier=None) -> ThreadingHTTPServer:
     expected = f"Bearer {token}"
 
     class Handler(BaseHTTPRequestHandler):
@@ -409,6 +410,12 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
             if self.path not in ("/mcp", "/v1/mcp", "/"):
                 self._send(404, {"error": "not_found"})
                 return
+            jwt = self.headers.get("Cf-Access-Jwt-Assertion", "")
+            if verifier is not None:
+                why = verifier.check(jwt) if jwt else "missing"
+                if why:
+                    self._send(403, {"error": "access_denied", "message": f"Cloudflare Access token: {why}"})
+                    return
             if require_access and not self.headers.get("Cf-Access-Jwt-Assertion"):
                 # v2.21 --cloudflare --access: the origin is 127.0.0.1, only cloudflared reaches it, and Cloudflare adds
                 # this header only after Access let the caller in. No header: Access is not in front of this tunnel.
@@ -457,7 +464,8 @@ def default_scope(public: bool, scope: str | None) -> str:
 
 
 def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailscale: bool = False,
-               cloudflare: str | None = None, scope: str | None = None, access: bool = False) -> int:
+               cloudflare: str | None = None, scope: str | None = None, access: bool = False,
+               access_team: str | None = None, access_aud: str | None = None) -> int:
     token = ensure_token()
     bind = "127.0.0.1"
     if tailscale:
@@ -468,8 +476,17 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
         tunnel, cloudflare = False, None   # one or the other: the tailnet never needs a public tunnel
     public = bool(tunnel or cloudflare)
     scope = default_scope(public, scope)
+    verifier = None
+    if cloudflare and (access_team or access_aud):
+        from .cf_access import AccessVerifier
+        try:
+            import cryptography  # noqa: F401
+        except ImportError:
+            print("--access-team/--access-aud need python-cryptography (pacman -S python-cryptography)", file=sys.stderr)
+            return 1
+        verifier = AccessVerifier(access_team or "", access_aud or "")
     srv = create_http_server(tv_client_factory, token, bind, port, tailnet_only=tailscale, scope=scope,
-                             require_access=bool(cloudflare and access))
+                             require_access=bool(cloudflare and (access or verifier)), verifier=verifier)
     actual_port = srv.server_address[1]
     print(f"OmarchyTV MCP HTTP server listening on http://{bind}:{actual_port}/mcp"
           + (" (tailnet peers only)" if tailscale else "") + f", tools: {scope}", flush=True)
@@ -484,8 +501,10 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
                                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
             if cloudflare:
                 print(f"Cloudflare tunnel '{cloudflare}' -> this server. Its hostname is the one you routed to it "
-                      "(cloudflared tunnel route dns). See docs/CLOUDFLARE.md." + ("" if access else
-                      " Tip: put Cloudflare Access in front and add --access."), flush=True)
+                      "(cloudflared tunnel route dns). See docs/CLOUDFLARE.md." + (
+                          " Access JWT verified (team, audience, signature)." if verifier else
+                          " Access header required." if access else
+                          " Tip: put Cloudflare Access in front and add --access-team/--access-aud."), flush=True)
 
             def _watch():
                 for line in proc.stdout:
@@ -502,3 +521,22 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
         if proc:
             proc.terminate()
     return 0
+
+
+# ---- v2.21 setup helpers: omarchy-tv cloudflare setup | service ----------------------------------------------------
+
+def setup_commands(name: str, hostname: str) -> list:
+    """The cloudflared commands that make a named tunnel and route a hostname to it (run once)."""
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9-]{0,62}", name or ""):
+        raise ValueError("tunnel name: letters, digits and dashes")
+    if not re.fullmatch(r"(?=.{4,253}$)([a-z0-9-]{1,63}\.)+[a-z]{2,63}", hostname or ""):
+        raise ValueError("hostname: e.g. tv-mcp.example.com")
+    return [["cloudflared", "tunnel", "create", name], ["cloudflared", "tunnel", "route", "dns", name, hostname]]
+
+
+def service_unit(argv: list) -> str:
+    """A systemd user unit that keeps `omarchy-tv mcp …` running (and restarts it)."""
+    import shlex
+    return ("[Unit]\nDescription=OmarchyTV MCP server\nAfter=network-online.target\nWants=network-online.target\n\n"
+            "[Service]\nExecStart=" + " ".join(shlex.quote(a) for a in argv) + "\nRestart=on-failure\nRestartSec=10\n\n"
+            "[Install]\nWantedBy=default.target\n")

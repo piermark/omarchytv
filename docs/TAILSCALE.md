@@ -20,8 +20,10 @@ TV talk over Tailscale as if they were on the same LAN, from another room, anoth
 
 1. Install the official **Tailscale** app on the TV (Google Play on Android TV / Google TV) and sign in to the same
    tailnet as your PC.
+   OmarchyTV › Settings › **Omarchy Link** › **Tailscale app** opens it, or, when it is missing, opens its Play
+   Store page (or shows a QR code of it for your phone).
 2. OmarchyTV › Settings › **Omarchy Link** › **Allow Tailscale (tailnet)** → *on*. The row shows the TV's tailnet
-   address, for example `on · 100.101.2.3:47800`.
+   address, for example `on · 100.101.2.3:47800`, or `offline` when Tailscale is not connected.
 3. On the PC:
 
    ```sh
@@ -30,7 +32,15 @@ TV talk over Tailscale as if they were on the same LAN, from another room, anoth
    omarchy-link pair living-tv      # a MagicDNS name, a host name, or the 100.x address
    ```
 
-   `omarchy-link tailscale status` shows this PC's tailnet address and every OmarchyTV that answers on the tailnet.
+   `omarchy-link tailscale status` shows this PC's tailnet address and every OmarchyTV that answers on the tailnet,
+   with the path: `direct` or `relay (DERP)`.
+
+Why OmarchyTV uses the official app instead of building Tailscale in: the TV stays one device of your tailnet with
+Tailscale's own login, exit-node and DNS settings and security updates; Android allows one VPN at a time; and the
+launcher stays small. OmarchyTV finds the tailnet network by itself.
+
+If a tailnet PC is refused, the TV says why: `403 not_lan` with "turn on … Allow Tailscale" when the switch is off.
+`omarchy-link tv diagnostics` lists each paired PC with `"via": "tailscale"` or `"lan"`.
 
 The TV keeps working on the LAN at the same time. Before 2.21, having a VPN app (Tailscale included) active on the TV
 made Omarchy Link listen on the VPN address and refuse the PC next to it; now the TV always finds the Wi-Fi or
@@ -80,12 +90,24 @@ reach Omarchy Link's port:
 }
 ```
 
-Tag the TV (`tag:tv`) in the admin console. Add `tag:tv:8765` when the bridge runs on a tagged box.
+Tag the TV (`tag:tv`) in the admin console. `omarchy-link tailscale acl` prints a ready policy with the tags
+`omarchy-pc` and `omarchytv`. For an LG/Samsung TV behind a subnet router, allow its LAN address (for example
+`"src": ["192.168.1.40/32"]`) to the bridge's port 8765 on the box that runs `omarchy-tv webos-serve`.
+
+## Everything else over the tailnet
+
+- **App tokens and the app API** (dashboards, agent pages, `GET /v1/state`, `/v1/stream`, `/v1/ask`): a page or an
+  agent on any tailnet box reaches the TV at its `100.x` address with an app token ([INTEGRATIONS.md](INTEGRATIONS.md)).
+- **MCP from another box**: `omarchy-tv mcp --http --tailscale` on the PC (tailnet peers only), or
+  `omarchy-link mcp` on the PC for local agents.
+- **The LG/Samsung bridge** (`omarchy-tv webos-serve`) answers on every interface of its box, the tailnet included.
+- **For agents in the cloud**, which cannot join the tailnet, use Cloudflare instead: [CLOUDFLARE.md](CLOUDFLARE.md).
 
 ## Limits
 
 - **Relayed connections** (DERP, when Tailscale cannot connect directly) work for everything but are slow for casting
-  big files and live screens. `tailscale ping <tv>` says `via DERP` when that happens.
+  big files and live screens. `omarchy-link cast` warns when the TV is reached through a relay; `tailscale ping <tv>`
+  says when the direct path is up.
 - **No hostnames on the TV side**: Remote panes and casts accept literal addresses only (`100.x.y.z`), as on the LAN.
 - **Exit nodes**: when the TV uses an exit node, Tailscale may route the LAN through it; enable *Allow LAN access*
   in the Tailscale app.

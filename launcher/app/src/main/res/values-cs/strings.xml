@@ -187,6 +187,13 @@
     <string name="agentq_asks">se ptá</string>
     <string name="agentq_hint">Vyberte odpověď dálkovým ovladačem · ZPĚT: odpovědět později</string>
     <string name="link_app_tokens">Tokeny aplikací (přehledy, agenti)</string>
+    <string name="link_new_app_token">Nový token aplikace</string>
+    <string name="link_app_tokens_full">Už je 16 tokenů: nejdřív je zrušte</string>
+    <string name="link_app_token_once">Zobrazí se jen jednou. Naskenujte nebo zadejte do aplikace; zrušíte zde nebo přes omarchy-link token.</string>
+    <string name="link_tailscale_app">Aplikace Tailscale</string>
+    <string name="link_tailscale_open">otevřít</string>
+    <string name="link_tailscale_get">nainstalovat</string>
+    <string name="link_tailscale_qr">Naskenujte telefonem a otevřete Tailscale na Google Play</string>
     <string name="link_paired_toast">Spárováno s %1$s</string>
     <string name="link_online">připojeno</string>
     <string name="ai_settings">AI kredity</string>
