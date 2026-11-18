@@ -7,6 +7,8 @@ import sqlite3
 import subprocess
 import time
 import unittest
+from unittest.mock import patch
+import tempfile
 
 import helpers
 from helpers import cli
@@ -105,6 +107,66 @@ class Base(unittest.TestCase):
 
 
 class Monitor(Base):
+    def test_t3_active_metadata_is_readonly_private_and_clears_finished_threads(self):
+        with tempfile.TemporaryDirectory(dir=helpers.TMP) as root:
+            from pathlib import Path
+            from omarchy_link.agents import t3
+            path = Path(root) / "userdata" / "statev2.sqlite"
+            path.parent.mkdir()
+            db = sqlite3.connect(path)
+            db.executescript("""
+                CREATE TABLE projection_projects(project_id TEXT PRIMARY KEY, workspace_root TEXT);
+                CREATE TABLE orchestration_v2_projection_threads(thread_id TEXT PRIMARY KEY, project_id TEXT,
+                    title TEXT, archived_at TEXT, deleted_at TEXT);
+                CREATE TABLE orchestration_v2_projection_runs(thread_id TEXT, status TEXT, requested_at TEXT);
+                CREATE TABLE orchestration_v2_projection_runtime_requests(thread_id TEXT, created_at TEXT,
+                    status TEXT, resolved_at TEXT, kind TEXT);
+                CREATE TABLE messages(secret TEXT);
+                INSERT INTO messages VALUES('PRIVATE CHAT CONTENT');
+            """)
+            db.execute("INSERT INTO projection_projects VALUES('p',?)", (str(PROJ),))
+            db.executemany("INSERT INTO orchestration_v2_projection_threads VALUES(?,?,?,?,?)", [
+                (SID, 'p', 'Fix /home/private/code.py --token=' + SECRET, None, None),
+                ('finished', 'p', 'Finished private title', None, None),
+                ('archived', 'p', 'Archived private title', now(), None)])
+            db.executemany("INSERT INTO orchestration_v2_projection_runs VALUES(?,?,?)", [
+                (SID, 'running', now(-20)), (SID, 'queued', now()),
+                ('finished', 'completed', now()), ('archived', 'running', now())])
+            db.commit()
+            original = sqlite3.connect
+            def readonly(*args, **kwargs):
+                self.assertIn('mode=ro', args[0])
+                connection = original(*args, **kwargs)
+                connection.set_authorizer(lambda op, table, column, *rest:
+                    sqlite3.SQLITE_DENY if op == sqlite3.SQLITE_READ and table == 'messages' else sqlite3.SQLITE_OK)
+                return connection
+            with patch.dict(os.environ, T3CODE_HOME=root), patch.object(t3.time, 'monotonic', return_value=0) as clock, \
+                    patch.object(t3.sqlite3, 'connect', side_effect=readonly):
+                a = self.one(on(agents=['t3-code']))
+                self.assertEqual((a['status'], a['project'], a['canAsk']), ('running', 'shop', False))
+                public = json.dumps(agents.public(agents.snapshot(on(agents=['t3-code']))))
+                for private in [SID, str(PROJ), SECRET, '/home/private', 'PRIVATE CHAT CONTENT', 'Finished private title', 'Archived private title']:
+                    self.assertNotIn(private, public)
+                opaque = a['id']
+                db.execute('INSERT INTO orchestration_v2_projection_runtime_requests VALUES(?,?,?,?,?)',
+                           (SID, now(), 'pending', None, 'user_input'))
+                db.commit(); clock.return_value += 6
+                a = self.one(on(agents=['t3-code']))
+                self.assertEqual((a['status'], a['id'], a['needsInput']), ('waiting', opaque, True))
+                db.execute("UPDATE orchestration_v2_projection_runtime_requests SET status='resolved'")
+                db.execute("UPDATE orchestration_v2_projection_runs SET status='completed' WHERE thread_id=?", (SID,))
+                db.commit(); clock.return_value += 6
+                self.assertEqual(self.one(on(agents=['t3-code']))['status'], 'idle')
+                db.execute("UPDATE orchestration_v2_projection_runs SET status='running' WHERE thread_id=?", (SID,))
+                db.commit(); clock.return_value += 6
+                self.assertEqual(self.one(on(agents=['t3-code']))['status'], 'running')
+                old = time.time() - 121
+                os.utime(path, (old, old)); clock.return_value += 6
+                self.assertEqual(self.one(on(agents=['t3-code']))['status'], 'error')
+                db.execute('DROP TABLE orchestration_v2_projection_runs'); db.commit(); clock.return_value += 6
+                self.assertEqual(self.one(on(agents=['t3-code']))['status'], 'error')
+            db.close()
+
     def test_off_by_default(self):
         claude_session()
         snap = agents.snapshot(config.load_config())

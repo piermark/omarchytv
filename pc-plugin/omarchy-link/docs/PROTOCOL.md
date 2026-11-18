@@ -419,7 +419,7 @@ the PC until the user enables it. The TV advertises capability `agents` once it 
 | field | meaning |
 |---|---|
 | `id` | opaque, stable per session. Use it in `agent_ask`. |
-| `agent` | `claude-code` \| `codex` \| `grok` \| `hermes` \| `gemini` \| `grok-bot` (more may come) |
+| `agent` | `claude-code` \| `codex` \| `grok` \| `hermes` \| `gemini` \| `grok-bot` \| `t3-code` (more may come) |
 | `status` | `thinking` \| `running` (a tool) \| `waiting` (needs the user) \| `idle` \| `done` \| `error` |
 | `step` | current step, ≤ 72 characters, already sanitised. Plain text only. |
 | `since` / `elapsed` | when the current step began, and seconds at send time. The TV counts up from `since`. |
@@ -429,6 +429,8 @@ the PC until the user enables it. The TV advertises capability `agents` once it 
 
 At most 8 agents, sorted waiting → running → thinking → error → done → idle. `enabled:false` with
 an empty list means the user turned the monitor off: hide the widget.
+
+`t3-code` rows contain active-thread metadata and always set `canAsk:false`. Their IDs are hashes rather than raw thread IDs. An idle placeholder means no active threads; an error placeholder means metadata is unavailable. Neither placeholder contains a thread title. T3 does not support `agent_ask`.
 
 **Event `agent_activity`** (PC → TV):
 - sent on every change, at most **2 per second**;
