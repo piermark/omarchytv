@@ -287,12 +287,13 @@ final class HomeV29 extends FrameLayout {
         term.addView(termLogo, ll);
         term.addView(termInfo);
 
-        // ---- 3.3 widgets: right 32, y 76, w 1120, 3 equal columns, gap 16 ----
+        // ---- 3.3 widgets: right 32, y 76, w 1200 (widgetsWidth), 3 columns, gap 16 ----
         widgets = new LinearLayout(a);
         widgets.setOrientation(LinearLayout.VERTICAL);
-        // Extend the row 80 px to the left so Weather fills the unused margin beside the terminal widget.
-        // Keep the right edge fixed and align Weather's left and right gutters to 16 px.
-        LayoutParams wl = new LayoutParams(px(1200), -2, Gravity.END | Gravity.TOP);
+        // The row runs from the term box gutter to the right margin: Weather takes the 80 px beside the terminal
+        // widget (#126), so the three columns add up to 1200, never 1120. apply() sets this width again from
+        // widgetsWidth(), which must agree, or the AI panel ends up past the right edge of the screen.
+        LayoutParams wl = new LayoutParams(px(widgetsWidth(false)), -2, Gravity.END | Gravity.TOP);
         wl.rightMargin = px(32);
         wl.topMargin = px(76);
         addView(widgets, wl);
@@ -317,9 +318,9 @@ final class HomeV29 extends FrameLayout {
         pcBox = widget(r1, "omarchy · pc", 16);
         BoxView ai = widget(r1, "ai credits · pc", 16);
         // Keep the PC and AI panels one column wide. Give Weather the 80 px used to fill the left gutter.
-        float colWidth = (1120 - 32) / 3f;
+        float colWidth = sideColWidth(false);
         LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
-        wxl.width = px(colWidth + 80);
+        wxl.width = px(weatherColWidth(false));
         wxl.weight = 0f;
         for (View col : new View[]{raceBox, pcBox, ai}) {   // #123 the racing panel: one column too
             LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
@@ -2162,9 +2163,13 @@ final class HomeV29 extends FrameLayout {
     // (1200 - 382 - 3*16 - 80) is divisible by 3 so weather/pc/ai still fill the 1200 row exactly.
     static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 382;
 
-    /** Right-aligned widgets row width in design px. With racing on, the row uses the space from the term gutter to the right margin (1200), never the term box. */
+    /**
+     * Right-aligned widgets row width in design px: the space from the term box gutter to the right margin (1200),
+     * never the term box. Since #126 Weather is 80 px wider than a column in both layouts, so the row is 1200 with
+     * racing off too; at WIDGETS_W the three columns (442 + 362 + 362 + two gaps = 1198) overflowed the right edge of
+     * the screen and the AI panel lost its numbers.
+     */
     static int widgetsWidth(boolean racing) {
-        if (!racing) return WIDGETS_W;
         return HOME_W - HOME_MARGIN - (HOME_MARGIN + TERM_W + WIDGET_GAP);
     }
 
