@@ -601,6 +601,9 @@
     <string name="radio_auto">random (a new one each scene)</string>
     <string name="radio_auto_demo">Demo mode after 1 minute idle</string>
     <string name="radio_shuffle">Shuffle</string>
+    <string name="radio_home_music">Music on Home</string>
+    <string name="radio_sleep">Sleep timer</string>
+    <string name="radio_sleep_left" formatted="true">%d min left</string>
     <string name="radio_repeat">Repeat</string>
     <string name="radio_repeat_all">all</string>
     <string name="radio_repeat_one">one</string>

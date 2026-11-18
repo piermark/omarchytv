@@ -104,6 +104,8 @@ ALLOWED_TOOLS = (
             "properties": {
                 "text": {"type": "string", "description": "One line, at most 200 characters"},
                 "from": {"type": "string", "description": "Who is talking, e.g. Claude Code (at most 40 characters)"},
+                "title": {"type": "string", "description": "Optional title, at most 60 characters"},
+                "level": {"type": "string", "enum": ["info", "warn", "alert"], "description": "info waits while a film is on; warn and alert show at once"},
             },
             "required": ["text"],
         },
@@ -155,6 +157,23 @@ ALLOWED_TOOLS = (
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
+        "name": "tv_radio_now",
+        "description": "What Radiomarchy (Omarchy Radio on the TV) is playing.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "tv_radio",
+        "description": "Control Radiomarchy: play (resume or start the playlist), pause, next, previous, stop.",
+        "inputSchema": {"type": "object", "properties": {"action": {"type": "string", "enum": ["play", "pause", "next", "previous", "stop"]}},
+                        "required": ["action"]},
+    },
+    {
+        "name": "tv_open",
+        "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
+        "inputSchema": {"type": "object", "properties": {"target": {"type": "string", "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office"]}},
+                        "required": ["target"]},
+    },
+    {
         "name": "tv_diagnostics",
         "description": "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, "
                        "recent log lines. No secrets.",
@@ -167,6 +186,7 @@ ALLOWED_TOOLS = (
 SCOPES = ("read", "notify", "control")
 TOOL_SCOPE = {
     "tv_status": "read", "tv_list_themes": "read", "tv_list_apps": "read", "tv_get_theme": "read", "tv_get_state": "read",
+    "tv_radio_now": "read", "tv_radio": "control", "tv_open": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
     "tv_screensaver": "control", "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control",
@@ -265,7 +285,9 @@ def _call_tool(name: str, args: dict, c) -> dict:
         text = str(args.get("text", "")).strip()
         if not text:
             raise ValueError("text is required")
-        return c.request("POST", "/v1/notify", {"text": text[:200], "from": str(args.get("from") or "AI agent")[:40]})
+        level = args.get("level") if args.get("level") in ("info", "warn", "alert") else "info"
+        return c.request("POST", "/v1/notify", {"text": text[:200], "title": str(args.get("title") or "")[:60], "level": level,
+                                                 "from": str(args.get("from") or "AI agent")[:40]})
     if name == "tv_get_state":
         return c.request("GET", "/v1/state")
     if name == "tv_ask_user":
@@ -285,6 +307,12 @@ def _call_tool(name: str, args: dict, c) -> dict:
         return c.request("POST", "/v1/page", {"url": str(args.get("url", ""))})
     if name == "tv_close_page":
         return c.request("DELETE", "/v1/page")
+    if name == "tv_radio_now":
+        return c.request("GET", "/v1/radio")
+    if name == "tv_radio":
+        return c.request("POST", "/v1/radio", {"action": str(args.get("action", ""))})
+    if name == "tv_open":
+        return c.request("POST", "/v1/open", {"target": str(args.get("target", ""))})
     if name == "tv_diagnostics":
         return c.request("GET", "/v1/diagnostics")
     if name == "tv_screensaver":

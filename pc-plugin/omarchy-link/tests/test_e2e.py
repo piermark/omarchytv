@@ -183,6 +183,12 @@ class E2E(unittest.TestCase):
         self.assertEqual(self.tv.page, "http://192.168.1.20:8080/")
         self.assertEqual(cli("page", "--close").stdout.strip(), "closed")
         self.assertIn("question from PC", cli("tv", "logs").stdout)
+        self.assertEqual(cli("radio").stdout.strip(), "nothing playing")
+        self.assertIn("Hyprland Nights", cli("radio", "play").stdout)
+        cli("open", "radiomarchy")
+        self.assertEqual(self.tv.opened, "radiomarchy")
+        self.tv.watching = True
+        self.assertIn("held", cli("notify", "--title", "Build", "green").stderr)
 
     def test_status_offline_and_unpaired(self):
         self.assertEqual(json.loads(cli("status", "--waybar").stdout)["class"], "unpaired")

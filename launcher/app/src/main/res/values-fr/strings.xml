@@ -545,6 +545,9 @@
     <string name="radio_auto">aléatoire (une nouvelle à chaque scène)</string>
     <string name="radio_auto_demo">Mode démo après 1 minute sans touche</string>
     <string name="radio_shuffle">Aléatoire</string>
+    <string name="radio_home_music">Musique sur l\'accueil</string>
+    <string name="radio_sleep">Minuterie de veille</string>
+    <string name="radio_sleep_left" formatted="true">encore %d min</string>
     <string name="radio_repeat">Répéter</string>
     <string name="radio_repeat_all">tout</string>
     <string name="radio_repeat_one">un</string>

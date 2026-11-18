@@ -545,6 +545,9 @@
     <string name="radio_auto">ランダム（シーンごとに新しく）</string>
     <string name="radio_auto_demo">1 分間操作がないとデモモード</string>
     <string name="radio_shuffle">シャッフル</string>
+    <string name="radio_home_music">ホームで音楽</string>
+    <string name="radio_sleep">スリープタイマー</string>
+    <string name="radio_sleep_left" formatted="true">残り %d 分</string>
     <string name="radio_repeat">リピート</string>
     <string name="radio_repeat_all">すべて</string>
     <string name="radio_repeat_one">1 曲</string>

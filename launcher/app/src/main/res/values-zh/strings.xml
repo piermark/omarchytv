@@ -545,6 +545,9 @@
     <string name="radio_auto">随机（每个场景换新）</string>
     <string name="radio_auto_demo">闲置 1 分钟后进入演示模式</string>
     <string name="radio_shuffle">随机播放</string>
+    <string name="radio_home_music">主屏幕音乐</string>
+    <string name="radio_sleep">睡眠定时</string>
+    <string name="radio_sleep_left" formatted="true">剩余 %d 分钟</string>
     <string name="radio_repeat">重复</string>
     <string name="radio_repeat_all">全部</string>
     <string name="radio_repeat_one">单曲</string>

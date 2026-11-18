@@ -545,6 +545,9 @@
     <string name="radio_auto">випадковий (новий у кожній сцені)</string>
     <string name="radio_auto_demo">Демо-режим після 1 хвилини без натискань</string>
     <string name="radio_shuffle">Перемішати</string>
+    <string name="radio_home_music">Музика на головному екрані</string>
+    <string name="radio_sleep">Таймер сну</string>
+    <string name="radio_sleep_left" formatted="true">залишилось %d хв</string>
     <string name="radio_repeat">Повтор</string>
     <string name="radio_repeat_all">усі</string>
     <string name="radio_repeat_one">одну</string>

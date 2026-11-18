@@ -545,6 +545,9 @@
     <string name="radio_auto">tilfeldig (en ny for hver scene)</string>
     <string name="radio_auto_demo">Demomodus etter 1 minutt uten tast</string>
     <string name="radio_shuffle">Tilfeldig</string>
+    <string name="radio_home_music">Musikk på startskjermen</string>
+    <string name="radio_sleep">Sovetimer</string>
+    <string name="radio_sleep_left" formatted="true">%d min igjen</string>
     <string name="radio_repeat">Gjenta</string>
     <string name="radio_repeat_all">alle</string>
     <string name="radio_repeat_one">én</string>

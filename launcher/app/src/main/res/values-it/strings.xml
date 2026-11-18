@@ -549,6 +549,9 @@
     <string name="radio_auto">casuale (uno nuovo a ogni scena)</string>
     <string name="radio_auto_demo">Modalità demo dopo 1 minuto senza tasti</string>
     <string name="radio_shuffle">Casuale</string>
+    <string name="radio_home_music">Musica sulla Home</string>
+    <string name="radio_sleep">Timer di spegnimento</string>
+    <string name="radio_sleep_left" formatted="true">ancora %d min</string>
     <string name="radio_repeat">Ripeti</string>
     <string name="radio_repeat_all">tutti</string>
     <string name="radio_repeat_one">uno</string>

@@ -125,7 +125,8 @@ final class AppApi {
     static boolean appPath(String p) {
         return "/v1/state".equals(p) || "/v1/stream".equals(p) || "/v1/notify".equals(p) || "/v1/ask".equals(p)
                 || ASK_PATH.matcher(p).matches() || "/v1/page".equals(p) || "/v1/diagnostics".equals(p)
-                || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p);
+                || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
+                || "/v1/radio".equals(p) || "/v1/open".equals(p);
     }
 
     /** The app token a request presents: "Authorization: Bearer otva_…", or ?token= on GET /v1/state and /v1/stream. */
@@ -162,6 +163,9 @@ final class AppApi {
             return r;
         }
         a.lastUsed = System.currentTimeMillis() / 1000;
+        if (!"GET".equals(req.method) || "/v1/stream".equals(p) || "/v1/diagnostics".equals(p)) {
+            host.log("app " + a.name + ": " + req.method + " " + p);   // v2.21: integration calls in the diagnostics
+        }
         JSONObject body;
         try {
             body = req.body == null || req.body.length == 0 ? new JSONObject() : new JSONObject(new String(req.body, StandardCharsets.UTF_8));
@@ -223,6 +227,16 @@ final class AppApi {
             return e == null ? new LinkServer.Response(200, LinkServer.ok().put("url", url))
                     : new LinkServer.Response("not_lan_url".equals(e) ? 400 : 409, LinkServer.err(e, "a http:// page on the LAN or tailnet, by IP address"));
         }
+        if ("/v1/radio".equals(p) && ("GET".equals(m) || "POST".equals(m))) {   // v2.21 Radiomarchy
+            if ("GET".equals(m)) return who.can("read") ? radio("now") : forbidden("read");
+            return who.can("control") ? radio(body.optString("action", "")) : forbidden("control");
+        }
+        if ("POST".equals(m) && "/v1/open".equals(p)) {
+            if (!who.can("control")) return forbidden("control");
+            String e = host.openTarget(body.optString("target", ""));
+            return e == null ? new LinkServer.Response(200, LinkServer.ok().put("target", body.optString("target")))
+                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office"));
+        }
         if ("GET".equals(m) && "/v1/diagnostics".equals(p)) return who.can("control") ? new LinkServer.Response(200, diagnostics()) : forbidden("control");
         if ("POST".equals(m) && ("/v1/mcp".equals(p) || "/mcp".equals(p))) return s.mcp(body, who);
         // paired PCs only
@@ -244,6 +258,15 @@ final class AppApi {
             return tokens.remove(tm.group(1)) ? new LinkServer.Response(200, LinkServer.ok()) : new LinkServer.Response(404, LinkServer.err("no_such_app", null));
         }
         return null;
+    }
+
+    static final java.util.Set<String> RADIO = new java.util.HashSet<>(java.util.Arrays.asList("now", "play", "pause", "next", "previous", "stop"));
+
+    LinkServer.Response radio(String action) throws JSONException {
+        if (!RADIO.contains(action)) return new LinkServer.Response(400, LinkServer.err("bad_action", "now, play, pause, next, previous, stop"));
+        JSONObject r = host.radio(action);
+        return r == null ? new LinkServer.Response(409, LinkServer.err("no_radio", "Radiomarchy is not available"))
+                : new LinkServer.Response(200, r);
     }
 
     // ---- state ---------------------------------------------------------------------------------------------

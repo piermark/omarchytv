@@ -538,19 +538,109 @@ final class RadioPlayer {
         startService();
     }
 
+    private boolean wallpaperMusicTried;
+
+    /** v2.21 "Music on Home" (Radiomarchy settings): off by default, so Home is silent until you press play. */
+    boolean homeMusic() {
+        return prefs().getBoolean("homeMusic", false);
+    }
+
+    void setHomeMusic(boolean on) {
+        prefs().edit().putBoolean("homeMusic", on).apply();
+        if (!on) wallpaperMusicTried = false;
+    }
+
     /**
-     * Home fractals wallpaper is music-reactive, like the screensaver. v2.21: it never starts music by itself
-     * (the owner asked for a silent Home). If a track is already current and playing, keep it audible (volume
-     * and audio focus); a paused one keeps its media session so PLAY on Home resumes it. Nothing current: silence.
+     * Home fractals wallpaper is music-reactive, like the screensaver. A song already playing stays audible (volume and
+     * audio focus); a paused one keeps its media session so PLAY on Home resumes it. Nothing current: silence, unless
+     * the owner turned "Music on Home" on (v2.21): then the cached playlist starts, or radio.omarchy.org is fetched
+     * once. Never un-pauses a track the owner paused.
      */
     void ensureWallpaperMusic() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             h.post(this::ensureWallpaperMusic);
             return;
         }
-        if (current() == null) return;
-        if (player != null && player.getPlayWhenReady()) ensureAudible();
-        else claimSession();
+        if (current() != null) {
+            if (player != null && player.getPlayWhenReady()) ensureAudible();
+            else claimSession();
+            return;
+        }
+        if (!homeMusic()) return;
+        List<RadioCatalog.Track> list = cachedSongs();
+        if (!list.isEmpty()) {
+            wallpaperMusicTried = true;
+            play(list, shuffle ? new Random().nextInt(list.size()) : 0);
+            return;
+        }
+        if (wallpaperMusicTried) return;
+        wallpaperMusicTried = true;
+        com.omarchytv.home.lights.Lights.run(() -> {
+            String txt = RadioCatalog.fetch(RadioCatalog.PLAYLIST);
+            if (txt != null) RadioCatalog.writeCache(new File(app.getFilesDir(), "radio-playlist.json"), txt);
+            List<RadioCatalog.Track> songs = txt != null ? RadioCatalog.parseSongs(txt) : java.util.Collections.emptyList();
+            h.post(() -> {
+                if (current() != null || songs.isEmpty() || !homeMusic()) return;
+                List<RadioCatalog.Track> vis = visibleSongs(songs);
+                if (!vis.isEmpty()) play(vis, shuffle ? new Random().nextInt(vis.size()) : 0);
+            });
+        });
+    }
+
+    private List<RadioCatalog.Track> cachedSongs() {
+        String a = RadioCatalog.readCache(new File(app.getFilesDir(), "radio-playlist.json"));
+        return a == null ? java.util.Collections.emptyList() : visibleSongs(RadioCatalog.parseSongs(a));
+    }
+
+    /** v2.21 MCP tv_radio "play": resume the current song, or start the playlist (cached, else fetched once). */
+    void playOrStart() {
+        if (current() != null) {
+            if (!playing()) toggle();
+            return;
+        }
+        List<RadioCatalog.Track> list = cachedSongs();
+        if (!list.isEmpty()) {
+            play(list, shuffle ? new Random().nextInt(list.size()) : 0);
+            return;
+        }
+        com.omarchytv.home.lights.Lights.run(() -> {
+            String txt = RadioCatalog.fetch(RadioCatalog.PLAYLIST);
+            if (txt != null) RadioCatalog.writeCache(new File(app.getFilesDir(), "radio-playlist.json"), txt);
+            List<RadioCatalog.Track> songs = txt != null ? visibleSongs(RadioCatalog.parseSongs(txt)) : java.util.Collections.emptyList();
+            h.post(() -> {
+                if (current() == null && !songs.isEmpty()) play(songs, shuffle ? new Random().nextInt(songs.size()) : 0);
+            });
+        });
+    }
+
+    // ---- v2.21 sleep timer: stop the music after 15 / 30 / 60 / 90 minutes ----
+    static final int[] SLEEP_MIN = {0, 15, 30, 60, 90};
+    private int sleepMin;
+    private long sleepAt;
+    private final Runnable sleepStop = () -> {
+        sleepMin = 0;
+        sleepAt = 0;
+        stop();
+    };
+
+    /** Next step of the timer (off → 15 → 30 → 60 → 90 → off); returns the minutes now set. */
+    int cycleSleep() {
+        int i = 0;
+        while (i < SLEEP_MIN.length && SLEEP_MIN[i] != sleepMin) i++;
+        setSleep(SLEEP_MIN[(i + 1) % SLEEP_MIN.length]);
+        return sleepMin;
+    }
+
+    void setSleep(int minutes) {
+        h.removeCallbacks(sleepStop);
+        sleepMin = Math.max(0, minutes);
+        sleepAt = sleepMin == 0 ? 0 : SystemClock.elapsedRealtime() + sleepMin * 60_000L;
+        if (sleepMin > 0) h.postDelayed(sleepStop, sleepMin * 60_000L);
+    }
+
+    /** Minutes left (rounded up), 0 when off. */
+    int sleepLeft() {
+        return sleepAt == 0 ? 0 : (int) Math.max(1, (sleepAt - SystemClock.elapsedRealtime() + 59_999) / 60_000);
     }
 
     private List<RadioCatalog.Track> visibleSongs(List<RadioCatalog.Track> songs) {

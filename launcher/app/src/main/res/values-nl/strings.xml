@@ -545,6 +545,9 @@
     <string name="radio_auto">willekeurig (elke scène een nieuwe)</string>
     <string name="radio_auto_demo">Demomodus na 1 minuut zonder toets</string>
     <string name="radio_shuffle">Willekeurig</string>
+    <string name="radio_home_music">Muziek op het startscherm</string>
+    <string name="radio_sleep">Slaaptimer</string>
+    <string name="radio_sleep_left" formatted="true">nog %d min</string>
     <string name="radio_repeat">Herhalen</string>
     <string name="radio_repeat_all">alle</string>
     <string name="radio_repeat_one">één</string>

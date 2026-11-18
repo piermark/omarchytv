@@ -129,11 +129,12 @@ public final class LinkServer {
         }
 
         /**
-         * v2.21 POST /v1/notify and the MCP tv_notify tool: a short message from an agent or a script on the PC,
-         * shown over whatever is on screen. False when the owner did not allow it (Settings, "agentAlert").
+         * v2.21 POST /v1/notify and the MCP tv_notify tool: a short message from an agent or a script.
+         * Level "info" waits while an app (a film, a match) is on screen and shows when Home comes back; "warn" and
+         * "alert" show at once. Returns "shown", "deferred", or null when the owner did not allow it ("agentAlert").
          */
-        default boolean notify(String from, String text) {
-            return false;
+        default String notify(String from, String title, String text, String level) {
+            return null;
         }
 
         /** v2.21 GET /v1/state: what is playing ({title, artist, source}), or null. */
@@ -161,6 +162,19 @@ public final class LinkServer {
         /** v2.21 GET /v1/diagnostics: version, device, network, the last log lines. No tokens, no keys. */
         default JSONObject diagnostics() {
             return null;
+        }
+
+        /**
+         * v2.21 Radiomarchy from agents: "now" (read) or "play", "pause", "next", "previous", "stop".
+         * {playing, title, artist, sleepMinutes} after the action; null when there is no Radiomarchy.
+         */
+        default JSONObject radio(String action) {
+            return null;
+        }
+
+        /** v2.21 open a part of OmarchyTV: home, radiomarchy, cinemarchy, arcade, office. Null when opened. */
+        default String openTarget(String target) {
+            return "no_such_target";
         }
 
         /** v2.21 GET /v1/sdk/omarchytv.js. */
@@ -1339,6 +1353,20 @@ public final class LinkServer {
                     case "tv_diagnostics":
                         out = app.diagnostics();
                         break;
+                    case "tv_radio_now":
+                    case "tv_radio": {
+                        String act = "tv_radio_now".equals(name) ? "now" : args.optString("action", "");
+                        Response rr = app.radio(act);
+                        out = new JSONObject(new String(rr.body, StandardCharsets.UTF_8));
+                        isError = rr.status != 200;
+                        break;
+                    }
+                    case "tv_open": {
+                        String e = host.openTarget(args.optString("target", ""));
+                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office");
+                        isError = e != null;
+                        break;
+                    }
                     case "tv_get_theme": {   // v2.21: the same payload as GET /v1/theme, even with sharing off (paired)
                         JSONObject t = host.sharedTheme();
                         out = t != null ? t : new JSONObject().put("name", status().optString("theme", "")).put("shared", false);
@@ -1375,8 +1403,10 @@ public final class LinkServer {
         t.add(new Object[]{"tv_list_apps", "List installed Android TV apps and WebApps.", new JSONObject(), "read"});
         t.add(new Object[]{"tv_ai_status", "Read live AI agents and PC stats displayed on OmarchyTV.", new JSONObject(), "read"});
         t.add(new Object[]{"tv_cinemarchy", "Read Cinemarchy media library and video snippets on OmarchyTV.", new JSONObject(), "read"});
-        t.add(new Object[]{"tv_notify", "Show a short message on the TV over whatever is playing (e.g. 'build finished'). Needs agent alerts on in the TV's settings.",
+        t.add(new Object[]{"tv_notify", "Show a short message on the TV (e.g. 'build finished'). level info waits while a film or an app is on screen; warn and alert show at once. Needs agent alerts on in the TV's settings.",
                 new JSONObject().put("text", prop("string", "The message, one line, at most 200 characters"))
+                        .put("title", prop("string", "Optional title, at most 60 characters"))
+                        .put("level", prop("string", "info (default) | warn | alert"))
                         .put("from", prop("string", "Who is talking, e.g. Claude Code (at most 40 characters)")), "notify"});
         t.add(new Object[]{"tv_ask_user", "Ask the person in front of the TV a question; they pick an answer with the remote. Waits for the answer (up to 'wait' seconds).",
                 new JSONObject().put("question", prop("string", "One line, at most 200 characters"))
@@ -1386,6 +1416,11 @@ public final class LinkServer {
                         .put("from", prop("string", "Who asks, e.g. Claude Code")), "notify"});
         t.add(new Object[]{"tv_ask_result", "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
                 new JSONObject().put("id", prop("string", "The id tv_ask_user returned")).put("wait", prop("integer", "Seconds to wait (0-25)")), "notify"});
+        t.add(new Object[]{"tv_radio_now", "What Radiomarchy (Omarchy Radio on the TV) is playing.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_radio", "Control Radiomarchy: play (resume or start the playlist), pause, next, previous, stop.",
+                new JSONObject().put("action", prop("string", "play | pause | next | previous | stop")), "control"});
+        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
+                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office")), "control"});
         t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
                 new JSONObject().put("name", prop("string", "Theme slug (e.g. tokyo-night, jade-horse, hermarchy)")), "control"});
         t.add(new Object[]{"tv_send_key", "Send a remote key to the TV (home, back, up, down, left, right, select, play_pause, volume_up, volume_down, mute).",
@@ -1810,15 +1845,25 @@ public final class LinkServer {
     }
 
     /** {text, from?} → 200 {ok, shown:true} / 403 notify_off / 400 bad_notify. Plain text, one line, 200 chars. */
+    static final java.util.Set<String> LEVELS = new java.util.HashSet<>(java.util.Arrays.asList("info", "warn", "alert"));
+
+    /**
+     * {text | body, title?, level?: info|warn|alert, from?} → {ok, shown|deferred} / 403 notify_off / 400 bad_notify.
+     * One line each: title 60 chars, text 200.
+     */
     Response notifyPost(JSONObject b) throws Exception {
-        String text = printable(b.optString("text", "").replace('\n', ' ').trim(), 200);
-        String from = printable(b.optString("from", "").trim(), 40);
-        if (text.isEmpty()) return new Response(400, err("bad_notify", "text is required"));
-        if (!host.notify(from.isEmpty() ? "PC" : from, text)) {
-            return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Omarchy Link)"));
-        }
-        app.event("notify", new JSONObject().put("from", from.isEmpty() ? "PC" : from).put("text", text));
-        return new Response(200, ok().put("shown", true));
+        String text = printable((b.has("text") ? b.optString("text", "") : b.optString("body", "")).replace('\n', ' ').trim(), 200);
+        String title = printable(b.optString("title", "").replace('\n', ' ').trim(), 60);
+        String from = printable(b.optString("from", b.optString("source", "")).trim(), 40);
+        String level = b.optString("level", "info");
+        if (!LEVELS.contains(level)) level = "info";
+        if (text.isEmpty() && title.isEmpty()) return new Response(400, err("bad_notify", "text is required"));
+        if (from.isEmpty()) from = "PC";
+        String r = host.notify(from, title, text, level);
+        if (r == null) return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Omarchy Link)"));
+        host.log("notify from " + from + " (" + level + ", " + r + ")");
+        app.event("notify", new JSONObject().put("from", from).put("title", title).put("text", text).put("level", level));
+        return new Response(200, ok().put("shown", "shown".equals(r)).put("deferred", "deferred".equals(r)));
     }
 
     private Response screensaver(JSONObject b) throws Exception {

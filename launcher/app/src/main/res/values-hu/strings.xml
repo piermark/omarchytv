@@ -545,6 +545,9 @@
     <string name="radio_auto">véletlen (minden jelenetben új)</string>
     <string name="radio_auto_demo">Demó mód 1 perc tétlenség után</string>
     <string name="radio_shuffle">Keverés</string>
+    <string name="radio_home_music">Zene a kezdőképernyőn</string>
+    <string name="radio_sleep">Elalváskapcsoló</string>
+    <string name="radio_sleep_left" formatted="true">még %d perc</string>
     <string name="radio_repeat">Ismétlés</string>
     <string name="radio_repeat_all">mind</string>
     <string name="radio_repeat_one">egy</string>

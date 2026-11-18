@@ -545,6 +545,9 @@
     <string name="radio_auto">عشوائي (جديد في كل مشهد)</string>
     <string name="radio_auto_demo">وضع العرض بعد دقيقة دون ضغط</string>
     <string name="radio_shuffle">عشوائي</string>
+    <string name="radio_home_music">موسيقى في الشاشة الرئيسية</string>
+    <string name="radio_sleep">مؤقت النوم</string>
+    <string name="radio_sleep_left" formatted="true">تبقى %d د</string>
     <string name="radio_repeat">تكرار</string>
     <string name="radio_repeat_all">الكل</string>
     <string name="radio_repeat_one">واحدة</string>

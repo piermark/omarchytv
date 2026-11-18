@@ -174,8 +174,11 @@ def cmd_notify(a, cfg):
     if not p.paired:
         return 0 if a.quiet else EXIT_NOT_PAIRED
     try:
-        link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets")).request(
-            "POST", "/v1/notify", {"text": text, "from": (a.source or "PC")[:40]}, timeout=4)
+        r = link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets")).request(
+            "POST", "/v1/notify", {"text": text, "title": (a.title or "")[:60], "level": a.level,
+                                   "from": (a.source or "PC")[:40]}, timeout=4)
+        if r.get("deferred") and not a.quiet:
+            print("held: shown when the TV is back on Home (use --level warn to show it now)", file=sys.stderr)
         return 0
     except (link.LinkError, OSError, ValueError) as e:
         if a.quiet:
@@ -261,6 +264,31 @@ def cmd_page(a, cfg):
         return 2
     _call(cfg, "POST", "/v1/page", {"url": a.url})
     return 0
+
+
+def cmd_radio(a, cfg):
+    """v2.21 Radiomarchy on the TV: now | play | pause | next | previous | stop."""
+    if a.action == "now":
+        r = _call(cfg, "GET", "/v1/radio")
+    else:
+        r = _call(cfg, "POST", "/v1/radio", {"action": a.action})
+    if r.get("title"):
+        print(("▶ " if r.get("playing") else "❚❚ ") + f"{r['title']} · {r.get('artist') or ''}".rstrip(" ·"))
+    else:
+        print("nothing playing")
+    return 0
+
+
+def cmd_open(a, cfg):
+    """v2.21 open a part of OmarchyTV on the TV."""
+    _call(cfg, "POST", "/v1/open", {"target": a.target})
+    return 0
+
+
+def cmd_mcp(a, cfg):
+    """v2.21 the TV's MCP on stdio for desktop agents (claude mcp add omarchytv -- omarchy-link mcp)."""
+    from . import mcp_bridge
+    return mcp_bridge.serve(lambda: _client(cfg), a.scope)
 
 
 def cmd_tv(a, cfg):
@@ -937,6 +965,9 @@ def main(argv=None) -> int:
     s = sub.add_parser("notify", help="show a short message on the TV (agent hooks, scripts); text or stdin")
     s.add_argument("text", nargs="*")
     s.add_argument("--from", dest="source", help="who is talking, e.g. \"Claude Code\"")
+    s.add_argument("--title")
+    s.add_argument("--level", choices=["info", "warn", "alert"], default="info",
+                   help="info waits while a film is on; warn and alert show at once")
     s.add_argument("--quiet", "-q", action="store_true", help="never fail (for hooks)")
     s.set_defaults(fn=cmd_notify)
     s = sub.add_parser("token", help="app tokens for dashboards and agents: list | add NAME --scope | revoke ID")
@@ -955,6 +986,15 @@ def main(argv=None) -> int:
     s.add_argument("url", nargs="?")
     s.add_argument("--close", action="store_true")
     s.set_defaults(fn=cmd_page)
+    s = sub.add_parser("radio", help="Radiomarchy on the TV: now | play | pause | next | previous | stop")
+    s.add_argument("action", nargs="?", choices=["now", "play", "pause", "next", "previous", "stop"], default="now")
+    s.set_defaults(fn=cmd_radio)
+    s = sub.add_parser("open", help="open home | radiomarchy | cinemarchy | arcade | office on the TV")
+    s.add_argument("target", choices=["home", "radiomarchy", "cinemarchy", "arcade", "office"])
+    s.set_defaults(fn=cmd_open)
+    s = sub.add_parser("mcp", help="the TV's MCP tools on stdio for AI agents (claude mcp add omarchytv -- omarchy-link mcp)")
+    s.add_argument("--scope", choices=["read", "notify", "control"], default="control")
+    s.set_defaults(fn=cmd_mcp)
     s = sub.add_parser("tv", help="tv logs | tv diagnostics (for bug reports)")
     s.add_argument("what", nargs="?", choices=["logs", "diagnostics"], default="logs")
     s.add_argument("--json", action="store_true")

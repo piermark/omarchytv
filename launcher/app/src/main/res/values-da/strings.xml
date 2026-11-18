@@ -545,6 +545,9 @@
     <string name="radio_auto">tilfældig (en ny for hver scene)</string>
     <string name="radio_auto_demo">Demotilstand efter 1 minut uden tast</string>
     <string name="radio_shuffle">Bland</string>
+    <string name="radio_home_music">Musik på startskærmen</string>
+    <string name="radio_sleep">Sleep-timer</string>
+    <string name="radio_sleep_left" formatted="true">%d min tilbage</string>
     <string name="radio_repeat">Gentag</string>
     <string name="radio_repeat_all">alle</string>
     <string name="radio_repeat_one">én</string>

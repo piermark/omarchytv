@@ -545,6 +545,9 @@
     <string name="radio_auto">rastgele (her sahnede yeni)</string>
     <string name="radio_auto_demo">1 dakika tuşa basılmazsa demo modu</string>
     <string name="radio_shuffle">Karışık</string>
+    <string name="radio_home_music">Ana ekranda müzik</string>
+    <string name="radio_sleep">Uyku zamanlayıcısı</string>
+    <string name="radio_sleep_left" formatted="true">%d dk kaldı</string>
     <string name="radio_repeat">Tekrarla</string>
     <string name="radio_repeat_all">tümü</string>
     <string name="radio_repeat_one">bir</string>

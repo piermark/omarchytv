@@ -549,6 +549,9 @@
     <string name="radio_auto">zufällig (jede Szene neu)</string>
     <string name="radio_auto_demo">Demo-Modus nach 1 Minute ohne Taste</string>
     <string name="radio_shuffle">Zufall</string>
+    <string name="radio_home_music">Musik auf dem Startbildschirm</string>
+    <string name="radio_sleep">Sleep-Timer</string>
+    <string name="radio_sleep_left" formatted="true">noch %d Min.</string>
     <string name="radio_repeat">Wiederholen</string>
     <string name="radio_repeat_all">alle</string>
     <string name="radio_repeat_one">einen</string>

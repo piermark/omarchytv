@@ -545,6 +545,9 @@
     <string name="radio_auto">τυχαίο (νέο σε κάθε σκηνή)</string>
     <string name="radio_auto_demo">Λειτουργία demo μετά από 1 λεπτό αδράνειας</string>
     <string name="radio_shuffle">Τυχαία</string>
+    <string name="radio_home_music">Μουσική στην αρχική οθόνη</string>
+    <string name="radio_sleep">Χρονοδιακόπτης ύπνου</string>
+    <string name="radio_sleep_left" formatted="true">απομένουν %d λεπ.</string>
     <string name="radio_repeat">Επανάληψη</string>
     <string name="radio_repeat_all">όλα</string>
     <string name="radio_repeat_one">ένα</string>

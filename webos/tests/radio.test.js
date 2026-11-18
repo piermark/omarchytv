@@ -138,7 +138,8 @@ test("Home fractals wallpaper keeps playing music audible but never starts it (v
   const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
   assert.match(src, /E\.ensureWallpaperMusic/);
   const body = src.slice(src.indexOf("E.ensureWallpaperMusic ="), src.indexOf("E.seek ="));
-  assert.ok(!/E\.play\(|E\.load\(/.test(body), "Home must not start the playlist");
+  assert.ok(/if \(cur\(\) \|\| !P\.homeMusic\) return;/.test(body), "Home starts music only with Music on Home on");
+  assert.match(src, /homeMusic: false/);
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
   assert.match(app, /ensureWallpaperMusic/);
 });
@@ -253,5 +254,21 @@ test("LG: a key press resumes a suspended context", () => {
   w.ctxs[0].state = "suspended";   // webOS suspended it in the background
   w.docL.keydown.forEach((f) => f({}));
   assert.equal(w.ctxs[0].state, "running");
+  E.stop();
+});
+
+test("v2.21 Music on Home: off = silence, on = the playlist starts once; sleep timer stops it", async () => {
+  const w = fakeAudioWorld("running");
+  const E = engineIn(w);
+  E.songs = SONG.slice();
+  E.ensureWallpaperMusic();
+  assert.strictEqual(E.current(), null, "silent by default");
+  E.setHomeMusic(true);
+  E.ensureWallpaperMusic();
+  assert.ok(E.current(), "plays with the switch on");
+  assert.strictEqual(E.sleepLeft(), 0);
+  assert.strictEqual(E.cycleSleep(), 15);
+  assert.strictEqual(E.sleepLeft(), 15);
+  E.setSleep(0);
   E.stop();
 });

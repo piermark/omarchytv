@@ -1038,6 +1038,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
         OmarchyLink.showPendingAsk(this);   // v2.21: a question from an agent that waited for Home
+        OmarchyLink.flushHeldNotes(this);   // v2.21: notifications that waited while a film was on
         LauncherConfig cfg = LauncherConfig.get(this);
         if (cfg.pulseNotice) {
             Toast.makeText(this, R.string.pulse_notice, Toast.LENGTH_LONG).show();

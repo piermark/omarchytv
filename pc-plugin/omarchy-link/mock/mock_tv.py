@@ -420,6 +420,7 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/v1/tokens"): self._token_add, ("GET", "/v1/tokens"): self._token_list,
             ("POST", "/v1/ask"): self._ask, ("GET", "/v1/diagnostics"): self._diag,
             ("POST", "/v1/page"): self._page, ("DELETE", "/v1/page"): self._page_close,
+            ("GET", "/v1/radio"): self._radio, ("POST", "/v1/radio"): self._radio, ("POST", "/v1/open"): self._open,
         }.get((method, path))
         if not handler and method == "GET" and path.split("?")[0].startswith("/v1/ask/"):
             handler = self._ask_get
@@ -585,7 +586,8 @@ class Handler(BaseHTTPRequestHandler):
         if not self.tv.config().get("agentAlert"):
             return 403, {"error": "notify_off", "message": "turn on agent alerts on the TV"}
         self.tv.notes = getattr(self.tv, "notes", []) + [(str(a.get("from") or "PC")[:40], text)]
-        return 200, {"ok": True, "shown": True}
+        held = a.get("level", "info") == "info" and getattr(self.tv, "watching", False)
+        return 200, {"ok": True, "shown": not held, "deferred": held}
 
     # v2.21 app API (a small model of the TV's AppApi)
     def _token_add(self, pc, a, body):
@@ -618,6 +620,20 @@ class Handler(BaseHTTPRequestHandler):
         if getattr(self.tv, "answer_with", None):
             ask.update(state="answered", answer=self.tv.answer_with)
         return 200, dict(ask)
+
+    def _radio(self, pc, a, body):
+        act = a.get("action", "now")
+        if act == "play":
+            self.tv.radio = {"playing": True, "title": "Hyprland Nights", "artist": "omarchy"}
+        elif act in ("pause", "stop"):
+            self.tv.radio = dict(getattr(self.tv, "radio", {}) or {}, playing=False)
+        return 200, getattr(self.tv, "radio", None) or {"playing": False, "title": None, "artist": None}
+
+    def _open(self, pc, a, body):
+        if a.get("target") not in ("home", "radiomarchy", "cinemarchy", "arcade", "office"):
+            return 400, {"error": "no_such_target"}
+        self.tv.opened = a["target"]
+        return 200, {"ok": True, "target": a["target"]}
 
     def _diag(self, pc, a, body):
         return 200, {"launcherVersion": "2.21.0", "log": ["12:00:00 listening", "12:00:01 question from PC"]}

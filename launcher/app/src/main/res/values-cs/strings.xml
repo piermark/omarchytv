@@ -545,6 +545,9 @@
     <string name="radio_auto">náhodný (v každé scéně nový)</string>
     <string name="radio_auto_demo">Režim demo po 1 minutě bez kláves</string>
     <string name="radio_shuffle">Náhodně</string>
+    <string name="radio_home_music">Hudba na domovské obrazovce</string>
+    <string name="radio_sleep">Časovač vypnutí</string>
+    <string name="radio_sleep_left" formatted="true">zbývá %d min</string>
     <string name="radio_repeat">Opakovat</string>
     <string name="radio_repeat_all">vše</string>
     <string name="radio_repeat_one">jednu</string>

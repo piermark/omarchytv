@@ -69,11 +69,13 @@ class FakeHost implements LinkServer.Host {
     }
     final java.util.List<String> notes = new java.util.concurrent.CopyOnWriteArrayList<>();
 
+    volatile boolean watching;   // an app is on screen: "info" waits
+
     @Override
-    public boolean notify(String from, String text) {
-        if (!notifyOn) return false;
-        notes.add(from + ": " + text);
-        return true;
+    public String notify(String from, String title, String text, String level) {
+        if (!notifyOn) return null;
+        notes.add(from + ": " + (title.isEmpty() ? "" : title + " · ") + text);
+        return watching && "info".equals(level) ? "deferred" : "shown";
     }
 
     FakeHost(File dir) {

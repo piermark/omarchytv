@@ -1128,17 +1128,43 @@ public final class OmarchyLink implements LinkServer.Host {
         bg.execute(() -> CastRouter.sweep(r.app, r.live() ? r.server.currentCastFile() : null));
     }
 
-    /** v2.21 POST /v1/notify, MCP tv_notify: shown like an agent alert, and only when agent alerts are on. */
+    /** v2.21 notifications that waited for Home (level info while an app was on screen); at most 10, oldest dropped. */
+    private static final java.util.ArrayDeque<String> HELD = new java.util.ArrayDeque<>();
+
+    /** v2.21 POST /v1/notify, MCP tv_notify: only with agent alerts on; "info" waits while an app is on screen. */
     @Override
-    public boolean notify(String from, String text) {
-        if (!LauncherConfig.get(app).agentAlert) return false;
-        String msg = app.getString(R.string.agent_note, from, text);
-        main.post(() -> android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show());
+    public String notify(String from, String title, String text, String level) {
+        if (!LauncherConfig.get(app).agentAlert) return null;
+        String body = title.isEmpty() ? text : text.isEmpty() ? title : title + " · " + text;
+        String msg = app.getString(R.string.agent_note, from, body);
         try {
-            emit("agent", new JSONObject().put("name", from).put("text", text));
+            emit("agent", new JSONObject().put("name", from).put("text", body));
         } catch (org.json.JSONException ignored) {
         }
-        return true;
+        if ("info".equals(level) && !homeVisible && screenOn()) {
+            synchronized (HELD) {
+                if (HELD.size() >= 10) HELD.removeFirst();
+                HELD.addLast(msg);
+            }
+            return "deferred";
+        }
+        main.post(() -> android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show());
+        return "shown";
+    }
+
+    /** Home is back: the notifications that waited, one toast (the last three lines). */
+    static void flushHeldNotes(Context c) {
+        StringBuilder b = new StringBuilder();
+        int n;
+        synchronized (HELD) {
+            n = HELD.size();
+            int skip = Math.max(0, n - 3);
+            for (String m : HELD) if (skip-- <= 0) b.append(b.length() == 0 ? "" : "\n").append(m);
+            HELD.clear();
+        }
+        if (n == 0) return;
+        if (n > 3) b.insert(0, "+" + (n - 3) + "\n");
+        android.widget.Toast.makeText(c.getApplicationContext(), b.toString(), android.widget.Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -1186,6 +1212,63 @@ public final class OmarchyLink implements LinkServer.Host {
     @Override
     public boolean closePage() {
         return AgentPageActivity.closeOpen();
+    }
+
+    /** v2.21 Radiomarchy for agents; runs on the main thread (the player lives there), waits at most 3 s. */
+    @Override
+    public JSONObject radio(String action) {
+        final JSONObject[] out = {null};
+        java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
+        main.post(() -> {
+            try {
+                RadioPlayer p = RadioPlayer.get(app);
+                switch (action) {
+                    case "play": p.playOrStart(); break;
+                    case "pause": p.pause(); break;
+                    case "next": p.advance(1, true); break;
+                    case "previous": p.advance(-1, true); break;
+                    case "stop": p.stop(); break;
+                    default: break;
+                }
+                RadioCatalog.Track t = p.current();
+                out[0] = new JSONObject().put("playing", p.playing()).put("title", t == null ? JSONObject.NULL : t.title)
+                        .put("artist", t == null ? JSONObject.NULL : t.artist).put("sleepMinutes", p.sleepLeft());
+            } catch (Exception e) {
+                Log.w(TAG, "radio " + action + ": " + e);
+            } finally {
+                done.countDown();
+            }
+        });
+        try {
+            done.await(3, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        log("radio " + action);
+        return out[0];
+    }
+
+    @Override
+    public String openTarget(String target) {
+        Class<?> c;
+        switch (target == null ? "" : target) {
+            case "home": c = MainActivity.class; break;
+            case "radiomarchy": c = RadioActivity.class; break;
+            case "cinemarchy": c = CinemarchyActivity.class; break;
+            case "arcade": c = ArcadeActivity.class; break;
+            case "office": c = OfficeActivity.class; break;
+            default: return "no_such_target";
+        }
+        Class<?> fc = c;
+        main.post(() -> {
+            try {
+                app.startActivity(new Intent(app, fc).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "open " + target + ": " + e);
+            }
+        });
+        log("open " + target);
+        return null;
     }
 
     @Override

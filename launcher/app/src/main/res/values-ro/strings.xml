@@ -545,6 +545,9 @@
     <string name="radio_auto">aleatoriu (unul nou la fiecare scenă)</string>
     <string name="radio_auto_demo">Mod demo după 1 minut fără taste</string>
     <string name="radio_shuffle">Aleatoriu</string>
+    <string name="radio_home_music">Muzică pe ecranul principal</string>
+    <string name="radio_sleep">Temporizator de oprire</string>
+    <string name="radio_sleep_left" formatted="true">încă %d min</string>
     <string name="radio_repeat">Repetă</string>
     <string name="radio_repeat_all">toate</string>
     <string name="radio_repeat_one">una</string>

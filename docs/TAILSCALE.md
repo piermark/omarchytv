@@ -52,10 +52,16 @@ echo 'net.ipv4.ip_forward = 1' | sudo tee /etc/sysctl.d/99-tailscale.conf && sud
 sudo tailscale up --advertise-routes=192.168.1.0/24     # your TV's LAN
 ```
 
-Approve the route in the Tailscale admin console (Machines › the Pi › Edit route settings). Your PC then reaches
-the TV's LAN address (`192.168.1.x`) through the Pi. Those are private LAN addresses, so the PC bridge
-(`omarchy-tv webos-serve`) and the TV app need no change. If the PC is **also** away from home, run the bridge on
-the Pi itself, next to the TV.
+Approve the route in the Tailscale admin console (Machines › the Pi › Edit route settings), and on a Linux PC
+accept routes once: `sudo tailscale set --accept-routes`. Your PC then reaches the TV's LAN address (`192.168.1.x`)
+through the Pi.
+
+- **LG / Samsung**: the TV talks to the bridge (`omarchy-tv webos-serve`) on the PC. When the PC is away from home,
+  run the bridge on the Pi itself, next to the TV ([RASPBERRY-PI.md](RASPBERRY-PI.md)).
+- **An Android TV without the Tailscale app** works the same way, through the Pi. The TV's address is then a LAN
+  address of *another* network than the PC's, so tell omarchy-link once: `"allowOtherSubnets": true` in
+  `~/.config/omarchy-link/config.json` (private addresses only; the internet is still refused). The TV's
+  Tailscale switch is not needed for this: the connections arrive from the Pi's LAN address.
 
 The same Pi can be your always-on box for dashboards: it serves the page, and the page reads the theme from
 `GET /v1/theme` on the TV or on the bridge.

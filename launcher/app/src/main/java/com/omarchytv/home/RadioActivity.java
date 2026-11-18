@@ -762,6 +762,10 @@ public final class RadioActivity extends Activity implements RadioPlayer.Listene
             autoDemo = !autoDemo;
             player.prefs().edit().putBoolean("autoDemo", autoDemo).apply();
         });
+        setting(getString(R.string.radio_home_music), getString(player.homeMusic() ? R.string.on : R.string.off),
+                () -> player.setHomeMusic(!player.homeMusic()));   // v2.21: Home is silent unless this is on
+        setting(getString(R.string.radio_sleep), player.sleepLeft() == 0 ? getString(R.string.off)
+                : getString(R.string.radio_sleep_left, player.sleepLeft()), player::cycleSleep);   // v2.21 sleep timer
         setting(getString(R.string.radio_shuffle), getString(player.shuffle() ? R.string.on : R.string.off), () -> player.setShuffle(!player.shuffle()));
         setting(getString(R.string.radio_repeat), repeatLabel(), player::cycleRepeat);
         setting(getString(R.string.radio_stop), "■", () -> player.stop());

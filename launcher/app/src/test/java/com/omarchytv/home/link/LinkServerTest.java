@@ -597,6 +597,14 @@ public class LinkServerTest {
                 .put("params", new JSONObject().put("name", "tv_notify").put("arguments", new JSONObject().put("text", "tests pass").put("from", "Hermes"))).toString());
         assertFalse(call.json().getJSONObject("result").getBoolean("isError"));
         assertEquals("Hermes: tests pass", host.notes.get(1));
+        // v2.21 title and level: info waits while a film is on, alert shows at once
+        host.watching = true;
+        Resp held = signed("POST", "/v1/notify", "{\"title\":\"Build\",\"text\":\"green\",\"level\":\"info\"}");
+        assertTrue(held.json().getBoolean("deferred"));
+        Resp now = signed("POST", "/v1/notify", "{\"text\":\"prod is down\",\"level\":\"alert\"}");
+        assertTrue(now.json().getBoolean("shown"));
+        assertEquals("PC: Build · green", host.notes.get(2));
+        host.watching = false;
         Resp th = signed("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 3).put("method", "tools/call")
                 .put("params", new JSONObject().put("name", "tv_get_theme")).toString());
         String txt = th.json().getJSONObject("result").getJSONArray("content").getJSONObject(0).getString("text");

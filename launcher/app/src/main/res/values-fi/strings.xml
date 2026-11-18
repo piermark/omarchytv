@@ -545,6 +545,9 @@
     <string name="radio_auto">satunnainen (uusi joka kohtauksessa)</string>
     <string name="radio_auto_demo">Demotila 1 minuutin jälkeen ilman näppäimiä</string>
     <string name="radio_shuffle">Satunnainen</string>
+    <string name="radio_home_music">Musiikki aloitusnäytössä</string>
+    <string name="radio_sleep">Uniajastin</string>
+    <string name="radio_sleep_left" formatted="true">%d min jäljellä</string>
     <string name="radio_repeat">Toista</string>
     <string name="radio_repeat_all">kaikki</string>
     <string name="radio_repeat_one">yksi</string>
