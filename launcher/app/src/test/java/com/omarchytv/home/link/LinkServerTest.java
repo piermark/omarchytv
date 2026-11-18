@@ -603,6 +603,139 @@ public class LinkServerTest {
         assertEquals("#7aa2f7", new JSONObject(txt).getString("accent"));
     }
 
+    // ---- v2.21 app API ----
+
+    String appToken(String name, String scope) throws Exception {
+        Resp r = signed("POST", "/v1/tokens", new JSONObject().put("name", name).put("scope", scope).toString());
+        assertEquals(200, r.status);
+        assertTrue(r.json().getString("token").startsWith("otva_"));
+        return r.json().getString("token");
+    }
+
+    Resp app(String method, String target, String body, String tok) throws Exception {
+        Map<String, String> h = new HashMap<>();
+        if (tok != null) h.put("Authorization", "Bearer " + tok);
+        return http(method, target, body == null ? new byte[0] : body.getBytes(StandardCharsets.UTF_8), h);
+    }
+
+    @Test
+    public void appTokensAreMadeByAPairedPcAndScoped() throws Exception {
+        pair("123456");
+        server.limits = false;
+        assertEquals(401, app("POST", "/v1/tokens", "{\"name\":\"x\"}", null).status);   // not without a PC
+        String read = appToken("Dashboard", "read"), ctl = appToken("Hermes", "control");
+        Resp list = signed("GET", "/v1/tokens", "");
+        assertEquals(2, list.json().getJSONArray("apps").length());
+        assertFalse(list.toString().contains("otva_"));
+        assertFalse(new String(list.body, StandardCharsets.UTF_8).contains(read));   // never shown again
+        // read: state yes, notify no
+        Resp st = app("GET", "/v1/state", null, read);
+        assertEquals(200, st.status);
+        assertEquals("home", st.json().getString("screen"));
+        assertEquals("*", st.headers.get("access-control-allow-origin"));
+        assertEquals(200, app("GET", "/v1/state?token=" + read, null, null).status);   // EventSource-style
+        Resp no = app("POST", "/v1/notify", "{\"text\":\"x\"}", read);
+        assertEquals(403, no.status);
+        assertEquals("scope", no.json().getString("error"));
+        assertEquals(403, app("GET", "/v1/diagnostics", null, read).status);
+        // an app cannot manage tokens
+        assertEquals(401, app("GET", "/v1/tokens", null, read).status);
+        // control: diagnostics, page
+        Resp d = app("GET", "/v1/diagnostics", null, ctl);
+        assertEquals(200, d.status);
+        assertEquals(2, d.json().getJSONObject("link").getInt("appTokens"));
+        assertEquals(200, app("POST", "/v1/page", "{\"url\":\"http://192.168.1.9:8080/\"}", ctl).status);
+        assertEquals(400, app("POST", "/v1/page", "{\"url\":\"https://evil.example/\"}", ctl).status);
+        assertEquals("http://192.168.1.9:8080/", host.pages.get(0));
+        // MCP: a read token sees read tools only
+        Resp tl = app("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}", read);
+        String tools = tl.json().getJSONObject("result").getJSONArray("tools").toString();
+        assertTrue(tools.contains("tv_get_state") && tools.contains("tv_get_theme"));
+        assertFalse(tools.contains("tv_send_key") || tools.contains("tv_notify"));
+        Resp key = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 2).put("method", "tools/call")
+                .put("params", new JSONObject().put("name", "tv_send_key").put("arguments", new JSONObject().put("key", "home"))).toString(), read);
+        assertTrue(key.json().has("error"));
+        assertTrue(host.keys.isEmpty());
+        // revoke
+        String id = list.json().getJSONArray("apps").getJSONObject(0).getString("id");
+        assertEquals(200, signed("DELETE", "/v1/tokens/" + id, "").status);
+        assertEquals(401, app("GET", "/v1/state", null, read).status);
+        assertEquals(401, app("GET", "/v1/state", null, "otva_forged").status);
+        // preflight and SDK need no token
+        assertEquals(204, app("OPTIONS", "/v1/state", null, null).status);
+        Resp sdk = app("GET", "/v1/sdk/omarchytv.js", null, null);
+        assertEquals(200, sdk.status);
+        assertTrue(sdk.headers.get("content-type").startsWith("text/javascript"));
+        // tokens survive a restart (only their hash is on disk)
+        assertEquals(1, new AppTokens(new File(dir, "link-apps.json")).size());
+        assertFalse(new String(java.nio.file.Files.readAllBytes(new File(dir, "link-apps.json").toPath()), StandardCharsets.UTF_8).contains(ctl));
+    }
+
+    @Test
+    public void askIsAnsweredOnTheRemoteAndOnlyItsAppSeesIt() throws Exception {
+        pair("123456");
+        server.limits = false;
+        String a = appToken("Claude Code", "notify"), b = appToken("Other", "notify");
+        assertEquals(403, app("POST", "/v1/ask", "{\"question\":\"Deploy?\"}", a).status);   // agent alerts off
+        host.notifyOn = true;
+        Resp q = app("POST", "/v1/ask", "{\"question\":\"Deploy now?\",\"choices\":[\"Yes\",\"Not now\",\"Yes\"],\"timeout\":60}", a);
+        assertEquals(200, q.status);
+        String id = q.json().getString("id");
+        assertEquals("pending", q.json().getString("state"));
+        assertEquals(2, q.json().getJSONArray("choices").length());
+        assertTrue(host.asked.get(0).contains("|Claude Code|Deploy now?|[Yes, Not now]"));
+        assertEquals(404, app("GET", "/v1/ask/" + id, null, b).status);   // another app's question
+        new Thread(() -> {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException ignored) {
+            }
+            assertFalse(server.answerAsk(id, "Maybe"));   // not one of the choices
+            assertTrue(server.answerAsk(id, "Not now"));
+        }).start();
+        long t0 = System.currentTimeMillis();
+        Resp r = app("GET", "/v1/ask/" + id + "?wait=5", null, a);
+        assertEquals("answered", r.json().getString("state"));
+        assertEquals("Not now", r.json().getString("answer"));
+        assertTrue(System.currentTimeMillis() - t0 < 4000);
+        assertFalse(server.answerAsk(id, "Yes"));   // once
+        assertTrue(server.pendingAsks().isEmpty());
+        // the PC sees it too, and MCP tv_ask_result
+        assertEquals("answered", signed("GET", "/v1/ask/" + id, "").json().getString("state"));
+    }
+
+    @Test
+    public void streamSendsStateAndNotify() throws Exception {
+        pair("123456");
+        server.limits = false;
+        host.notifyOn = true;
+        host.theme = new JSONObject().put("name", "nord");
+        String tok = appToken("Board", "notify");
+        try (java.net.Socket sk = new java.net.Socket(InetAddress.getLoopbackAddress(), port)) {
+            sk.setSoTimeout(8000);
+            sk.getOutputStream().write(("GET /v1/stream?token=" + tok + " HTTP/1.1\r\nHost: tv\r\n\r\n").getBytes(StandardCharsets.ISO_8859_1));
+            java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(sk.getInputStream(), StandardCharsets.UTF_8));
+            StringBuilder seen = new StringBuilder();
+            String line;
+            boolean sent = false;
+            long until = System.currentTimeMillis() + 7000;
+            while (System.currentTimeMillis() < until && (line = in.readLine()) != null) {
+                seen.append(line).append('\n');
+                if (!sent && seen.indexOf("event: theme") >= 0 && seen.indexOf("event: state") >= 0) {
+                    sent = true;
+                    assertEquals(200, app("POST", "/v1/notify", "{\"text\":\"tests pass\"}", tok).status);
+                }
+                if (seen.indexOf("event: notify") >= 0 && line.startsWith("data:") && line.contains("tests pass")) break;
+            }
+            String all = seen.toString();
+            assertTrue(all, all.startsWith("HTTP/1.1 200 OK"));
+            assertTrue(all, all.contains("text/event-stream"));
+            assertTrue(all, all.contains("\"screen\":\"home\""));
+            assertTrue(all, all.contains("\"name\":\"nord\""));
+            assertTrue(all, all.contains("\"from\":\"Board\""));   // an app's notify carries its own name
+        }
+    }
+
     @Test
     public void notifyIsRateLimited() throws Exception {
         pair("123456");

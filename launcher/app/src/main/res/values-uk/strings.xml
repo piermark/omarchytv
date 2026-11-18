@@ -184,6 +184,9 @@
     <string name="link_usage">Доступ до історії використання (поточний застосунок)</string>
     <string name="link_share_theme">Ділитися темою з застосунками в мережі</string>
     <string name="link_tailscale">Дозволити Tailscale (tailnet)</string>
+    <string name="agentq_asks">питає</string>
+    <string name="agentq_hint">Оберіть відповідь пультом · НАЗАД: відповісти пізніше</string>
+    <string name="link_app_tokens">Токени застосунків (панелі, агенти)</string>
     <string name="link_paired_toast">Сполучено з %1$s</string>
     <string name="link_online">підключено</string>
     <string name="ai_settings">Кредити ШІ</string>

@@ -184,6 +184,9 @@
     <string name="link_usage">Acesso de uso (app atual)</string>
     <string name="link_share_theme">Compartilhar o tema com os apps da rede</string>
     <string name="link_tailscale">Permitir Tailscale (tailnet)</string>
+    <string name="agentq_asks">pergunta</string>
+    <string name="agentq_hint">Escolha uma resposta com o controle · VOLTAR: responder depois</string>
+    <string name="link_app_tokens">Tokens de apps (painéis, agentes)</string>
     <string name="link_paired_toast">Pareado com %1$s</string>
     <string name="link_online">conectado</string>
     <string name="ai_settings">Créditos IA</string>

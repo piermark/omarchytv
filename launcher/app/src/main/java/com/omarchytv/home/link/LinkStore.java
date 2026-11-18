@@ -46,6 +46,12 @@ public final class LinkStore {
     private String wallpaperSha;
     private long savedAt;
 
+    /** The folder of link.json (internal storage); v2.21 app tokens live next to it. */
+    public File dir() {
+        File d = file.getAbsoluteFile().getParentFile();
+        return d != null ? d : new File(".");
+    }
+
     public LinkStore(File file) {
         this.file = file;
         load();

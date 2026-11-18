@@ -184,6 +184,9 @@
     <string name="link_usage">Gebruikstoegang (huidige app)</string>
     <string name="link_share_theme">Thema delen met apps op het netwerk</string>
     <string name="link_tailscale">Tailscale toestaan (tailnet)</string>
+    <string name="agentq_asks">vraagt</string>
+    <string name="agentq_hint">Kies een antwoord met de afstandsbediening · TERUG: later antwoorden</string>
+    <string name="link_app_tokens">App-tokens (dashboards, agents)</string>
     <string name="link_paired_toast">Gekoppeld met %1$s</string>
     <string name="link_online">verbonden</string>
     <string name="ai_settings">AI-tegoed</string>

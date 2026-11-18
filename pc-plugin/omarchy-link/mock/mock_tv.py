@@ -366,6 +366,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_PUT(self):
         self._route("PUT")
 
+    def do_DELETE(self):
+        self._route("DELETE")
+
     def _route(self, method: str):
         if not self._lan_only():
             return
@@ -414,7 +417,14 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/v1/cast/control"): self._cast_control,
             ("PUT", "/v1/plugins/grokbot"): self._grokbot_put,
             ("POST", "/v1/notify"): self._notify,
+            ("POST", "/v1/tokens"): self._token_add, ("GET", "/v1/tokens"): self._token_list,
+            ("POST", "/v1/ask"): self._ask, ("GET", "/v1/diagnostics"): self._diag,
+            ("POST", "/v1/page"): self._page, ("DELETE", "/v1/page"): self._page_close,
         }.get((method, path))
+        if not handler and method == "GET" and path.split("?")[0].startswith("/v1/ask/"):
+            handler = self._ask_get
+        if not handler and method == "DELETE" and path.startswith("/v1/tokens/"):
+            handler = lambda pc, a, b, p=path: self._token_del(p.rsplit("/", 1)[1])
         if not handler:
             return self._json(404, {"error": "not_found"}, sign)
         status, obj = handler(pc_id, payload, body)
@@ -576,6 +586,50 @@ class Handler(BaseHTTPRequestHandler):
             return 403, {"error": "notify_off", "message": "turn on agent alerts on the TV"}
         self.tv.notes = getattr(self.tv, "notes", []) + [(str(a.get("from") or "PC")[:40], text)]
         return 200, {"ok": True, "shown": True}
+
+    # v2.21 app API (a small model of the TV's AppApi)
+    def _token_add(self, pc, a, body):
+        apps = getattr(self.tv, "app_tokens", [])
+        tok = {"id": f"{len(apps) + 1:08x}", "name": a.get("name", ""), "scope": a.get("scope", "read")}
+        self.tv.app_tokens = apps + [tok]
+        return 200, dict(tok, token="otva_mock" + tok["id"])
+
+    def _token_list(self, pc, a, body):
+        return 200, {"apps": getattr(self.tv, "app_tokens", []), "max": 16}
+
+    def _token_del(self, tid):
+        apps = getattr(self.tv, "app_tokens", [])
+        if not any(x["id"] == tid for x in apps):
+            return 404, {"error": "no_such_app"}
+        self.tv.app_tokens = [x for x in apps if x["id"] != tid]
+        return 200, {"ok": True}
+
+    def _ask(self, pc, a, body):
+        if not self.tv.config().get("agentAlert"):
+            return 403, {"error": "ask_off"}
+        self.tv.ask = {"id": "0123456789abcdef", "question": a.get("question"), "choices": a.get("choices") or ["Yes", "No"],
+                       "state": "pending", "answer": None}
+        return 200, dict(self.tv.ask)
+
+    def _ask_get(self, pc, a, body):
+        ask = getattr(self.tv, "ask", None)
+        if not ask:
+            return 404, {"error": "no_such_ask"}
+        if getattr(self.tv, "answer_with", None):
+            ask.update(state="answered", answer=self.tv.answer_with)
+        return 200, dict(ask)
+
+    def _diag(self, pc, a, body):
+        return 200, {"launcherVersion": "2.21.0", "log": ["12:00:00 listening", "12:00:01 question from PC"]}
+
+    def _page(self, pc, a, body):
+        self.tv.page = a.get("url")
+        return 200, {"ok": True, "url": a.get("url")}
+
+    def _page_close(self, pc, a, body):
+        was = bool(getattr(self.tv, "page", None))
+        self.tv.page = None
+        return 200, {"ok": True, "closed": was}
 
     def _agents_get(self, pc, a, body):
         return 200, self.tv.config().get("link", {}).get("agents") or {"agents": [], "at": None}

@@ -184,6 +184,9 @@
     <string name="link_usage">Dostęp do użycia (bieżąca aplikacja)</string>
     <string name="link_share_theme">Udostępniaj motyw aplikacjom w sieci</string>
     <string name="link_tailscale">Zezwól na Tailscale (tailnet)</string>
+    <string name="agentq_asks">pyta</string>
+    <string name="agentq_hint">Wybierz odpowiedź pilotem · WSTECZ: odpowiedz później</string>
+    <string name="link_app_tokens">Tokeny aplikacji (panele, agenci)</string>
     <string name="link_paired_toast">Sparowano z %1$s</string>
     <string name="link_online">połączono</string>
     <string name="ai_settings">Kredyty AI</string>

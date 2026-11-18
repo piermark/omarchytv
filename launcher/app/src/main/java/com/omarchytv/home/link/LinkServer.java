@@ -135,6 +135,38 @@ public final class LinkServer {
         default boolean notify(String from, String text) {
             return false;
         }
+
+        /** v2.21 GET /v1/state: what is playing ({title, artist, source}), or null. */
+        default JSONObject nowPlaying() {
+            return null;
+        }
+
+        /**
+         * v2.21 POST /v1/ask: show the question with its answers; the TV calls LinkServer.answerAsk(id, choice).
+         * Null when shown, else an error code ("ask_off" when agent alerts are off).
+         */
+        default String askUser(String id, String from, String question, List<String> choices, long deadlineMs) {
+            return "ask_off";
+        }
+
+        /** v2.21 POST /v1/page: open a LAN / tailnet page full screen. Null when opened, else an error code. */
+        default String openPage(String url, String from) {
+            return "no_page";
+        }
+
+        default boolean closePage() {
+            return false;
+        }
+
+        /** v2.21 GET /v1/diagnostics: version, device, network, the last log lines. No tokens, no keys. */
+        default JSONObject diagnostics() {
+            return null;
+        }
+
+        /** v2.21 GET /v1/sdk/omarchytv.js. */
+        default byte[] sdk() {
+            return null;
+        }
     }
 
     /** Bytes with their media type (an image served as is). */
@@ -156,6 +188,8 @@ public final class LinkServer {
 
     private final Host host;
     private final LinkStore store;
+    /** v2.21 app tokens, /v1/state, /v1/stream, /v1/ask, /v1/page, /v1/diagnostics. */
+    final AppApi app;
     private volatile ServerSocket server;
     private volatile boolean running;
     private final ThreadPoolExecutor pool;
@@ -199,6 +233,7 @@ public final class LinkServer {
     public LinkServer(Host host, LinkStore store) {
         this.host = host;
         this.store = store;
+        this.app = new AppApi(this, host, new AppTokens(new File(store.dir(), "link-apps.json")));
         pool = new ThreadPoolExecutor(0, MAX_CONN, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), r -> {
             Thread t = new Thread(r, "otv-link");
             t.setDaemon(true);
@@ -705,6 +740,7 @@ public final class LinkServer {
         if (sharePath(path) && ("GET".equals(req.method) || "HEAD".equals(req.method) || "OPTIONS".equals(req.method))) {
             return sharedTheme(req, path);
         }
+        if (app.wants(req)) return app.handle(req, out, sock);   // v2.21 app tokens (and the SDK, preflights)
         if ("POST".equals(req.method) && ("/v1/pair/start".equals(path) || "/v1/pair/confirm".equals(path))) {
             long retry = limited(req.peer + "|" + path, 1, 2000);
             if (retry > 0) return retryAfter(new Response(429, err("rate_limited", "1 pairing request per 2 s")), retry);
@@ -785,7 +821,7 @@ public final class LinkServer {
     }
 
     /** Fixed-window limiter: at most {@code max} per {@code windowMs}; returns 0 or the seconds to wait. */
-    private long limited(String key, int max, long windowMs) {
+    long limited(String key, int max, long windowMs) {
         if (!limits) return 0;
         long t = System.currentTimeMillis();
         synchronized (rates) {
@@ -1134,8 +1170,10 @@ public final class LinkServer {
         if (("POST".equals(m) || "PUT".equals(m)) && "/v1/plugins/grokbot".equals(p)) return pluginsGrokbotPost(body, a.pcId);
         if ("POST".equals(m) && "/v1/notify".equals(p)) return notifyPost(body);
         if ("POST".equals(m) && ("/mcp".equals(p) || "/v1/mcp".equals(p))) {
-            return mcp(body);
+            return mcp(body, AppApi.Principal.pc(a.pcId));
         }
+        Response ar = app.route(AppApi.Principal.pc(a.pcId), req, body);   // v2.21 state, ask, page, diagnostics, tokens
+        if (ar != null) return ar;
         if ("POST".equals(m) && "/v1/unpair".equals(p)) {
             closeClients(a.pcId, false);
             store.remove(a.pcId);
@@ -1177,7 +1215,7 @@ public final class LinkServer {
      * Native Model Context Protocol (MCP) JSON-RPC 2.0 endpoint (/mcp and /v1/mcp) for Grok Bot, Claude,
      * Hermes, and desktop MCP clients. Authenticated via OTV1 HMAC or Authorization: Bearer <paired-token>.
      */
-    private Response mcp(JSONObject req) throws Exception {
+    Response mcp(JSONObject req, AppApi.Principal who) throws Exception {
         Object id = req.has("id") ? req.get("id") : JSONObject.NULL;
         String method = req.optString("method", "");
         JSONObject params = req.optJSONObject("params");
@@ -1195,24 +1233,8 @@ public final class LinkServer {
             case "ping":
                 return new Response(200, res.put("result", new JSONObject()));
             case "tools/list": {
-                JSONArray tools = new JSONArray()
-                        .put(mcpTool("tv_status", "Read OmarchyTV status, active theme, capabilities, and paired PCs.", new JSONObject()))
-                        .put(mcpTool("tv_list_themes", "List bundled MIT Omarchy themes and custom themes installed on the TV.", new JSONObject()))
-                        .put(mcpTool("tv_set_theme", "Switch the active Omarchy theme on the TV.",
-                                new JSONObject().put("name", new JSONObject().put("type", "string").put("description", "Theme slug (e.g. tokyo-night, jade-horse, hermarchy)"))))
-                        .put(mcpTool("tv_send_key", "Send a remote key to the TV (home, back, up, down, left, right, select, play_pause, volume_up, volume_down, mute).",
-                                new JSONObject().put("key", new JSONObject().put("type", "string").put("description", "Key name"))))
-                        .put(mcpTool("tv_list_apps", "List installed Android TV apps and WebApps.", new JSONObject()))
-                        .put(mcpTool("tv_launch_app", "Launch an Android TV app by package name.",
-                                new JSONObject().put("package", new JSONObject().put("type", "string").put("description", "Android package name"))))
-                        .put(mcpTool("tv_screensaver", "Set or reset custom ASCII screensaver text on the TV.",
-                                new JSONObject().put("text", new JSONObject().put("type", "string").put("description", "ASCII text (empty string resets to default)"))))
-                        .put(mcpTool("tv_ai_status", "Read live AI agents and PC stats displayed on OmarchyTV.", new JSONObject()))
-                        .put(mcpTool("tv_cinemarchy", "Read Cinemarchy media library and video snippets on OmarchyTV.", new JSONObject()))
-                        .put(mcpTool("tv_get_theme", "Read the TV's current theme: background, foreground, accent, the full colors.toml palette and the wallpaper URL (schema omarchytv-theme/1).", new JSONObject()))
-                        .put(mcpTool("tv_notify", "Show a short message on the TV over whatever is playing (e.g. 'build finished', 'I need your answer'). Needs agent alerts on in the TV's settings.",
-                                new JSONObject().put("text", new JSONObject().put("type", "string").put("description", "The message, one line, at most 200 characters"))
-                                        .put("from", new JSONObject().put("type", "string").put("description", "Who is talking, e.g. Claude Code (at most 40 characters)"))));
+                JSONArray tools = new JSONArray();
+                for (Object[] t : mcpTools()) if (who.can((String) t[3])) tools.put(mcpTool((String) t[0], (String) t[1], (JSONObject) t[2]));
                 return new Response(200, res.put("result", new JSONObject().put("tools", tools)));
             }
             case "tools/call": {
@@ -1220,6 +1242,10 @@ public final class LinkServer {
                 final JSONObject args = params.optJSONObject("arguments") != null ? params.optJSONObject("arguments") : new JSONObject();
                 JSONObject out;
                 boolean isError = false;
+                String need = mcpScope(name);
+                if (need != null && !who.can(need)) {   // v2.21: an app token only gets the tools of its scope
+                    return new Response(200, res.put("error", new JSONObject().put("code", -32601).put("message", "Not allowed for this app token: " + name)));
+                }
                 switch (name) {
                     case "tv_status":
                         out = status();
@@ -1278,6 +1304,41 @@ public final class LinkServer {
                     case "tv_cinemarchy":
                         out = new JSONObject().put("library", cinemarchyLibrary()).put("snippets", cinemarchySnippets());
                         break;
+                    case "tv_get_state":
+                        out = app.state();
+                        break;
+                    case "tv_ask_user": {   // v2.21: waits for the answer (at most "wait" s, default 60, max 110)
+                        JSONObject b = new JSONObject().put("question", args.optString("question", ""))
+                                .put("choices", args.optJSONArray("choices") != null ? args.optJSONArray("choices") : new JSONArray())
+                                .put("timeout", Math.max(10, Math.min(300, args.optInt("timeout", 120))))
+                                .put("from", args.optString("from", ""));
+                        Response ar = app.askPost(who, b);
+                        out = new JSONObject(new String(ar.body, StandardCharsets.UTF_8));
+                        isError = ar.status != 200;
+                        if (!isError) {
+                            JSONObject done = app.await(out.getString("id"), Math.max(0, Math.min(110, args.optInt("wait", 60))) * 1000L);
+                            if (done != null) out = done;
+                        }
+                        break;
+                    }
+                    case "tv_ask_result": {
+                        JSONObject r = app.await(args.optString("id", ""), Math.max(0, Math.min(25, args.optInt("wait", 0))) * 1000L);
+                        out = r != null ? r : err("no_such_ask", null);
+                        isError = r == null;
+                        break;
+                    }
+                    case "tv_show_page": {
+                        String e = host.openPage(args.optString("url", ""), who.name);
+                        out = e == null ? ok().put("url", args.optString("url", "")) : err(e, "a http:// page on the LAN or tailnet, by IP address");
+                        isError = e != null;
+                        break;
+                    }
+                    case "tv_close_page":
+                        out = ok().put("closed", host.closePage());
+                        break;
+                    case "tv_diagnostics":
+                        out = app.diagnostics();
+                        break;
                     case "tv_get_theme": {   // v2.21: the same payload as GET /v1/theme, even with sharing off (paired)
                         JSONObject t = host.sharedTheme();
                         out = t != null ? t : new JSONObject().put("name", status().optString("theme", "")).put("shared", false);
@@ -1298,6 +1359,54 @@ public final class LinkServer {
             default:
                 return new Response(200, res.put("error", new JSONObject().put("code", -32601).put("message", "Method not found: " + method)));
         }
+    }
+
+    private static JSONObject prop(String type, String description) throws JSONException {
+        return new JSONObject().put("type", type).put("description", description);
+    }
+
+    /** {name, description, properties, scope}: read &lt; notify &lt; control (a paired PC has them all). */
+    static List<Object[]> mcpTools() throws JSONException {
+        List<Object[]> t = new ArrayList<>();
+        t.add(new Object[]{"tv_status", "Read OmarchyTV status, active theme, capabilities, and paired PCs.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_get_state", "What is on the TV now: screen (home, app, screensaver, off), the app, the theme, the music.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_get_theme", "Read the TV's current theme: background, foreground, accent, the full colors.toml palette and the wallpaper URL (schema omarchytv-theme/1).", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_list_themes", "List bundled MIT Omarchy themes and custom themes installed on the TV.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_list_apps", "List installed Android TV apps and WebApps.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_ai_status", "Read live AI agents and PC stats displayed on OmarchyTV.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_cinemarchy", "Read Cinemarchy media library and video snippets on OmarchyTV.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_notify", "Show a short message on the TV over whatever is playing (e.g. 'build finished'). Needs agent alerts on in the TV's settings.",
+                new JSONObject().put("text", prop("string", "The message, one line, at most 200 characters"))
+                        .put("from", prop("string", "Who is talking, e.g. Claude Code (at most 40 characters)")), "notify"});
+        t.add(new Object[]{"tv_ask_user", "Ask the person in front of the TV a question; they pick an answer with the remote. Waits for the answer (up to 'wait' seconds).",
+                new JSONObject().put("question", prop("string", "One line, at most 200 characters"))
+                        .put("choices", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "Up to 4 short answers (default Yes / No)"))
+                        .put("timeout", prop("integer", "Seconds the question stays on the TV (10-300, default 120)"))
+                        .put("wait", prop("integer", "Seconds to wait here for the answer (0-110, default 60); then use tv_ask_result"))
+                        .put("from", prop("string", "Who asks, e.g. Claude Code")), "notify"});
+        t.add(new Object[]{"tv_ask_result", "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
+                new JSONObject().put("id", prop("string", "The id tv_ask_user returned")).put("wait", prop("integer", "Seconds to wait (0-25)")), "notify"});
+        t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
+                new JSONObject().put("name", prop("string", "Theme slug (e.g. tokyo-night, jade-horse, hermarchy)")), "control"});
+        t.add(new Object[]{"tv_send_key", "Send a remote key to the TV (home, back, up, down, left, right, select, play_pause, volume_up, volume_down, mute).",
+                new JSONObject().put("key", prop("string", "Key name")), "control"});
+        t.add(new Object[]{"tv_launch_app", "Launch an Android TV app by package name.",
+                new JSONObject().put("package", prop("string", "Android package name")), "control"});
+        t.add(new Object[]{"tv_screensaver", "Set or reset custom ASCII screensaver text on the TV.",
+                new JSONObject().put("text", prop("string", "ASCII text (empty string resets to default)")), "control"});
+        t.add(new Object[]{"tv_show_page", "Open a web page of the LAN or tailnet full screen on the TV (http:// and an IP address, e.g. a dashboard). BACK closes it.",
+                new JSONObject().put("url", prop("string", "http://<LAN or 100.x address>[:port]/path")), "control"});
+        t.add(new Object[]{"tv_close_page", "Close the page opened with tv_show_page.", new JSONObject(), "control"});
+        t.add(new Object[]{"tv_diagnostics", "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, recent log lines. No secrets.", new JSONObject(), "control"});
+        return t;
+    }
+
+    static String mcpScope(String tool) {
+        try {
+            for (Object[] t : mcpTools()) if (t[0].equals(tool)) return (String) t[3];
+        } catch (JSONException ignored) {
+        }
+        return null;
     }
 
     private static JSONObject mcpTool(String name, String description, JSONObject props) throws JSONException {
@@ -1701,13 +1810,14 @@ public final class LinkServer {
     }
 
     /** {text, from?} → 200 {ok, shown:true} / 403 notify_off / 400 bad_notify. Plain text, one line, 200 chars. */
-    private Response notifyPost(JSONObject b) throws Exception {
+    Response notifyPost(JSONObject b) throws Exception {
         String text = printable(b.optString("text", "").replace('\n', ' ').trim(), 200);
         String from = printable(b.optString("from", "").trim(), 40);
         if (text.isEmpty()) return new Response(400, err("bad_notify", "text is required"));
         if (!host.notify(from.isEmpty() ? "PC" : from, text)) {
             return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Omarchy Link)"));
         }
+        app.event("notify", new JSONObject().put("from", from.isEmpty() ? "PC" : from).put("text", text));
         return new Response(200, ok().put("shown", true));
     }
 
@@ -2551,7 +2661,42 @@ public final class LinkServer {
     }
 
     /** Sends an event to every connected PC. */
+    // ---- v2.21 app API, for the TV's own UI ----
+
+    /** The answer picked on the remote. False when the question is gone or expired. */
+    public boolean answerAsk(String id, String choice) {
+        return app.answer(id, choice);
+    }
+
+    /** Questions still waiting: [id, from, question, deadlineMs, choice...]. */
+    public List<String[]> pendingAsks() {
+        List<String[]> out = new ArrayList<>();
+        for (AppApi.Ask a : app.pending()) {
+            List<String> row = new ArrayList<>();
+            row.add(a.id);
+            row.add(a.from);
+            row.add(a.question);
+            row.add(String.valueOf(a.deadline));
+            row.addAll(a.choices);
+            out.add(row.toArray(new String[0]));
+        }
+        return out;
+    }
+
+    public int appTokenCount() {
+        return app.tokens.size();
+    }
+
+    public int revokeAppTokens() {
+        return app.tokens.clear();
+    }
+
+    boolean isRunning() {
+        return running;
+    }
+
     public void broadcast(String type, JSONObject data) {
+        app.event(type, data);
         for (WsClient c : clients) {
             try {
                 c.send(type, data);

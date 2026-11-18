@@ -184,6 +184,9 @@
     <string name="link_usage">الوصول إلى الاستخدام (التطبيق الحالي)</string>
     <string name="link_share_theme">مشاركة السمة مع تطبيقات الشبكة</string>
     <string name="link_tailscale">السماح بـ Tailscale (tailnet)</string>
+    <string name="agentq_asks">يسأل</string>
+    <string name="agentq_hint">اختر إجابة بجهاز التحكم · رجوع: أجب لاحقًا</string>
+    <string name="link_app_tokens">رموز التطبيقات (لوحات، وكلاء)</string>
     <string name="link_paired_toast">تم الاقتران مع %1$s</string>
     <string name="link_online">متصل</string>
     <string name="ai_settings">أرصدة AI</string>

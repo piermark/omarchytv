@@ -184,6 +184,9 @@
     <string name="link_usage">使用情况访问权限（当前应用）</string>
     <string name="link_share_theme">与网络中的应用共享主题</string>
     <string name="link_tailscale">允许 Tailscale (tailnet)</string>
+    <string name="agentq_asks">提问</string>
+    <string name="agentq_hint">用遥控器选择答案 · 返回：稍后回答</string>
+    <string name="link_app_tokens">应用令牌（仪表板、代理）</string>
     <string name="link_paired_toast">已与 %1$s 配对</string>
     <string name="link_online">已连接</string>
     <string name="ai_settings">AI 额度</string>

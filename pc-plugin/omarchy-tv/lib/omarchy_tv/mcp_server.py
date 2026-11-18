@@ -116,7 +116,66 @@ ALLOWED_TOOLS = (
             "properties": {"text": {"type": "string", "description": "ASCII text (empty string resets to default)"}},
         },
     },
+    {
+        "name": "tv_get_state",
+        "description": "What is on the TV now: screen (home, app, screensaver, off), the app, the theme, the music.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "tv_ask_user",
+        "description": "Ask the person in front of the TV a question; they pick an answer with the remote. "
+                       "Waits for the answer up to 'wait' seconds, then use tv_ask_result.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "question": {"type": "string", "description": "One line, at most 200 characters"},
+                "choices": {"type": "array", "items": {"type": "string"}, "description": "Up to 4 short answers (default Yes / No)"},
+                "timeout": {"type": "integer", "description": "Seconds the question stays on the TV (10-300, default 120)"},
+                "wait": {"type": "integer", "description": "Seconds to wait here for the answer (0-90, default 60)"},
+                "from": {"type": "string", "description": "Who asks, e.g. Claude Code"},
+            },
+            "required": ["question"],
+        },
+    },
+    {
+        "name": "tv_ask_result",
+        "description": "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
+        "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "wait": {"type": "integer", "description": "0-25 s"}},
+                        "required": ["id"]},
+    },
+    {
+        "name": "tv_show_page",
+        "description": "Open a web page of the LAN or tailnet full screen on the TV (http:// and an IP address, e.g. a "
+                       "dashboard). BACK closes it.",
+        "inputSchema": {"type": "object", "properties": {"url": {"type": "string"}}, "required": ["url"]},
+    },
+    {
+        "name": "tv_close_page",
+        "description": "Close the page opened with tv_show_page.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "tv_diagnostics",
+        "description": "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, "
+                       "recent log lines. No secrets.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
 )
+
+# v2.21 scopes, as on the TV: read < notify < control. A server reachable from the internet (--tunnel,
+# --cloudflare) defaults to notify: an agent in the cloud can read and talk to you, not drive the TV.
+SCOPES = ("read", "notify", "control")
+TOOL_SCOPE = {
+    "tv_status": "read", "tv_list_themes": "read", "tv_list_apps": "read", "tv_get_theme": "read", "tv_get_state": "read",
+    "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
+    "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
+    "tv_screensaver": "control", "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control",
+}
+
+
+def allowed(tool: str, scope: str) -> bool:
+    need = TOOL_SCOPE.get(tool)
+    return need is not None and SCOPES.index(scope) >= SCOPES.index(need)
 
 
 def ensure_token(path: Path | None = None) -> str:
@@ -133,7 +192,7 @@ def ensure_token(path: Path | None = None) -> str:
     return tok
 
 
-def handle_rpc(req: dict, tv_client) -> dict | None:
+def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
     """Process one MCP JSON-RPC 2.0 request dict and return response dict (or None for notifications)."""
     method = req.get("method", "")
     req_id = req.get("id")
@@ -154,12 +213,15 @@ def handle_rpc(req: dict, tv_client) -> dict | None:
     if method == "ping":
         return {"jsonrpc": "2.0", "id": req_id, "result": {}}
     if method == "tools/list":
-        return {"jsonrpc": "2.0", "id": req_id, "result": {"tools": list(ALLOWED_TOOLS)}}
+        return {"jsonrpc": "2.0", "id": req_id, "result": {"tools": [t for t in ALLOWED_TOOLS if allowed(t["name"], scope)]}}
     if method == "tools/call":
         name = params.get("name", "")
         args = params.get("arguments") if isinstance(params.get("arguments"), dict) else {}
         if name not in {t["name"] for t in ALLOWED_TOOLS}:
             return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": f"Unknown tool: {name}"}}
+        if not allowed(name, scope):
+            return {"jsonrpc": "2.0", "id": req_id,
+                    "error": {"code": -32601, "message": f"Not allowed on this server (scope {scope}): {name}"}}
         try:
             out = _call_tool(name, args, tv_client)
             return {
@@ -204,9 +266,42 @@ def _call_tool(name: str, args: dict, c) -> dict:
         if not text:
             raise ValueError("text is required")
         return c.request("POST", "/v1/notify", {"text": text[:200], "from": str(args.get("from") or "AI agent")[:40]})
+    if name == "tv_get_state":
+        return c.request("GET", "/v1/state")
+    if name == "tv_ask_user":
+        q = str(args.get("question", "")).strip()
+        if not q:
+            raise ValueError("question is required")
+        r = c.request("POST", "/v1/ask", {"question": q[:200], "choices": [str(x)[:24] for x in (args.get("choices") or [])][:4],
+                                         "timeout": max(10, min(300, int(args.get("timeout") or 120))),
+                                         "from": str(args.get("from") or "AI agent")[:40]})
+        return _await_ask(c, r, max(0, min(90, int(args.get("wait", 60) or 0))))
+    if name == "tv_ask_result":
+        aid = str(args.get("id", ""))
+        if not re.fullmatch(r"[0-9a-f]{16}", aid):
+            raise ValueError("bad id")
+        return c.request("GET", f"/v1/ask/{aid}?wait={max(0, min(25, int(args.get('wait', 0) or 0)))}", timeout=35)
+    if name == "tv_show_page":
+        return c.request("POST", "/v1/page", {"url": str(args.get("url", ""))})
+    if name == "tv_close_page":
+        return c.request("DELETE", "/v1/page")
+    if name == "tv_diagnostics":
+        return c.request("GET", "/v1/diagnostics")
     if name == "tv_screensaver":
         return c.request("PUT", "/v1/screensaver", {"text": str(args.get("text", ""))})
     raise ValueError(f"unsupported tool: {name}")
+
+
+def _await_ask(c, r: dict, wait: int) -> dict:
+    """Long-poll the TV (25 s at a time) until the answer, the deadline or `wait` seconds."""
+    import time
+    end = time.time() + wait
+    while r.get("state") == "pending" and time.time() < end:
+        step = int(max(0, min(25, end - time.time())))
+        r = c.request("GET", f"/v1/ask/{r['id']}?wait={step}", timeout=step + 10)
+        if step == 0:
+            break
+    return r
 
 
 def _tv_theme(c) -> dict:
@@ -255,7 +350,7 @@ def tailnet_ip(run=subprocess.run) -> str | None:
     return None
 
 
-def serve_stdio(tv_client_factory) -> int:
+def serve_stdio(tv_client_factory, scope: str = "control") -> int:
     for line in sys.stdin:
         line = line.strip()
         if not line:
@@ -264,7 +359,7 @@ def serve_stdio(tv_client_factory) -> int:
             req = json.loads(line)
         except ValueError:
             continue
-        resp = handle_rpc(req, tv_client_factory())
+        resp = handle_rpc(req, tv_client_factory(), scope)
         if resp is not None:
             sys.stdout.write(json.dumps(resp) + "\n")
             sys.stdout.flush()
@@ -272,7 +367,7 @@ def serve_stdio(tv_client_factory) -> int:
 
 
 def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", port: int = 8990,
-                       tailnet_only: bool = False) -> ThreadingHTTPServer:
+                       tailnet_only: bool = False, scope: str = "control", require_access: bool = False) -> ThreadingHTTPServer:
     expected = f"Bearer {token}"
 
     class Handler(BaseHTTPRequestHandler):
@@ -285,6 +380,11 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
                 return
             if self.path not in ("/mcp", "/v1/mcp", "/"):
                 self._send(404, {"error": "not_found"})
+                return
+            if require_access and not self.headers.get("Cf-Access-Jwt-Assertion"):
+                # v2.21 --cloudflare --access: the origin is 127.0.0.1, only cloudflared reaches it, and Cloudflare adds
+                # this header only after Access let the caller in. No header: Access is not in front of this tunnel.
+                self._send(403, {"error": "access_required", "message": "put Cloudflare Access in front of this tunnel"})
                 return
             auth = self.headers.get("Authorization", "").strip()
             if not hmac.compare_digest(auth, expected):
@@ -299,7 +399,7 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
             except ValueError:
                 self._send(400, {"error": "invalid_json"})
                 return
-            resp = handle_rpc(req, tv_client_factory())
+            resp = handle_rpc(req, tv_client_factory(), scope)
             self._send(200, resp or {"jsonrpc": "2.0", "id": None, "result": {}})
 
         def _send(self, code: int, obj: dict):
@@ -314,7 +414,22 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
     return ThreadingHTTPServer((host, port), Handler)
 
 
-def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailscale: bool = False) -> int:
+def tunnel_argv(cf: str, port: int, name: str | None) -> list:
+    """Quick tunnel (a random trycloudflare.com URL) or, v2.21, a named tunnel on your own domain."""
+    if name:
+        return [cf, "tunnel", "--no-autoupdate", "run", "--url", f"http://127.0.0.1:{port}", name]
+    return [cf, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{port}"]
+
+
+def default_scope(public: bool, scope: str | None) -> str:
+    """Local and tailnet: control. Through the internet (a tunnel): notify unless asked."""
+    if scope in SCOPES:
+        return scope
+    return "notify" if public else "control"
+
+
+def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailscale: bool = False,
+               cloudflare: str | None = None, scope: str | None = None, access: bool = False) -> int:
     token = ensure_token()
     bind = "127.0.0.1"
     if tailscale:
@@ -322,27 +437,33 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
         if not bind:
             print("tailscale: no tailnet address on this PC (sudo tailscale up)", file=sys.stderr, flush=True)
             return 1
-        tunnel = False   # one or the other: the tailnet never needs a public tunnel
-    srv = create_http_server(tv_client_factory, token, bind, port, tailnet_only=tailscale)
+        tunnel, cloudflare = False, None   # one or the other: the tailnet never needs a public tunnel
+    public = bool(tunnel or cloudflare)
+    scope = default_scope(public, scope)
+    srv = create_http_server(tv_client_factory, token, bind, port, tailnet_only=tailscale, scope=scope,
+                             require_access=bool(cloudflare and access))
     actual_port = srv.server_address[1]
     print(f"OmarchyTV MCP HTTP server listening on http://{bind}:{actual_port}/mcp"
-          + (" (tailnet peers only)" if tailscale else ""), flush=True)
+          + (" (tailnet peers only)" if tailscale else "") + f", tools: {scope}", flush=True)
     print(f"Authorization: Bearer {token}", flush=True)
     proc = None
-    if tunnel:
+    if public:
         cf = shutil.which("cloudflared")
         if not cf:
             print("cloudflared not found on PATH; running local HTTP only.", file=sys.stderr, flush=True)
         else:
-            proc = subprocess.Popen(
-                [cf, "tunnel", "--no-autoupdate", "--url", f"http://127.0.0.1:{actual_port}"],
-                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
-            )
+            proc = subprocess.Popen(tunnel_argv(cf, actual_port, cloudflare),
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            if cloudflare:
+                print(f"Cloudflare tunnel '{cloudflare}' -> this server. Its hostname is the one you routed to it "
+                      "(cloudflared tunnel route dns). See docs/CLOUDFLARE.md." + ("" if access else
+                      " Tip: put Cloudflare Access in front and add --access."), flush=True)
+
             def _watch():
                 for line in proc.stdout:
                     m = re.search(r"https://[a-zA-Z0-9.-]+\.trycloudflare\.com", line)
                     if m:
-                        print(f"Grok Bot MCP Tunnel URL: {m.group(0)}/mcp", flush=True)
+                        print(f"MCP tunnel URL: {m.group(0)}/mcp", flush=True)
             threading.Thread(target=_watch, daemon=True).start()
     try:
         srv.serve_forever()

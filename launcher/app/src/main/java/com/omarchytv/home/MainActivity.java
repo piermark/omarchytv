@@ -1037,6 +1037,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (rp != null) rp.claimSession();   // v2.20: after YouTube took audio focus, media keys on Home still resume
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
+        OmarchyLink.showPendingAsk(this);   // v2.21: a question from an agent that waited for Home
         LauncherConfig cfg = LauncherConfig.get(this);
         if (cfg.pulseNotice) {
             Toast.makeText(this, R.string.pulse_notice, Toast.LENGTH_LONG).show();
@@ -3615,6 +3616,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             });
             CastRouter.reset();
             r.setValue(str(n ? R.string.on : R.string.off));
+            return true;
+        });
+        // v2.21: app tokens are made on the PC (omarchy-link token add); here only how many, and revoke them all.
+        int apps = OmarchyLink.appTokens();
+        p.add(str(R.string.link_app_tokens), apps == 0 ? "0" : apps + " · " + str(R.string.link_forget_short), r -> {
+            if (OmarchyLink.appTokens() > 0) OmarchyLink.revokeAppTokens();
+            r.setValue("0");
             return true;
         });
         // v2.21: Tailscale (off by default). On: the TV also answers its tailnet address; the value shows it.

@@ -217,6 +217,9 @@
     <string name="link_usage">Usage access (current app)</string>
     <string name="link_share_theme">Share theme with apps on the network</string>
     <string name="link_tailscale">Allow Tailscale (tailnet)</string>
+    <string name="agentq_asks">asks</string>
+    <string name="agentq_hint">Pick an answer with the remote · BACK: answer later</string>
+    <string name="link_app_tokens">App tokens (dashboards, agents)</string>
     <string name="agent_note" formatted="true" translatable="false">● %1$s: %2$s</string>
     <string name="link_paired_toast">Paired with %1$s</string>
     <string name="link_online">connected</string>

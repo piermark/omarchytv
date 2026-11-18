@@ -184,6 +184,9 @@
     <string name="link_usage">Adgang til forbrug (aktuel app)</string>
     <string name="link_share_theme">Del temaet med apps på netværket</string>
     <string name="link_tailscale">Tillad Tailscale (tailnet)</string>
+    <string name="agentq_asks">spørger</string>
+    <string name="agentq_hint">Vælg et svar med fjernbetjeningen · TILBAGE: svar senere</string>
+    <string name="link_app_tokens">App-tokens (dashboards, agenter)</string>
     <string name="link_paired_toast">Parret med %1$s</string>
     <string name="link_online">forbundet</string>
     <string name="ai_settings">AI-kreditter</string>

@@ -89,6 +89,14 @@ final class RadioPlayer {
         return inst;
     }
 
+    /** v2.21 GET /v1/state: {title, artist} of the song playing, or null. Never creates the player. */
+    static String[] nowPlaying() {
+        RadioPlayer p = inst;
+        if (p == null || !active()) return null;
+        RadioCatalog.Track t = p.current();
+        return t == null ? null : new String[]{t.title, t.artist};
+    }
+
     /** Is there one, and is it playing (or about to)? Never creates the player. */
     static boolean active() {
         return inst != null && inst.player != null && inst.player.getPlayWhenReady() && inst.current() != null;

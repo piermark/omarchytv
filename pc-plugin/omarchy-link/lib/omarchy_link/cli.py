@@ -187,6 +187,93 @@ def cmd_notify(a, cfg):
         return 1
 
 
+def _call(cfg, method, path, payload=None, timeout=8.0):
+    return _client(cfg).request(method, path, payload, timeout=timeout)
+
+
+def cmd_token(a, cfg):
+    """v2.21 app tokens for dashboards and agents: add NAME --scope read|notify|control, list, revoke ID."""
+    if a.action == "add":
+        if not a.name:
+            print("omarchy-link token add NAME [--scope read|notify|control]", file=sys.stderr)
+            return 2
+        r = _call(cfg, "POST", "/v1/tokens", {"name": " ".join(a.name), "scope": a.scope})
+        if a.json:
+            print(json.dumps(r, indent=2))
+        else:
+            print(f"{r['name']} ({r['scope']}), id {r['id']}")
+            print(r["token"])
+            print("Shown once: keep it in your app's settings. Revoke: omarchy-link token revoke " + r["id"], file=sys.stderr)
+        return 0
+    if a.action == "revoke":
+        if not a.name:
+            print("omarchy-link token revoke ID", file=sys.stderr)
+            return 2
+        _call(cfg, "DELETE", "/v1/tokens/" + a.name[0])
+        print("revoked")
+        return 0
+    r = _call(cfg, "GET", "/v1/tokens")
+    if a.json:
+        print(json.dumps(r, indent=2))
+        return 0
+    if not r.get("apps"):
+        print("No app tokens. Add one: omarchy-link token add \"My dashboard\" --scope read")
+    for x in r.get("apps", []):
+        print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}")
+    return 0
+
+
+def cmd_ask(a, cfg):
+    """v2.21 ask the person at the TV; prints the answer. Exit 0 answered, 5 no answer in time, 4 alerts off."""
+    q = " ".join(a.question).strip()
+    if not q:
+        print("omarchy-link ask \"Deploy now?\" [--choice Yes --choice No] [--timeout 120]", file=sys.stderr)
+        return 2
+    try:
+        r = _call(cfg, "POST", "/v1/ask", {"question": q, "choices": a.choice or [], "timeout": a.timeout,
+                                           "from": (a.source or "PC")[:40]})
+    except link.LinkError as e:
+        if getattr(e, "status", 0) == 403:
+            print("The TV does not take questions: turn on agent alerts (Settings > Omarchy Link).", file=sys.stderr)
+            return 4
+        raise
+    import time as _t
+    end = _t.time() + a.timeout + 5
+    while _t.time() < end:
+        s = _call(cfg, "GET", f"/v1/ask/{r['id']}?wait=25", timeout=35)
+        if s.get("state") == "answered":
+            print(s["answer"])
+            return 0
+        if s.get("state") == "expired":
+            break
+    print("no answer", file=sys.stderr)
+    return 5
+
+
+def cmd_page(a, cfg):
+    """v2.21 open a page of the LAN / tailnet full screen on the TV, or --close it."""
+    if a.close:
+        r = _call(cfg, "DELETE", "/v1/page")
+        print("closed" if r.get("closed") else "no page was open")
+        return 0
+    if not a.url:
+        print("omarchy-link page http://192.168.1.20:8080/  (or --close)", file=sys.stderr)
+        return 2
+    _call(cfg, "POST", "/v1/page", {"url": a.url})
+    return 0
+
+
+def cmd_tv(a, cfg):
+    """v2.21 tv logs | tv diagnostics: what a bug report needs (no tokens, no keys)."""
+    d = _call(cfg, "GET", "/v1/diagnostics")
+    if a.json or a.what == "diagnostics":
+        print(json.dumps(d, indent=2))
+        return 0
+    for line in d.get("log", []):
+        print(line)
+    return 0
+
+
 def cmd_launch(a, cfg):
     _client(cfg).launch(a.package)
     return 0
@@ -852,6 +939,26 @@ def main(argv=None) -> int:
     s.add_argument("--from", dest="source", help="who is talking, e.g. \"Claude Code\"")
     s.add_argument("--quiet", "-q", action="store_true", help="never fail (for hooks)")
     s.set_defaults(fn=cmd_notify)
+    s = sub.add_parser("token", help="app tokens for dashboards and agents: list | add NAME --scope | revoke ID")
+    s.add_argument("action", nargs="?", choices=["list", "add", "revoke"], default="list")
+    s.add_argument("name", nargs="*")
+    s.add_argument("--scope", choices=["read", "notify", "control"], default="read")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_token)
+    s = sub.add_parser("ask", help="ask the person at the TV, print the answer (agent hooks, scripts)")
+    s.add_argument("question", nargs="*")
+    s.add_argument("--choice", action="append", help="an answer (up to 4; default Yes / No)")
+    s.add_argument("--timeout", type=int, default=120)
+    s.add_argument("--from", dest="source")
+    s.set_defaults(fn=cmd_ask)
+    s = sub.add_parser("page", help="open a LAN / tailnet page full screen on the TV (or --close)")
+    s.add_argument("url", nargs="?")
+    s.add_argument("--close", action="store_true")
+    s.set_defaults(fn=cmd_page)
+    s = sub.add_parser("tv", help="tv logs | tv diagnostics (for bug reports)")
+    s.add_argument("what", nargs="?", choices=["logs", "diagnostics"], default="logs")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_tv)
     s = sub.add_parser("tailscale", help="reach the TV over Tailscale: on | off | status (off by default)")
     s.add_argument("action", nargs="?", choices=["on", "off", "status"], default="status")
     s.add_argument("--json", action="store_true")

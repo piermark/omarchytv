@@ -278,6 +278,35 @@ public final class OmarchyLink implements LinkServer.Host {
     }
 
     /** True when a PC is connected over the sealed link (the Grok Bot bridge needs one). */
+    // ---- v2.21 app API (dashboards, agents): questions, pages, app tokens -------------------------------------
+
+    /** The answer picked on the TV (AgentQuestionActivity). */
+    static boolean answerAsk(String id, String choice) {
+        OmarchyLink r = runtime;
+        return r != null && r.live() && r.server.answerAsk(id, choice);
+    }
+
+    /** Home came back: show the oldest question still waiting, if any. */
+    static void showPendingAsk(android.app.Activity a) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live()) return;
+        java.util.List<String[]> p = r.server.pendingAsks();
+        if (p.isEmpty()) return;
+        String[] q = p.get(0);
+        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(4, q.length));
+        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3])));
+    }
+
+    static int appTokens() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.appTokenCount() : 0;
+    }
+
+    static int revokeAppTokens() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.revokeAppTokens() : 0;
+    }
+
     static boolean hasPc() {
         OmarchyLink r = runtime;
         return r != null && r.live() && r.server.connectedClients() > 0;
@@ -1113,6 +1142,98 @@ public final class OmarchyLink implements LinkServer.Host {
     }
 
     @Override
+    public JSONObject nowPlaying() {
+        String[] np = RadioPlayer.nowPlaying();
+        if (np == null) return null;
+        try {
+            return new JSONObject().put("title", np[0]).put("artist", np[1]).put("source", "radiomarchy");
+        } catch (org.json.JSONException e) {
+            return null;
+        }
+    }
+
+    /** v2.21 ask_user: only with agent alerts on; the dialog opens over the current app when Android allows it. */
+    @Override
+    public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs) {
+        if (!LauncherConfig.get(app).agentAlert) return "ask_off";
+        String msg = app.getString(R.string.agent_note, from, question);
+        main.post(() -> {
+            try {
+                app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "ask: " + e);
+            }
+            android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show();   // seen even if the dialog waits for Home
+        });
+        log("question from " + from);
+        return null;
+    }
+
+    @Override
+    public String openPage(String url, String from) {
+        if (!AgentPageActivity.allowed(url)) return "not_lan_url";
+        main.post(() -> {
+            try {
+                app.startActivity(AgentPageActivity.intent(app, url));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "page: " + e);
+            }
+        });
+        log("page from " + from + ": " + android.net.Uri.parse(url).getHost());
+        return null;
+    }
+
+    @Override
+    public boolean closePage() {
+        return AgentPageActivity.closeOpen();
+    }
+
+    @Override
+    public byte[] sdk() {
+        try (java.io.InputStream in = app.getAssets().open("sdk/omarchytv.js")) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] b = new byte[8192];
+            int n;
+            while ((n = in.read(b)) > 0) out.write(b, 0, n);
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            return null;
+        }
+    }
+
+    /** v2.21 GET /v1/diagnostics, MCP tv_diagnostics: what a bug report needs. No tokens, no keys, no file paths. */
+    @Override
+    public JSONObject diagnostics() {
+        try {
+            LauncherConfig cfg = LauncherConfig.get(app);
+            android.app.ActivityManager am = app.getSystemService(android.app.ActivityManager.class);
+            android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+            if (am != null) am.getMemoryInfo(mi);
+            String gpu = app.getSharedPreferences("omarchytv", Context.MODE_PRIVATE).getString(FractalView.PREF_GPU, "");
+            InetAddress ts = tailnetAddress();
+            JSONArray logs = new JSONArray();
+            synchronized (LOG) {
+                for (String l : LOG) logs.put(l);
+            }
+            return new JSONObject()
+                    .put("launcherVersion", version())
+                    .put("device", new JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL)
+                            .put("android", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT)
+                            .put("ramMb", mi.totalMem / (1024 * 1024)).put("lowRam", am != null && am.isLowRamDevice())
+                            .put("gpu", gpu))
+                    .put("network", new JSONObject().put("lan", lanIp() == null ? JSONObject.NULL : lanIp())
+                            .put("tailnet", ts == null ? JSONObject.NULL : ts.getHostAddress())
+                            .put("listening", bound != null))
+                    .put("settings", new JSONObject().put("shareTheme", cfg.shareTheme).put("tailscale", cfg.tailscale)
+                            .put("agentAlerts", cfg.agentAlert).put("cast", cfg.castEnabled))
+                    .put("screen", new JSONObject().put("on", screenOn()).put("home", homeVisible).put("screensaver", screensaver))
+                    .put("log", logs);
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
+    @Override
     public void onEvent(String pcId, String type, JSONObject data) {
         if ("living".equals(type)) {   // v2.14: kept for the screensaver page, not an event for the UI
             Living.set(data);
@@ -1145,8 +1266,17 @@ public final class OmarchyLink implements LinkServer.Host {
         emit(type, data);
     }
 
+    /** The last 100 Link log lines, in memory only, for /v1/diagnostics. */
+    private static final java.util.ArrayDeque<String> LOG = new java.util.ArrayDeque<>();
+
     @Override
     public void log(String message) {
         Log.i(TAG, message);
+        String line = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.ROOT).format(new java.util.Date()) + " "
+                + (message.length() > 200 ? message.substring(0, 200) : message);
+        synchronized (LOG) {
+            if (LOG.size() >= 100) LOG.removeFirst();
+            LOG.addLast(line);
+        }
     }
 }

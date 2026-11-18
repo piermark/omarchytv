@@ -184,6 +184,9 @@
     <string name="link_usage">Käyttötietojen käyttöoikeus (nykyinen sovellus)</string>
     <string name="link_share_theme">Jaa teema verkon sovelluksille</string>
     <string name="link_tailscale">Salli Tailscale (tailnet)</string>
+    <string name="agentq_asks">kysyy</string>
+    <string name="agentq_hint">Valitse vastaus kaukosäätimellä · TAKAISIN: vastaa myöhemmin</string>
+    <string name="link_app_tokens">Sovellustunnukset (koontinäytöt, agentit)</string>
     <string name="link_paired_toast">Pariliitetty laitteeseen %1$s</string>
     <string name="link_online">yhdistetty</string>
     <string name="ai_settings">AI-krediitit</string>

@@ -184,6 +184,9 @@
     <string name="link_usage">Használati hozzáférés (aktuális alkalmazás)</string>
     <string name="link_share_theme">Téma megosztása a hálózat alkalmazásaival</string>
     <string name="link_tailscale">Tailscale engedélyezése (tailnet)</string>
+    <string name="agentq_asks">kérdezi</string>
+    <string name="agentq_hint">Válassz választ a távirányítóval · VISSZA: válasz később</string>
+    <string name="link_app_tokens">Alkalmazás-tokenek (irányítópultok, ügynökök)</string>
     <string name="link_paired_toast">Párosítva: %1$s</string>
     <string name="link_online">csatlakozva</string>
     <string name="ai_settings">AI-kreditek</string>

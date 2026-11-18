@@ -37,6 +37,36 @@ class FakeHost implements LinkServer.Host {
     }
 
     volatile boolean notifyOn;
+    final List<String> asked = new java.util.concurrent.CopyOnWriteArrayList<>();
+    final List<String> pages = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    @Override
+    public String askUser(String id, String from, String question, List<String> choices, long deadlineMs) {
+        if (!notifyOn) return "ask_off";
+        asked.add(id + "|" + from + "|" + question + "|" + choices);
+        return null;
+    }
+
+    @Override
+    public String openPage(String url, String from) {
+        if (!url.startsWith("http://192.168.")) return "not_lan_url";
+        pages.add(url);
+        return null;
+    }
+
+    @Override
+    public JSONObject diagnostics() {
+        try {
+            return new JSONObject().put("launcherVersion", "2.21.0").put("log", new JSONArray().put("12:00:00 hello"));
+        } catch (org.json.JSONException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public byte[] sdk() {
+        return "/* omarchytv.js */".getBytes(StandardCharsets.UTF_8);
+    }
     final java.util.List<String> notes = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     @Override

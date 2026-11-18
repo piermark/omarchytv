@@ -184,6 +184,9 @@
     <string name="link_usage">Přístup k využití (aktuální aplikace)</string>
     <string name="link_share_theme">Sdílet motiv s aplikacemi v síti</string>
     <string name="link_tailscale">Povolit Tailscale (tailnet)</string>
+    <string name="agentq_asks">se ptá</string>
+    <string name="agentq_hint">Vyberte odpověď dálkovým ovladačem · ZPĚT: odpovědět později</string>
+    <string name="link_app_tokens">Tokeny aplikací (přehledy, agenti)</string>
     <string name="link_paired_toast">Spárováno s %1$s</string>
     <string name="link_online">připojeno</string>
     <string name="ai_settings">AI kredity</string>

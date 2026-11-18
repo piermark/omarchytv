@@ -22,7 +22,8 @@
   omarchy-tv stats                      show the stats pushed every 5 s while the TV home is visible
   omarchy-tv office push <bots.json> | show | clear   GrokBot Office: your bots and weekly usage on the TV (2.20, optional)
                                                        (+ Claude / ChatGPT bots: omarchy-link office hire)
-  omarchy-tv mcp [--stdio|--http] [--port 8990] [--tunnel|--tailscale]   MCP server for Grok Bot / Claude / Hermes
+  omarchy-tv mcp [--stdio|--http] [--port 8990] [--tunnel|--tailscale|--cloudflare NAME [--access]] [--scope read|notify|control]
+                                                                         MCP server for Grok Bot / Claude / Hermes
 """
 import os, sys
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -384,9 +385,15 @@ def main(argv):
         return cmd_webos_serve(rest)
     if cmd == "mcp":
         port = int(rest[rest.index("--port") + 1]) if "--port" in rest else 8990
-        if "--http" in rest or "--tunnel" in rest or "--tailscale" in rest:
-            return mcp_server.serve_http(client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest)
-        return mcp_server.serve_stdio(client)
+        scope = rest[rest.index("--scope") + 1] if "--scope" in rest else None
+        if scope is not None and scope not in mcp_server.SCOPES:
+            ui.say("--scope read|notify|control")
+            return 2
+        cfname = rest[rest.index("--cloudflare") + 1] if "--cloudflare" in rest else None
+        if any(f in rest for f in ("--http", "--tunnel", "--tailscale", "--cloudflare")):
+            return mcp_server.serve_http(client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest,
+                                         cloudflare=cfname, scope=scope, access="--access" in rest)
+        return mcp_server.serve_stdio(client, scope or "control")
     if cmd == "stats":
         from omarchy_link import stats, config
         ui.say(str(stats.payload(config.load_config())))

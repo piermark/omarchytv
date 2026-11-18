@@ -166,6 +166,24 @@ class E2E(unittest.TestCase):
         cli("notify", "build   done", "--from", "Claude Code")
         self.assertEqual(self.tv.notes[-1], ("Claude Code", "build done"))
 
+    def test_app_tokens_ask_page_and_logs(self):   # v2.21
+        self.pair()
+        out = cli("token", "add", "My", "dashboard", "--scope", "notify").stdout.splitlines()
+        self.assertIn("My dashboard (notify)", out[0])
+        self.assertTrue(out[1].startswith("otva_"))
+        self.assertIn("My dashboard", cli("token").stdout)
+        cli("token", "revoke", "00000001")
+        self.assertIn("No app tokens", cli("token").stdout)
+        self.assertEqual(cli("ask", "Deploy?", check=False).returncode, 4)
+        self.tv.update_config(lambda j: j.update(agentAlert=True))
+        self.tv.answer_with = "Not now"
+        r = cli("ask", "Deploy?", "--choice", "Yes", "--choice", "Not now", "--timeout", "10")
+        self.assertEqual(r.stdout.strip(), "Not now")
+        cli("page", "http://192.168.1.20:8080/")
+        self.assertEqual(self.tv.page, "http://192.168.1.20:8080/")
+        self.assertEqual(cli("page", "--close").stdout.strip(), "closed")
+        self.assertIn("question from PC", cli("tv", "logs").stdout)
+
     def test_status_offline_and_unpaired(self):
         self.assertEqual(json.loads(cli("status", "--waybar").stdout)["class"], "unpaired")
         self.pair()
