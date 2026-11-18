@@ -1,5 +1,47 @@
 # Changelog
 
+## [2.21.0] — unreleased (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
+
+Built on the published 2.20.0.
+
+### One theme for every app (`GET /v1/theme`)
+
+- **The TV is now the theme server for your other apps**: a dashboard on a stick, a Home Assistant panel, an
+  agent page. `GET http://<tv>:47800/v1/theme` returns `background`, `foreground`, `accent`, `accent2`, the full
+  `colors.toml` palette and a link to the current wallpaper (`/v1/theme/wallpaper`). No pairing and no token: it
+  is read-only, LAN only, with `ETag`/`304` and CORS so a page served from another box can read it. Asked for by
+  a Hermes user who ran a second theme server just for this.
+- **LG and Samsung**: the PC bridge (`omarchy-tv webos-serve`, port 8765) answers the same paths with the same
+  schema, from the live Omarchy theme on the PC.
+- Off switch: Settings › Omarchy Link › **Share theme with apps on the network** (on by default). The TV lists
+  `theme-share` in its capabilities. Schema `omarchytv-theme/1`, documented in PROTOCOL.md with curl examples.
+
+### Home is quiet
+
+- **No more music starting by itself on Home** with the fractals wallpaper. Music plays only when you start it
+  (Radiomarchy, PLAY). A song you started keeps playing and the fractals still follow it.
+
+### Radiomarchy on LG
+
+- **Fixed: on LG the music played once, then never again.** The song went only through the WebAudio graph that
+  makes the fractals dance, and webOS can leave that graph suspended (started without a key press, or after
+  the app went to the background) while the player says "playing". Now every key press and every return to the
+  app wakes it, and if webOS still keeps it asleep, the song moves to a plain player at the same second: you
+  hear it for sure, and the fractals dance on their own beat for the rest of that session.
+
+### Pull requests merged
+
+- #155 Radiomarchy declares POST_NOTIFICATIONS and guards the now-playing notification.
+- #152 omarchy-link cast: optional fixed port for the served file, `castPort`.
+- #153 omarchy-link agents: T3 Code as a read-only agent source.
+- #146 omarchy-link: a PC without an Omarchy theme (macOS) leaves the TV's theme alone.
+- #149 Home: the widgets row is 1200 px with racing off too, so the AI panel stays on screen.
+- #156 Home: AI credit rows keep what tells them apart.
+- #144 Omarchy Link stays reachable after boot, an update and sleep.
+- #147 One VoiceInput for every mic, the in-app recognizer first.
+
+Thanks to the contributors of these pull requests.
+
 ## [2.20.0] — 2026-11-14 (`versionCode 29`; webOS 2.20.0, Tizen 2.20.0, PC plugins 2.20.0)
 
 Built on the published 2.15.1: everything fixed there is in here.

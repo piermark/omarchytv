@@ -530,46 +530,19 @@ final class RadioPlayer {
         startService();
     }
 
-    private boolean wallpaperMusicTried;
-
     /**
-     * Home fractals wallpaper is music-reactive, like the screensaver. If a track is already current
-     * and not user-paused, keep it audible (volume and audio focus). If nothing is current, start the
-     * cached playlist, or fetch radio.omarchy.org once. Never un-pauses a track the owner paused.
+     * Home fractals wallpaper is music-reactive, like the screensaver. v2.21: it never starts music by itself
+     * (the owner asked for a silent Home). If a track is already current and playing, keep it audible (volume
+     * and audio focus); a paused one keeps its media session so PLAY on Home resumes it. Nothing current: silence.
      */
     void ensureWallpaperMusic() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             h.post(this::ensureWallpaperMusic);
             return;
         }
-        if (current() != null) {
-            if (player != null && player.getPlayWhenReady()) ensureAudible();
-            else claimSession();
-            return;
-        }
-        List<RadioCatalog.Track> list = cachedSongs();
-        if (!list.isEmpty()) {
-            wallpaperMusicTried = true;
-            play(list, shuffle && !list.isEmpty() ? new Random().nextInt(list.size()) : 0);
-            return;
-        }
-        if (wallpaperMusicTried) return;
-        wallpaperMusicTried = true;
-        com.omarchytv.home.lights.Lights.run(() -> {
-            String txt = RadioCatalog.fetch(RadioCatalog.PLAYLIST);
-            if (txt != null) RadioCatalog.writeCache(new File(app.getFilesDir(), "radio-playlist.json"), txt);
-            List<RadioCatalog.Track> songs = txt != null ? RadioCatalog.parseSongs(txt) : java.util.Collections.emptyList();
-            h.post(() -> {
-                if (current() != null || songs.isEmpty()) return;
-                List<RadioCatalog.Track> vis = visibleSongs(songs);
-                if (!vis.isEmpty()) play(vis, shuffle ? new Random().nextInt(vis.size()) : 0);
-            });
-        });
-    }
-
-    private List<RadioCatalog.Track> cachedSongs() {
-        String a = RadioCatalog.readCache(new File(app.getFilesDir(), "radio-playlist.json"));
-        return a == null ? java.util.Collections.emptyList() : visibleSongs(RadioCatalog.parseSongs(a));
+        if (current() == null) return;
+        if (player != null && player.getPlayWhenReady()) ensureAudible();
+        else claimSession();
     }
 
     private List<RadioCatalog.Track> visibleSongs(List<RadioCatalog.Track> songs) {

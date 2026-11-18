@@ -176,8 +176,9 @@
     var ctx = null, an = null, freq = null, bands = Bands(), lastAn = 0;
     function audio() { var t = cur(); return t && t.kind === "episode" ? plain : song; }
     function emit() { for (var i = 0; i < E.listeners.length; i++) try { E.listeners[i](); } catch (e) { /* a closed UI */ } }
+    var noGraph = false, checkT = 0;
     function analyser() {
-      if (an || !(root.AudioContext || root.webkitAudioContext)) return;
+      if (an || noGraph || !(root.AudioContext || root.webkitAudioContext)) return;
       try {
         ctx = new (root.AudioContext || root.webkitAudioContext)();
         var src = ctx.createMediaElementSource(song);
@@ -197,12 +198,12 @@
       var a = audio(), other = a === song ? plain : song;
       other.pause();
       if (a === song) analyser();
-      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ }
       a.src = t.url;
       var from = t.kind === "episode" ? Math.max(0, (P.pos[t.url] || 0) - 3) : 0;
       if (from > 0) { var seek = function () { a.removeEventListener("loadedmetadata", seek); try { a.currentTime = from; } catch (e) { /* not seekable */ } }; a.addEventListener("loadedmetadata", seek); }
       var pr = a.play();
       if (pr && pr.catch) pr.catch(function (e) { E.error = String(e && e.name || "error"); emit(); });
+      if (a === song) resumeAudio();
       emit();
     }
     var errorsInARow = 0;
@@ -222,14 +223,57 @@
       errorsInARow = 0;
       if (t && t.kind === "episode" && now - lastSave > 15000 && a.currentTime > 10) { lastSave = now; P.pos[t.url] = Math.floor(a.currentTime); save(); }
     }
-    for (var x = 0, els = [song, plain]; x < 2; x++) {
-      els[x].addEventListener("ended", onEnded);
-      els[x].addEventListener("error", onError);
-      els[x].addEventListener("timeupdate", onTime);
-      els[x].addEventListener("play", emit);
-      els[x].addEventListener("pause", emit);
-      els[x].addEventListener("waiting", emit);
-      els[x].addEventListener("playing", emit);
+    function listen(el) {
+      el.addEventListener("ended", onEnded);
+      el.addEventListener("error", onError);
+      el.addEventListener("timeupdate", onTime);
+      el.addEventListener("play", emit);
+      el.addEventListener("pause", emit);
+      el.addEventListener("waiting", emit);
+      el.addEventListener("playing", emit);
+    }
+    listen(song);
+    listen(plain);
+    /**
+     * v2.21 LG fix: createMediaElementSource sends the song ONLY through the AudioContext. webOS can leave that
+     * context suspended (started without a key press, or after the app went to the background) while the
+     * <audio> says "playing": silence. So: resume it on every key and on coming back; if it is still not
+     * running shortly after, move the song to a fresh <audio> with no graph (heard for sure, fractals then
+     * dance on their own beat instead of the music's) for the rest of this session.
+     */
+    function bypassGraph() {
+      if (noGraph) return;
+      noGraph = true;
+      var old = song, at = 0, was = !old.paused && !!cur();
+      try { at = old.currentTime || 0; } catch (e) { /* not seekable */ }
+      var fresh = doc.createElement("audio");
+      fresh.preload = "auto";
+      listen(fresh);
+      song = fresh;
+      try { old.pause(); old.removeAttribute("src"); old.load(); } catch (e) { /* gone */ }
+      try { if (ctx && ctx.close) ctx.close(); } catch (e) { /* closed */ }
+      ctx = null; an = null; freq = null;
+      var t = cur();
+      if (t && t.kind !== "episode") {
+        fresh.src = t.url;
+        if (at > 0) { var seek = function () { fresh.removeEventListener("loadedmetadata", seek); try { fresh.currentTime = at; } catch (e) { /* not seekable */ } }; fresh.addEventListener("loadedmetadata", seek); }
+        if (was) { var pr = fresh.play(); if (pr && pr.catch) pr.catch(function (e) { E.error = String(e && e.name || "error"); emit(); }); }
+      }
+      emit();
+    }
+    function resumeAudio() {
+      if (!ctx || noGraph) return;
+      if (ctx.state !== "running" && ctx.resume) {
+        try { var pr = ctx.resume(); if (pr && pr.catch) pr.catch(function () { /* checked below */ }); } catch (e) { /* checked below */ }
+      }
+      clearTimeout(checkT);
+      checkT = setTimeout(function () {
+        if (ctx && ctx.state && ctx.state !== "running" && cur() && audio() === song && !song.paused) bypassGraph();
+      }, 1500);
+    }
+    if (doc.addEventListener) {
+      doc.addEventListener("keydown", resumeAudio, true);   // a key press is the gesture webOS wants
+      doc.addEventListener("visibilitychange", function () { if (!doc.hidden) resumeAudio(); });
     }
 
     E.on = function (fn) { E.listeners.push(fn); return function () { var i = E.listeners.indexOf(fn); if (i >= 0) E.listeners.splice(i, 1); }; };
@@ -263,8 +307,7 @@
     E.toggle = function () {
       var a = audio();
       if (!cur()) return;
-      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* later */ }
-      if (a.paused) { var pr = a.play(); if (pr && pr.catch) pr.catch(function () { /* the TV said no */ }); } else a.pause();
+      if (a.paused) { var pr = a.play(); if (pr && pr.catch) pr.catch(function () { /* the TV said no */ }); resumeAudio(); } else a.pause();
       emit();
     };
     E.pause = function () { audio().pause(); };
@@ -273,8 +316,10 @@
       song.muted = false; plain.muted = false;
       try { song.volume = 1; plain.volume = 1; } catch (e) { /* some TVs freeze volume */ }
       if (cur() && audio() === song) analyser();
-      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ }
+      resumeAudio();
     };
+    E.resumeAudio = resumeAudio;
+    E.graphBypassed = function () { return noGraph; };
     /**
      * Keep the song audible: the &lt;audio&gt; can report playing while an AudioContext left suspended
      * (idle/screensaver) is silent, because the analyser reroutes the element through it.
@@ -287,19 +332,9 @@
         if (pr && pr.catch) pr.catch(function () { /* the TV said no */ });
       }
     };
-    /** Home fractals wallpaper: keep a current unpaused track audible, or start the playlist once. */
+    // v2.21: Home never starts music by itself. A song the owner started keeps playing (and audible); silence stays silence.
     E.ensureWallpaperMusic = function () {
-      if (E.playing()) { if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ } E.claimSession(); return; }
-      if (cur()) return;   // the owner paused it
-      function start() {
-        if (cur() || E.playing()) return;
-        var list = visible(E.songs, P.explicit);
-        if (!list.length) return false;
-        E.play(list, P.shuffle ? Math.floor(Math.random() * list.length) : 0);
-        return true;
-      }
-      if (start()) return;
-      E.load(function () { start(); });
+      if (E.playing()) { E.resumeAudio(); E.claimSession(); }
     };
     E.seek = function (s) { var a = audio(), d = E.duration(); try { a.currentTime = Math.max(0, d ? Math.min(s, d - 0.5) : s); } catch (e) { /* not seekable */ } emit(); };
     E.seekBy = function (s) { E.seek(E.position() + s); };
