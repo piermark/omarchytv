@@ -306,6 +306,72 @@ class AiAgentsBridgeTest(unittest.TestCase):
         self.assertEqual(self.post("/v1/ai/ask", {"text": ""}, tok)[0], 400)
 
 
+class SharedThemeBridgeTest(unittest.TestCase):
+    """v2.21 GET /v1/theme on the PC bridge: same schema as the TV, no token, ETag/304, CORS."""
+
+    def setUp(self):
+        import tempfile, http.client
+        self.td = tempfile.TemporaryDirectory()
+        home = webos.Path(self.td.name)
+        th = home / ".local/state/omarchy/current/theme"
+        th.mkdir(parents=True)
+        (th / "colors.toml").write_text('accent = "#E0A030"\nbackground = "#101010"\nforeground = "#eeeeee"\ncolor5 = "#aa55ff"\n')
+        (home / ".local/state/omarchy/current/theme.name").write_text("ember\n")
+        self.wall = home / ".local/state/omarchy/current/wall.png"
+        self.wall.write_bytes(b"\x89PNG\r\n\x1a\nfake")
+        (home / ".local/state/omarchy/current/background").symlink_to(self.wall.name)
+        self.p = mock.patch.object(webos.Path, "home", return_value=home)
+        self.p.start()
+        webos._wp_cache.clear()
+        self.srv = HTTPServer(("127.0.0.1", 0), webos.WebOSHandler)
+        threading.Thread(target=self.srv.serve_forever, daemon=True).start()
+        self.http = http.client
+
+    def tearDown(self):
+        self.srv.shutdown()
+        self.srv.server_close()
+        self.p.stop()
+        self.td.cleanup()
+
+    def req(self, method, path, headers=None):
+        c = self.http.HTTPConnection("127.0.0.1", self.srv.server_port, timeout=5)
+        c.request(method, path, headers=headers or {})
+        r = c.getresponse()
+        body = r.read()
+        c.close()
+        return r.status, {k.lower(): v for k, v in r.getheaders()}, body
+
+    def test_theme_payload_etag_and_cors(self):
+        st, h, body = self.req("GET", "/v1/theme")
+        self.assertEqual(st, 200)
+        o = json.loads(body)
+        self.assertEqual(o["schema"], "omarchytv-theme/1")
+        self.assertEqual(o["name"], "ember")
+        self.assertEqual(o["source"], "omarchy-pc")
+        self.assertEqual((o["background"], o["foreground"], o["accent"], o["accent2"]), ("#101010", "#eeeeee", "#e0a030", "#aa55ff"))
+        self.assertEqual(o["mode"], "dark")
+        self.assertEqual(o["wallpaper"]["type"], "image/png")
+        self.assertEqual(o["wallpaper"]["url"], "/v1/theme/wallpaper")
+        self.assertEqual(h["access-control-allow-origin"], "*")
+        self.assertEqual(h["cache-control"], "no-cache")
+        st, _, body = self.req("GET", "/v1/theme", {"If-None-Match": h["etag"]})
+        self.assertEqual((st, body), (304, b""))
+        st, _, _ = self.req("OPTIONS", "/v1/theme")
+        self.assertEqual(st, 204)
+
+    def test_wallpaper_bytes_head_and_missing(self):
+        st, h, body = self.req("GET", "/v1/theme/wallpaper")
+        self.assertEqual((st, h["content-type"]), (200, "image/png"))
+        self.assertEqual(body, self.wall.read_bytes())
+        st, h2, body = self.req("HEAD", "/v1/theme")
+        self.assertEqual((st, body), (200, b""))
+        self.assertTrue(int(h2["content-length"]) > 0)
+        self.wall.unlink()
+        webos._wp_cache.clear()
+        self.assertEqual(self.req("GET", "/v1/theme/wallpaper")[0], 404)
+        self.assertIsNone(json.loads(self.req("GET", "/v1/theme")[2])["wallpaper"])
+
+
 class LiveThemePathTest(unittest.TestCase):
     def test_theme_name_and_wallpaper_prefer_the_state_dir(self):
         with tempfile.TemporaryDirectory() as td:

@@ -162,6 +162,8 @@ fake status or swallow commands.
 | Method & path | Auth | Body → Response |
 |---|---|---|
 | `GET /v1/info` | none | → `{service:"omarchytv-link", protocol:1, tvId, name, pairingOpen}`. Nothing else. |
+| `GET /v1/theme` | none, LAN only (v2.21) | → the current theme for other apps (§6, Theme for apps). `403 theme_sharing_off` when turned off. |
+| `GET /v1/theme/wallpaper` | none, LAN only (v2.21) | → the current wallpaper image (`image/jpeg`, `png` or `webp`) / `404 no_wallpaper` |
 | `POST /v1/pair/start` | none, pairing window | §4 |
 | `POST /v1/pair/confirm` | none, pairing window | §4 |
 | `GET /v1/status` | ✓ | → Status (below) |
@@ -257,6 +259,48 @@ same theme as the current one does nothing. The normal PC → TV sync then pushe
 theme the PC doesn't have changes only the TV (logged on the PC). LG/Samsung use the bridge instead:
 `POST /v1/theme/set` on `omarchy-tv webos-serve`, header `X-Omarchy-Token`, body `{"name"}` →
 `{"result": "ok"|"same"}` 200, `"unknown"` 404, `"busy"` 429, 403 when `themeFromTv` is off, 503 without omarchy-link.
+
+### Theme for apps (`GET /v1/theme`, v2.21)
+
+One canonical theme for every app on the network: a WebView dashboard, a Home Assistant panel, an agent page.
+Read-only, no pairing, no token. The TV answers it on the Link port (47800), and the LG/Samsung bridge
+(`omarchy-tv webos-serve`, port 8765) answers the same paths from the live Omarchy theme on the PC.
+
+```json
+{
+  "schema": "omarchytv-theme/1",
+  "name": "tokyo-night",
+  "mode": "dark",
+  "source": "omarchy-pc",
+  "background": "#1a1b26",
+  "foreground": "#a9b1d6",
+  "accent": "#7aa2f7",
+  "accent2": "#bb9af7",
+  "colors": { "background": "#1a1b26", "foreground": "#a9b1d6", "color0": "#32344a", "...": "every colors.toml key" },
+  "wallpaper": { "url": "/v1/theme/wallpaper", "type": "image/webp", "sha256": "<hex>", "bytes": 812345 }
+}
+```
+
+- `source`: `omarchy-pc` when the PC pushed the theme (Omarchy Link or the bridge), `tv` when it was picked on the TV.
+- `colors`: the theme's `colors.toml` (`#rrggbb`, and `rgba(rrggbbaa)` for keys such as borders). On the TV, keys the
+  theme lacks are filled with what the TV draws (Tokyo Night). `wallpaper` is `null` for a procedural or fractal
+  background.
+- Caching: `ETag` on both paths, `Cache-Control: no-cache`. Send `If-None-Match` and get `304` with no body
+  until the theme or the wallpaper changes. Poll every 10–30 s; the TV allows 10 requests per 10 s per address
+  (`429` above that).
+- CORS: `Access-Control-Allow-Origin: *`, `HEAD` and `OPTIONS` preflight, `Access-Control-Allow-Private-Network`,
+  so a page served from another box can `fetch()` it.
+- LAN only, like every Link route: a peer outside the TV's subnet gets `403 not_lan`. Nothing here can change the
+  TV; `PUT /v1/theme` still needs a paired, signed PC.
+- Off switch: Settings > Omarchy Link > "Share theme with apps on the network", or `"link": {"shareTheme": false}`
+  in `omarchytv.json` → `403 theme_sharing_off`.
+
+```sh
+curl -s http://<tv>:47800/v1/theme | jq '{background, foreground, accent}'
+curl -s -o wall.webp http://<tv>:47800/v1/theme/wallpaper
+etag=$(curl -sI http://<tv>:47800/v1/theme | awk -F': ' 'tolower($1)=="etag"{print $2}' | tr -d '\r')
+curl -s -o /dev/null -w '%{http_code}\n' -H "If-None-Match: $etag" http://<tv>:47800/v1/theme   # 304
+```
 
 ### Power together and liftoff (v2.14)
 
@@ -748,7 +792,7 @@ during the screensaver (that is when the PC shows "screensaver"), with at most
 - This section covers Omarchy Link (Android TV). The LG webOS / Samsung Tizen bridge
   (`omarchy-tv webos serve`) is plain HTTP with a static ask code in the
   `X-Omarchy-Token` header: no encryption and no per-request signing.
-- No unauthenticated endpoint does anything: `/v1/info` is read-only and minimal,
+- No unauthenticated endpoint does anything: `/v1/info` and `GET /v1/theme` (colours and wallpaper, v2.21) are read-only,
   and `pair/*` only work while the user has the pairing page open.
 - LAN only, enforced on both sides. The TV checks its subnet. The PC refuses
   non-private targets and, by default, targets outside its own subnets

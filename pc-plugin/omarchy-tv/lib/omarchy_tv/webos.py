@@ -53,6 +53,7 @@ import shutil
 import socket
 import subprocess
 import time
+import hashlib
 import hmac
 import secrets
 import threading
@@ -272,6 +273,83 @@ def current_wallpaper_path() -> Path | None:
     return None
 
 
+THEME_SCHEMA = "omarchytv-theme/1"
+_TN = {"background": "#1a1b26", "foreground": "#a9b1d6", "accent": "#7aa2f7", "accent2": "#bb9af7"}
+_wp_cache: dict = {}
+
+
+def current_theme_dir() -> Path | None:
+    """The live theme folder (colors.toml, light.mode): state dir first, then the older config path."""
+    for root in _current_dirs():
+        d = root / "theme"
+        try:
+            if (d / "colors.toml").is_file():
+                return d
+        except OSError:
+            pass
+    return None
+
+
+def _image_type(data: bytes, name: str = "") -> str:
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:4] == b"\x89PNG":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    ext = Path(name).suffix.lower()
+    return "image/webp" if ext == ".webp" else ("image/png" if ext == ".png" else "image/jpeg")
+
+
+def theme_wallpaper() -> tuple[bytes, str, str] | None:
+    """(bytes, type, sha256) of the live wallpaper, hashed once per file change."""
+    wp = current_wallpaper_path()
+    if not wp:
+        return None
+    try:
+        st = wp.stat()
+        if st.st_size > 32 * 1024 * 1024:
+            return None
+        key = (str(wp), st.st_mtime_ns, st.st_size)
+        hit = _wp_cache.get("wp")
+        if hit and hit[0] == key:
+            return hit[1]
+        data = wp.read_bytes()
+    except OSError:
+        return None
+    val = (data, _image_type(data, wp.name), hashlib.sha256(data).hexdigest())
+    _wp_cache["wp"] = (key, val)
+    return val
+
+
+def build_theme_payload() -> dict:
+    """GET /v1/theme: the same schema the TV serves (PROTOCOL.md 6.x), read from the live Omarchy theme."""
+    d = current_theme_dir()
+    c: dict = {}
+    if d:
+        try:
+            c = themes.parse_colors((d / "colors.toml").read_text())
+        except OSError:
+            c = {}
+    colors = dict(c)
+    for k in ("background", "foreground"):
+        colors.setdefault(k, _TN[k])
+    accent = c.get("accent") or c.get("color4") or _TN["accent"]
+    wp = theme_wallpaper()
+    return {
+        "schema": THEME_SCHEMA,
+        "name": current_theme_name(),
+        "mode": "light" if d and (d / "light.mode").exists() else "dark",
+        "source": "omarchy-pc",
+        "background": colors["background"],
+        "foreground": colors["foreground"],
+        "accent": accent,
+        "accent2": c.get("color5") or accent,
+        "colors": colors,
+        "wallpaper": {"url": "/v1/theme/wallpaper", "type": wp[1], "sha256": wp[2], "bytes": len(wp[0])} if wp else None,
+    }
+
+
 def now_playing() -> dict | None:
     if not shutil.which("playerctl"):
         return None
@@ -363,8 +441,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token")   # Chrome 38 has no "*"
+        self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token, If-None-Match")   # Chrome 38 has no "*"
+        self.send_header("Access-Control-Allow-Private-Network", "true")
         self.end_headers()
 
     def _authorized(self) -> bool:
@@ -556,6 +635,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
         if path == "/v1/themes":
             self._send_json(build_themes_payload())
             return
+        if path in ("/v1/theme", "/v1/theme/wallpaper"):
+            self._shared_theme(path)
+            return
         if path == "/v1/media/list":
             self._media_list()
             return
@@ -660,10 +742,47 @@ class WebOSHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
 
+    # ---- v2.21 one canonical theme for every app on the LAN (read-only, no token) ----
+    def _shared_theme(self, path: str, head: bool = False) -> None:
+        if path == "/v1/theme":
+            body = json.dumps(build_theme_payload(), sort_keys=True).encode("utf-8")
+            ctype = "application/json; charset=utf-8"
+            tag = hashlib.sha256(body).hexdigest()[:32]
+        else:
+            wp = theme_wallpaper()
+            if not wp:
+                self._send_json({"error": "no_wallpaper"}, 404)
+                return
+            body, ctype, tag = wp[0], wp[1], wp[2][:32]
+        etag = f'"{tag}"'
+        inm = [t.strip() for t in (self.headers.get("If-None-Match") or "").split(",")]
+        if etag in inm or "*" in inm:
+            self.send_response(304)
+            self._theme_headers(etag)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self._theme_headers(etag)
+        self.end_headers()
+        if not head:
+            self.wfile.write(body)
+
+    def _theme_headers(self, etag: str) -> None:
+        self.send_header("ETag", etag)
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Expose-Headers", "ETag")
+
     def do_HEAD(self):
         path = self.path.split("?", 1)[0]
         if path.startswith("/v1/media/f/"):
             self._media_file(path)
+            return
+        if path in ("/v1/theme", "/v1/theme/wallpaper"):
+            self._shared_theme(path, head=True)
         else:
             self.send_response(404)
             self.end_headers()
