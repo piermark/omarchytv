@@ -23,6 +23,18 @@ class FakeHost implements LinkServer.Host {
     final List<String> keys = new ArrayList<>();
     LinkServer server;
     int codes;
+    volatile JSONObject theme;               // GET /v1/theme (null = sharing off)
+    volatile LinkServer.Blob wallpaper;      // GET /v1/theme/wallpaper
+
+    @Override
+    public JSONObject sharedTheme() {
+        return theme;
+    }
+
+    @Override
+    public LinkServer.Blob sharedWallpaper() {
+        return wallpaper;
+    }
 
     FakeHost(File dir) {
         this.dir = dir;

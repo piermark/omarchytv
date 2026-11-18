@@ -182,6 +182,7 @@
     <string name="home_service_desc">Otwiera OmarchyTV, gdy Home pokazuje fabryczny ekran główny telewizora. Widzi tylko, który ekran główny się otworzył, i niczego nie odczytuje z ekranu.</string>
     <string name="set_home_override">Przycisk Home otwiera OmarchyTV</string>
     <string name="link_usage">Dostęp do użycia (bieżąca aplikacja)</string>
+    <string name="link_share_theme">Udostępniaj motyw aplikacjom w sieci</string>
     <string name="link_paired_toast">Sparowano z %1$s</string>
     <string name="link_online">połączono</string>
     <string name="ai_settings">Kredyty AI</string>

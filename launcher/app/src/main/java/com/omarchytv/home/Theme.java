@@ -34,6 +34,8 @@ final class Theme {
     final int magenta;
     /** shell.toml hyprland.active-border-foreground: the theme's active border gradient, else foreground. */
     final int activeBorderFg;
+    /** v2.21: the resolved colors.toml (stock palette, then the PC's pushed colours), for GET /v1/theme. */
+    private final JSONObject palette;
 
     private static volatile Theme current;
     private static JSONObject bundled;
@@ -151,6 +153,43 @@ final class Theme {
         String ab = str(stock, over, "hyprland_active_border", null);
         activeBorderFg = ab != null ? activeBorder : fg;
         fgDim = readable(fgDark, fg, bg);
+        palette = merge(stock, over);
+    }
+
+    /** Stock keys, then pushed ones on top; internal keys ("_accent2") and non-colours ("mode") left out. */
+    static JSONObject merge(JSONObject stock, JSONObject over) {
+        JSONObject out = new JSONObject();
+        for (JSONObject src : new JSONObject[]{stock, over}) {
+            if (src == null) continue;
+            for (java.util.Iterator<String> it = src.keys(); it.hasNext(); ) {
+                String k = it.next();
+                if (k.startsWith("_") || "mode".equals(k)) continue;
+                String v = src.optString(k, "").trim().toLowerCase(java.util.Locale.ROOT);
+                if (!v.matches("#[0-9a-f]{6}|rgba?\\([0-9a-f]{6,8}\\)")) continue;   // colours only
+                try {
+                    out.put(k, v);
+                } catch (org.json.JSONException ignored) {
+                }
+            }
+        }
+        for (String[] kv : TN) {
+            if (!out.has(kv[0])) {
+                try {
+                    out.put(kv[0], kv[1]);
+                } catch (org.json.JSONException ignored) {
+                }
+            }
+        }
+        return out;
+    }
+
+    /** A copy of the resolved colors.toml (key → "#rrggbb"). */
+    JSONObject palette() {
+        try {
+            return new JSONObject(palette.toString());
+        } catch (org.json.JSONException e) {
+            return new JSONObject();
+        }
     }
 
     /** dark_foreground, mixed towards foreground only as far as needed for 4.5:1 on background. */

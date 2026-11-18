@@ -182,6 +182,7 @@
     <string name="home_service_desc">Apre OmarchyTV quando Home mostra la home della TV. Vede solo quale home si è aperta e non legge nulla dallo schermo.</string>
     <string name="set_home_override">Il tasto Home apre OmarchyTV</string>
     <string name="link_usage">Accesso utilizzo (app attuale)</string>
+    <string name="link_share_theme">Condividi il tema con le app della rete</string>
     <string name="link_paired_toast">Associato a %1$s</string>
     <string name="link_online">connesso</string>
     <string name="ai_settings">Crediti AI</string>

@@ -182,6 +182,7 @@
     <string name="home_service_desc">Ana Ekran, TV\'nin kendi ana ekranını gösterdiğinde OmarchyTV\'yi açar. Yalnızca hangi ana ekranın açıldığını görür ve ekranda hiçbir şey okumaz.</string>
     <string name="set_home_override">Ana Ekran tuşu OmarchyTV\'yi açar</string>
     <string name="link_usage">Kullanım erişimi (mevcut uygulama)</string>
+    <string name="link_share_theme">Temayı ağdaki uygulamalarla paylaş</string>
     <string name="link_paired_toast">%1$s ile eşleştirildi</string>
     <string name="link_online">bağlı</string>
     <string name="ai_settings">AI kredileri</string>

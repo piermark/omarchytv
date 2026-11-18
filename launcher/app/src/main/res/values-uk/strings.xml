@@ -182,6 +182,7 @@
     <string name="home_service_desc">Відкриває OmarchyTV, коли «Додому» показує рідний головний екран телевізора. Бачить лише, який головний екран відкрився, і нічого не зчитує з екрана.</string>
     <string name="set_home_override">Кнопка «Додому» відкриває OmarchyTV</string>
     <string name="link_usage">Доступ до історії використання (поточний застосунок)</string>
+    <string name="link_share_theme">Ділитися темою з застосунками в мережі</string>
     <string name="link_paired_toast">Сполучено з %1$s</string>
     <string name="link_online">підключено</string>
     <string name="ai_settings">Кредити ШІ</string>

@@ -230,7 +230,12 @@ public class WallpaperView extends View {
      * for "RIFF"); unwrap it so the bounds probe, the region decode and the full decode all see the WebP.
      */
     private byte[] assetBytes(String asset) {
-        try (java.io.InputStream in = getContext().getAssets().open(asset)) {
+        return assetBytes(getContext(), asset);
+    }
+
+    /** A bundled wallpaper's bytes, base64-unwrapped (some themes ship their WebP as base64 text); null if missing. */
+    static byte[] assetBytes(android.content.Context c, String asset) {
+        try (java.io.InputStream in = c.getAssets().open(asset)) {
             java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
             byte[] buf = new byte[16384];
             int n;

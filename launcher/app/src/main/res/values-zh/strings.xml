@@ -182,6 +182,7 @@
     <string name="home_service_desc">当主页键显示电视自带的主屏幕时打开 OmarchyTV。它只能看到打开了哪个主屏幕，不读取屏幕上的任何内容。</string>
     <string name="set_home_override">主页键打开 OmarchyTV</string>
     <string name="link_usage">使用情况访问权限（当前应用）</string>
+    <string name="link_share_theme">与网络中的应用共享主题</string>
     <string name="link_paired_toast">已与 %1$s 配对</string>
     <string name="link_online">已连接</string>
     <string name="ai_settings">AI 额度</string>

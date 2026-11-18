@@ -114,6 +114,32 @@ public final class LinkServer {
 
         /** play / pause / stop / seek on the open cast. Returns null when done, or an error code ("nothing_playing"). */
         String castControl(String id, String action, double position);
+
+        /**
+         * v2.21 GET /v1/theme: the theme the TV shows, for other apps on the network (ThemeShare.payload), or null
+         * when the owner turned "Share theme with apps on the network" off.
+         */
+        default JSONObject sharedTheme() {
+            return null;
+        }
+
+        /** v2.21 GET /v1/theme/wallpaper: the wallpaper that goes with it, or null (none to share, or sharing off). */
+        default Blob sharedWallpaper() {
+            return null;
+        }
+    }
+
+    /** Bytes with their media type (an image served as is). */
+    public static final class Blob {
+        public final byte[] bytes;
+        public final String type;
+        public final String sha256;
+
+        public Blob(byte[] bytes, String type, String sha256) {
+            this.bytes = bytes;
+            this.type = type;
+            this.sha256 = sha256;
+        }
     }
 
     public interface ConfigEdit {
@@ -301,9 +327,17 @@ public final class LinkServer {
         final Map<String, String> headers = new java.util.LinkedHashMap<>();
         boolean close;
 
+        String contentType = "application/json";
+
         Response(int status, JSONObject obj) {
             this.status = status;
             this.body = obj == null ? new byte[0] : LinkCrypto.utf8(obj.toString());
+        }
+
+        Response(int status, byte[] body, String contentType) {
+            this.status = status;
+            this.body = body == null ? new byte[0] : body;
+            this.contentType = contentType;
         }
     }
 
@@ -404,17 +438,19 @@ public final class LinkServer {
     static void write(OutputStream out, Response r) throws IOException {
         StringBuilder h = new StringBuilder();
         h.append("HTTP/1.1 ").append(r.status).append(' ').append(reason(r.status)).append("\r\n");
-        if (r.status != 101) {
-            h.append("Content-Type: application/json\r\n");
+        if (r.status != 101 && r.status != 204 && r.status != 304) {
+            h.append("Content-Type: ").append(r.contentType).append("\r\n");
             h.append("Content-Length: ").append(r.body.length).append("\r\n");
+        } else if (r.status == 204 || r.status == 304) {
+            h.append("Content-Length: 0\r\n");
         }
-        h.append("Cache-Control: no-store\r\n");
+        if (!r.headers.containsKey("Cache-Control")) h.append("Cache-Control: no-store\r\n");
         h.append("X-OTV-Time: ").append(System.currentTimeMillis() / 1000).append("\r\n");
         for (Map.Entry<String, String> e : r.headers.entrySet()) h.append(e.getKey()).append(": ").append(e.getValue()).append("\r\n");
         if (r.close) h.append("Connection: close\r\n");
         h.append("\r\n");
         out.write(h.toString().getBytes(StandardCharsets.ISO_8859_1));
-        if (r.status != 101) out.write(r.body);
+        if (r.status != 101 && r.status != 204 && r.status != 304) out.write(r.body);
         out.flush();
     }
 
@@ -422,6 +458,8 @@ public final class LinkServer {
         switch (s) {
             case 101: return "Switching Protocols";
             case 200: return "OK";
+            case 204: return "No Content";
+            case 304: return "Not Modified";
             case 400: return "Bad Request";
             case 401: return "Unauthorized";
             case 403: return "Forbidden";
@@ -655,6 +693,9 @@ public final class LinkServer {
             } catch (JSONException ignored) {
             }
             return new Response(200, o);
+        }
+        if (sharePath(path) && ("GET".equals(req.method) || "HEAD".equals(req.method) || "OPTIONS".equals(req.method))) {
+            return sharedTheme(req, path);
         }
         if ("POST".equals(req.method) && ("/v1/pair/start".equals(path) || "/v1/pair/confirm".equals(path))) {
             long retry = limited(req.peer + "|" + path, 1, 2000);
@@ -932,6 +973,84 @@ public final class LinkServer {
 
     // ---- endpoints (§6) ----------------------------------------------------------------------------
 
+    /** v2.21: the read-only theme for apps (no pairing): GET /v1/theme and GET /v1/theme/wallpaper. */
+    static boolean sharePath(String target) {
+        String p = target == null ? "" : target.split("\\?", 2)[0];
+        return "/v1/theme".equals(p) || "/v1/theme/wallpaper".equals(p);
+    }
+
+    /**
+     * GET /v1/theme (JSON) and /v1/theme/wallpaper (the image), for dashboards, Remote panes and agent pages on the
+     * LAN. CORS for web pages, an ETag so polling costs a 304, at most 10 requests per 10 s per client. 403
+     * theme_sharing_off when the owner turned it off. Never anything private: colours, a theme name, an image.
+     */
+    private Response sharedTheme(Request req, String target) {
+        String path = target.split("\\?", 2)[0];
+        boolean image = path.endsWith("/wallpaper");
+        Response r;
+        if ("OPTIONS".equals(req.method)) {
+            r = new Response(204, new byte[0], "text/plain");
+        } else if (limited(req.peer + "|theme", 10, 10_000) > 0) {
+            r = retryAfter(new Response(429, err("rate_limited", "10 theme requests per 10 s")), 2);
+        } else {
+            JSONObject theme = host.sharedTheme();
+            if (theme == null) {
+                r = new Response(403, err("theme_sharing_off", "Settings > Omarchy Link > Share theme with apps on the network"));
+            } else if (!image) {
+                byte[] body = LinkCrypto.utf8(theme.toString());
+                r = conditional(req, new Response(200, body, "application/json"), sha256Hex(body));
+            } else {
+                Blob wp = host.sharedWallpaper();
+                if (wp == null) r = new Response(404, err("no_wallpaper", "the TV shows no wallpaper image right now"));
+                else r = conditional(req, new Response(200, wp.bytes, wp.type), wp.sha256);
+            }
+        }
+        r.headers.put("Access-Control-Allow-Origin", "*");
+        r.headers.put("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        r.headers.put("Access-Control-Allow-Headers", "If-None-Match");
+        r.headers.put("Access-Control-Expose-Headers", "ETag");
+        r.headers.put("Access-Control-Allow-Private-Network", "true");
+        r.headers.put("Access-Control-Max-Age", "600");
+        if ("HEAD".equals(req.method) && r.status == 200) {
+            Response h = new Response(200, new byte[0], r.contentType);
+            h.headers.putAll(r.headers);
+            h.headers.put("X-Content-Length", String.valueOf(r.body.length));
+            return h;
+        }
+        return r;
+    }
+
+    /** ETag + If-None-Match: 304 when the client already has it; no-cache so browsers always revalidate. */
+    static Response conditional(Request req, Response ok, String sha) {
+        String etag = "\"" + sha.substring(0, Math.min(32, sha.length())) + "\"";
+        String inm = req.header("If-None-Match");
+        Response r = ok;
+        if (!inm.isEmpty()) {
+            for (String t : inm.split(",")) {
+                String v = t.trim();
+                if (v.startsWith("W/")) v = v.substring(2);
+                if (v.equals(etag) || "*".equals(v)) {
+                    r = new Response(304, new byte[0], ok.contentType);
+                    break;
+                }
+            }
+        }
+        r.headers.put("ETag", etag);
+        r.headers.put("Cache-Control", "no-cache");
+        return r;
+    }
+
+    static String sha256Hex(byte[] b) {
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256").digest(b);
+            StringBuilder s = new StringBuilder(64);
+            for (byte x : d) s.append(String.format(Locale.ROOT, "%02x", x & 0xFF));
+            return s.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            return "0";
+        }
+    }
+
     private Response route(Request req, Auth a, JSONObject body) throws Exception {
         String m = req.method, p = req.target;
         if ("GET".equals(m) && "/v1/status".equals(p)) return new Response(200, status());
@@ -1178,6 +1297,7 @@ public final class LinkServer {
             caps0.put("plugins");
             caps0.put("enc-a256gcm");
             caps0.put("mcp");   // v-next: PUT/DELETE /v1/banners/<package> (PNG), GET /v1/banners   // v2.10.1: PUT/DELETE /v1/themes/<name>, GET /v1/themes, POST /v1/themes/<name>/select   // §6 Agents: PUT/GET /v1/agents, agent_activity, agent_ask
+            if (host.sharedTheme() != null) caps0.put("theme-share");   // v2.21 GET /v1/theme, /v1/theme/wallpaper (no token)
             caps0.put("office");   // v2.20 GrokBot Office: PUT/GET /v1/office, office_hire / office_hire_result
             List<String> kinds = host.castKinds();
             if (kinds != null && !kinds.isEmpty()) {

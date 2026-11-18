@@ -182,6 +182,7 @@
     <string name="home_service_desc">Öffnet OmarchyTV, wenn die Home-Taste den Startbildschirm des Fernsehers zeigt. Sieht nur, welcher Startbildschirm geöffnet wurde, und liest nichts vom Bildschirm.</string>
     <string name="set_home_override">Home-Taste öffnet OmarchyTV</string>
     <string name="link_usage">Nutzungszugriff (aktuelle App)</string>
+    <string name="link_share_theme">Theme mit Apps im Netzwerk teilen</string>
     <string name="link_paired_toast">Gekoppelt mit %1$s</string>
     <string name="link_online">verbunden</string>
     <string name="ai_settings">KI-Guthaben</string>

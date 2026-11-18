@@ -182,6 +182,7 @@
     <string name="home_service_desc">Abre o OmarchyTV quando Início mostra o ecrã inicial original do televisor. Vê apenas que ecrã inicial abriu e não lê nada no ecrã.</string>
     <string name="set_home_override">O botão Início abre o OmarchyTV</string>
     <string name="link_usage">Acesso de utilização (app atual)</string>
+    <string name="link_share_theme">Partilhar o tema com as apps da rede</string>
     <string name="link_paired_toast">Emparelhado com %1$s</string>
     <string name="link_online">ligado</string>
     <string name="ai_settings">Créditos IA</string>

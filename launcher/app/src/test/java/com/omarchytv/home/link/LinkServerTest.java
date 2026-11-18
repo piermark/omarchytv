@@ -1,5 +1,6 @@
 package com.omarchytv.home.link;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -230,6 +231,62 @@ public class LinkServerTest {
         assertFalse(f.exists());
         assertEquals(404, signed("DELETE", "/v1/banners/com.netflix.ninja", "").status);
         assertTrue(host.events.stream().anyMatch(e -> e.startsWith("banners ")));
+    }
+
+    @Test
+    public void themeForAppsNeedsNoPairingHasEtagCorsAndCanBeTurnedOff() throws Exception {
+        server.limits = false;
+        host.theme = new JSONObject().put("schema", "omarchytv-theme/1").put("name", "tokyo-night").put("background", "#1a1b26");
+        Resp r = http("GET", "/v1/theme", new byte[0], null);
+        assertEquals(200, r.status);
+        assertEquals("tokyo-night", r.json().getString("name"));
+        assertEquals("*", r.headers.get("access-control-allow-origin"));
+        assertEquals("no-cache", r.headers.get("cache-control"));
+        String etag = r.headers.get("etag");
+        assertNotNull(etag);
+        Map<String, String> h = new HashMap<>();
+        h.put("If-None-Match", etag);
+        Resp same = http("GET", "/v1/theme?x=1", new byte[0], h);
+        assertEquals(304, same.status);
+        assertEquals(0, same.body.length);
+        // a new theme, a new tag
+        host.theme.put("name", "gruvbox");
+        assertEquals(200, http("GET", "/v1/theme", new byte[0], h).status);
+        // CORS preflight
+        Resp pre = http("OPTIONS", "/v1/theme", new byte[0], null);
+        assertEquals(204, pre.status);
+        assertTrue(pre.headers.get("access-control-allow-headers").contains("If-None-Match"));
+        // the wallpaper, served as the image it is
+        assertEquals(404, http("GET", "/v1/theme/wallpaper", new byte[0], null).status);
+        byte[] img = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 1, 2, 3};
+        host.wallpaper = new LinkServer.Blob(img, "image/jpeg", "abc123");
+        Resp wp = http("GET", "/v1/theme/wallpaper", new byte[0], null);
+        assertEquals(200, wp.status);
+        assertEquals("image/jpeg", wp.headers.get("content-type"));
+        assertArrayEquals(img, wp.body);
+        assertEquals("\"abc123\"", wp.headers.get("etag"));
+        // writing the theme still needs a paired, signed PC
+        assertEquals(401, http("PUT", "/v1/theme", "{}".getBytes(), null).status);
+        // the owner turned sharing off
+        host.theme = null;
+        Resp off = http("GET", "/v1/theme", new byte[0], null);
+        assertEquals(403, off.status);
+        assertEquals("theme_sharing_off", off.json().getString("error"));
+    }
+
+    @Test
+    public void themeForAppsIsLanOnlyAndRateLimited() throws Exception {
+        host.theme = new JSONObject().put("name", "tokyo-night");
+        int ok = 0, limited = 0;
+        for (int i = 0; i < 12; i++) {
+            int st = http("GET", "/v1/theme", new byte[0], null).status;
+            if (st == 200) ok++;
+            if (st == 429) limited++;
+        }
+        assertEquals(10, ok);
+        assertEquals(2, limited);
+        host.allowLoopback = false;
+        assertEquals(403, http("GET", "/v1/theme", new byte[0], null).status);
     }
 
     @Test

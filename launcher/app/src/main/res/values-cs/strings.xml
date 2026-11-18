@@ -182,6 +182,7 @@
     <string name="home_service_desc">Otevře OmarchyTV, když Domů zobrazí původní domovskou obrazovku televize. Vidí jen, která domovská obrazovka se otevřela, a nic nečte z obrazovky.</string>
     <string name="set_home_override">Tlačítko Domů otevírá OmarchyTV</string>
     <string name="link_usage">Přístup k využití (aktuální aplikace)</string>
+    <string name="link_share_theme">Sdílet motiv s aplikacemi v síti</string>
     <string name="link_paired_toast">Spárováno s %1$s</string>
     <string name="link_online">připojeno</string>
     <string name="ai_settings">AI kredity</string>

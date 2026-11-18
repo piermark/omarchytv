@@ -264,6 +264,8 @@ final class LauncherConfig {
 
     /** Omarchy Link server on/off (omarchytv.json "link": {"enabled": false}); default on. */
     final boolean linkEnabled;
+    /** v2.21: GET /v1/theme answers apps on the network ("link": {"shareTheme": false} turns it off); default on. */
+    final boolean shareTheme;
     /** AI pane when no PC is connected and the data is old: "stale" (dim, "pc offline · 3h ago") or "hide". */
     final String aiOffline;
     /** Unix seconds of the last PUT /v1/ai (omarchytv.json "aiAt"), 0 if never. */
@@ -650,6 +652,7 @@ final class LauncherConfig {
         paneOverflow = wg != null && "skip".equals(wg.optString("overflow")) ? "skip" : "row2";
         hiddenPcPanes = strings(wg, "hidden", Collections.<String>emptyList());
         linkEnabled = lkc == null || lkc.optBoolean("enabled", true);
+        shareTheme = lkc == null || lkc.optBoolean("shareTheme", true);
         JSONObject ap = j != null ? j.optJSONObject("aiPane") : null;
         aiOffline = ap != null && "hide".equals(ap.optString("offline")) ? "hide" : "stale";
         aiAt = j != null ? j.optLong("aiAt", 0) : 0;

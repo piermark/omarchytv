@@ -941,6 +941,31 @@ public final class OmarchyLink implements LinkServer.Host {
         return CastRouter.control(app, id, action, position);
     }
 
+    /** v2.21 GET /v1/theme: the theme on screen, unless the owner turned sharing off. Server thread. */
+    @Override
+    public JSONObject sharedTheme() {
+        LauncherConfig cfg = LauncherConfig.get(app);
+        if (!cfg.shareTheme) return null;
+        try {
+            ThemeShare.Wallpaper wp = ThemeShare.wallpaper(app);
+            return ThemeShare.payload(Theme.cur(), wp, ThemeShare.source(themeCfg()));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private JSONObject themeCfg() {
+        JSONObject j = LauncherConfig.readJson(app);
+        return j != null ? j.optJSONObject("theme") : null;
+    }
+
+    @Override
+    public com.omarchytv.home.link.LinkServer.Blob sharedWallpaper() {
+        if (!LauncherConfig.get(app).shareTheme) return null;
+        ThemeShare.Wallpaper wp = ThemeShare.wallpaper(app);
+        return wp == null ? null : new com.omarchytv.home.link.LinkServer.Blob(wp.bytes, wp.type, wp.sha256);
+    }
+
     /** Player / viewer state for the PC (any thread). Socket I/O goes to the Link worker. No PC: returns at once. */
     /** Sends a TV -> PC mpv handoff event with current URL and playback position in seconds. */
     static void handoffToPc(String title, String url, double position) {

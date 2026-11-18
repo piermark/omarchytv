@@ -182,6 +182,7 @@
     <string name="home_service_desc">Avaa OmarchyTV:n, kun Koti näyttää television oman aloitusnäytön. Se näkee vain, mikä aloitusnäyttö avautui, eikä lue näytöltä mitään.</string>
     <string name="set_home_override">Koti-painike avaa OmarchyTV:n</string>
     <string name="link_usage">Käyttötietojen käyttöoikeus (nykyinen sovellus)</string>
+    <string name="link_share_theme">Jaa teema verkon sovelluksille</string>
     <string name="link_paired_toast">Pariliitetty laitteeseen %1$s</string>
     <string name="link_online">yhdistetty</string>
     <string name="ai_settings">AI-krediitit</string>

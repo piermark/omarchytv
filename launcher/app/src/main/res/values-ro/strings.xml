@@ -182,6 +182,7 @@
     <string name="home_service_desc">Deschide OmarchyTV când Acasă afișează ecranul de pornire original al televizorului. Vede doar ce ecran de pornire s-a deschis și nu citește nimic de pe ecran.</string>
     <string name="set_home_override">Butonul Acasă deschide OmarchyTV</string>
     <string name="link_usage">Acces la utilizare (aplicația curentă)</string>
+    <string name="link_share_theme">Partajează tema cu aplicațiile din rețea</string>
     <string name="link_paired_toast">Asociat cu %1$s</string>
     <string name="link_online">conectat</string>
     <string name="ai_settings">Credite AI</string>

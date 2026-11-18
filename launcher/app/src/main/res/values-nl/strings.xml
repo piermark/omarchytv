@@ -182,6 +182,7 @@
     <string name="home_service_desc">Opent OmarchyTV als Home het eigen startscherm van de tv toont. Het ziet alleen welk startscherm openging en leest niets op het scherm.</string>
     <string name="set_home_override">Home-knop opent OmarchyTV</string>
     <string name="link_usage">Gebruikstoegang (huidige app)</string>
+    <string name="link_share_theme">Thema delen met apps op het netwerk</string>
     <string name="link_paired_toast">Gekoppeld met %1$s</string>
     <string name="link_online">verbonden</string>
     <string name="ai_settings">AI-tegoed</string>

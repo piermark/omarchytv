@@ -182,6 +182,7 @@
     <string name="home_service_desc">Åbner OmarchyTV, når Hjem viser tv\'ets egen startskærm. Den ser kun, hvilken startskærm der åbnede, og læser intet på skærmen.</string>
     <string name="set_home_override">Hjem-knappen åbner OmarchyTV</string>
     <string name="link_usage">Adgang til forbrug (aktuel app)</string>
+    <string name="link_share_theme">Del temaet med apps på netværket</string>
     <string name="link_paired_toast">Parret med %1$s</string>
     <string name="link_online">forbundet</string>
     <string name="ai_settings">AI-kreditter</string>

@@ -3617,6 +3617,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             r.setValue(str(n ? R.string.on : R.string.off));
             return true;
         });
+        // v2.21: GET /v1/theme, the theme for dashboards and agent pages on the network (on by default).
+        p.add(str(R.string.link_share_theme), str(LauncherConfig.get(this).shareTheme ? R.string.on : R.string.off), r -> {
+            boolean n = !LauncherConfig.get(this).shareTheme;
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject c = j.optJSONObject("link");
+                if (c == null) j.put("link", c = new org.json.JSONObject());
+                c.put("shareTheme", n);
+            });
+            r.setValue(str(n ? R.string.on : R.string.off));
+            return true;
+        });
         p.add(str(R.string.link_new_code), null, r -> {
             OmarchyLink.openPairing();
             refreshMenu("link");
