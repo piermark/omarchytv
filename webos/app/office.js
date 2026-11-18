@@ -181,15 +181,20 @@
     var since = Math.floor(now() / 1000) - 5, end = now() + G.TIMEOUT_MS;
     f(s.url, { method: "POST", headers: G.headers(s.key), body: requestBody(G.body(q, lang, s.topic, id, apps, context, s.server), office) }).then(function (r) {
       if (!r.ok) { cb(r.status === 401 || r.status === 403 ? "The webhook refused the key (HTTP " + r.status + "): check it in Settings." : "The webhook answered HTTP " + r.status + "."); return; }
+      var attempt = 0, last = 200, retryAfter = 0, limited = false;   // v2.21 (#70): gentler polling, 429 said out loud
       (function poll() {
-        if (now() >= end) { cb("No answer from Grok Bot within 90 s. Check the routine and its ntfy step."); return; }
+        if (now() >= end) { cb(G.noAnswer ? G.noAnswer(s.server, limited) : "No answer from Grok Bot within 90 s. Check the routine and its ntfy step."); return; }
         wait(function () {
           f(G.pollUrl(s.topic, since, s.server), G.validToken(s.ntfyToken) ? { headers: { "Authorization": "Bearer " + s.ntfyToken } } : undefined)
-            .then(function (p) { return p.ok ? p.text() : ""; }).then(function (t) {
+            .then(function (p) {
+              last = p.status; retryAfter = 0;
+              if (p.status === 429) { limited = true; var ra = p.headers && p.headers.get ? parseInt(p.headers.get("Retry-After"), 10) : 0; retryAfter = ra > 0 ? ra : 0; }
+              return p.ok ? p.text() : "";
+            }).then(function (t) {
               var rep = G.find(t, id);
               if (rep) cb(null, rep, findOffice(t, id)); else poll();
-            }).catch(poll);
-        }, G.POLL_MS);
+            }).catch(function () { last = 0; poll(); });
+        }, G.pollDelay ? G.pollDelay(attempt++, last, retryAfter) : G.POLL_MS);
       })();
     }).catch(function () { cb("Could not reach the webhook."); });
   }

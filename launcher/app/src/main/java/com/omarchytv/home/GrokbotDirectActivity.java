@@ -241,16 +241,11 @@ public class GrokbotDirectActivity extends Activity {
             try {
                 long since = System.currentTimeMillis() / 1000 - 5;
                 post(url, GrokbotDirect.headers(key), GrokbotDirect.body(question, lang, topic, id, apps, "OmarchyTV on Android TV", server));
-                long end = System.currentTimeMillis() + GrokbotDirect.TIMEOUT_MS;
-                while (r == null && id.equals(pendingId) && System.currentTimeMillis() < end) {
-                    Thread.sleep(GrokbotDirect.POLL_MS);
-                    try {
-                        r = GrokbotDirect.find(get(GrokbotDirect.pollUrl(server, topic, since), token), id);
-                    } catch (Exception ignored) {   // one failed poll: keep trying until the deadline
-                    }
-                }
-                if (r == null && id.equals(pendingId)) err = "No answer from Grok Bot within 90 s. Check the routine and its ntfy step (see docs/GROKBOT-DIRECT.md)."
-                        + (GrokbotDirect.NTFY.equals(server) ? " If ntfy.sh's daily quota ran out, set your own reply server in Settings." : "");
+                boolean[] limited = new boolean[1];   // v2.21 (#70): gentler polling, 429 said out loud
+                String nd = GrokbotDirect.awaitReply(server, topic, id, since, u -> GrokbotDirect.httpGet(u, token), Thread::sleep,
+                        System::currentTimeMillis, () -> id.equals(pendingId), limited);
+                if (nd != null) r = GrokbotDirect.find(nd, id);
+                if (r == null && id.equals(pendingId)) err = GrokbotDirect.noAnswer(server, limited[0]);
             } catch (HttpCode e) {
                 err = e.code == 401 || e.code == 403 ? "The webhook refused the key (HTTP " + e.code + "): check it in Settings." : "The webhook answered HTTP " + e.code + ".";
             } catch (Exception e) {
@@ -472,25 +467,6 @@ public class GrokbotDirectActivity extends Activity {
             }
             int code = c.getResponseCode();
             if (code < 200 || code >= 300) throw new HttpCode(code);
-        } finally {
-            c.disconnect();
-        }
-    }
-
-    private static String get(String url, String token) throws Exception {
-        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
-        try {
-            if (GrokbotDirect.validToken(token)) c.setRequestProperty("Authorization", "Bearer " + token);
-            c.setConnectTimeout(8_000);
-            c.setReadTimeout(10_000);
-            if (c.getResponseCode() != 200) return "";
-            try (InputStream in = c.getInputStream()) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                byte[] buf = new byte[8192];
-                int n;
-                while ((n = in.read(buf)) > 0 && out.size() < 512 * 1024) out.write(buf, 0, n);
-                return out.toString("UTF-8");
-            }
         } finally {
             c.disconnect();
         }

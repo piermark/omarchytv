@@ -160,3 +160,24 @@ test("ask() posts the server to the routine and reads the replies from it, with 
   assert.ok(calls[1][0].startsWith("https://ntfy.example.com/otv-"));
   assert.strictEqual(calls[1][1].headers.Authorization, "Bearer tk_abcdefgh12345678");
 });
+
+test("v2.21 #70: polling slows down, honours Retry-After and says when ntfy rate-limits", async () => {
+  assert.strictEqual(G.pollDelay(0, 200, 0), 2000);
+  assert.strictEqual(G.pollDelay(3, 200, 0), 3000);
+  assert.strictEqual(G.pollDelay(50, 200, 0), 10000);
+  assert.strictEqual(G.pollDelay(1, 429, 7), 7000);
+  assert.strictEqual(G.pollDelay(1, 429, 999), 30000);
+  let total = 0, n = 0;
+  while (total < G.TIMEOUT_MS) total += G.pollDelay(n++, 200, 0);
+  assert.ok(n <= 16, "polls in 90 s: " + n);
+  let t = 0;
+  const st = { enabled: true, url: "https://api.x.ai/hook/abc", key: "crsr_abcdefghijklmnop1234", topic: "otv" + "a".repeat(32) };
+  const fetch = (u) => u.indexOf("ntfy") >= 0
+    ? Promise.resolve({ ok: false, status: 429, headers: { get: () => "20" }, text: () => Promise.resolve("") })
+    : Promise.resolve({ ok: true, status: 200 });
+  const waits = [];
+  const err = await new Promise((res) => G.ask(st, "q", "en", [], "", (e) => res(e), { fetch, now: () => t, setTimeout: (f, ms) => { waits.push(ms); t += ms; f(); } }));
+  assert.match(err, /ntfy\.sh is rate limiting this TV \(HTTP 429\)/);
+  assert.strictEqual(waits[1], 20000, "Retry-After honoured");
+  assert.ok(waits.length <= 6);
+});

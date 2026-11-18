@@ -148,4 +148,51 @@ public class GrokbotDirectTest {
         assertTrue(GrokbotDirect.validToken("tk_abcdefgh12345678"));
         assertFalse(GrokbotDirect.validToken("abc"));
     }
+
+    // ---- v2.21 (#70) ----
+    @Test
+    public void pollingSlowsDownAndHonoursRetryAfter() {
+        assertEquals(2000, GrokbotDirect.pollDelay(0, 200, 0));
+        assertEquals(2000, GrokbotDirect.pollDelay(2, 200, 0));
+        assertEquals(3000, GrokbotDirect.pollDelay(3, 200, 0));
+        assertEquals(10_000, GrokbotDirect.pollDelay(40, 200, 0));
+        assertEquals(7000, GrokbotDirect.pollDelay(1, 429, 7));
+        assertEquals(30_000, GrokbotDirect.pollDelay(1, 429, 3600));
+        assertEquals(10_000, GrokbotDirect.pollDelay(1, 429, 0));
+        long total = 0;
+        int n = 0;
+        while (total < GrokbotDirect.TIMEOUT_MS) total += GrokbotDirect.pollDelay(n++, 200, 0);
+        org.junit.Assert.assertTrue("polls in 90 s: " + n, n <= 16);
+    }
+
+    @Test
+    public void awaitReplyStopsOnTheReplyAndReports429() throws Exception {
+        long[] now = {0};
+        java.util.List<String> urls = new java.util.ArrayList<>();
+        String reply = "{\"event\":\"message\",\"message\":\"{\\\"id\\\":\\\"abc\\\",\\\"text\\\":\\\"hi\\\"}\"}\n";
+        int[] calls = {0};
+        boolean[] limited = new boolean[1];
+        String nd = GrokbotDirect.awaitReply("", "otvtopic", "abc", 100,
+                u -> {
+                    urls.add(u);
+                    calls[0]++;
+                    if (calls[0] == 1) return new GrokbotDirect.Polled(429, "", 5);
+                    if (calls[0] == 2) return new GrokbotDirect.Polled(200, "", 0);
+                    return new GrokbotDirect.Polled(200, reply, 0);
+                },
+                ms -> now[0] += ms, () -> now[0], () -> true, limited);
+        org.junit.Assert.assertTrue(limited[0]);
+        org.junit.Assert.assertEquals(3, calls[0]);
+        org.junit.Assert.assertTrue(urls.get(0).startsWith("https://ntfy.sh/otvtopic/json?poll=1&since=100"));
+        org.junit.Assert.assertEquals(2000 + 5000 + 2000, now[0]);
+        org.junit.Assert.assertNotNull(GrokbotDirect.find(reply, "abc"));
+        org.junit.Assert.assertEquals(reply, nd);
+    }
+
+    @Test
+    public void noAnswerSaysWhenNtfyRateLimited() {
+        org.junit.Assert.assertTrue(GrokbotDirect.noAnswer("", true).contains("ntfy.sh is rate limiting this TV (HTTP 429)"));
+        org.junit.Assert.assertTrue(GrokbotDirect.noAnswer("https://ntfy.example.org/", true).contains("the reply server"));
+        org.junit.Assert.assertTrue(GrokbotDirect.noAnswer("", false).contains("within 90 s"));
+    }
 }
