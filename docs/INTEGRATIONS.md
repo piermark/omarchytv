@@ -11,7 +11,10 @@ the simplest (read-only, no pairing) to full control (MCP).
 | What is on screen, live | `GET /v1/state`, `GET /v1/stream` (Server-Sent Events) | app token, `read` | 2.21 |
 | Show a message on the TV | `omarchy-link notify`, `POST /v1/notify`, MCP `tv_notify` | app token `notify`, or the paired PC | 2.21 |
 | Ask the person at the TV | `omarchy-link ask`, `POST /v1/ask`, MCP `tv_ask_user` | app token `notify`, or the paired PC | 2.21 |
-| Open a page full screen | `omarchy-link page`, `POST /v1/page`, MCP `tv_show_page` | app token `control`, or the paired PC | 2.21 |
+| Open a page full screen, or up to 4 tiled | `omarchy-link page`, `POST /v1/page`, MCP `tv_show_page` | app token `control`, or the paired PC | 2.21 |
+| Agent pages as Home tiles, with a badge | `omarchy-link pages`, `PUT /v1/pages/<id>`, MCP `tv_publish_page`, `tv_page_badge` | `control` (badge: `notify`) | 2.21 |
+| Radiomarchy and parts of OmarchyTV | `omarchy-link radio`, `omarchy-link open`, MCP `tv_radio`, `tv_open` | `read` / `control` | 2.21 |
+| The same on LG / Samsung | `omarchy-tv notify`, `page`, `ask`, `omarchy-tv mcp --bridge` | the bridge's ask code | 2.21 |
 | Diagnostics and logs | `omarchy-link tv logs`, `GET /v1/diagnostics`, MCP `tv_diagnostics` | app token `control`, or the paired PC | 2.21 |
 | Control the TV from an AI agent | MCP: on the TV (`/v1/mcp`) or on the PC (`omarchy-tv mcp`) | app token (tools of its scope), PC token, MCP Bearer token | 2.12, more in 2.21 |
 | The same, from another box | `omarchy-tv mcp --http --tailscale` | Bearer token, tailnet peers only | 2.21 |
@@ -70,7 +73,11 @@ An agent or a script on the paired PC can put one line on the TV, over whatever 
 ```sh
 omarchy-link notify "Build finished: 0 errors" --from "Claude Code"
 make test 2>&1 | tail -1 | omarchy-link notify --from tests      # text from stdin
+omarchy-link notify --title Deploy --level alert "prod is down"   # shows at once, even over a film
 ```
+
+Levels: `info` (default) waits while a film or an app is on screen and shows when you are back on Home, so a busy
+agent never interrupts a film; `warn` and `alert` show at once. The TV prints `held` on stderr when it waited.
 
 It needs **agent alerts** on the TV (Settings › Omarchy Link, off by default). Exit codes: 0 shown, 4 alerts off on
 the TV, 3 not paired. `--quiet` never fails, for hooks. At most 3 messages per 10 s, one line, 200 characters.
@@ -104,7 +111,9 @@ omarchy-tv mcp --cloudflare NAME --access    # a named Cloudflare tunnel behind 
 omarchy-tv mcp --stdio --scope notify        # fewer tools: read | notify | control
 ```
 
-Claude Code: `claude mcp add omarchytv -- omarchy-tv mcp --stdio`.
+Claude Code: `claude mcp add omarchytv -- omarchy-link mcp` (the TV's own MCP over the paired link, no token to
+copy; `--scope notify` for fewer tools) or `claude mcp add omarchytv -- omarchy-tv mcp --stdio`. For an LG or Samsung
+TV: `omarchy-tv mcp --stdio --bridge` (notify, ask, pages and the theme, through `omarchy-tv webos-serve`).
 
 **On the TV** (`POST /v1/mcp`, Android TV), with an app token (`Authorization: Bearer otva_…`, the tools of its
 scope), the paired PC's token, or an OTV1-signed request.
@@ -119,7 +128,12 @@ scope), the paired PC's token, or an OTV1-signed request.
 | `tv_set_theme`, `tv_push_theme` | control | themes (`tv_push_theme`: PC server only) |
 | `tv_send_key`, `tv_launch_app` | control | the remote and the apps |
 | `tv_screensaver` | control | the text screensaver |
-| `tv_show_page`, `tv_close_page` | control | a LAN / tailnet page full screen |
+| `tv_show_page`, `tv_close_page` | control | a LAN / tailnet page full screen, or `urls` (up to 4) tiled |
+| `tv_list_pages` | read | the pages published as Home tiles |
+| `tv_page_badge` | notify | the count on a page's tile |
+| `tv_publish_page`, `tv_remove_page` | control | publish a page as a Home tile, remove it |
+| `tv_radio_now` | read | what Radiomarchy plays |
+| `tv_radio`, `tv_open` | control | play / pause / next / previous / stop; open home, radiomarchy, cinemarchy, arcade, office |
 | `tv_diagnostics` | control | version, device, network, recent log lines |
 
 A local server (`--stdio`, `--http`, `--tailscale`) offers every tool unless you pass `--scope`; one reachable from
@@ -169,7 +183,16 @@ The TV serves `omarchytv.js` (ES5, no dependencies; any Android TV WebView). A p
 | `on(type, cb)` | `read` | events `state`, `theme`, `notify`, `ask_answer`; one stream, reconnects by itself |
 | `notify(text)` | `notify` | shown on the TV (agent alerts on) |
 | `ask(question, choices?, {timeout})` | `notify` | the answer, or `null` if nobody answered |
+| `badge(pageId, n)` | `notify` | the count on the page's Home tile |
 | `close()` | | stops the stream |
+| `OmarchyTV.remote(handlers?, selector?)` | | the remote: arrows move the focus, OK clicks, keys by name (`red`, `play_pause`…) |
+
+```js
+OmarchyTV.remote({
+  red: function () { refresh(); return false; },          // a colour key
+  any: function (key) { console.log("key", key); }         // every key by name
+});                                                        // focusable: a, button, [data-otv-focus]
+```
 
 ## 6. Live state (`GET /v1/state`, `GET /v1/stream`)
 
@@ -194,12 +217,20 @@ theme's colours, with up to 4 answers on the remote. BACK answers later; it clos
 (10–300 s, default 120). Exit codes: 0 answered, 5 no answer in time, 4 agent alerts off on the TV. In an agent:
 MCP `tv_ask_user` (waits for the answer) and `tv_ask_result`.
 
-## 8. Pages full screen
+## 8. Pages full screen, tiled, and as Home tiles
 
 ```sh
 omarchy-link page http://192.168.1.20:8080/        # a dashboard on the Pi
+omarchy-link page http://192.168.1.20:8080/ http://192.168.1.21:3000/ http://192.168.1.22/   # tiled, Hyprland style
 omarchy-link page --close
+omarchy-link pages add dubai "Dubai flats" http://192.168.1.20:8080/ --icon D --badge 3      # a Home tile
+omarchy-link pages badge dubai 5
+omarchy-link pages                                  # list; show ID; remove ID
 ```
+
+Tiled: up to four windows (two on a low-RAM TV), with gaps, the accent border on the active window and Hyprland's
+dwindle layout for three; 1-4, the colour keys or CH+/CH- switch windows, the arrows and OK go to the active one.
+Home tiles: at most 16; the badge shows in the tile's name ("Dubai flats · 5"); Walker opens all of them tiled.
 
 Only `http://` to a literal LAN address (or a `100.x` tailnet address with Tailscale on): no internet pages, no
 DNS names. The page stays on its own host (links elsewhere are not followed), has no access to the TV's files and
@@ -215,7 +246,20 @@ omarchy-link tv diagnostics     # + launcher version, device, GPU, RAM, LAN / ta
 Nothing secret: no tokens, no keys, no file paths. Useful in a bug report, and for an agent that helps you set up
 the TV (MCP `tv_diagnostics`, scope control).
 
-## 10. A dashboard on a stick, the way a Hermes user built it
+## 10. LG and Samsung
+
+webOS and Tizen have no Omarchy Link server: the PC bridge (`omarchy-tv webos-serve`) keeps an inbox the TV app
+reads every 3 s with its ask code. Notifications (mako style), a page full screen (one at a time) and questions work
+the same; tiles, state, Radiomarchy control and the remote are Android TV only.
+
+```sh
+omarchy-tv notify "backup done" --title NAS --level warn
+omarchy-tv page http://192.168.1.20:8080/      # --close
+omarchy-tv ask "Merge?" --choice Merge --choice Wait
+omarchy-tv mcp --stdio --bridge                 # the same MCP tools for agents (the ones LG/Samsung can do)
+```
+
+## 11. A dashboard on a stick, the way a Hermes user built it
 
 1. An always-on box (a Raspberry Pi, a NAS) serves the dashboard page and its data, so the TV never goes blank when
    the laptop sleeps.

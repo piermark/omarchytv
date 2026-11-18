@@ -2,91 +2,107 @@
 
 ## [2.21.0] — unreleased (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 
-Built on the published 2.20.0.
+Built on the published 2.20.0. The theme of this version: **OmarchyTV as the screen of your agents and dashboards**,
+reachable from home, from your tailnet and, carefully, from the cloud.
 
-### One theme for every app (`GET /v1/theme`)
+### The screen of your AI agents
 
-- **The TV is now the theme server for your other apps**: a dashboard on a stick, a Home Assistant panel, an
-  agent page. `GET http://<tv>:47800/v1/theme` returns `background`, `foreground`, `accent`, `accent2`, the full
-  `colors.toml` palette and a link to the current wallpaper (`/v1/theme/wallpaper`). No pairing and no token: it
-  is read-only, LAN only, with `ETag`/`304` and CORS so a page served from another box can read it. Asked for by
-  a Hermes user who ran a second theme server just for this.
-- **LG and Samsung**: the PC bridge (`omarchy-tv webos-serve`, port 8765) answers the same paths with the same
-  schema, from the live Omarchy theme on the PC.
-- Off switch: Settings › Omarchy Link › **Share theme with apps on the network** (on by default). The TV lists
-  `theme-share` in its capabilities. Schema `omarchytv-theme/1`, documented in PROTOCOL.md with curl examples.
-
-### OmarchyTV for dashboards and AI agents (the big one)
-
-- **App tokens**: a dashboard or an agent gets its own token instead of your PC's, with one scope: `read`, `notify` or
-  `control`. `omarchy-link token add "Kitchen dashboard" --scope read`, `token`, `token revoke`. The TV keeps only a
-  hash; Settings › Omarchy Link › App tokens shows how many and revokes them all.
-- **What is on screen, live**: `GET /v1/state` (home, app, screensaver or off; the app; the theme; the music) and
+- **Notifications**: `omarchy-link notify "Build green" --from "Claude Code"` puts one line on the TV over
+  whatever is playing. `--title`, `--level info|warn|alert`: *info* waits while a film or an app is on screen and
+  shows when you are back on Home (do not disturb), *warn* and *alert* show at once. Text from stdin, `--quiet` for
+  hooks. Shown only with agent alerts on; 3 per 10 s.
+- **Questions you answer with the remote**: `omarchy-link ask "Merge the PR?" --choice Merge --choice Wait` prints
+  your answer; MCP `tv_ask_user` waits for it. The question opens over what is playing, in the theme's colours
+  (or waits for Home), with up to four answers. BACK answers later; Walker lists the questions still waiting.
+- **Agent pages as Home tiles**: an agent publishes its page (`tv_publish_page`, `omarchy-link pages add`) and it
+  becomes a tile in the app row, with a **badge** it can update (`tv_page_badge`: new replies, open tasks).
+- **Pages full screen, or tiled like Hyprland**: `omarchy-link page URL [URL …]` or `tv_show_page` opens up to four
+  LAN / tailnet pages side by side, with gaps, the accent border on the active window and the dwindle layout for
+  three; 1-4 or the colour keys switch windows, BACK closes. Walker opens all your agent pages tiled in one go.
+- **Live state and events**: `GET /v1/state` (home, app, screensaver or off; the app; the theme; the music) and
   `GET /v1/stream`, Server-Sent Events for pages (`state`, `theme`, `notify`, `ask_answer`).
-- **Notify**: `omarchy-link notify "text"` puts one line on the TV over whatever is playing, from an agent hook or a
-  script (`--from "Claude Code"`, stdin, `--quiet`). Shown only with agent alerts on; 3 per 10 s.
-- **Ask**: an agent asks, you answer with the remote. `omarchy-link ask "Merge the PR?" --choice Merge --choice
-  Wait` prints the answer; MCP `tv_ask_user` waits for it. The question opens over what is playing, in the theme's
-  colours, or waits for Home.
-- **Pages full screen**: `omarchy-link page http://192.168.1.20:8080/` or MCP `tv_show_page` opens a dashboard of the
-  LAN or tailnet on the TV; BACK closes it. LAN/tailnet addresses only; the page stays on its own host.
-- **The JavaScript SDK** (`/v1/sdk/omarchytv.js`): `followTheme()`, `state()`, `on()`, `notify()`, `ask()` for any
-  page, in old TV WebViews too.
-- **Diagnostics**: `omarchy-link tv logs` / `tv diagnostics` and MCP `tv_diagnostics` (version, device, network,
-  the last 100 Link log lines; no secrets) for bug reports and for agents that help you set up.
-- **MCP**: new tools `tv_get_state`, `tv_get_theme`, `tv_notify`, `tv_ask_user`, `tv_ask_result`, `tv_show_page`,
-  `tv_close_page`, `tv_diagnostics`, on the TV and on the PC; every tool has a scope, and an app token sees only
-  its own.
-- **MCP from another box** (`omarchy-tv mcp --http --tailscale`, tailnet peers only) and **from the cloud**
-  (`omarchy-tv mcp --cloudflare NAME --access`: a named Cloudflare tunnel behind Cloudflare Access, read + notify
-  tools unless `--scope control`; the TV's own port is never exposed).
-- Guides: **docs/INTEGRATIONS.md** (everything above, a Claude Code hook, the "dashboard on a stick" recipe),
-  **docs/CLOUDFLARE.md**, **docs/RASPBERRY-PI.md** (the always-on box next to the TV), PROTOCOL.md "App API".
+- **Radiomarchy and OmarchyTV for agents**: `tv_radio` (play, pause, next, previous, stop), `tv_radio_now`, `tv_open`
+  (home, radiomarchy, cinemarchy, arcade, office); `omarchy-link radio …`, `omarchy-link open …`.
+- **MCP everywhere**: new tools on the TV and on the PC, each with a scope; `omarchy-link mcp` gives desktop agents
+  the TV's own MCP over the paired link (`claude mcp add omarchytv -- omarchy-link mcp`, no token to copy).
+- **Diagnostics**: Settings › **System info** on the TV, `omarchy-link tv logs` / `tv diagnostics` and MCP
+  `tv_diagnostics`: version, device, GPU, RAM, LAN and tailnet address, each PC with how it connects, the last 100
+  Link log lines. No secrets. Calls from apps and agents are in the log too.
 
-### Grok Bot diretto and GrokBot Office: replies that ntfy.sh does not block (#70)
+### One theme for every app, and a JavaScript SDK
 
-- The TV now polls the reply topic every 2 s only at first, then slower up to 10 s: about 14 requests per question
-  instead of 45, so the shared ntfy.sh limit is hit much later.
-- On HTTP 429 it waits what the server asks (`Retry-After`, at most 30 s), and if no reply came it says that ntfy.sh
-  is rate limiting the TV and how to use your own reply server, instead of a generic timeout.
-- Same on Android TV, LG and Samsung.
+- **The TV is the theme server for your other apps** (asked for by a Hermes user who ran a second server just for
+  this): `GET http://<tv>:47800/v1/theme` returns `background`, `foreground`, `accent`, `accent2`, the full
+  `colors.toml` palette and the wallpaper (`/v1/theme/wallpaper`). No token, read-only, LAN / tailnet only,
+  `ETag`/`304`, CORS. The LG/Samsung bridge answers the same. Off switch in Settings › Omarchy Link.
+- **`omarchytv.js`**, served by the TV at `/v1/sdk/omarchytv.js`: `followTheme()` (CSS variables `--otv-*`, live),
+  `state()`, `on()`, `notify()`, `ask()`, `badge()`, and `OmarchyTV.remote()`: arrows move the focus between the
+  page's buttons and links, OK clicks, colour and media keys by name, the focus outlined in the theme's accent.
+- **App tokens**: a dashboard or an agent gets its own token with one scope, `read`, `notify` or `control`. Made on
+  the PC (`omarchy-link token add "Kitchen" --scope read`) or on the TV (Settings › Omarchy Link › New app token,
+  shown once as text and QR). Only a hash is kept; the last use is remembered; revoke one from the PC or all from
+  the TV.
 
-### Home is quiet
+### LG and Samsung too
 
-- **No more music starting by itself on Home** with the fractals wallpaper. Music plays only when you start it
-  (Radiomarchy, PLAY). A song you started keeps playing and the fractals still follow it.
-
-### Radiomarchy on LG
-
-- **Fixed: on LG the music played once, then never again.** The song went only through the WebAudio graph that
-  makes the fractals dance, and webOS can leave that graph suspended (started without a key press, or after
-  the app went to the background) while the player says "playing". Now every key press and every return to the
-  app wakes it, and if webOS still keeps it asleep, the song moves to a plain player at the same second: you
-  hear it for sure, and the fractals dance on their own beat for the rest of that session.
+- The PC bridge (`omarchy-tv webos-serve`) keeps an inbox for the TV: notifications (mako style, in the theme's
+  colours), a page full screen, questions answered with the remote. `omarchy-tv notify | page | ask` and
+  `omarchy-tv mcp --bridge` use the same calls as an Android TV, so agents do not care which TV you have.
 
 ### Tailscale (optional, off by default)
 
-- **Pair and use OmarchyTV over your tailnet**, from another room, network or house. TV: Settings › Omarchy Link ›
-  **Allow Tailscale (tailnet)**; the row shows the TV's tailnet address. PC: `omarchy-link tailscale on`, then
-  `omarchy-link discover` finds tailnet TVs through tailscaled, and `omarchy-link pair living-tv` takes a MagicDNS
-  name. `omarchy-link tailscale status` lists them.
-- Only Tailscale's own addresses (`100.64.0.0/10`, `fd7a:115c:a1e0::/48`) are added; everything else still gets
-  `403 not_lan`. No Funnel, no Serve, nothing opened to the internet. Pairing, signing and encryption are the same.
-- Casts and Remote panes accept tailnet addresses too when the switch is on.
-- **Fixed: a VPN app on the TV broke Omarchy Link.** With Tailscale (or any VPN) active, the TV listened on the VPN
-  address and refused the PC on the same Wi-Fi. It now always finds the Wi-Fi or Ethernet network under the VPN.
-- LG and Samsung: a Raspberry Pi subnet router puts the TV's LAN on the tailnet. docs/TAILSCALE.md has the steps
-  and an ACL example.
+- **Use OmarchyTV from anywhere over your tailnet**: pairing, theme, remote, Radiomarchy, notifications,
+  questions, pages, MCP, casts and Remote panes. TV: install the official Tailscale app (Settings › Omarchy Link ›
+  **Tailscale app** opens it or its Play Store page, or a QR code for the phone), then **Allow Tailscale**; the row
+  shows the TV's tailnet address. PC: `omarchy-link tailscale on`; `discover` and `pair living-tv` find tailnet TVs
+  and MagicDNS names through tailscaled; `tailscale status` shows each TV and whether the path is direct or relayed;
+  `tailscale acl` prints a tagged policy. Casts warn when Tailscale goes through a relay.
+- Only Tailscale's own addresses (`100.64.0.0/10`, `fd7a:115c:a1e0::/48`) are added; a refused tailnet peer is told
+  to turn the switch on. No Funnel, no Serve, nothing opened to the internet; pairing, signing and encryption are
+  the same.
+- **Fixed: a VPN app on the TV broke Omarchy Link**: the TV listened on the VPN address and refused the PC on the
+  same Wi-Fi. It now always finds the Wi-Fi or Ethernet network under the VPN.
+- LG / Samsung, and Android TVs without the app: a Raspberry Pi subnet router (docs/TAILSCALE.md,
+  docs/RASPBERRY-PI.md).
+
+### Cloudflare Tunnel, for agents in the cloud
+
+- `omarchy-tv mcp --cloudflare NAME --access-team TEAM --access-aud AUD`: the PC's MCP through a named Cloudflare
+  tunnel on your domain, behind **Cloudflare Access**. The server verifies the Access JWT (RS256 signature against
+  your team's keys, audience, issuer, expiry) before the Bearer token. Tools: read + notify unless
+  `--scope control`. The TV's own port is never exposed.
+- `omarchy-tv cloudflare setup NAME HOSTNAME` makes the tunnel and its DNS route (asks first);
+  `omarchy-tv cloudflare service …` writes a systemd user unit. `omarchy-tv mcp --tunnel` (a temporary
+  trycloudflare URL) also defaults to read + notify now.
+
+### Home and Radiomarchy
+
+- **Home is quiet**: the fractals wallpaper no longer starts music by itself. Radiomarchy › Settings › **Music on
+  Home** brings it back for those who liked it. A song you started keeps playing and the fractals follow it.
+- **Sleep timer** in Radiomarchy (15, 30, 60, 90 minutes), and the **song's page as a QR code** for your phone.
+- **Fixed on LG: the music played once, then never again.** The song went only through the WebAudio graph that
+  makes the fractals dance, and webOS can leave that graph suspended. Every key press and every return to the app
+  now wakes it; if webOS keeps it asleep, the song moves to a plain player at the same second.
 
 ### Lighter fractals
 
-- **Each fractal is now its own small shader.** Before, every frame ran one big shader holding all five fractals
-  (and, with 2x2 supersampling, four copies of it); many TV GPUs size that for the heaviest one even when a light
-  plasma is on screen. Now the TV builds a program with only what is on screen (two during a cross-fade), the
-  first time it is needed. Same picture, same random geometry and colours, less work per pixel.
-- **Auto quality stops at "high"** (full resolution, 320 iterations). "Ultra" (2x2 supersampling, 500 iterations)
-  is only used when you pick it in the settings, so a strong TV no longer climbs to it and then stutters back down.
-- Same on Android TV, LG and Samsung; the shader stays the same text on both.
+- **Each fractal is now its own small shader**, built the first time it is needed (two during a cross-fade),
+  instead of one big shader with all five (four times over with supersampling). Same picture, less work per pixel.
+- **Auto quality stops at "high"**: "ultra" (2x2 supersampling, 500 iterations) only when you pick it.
+- Same on Android TV, LG and Samsung.
+
+### Grok Bot diretto and GrokBot Office: replies that ntfy.sh does not block (#70)
+
+- The reply topic is polled every 2 s only at first, then slower up to 10 s: about 14 requests per question instead
+  of 45. On HTTP 429 the TV waits what the server asks (`Retry-After`, at most 30 s) and says that ntfy.sh is rate
+  limiting it, with how to use your own reply server. Android TV, LG and Samsung.
+
+### Also
+
+- **Backup and restore** of the TV's settings: `omarchy-link tv backup [FILE]`, `tv restore FILE` (the TV keeps its
+  own pairings and panes).
+- Guides: **docs/INTEGRATIONS.md**, **docs/TAILSCALE.md**, **docs/CLOUDFLARE.md**, **docs/RASPBERRY-PI.md**,
+  **docs/openapi.yaml**; PROTOCOL.md "Theme for apps" and "App API".
 
 ### Pull requests merged
 

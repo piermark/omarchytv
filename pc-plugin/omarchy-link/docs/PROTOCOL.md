@@ -321,15 +321,29 @@ allow 30 requests per 10 s per token. A paired PC can do everything an app can, 
 |---|---|---|
 | `GET /v1/state` | read | `{screen: "home"\|"app"\|"screensaver"\|"off"\|"unknown", app: {package, label}\|null, theme, nowPlaying: {title, artist, source}\|null, launcherVersion, time}` |
 | `GET /v1/stream` | read | `text/event-stream`: `state` (on change, checked every 2 s), `theme` (every 5 s), `notify`, `ask_answer` (the asker's only), `: ping` every 20 s. At most 4 streams; each ends after 1 h. |
-| `POST /v1/notify` | notify | §6 table; an app's message carries the app's name as `from` |
+| `POST /v1/notify` | notify | `{text \| body, title?, level?: info\|warn\|alert, from?}` → `{ok, shown, deferred}`. *info* waits while an app is on screen (shown when Home comes back); an app's message carries the app's name as `from` |
 | `POST /v1/ask` | notify | `{question, choices?[≤4, ≤24 chars], timeout?: 10-300 (120), from?}` → `{id, state: "pending", choices, expires}` / `403 ask_off` (agent alerts off) / `429 busy` (4 waiting) |
 | `GET /v1/ask/<id>?wait=0-25` | notify | `{id, state: "pending"\|"answered"\|"expired", answer}`; waits up to `wait` s for the answer. Only the asker (or a PC). |
-| `POST /v1/page` | control | `{url}`: `http://` to a literal LAN / tailnet address → `{ok, url}` / `400 not_lan_url`. `DELETE` closes it. |
+| `POST /v1/page` | control | `{url}` or `{urls: [≤4]}`: `http://` to literal LAN / tailnet addresses, tiled when several → `{ok, url, urls}` / `400 not_lan_url`. `DELETE` closes. |
+| `GET /v1/pages` | read | `{pages: [{id, name, url, icon, badge, by, updated}]}`: the agent pages shown as Home tiles (`omarchytv.json` `agentPages`) |
+| `PUT /v1/pages/<id>` | control | `{name ≤32, url, icon?, badge?}`: publish or update a tile; `id` is `[a-z0-9-]{1,40}`; at most 16 (`409 too_many_pages`) |
+| `POST /v1/pages/<id>/badge` | notify | `{badge: 0-999}` |
+| `POST /v1/pages/<id>/show`, `DELETE /v1/pages/<id>` | control | open it full screen / remove the tile |
+| `GET /v1/radio`, `POST /v1/radio` | read / control | `{action: play\|pause\|next\|previous\|stop}` → `{playing, title, artist, sleepMinutes}` |
+| `POST /v1/open` | control | `{target: home\|radiomarchy\|cinemarchy\|arcade\|office}` |
 | `GET /v1/diagnostics` | control | `{launcherVersion, device, network, settings, screen, link, log[]}`; no tokens, keys or paths |
 | `POST /v1/mcp` | any | MCP; `tools/list` and `tools/call` limited to the token's scope |
 | `GET /v1/sdk/omarchytv.js` | none | the JavaScript SDK (docs/INTEGRATIONS.md) |
 
 The answer to a question is also sent to the PCs as the event `ask_answer {id, answer}`.
+
+Paired PC only: `GET /v1/config` → `{config}` (the TV's `omarchytv.json`) and `PUT /v1/config {config}` (restore; the
+TV keeps its own `link` object: pairings and panes). Apps never read or write it (`401`).
+
+**LG / Samsung (the bridge).** `omarchy-tv webos-serve` answers `POST /v1/notify`, `POST /v1/page` (`{url}` or
+`{close: true}`; one page), `POST /v1/ask`, `GET /v1/ask/<id>?wait=` with the same bodies, and the TV app reads
+`GET /v1/inbox?since=<seq>` → `{seq, notes[], page, asks[]}` and answers `POST /v1/ask/<id> {answer}`. All with the
+ask code (`X-Omarchy-Token`), memory only.
 
 ### Power together and liftoff (v2.14)
 
