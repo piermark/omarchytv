@@ -422,6 +422,10 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/v1/page"): self._page, ("DELETE", "/v1/page"): self._page_close,
             ("GET", "/v1/radio"): self._radio, ("POST", "/v1/radio"): self._radio, ("POST", "/v1/open"): self._open,
         }.get((method, path))
+        if not handler and path == "/v1/pages" and method == "GET":
+            handler = lambda pc, a, b: (200, {"pages": getattr(self.tv, "agent_pages", [])})
+        if not handler and path.startswith("/v1/pages/"):
+            handler = lambda pc, a, b, m=method, p=path: self._page_tile(m, p, a)
         if not handler and method == "GET" and path.split("?")[0].startswith("/v1/ask/"):
             handler = self._ask_get
         if not handler and method == "DELETE" and path.startswith("/v1/tokens/"):
@@ -634,6 +638,30 @@ class Handler(BaseHTTPRequestHandler):
             return 400, {"error": "no_such_target"}
         self.tv.opened = a["target"]
         return 200, {"ok": True, "target": a["target"]}
+
+    def _page_tile(self, method, path, a):
+        parts = path.split("/")[3:]
+        pid, sub = parts[0], (parts[1] if len(parts) > 1 else "")
+        pages = getattr(self.tv, "agent_pages", [])
+        cur = next((x for x in pages if x["id"] == pid), None)
+        if method == "PUT" and not sub:
+            if not str(a.get("url", "")).startswith("http://192.168."):
+                return 400, {"error": "not_lan_url"}
+            new = {"id": pid, "name": a.get("name"), "url": a.get("url"), "icon": a.get("icon", ""), "badge": a.get("badge", 0)}
+            self.tv.agent_pages = [x for x in pages if x["id"] != pid] + [new]
+            return 200, {"ok": True, "id": pid}
+        if cur is None:
+            return 404, {"error": "no_such_page"}
+        if method == "POST" and sub == "badge":
+            cur["badge"] = int(a.get("badge", 0))
+            return 200, {"ok": True, "badge": cur["badge"]}
+        if method == "POST" and sub == "show":
+            self.tv.page = cur["url"]
+            return 200, {"ok": True}
+        if method == "DELETE" and not sub:
+            self.tv.agent_pages = [x for x in pages if x["id"] != pid]
+            return 200, {"ok": True}
+        return 404, {"error": "not_found"}
 
     def _diag(self, pc, a, body):
         return 200, {"launcherVersion": "2.21.0", "log": ["12:00:00 listening", "12:00:01 question from PC"]}

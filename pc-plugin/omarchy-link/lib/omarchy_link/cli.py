@@ -291,6 +291,31 @@ def cmd_mcp(a, cfg):
     return mcp_bridge.serve(lambda: _client(cfg), a.scope)
 
 
+def cmd_pages(a, cfg):
+    """v2.21 agent pages as Home tiles: list | add ID NAME URL [--icon X] [--badge N] | badge ID N | show ID | remove ID."""
+    from urllib.parse import quote
+    args = a.args
+    if a.action == "list":
+        r = _call(cfg, "GET", "/v1/pages")
+        for pg in r.get("pages", []):
+            badge = f" ({pg['badge']})" if pg.get("badge") else ""
+            print(f"{pg['id']}\t{pg['name']}{badge}\t{pg['url']}\t{pg.get('by', '')}")
+        if not r.get("pages"):
+            print("No pages on the TV's Home. Add one: omarchy-link pages add dash \"My dashboard\" http://192.168.1.20:8080/")
+        return 0
+    if a.action == "add" and len(args) >= 3:
+        _call(cfg, "PUT", "/v1/pages/" + quote(args[0]), {"name": args[1], "url": args[2], "icon": a.icon or "", "badge": a.badge})
+        return 0
+    if a.action == "badge" and len(args) >= 2 and args[1].isdigit():
+        _call(cfg, "POST", "/v1/pages/" + quote(args[0]) + "/badge", {"badge": int(args[1])})
+        return 0
+    if a.action in ("show", "remove") and args:
+        _call(cfg, "POST" if a.action == "show" else "DELETE", "/v1/pages/" + quote(args[0]) + ("/show" if a.action == "show" else ""))
+        return 0
+    print("omarchy-link pages [list] | add ID NAME URL [--icon X] [--badge N] | badge ID N | show ID | remove ID", file=sys.stderr)
+    return 2
+
+
 def cmd_tv(a, cfg):
     """v2.21 tv logs | tv diagnostics: what a bug report needs (no tokens, no keys)."""
     d = _call(cfg, "GET", "/v1/diagnostics")
@@ -1002,6 +1027,12 @@ def main(argv=None) -> int:
     s.add_argument("url", nargs="?")
     s.add_argument("--close", action="store_true")
     s.set_defaults(fn=cmd_page)
+    s = sub.add_parser("pages", help="agent pages as tiles on the TV's Home: list | add | badge | show | remove")
+    s.add_argument("action", nargs="?", choices=["list", "add", "badge", "show", "remove"], default="list")
+    s.add_argument("args", nargs="*")
+    s.add_argument("--icon")
+    s.add_argument("--badge", type=int, default=0)
+    s.set_defaults(fn=cmd_pages)
     s = sub.add_parser("radio", help="Radiomarchy on the TV: now | play | pause | next | previous | stop")
     s.add_argument("action", nargs="?", choices=["now", "play", "pause", "next", "previous", "stop"], default="now")
     s.set_defaults(fn=cmd_radio)

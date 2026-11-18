@@ -119,6 +119,42 @@ final class LauncherConfig {
         return null;
     }
 
+    /** v2.21 agent pages (omarchytv.json "agentPages"): LAN / tailnet pages an agent published as Home tiles. */
+    final List<AgentPage> agentPages;
+
+    static final class AgentPage {
+        final String id, name, url, icon, by;
+        final int badge;
+
+        AgentPage(String id, String name, String url, String icon, int badge, String by) {
+            this.id = id;
+            this.name = name;
+            this.url = url;
+            this.icon = icon;
+            this.badge = badge;
+            this.by = by;
+        }
+
+        /** The tile's label: the name, and the badge when there is one ("Dubai flats · 3"). */
+        String label() {
+            return badge > 0 ? name + " · " + (badge > 99 ? "99+" : String.valueOf(badge)) : name;
+        }
+    }
+
+    static List<AgentPage> parsePages(JSONObject j) {
+        List<AgentPage> out = new ArrayList<>();
+        JSONArray a = j != null ? j.optJSONArray("agentPages") : null;
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        for (int i = 0; a != null && i < a.length() && out.size() < 16; i++) {
+            JSONObject o = a.optJSONObject(i);
+            if (o == null) continue;
+            String id = o.optString("id"), name = o.optString("name").trim(), url = o.optString("url").trim();
+            if (!id.matches("[a-z0-9][a-z0-9-]{0,39}") || name.isEmpty() || !url.startsWith("http://") || !ids.add(id)) continue;
+            out.add(new AgentPage(id, name, url, o.optString("icon", ""), Math.max(0, o.optInt("badge", 0)), o.optString("by", "")));
+        }
+        return out;
+    }
+
     static final class WebApp {
         final String id, name, url, icon, ua;
 
@@ -703,6 +739,7 @@ final class LauncherConfig {
             }
         }
         webapps = Collections.unmodifiableList(web);
+        agentPages = Collections.unmodifiableList(parsePages(j));
         List<Provider> provs = new ArrayList<>();
         JSONObject lk = j != null ? j.optJSONObject("link") : null;
         JSONArray pa = lk != null ? lk.optJSONArray("aiProviders") : null;

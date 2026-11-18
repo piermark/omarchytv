@@ -187,6 +187,13 @@ class E2E(unittest.TestCase):
         self.assertIn("Hyprland Nights", cli("radio", "play").stdout)
         cli("open", "radiomarchy")
         self.assertEqual(self.tv.opened, "radiomarchy")
+        cli("pages", "add", "dubai", "Dubai flats", "http://192.168.1.20:8080/", "--icon", "D", "--badge", "2")
+        cli("pages", "badge", "dubai", "5")
+        self.assertIn("Dubai flats (5)", cli("pages").stdout)
+        cli("pages", "show", "dubai")
+        self.assertEqual(self.tv.page, "http://192.168.1.20:8080/")
+        cli("pages", "remove", "dubai")
+        self.assertIn("No pages", cli("pages").stdout)
         self.tv.watching = True
         self.assertIn("held", cli("notify", "--title", "Build", "green").stderr)
 

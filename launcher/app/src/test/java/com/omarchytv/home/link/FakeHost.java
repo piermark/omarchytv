@@ -158,6 +158,11 @@ class FakeHost implements LinkServer.Host {
         return 409;
     }
 
+    @Override
+    public JSONObject config() {
+        return readConfig();
+    }
+
     synchronized JSONObject readConfig() {
         try {
             return config.exists() ? new JSONObject(new String(Files.readAllBytes(config.toPath()), StandardCharsets.UTF_8)) : new JSONObject();

@@ -174,6 +174,30 @@ ALLOWED_TOOLS = (
                         "required": ["target"]},
     },
     {
+        "name": "tv_list_pages",
+        "description": "The agent pages published as tiles on the TV's Home.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "tv_publish_page",
+        "description": "Publish (or update) a LAN / tailnet page as a tile on the TV's Home: id, name, url, optional "
+                       "one-letter icon and badge count. At most 16.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string", "description": "a-z, 0-9, dashes"}, "name": {"type": "string"},
+            "url": {"type": "string", "description": "http://<LAN or 100.x address>[:port]/path"},
+            "icon": {"type": "string"}, "badge": {"type": "integer"}}, "required": ["id", "name", "url"]},
+    },
+    {
+        "name": "tv_page_badge",
+        "description": "Set the badge count of a published page (0 hides it), e.g. new replies.",
+        "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "badge": {"type": "integer"}}, "required": ["id", "badge"]},
+    },
+    {
+        "name": "tv_remove_page",
+        "description": "Remove a published page from the TV's Home.",
+        "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
+    },
+    {
         "name": "tv_diagnostics",
         "description": "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, "
                        "recent log lines. No secrets.",
@@ -187,6 +211,7 @@ SCOPES = ("read", "notify", "control")
 TOOL_SCOPE = {
     "tv_status": "read", "tv_list_themes": "read", "tv_list_apps": "read", "tv_get_theme": "read", "tv_get_state": "read",
     "tv_radio_now": "read", "tv_radio": "control", "tv_open": "control",
+    "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
     "tv_screensaver": "control", "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control",
@@ -307,6 +332,18 @@ def _call_tool(name: str, args: dict, c) -> dict:
         return c.request("POST", "/v1/page", {"url": str(args.get("url", ""))})
     if name == "tv_close_page":
         return c.request("DELETE", "/v1/page")
+    if name in ("tv_publish_page", "tv_page_badge", "tv_remove_page"):
+        pid = str(args.get("id", ""))
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,39}", pid):
+            raise ValueError("id: a-z, 0-9, dashes")
+        if name == "tv_publish_page":
+            return c.request("PUT", f"/v1/pages/{pid}", {"name": str(args.get("name", ""))[:32], "url": str(args.get("url", "")),
+                                                         "icon": str(args.get("icon", ""))[:2], "badge": int(args.get("badge") or 0)})
+        if name == "tv_page_badge":
+            return c.request("POST", f"/v1/pages/{pid}/badge", {"badge": int(args.get("badge") or 0)})
+        return c.request("DELETE", f"/v1/pages/{pid}")
+    if name == "tv_list_pages":
+        return c.request("GET", "/v1/pages")
     if name == "tv_radio_now":
         return c.request("GET", "/v1/radio")
     if name == "tv_radio":

@@ -40,6 +40,8 @@ final class AppApi {
     static final int MAX_SSE = 4, MAX_ASKS = 4;
     static final Pattern ASK_PATH = Pattern.compile("^/v1/ask/([0-9a-f]{16})$");
     static final Pattern TOKEN_PATH = Pattern.compile("^/v1/tokens/([0-9a-f]{8})$");
+    static final Pattern PAGE_PATH = Pattern.compile("^/v1/pages/([a-z0-9][a-z0-9-]{0,39})(/badge|/show)?$");
+    static final Pattern LAN_URL = Pattern.compile("^http://(10\\.|192\\.168\\.|172\\.(1[6-9]|2[0-9]|3[01])\\.|100\\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\\.)[0-9.]+(:[0-9]{1,5})?(/[^\\s]*)?$");
 
     /** Who is calling: an app token, or a paired PC (everything an app may do, plus managing tokens). */
     static final class Principal {
@@ -126,7 +128,7 @@ final class AppApi {
         return "/v1/state".equals(p) || "/v1/stream".equals(p) || "/v1/notify".equals(p) || "/v1/ask".equals(p)
                 || ASK_PATH.matcher(p).matches() || "/v1/page".equals(p) || "/v1/diagnostics".equals(p)
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
-                || "/v1/radio".equals(p) || "/v1/open".equals(p);
+                || "/v1/radio".equals(p) || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches();
     }
 
     /** The app token a request presents: "Authorization: Bearer otva_…", or ?token= on GET /v1/state and /v1/stream. */
@@ -187,7 +189,7 @@ final class AppApi {
 
     static LinkServer.Response cors(LinkServer.Response r) {
         r.headers.put("Access-Control-Allow-Origin", "*");
-        r.headers.put("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS");
+        r.headers.put("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         r.headers.put("Access-Control-Allow-Headers", "Authorization, Content-Type");
         r.headers.put("Access-Control-Allow-Private-Network", "true");
         r.headers.put("Access-Control-Max-Age", "600");
@@ -237,6 +239,21 @@ final class AppApi {
             return e == null ? new LinkServer.Response(200, LinkServer.ok().put("target", body.optString("target")))
                     : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office"));
         }
+        if ("GET".equals(m) && "/v1/pages".equals(p)) return who.can("read") ? new LinkServer.Response(200, new JSONObject().put("pages", pages())) : forbidden("read");
+        Matcher pm = PAGE_PATH.matcher(p);
+        if (pm.matches()) {   // v2.21 agent pages as Home tiles
+            String id = pm.group(1), sub = pm.group(2);
+            if ("/badge".equals(sub) && "POST".equals(m)) return who.can("notify") ? pageBadge(id, body.optInt("badge", 0)) : forbidden("notify");
+            if (!who.can("control")) return forbidden("control");
+            if ("/show".equals(sub) && "POST".equals(m)) {
+                JSONObject pg = page(id);
+                if (pg == null) return new LinkServer.Response(404, LinkServer.err("no_such_page", null));
+                String e = host.openPage(pg.optString("url"), who.name);
+                return e == null ? new LinkServer.Response(200, LinkServer.ok()) : new LinkServer.Response(409, LinkServer.err(e, null));
+            }
+            if (sub == null && "PUT".equals(m)) return publishPage(id, body, who);
+            if (sub == null && "DELETE".equals(m)) return removePage(id);
+        }
         if ("GET".equals(m) && "/v1/diagnostics".equals(p)) return who.can("control") ? new LinkServer.Response(200, diagnostics()) : forbidden("control");
         if ("POST".equals(m) && ("/v1/mcp".equals(p) || "/mcp".equals(p))) return s.mcp(body, who);
         // paired PCs only
@@ -267,6 +284,87 @@ final class AppApi {
         JSONObject r = host.radio(action);
         return r == null ? new LinkServer.Response(409, LinkServer.err("no_radio", "Radiomarchy is not available"))
                 : new LinkServer.Response(200, r);
+    }
+
+    // ---- agent pages (Home tiles) ----
+
+    JSONArray pages() {
+        JSONObject c = host.config();
+        JSONArray a = c != null ? c.optJSONArray("agentPages") : null;
+        return a != null ? a : new JSONArray();
+    }
+
+    JSONObject page(String id) {
+        JSONArray a = pages();
+        for (int i = 0; i < a.length(); i++) {
+            JSONObject o = a.optJSONObject(i);
+            if (o != null && id.equals(o.optString("id"))) return o;
+        }
+        return null;
+    }
+
+    static boolean lanUrl(String url) {
+        return url != null && url.length() <= 2000 && LAN_URL.matcher(url).matches();
+    }
+
+    LinkServer.Response publishPage(String id, JSONObject b, Principal who) throws Exception {
+        if (!id.matches("[a-z0-9][a-z0-9-]{0,39}")) return new LinkServer.Response(400, LinkServer.err("bad_id", "a-z, 0-9, dashes"));
+        String name = LinkServer.printable(b.optString("name", ""), 32), url = b.optString("url", "").trim();
+        if (name.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_name", "name is required"));
+        if (!lanUrl(url)) return new LinkServer.Response(400, LinkServer.err("not_lan_url", "http:// to a LAN or tailnet IP address"));
+        String icon = LinkServer.printable(b.optString("icon", ""), 2);
+        int badge = Math.max(0, Math.min(999, b.optInt("badge", 0)));
+        final boolean[] full = {false};
+        host.editConfig(j -> {
+            JSONArray a = j.optJSONArray("agentPages");
+            if (a == null) j.put("agentPages", a = new JSONArray());
+            JSONObject o = null;
+            for (int i = 0; i < a.length(); i++) if (id.equals(a.optJSONObject(i) != null ? a.optJSONObject(i).optString("id") : "")) o = a.optJSONObject(i);
+            if (o == null) {
+                if (a.length() >= 16) {
+                    full[0] = true;
+                    return;
+                }
+                a.put(o = new JSONObject().put("id", id));
+            }
+            o.put("name", name).put("url", url).put("icon", icon).put("badge", badge).put("by", who.name)
+                    .put("updated", System.currentTimeMillis() / 1000);
+        });
+        if (full[0]) return new LinkServer.Response(409, LinkServer.err("too_many_pages", "16 pages; remove one"));
+        host.log("page published by " + who.name + ": " + id);
+        return new LinkServer.Response(200, LinkServer.ok().put("id", id));
+    }
+
+    LinkServer.Response pageBadge(String id, int badge) throws Exception {
+        final boolean[] found = {false};
+        int v = Math.max(0, Math.min(999, badge));
+        host.editConfig(j -> {
+            JSONArray a = j.optJSONArray("agentPages");
+            for (int i = 0; a != null && i < a.length(); i++) {
+                JSONObject o = a.optJSONObject(i);
+                if (o != null && id.equals(o.optString("id"))) {
+                    o.put("badge", v);
+                    found[0] = true;
+                }
+            }
+        });
+        return found[0] ? new LinkServer.Response(200, LinkServer.ok().put("badge", v)) : new LinkServer.Response(404, LinkServer.err("no_such_page", null));
+    }
+
+    LinkServer.Response removePage(String id) throws Exception {
+        final boolean[] found = {false};
+        host.editConfig(j -> {
+            JSONArray a = j.optJSONArray("agentPages");
+            if (a == null) return;
+            JSONArray keep = new JSONArray();
+            for (int i = 0; i < a.length(); i++) {
+                JSONObject o = a.optJSONObject(i);
+                if (o != null && id.equals(o.optString("id"))) found[0] = true;
+                else if (o != null) keep.put(o);
+            }
+            j.put("agentPages", keep);
+        });
+        return found[0] ? new LinkServer.Response(200, LinkServer.ok()) : new LinkServer.Response(404, LinkServer.err("no_such_page", null));
     }
 
     // ---- state ---------------------------------------------------------------------------------------------

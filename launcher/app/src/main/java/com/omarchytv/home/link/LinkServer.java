@@ -177,6 +177,11 @@ public final class LinkServer {
             return "no_such_target";
         }
 
+        /** v2.21 the launcher's omarchytv.json as it is now (read only), or null. */
+        default JSONObject config() {
+            return null;
+        }
+
         /** v2.21 GET /v1/sdk/omarchytv.js. */
         default byte[] sdk() {
             return null;
@@ -1348,6 +1353,20 @@ public final class LinkServer {
                         isError = e != null;
                         break;
                     }
+                    case "tv_list_pages":
+                        out = new JSONObject().put("pages", app.pages());
+                        break;
+                    case "tv_publish_page":
+                    case "tv_page_badge":
+                    case "tv_remove_page": {
+                        String pid = args.optString("id", "");
+                        Response pr = "tv_publish_page".equals(name) ? app.publishPage(pid, args, who)
+                                : "tv_page_badge".equals(name) ? app.pageBadge(pid, args.optInt("badge", 0))
+                                : app.removePage(pid);
+                        out = new JSONObject(new String(pr.body, StandardCharsets.UTF_8));
+                        isError = pr.status != 200;
+                        break;
+                    }
                     case "tv_close_page":
                         out = ok().put("closed", host.closePage());
                         break;
@@ -1433,6 +1452,16 @@ public final class LinkServer {
         t.add(new Object[]{"tv_show_page", "Open a web page of the LAN or tailnet full screen on the TV (http:// and an IP address, e.g. a dashboard). BACK closes it.",
                 new JSONObject().put("url", prop("string", "http://<LAN or 100.x address>[:port]/path")), "control"});
         t.add(new Object[]{"tv_close_page", "Close the page opened with tv_show_page.", new JSONObject(), "control"});
+        t.add(new Object[]{"tv_list_pages", "The agent pages published as tiles on the TV's Home.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_publish_page", "Publish (or update) a LAN / tailnet page as a tile on the TV's Home, with a name, a one-letter icon and an optional badge count. At most 16.",
+                new JSONObject().put("id", prop("string", "Short id: a-z, 0-9, dashes (e.g. dubai-flats)"))
+                        .put("name", prop("string", "Tile name, at most 32 characters"))
+                        .put("url", prop("string", "http://<LAN or 100.x address>[:port]/path"))
+                        .put("icon", prop("string", "One letter or emoji (optional)"))
+                        .put("badge", prop("integer", "A count shown on the tile (0 hides it)")), "control"});
+        t.add(new Object[]{"tv_page_badge", "Set the badge count of a published page (0 hides it), e.g. new replies.",
+                new JSONObject().put("id", prop("string", "The page id")).put("badge", prop("integer", "0-999")), "notify"});
+        t.add(new Object[]{"tv_remove_page", "Remove a published page from the TV's Home.", new JSONObject().put("id", prop("string", "The page id")), "control"});
         t.add(new Object[]{"tv_diagnostics", "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, recent log lines. No secrets.", new JSONObject(), "control"});
         return t;
     }

@@ -7,6 +7,7 @@
  *     tv.followTheme();                                     // CSS variables --otv-background, --otv-accent, …
  *     tv.on("state", function (s) { console.log(s.screen, s.app); });
  *     tv.ask("Deploy to production?", ["Yes", "Not now"]).then(function (a) { … });
+ *     OmarchyTV.remote({ red: function () { refresh(); } });   // arrows move the focus, OK clicks
  *   </script>
  *
  * The theme needs no token. state / on() need a "read" token, notify() and ask() a "notify" token
@@ -185,10 +186,104 @@
     this._listeners = {};
   };
 
+  /** Set the badge (a count on the page's Home tile; 0 hides it). Needs a "notify" token. */
+  Client.prototype.badge = function (pageId, n) {
+    return this._req("POST", "/v1/pages/" + encodeURIComponent(pageId) + "/badge", { badge: n | 0 }, true);
+  };
+
+  // ---- the remote: keys and focus ---------------------------------------------------------------------------
+
+  var KEYS = {
+    37: "left", 38: "up", 39: "right", 40: "down", 13: "ok", 23: "ok",
+    403: "red", 404: "green", 405: "yellow", 406: "blue",   // webOS / Tizen / HbbTV colour keys
+    415: "play", 19: "pause", 179: "play_pause", 10252: "play_pause", 417: "next", 412: "previous"
+  };
+  var KEY_NAMES = {
+    ArrowLeft: "left", ArrowUp: "up", ArrowRight: "right", ArrowDown: "down", Enter: "ok",
+    ColorF0Red: "red", ColorF1Green: "green", ColorF2Yellow: "yellow", ColorF3Blue: "blue",
+    MediaPlayPause: "play_pause", MediaPlay: "play", MediaPause: "pause", MediaTrackNext: "next", MediaTrackPrevious: "previous"
+  };
+
+  /** The remote key of a keyboard event: "up", "ok", "red", "play_pause" …, or "". */
+  function keyOf(ev) {
+    if (!ev) return "";
+    return KEY_NAMES[ev.key] || KEYS[ev.keyCode] || "";
+  }
+
+  /**
+   * The next element from `from` in direction `dir` among `items` (each with a rect {left, top, width, height}):
+   * the nearest one whose centre lies that way, with a penalty for being off-axis. Pure, for tests.
+   */
+  function nearest(from, dir, items, rectOf) {
+    var a = rectOf(from), ax = a.left + a.width / 2, ay = a.top + a.height / 2, best = null, bestD = Infinity;
+    for (var i = 0; i < items.length; i++) {
+      var el = items[i];
+      if (el === from) continue;
+      var b = rectOf(el), bx = b.left + b.width / 2, by = b.top + b.height / 2, dx = bx - ax, dy = by - ay, main, off;
+      if (dir === "left") { if (dx >= -1) continue; main = -dx; off = Math.abs(dy); }
+      else if (dir === "right") { if (dx <= 1) continue; main = dx; off = Math.abs(dy); }
+      else if (dir === "up") { if (dy >= -1) continue; main = -dy; off = Math.abs(dx); }
+      else { if (dy <= 1) continue; main = dy; off = Math.abs(dx); }
+      var d = main + off * 2;
+      if (d < bestD) { bestD = d; best = el; }
+    }
+    return best;
+  }
+
+  /**
+   * Remote control for the page: arrows move the focus between `selector` elements (default: links, buttons and
+   * [data-otv-focus]), OK clicks, and `handlers` get every key by name (return false to stop the default).
+   * The focused element gets the class "otv-focus" and an outline in the theme's accent.
+   */
+  function remote(handlers, selector, doc) {
+    doc = doc || root.document;
+    handlers = handlers || {};
+    selector = selector || "a[href], button, [data-otv-focus], input, select, textarea";
+    if (!doc) return null;
+    if (!doc.getElementById("otv-focus-style") && doc.createElement) {
+      var st = doc.createElement("style");
+      st.id = "otv-focus-style";
+      st.textContent = ".otv-focus{outline:3px solid var(--otv-accent,#7aa2f7)!important;outline-offset:3px}";
+      (doc.head || doc.documentElement).appendChild(st);
+    }
+    var cur = null;
+    function items() { return Array.prototype.slice.call(doc.querySelectorAll(selector)); }
+    function rect(el) { return el.getBoundingClientRect(); }
+    function focus(el) {
+      if (!el) return;
+      if (cur && cur.classList) cur.classList.remove("otv-focus");
+      cur = el;
+      if (el.classList) el.classList.add("otv-focus");
+      if (el.focus) try { el.focus(); } catch (e) { /* not focusable */ }
+      if (el.scrollIntoView) try { el.scrollIntoView({ block: "nearest", inline: "nearest" }); } catch (e) { el.scrollIntoView(false); }
+    }
+    function onKey(ev) {
+      var k = keyOf(ev);
+      if (!k) return;
+      if (handlers[k] && handlers[k](ev, cur) === false) { ev.preventDefault(); return; }
+      if (handlers.any && handlers.any(k, ev, cur) === false) { ev.preventDefault(); return; }
+      var list = items();
+      if (!list.length) return;
+      if (!cur || list.indexOf(cur) < 0) { focus(list[0]); ev.preventDefault(); return; }
+      if (k === "ok") { if (cur.click) cur.click(); ev.preventDefault(); return; }
+      if (k === "up" || k === "down" || k === "left" || k === "right") {
+        var n = nearest(cur, k, list, rect);
+        if (n) { focus(n); ev.preventDefault(); }
+      }
+    }
+    doc.addEventListener("keydown", onKey, true);
+    var first = items()[0];
+    if (first) focus(first);
+    return { focus: focus, current: function () { return cur; }, stop: function () { doc.removeEventListener("keydown", onKey, true); } };
+  }
+
   var OmarchyTV = {
     version: "2.21.0",
     connect: function (opts) { return new Client(opts); },
     themeVars: themeVars,
+    remote: remote,
+    keyOf: keyOf,
+    nearest: nearest,
     Client: Client
   };
 

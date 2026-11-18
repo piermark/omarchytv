@@ -83,3 +83,31 @@ test("on() opens one stream with the token and dispatches events", () => {
   tv.close();
   assert.ok(made[0].closed);
 });
+
+test("remote keys by code and by name", () => {
+  assert.strictEqual(SDK.keyOf({ keyCode: 38 }), "up");
+  assert.strictEqual(SDK.keyOf({ keyCode: 403 }), "red");
+  assert.strictEqual(SDK.keyOf({ key: "ColorF3Blue", keyCode: 0 }), "blue");
+  assert.strictEqual(SDK.keyOf({ key: "MediaPlayPause" }), "play_pause");
+  assert.strictEqual(SDK.keyOf({ keyCode: 65 }), "");
+});
+
+test("spatial focus picks the nearest element that way", () => {
+  // a 2x2 grid plus one far right on the top row
+  const R = { a: [0, 0], b: [200, 0], c: [0, 100], d: [200, 100], e: [800, 0] };
+  const rect = (el) => ({ left: R[el][0], top: R[el][1], width: 100, height: 50 });
+  const all = Object.keys(R);
+  assert.strictEqual(SDK.nearest("a", "right", all, rect), "b");
+  assert.strictEqual(SDK.nearest("a", "down", all, rect), "c");
+  assert.strictEqual(SDK.nearest("d", "up", all, rect), "b");
+  assert.strictEqual(SDK.nearest("b", "right", all, rect), "e");
+  assert.strictEqual(SDK.nearest("a", "left", all, rect), null);
+});
+
+test("badge() posts the count with the token", async () => {
+  let seen;
+  const tv = SDK.connect({ tv: "10.0.0.2", token: "otva_z", fetch: (u, o) => { seen = [u, o]; return Promise.resolve(resp(200, { ok: true })); } });
+  await tv.badge("dubai-flats", 4);
+  assert.strictEqual(seen[0], "http://10.0.0.2:47800/v1/pages/dubai-flats/badge");
+  assert.deepStrictEqual(JSON.parse(seen[1].body), { badge: 4 });
+});

@@ -1277,6 +1277,11 @@ public final class OmarchyLink implements LinkServer.Host {
     }
 
     @Override
+    public JSONObject config() {
+        return LauncherConfig.readJson(app);
+    }
+
+    @Override
     public byte[] sdk() {
         try (java.io.InputStream in = app.getAssets().open("sdk/omarchytv.js")) {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();

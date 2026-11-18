@@ -680,6 +680,29 @@ public class LinkServerTest {
     }
 
     @Test
+    public void agentPagesBecomeHomeTilesWithABadge() throws Exception {
+        pair("123456");
+        server.limits = false;
+        String ctl = appToken("Hermes", "control"), note = appToken("Watcher", "notify");
+        Resp put = app("PUT", "/v1/pages/dubai-flats", "{\"name\":\"Dubai flats\",\"url\":\"http://192.168.1.20:8080/\",\"icon\":\"D\",\"badge\":2}", ctl);
+        assertEquals(200, put.status);
+        assertEquals(400, app("PUT", "/v1/pages/x", "{\"name\":\"x\",\"url\":\"https://example.com/\"}", ctl).status);
+        assertEquals(403, app("PUT", "/v1/pages/y", "{\"name\":\"y\",\"url\":\"http://192.168.1.2/\"}", note).status);
+        assertEquals(200, app("POST", "/v1/pages/dubai-flats/badge", "{\"badge\":5}", note).status);   // notify may update the count
+        JSONObject cfg = host.readConfig();
+        JSONObject pg = cfg.getJSONArray("agentPages").getJSONObject(0);
+        assertEquals("Dubai flats", pg.getString("name"));
+        assertEquals(5, pg.getInt("badge"));
+        assertEquals("Hermes", pg.getString("by"));
+        assertEquals(1, app("GET", "/v1/pages", null, note).json().getJSONArray("pages").length());
+        assertEquals(200, app("POST", "/v1/pages/dubai-flats/show", null, ctl).status);
+        assertEquals("http://192.168.1.20:8080/", host.pages.get(0));
+        assertEquals(200, app("DELETE", "/v1/pages/dubai-flats", null, ctl).status);
+        assertEquals(0, host.readConfig().getJSONArray("agentPages").length());
+        assertEquals(404, app("POST", "/v1/pages/dubai-flats/badge", "{\"badge\":1}", note).status);
+    }
+
+    @Test
     public void askIsAnsweredOnTheRemoteAndOnlyItsAppSeesIt() throws Exception {
         pair("123456");
         server.limits = false;
