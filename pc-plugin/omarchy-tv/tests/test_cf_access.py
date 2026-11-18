@@ -49,6 +49,17 @@ class AccessTest(unittest.TestCase):
         self.assertEqual(self.v.check("not.a.jwt"), "malformed")
         self.assertEqual(self.v.check(self.k.jwt(self.good, alg="HS256")), "alg")
 
+    def test_unknown_kids_do_not_hammer_cloudflare(self):
+        self.assertIsNone(self.v.check(self.k.jwt(self.good)))
+        for i in range(20):
+            self.assertEqual(self.v.check(self.k.jwt(self.good, kid=f"made-up-{i}")), "unknown key")
+        self.assertEqual(len(self.fetched), 1)   # one fetch, not 21
+
+    def test_odd_json_is_malformed_not_a_crash(self):
+        for h, p in (("[1]", "{}"), ('"x"', "{}"), ('{"alg":"RS256","kid":"k1"}', "[]")):
+            tok = f"{b64(h.encode())}.{b64(p.encode())}.{b64(b'sig')}"
+            self.assertEqual(self.v.check(tok), "malformed")
+
     def test_bad_settings(self):
         with self.assertRaises(ValueError):
             cf_access.AccessVerifier("my team!", AUD)

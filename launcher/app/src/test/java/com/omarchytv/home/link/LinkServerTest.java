@@ -790,6 +790,21 @@ public class LinkServerTest {
             assertTrue(all, all.contains("\"screen\":\"home\""));
             assertTrue(all, all.contains("\"name\":\"nord\""));
             assertTrue(all, all.contains("\"from\":\"Board\""));   // an app's notify carries its own name
+            // v2.21 revoking every token from the TV ends their streams at once
+            server.revokeAppTokens();
+            long until2 = System.currentTimeMillis() + 5000;
+            boolean ended = false;
+            try {
+                while (System.currentTimeMillis() < until2) {
+                    if (in.readLine() == null) {
+                        ended = true;
+                        break;
+                    }
+                }
+            } catch (java.io.IOException e) {
+                ended = true;
+            }
+            assertTrue("stream closed after revoke", ended);
         }
     }
 

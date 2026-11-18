@@ -14,7 +14,7 @@ the simplest (read-only, no pairing) to full control (MCP).
 | Open a page full screen, or up to 4 tiled | `omarchy-link page`, `POST /v1/page`, MCP `tv_show_page` | app token `control`, or the paired PC | 2.21 |
 | Agent pages as Home tiles, with a badge | `omarchy-link pages`, `PUT /v1/pages/<id>`, MCP `tv_publish_page`, `tv_page_badge` | `control` (badge: `notify`) | 2.21 |
 | Radiomarchy and parts of OmarchyTV | `omarchy-link radio`, `omarchy-link open`, MCP `tv_radio`, `tv_open` | `read` / `control` | 2.21 |
-| The same on LG / Samsung | `omarchy-tv notify`, `page`, `ask`, `omarchy-tv mcp --bridge` | the bridge's ask code | 2.21 |
+| The same on LG / Samsung | `omarchy-tv notify`, `page`, `ask`, `omarchy-tv mcp --bridge` | the bridge's agent key (not the TV's ask code) | 2.21 |
 | Diagnostics and logs | `omarchy-link tv logs`, `GET /v1/diagnostics`, MCP `tv_diagnostics` | app token `control`, or the paired PC | 2.21 |
 | Control the TV from an AI agent | MCP: on the TV (`/v1/mcp`) or on the PC (`omarchy-tv mcp`) | app token (tools of its scope), PC token, MCP Bearer token | 2.12, more in 2.21 |
 | The same, from another box | `omarchy-tv mcp --http --tailscale` | Bearer token, tailnet peers only | 2.21 |
@@ -81,7 +81,7 @@ agent never interrupts a film; `warn` and `alert` show at once. The TV prints `h
 
 `--speak` reads it aloud with the TV's voice (Android TextToSpeech; LG/Samsung where the browser has
 speechSynthesis). *warn* plays one short tone, *alert* two; `"link": {"notifySound": false}` in `omarchytv.json`
-silences them.
+silences both the tones and the voice.
 
 ```sh
 omarchy-link watch -- make release      # runs it, then ✓ / ✗, the time and the last line on the TV (alert on failure)
@@ -262,6 +262,13 @@ the TV (MCP `tv_diagnostics`, scope control).
 webOS and Tizen have no Omarchy Link server: the PC bridge (`omarchy-tv webos-serve`) keeps an inbox the TV app
 reads every 3 s with its ask code. Notifications (mako style), a page full screen (one at a time) and questions work
 the same; tiles, state, Radiomarchy control and the remote are Android TV only.
+
+Agents and the TV hold different keys. Agents send `X-Omarchy-Agent` with the key in
+`~/.config/omarchy-tv/bridge-agent-token` (created on first use, mode 0600; the commands below read it for you).
+They can post and wait for an answer, but they cannot read the inbox or answer a question. Only the TV, with its ask
+code, answers, so an agent can never approve its own `tv_ask_user`. The inbox routes accept this PC, private LAN
+addresses, and the tailnet only while omarchy-link's Tailscale switch is on. A page must be `http://` to a private
+address (a tailnet one only with the switch on; never link-local). On the TV it opens in a sandboxed frame.
 
 ```sh
 omarchy-tv notify "backup done" --title NAS --level warn

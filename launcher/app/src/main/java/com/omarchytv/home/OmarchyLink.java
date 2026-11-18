@@ -1223,7 +1223,7 @@ public final class OmarchyLink implements LinkServer.Host {
     /** v2.21 notify "speak": read it aloud in the TV's language; the engine starts on first use. */
     @Override
     public void speak(String text) {
-        if (text == null || text.isEmpty()) return;
+        if (text == null || text.isEmpty() || !LauncherConfig.get(app).notifySound) return;   // notifySound: false = silent
         String say = text.length() > 300 ? text.substring(0, 300) : text;
         main.post(() -> {
             if (tts == null) {

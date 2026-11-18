@@ -223,7 +223,7 @@ def cmd_watch(a, cfg):
     name = " ".join(argv)[:50]
     title = ("✓ " if rc == 0 else f"✗ exit {rc} · ") + name
     ns = argparse.Namespace(text=[f"{took} · {last}"[:200] if last else took], source=a.source or "watch",
-                            title=title, level="info" if rc == 0 else "alert", speak=a.speak, quiet=True)
+                            title=title, level="info" if rc == 0 else "alert", speak=a.speak, quiet=True, hint=True)
     cmd_notify(ns, cfg)
     return rc
 
@@ -250,9 +250,13 @@ def cmd_notify(a, cfg):
             print("held: shown when the TV is back on Home (use --level warn to show it now)", file=sys.stderr)
         return 0
     except (link.LinkError, OSError, ValueError) as e:
+        off = getattr(e, "code", "") == "notify_off" or getattr(e, "status", 0) == 403
         if a.quiet:
+            if off and getattr(a, "hint", False):   # watch: the command's result still wins, but say why the TV is silent
+                print("omarchy-link watch: the TV did not show it: turn on agent alerts (Settings > Omarchy Link).",
+                      file=sys.stderr)
             return 0
-        if getattr(e, "code", "") == "notify_off" or getattr(e, "status", 0) == 403:
+        if off:
             print("The TV does not show notifications: turn on agent alerts (Settings > Omarchy Link).", file=sys.stderr)
             return 4
         print(f"omarchy-link notify: {e}", file=sys.stderr)

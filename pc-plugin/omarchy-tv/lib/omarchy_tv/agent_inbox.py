@@ -1,7 +1,9 @@
 """v2.21 agents on LG / Samsung: what the PC bridge (omarchy-tv webos-serve) keeps for the web app on the TV.
 
 The TV app polls GET /v1/inbox every few seconds (with the ask code, X-Omarchy-Token) and shows what is new:
-notifications, a page to open full screen, questions to answer with the remote. The same routes as on an Android TV
+notifications, a page to open full screen, questions to answer with the remote. Agents use their own key
+(X-Omarchy-Agent, ~/.config/omarchy-tv/bridge-agent-token): they post and poll, but cannot read the inbox or answer
+a question; only the TV can. Peers: this PC, the LAN, the tailnet only with omarchy-link's switch on. The same routes as on an Android TV
 (POST /v1/notify, POST /v1/page, POST /v1/ask, GET /v1/ask/<id>?wait=), so `omarchy-tv mcp --bridge`, the
 `omarchy-tv notify|page|ask` commands and scripts work the same for every TV. Memory only: nothing on disk.
 """
@@ -21,8 +23,29 @@ def clean(s, n: int) -> str:
     return "".join(ch for ch in str(s or "").replace("\n", " ") if ch.isprintable()).strip()[:n]
 
 
-def lan_url(url: str, allow_tailnet: bool = True) -> bool:
-    """http:// to a literal private (or tailnet) address: what the TV may open full screen."""
+TAILNET4 = ipaddress.ip_network("100.64.0.0/10")
+TAILNET6 = ipaddress.ip_network("fd7a:115c:a1e0::/48")
+
+
+def tailnet_on() -> bool:
+    """omarchy-link's "tailscale" switch (config.json); off when omarchy-link is not installed."""
+    try:
+        from omarchy_link import config   # noqa: PLC0415
+        return config.load_config().get("tailscale") is True
+    except Exception:
+        return False
+
+
+def lan_ip(ip, allow_tailnet: bool) -> bool:
+    if ip in (TAILNET4 if ip.version == 4 else TAILNET6):
+        return allow_tailnet
+    if ip.version == 4:
+        return ip.is_private and not ip.is_loopback and not ip.is_link_local and not ip.is_unspecified
+    return ip in ipaddress.ip_network("fc00::/7")   # ULA; no link-local (a page needs a routable address)
+
+
+def lan_url(url: str, allow_tailnet: bool | None = None) -> bool:
+    """http:// to a literal private (or, with the switch on, tailnet) address: what the TV may open full screen."""
     try:
         u = urlparse(url)
         if u.scheme != "http" or not u.hostname or len(url) > 2000:
@@ -30,9 +53,22 @@ def lan_url(url: str, allow_tailnet: bool = True) -> bool:
         ip = ipaddress.ip_address(u.hostname)
     except ValueError:
         return False
-    if ip.version == 4 and allow_tailnet and ip in ipaddress.ip_network("100.64.0.0/10"):
+    return lan_ip(ip, tailnet_on() if allow_tailnet is None else allow_tailnet)
+
+
+def peer_ok(addr: str) -> bool:
+    """Who may use the bridge's inbox routes: this PC, the LAN, the tailnet (switch on)."""
+    try:
+        ip = ipaddress.ip_address(addr.split("%", 1)[0])
+    except ValueError:
+        return False
+    if getattr(ip, "ipv4_mapped", None):
+        ip = ip.ipv4_mapped
+    if ip.is_loopback:
         return True
-    return ip.is_private and not ip.is_loopback
+    if ip.version == 6 and ip.is_link_local:
+        return True
+    return lan_ip(ip, tailnet_on())
 
 
 class Inbox:

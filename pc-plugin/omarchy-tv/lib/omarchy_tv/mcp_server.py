@@ -418,7 +418,34 @@ def tailnet_ip(run=subprocess.run) -> str | None:
     return None
 
 
+class LazyClient:
+    """The TV client, made on the first tool call: initialize and tools/list work before pairing, and a factory that
+    prints (\"TV not paired\") or exits never writes on the MCP stdout nor kills the server."""
+
+    def __init__(self, factory):
+        self._factory, self._c = factory, None
+
+    def _get(self):
+        if self._c is None:
+            import contextlib
+            try:
+                with contextlib.redirect_stdout(sys.stderr):
+                    self._c = self._factory()
+            except SystemExit:
+                raise RuntimeError("the TV is not paired: run omarchy-link pair (or omarchy-tv pair)") from None
+        return self._c
+
+    def request(self, *a, **kw):
+        return self._get().request(*a, **kw)
+
+    def __getattr__(self, name):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        return getattr(self._get(), name)
+
+
 def serve_stdio(tv_client_factory, scope: str = "control") -> int:
+    lazy = LazyClient(tv_client_factory)
     for line in sys.stdin:
         line = line.strip()
         if not line:
@@ -427,7 +454,7 @@ def serve_stdio(tv_client_factory, scope: str = "control") -> int:
             req = json.loads(line)
         except ValueError:
             continue
-        resp = handle_rpc(req, tv_client_factory(), scope)
+        resp = handle_rpc(req, lazy, scope)
         if resp is not None:
             sys.stdout.write(json.dumps(resp) + "\n")
             sys.stdout.flush()
@@ -474,7 +501,7 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
             except ValueError:
                 self._send(400, {"error": "invalid_json"})
                 return
-            resp = handle_rpc(req, tv_client_factory(), scope)
+            resp = handle_rpc(req, LazyClient(tv_client_factory), scope)
             self._send(200, resp or {"jsonrpc": "2.0", "id": None, "result": {}})
 
         def _send(self, code: int, obj: dict):
@@ -513,7 +540,10 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
         if not bind:
             print("tailscale: no tailnet address on this PC (sudo tailscale up)", file=sys.stderr, flush=True)
             return 1
-        tunnel, cloudflare = False, None   # one or the other: the tailnet never needs a public tunnel
+        if tunnel or cloudflare:
+            print("--tailscale: ignoring --tunnel/--cloudflare (the tailnet never needs a public tunnel)",
+                  file=sys.stderr, flush=True)
+        tunnel, cloudflare = False, None   # one or the other
     public = bool(tunnel or cloudflare)
     scope = default_scope(public, scope)
     verifier = None
@@ -525,6 +555,10 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
             print("--access-team/--access-aud need python-cryptography (pacman -S python-cryptography)", file=sys.stderr)
             return 1
         verifier = AccessVerifier(access_team or "", access_aud or "")
+    if cloudflare and not (access or verifier):
+        print("warning: --cloudflare without Access: anyone with the URL and the bearer token reaches this server. "
+              "Put a Cloudflare Access policy in front and add --access-team/--access-aud (docs/CLOUDFLARE.md).",
+              file=sys.stderr, flush=True)
     srv = create_http_server(tv_client_factory, token, bind, port, tailnet_only=tailscale, scope=scope,
                              require_access=bool(cloudflare and (access or verifier)), verifier=verifier)
     actual_port = srv.server_address[1]

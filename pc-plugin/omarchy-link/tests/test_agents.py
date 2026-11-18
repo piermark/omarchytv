@@ -365,7 +365,7 @@ print("Done: login fixed. key {SECRET}")
         rid_box = {}
 
         def approve_soon():
-            for _ in range(100):
+            for _ in range(300):   # 30 s: under a parallel gradle build the PC side can be slow
                 if LOG.exists() and "agents approve" in LOG.read_text():
                     tok = LOG.read_text().split("agents approve ")[1].split()[0]
                     rid_box["token"] = tok

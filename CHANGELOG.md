@@ -22,8 +22,8 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 - **Live state and events**: `GET /v1/state` (home, app, screensaver or off; the app; the theme; the music) and
   `GET /v1/stream`, Server-Sent Events for pages (`state`, `theme`, `notify`, `ask_answer`).
 - **The TV speaks and chimes**: `--speak` (and `"speak": true`, MCP `speak`) reads a notification aloud with the
-  TV's voice; *warn* plays one short tone and *alert* two (`"link": {"notifySound": false}` silences them). LG and
-  Samsung too, where the browser can.
+  TV's voice; *warn* plays one short tone and *alert* two (`"link": {"notifySound": false}` silences the tones
+  and the voice). LG and Samsung too, where the browser can.
 - **`omarchy-link watch -- make release`**: runs any command and tells the TV how it went: ✓ or ✗ with the exit
   code, how long it took and the last line (an alert when it fails; `--speak` to hear it).
 - **Hooks for every agent**: Claude Code (Stop, Notification), Codex (`notify = ["omarchy-link", "notify", …]`, its
@@ -56,13 +56,17 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 - **App tokens**: a dashboard or an agent gets its own token with one scope, `read`, `notify` or `control`. Made on
   the PC (`omarchy-link token add "Kitchen" --scope read`) or on the TV (Settings › Omarchy Link › New app token,
   shown once as text and QR). Only a hash is kept; the last use is remembered; revoke one from the PC or all from
-  the TV.
+  the TV (a revoked token's live stream ends at once).
 
 ### LG and Samsung too
 
 - The PC bridge (`omarchy-tv webos-serve`) keeps an inbox for the TV: notifications (mako style, in the theme's
   colours), a page full screen, questions answered with the remote. `omarchy-tv notify | page | ask` and
   `omarchy-tv mcp --bridge` use the same calls as an Android TV, so agents do not care which TV you have.
+- Agents and the TV hold different keys on the bridge: agents post and wait with their own key
+  (`~/.config/omarchy-tv/bridge-agent-token`), and only the TV, with its ask code, reads the inbox and answers. An
+  agent can never approve its own question. The inbox routes accept this PC, the LAN, and the tailnet only with the
+  switch on. Pages open in a sandboxed frame.
 
 ### Tailscale (optional, off by default)
 

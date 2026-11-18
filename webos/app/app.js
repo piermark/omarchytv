@@ -4748,7 +4748,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   if (window.OmarchyInbox) {
     agentInbox = window.OmarchyInbox.create({
       base: pcBase, token: function () { return cfg.grokbotCode || ""; },
-      asks: function () { return tr("agent_asks"); }, hint: function () { return tr("agent_hint"); }
+      asks: function () { return tr("agent_asks"); }, hint: function () { return tr("agent_hint"); },
+      sound: function () { return cfg.notifySound !== false; }   // like Android's "link": {"notifySound": false}
     });
     setInterval(function () { if (!document.hidden) agentInbox.tick(); }, 3000);
   }

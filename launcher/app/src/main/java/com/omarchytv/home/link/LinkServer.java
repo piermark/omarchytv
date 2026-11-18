@@ -2783,6 +2783,7 @@ public final class LinkServer {
     }
 
     public int revokeAppTokens() {
+        app.closeAppStreams();   // a revoked token's /v1/stream ends now, not after its hour
         return app.tokens.clear();
     }
 

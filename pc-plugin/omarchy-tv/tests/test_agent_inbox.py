@@ -50,6 +50,8 @@ class BridgeRoutesTest(unittest.TestCase):
     def setUp(self):
         self.p = mock.patch.object(webos, "bridge_token", return_value="ABCD1234")
         self.p.start()
+        self.pa = mock.patch.object(webos, "bridge_agent_token", return_value="agent-key-0123456789abcdef")
+        self.pa.start()
         self.old = agent_inbox.INBOX
         agent_inbox.INBOX = agent_inbox.Inbox()
         self.srv = HTTPServer(("127.0.0.1", 0), webos.WebOSHandler)
@@ -59,13 +61,17 @@ class BridgeRoutesTest(unittest.TestCase):
         self.srv.shutdown()
         self.srv.server_close()
         self.p.stop()
+        self.pa.stop()
         agent_inbox.INBOX = self.old
 
-    def req(self, method, path, body=None, token="ABCD1234"):
+    def req(self, method, path, body=None, token="ABCD1234", agent=None):
+        """token: the TV's ask code (X-Omarchy-Token); agent: the agents' key (X-Omarchy-Agent)."""
         c = http.client.HTTPConnection("127.0.0.1", self.srv.server_address[1], timeout=8)
         h = {"Content-Type": "text/plain"}
         if token:
             h["X-Omarchy-Token"] = token
+        if agent:
+            h["X-Omarchy-Agent"] = agent
         c.request(method, path, body=json.dumps(body).encode() if body is not None else None, headers=h)
         r = c.getresponse()
         out = (r.status, json.loads(r.read() or b"{}"))
@@ -73,27 +79,49 @@ class BridgeRoutesTest(unittest.TestCase):
         return out
 
     def test_the_tv_reads_its_inbox_and_answers(self):
+        A = "agent-key-0123456789abcdef"
         self.assertEqual(self.req("POST", "/v1/notify", {"text": "hi"}, token=None)[0], 401)
+        self.assertEqual(self.req("POST", "/v1/notify", {"text": "hi"})[0], 401)   # the TV's code is not an agent key
         self.assertEqual(self.req("GET", "/v1/inbox", token="WRONG")[0], 401)
-        self.assertEqual(self.req("POST", "/v1/notify", {"text": "backup done", "from": "Pi"})[0], 200)
-        self.assertEqual(self.req("POST", "/v1/page", {"url": "https://evil.example/"})[0], 400)
-        self.assertEqual(self.req("POST", "/v1/page", {"url": "http://192.168.1.5:8080/"})[0], 200)
-        st, a = self.req("POST", "/v1/ask", {"question": "Merge?", "choices": ["Merge", "Wait"]})
+        self.assertEqual(self.req("GET", "/v1/inbox", token=None, agent=A)[0], 401)   # agents do not read the TV's inbox
+        self.assertEqual(self.req("POST", "/v1/notify", {"text": "backup done", "from": "Pi"}, token=None, agent=A)[0], 200)
+        self.assertEqual(self.req("POST", "/v1/page", {"url": "https://evil.example/"}, token=None, agent=A)[0], 400)
+        self.assertEqual(self.req("POST", "/v1/page", {"url": "http://192.168.1.5:8080/"}, token=None, agent=A)[0], 200)
+        st, a = self.req("POST", "/v1/ask", {"question": "Merge?", "choices": ["Merge", "Wait"]}, token=None, agent=A)
         self.assertEqual(st, 200)
         st, box = self.req("GET", "/v1/inbox?since=0")
         self.assertEqual(box["notes"][0]["text"], "backup done")
         self.assertEqual(box["page"]["url"], "http://192.168.1.5:8080/")
         self.assertEqual(box["asks"][0]["question"], "Merge?")
+        # v2.21 review: an agent cannot approve its own question; only the TV (ask code) answers
+        self.assertEqual(self.req("POST", f"/v1/ask/{a['id']}", {"answer": "Merge"}, token=None, agent=A)[0], 401)
         self.assertEqual(self.req("POST", f"/v1/ask/{a['id']}", {"answer": "Merge"})[0], 200)
-        st, r = self.req("GET", f"/v1/ask/{a['id']}?wait=1")
+        st, r = self.req("GET", f"/v1/ask/{a['id']}?wait=1", token=None, agent=A)
         self.assertEqual(r["answer"], "Merge")
-        self.assertEqual(self.req("POST", "/v1/page", {"close": True})[1]["url"], None)
+        self.assertEqual(self.req("POST", "/v1/page", {"close": True}, token=None, agent=A)[1]["url"], None)
+
+    def test_peers_and_urls(self):
+        self.assertTrue(agent_inbox.peer_ok("127.0.0.1"))
+        self.assertTrue(agent_inbox.peer_ok("192.168.1.20"))
+        self.assertTrue(agent_inbox.peer_ok("::ffff:10.0.0.4"))
+        self.assertFalse(agent_inbox.peer_ok("8.8.8.8"))
+        with mock.patch.object(agent_inbox, "tailnet_on", return_value=False):
+            self.assertFalse(agent_inbox.peer_ok("100.101.102.103"))
+            self.assertFalse(agent_inbox.lan_url("http://100.101.102.103/"))
+            self.assertFalse(agent_inbox.lan_url("http://[fd7a:115c:a1e0::5]/"))
+        with mock.patch.object(agent_inbox, "tailnet_on", return_value=True):
+            self.assertTrue(agent_inbox.peer_ok("100.101.102.103"))
+            self.assertTrue(agent_inbox.lan_url("http://100.101.102.103:8080/"))
+            self.assertTrue(agent_inbox.lan_url("http://[fd7a:115c:a1e0::5]/"))
+        self.assertFalse(agent_inbox.lan_url("http://169.254.1.1/"))
+        self.assertFalse(agent_inbox.lan_url("http://[fe80::1]/"))
+        self.assertTrue(agent_inbox.lan_url("http://[fd12:3456::1]/"))
 
 
 class BridgeClientTest(BridgeRoutesTest):
     def test_the_mcp_tools_work_through_the_bridge(self):
         from omarchy_tv import bridge_client, mcp_server
-        c = bridge_client.BridgeClient("127.0.0.1", self.srv.server_address[1], "ABCD1234")
+        c = bridge_client.BridgeClient("127.0.0.1", self.srv.server_address[1], "agent-key-0123456789abcdef")
         r = mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
                                    "params": {"name": "tv_notify", "arguments": {"text": "from MCP", "level": "warn"}}}, c)
         self.assertFalse(r["result"]["isError"])

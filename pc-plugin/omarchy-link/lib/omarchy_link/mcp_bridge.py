@@ -17,6 +17,7 @@ SCOPES = ("read", "notify", "control")
 TOOL_SCOPE = {
     "tv_status": "read", "tv_get_state": "read", "tv_get_theme": "read", "tv_list_themes": "read",
     "tv_list_apps": "read", "tv_ai_status": "read", "tv_cinemarchy": "read", "tv_radio_now": "read",
+    "tv_list_pages": "read", "tv_page_badge": "notify",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_send_key": "control", "tv_launch_app": "control", "tv_screensaver": "control",
     "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control", "tv_radio": "control",

@@ -68,7 +68,7 @@
     /** A short tone (two for alert), WebAudio; silent where the TV has none. */
     function chime(twice) {
       var AC = root.AudioContext || root.webkitAudioContext;
-      if (!AC || opts.sound === false) return;
+      if (!AC || quiet()) return;
       try {
         var ctx = chime.ctx || (chime.ctx = new AC()), t = ctx.currentTime;
         if (ctx.resume) ctx.resume();
@@ -84,10 +84,16 @@
       } catch (e) { /* no audio */ }
     }
 
-    /** Read it aloud where the TV's browser can (speechSynthesis). */
+    /** sound: false (or a function returning false) silences the chime and the voice. */
+    function quiet() {
+      var v = typeof opts.sound === "function" ? opts.sound() : opts.sound;
+      return v === false;
+    }
+
+    /** Read it aloud where the TV's browser can (speechSynthesis); sound: false silences it, like the chime. */
     function say(text) {
       try {
-        if (!root.speechSynthesis || !root.SpeechSynthesisUtterance || !text) return false;
+        if (quiet() || !root.speechSynthesis || !root.SpeechSynthesisUtterance || !text) return false;
         root.speechSynthesis.speak(new root.SpeechSynthesisUtterance(String(text).slice(0, 300)));
         return true;
       } catch (e) { return false; }
@@ -112,7 +118,7 @@
 
     function showPage(p) {
       if (!lanUrl(p.url)) return null;
-      var l = layer("<iframe src='" + esc(p.url) + "' style='border:0;width:100%;height:100%;background:#fff'></iframe>");
+      var l = layer("<iframe sandbox='allow-scripts allow-same-origin allow-forms' src='" + esc(p.url) + "' style='border:0;width:100%;height:100%;background:#fff'></iframe>");
       open.kind = "page";
       return l;
     }

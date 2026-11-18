@@ -20,11 +20,11 @@ class BridgeError(Exception):
 
 
 class BridgeClient:
-    SUPPORTED = ("/v1/notify", "/v1/page", "/v1/ask", "/v1/theme", "/v1/status")
+    SUPPORTED = ("/v1/notify", "/v1/page", "/v1/ask", "/v1/theme", "/v1/status")   # not /v1/ask/<id> POST: the TV answers
 
     def __init__(self, host: str = "127.0.0.1", port: int = 8765, token: str | None = None):
         self.host, self.port = host, port
-        self.token = token if token is not None else webos.bridge_token()
+        self.token = token if token is not None else webos.bridge_agent_token()   # the agents' key, not the TV's
 
     def request(self, method: str, path: str, body=None, timeout: float = 8.0):
         if method == "DELETE" and path == "/v1/page":
@@ -38,7 +38,7 @@ class BridgeClient:
         c = http.client.HTTPConnection(self.host, self.port, timeout=timeout)
         try:
             data = json.dumps(body).encode() if body is not None else None
-            c.request(method, path, body=data, headers={"X-Omarchy-Token": self.token, "Content-Type": "text/plain"})
+            c.request(method, path, body=data, headers={"X-Omarchy-Agent": self.token, "Content-Type": "text/plain"})
             r = c.getresponse()
             out = json.loads(r.read(1 << 20) or b"{}")
             if r.status >= 400:

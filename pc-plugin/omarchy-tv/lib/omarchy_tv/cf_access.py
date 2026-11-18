@@ -33,7 +33,7 @@ class AccessVerifier:
         self._fetch = fetch or self._http
         self._now = now
         self._keys: dict = {}
-        self._at = 0.0
+        self._at = float("-inf")   # never fetched
         self._lock = threading.Lock()
 
     def _http(self, url: str) -> dict:
@@ -42,8 +42,16 @@ class AccessVerifier:
 
     def _key(self, kid: str):
         with self._lock:
-            if kid not in self._keys or self._now() - self._at > 3600:
-                data = self._fetch(self.issuer + "/cdn-cgi/access/certs")
+            age = self._now() - self._at
+            # an unknown kid refetches at most once a minute: a flood of made-up kids cannot hammer Cloudflare
+            if age > 3600 or (kid not in self._keys and age > 60):
+                self._at = self._now()
+                try:
+                    data = self._fetch(self.issuer + "/cdn-cgi/access/certs")
+                except Exception:
+                    return self._keys.get(kid)   # Cloudflare away: keep the keys we have
+                if not isinstance(data, dict):
+                    return self._keys.get(kid)
                 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPublicNumbers
                 keys = {}
                 for k in data.get("keys", []):
@@ -60,6 +68,8 @@ class AccessVerifier:
             h64, p64, s64 = token.split(".")
             head, claims = json.loads(_b64(h64)), json.loads(_b64(p64))
         except (ValueError, json.JSONDecodeError):
+            return "malformed"
+        if not isinstance(head, dict) or not isinstance(claims, dict):
             return "malformed"
         if head.get("alg") != "RS256":
             return "alg"

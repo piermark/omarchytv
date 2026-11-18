@@ -304,7 +304,7 @@ final class LauncherConfig {
     final boolean shareTheme;
     /** v2.21: Tailscale peers (100.64.0.0/10, fd7a:115c:a1e0::/48) may use Omarchy Link, casts and panes; default off. */
     final boolean tailscale;
-    /** v2.21: a short tone with warn / alert notifications ("link": {"notifySound": false} silences it). */
+    /** v2.21: tones with warn / alert notifications and spoken ones ("link": {"notifySound": false} silences both). */
     final boolean notifySound;
     /** AI pane when no PC is connected and the data is old: "stale" (dim, "pc offline · 3h ago") or "hide". */
     final String aiOffline;

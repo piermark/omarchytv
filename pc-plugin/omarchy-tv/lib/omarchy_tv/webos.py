@@ -89,6 +89,26 @@ def bridge_token() -> str:
     return t
 
 
+AGENT_TOKEN_FILE = TOKEN_FILE.with_name("bridge-agent-token")
+
+
+def bridge_agent_token() -> str:
+    """v2.21 the agents' key to the inbox (notify, page, ask), not the TV's ask code: an agent cannot answer its own
+    question, only the TV can. 32 characters, file mode 0600, next to the ask code; read by omarchy-tv on this PC."""
+    try:
+        t = AGENT_TOKEN_FILE.read_text(encoding="utf-8").strip()
+        if len(t) >= 24:
+            return t
+    except OSError:
+        pass
+    t = secrets.token_urlsafe(24)
+    AGENT_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(AGENT_TOKEN_FILE), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(t + "\n")
+    return t
+
+
 def _link_theme():
     try:
         from omarchy_link import theme   # noqa: PLC0415 (optional: omarchy-link may not be installed)
@@ -442,13 +462,22 @@ class WebOSHandler(BaseHTTPRequestHandler):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token, If-None-Match")   # Chrome 38 has no "*"
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token, X-Omarchy-Agent, If-None-Match")   # Chrome 38 has no "*"
         self.send_header("Access-Control-Allow-Private-Network", "true")
         self.end_headers()
 
     def _authorized(self) -> bool:
         got = (self.headers.get("X-Omarchy-Token") or "").strip().upper()
         return bool(got) and hmac.compare_digest(got.encode(), bridge_token().upper().encode())
+
+    def _agent_authorized(self) -> bool:
+        got = (self.headers.get("X-Omarchy-Agent") or "").strip()
+        return bool(got) and hmac.compare_digest(got.encode(), bridge_agent_token().encode())
+
+    def _peer_ok(self) -> bool:
+        """v2.21 inbox routes: loopback, a private LAN address, or the tailnet when omarchy-link's switch is on."""
+        from .agent_inbox import peer_ok
+        return peer_ok(self.client_address[0])
 
     def do_POST(self):
         global _last_ask
@@ -458,7 +487,15 @@ class WebOSHandler(BaseHTTPRequestHandler):
                         "/v1/notify", "/v1/page", "/v1/ask") and not re.fullmatch(r"/v1/ask/[0-9a-f]{16}", path):
             self._send_json({"error": "not found"}, 404)
             return
-        if not self._authorized():
+        agent_route = path in ("/v1/notify", "/v1/page", "/v1/ask")
+        if agent_route or path.startswith("/v1/ask/"):
+            if not self._peer_ok():
+                self._send_json({"error": "not_lan"}, 403)
+                return
+            if not (self._agent_authorized() if agent_route else self._authorized()):   # only the TV answers
+                self._send_json({"error": "unauthorized", "message": "wrong or missing key"}, 401)
+                return
+        elif not self._authorized():
             self._send_json({"error": "unauthorized", "message": "wrong or missing ask code"}, 401)
             return
         try:
@@ -650,8 +687,12 @@ class WebOSHandler(BaseHTTPRequestHandler):
     def _agent_get(self, path: str) -> bool:
         if path != "/v1/inbox" and not re.fullmatch(r"/v1/ask/[0-9a-f]{16}", path):
             return False
-        if not self._authorized():
-            self._send_json({"error": "unauthorized", "message": "wrong or missing ask code"}, 401)
+        if not self._peer_ok():
+            self._send_json({"error": "not_lan"}, 403)
+            return True
+        ok = self._authorized() if path == "/v1/inbox" else self._agent_authorized()   # the inbox is the TV's
+        if not ok:
+            self._send_json({"error": "unauthorized", "message": "wrong or missing key"}, 401)
             return True
         from urllib.parse import parse_qs, urlsplit
         from .agent_inbox import INBOX

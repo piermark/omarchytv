@@ -46,6 +46,9 @@ With the switch off the TV listens on its LAN address only, so a tailnet PC gets
 **IPv6**: with the switch on, the TV listens on IPv4 and IPv6 (dual stack; a TV without IPv6 falls back to IPv4),
 so it answers on its `100.x` address and on its `fd7a:115c:a1e0::/48` address. `discover` and MagicDNS names use
 IPv4; to pair over IPv6 give the address: `omarchy-link pair fd7a:115c:a1e0::5` or `[fd7a:115c:a1e0::5]:47800`.
+Listening on IPv6 also means devices on your home LAN that have IPv6 can reach port 47800 over it, not only over
+IPv4. Nothing changes for them: every route except the public theme still needs a paired PC or an app token, and
+with the switch off the TV listens on IPv4 only, as in 2.20.
 Pages, casts and Remote panes use the `100.x` address.
 
 The TV keeps working on the LAN at the same time. Before 2.21, having a VPN app (Tailscale included) active on the TV

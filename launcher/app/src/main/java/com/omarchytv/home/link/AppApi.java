@@ -565,6 +565,10 @@ final class AppApi {
         return "event: " + type + "\ndata: " + json + "\n\n";
     }
 
+    void closeAppStreams() {
+        for (Sse c : streams) if (c.owner.startsWith("app:")) c.closed = true;
+    }
+
     private void closeStreams(String owner) {
         for (Sse c : streams) if (c.owner.equals(owner)) c.closed = true;
     }

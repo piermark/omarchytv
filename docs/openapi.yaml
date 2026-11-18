@@ -5,7 +5,7 @@ info:
   description: |
     What dashboards, agent pages and AI agents use on an OmarchyTV (Android TV), on port 47800, LAN or tailnet only.
     Authentication: an app token (`Authorization: Bearer otva_…`, made with `omarchy-link token add`), with one scope:
-    read < notify < control. `GET /v1/theme`, `/v1/theme/wallpaper` and `/v1/sdk/omarchytv.js` need no token.
+    read < notify < control (each operation's `x-scope`). `GET /v1/theme`, `/v1/theme/wallpaper` and `/v1/sdk/omarchytv.js` need no token.
     A paired PC uses the same routes with its OTV1-signed requests (PROTOCOL.md). Guide: docs/INTEGRATIONS.md.
   license:
     name: MIT
@@ -123,6 +123,7 @@ paths:
   /v1/state:
     get:
       summary: What is on screen (read)
+      x-scope: read
       parameters:
         - { in: query, name: token, schema: { type: string }, description: "The app token, for clients that cannot send headers" }
       responses:
@@ -131,14 +132,17 @@ paths:
   /v1/stream:
     get:
       summary: Server-Sent Events (read) — state, theme, notify, ask_answer
+      x-scope: read
+      description: Ends when its token is revoked (from the PC, or every token at once from the TV).
       parameters:
-        - { in: query, name: token, schema: { type: string } }
+        - { in: query, name: token, schema: { type: string }, description: "The app token, for EventSource (no headers)" }
       responses:
         "200": { description: An event stream, content: { text/event-stream: {} } }
         "503": { $ref: "#/components/responses/Error" }
   /v1/notify:
     post:
       summary: One line on the TV (notify)
+      x-scope: notify
       requestBody:
         required: true
         content:
@@ -159,6 +163,7 @@ paths:
   /v1/ask:
     post:
       summary: Ask the person at the TV (notify)
+      x-scope: notify
       requestBody:
         required: true
         content:
@@ -177,6 +182,7 @@ paths:
   /v1/ask/{id}:
     get:
       summary: The question's state; waits up to `wait` seconds for the answer (notify)
+      x-scope: notify
       parameters:
         - { in: path, name: id, required: true, schema: { type: string } }
         - { in: query, name: wait, schema: { type: integer, minimum: 0, maximum: 25 } }
@@ -186,6 +192,7 @@ paths:
   /v1/page:
     post:
       summary: Open LAN / tailnet pages full screen, tiled when several (control)
+      x-scope: control
       requestBody:
         required: true
         content:
@@ -200,11 +207,13 @@ paths:
         "400": { $ref: "#/components/responses/Error" }
     delete:
       summary: Close the pages (control)
+      x-scope: control
       responses:
         "200": { description: Closed }
   /v1/pages:
     get:
       summary: Agent pages shown as Home tiles (read)
+      x-scope: read
       responses:
         "200":
           description: The pages
@@ -212,6 +221,7 @@ paths:
   /v1/pages/{id}:
     put:
       summary: Publish or update a Home tile (control)
+      x-scope: control
       parameters:
         - { in: path, name: id, required: true, schema: { type: string, pattern: "^[a-z0-9][a-z0-9-]{0,39}$" } }
       requestBody:
@@ -232,6 +242,7 @@ paths:
         "409": { $ref: "#/components/responses/Error" }
     delete:
       summary: Remove the tile (control)
+      x-scope: control
       parameters:
         - { in: path, name: id, required: true, schema: { type: string } }
       responses:
@@ -240,6 +251,7 @@ paths:
   /v1/pages/{id}/badge:
     post:
       summary: Set the tile's badge (notify)
+      x-scope: notify
       parameters:
         - { in: path, name: id, required: true, schema: { type: string } }
       requestBody:
@@ -251,6 +263,7 @@ paths:
   /v1/pages/{id}/show:
     post:
       summary: Open the tile's page (control)
+      x-scope: control
       parameters:
         - { in: path, name: id, required: true, schema: { type: string } }
       responses:
@@ -258,10 +271,12 @@ paths:
   /v1/radio:
     get:
       summary: What Radiomarchy plays (read)
+      x-scope: read
       responses:
         "200": { description: Now playing }
     post:
       summary: Control Radiomarchy (control)
+      x-scope: control
       requestBody:
         required: true
         content:
@@ -272,6 +287,7 @@ paths:
   /v1/open:
     post:
       summary: Open a part of OmarchyTV (control)
+      x-scope: control
       requestBody:
         required: true
         content:
@@ -282,10 +298,26 @@ paths:
   /v1/diagnostics:
     get:
       summary: Version, device, network, Link, recent log lines; no secrets (control)
+      x-scope: control
       responses:
         "200": { description: Diagnostics }
   /v1/mcp:
     post:
-      summary: MCP (JSON-RPC 2.0); the tools of the token's scope
+      summary: MCP (JSON-RPC 2.0); the tools of the token's scope (read)
+      x-scope: read
+      description: |
+        tools/list shows only the tools the token's scope allows; a tools/call above it is refused.
+        Tool scopes: read — tv_status, tv_get_state, tv_get_theme, tv_list_themes, tv_list_apps, tv_ai_status,
+        tv_cinemarchy, tv_radio_now, tv_list_pages; notify — tv_notify, tv_ask_user, tv_ask_result, tv_page_badge;
+        control — everything else.
       responses:
         "200": { description: A JSON-RPC response }
+        "202": { description: "A notification (no id, e.g. notifications/initialized): accepted, no body" }
+        "401": { $ref: "#/components/responses/Error" }
+  /mcp:
+    post:
+      summary: The same as /v1/mcp, for MCP clients that expect /mcp (read)
+      x-scope: read
+      responses:
+        "200": { description: A JSON-RPC response }
+        "202": { description: A notification, accepted }

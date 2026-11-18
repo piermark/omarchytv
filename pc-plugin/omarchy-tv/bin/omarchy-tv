@@ -475,14 +475,21 @@ def main(argv):
         cfname = rest[rest.index("--cloudflare") + 1] if "--cloudflare" in rest else None
         team = rest[rest.index("--access-team") + 1] if "--access-team" in rest else None
         aud = rest[rest.index("--access-aud") + 1] if "--access-aud" in rest else None
+        tv_client = client
         if "--bridge" in rest:   # v2.21: an LG / Samsung TV through the local bridge (omarchy-tv webos-serve)
             from omarchy_tv.bridge_client import BridgeClient
-            client = lambda: BridgeClient()   # noqa: E731
+            tv_client = BridgeClient   # a factory, like client(); never rebind client (it is global)
+        if "--tailscale" in rest and ("--tunnel" in rest or "--cloudflare" in rest):
+            ui.say("--tailscale and --tunnel/--cloudflare: pick one (the tailnet never needs a public tunnel)")
+            return 2
+        if "--access-team" in rest and "--access-aud" not in rest or "--access-aud" in rest and "--access-team" not in rest:
+            ui.say("--access-team and --access-aud go together (CLOUDFLARE.md)")
+            return 2
         if any(f in rest for f in ("--http", "--tunnel", "--tailscale", "--cloudflare")):
-            return mcp_server.serve_http(client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest,
+            return mcp_server.serve_http(tv_client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest,
                                          cloudflare=cfname, scope=scope, access="--access" in rest,
                                          access_team=team, access_aud=aud)
-        return mcp_server.serve_stdio(client, scope or "control")
+        return mcp_server.serve_stdio(tv_client, scope or "control")
     if cmd == "cloudflare":   # v2.21: setup NAME HOSTNAME | service [mcp flags…]
         return cmd_cloudflare(rest)
     if cmd == "stats":
