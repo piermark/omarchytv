@@ -42,7 +42,7 @@ public final class Tailnet {
      */
     public static boolean peerAllowed(InetAddress peer, byte[][] lanAddrs, int[] prefixes) {
         if (peer == null) return false;
-        if (allowedPeer(peer)) return true;
+        if (isTailnet(peer)) return allowed;   // fd7a:… is also fc00::/7: never let it in as "LAN" with the switch off
         byte[] p = unmap(peer.getAddress());
         for (int i = 0; lanAddrs != null && i < lanAddrs.length; i++) {
             if (samePrefix(lanAddrs[i], prefixes[i], p)) return true;

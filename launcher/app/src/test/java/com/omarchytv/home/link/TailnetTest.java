@@ -58,6 +58,8 @@ public class TailnetTest {
         assertFalse(Tailnet.peerAllowed(ip("192.168.2.77"), lan, bits));
         assertFalse(Tailnet.peerAllowed(ip("8.8.8.8"), lan, bits));
         assertFalse(Tailnet.peerAllowed(ip("100.101.2.3"), lan, bits));   // switch off
+        byte[][] ula = {ip("fd7a:115c:a1e0::1").getAddress()};
+        assertFalse(Tailnet.peerAllowed(ip("fd7a:115c:a1e0::9"), ula, new int[]{48}));   // same "subnet", still the tailnet
         assertFalse(Tailnet.peerAllowed(null, lan, bits));
         Tailnet.allowed = true;
         assertTrue(Tailnet.peerAllowed(ip("100.101.2.3"), lan, bits));

@@ -30,6 +30,11 @@ def _tty() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
+def hostport(host: str, port) -> str:
+    """host:port, with brackets for IPv6: [fd7a:115c:a1e0::2]:47800."""
+    return f"[{host}]:{port}" if ":" in str(host) else f"{host}:{port}"
+
+
 def _is_ip(host: str) -> bool:
     import ipaddress
     try:
@@ -55,7 +60,7 @@ def cmd_discover(a, cfg):
     elif not devs:
         print("No OmarchyTV found. Open “Connect Omarchy Linux” on the TV, or pair by IP.")
     for d in devs if not a.json else []:
-        print(f"{d['name']}\t{d['address']}:{d['port']}\t{'pairing open' if d['txt'].get('pair') == '1' else ''}"
+        print(f"{d['name']}\t{hostport(d['address'], d['port'])}\t{'pairing open' if d['txt'].get('pair') == '1' else ''}"
               + ("\ttailscale" if d.get("via") == "tailscale" else ""))
     return 0 if devs else 1
 
@@ -113,7 +118,7 @@ def cmd_pair(a, cfg):
     tv = link.pair(host, port, code.replace(" ", "").strip(), pairing.pc_id, pairing.pc_name)
     tv["name"] = tv.get("name") or info.get("name")
     pairing.set_tv(tv)
-    print(f"Paired with {tv['name']} ({host}:{port}).")
+    print(f"Paired with {tv['name']} ({hostport(host, port)}).")
     if cfg.get("themeSync", True):
         try:
             sync.sync_theme(link.Client(tv, pairing.pc_id, not cfg.get("allowOtherSubnets")), cfg, True, print)
@@ -1069,7 +1074,7 @@ def cmd_tailscale(a, cfg):
         print("turn it on: omarchy-link tailscale on")
     for d in out["tvs"]:
         path = "relay (DERP)" if tailnet.relayed(st, d["address"]) else "direct"   # probing just woke the path
-        print(f"TV: {d['name']}\t{d['address']}:{d['port']}\t{d['dns']}\t{path}\t{'pairing open' if d['txt']['pair'] == '1' else ''}")
+        print(f"TV: {d['name']}\t{hostport(d['address'], d['port'])}\t{d['dns']}\t{path}\t{'pairing open' if d['txt']['pair'] == '1' else ''}")
     if on and not out["tvs"]:
         print("no OmarchyTV answered on the tailnet (is Tailscale allowed on the TV, and the TV on the tailnet?)")
     return 0

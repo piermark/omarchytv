@@ -31,6 +31,8 @@ class TailnetTest(unittest.TestCase):
         with self.assertRaises(ValueError) as e:
             netcheck.check_host("100.101.2.3")
         self.assertIn("omarchy-link tailscale on", str(e.exception))
+        self.assertFalse(netcheck.is_lan_address("fd7a:115c:a1e0::5"), "fd7a is fc00::/7, but tailnet: switch off")
+        self.assertTrue(netcheck.is_lan_address("fd12:3456::5"), "other ULA stays LAN")
         netcheck.allow_tailnet = True
         self.assertTrue(netcheck.is_lan_address("100.101.2.3"))
         netcheck.check_host("100.101.2.3", strict_subnet=True)   # a tailnet is flat: no same-subnet rule
@@ -103,6 +105,13 @@ class HostPortTest(unittest.TestCase):
         self.assertEqual(cli._host_port("[fd7a:115c:a1e0::1]"), ("fd7a:115c:a1e0::1", 47800))
         self.assertEqual(cli._host_port("cafe"), ("cafe", 47800))
         self.assertEqual(cli._host_port("living-tv:47800"), ("living-tv", 47800))
+
+
+class HostPortFormatTest(unittest.TestCase):
+    def test_brackets_for_ipv6(self):
+        from omarchy_link import cli
+        self.assertEqual(cli.hostport("fd7a:115c:a1e0::2", 47800), "[fd7a:115c:a1e0::2]:47800")
+        self.assertEqual(cli.hostport("192.168.1.5", 47800), "192.168.1.5:47800")
 
 
 class AclTest(unittest.TestCase):

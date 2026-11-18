@@ -30,8 +30,8 @@ def is_lan_address(host: str) -> bool:
         ip = ipaddress.ip_address(host.split("%", 1)[0])
     except ValueError:
         return False
-    if allow_tailnet and is_tailnet(host):
-        return True
+    if is_tailnet(host):   # Tailscale's own ranges (fd7a:… is also fc00::/7): only with the switch on
+        return allow_tailnet
     if ip.is_loopback:
         return True  # the mock TV and tests
     if ip.version == 4:

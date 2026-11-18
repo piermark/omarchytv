@@ -54,8 +54,9 @@ final class LanHttpDataSource extends BaseDataSource {
         try {
             InetAddress a = InetAddress.getByName(h);
             byte[] b = a.getAddress();
+            // v2.21 Tailscale's ranges (fd7a:115c:a1e0::/48 is also fc00::/7) only with Tailscale on
+            if (com.omarchytv.home.link.Tailnet.isTailnet(a)) return com.omarchytv.home.link.Tailnet.allowed;
             if (a.isSiteLocalAddress() || a.isLinkLocalAddress()) return true;
-            if (com.omarchytv.home.link.Tailnet.allowedPeer(a)) return true;   // v2.21, only with Tailscale on
             return b.length == 16 && (b[0] & 0xFE) == 0xFC;
         } catch (IOException e) {
             return false;

@@ -59,6 +59,8 @@ public class RemotePanesUrlTest {
     public void tailnetHostsOnlyWithTailscaleOn() {   // v2.21
         try {
             assertFalse(LanHttpDataSource.lanHost("100.101.1.2"));
+            assertFalse(LanHttpDataSource.lanHost("fd7a:115c:a1e0::2"));   // ULA, but the tailnet: switch off
+            assertTrue(LanHttpDataSource.lanHost("fd12:3456::2"));
             com.omarchytv.home.link.Tailnet.allowed = true;
             assertTrue(LanHttpDataSource.lanHost("100.101.1.2"));
             assertFalse(LanHttpDataSource.lanHost("100.200.1.2"));
