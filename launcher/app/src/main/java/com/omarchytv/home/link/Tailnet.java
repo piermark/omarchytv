@@ -36,6 +36,28 @@ public final class Tailnet {
         return allowed && isTailnet(a);
     }
 
+    /**
+     * The Link peer rule (OmarchyLink.allowPeer): a tailnet peer when Tailscale is allowed, else a peer on one of the
+     * LAN's own subnets (address + prefix length of each LinkAddress under any VPN). Plain Java, for tests.
+     */
+    public static boolean peerAllowed(InetAddress peer, byte[][] lanAddrs, int[] prefixes) {
+        if (peer == null) return false;
+        if (allowedPeer(peer)) return true;
+        byte[] p = unmap(peer.getAddress());
+        for (int i = 0; lanAddrs != null && i < lanAddrs.length; i++) {
+            if (samePrefix(lanAddrs[i], prefixes[i], p)) return true;
+        }
+        return false;
+    }
+
+    /** ::ffff:a.b.c.d (an IPv4 peer on a dual-stack socket) → the 4 IPv4 bytes; anything else unchanged. */
+    static byte[] unmap(byte[] b) {
+        if (b == null || b.length != 16) return b;
+        for (int i = 0; i < 10; i++) if (b[i] != 0) return b;
+        if ((b[10] & 0xFF) != 0xFF || (b[11] & 0xFF) != 0xFF) return b;
+        return new byte[]{b[12], b[13], b[14], b[15]};
+    }
+
     /** Same prefix of {@code bits} bits (bits &lt; 8 is never a match: never "everything"). */
     public static boolean samePrefix(byte[] a, int bits, byte[] p) {
         if (a == null || p == null || a.length != p.length || bits < 8) return false;

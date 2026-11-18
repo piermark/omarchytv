@@ -84,6 +84,27 @@ class TailnetTest(unittest.TestCase):
             tailnet.shutil.which = orig
 
 
+class PairNameTest(unittest.TestCase):
+    def test_hex_looking_names_are_names(self):
+        from omarchy_link import cli
+        for name in ("cafe", "beef", "dead-beef", "abc", "living-tv.tail1234.ts.net"):
+            self.assertFalse(cli._is_ip(name), name)
+        for ip in ("100.101.2.3", "192.168.1.5", "fd7a:115c:a1e0::1", "[fd7a:115c:a1e0::1]"):
+            self.assertTrue(cli._is_ip(ip), ip)
+
+
+class HostPortTest(unittest.TestCase):
+    def test_ipv4_ipv6_and_names(self):
+        from omarchy_link import cli
+        self.assertEqual(cli._host_port("192.168.1.5"), ("192.168.1.5", 47800))
+        self.assertEqual(cli._host_port("192.168.1.5:5000"), ("192.168.1.5", 5000))
+        self.assertEqual(cli._host_port("fd7a:115c:a1e0::1"), ("fd7a:115c:a1e0::1", 47800))
+        self.assertEqual(cli._host_port("[fd7a:115c:a1e0::1]:47801"), ("fd7a:115c:a1e0::1", 47801))
+        self.assertEqual(cli._host_port("[fd7a:115c:a1e0::1]"), ("fd7a:115c:a1e0::1", 47800))
+        self.assertEqual(cli._host_port("cafe"), ("cafe", 47800))
+        self.assertEqual(cli._host_port("living-tv:47800"), ("living-tv", 47800))
+
+
 class AclTest(unittest.TestCase):
     def test_acl_example_is_narrow(self):
         a = tailnet.acl_example()
@@ -92,10 +113,12 @@ class AclTest(unittest.TestCase):
 
 class RelayTest(unittest.TestCase):
     def test_relayed_only_without_a_direct_path(self):
-        st = {"Peer": {"a": {"TailscaleIPs": ["100.101.2.3"], "Relay": "fra", "CurAddr": ""},
-                       "b": {"TailscaleIPs": ["100.101.2.4"], "Relay": "fra", "CurAddr": "192.0.2.7:41641"}}}
+        st = {"Peer": {"a": {"TailscaleIPs": ["100.101.2.3"], "Relay": "fra", "CurAddr": "", "Active": True},
+                       "b": {"TailscaleIPs": ["100.101.2.4"], "Relay": "fra", "CurAddr": "192.0.2.7:41641", "Active": True},
+                       "c": {"TailscaleIPs": ["100.101.2.5"], "Relay": "fra", "CurAddr": "", "Active": False}}}
         self.assertTrue(tailnet.relayed(st, "100.101.2.3"))
         self.assertFalse(tailnet.relayed(st, "100.101.2.4"))
+        self.assertFalse(tailnet.relayed(st, "100.101.2.5"), "idle is not relayed")
         self.assertFalse(tailnet.relayed(st, "100.101.9.9"))
         self.assertFalse(tailnet.relayed(None, "100.101.2.3"))
 

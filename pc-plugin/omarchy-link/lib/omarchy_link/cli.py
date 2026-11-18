@@ -30,6 +30,15 @@ def _tty() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
+def _is_ip(host: str) -> bool:
+    import ipaddress
+    try:
+        ipaddress.ip_address(host.strip("[]").split("%", 1)[0])
+        return True
+    except ValueError:
+        return False
+
+
 def _tailnet_tvs(cfg) -> list:
     """v2.21: OmarchyTVs on this PC's tailnet (only with "tailscale": true)."""
     if cfg.get("tailscale") is not True:
@@ -52,17 +61,24 @@ def cmd_discover(a, cfg):
 
 
 def _host_port(text: str) -> tuple[str, int]:
+    """host[:port], [v6]:port, or a bare IPv6 address (v2.21: the tailnet's fd7a:115c:a1e0::/48 too)."""
+    text = text.strip()
+    if text.startswith("["):
+        host, _, rest = text[1:].partition("]")
+        return host, int(rest[1:]) if rest.startswith(":") and rest[1:].isdigit() else DEFAULT_PORT
+    if text.count(":") > 1:   # a bare IPv6 address has no port
+        return text, DEFAULT_PORT
     host, sep, port = text.rpartition(":")
-    if sep and port.isdigit() and "]" not in port:
-        return host.strip("[]"), int(port)
-    return text.strip("[]"), DEFAULT_PORT
+    if sep and port.isdigit():
+        return host, int(port)
+    return text, DEFAULT_PORT
 
 
 def cmd_pair(a, cfg):
     pairing = config.Pairing.load()
     if a.target:
         host, port = _host_port(a.target)
-        if not re.fullmatch(r"[0-9a-fA-F:.]+", host):   # v2.21: a MagicDNS / tailnet host name
+        if not _is_ip(host):   # v2.21: a MagicDNS / tailnet host name ("cafe" and "beef" are names too)
             ip = tailnet.resolve(host, tailnet.status()) if cfg.get("tailscale") is True else None
             if not ip:
                 print(f"omarchy-link: {host} is not an IP address" + ("" if cfg.get("tailscale") is True else
@@ -1004,7 +1020,7 @@ def cmd_tailscale(a, cfg):
     if not on:
         print("turn it on: omarchy-link tailscale on")
     for d in out["tvs"]:
-        path = "relay (DERP)" if tailnet.relayed(st, d["address"]) else "direct"
+        path = "relay (DERP)" if tailnet.relayed(st, d["address"]) else "direct"   # probing just woke the path
         print(f"TV: {d['name']}\t{d['address']}:{d['port']}\t{d['dns']}\t{path}\t{'pairing open' if d['txt']['pair'] == '1' else ''}")
     if on and not out["tvs"]:
         print("no OmarchyTV answered on the tailnet (is Tailscale allowed on the TV, and the TV on the tailnet?)")

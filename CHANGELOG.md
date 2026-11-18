@@ -57,8 +57,9 @@ reachable from home, from your tailnet and, carefully, from the cloud.
   shows the TV's tailnet address. PC: `omarchy-link tailscale on`; `discover` and `pair living-tv` find tailnet TVs
   and MagicDNS names through tailscaled; `tailscale status` shows each TV and whether the path is direct or relayed;
   `tailscale acl` prints a tagged policy. Casts warn when Tailscale goes through a relay.
-- Only Tailscale's own addresses (`100.64.0.0/10`, `fd7a:115c:a1e0::/48`) are added; a refused tailnet peer is told
-  to turn the switch on. No Funnel, no Serve, nothing opened to the internet; pairing, signing and encryption are
+- Only Tailscale's own addresses (`100.64.0.0/10`, `fd7a:115c:a1e0::/48`) are added, over IPv4 and IPv6 (the TV
+  listens dual stack when the switch is on); `omarchy-link pair` takes IPv6 addresses and MagicDNS names, also the
+  ones that look like hex (`cafe`, `beef`). No Funnel, no Serve, nothing opened to the internet; pairing, signing and encryption are
   the same.
 - **Fixed: a VPN app on the TV broke Omarchy Link**: the TV listened on the VPN address and refused the PC on the
   same Wi-Fi. It now always finds the Wi-Fi or Ethernet network under the VPN.

@@ -39,8 +39,14 @@ Why OmarchyTV uses the official app instead of building Tailscale in: the TV sta
 Tailscale's own login, exit-node and DNS settings and security updates; Android allows one VPN at a time; and the
 launcher stays small. OmarchyTV finds the tailnet network by itself.
 
-If a tailnet PC is refused, the TV says why: `403 not_lan` with "turn on … Allow Tailscale" when the switch is off.
-`omarchy-link tv diagnostics` lists each paired PC with `"via": "tailscale"` or `"lan"`.
+With the switch off the TV listens on its LAN address only, so a tailnet PC gets no answer at all (a timeout or
+"connection refused"), not an error page: turn the switch on. `omarchy-link tv diagnostics` lists each paired PC with
+`"via": "tailscale"` or `"lan"`.
+
+**IPv6**: with the switch on, the TV listens on IPv4 and IPv6 (dual stack; a TV without IPv6 falls back to IPv4),
+so it answers on its `100.x` address and on its `fd7a:115c:a1e0::/48` address. `discover` and MagicDNS names use
+IPv4; to pair over IPv6 give the address: `omarchy-link pair fd7a:115c:a1e0::5` or `[fd7a:115c:a1e0::5]:47800`.
+Pages, casts and Remote panes use the `100.x` address.
 
 The TV keeps working on the LAN at the same time. Before 2.21, having a VPN app (Tailscale included) active on the TV
 made Omarchy Link listen on the VPN address and refuse the PC next to it; now the TV always finds the Wi-Fi or
@@ -103,11 +109,18 @@ Tag the TV (`tag:tv`) in the admin console. `omarchy-link tailscale acl` prints 
 - **The LG/Samsung bridge** (`omarchy-tv webos-serve`) answers on every interface of its box, the tailnet included.
 - **For agents in the cloud**, which cannot join the tailnet, use Cloudflare instead: [CLOUDFLARE.md](CLOUDFLARE.md).
 
+## Who can read the theme
+
+`GET /v1/theme` and `/v1/theme/wallpaper` need no token, on the tailnet as on the LAN: any tailnet device that can
+reach the TV, devices **shared** into your tailnet included, can read your colours and wallpaper (nothing else).
+If that matters, turn off Settings › Omarchy Link › Share theme with apps on the network, or narrow who reaches
+port 47800 with an ACL (`omarchy-link tailscale acl`). Everything else needs pairing or an app token.
+
 ## Limits
 
 - **Relayed connections** (DERP, when Tailscale cannot connect directly) work for everything but are slow for casting
-  big files and live screens. `omarchy-link cast` warns when the TV is reached through a relay; `tailscale ping <tv>`
-  says when the direct path is up.
+  big files and live screens. `omarchy-link cast` warns when the TV is being reached through a relay right now (an
+  idle connection is not reported); `tailscale ping <tv>` says when the direct path is up.
 - **No hostnames on the TV side**: Remote panes and casts accept literal addresses only (`100.x.y.z`), as on the LAN.
 - **Exit nodes**: when the TV uses an exit node, Tailscale may route the LAN through it; enable *Allow LAN access*
   in the Tailscale app.

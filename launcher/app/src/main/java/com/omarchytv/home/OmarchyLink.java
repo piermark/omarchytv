@@ -695,7 +695,18 @@ public final class OmarchyLink implements LinkServer.Host {
             return;
         }
         try {
-            server.start(listen, LinkServer.PORT);
+            if (ts != null) {
+                // v2.21 Tailscale on: dual stack (::), so the tailnet's IPv6 (fd7a:115c:a1e0::/48) works too; a TV whose
+                // kernel has no IPv6 falls back to IPv4 only.
+                try {
+                    server.start(InetAddress.getByName("::"), LinkServer.PORT);
+                } catch (Exception v6) {
+                    Log.i(TAG, "no IPv6 listener (" + v6 + "): IPv4 only");
+                    server.start(listen, LinkServer.PORT);
+                }
+            } else {
+                server.start(listen, LinkServer.PORT);
+            }
             bound = a != null ? a : ts;
             bindKey = key;
             if (ts != null) Log.i(TAG, "Tailscale on: listening for the LAN " + a + " and the tailnet " + ts.getHostAddress());
@@ -867,15 +878,15 @@ public final class OmarchyLink implements LinkServer.Host {
     /** §3: only the LAN's own subnet (LinkProperties prefix, under any VPN); v2.21 plus the tailnet when allowed. */
     @Override
     public boolean allowPeer(InetAddress peer) {
-        if (peer == null) return false;
-        if (Tailnet.allowedPeer(peer)) return true;
-        LinkProperties lp = lanLink();
-        if (lp == null) return false;
-        byte[] p = peer.getAddress();
-        for (LinkAddress la : lp.getLinkAddresses()) {
-            if (Tailnet.samePrefix(la.getAddress().getAddress(), la.getPrefixLength(), p)) return true;
+        LinkProperties lp = peer == null || Tailnet.allowedPeer(peer) ? null : lanLink();
+        List<LinkAddress> las = lp == null ? java.util.Collections.emptyList() : lp.getLinkAddresses();
+        byte[][] addrs = new byte[las.size()][];
+        int[] bits = new int[las.size()];
+        for (int i = 0; i < las.size(); i++) {
+            addrs[i] = las.get(i).getAddress().getAddress();
+            bits[i] = las.get(i).getPrefixLength();
         }
-        return false;
+        return Tailnet.peerAllowed(peer, addrs, bits);
     }
 
     private boolean usageAccess() {

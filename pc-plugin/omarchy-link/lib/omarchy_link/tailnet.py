@@ -91,10 +91,11 @@ def discover(st: dict | None, probe, port: int = 47800, workers: int = 8) -> lis
 
 
 def relayed(st: dict | None, address: str) -> bool:
-    """True when tailscaled reaches this tailnet peer only through a DERP relay (no direct path yet)."""
+    """True when tailscaled is talking to this peer right now only through a DERP relay. An idle peer (Active false)
+    has no CurAddr either: that says nothing about the path, so it is not reported as relayed."""
     for p in ((st or {}).get("Peer") or {}).values():
         if isinstance(p, dict) and address in (p.get("TailscaleIPs") or []):
-            return bool(p.get("Relay")) and not p.get("CurAddr")
+            return p.get("Active") is True and bool(p.get("Relay")) and not p.get("CurAddr")
     return False
 
 
