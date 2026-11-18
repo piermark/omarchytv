@@ -413,6 +413,7 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/v1/cast"): self._cast, ("PUT", "/v1/cast/file"): self._cast_file,
             ("POST", "/v1/cast/control"): self._cast_control,
             ("PUT", "/v1/plugins/grokbot"): self._grokbot_put,
+            ("POST", "/v1/notify"): self._notify,
         }.get((method, path))
         if not handler:
             return self._json(404, {"error": "not_found"}, sign)
@@ -566,6 +567,15 @@ class Handler(BaseHTTPRequestHandler):
             return 400, {"error": "bad_agents"}
         self.tv.update_config(lambda j: j.setdefault("link", {}).update(agents=a, agentsAt=int(time.time())))
         return 200, {"ok": True}
+
+    def _notify(self, pc, a, body):   # v2.21: shown only with agent alerts on (agentAlert)
+        text = " ".join(str(a.get("text", "")).split())[:200]
+        if not text:
+            return 400, {"error": "bad_notify"}
+        if not self.tv.config().get("agentAlert"):
+            return 403, {"error": "notify_off", "message": "turn on agent alerts on the TV"}
+        self.tv.notes = getattr(self.tv, "notes", []) + [(str(a.get("from") or "PC")[:40], text)]
+        return 200, {"ok": True, "shown": True}
 
     def _agents_get(self, pc, a, body):
         return 200, self.tv.config().get("link", {}).get("agents") or {"agents": [], "at": None}

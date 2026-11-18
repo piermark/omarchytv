@@ -33,6 +33,9 @@ class FakeTvClient:
             name = path.split("/")[3]
             self.theme = (name, (body or {}).get("bg", 0))
             return {"ok": True, "name": name}
+        if method == "POST" and path == "/v1/notify":
+            self.notes = getattr(self, "notes", []) + [body]
+            return {"ok": True, "shown": True}
         if method == "PUT" and path == "/v1/screensaver":
             return {"ok": True, "text": (body or {}).get("text", "")}
         return {"ok": True}
@@ -86,6 +89,76 @@ class TestMcpServer(unittest.TestCase):
                 self.assertEqual(r.status, 200)
                 data = json.loads(r.read())
                 self.assertTrue(len(data["result"]["tools"]) >= 7)
+                c.close()
+            finally:
+                srv.shutdown()
+
+
+class TestMcpV221(unittest.TestCase):
+    def test_notify_and_theme_tools(self):
+        tv = FakeTvClient()
+        names = [t["name"] for t in mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/list"}, tv)["result"]["tools"]]
+        self.assertIn("tv_notify", names)
+        self.assertIn("tv_get_theme", names)
+        r = mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 2, "method": "tools/call",
+                                   "params": {"name": "tv_notify", "arguments": {"text": "x" * 500, "from": "Claude Code"}}}, tv)
+        self.assertFalse(r["result"]["isError"])
+        self.assertEqual(len(tv.notes[0]["text"]), 200)
+        self.assertEqual(tv.notes[0]["from"], "Claude Code")
+        r = mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 3, "method": "tools/call",
+                                   "params": {"name": "tv_notify", "arguments": {"text": "  "}}}, tv)
+        self.assertTrue(r["result"]["isError"])
+
+    def test_theme_tool_reads_the_tv_unsigned(self):
+        from http.server import BaseHTTPRequestHandler, HTTPServer
+
+        class H(BaseHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+
+            def do_GET(self):
+                body = json.dumps({"schema": "omarchytv-theme/1", "accent": "#7aa2f7"}).encode()
+                self.send_response(200 if self.path == "/v1/theme" else 404)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+        srv = HTTPServer(("127.0.0.1", 0), H)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        tv = FakeTvClient()
+        tv.host, tv.port = "127.0.0.1", srv.server_address[1]
+        try:
+            r = mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                       "params": {"name": "tv_get_theme", "arguments": {}}}, tv)
+            self.assertEqual(json.loads(r["result"]["content"][0]["text"])["accent"], "#7aa2f7")
+        finally:
+            srv.shutdown()
+
+    def test_tailnet_rule(self):
+        self.assertTrue(mcp_server.is_tailnet("100.101.2.3"))
+        self.assertTrue(mcp_server.is_tailnet("::ffff:100.101.2.3"))
+        self.assertTrue(mcp_server.is_tailnet("fd7a:115c:a1e0::9"))
+        self.assertFalse(mcp_server.is_tailnet("127.0.0.1"))
+        self.assertFalse(mcp_server.is_tailnet("192.168.1.2"))
+        run = lambda *a, **k: type("R", (), {"stdout": "100.100.1.1\n", "returncode": 0})()
+        orig = mcp_server.shutil.which
+        mcp_server.shutil.which = lambda n: "/usr/bin/tailscale"
+        try:
+            self.assertEqual(mcp_server.tailnet_ip(run), "100.100.1.1")
+        finally:
+            mcp_server.shutil.which = orig
+
+    def test_tailnet_only_server_refuses_other_peers(self):
+        tv = FakeTvClient()
+        with tempfile.TemporaryDirectory() as tmp:
+            tok = mcp_server.ensure_token(Path(tmp) / "mcp-token")
+            srv = mcp_server.create_http_server(lambda: tv, tok, "127.0.0.1", 0, tailnet_only=True)
+            threading.Thread(target=srv.serve_forever, daemon=True).start()
+            try:
+                c = http.client.HTTPConnection("127.0.0.1", srv.server_address[1], timeout=5)
+                c.request("POST", "/mcp", body=b'{"jsonrpc":"2.0","id":1,"method":"ping"}',
+                          headers={"Content-Type": "application/json", "Authorization": f"Bearer {tok}"})
+                self.assertEqual(c.getresponse().status, 403)   # loopback is not the tailnet
                 c.close()
             finally:
                 srv.shutdown()

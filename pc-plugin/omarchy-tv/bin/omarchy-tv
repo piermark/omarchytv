@@ -22,7 +22,7 @@
   omarchy-tv stats                      show the stats pushed every 5 s while the TV home is visible
   omarchy-tv office push <bots.json> | show | clear   GrokBot Office: your bots and weekly usage on the TV (2.20, optional)
                                                        (+ Claude / ChatGPT bots: omarchy-link office hire)
-  omarchy-tv mcp [--stdio|--http] [--port 8990] [--tunnel]   MCP server for Grok Bot / Claude / Hermes
+  omarchy-tv mcp [--stdio|--http] [--port 8990] [--tunnel|--tailscale]   MCP server for Grok Bot / Claude / Hermes
 """
 import os, sys
 HERE = os.path.dirname(os.path.realpath(__file__))
@@ -384,8 +384,8 @@ def main(argv):
         return cmd_webos_serve(rest)
     if cmd == "mcp":
         port = int(rest[rest.index("--port") + 1]) if "--port" in rest else 8990
-        if "--http" in rest or "--tunnel" in rest:
-            return mcp_server.serve_http(client, port=port, tunnel="--tunnel" in rest)
+        if "--http" in rest or "--tunnel" in rest or "--tailscale" in rest:
+            return mcp_server.serve_http(client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest)
         return mcp_server.serve_stdio(client)
     if cmd == "stats":
         from omarchy_link import stats, config

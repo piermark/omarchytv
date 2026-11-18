@@ -127,6 +127,14 @@ public final class LinkServer {
         default Blob sharedWallpaper() {
             return null;
         }
+
+        /**
+         * v2.21 POST /v1/notify and the MCP tv_notify tool: a short message from an agent or a script on the PC,
+         * shown over whatever is on screen. False when the owner did not allow it (Settings, "agentAlert").
+         */
+        default boolean notify(String from, String text) {
+            return false;
+        }
     }
 
     /** Bytes with their media type (an image served as is). */
@@ -730,6 +738,7 @@ public final class LinkServer {
             else if ("PUT".equals(req.method) && "/v1/office".equals(path)) retry = limited(req.peer + "|office", 2, 5_000);
             else if ("PUT".equals(req.method) && "/v1/stats".equals(path)) retry = limited(req.peer + "|stats", 1, 1_500);
             else if ("PUT".equals(req.method) && "/v1/screensaver".equals(path)) retry = limited(req.peer + "|saver", 1, 5_000);
+            else if (notifyCall(req.method, path, req.body)) retry = limited(req.peer + "|notify", 3, 10_000);
         }
         if (retry > 0) return sign(a, retryAfter(new Response(429, err("rate_limited", "slow down")), retry));
 
@@ -1123,6 +1132,7 @@ public final class LinkServer {
         if ("PUT".equals(m) && "/v1/plugins".equals(p)) return pluginsPut(body, a.pcId);
         if ("GET".equals(m) && "/v1/plugins/grokbot".equals(p)) return new Response(200, pluginsGrokbotGet());
         if (("POST".equals(m) || "PUT".equals(m)) && "/v1/plugins/grokbot".equals(p)) return pluginsGrokbotPost(body, a.pcId);
+        if ("POST".equals(m) && "/v1/notify".equals(p)) return notifyPost(body);
         if ("POST".equals(m) && ("/mcp".equals(p) || "/v1/mcp".equals(p))) {
             return mcp(body);
         }
@@ -1198,7 +1208,11 @@ public final class LinkServer {
                         .put(mcpTool("tv_screensaver", "Set or reset custom ASCII screensaver text on the TV.",
                                 new JSONObject().put("text", new JSONObject().put("type", "string").put("description", "ASCII text (empty string resets to default)"))))
                         .put(mcpTool("tv_ai_status", "Read live AI agents and PC stats displayed on OmarchyTV.", new JSONObject()))
-                        .put(mcpTool("tv_cinemarchy", "Read Cinemarchy media library and video snippets on OmarchyTV.", new JSONObject()));
+                        .put(mcpTool("tv_cinemarchy", "Read Cinemarchy media library and video snippets on OmarchyTV.", new JSONObject()))
+                        .put(mcpTool("tv_get_theme", "Read the TV's current theme: background, foreground, accent, the full colors.toml palette and the wallpaper URL (schema omarchytv-theme/1).", new JSONObject()))
+                        .put(mcpTool("tv_notify", "Show a short message on the TV over whatever is playing (e.g. 'build finished', 'I need your answer'). Needs agent alerts on in the TV's settings.",
+                                new JSONObject().put("text", new JSONObject().put("type", "string").put("description", "The message, one line, at most 200 characters"))
+                                        .put("from", new JSONObject().put("type", "string").put("description", "Who is talking, e.g. Claude Code (at most 40 characters)"))));
                 return new Response(200, res.put("result", new JSONObject().put("tools", tools)));
             }
             case "tools/call": {
@@ -1264,6 +1278,17 @@ public final class LinkServer {
                     case "tv_cinemarchy":
                         out = new JSONObject().put("library", cinemarchyLibrary()).put("snippets", cinemarchySnippets());
                         break;
+                    case "tv_get_theme": {   // v2.21: the same payload as GET /v1/theme, even with sharing off (paired)
+                        JSONObject t = host.sharedTheme();
+                        out = t != null ? t : new JSONObject().put("name", status().optString("theme", "")).put("shared", false);
+                        break;
+                    }
+                    case "tv_notify": {
+                        Response nr = notifyPost(args);
+                        out = new JSONObject(new String(nr.body, StandardCharsets.UTF_8));
+                        isError = nr.status != 200;
+                        break;
+                    }
                     default:
                         return new Response(200, res.put("error", new JSONObject().put("code", -32601).put("message", "Unknown tool: " + name)));
                 }
@@ -1666,6 +1691,26 @@ public final class LinkServer {
     }
 
     /** v2.9: {text: screensaver.txt} (at most 16 KiB, 60 lines x 240 cols); "" restores the OMARCHY TV logo. */
+    /** v2.21: the REST route, or an MCP tools/call of tv_notify (both share the notify rate limit). */
+    static boolean notifyCall(String method, String path, byte[] body) {
+        if (!"POST".equals(method)) return false;
+        if ("/v1/notify".equals(path)) return true;
+        if (!"/mcp".equals(path) && !"/v1/mcp".equals(path)) return false;
+        String b = new String(body, StandardCharsets.UTF_8);
+        return b.contains("tv_notify");
+    }
+
+    /** {text, from?} → 200 {ok, shown:true} / 403 notify_off / 400 bad_notify. Plain text, one line, 200 chars. */
+    private Response notifyPost(JSONObject b) throws Exception {
+        String text = printable(b.optString("text", "").replace('\n', ' ').trim(), 200);
+        String from = printable(b.optString("from", "").trim(), 40);
+        if (text.isEmpty()) return new Response(400, err("bad_notify", "text is required"));
+        if (!host.notify(from.isEmpty() ? "PC" : from, text)) {
+            return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Omarchy Link)"));
+        }
+        return new Response(200, ok().put("shown", true));
+    }
+
     private Response screensaver(JSONObject b) throws Exception {
         String t = b.optString("text", "");
         String[] lines = t.split("\n", -1);

@@ -16,6 +16,11 @@ from mock_tv import MockTV
 from omarchy_link import client as link, config, crypto, mdns, netcheck
 
 
+def config_not_paired():
+    from omarchy_link import cli as c
+    return c.EXIT_NOT_PAIRED
+
+
 class E2E(unittest.TestCase):
     def setUp(self):
         helpers.reset_pc_state()
@@ -151,6 +156,15 @@ class E2E(unittest.TestCase):
         self.assertEqual(json.loads(cli("status", "--waybar").stdout)["class"], "screensaver")
         self.assertEqual(cli("key", "reboot", check=False).returncode, 2)
         self.assertEqual(cli("launch", "com.not.installed", check=False).returncode, 1)
+
+    def test_notify_for_agent_hooks(self):   # v2.21
+        self.assertEqual(cli("notify", "hi", check=False).returncode, config_not_paired())
+        self.assertEqual(cli("notify", "-q", "hi").returncode, 0)
+        self.pair()
+        self.assertEqual(cli("notify", "build", "done", check=False).returncode, 4)   # agent alerts off on the TV
+        self.tv.update_config(lambda j: j.update(agentAlert=True))
+        cli("notify", "build   done", "--from", "Claude Code")
+        self.assertEqual(self.tv.notes[-1], ("Claude Code", "build done"))
 
     def test_status_offline_and_unpaired(self):
         self.assertEqual(json.loads(cli("status", "--waybar").stdout)["class"], "unpaired")

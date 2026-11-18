@@ -16,6 +16,26 @@ Built on the published 2.20.0.
 - Off switch: Settings › Omarchy Link › **Share theme with apps on the network** (on by default). The TV lists
   `theme-share` in its capabilities. Schema `omarchytv-theme/1`, documented in PROTOCOL.md with curl examples.
 
+### AI agents and scripts: MCP, notify, Tailscale
+
+- **`omarchy-link notify "text"`**: one line on the TV over whatever is playing, from an agent hook or a script
+  (`--from "Claude Code"`, text from stdin, `--quiet` for hooks). Shown only with agent alerts on. Signed route
+  `POST /v1/notify`, 3 per 10 s.
+- **New MCP tools** on the TV and on the PC: `tv_get_theme` (the `/v1/theme` payload) and `tv_notify`.
+- **MCP over Tailscale**: `omarchy-tv mcp --http --tailscale` listens on the PC's tailnet address and answers only
+  tailnet peers (still with the Bearer token), so an agent on another box of your tailnet uses the TV without a
+  public tunnel.
+- **docs/INTEGRATIONS.md**: theme for dashboards, notify, MCP, a Claude Code hook example, the "dashboard on a
+  stick" recipe.
+
+### Grok Bot diretto and GrokBot Office: replies that ntfy.sh does not block (#70)
+
+- The TV now polls the reply topic every 2 s only at first, then slower up to 10 s: about 14 requests per question
+  instead of 45, so the shared ntfy.sh limit is hit much later.
+- On HTTP 429 it waits what the server asks (`Retry-After`, at most 30 s), and if no reply came it says that ntfy.sh
+  is rate limiting the TV and how to use your own reply server, instead of a generic timeout.
+- Same on Android TV, LG and Samsung.
+
 ### Home is quiet
 
 - **No more music starting by itself on Home** with the fractals wallpaper. Music plays only when you start it

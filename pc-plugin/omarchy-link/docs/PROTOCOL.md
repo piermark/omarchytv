@@ -181,6 +181,8 @@ fake status or swallow commands.
 | `POST /v1/cast` | ✓ | Cast → `{id, state:"opening", app}` (§6, Cast) |
 | `PUT /v1/cast/file` | ✓ | raw bytes, `Content-Type` = media type, ≤ `castUploadMax` → `{file:<sha256 hex>, size}` |
 | `POST /v1/cast/control` | ✓ | `{action:"play"\|"pause"\|"stop"\|"seek", id?, position?}` → `{ok:true}` |
+| `POST /v1/notify` | ✓ (v2.21) | `{text, from?}` → `{ok:true, shown:true}` / `403 notify_off` (agent alerts off on the TV) / `400 bad_notify`. One line, 200 chars; 3 per 10 s. |
+| `POST /v1/mcp` | ✓ or `Bearer <pc token>` | MCP JSON-RPC 2.0: `tv_status`, `tv_get_theme`, `tv_notify`, themes, keys, apps… (docs/INTEGRATIONS.md) |
 | `POST /v1/unpair` | ✓ | `{}` → `{ok:true}`. The TV deletes this PC. |
 | `GET /v1/events` | ✓ (on the upgrade) | WebSocket, §7 |
 

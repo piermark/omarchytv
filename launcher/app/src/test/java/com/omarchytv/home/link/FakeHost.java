@@ -36,6 +36,16 @@ class FakeHost implements LinkServer.Host {
         return wallpaper;
     }
 
+    volatile boolean notifyOn;
+    final java.util.List<String> notes = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    @Override
+    public boolean notify(String from, String text) {
+        if (!notifyOn) return false;
+        notes.add(from + ": " + text);
+        return true;
+    }
+
     FakeHost(File dir) {
         this.dir = dir;
         dir.mkdirs();

@@ -159,6 +159,34 @@ def cmd_key(a, cfg):
     return 0
 
 
+def cmd_notify(a, cfg):
+    """v2.21: a short message on the TV over whatever is playing, for agent hooks and scripts.
+
+    Exit 0 shown, 4 when agent alerts are off on the TV, 3 not paired. Text from the argument or stdin; one line,
+    200 characters. Never fails a hook loudly: --quiet prints nothing and always exits 0.
+    """
+    text = " ".join(a.text) if a.text else ("" if sys.stdin.isatty() else sys.stdin.read(4096))
+    text = " ".join(text.split())[:200]
+    if not text:
+        print("omarchy-link notify: nothing to say", file=sys.stderr)
+        return 0 if a.quiet else 2
+    p = config.Pairing.load()
+    if not p.paired:
+        return 0 if a.quiet else EXIT_NOT_PAIRED
+    try:
+        link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets")).request(
+            "POST", "/v1/notify", {"text": text, "from": (a.source or "PC")[:40]}, timeout=4)
+        return 0
+    except (link.LinkError, OSError, ValueError) as e:
+        if a.quiet:
+            return 0
+        if getattr(e, "code", "") == "notify_off" or getattr(e, "status", 0) == 403:
+            print("The TV does not show notifications: turn on agent alerts (Settings > Omarchy Link).", file=sys.stderr)
+            return 4
+        print(f"omarchy-link notify: {e}", file=sys.stderr)
+        return 1
+
+
 def cmd_launch(a, cfg):
     _client(cfg).launch(a.package)
     return 0
@@ -819,6 +847,11 @@ def main(argv=None) -> int:
     s.add_argument("target", nargs="?", help="TV IP[:port] or, with Tailscale on, its tailnet name; discovered when omitted")
     s.add_argument("--code")
     s.set_defaults(fn=cmd_pair)
+    s = sub.add_parser("notify", help="show a short message on the TV (agent hooks, scripts); text or stdin")
+    s.add_argument("text", nargs="*")
+    s.add_argument("--from", dest="source", help="who is talking, e.g. \"Claude Code\"")
+    s.add_argument("--quiet", "-q", action="store_true", help="never fail (for hooks)")
+    s.set_defaults(fn=cmd_notify)
     s = sub.add_parser("tailscale", help="reach the TV over Tailscale: on | off | status (off by default)")
     s.add_argument("action", nargs="?", choices=["on", "off", "status"], default="status")
     s.add_argument("--json", action="store_true")

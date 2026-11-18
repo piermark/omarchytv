@@ -571,6 +571,53 @@ public class LinkServerTest {
     }
 
     @Test
+    public void notifyNeedsPairingTheOwnersSwitchAndStaysShort() throws Exception {
+        assertEquals(401, http("POST", "/v1/notify", "{\"text\":\"hi\"}".getBytes(StandardCharsets.UTF_8), null).status);
+        pair("123456");
+        server.limits = false;
+        Resp off = signed("POST", "/v1/notify", "{\"text\":\"build done\"}");
+        assertEquals(403, off.status);
+        assertEquals("notify_off", off.json().getString("error"));
+        host.notifyOn = true;
+        assertEquals(400, signed("POST", "/v1/notify", "{\"text\":\"  \"}").status);
+        StringBuilder longText = new StringBuilder();
+        for (int i = 0; i < 50; i++) longText.append("words ");
+        Resp ok = signed("POST", "/v1/notify", new JSONObject().put("text", "line one\nline two " + longText).put("from", "Claude Code").toString());
+        assertEquals(200, ok.status);
+        String shown = host.notes.get(0);
+        assertTrue(shown.startsWith("Claude Code: line one line two"));
+        assertTrue(shown.length() <= "Claude Code: ".length() + 200);
+        assertEquals(1, host.notes.size());
+        // MCP: tv_notify and tv_get_theme
+        host.theme = new JSONObject().put("schema", "omarchytv-theme/1").put("accent", "#7aa2f7");
+        Resp list = signed("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+        String names = list.json().getJSONObject("result").getJSONArray("tools").toString();
+        assertTrue(names.contains("tv_notify") && names.contains("tv_get_theme"));
+        Resp call = signed("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 2).put("method", "tools/call")
+                .put("params", new JSONObject().put("name", "tv_notify").put("arguments", new JSONObject().put("text", "tests pass").put("from", "Hermes"))).toString());
+        assertFalse(call.json().getJSONObject("result").getBoolean("isError"));
+        assertEquals("Hermes: tests pass", host.notes.get(1));
+        Resp th = signed("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 3).put("method", "tools/call")
+                .put("params", new JSONObject().put("name", "tv_get_theme")).toString());
+        String txt = th.json().getJSONObject("result").getJSONArray("content").getJSONObject(0).getString("text");
+        assertEquals("#7aa2f7", new JSONObject(txt).getString("accent"));
+    }
+
+    @Test
+    public void notifyIsRateLimited() throws Exception {
+        pair("123456");
+        host.notifyOn = true;
+        int ok = 0, limited = 0;
+        for (int i = 0; i < 5; i++) {
+            int st = signed("POST", "/v1/notify", "{\"text\":\"n" + i + "\"}").status;
+            if (st == 200) ok++;
+            if (st == 429) limited++;
+        }
+        assertEquals(3, ok);
+        assertEquals(2, limited);
+    }
+
+    @Test
     public void mcpInitializeListAndCall() throws Exception {
         pair("123456");
         server.limits = false;

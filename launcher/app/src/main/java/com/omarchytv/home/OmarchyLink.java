@@ -1099,6 +1099,19 @@ public final class OmarchyLink implements LinkServer.Host {
         bg.execute(() -> CastRouter.sweep(r.app, r.live() ? r.server.currentCastFile() : null));
     }
 
+    /** v2.21 POST /v1/notify, MCP tv_notify: shown like an agent alert, and only when agent alerts are on. */
+    @Override
+    public boolean notify(String from, String text) {
+        if (!LauncherConfig.get(app).agentAlert) return false;
+        String msg = app.getString(R.string.agent_note, from, text);
+        main.post(() -> android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show());
+        try {
+            emit("agent", new JSONObject().put("name", from).put("text", text));
+        } catch (org.json.JSONException ignored) {
+        }
+        return true;
+    }
+
     @Override
     public void onEvent(String pcId, String type, JSONObject data) {
         if ("living".equals(type)) {   // v2.14: kept for the screensaver page, not an event for the UI
