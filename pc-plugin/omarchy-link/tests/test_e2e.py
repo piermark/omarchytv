@@ -3,6 +3,7 @@ import base64
 import http.client
 import json
 import os
+import shutil
 import subprocess
 import threading
 import time
@@ -181,6 +182,14 @@ class E2E(unittest.TestCase):
         # wallpaper not re-sent when the TV already has it
         cli("sync-theme", "--force")
         self.assertEqual(sum(1 for m, p, _ in self.tv.log if p == "/v1/wallpaper" and m == "PUT"), 2)
+
+    def test_pc_without_a_theme_leaves_the_tv_theme(self):
+        # macOS (or a Linux without Omarchy): nothing under ~/.local/state/omarchy/current
+        shutil.rmtree(helpers.OMARCHY, ignore_errors=True)
+        self.pair()
+        self.assertNotIn("theme", self.tvconf())
+        self.assertIn("This PC has no Omarchy theme", cli("sync-theme", "--force").stdout)
+        self.assertEqual([p for m, p, _ in self.tv.log if p in ("/v1/theme", "/v1/wallpaper")], [])
 
     def test_hook_script(self):
         self.pair()

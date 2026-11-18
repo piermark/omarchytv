@@ -42,7 +42,8 @@ def pc_pane() -> dict:
         lines.append({"label": "Up", "value": f"{up // 86400}d {up % 86400 // 3600}h" if up >= 86400 else f"{up // 3600}h {up % 3600 // 60}m"})
     except (OSError, ValueError):
         pass
-    lines.append({"label": "Theme", "value": theme.theme_name().replace("-", " ").title()})
+    if theme.theme_name():   # a PC without an Omarchy theme (macOS) has no line to show
+        lines.append({"label": "Theme", "value": theme.theme_name().replace("-", " ").title()})
     if shutil.which("playerctl"):
         try:
             r = subprocess.run(["playerctl", "metadata", "--format", "{{status}}\t{{artist}} - {{title}}"],

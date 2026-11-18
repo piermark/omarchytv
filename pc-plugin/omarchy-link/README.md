@@ -2,7 +2,8 @@
 
 Pair your [Omarchy](https://omarchy.org) PC with the **OmarchyTV** Android TV launcher over your home network.
 
-- **Theme sync**: `omarchy theme set …` turns the TV the same colours, with your wallpaper as a 4K JPEG.
+- **Theme sync**: `omarchy theme set …` turns the TV the same colours, with your wallpaper as a 4K JPEG. A PC
+  without an Omarchy theme (macOS) sends none: the TV keeps the theme picked on the remote.
 - **Bar widget** with the TV's status (connected, the app on screen, screensaver). Click it for a
   remote (home, back, play/pause, volume) and an app launcher.
 - **Panes and shortcuts on the TV**: a live PC pane (CPU, RAM, uptime, now playing) plus your own panes and

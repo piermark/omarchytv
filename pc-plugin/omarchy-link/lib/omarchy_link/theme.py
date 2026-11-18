@@ -84,10 +84,17 @@ def theme_dir() -> Path:
 
 
 def theme_name() -> str:
+    """The theme omarchy-theme-set wrote, or "" on a PC without one (macOS, a Linux without Omarchy)."""
     try:
-        return (config.OMARCHY_STATE / "theme.name").read_text().strip() or "unknown"
+        return (config.OMARCHY_STATE / "theme.name").read_text().strip()
     except OSError:
-        return "unknown"
+        return ""
+
+
+def has_theme() -> bool:
+    """Is there an Omarchy theme to send? Without one the TV keeps the theme picked on the remote: sending
+    "unknown" with the fallback palette would replace it (that is what a Mac did before)."""
+    return bool(theme_name()) or (theme_dir() / "colors.toml").is_file()
 
 
 def parse_colors_toml(path: Path) -> dict:
@@ -169,7 +176,7 @@ def theme_payload(wallpaper_sha: str | None = None) -> dict:
     accent = colors.get("accent", "#7aa2f7")
     accent2 = colors.get("bright_magenta") or colors.get("magenta") or accent
     payload = {
-        "name": theme_name(),
+        "name": theme_name() or "unknown",
         "mode": mode if mode in ("dark", "light") else "dark",
         "accent": accent,
         "accent2": accent2,

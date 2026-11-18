@@ -42,6 +42,13 @@ def sync_theme(client, cfg: dict, force: bool = False, log=lambda m: None) -> di
         by_tv = dict(last.get("byTv") or {})
         if not force and (by_tv.get(tv_id) == fp or (last.get("fingerprint") == fp and last.get("tv") == tv_id)):
             return None
+        if not theme.has_theme():
+            # No Omarchy theme here (macOS, a Linux without Omarchy): nothing to send, the TV keeps its own theme.
+            # The fingerprint is still recorded so the session does not come back here every few seconds.
+            log("no Omarchy theme on this PC; the TV keeps its own")
+            by_tv[tv_id] = fp
+            config.write_json_private(config.SYNC_FILE, {**last, "byTv": by_tv})
+            return None
         sha = None
         if cfg.get("wallpaperSync", True):
             bg = theme.current_background()
