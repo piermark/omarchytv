@@ -3,6 +3,7 @@ import hashlib
 import json
 import os
 import shutil
+import socket
 import subprocess
 import sys
 import time
@@ -206,6 +207,23 @@ class CastE2E(unittest.TestCase):
         short = cast.FileServer("127.0.0.1", "song.mp3", "audio/mpeg", path=str(f), idle=1)
         time.sleep(2.5)
         self.assertTrue(short.closed.is_set())  # idle: closed by itself
+
+    def test_file_server_configured_port(self):
+        f = self.files / "photo.png"
+        f.write_bytes(b"image fixture")
+        with socket.socket() as probe:
+            probe.bind(("127.0.0.1", 0))
+            port = probe.getsockname()[1]
+        with mock.patch.object(cast.config, "load_config", return_value={"castPort": port}):
+            srv = cast.FileServer("127.0.0.1", f.name, "image/png", path=str(f))
+        self.addCleanup(srv.close)
+        self.assertEqual(srv.httpd.server_address[1], port)
+        with urllib.request.urlopen(srv.url, timeout=5) as response:
+            self.assertEqual(response.read(), f.read_bytes())
+        for bad in (-1, 1, 1023, 65536, "47800", None, True):
+            with self.subTest(port=bad), mock.patch.object(cast.config, "load_config", return_value={"castPort": bad}):
+                with self.assertRaises(cast.CastError):
+                    cast.FileServer("127.0.0.1", f.name, "image/png", path=str(f))
 
     def test_screen_experimental(self):
         tv = self.tv()

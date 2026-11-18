@@ -43,7 +43,7 @@ The PC opens **no listening port** unless you ask for one:
 - `--screen`, for mirroring.
 
 When one is open:
-- **Link route:** omarchy-link's own server binds only to the PC address that faces the TV, on a random port. It answers only the TV's IP and serves one URL with a 192-bit random token, with Range support for seeking. It closes when the TV reports `ended`/`stopped`/`error`, after 10 minutes idle (1 minute for the screen), or after 4 hours at most. The CLI stays running until then.
+- **Link route:** omarchy-link's own server binds only to the PC address that faces the TV, on a random port by default. Set `"castPort": 0` to keep that default, or an integer from 1024 through 65535 in `config.json` to use a fixed port for a scoped firewall rule. It answers only the TV's IP and serves one URL with a 192-bit random token, with Range support for seeking. It closes when the TV reports `ended`/`stopped`/`error`, after 10 minutes idle (1 minute for the screen), or after 4 hours at most. The CLI stays running until then.
 - **Cast route:** catt's own server is used, and it serves while catt runs.
 
 Small files (at most the TV's `castUploadMax`, 64 MiB on the mock) are uploaded over the signed channel instead, with no port at all. Above 8 MiB, `--serve` streams rather than uploads, so playback starts sooner.
@@ -58,7 +58,7 @@ plays ([#82](https://github.com/piermark/omarchytv/issues/82)). Allow your TV on
 sudo ufw allow from <tv-ip> proto tcp comment 'OmarchyTV'
 ```
 
-The rule lets only that TV in, on any TCP port (the stream port is random). The CLI prints this hint, with the TV's
+The rule lets only that TV in, on any TCP port (the stream port is random). With a fixed `castPort` the rule can name that one port: `sudo ufw allow from <tv-ip> to any port <castPort> proto tcp comment 'OmarchyTV'`. The CLI prints this hint, with the TV's
 address filled in, when a served cast fails while ufw is active. Uploads and links the TV fetches from the internet
 need no rule.
 
