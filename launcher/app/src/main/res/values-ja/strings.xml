@@ -183,6 +183,7 @@
     <string name="set_home_override">ホームボタンで OmarchyTV を開く</string>
     <string name="link_usage">使用状況へのアクセス（現在のアプリ）</string>
     <string name="link_share_theme">ネットワーク上のアプリとテーマを共有</string>
+    <string name="link_tailscale">Tailscale を許可 (tailnet)</string>
     <string name="link_paired_toast">%1$s とペアリングしました</string>
     <string name="link_online">接続済み</string>
     <string name="ai_settings">AI クレジット</string>

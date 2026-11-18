@@ -216,6 +216,7 @@
     <string name="set_home_override">Home button opens OmarchyTV</string>
     <string name="link_usage">Usage access (current app)</string>
     <string name="link_share_theme">Share theme with apps on the network</string>
+    <string name="link_tailscale">Allow Tailscale (tailnet)</string>
     <string name="link_paired_toast">Paired with %1$s</string>
     <string name="link_online">connected</string>
     <string name="ai_settings">AI credits</string>

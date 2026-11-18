@@ -183,6 +183,7 @@
     <string name="set_home_override">Hjem-knappen åpner OmarchyTV</string>
     <string name="link_usage">Brukstilgang (gjeldende app)</string>
     <string name="link_share_theme">Del temaet med apper på nettverket</string>
+    <string name="link_tailscale">Tillat Tailscale (tailnet)</string>
     <string name="link_paired_toast">Sammenkoblet med %1$s</string>
     <string name="link_online">tilkoblet</string>
     <string name="ai_settings">AI-kreditter</string>

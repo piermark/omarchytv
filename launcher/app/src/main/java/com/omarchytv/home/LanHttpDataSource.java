@@ -44,7 +44,10 @@ final class LanHttpDataSource extends BaseDataSource {
         return u != null && "http".equals(u.getScheme()) && lanHost(u.getHost());
     }
 
-    /** A literal 10/8, 172.16/12, 192.168/16, fc00::/7 or link-local address (plain Java, also used by RemotePanes). */
+    /**
+     * A literal 10/8, 172.16/12, 192.168/16, fc00::/7 or link-local address (plain Java, also used by RemotePanes);
+     * v2.21 also a Tailscale address when Tailscale is on in Omarchy Link settings.
+     */
     static boolean lanHost(String h) {
         if (h == null) return false;
         if (!h.matches("[0-9.]+") && !h.contains(":")) return false;   // literal addresses only, no DNS
@@ -52,6 +55,7 @@ final class LanHttpDataSource extends BaseDataSource {
             InetAddress a = InetAddress.getByName(h);
             byte[] b = a.getAddress();
             if (a.isSiteLocalAddress() || a.isLinkLocalAddress()) return true;
+            if (com.omarchytv.home.link.Tailnet.allowedPeer(a)) return true;   // v2.21, only with Tailscale on
             return b.length == 16 && (b[0] & 0xFE) == 0xFC;
         } catch (IOException e) {
             return false;

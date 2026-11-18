@@ -3617,6 +3617,18 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             r.setValue(str(n ? R.string.on : R.string.off));
             return true;
         });
+        // v2.21: Tailscale (off by default). On: the TV also answers its tailnet address; the value shows it.
+        p.add(str(R.string.link_tailscale), tailscaleValue(LauncherConfig.get(this).tailscale), r -> {
+            boolean n = !LauncherConfig.get(this).tailscale;
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject l = j.optJSONObject("link");
+                if (l == null) j.put("link", l = new org.json.JSONObject());
+                l.put("tailscale", n);
+            });
+            OmarchyLink.tailscaleChanged();
+            r.setValue(tailscaleValue(n));
+            return true;
+        });
         // v2.21: GET /v1/theme, the theme for dashboards and agent pages on the network (on by default).
         p.add(str(R.string.link_share_theme), str(LauncherConfig.get(this).shareTheme ? R.string.on : R.string.off), r -> {
             boolean n = !LauncherConfig.get(this).shareTheme;
@@ -3802,7 +3814,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     /** IPv4 address of the active network (Wi-Fi or Ethernet), or null. */
+    /** "off", "on · 100.x.y.z", or "on · offline" when this TV has no Tailscale address. */
+    private String tailscaleValue(boolean on) {
+        if (!on) return str(R.string.off);
+        String ip = OmarchyLink.tailnetIp();
+        return str(R.string.on) + " · " + (ip != null ? ip + ":" + LINK_PORT : str(R.string.offline));
+    }
+
     private String tvAddress() {
+        String lan = OmarchyLink.lanIp();   // v2.21: the LAN under a VPN, not the VPN's address
+        if (lan != null) return lan;
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm == null || cm.getActiveNetwork() == null) return null;
         android.net.LinkProperties lp = cm.getLinkProperties(cm.getActiveNetwork());

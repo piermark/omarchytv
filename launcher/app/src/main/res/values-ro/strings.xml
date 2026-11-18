@@ -183,6 +183,7 @@
     <string name="set_home_override">Butonul Acasă deschide OmarchyTV</string>
     <string name="link_usage">Acces la utilizare (aplicația curentă)</string>
     <string name="link_share_theme">Partajează tema cu aplicațiile din rețea</string>
+    <string name="link_tailscale">Permite Tailscale (tailnet)</string>
     <string name="link_paired_toast">Asociat cu %1$s</string>
     <string name="link_online">conectat</string>
     <string name="ai_settings">Credite AI</string>

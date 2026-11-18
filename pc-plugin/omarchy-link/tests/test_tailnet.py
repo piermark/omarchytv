@@ -1,0 +1,88 @@
+"""v2.21 Tailscale: the PC talks to tailnet TVs only when "tailscale": true, never to the internet."""
+import json
+import types
+import unittest
+
+import helpers  # noqa: F401  (hermetic env + sys.path)
+from omarchy_link import config, netcheck, tailnet
+
+STATUS = {
+    "Self": {"HostName": "omarchy", "TailscaleIPs": ["100.100.1.1", "fd7a:115c:a1e0::1"]},
+    "Peer": {
+        "k1": {"HostName": "living-tv", "DNSName": "living-tv.tail1234.ts.net.", "TailscaleIPs": ["100.101.2.3"],
+               "Online": True, "OS": "android"},
+        "k2": {"HostName": "phone", "DNSName": "phone.tail1234.ts.net.", "TailscaleIPs": ["100.101.9.9"],
+               "Online": True, "OS": "iOS"},
+        "k3": {"HostName": "old-tv", "DNSName": "old-tv.tail1234.ts.net.", "TailscaleIPs": ["100.101.7.7"],
+               "Online": False, "OS": "android"},
+        "k4": {"HostName": "bad", "TailscaleIPs": ["8.8.8.8"], "Online": True},
+    },
+}
+
+
+class TailnetTest(unittest.TestCase):
+    def tearDown(self):
+        netcheck.allow_tailnet = False
+
+    def test_tailnet_needs_the_switch_and_skips_the_subnet_rule(self):
+        self.assertTrue(netcheck.is_tailnet("100.101.2.3"))
+        self.assertFalse(netcheck.is_tailnet("100.128.0.1"))
+        self.assertFalse(netcheck.is_lan_address("100.101.2.3"))
+        with self.assertRaises(ValueError) as e:
+            netcheck.check_host("100.101.2.3")
+        self.assertIn("omarchy-link tailscale on", str(e.exception))
+        netcheck.allow_tailnet = True
+        self.assertTrue(netcheck.is_lan_address("100.101.2.3"))
+        netcheck.check_host("100.101.2.3", strict_subnet=True)   # a tailnet is flat: no same-subnet rule
+        self.assertTrue(netcheck.is_lan_address("fd7a:115c:a1e0::5"))
+        self.assertFalse(netcheck.is_lan_address("8.8.8.8"))
+        with self.assertRaises(ValueError):
+            netcheck.check_host("8.8.8.8")
+
+    def test_config_sets_the_switch(self):
+        config.save_config({"tailscale": True})
+        config.load_config()
+        self.assertTrue(netcheck.allow_tailnet)
+        config.save_config({"tailscale": None})
+        config.load_config()
+        self.assertFalse(netcheck.allow_tailnet)
+
+    def test_resolve_magicdns_names_from_status(self):
+        self.assertEqual(tailnet.resolve("living-tv", STATUS), "100.101.2.3")
+        self.assertEqual(tailnet.resolve("living-tv.tail1234.ts.net", STATUS), "100.101.2.3")
+        self.assertEqual(tailnet.resolve("LIVING-TV.tail1234.ts.net.", STATUS), "100.101.2.3")
+        self.assertIsNone(tailnet.resolve("bad", STATUS))   # not a tailnet address
+        self.assertIsNone(tailnet.resolve("nope", STATUS))
+        self.assertEqual(tailnet.self_address(STATUS), "100.100.1.1")
+
+    def test_discover_probes_online_peers_and_keeps_only_omarchytv(self):
+        seen = []
+
+        def probe(host, port):
+            seen.append(host)
+            if host == "100.101.2.3":
+                return {"service": "omarchytv-link", "protocol": 1, "tvId": "tv-1", "name": "Living", "pairingOpen": True}
+            raise OSError("refused")
+
+        tvs = tailnet.discover(STATUS, probe)
+        self.assertEqual(sorted(seen), ["100.101.2.3", "100.101.9.9"])   # offline and non-tailnet peers skipped
+        self.assertEqual(len(tvs), 1)
+        self.assertEqual(tvs[0]["address"], "100.101.2.3")
+        self.assertEqual(tvs[0]["txt"]["pair"], "1")
+        self.assertEqual(tvs[0]["via"], "tailscale")
+
+    def test_status_parses_the_cli(self):
+        def run(argv, **kw):
+            self.assertEqual(argv, ["tailscale", "status", "--json"])
+            return types.SimpleNamespace(returncode=0, stdout=json.dumps(STATUS))
+        orig = tailnet.shutil.which
+        tailnet.shutil.which = lambda n: "/usr/bin/tailscale"
+        try:
+            self.assertEqual(tailnet.status(run)["Self"]["HostName"], "omarchy")
+            self.assertIsNone(tailnet.status(lambda *a, **k: types.SimpleNamespace(returncode=1, stdout="")))
+        finally:
+            tailnet.shutil.which = orig
+
+
+if __name__ == "__main__":
+    unittest.main()

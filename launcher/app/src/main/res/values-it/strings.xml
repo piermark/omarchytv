@@ -183,6 +183,7 @@
     <string name="set_home_override">Il tasto Home apre OmarchyTV</string>
     <string name="link_usage">Accesso utilizzo (app attuale)</string>
     <string name="link_share_theme">Condividi il tema con le app della rete</string>
+    <string name="link_tailscale">Consenti Tailscale (tailnet)</string>
     <string name="link_paired_toast">Associato a %1$s</string>
     <string name="link_online">connesso</string>
     <string name="ai_settings">Crediti AI</string>

@@ -11,7 +11,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from . import DEFAULT_PORT, VERSION, ai, assistant, cast, client as link, config, mdns, netcheck, panes, sync, theme
+from . import DEFAULT_PORT, VERSION, ai, assistant, cast, client as link, config, mdns, netcheck, panes, sync, tailnet, theme
 from .session import KEYS, Session
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -30,14 +30,24 @@ def _tty() -> bool:
     return sys.stdin.isatty() and sys.stdout.isatty()
 
 
+def _tailnet_tvs(cfg) -> list:
+    """v2.21: OmarchyTVs on this PC's tailnet (only with "tailscale": true)."""
+    if cfg.get("tailscale") is not True:
+        return []
+    return tailnet.discover(tailnet.status(), lambda h, p: link.probe(h, p, 1.5))
+
+
 def cmd_discover(a, cfg):
     devs = mdns.browse(a.timeout)
+    seen = {d["address"] for d in devs}
+    devs += [d for d in _tailnet_tvs(cfg) if d["address"] not in seen]
     if a.json:
         print(json.dumps(devs, indent=2))
     elif not devs:
         print("No OmarchyTV found. Open “Connect Omarchy Linux” on the TV, or pair by IP.")
     for d in devs if not a.json else []:
-        print(f"{d['name']}\t{d['address']}:{d['port']}\t{'pairing open' if d['txt'].get('pair') == '1' else ''}")
+        print(f"{d['name']}\t{d['address']}:{d['port']}\t{'pairing open' if d['txt'].get('pair') == '1' else ''}"
+              + ("\ttailscale" if d.get("via") == "tailscale" else ""))
     return 0 if devs else 1
 
 
@@ -52,8 +62,17 @@ def cmd_pair(a, cfg):
     pairing = config.Pairing.load()
     if a.target:
         host, port = _host_port(a.target)
+        if not re.fullmatch(r"[0-9a-fA-F:.]+", host):   # v2.21: a MagicDNS / tailnet host name
+            ip = tailnet.resolve(host, tailnet.status()) if cfg.get("tailscale") is True else None
+            if not ip:
+                print(f"omarchy-link: {host} is not an IP address" + ("" if cfg.get("tailscale") is True else
+                      "; for a Tailscale name run: omarchy-link tailscale on") + ".", file=sys.stderr)
+                return 1
+            host = ip
     else:
         devs = mdns.browse(2.5)
+        if not devs:
+            devs = _tailnet_tvs(cfg)
         if not devs:
             print("No TV answered on mDNS. Pass its IP: omarchy-link pair 192.168.1.50", file=sys.stderr)
             return 1
@@ -757,6 +776,37 @@ def cmd_session(a, cfg):
     return Session().run(daemon=getattr(a, "daemon", False))
 
 
+def cmd_tailscale(a, cfg):
+    """v2.21: on | off | status. On lets this PC talk to TVs on its tailnet; the TV has its own switch."""
+    if a.action in ("on", "off"):
+        config.save_config({"tailscale": a.action == "on"})
+        if a.action == "on":
+            print("Tailscale on for this PC. On the TV: Settings > Omarchy Link > Allow Tailscale (tailnet).")
+            print("Then: omarchy-link discover   (or: omarchy-link pair <tv-name>)   See docs/TAILSCALE.md.")
+        else:
+            print("Tailscale off: Omarchy Link talks to the local network only.")
+        return 0
+    st = tailnet.status()
+    on = cfg.get("tailscale") is True
+    out = {"enabled": on, "tailscale": st is not None, "self": tailnet.self_address(st),
+           "tvs": tailnet.discover(st, lambda h, p: link.probe(h, p, 1.5)) if on and st else []}
+    if a.json:
+        print(json.dumps(out, indent=2))
+        return 0
+    print(f"Omarchy Link over Tailscale: {'on' if on else 'off'}")
+    if st is None:
+        print("tailscale: not installed or not running (sudo tailscale up)")
+        return 1
+    print(f"this PC: {out['self'] or '-'}")
+    if not on:
+        print("turn it on: omarchy-link tailscale on")
+    for d in out["tvs"]:
+        print(f"TV: {d['name']}\t{d['address']}:{d['port']}\t{d['dns']}\t{'pairing open' if d['txt']['pair'] == '1' else ''}")
+    if on and not out["tvs"]:
+        print("no OmarchyTV answered on the tailnet (is Tailscale allowed on the TV, and the TV on the tailnet?)")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="omarchy-link", description="Pair this Omarchy PC with an OmarchyTV launcher.")
     ap.add_argument("--version", action="version", version=f"omarchy-link {VERSION}")
@@ -766,9 +816,13 @@ def main(argv=None) -> int:
     s.add_argument("--timeout", type=float, default=2.5)
     s.set_defaults(fn=cmd_discover)
     s = sub.add_parser("pair", help="pair with the 6-digit code shown on the TV")
-    s.add_argument("target", nargs="?", help="TV IP[:port]; discovered when omitted")
+    s.add_argument("target", nargs="?", help="TV IP[:port] or, with Tailscale on, its tailnet name; discovered when omitted")
     s.add_argument("--code")
     s.set_defaults(fn=cmd_pair)
+    s = sub.add_parser("tailscale", help="reach the TV over Tailscale: on | off | status (off by default)")
+    s.add_argument("action", nargs="?", choices=["on", "off", "status"], default="status")
+    s.add_argument("--json", action="store_true")
+    s.set_defaults(fn=cmd_tailscale)
     sub.add_parser("unpair", help="forget the TV (and tell it)").set_defaults(fn=cmd_unpair)
     s = sub.add_parser("status", help="TV status")
     g = s.add_mutually_exclusive_group()

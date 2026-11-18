@@ -797,6 +797,11 @@ during the screensaver (that is when the PC shows "screensaver"), with at most
 - LAN only, enforced on both sides. The TV checks its subnet. The PC refuses
   non-private targets and, by default, targets outside its own subnets
   (`allowOtherSubnets`).
+  v2.21 Tailscale (off by default on both sides): with `link.tailscale` on the TV and
+  `"tailscale": true` on the PC, Tailscale's ranges (`100.64.0.0/10`,
+  `fd7a:115c:a1e0::/48`) count as local too; the TV then listens on all IPv4 interfaces
+  and still refuses every other peer with `403 not_lan`. Under any VPN the TV's LAN is
+  the Wi-Fi/Ethernet network beneath it. docs/TAILSCALE.md.
 - No shell or arbitrary intents from either side. Shortcuts that run on the PC are
   ids, mapped to argv lists the user wrote in `config.json` and confirmed per run.
 - The assistant passes TV text to AI tools on the PC. Only a paired TV can send `ask`

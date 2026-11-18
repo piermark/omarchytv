@@ -29,6 +29,20 @@ Built on the published 2.20.0.
   app wakes it, and if webOS still keeps it asleep, the song moves to a plain player at the same second: you
   hear it for sure, and the fractals dance on their own beat for the rest of that session.
 
+### Tailscale (optional, off by default)
+
+- **Pair and use OmarchyTV over your tailnet**, from another room, network or house. TV: Settings › Omarchy Link ›
+  **Allow Tailscale (tailnet)**; the row shows the TV's tailnet address. PC: `omarchy-link tailscale on`, then
+  `omarchy-link discover` finds tailnet TVs through tailscaled, and `omarchy-link pair living-tv` takes a MagicDNS
+  name. `omarchy-link tailscale status` lists them.
+- Only Tailscale's own addresses (`100.64.0.0/10`, `fd7a:115c:a1e0::/48`) are added; everything else still gets
+  `403 not_lan`. No Funnel, no Serve, nothing opened to the internet. Pairing, signing and encryption are the same.
+- Casts and Remote panes accept tailnet addresses too when the switch is on.
+- **Fixed: a VPN app on the TV broke Omarchy Link.** With Tailscale (or any VPN) active, the TV listened on the VPN
+  address and refused the PC on the same Wi-Fi. It now always finds the Wi-Fi or Ethernet network under the VPN.
+- LG and Samsung: a Raspberry Pi subnet router puts the TV's LAN on the tailnet. docs/TAILSCALE.md has the steps
+  and an ACL example.
+
 ### Lighter fractals
 
 - **Each fractal is now its own small shader.** Before, every frame ran one big shader holding all five fractals

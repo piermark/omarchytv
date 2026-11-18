@@ -183,6 +183,7 @@
     <string name="set_home_override">Кнопка «Домой» открывает OmarchyTV</string>
     <string name="link_usage">Доступ к истории использования (текущее приложение)</string>
     <string name="link_share_theme">Делиться темой с приложениями в сети</string>
+    <string name="link_tailscale">Разрешить Tailscale (tailnet)</string>
     <string name="link_paired_toast">Сопряжено с %1$s</string>
     <string name="link_online">подключено</string>
     <string name="ai_settings">Кредиты ИИ</string>

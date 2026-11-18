@@ -16,6 +16,9 @@ import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import com.omarchytv.home.link.Tailnet;
 import android.net.Network;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
@@ -486,6 +489,25 @@ public final class OmarchyLink implements LinkServer.Host {
             // hand off to bg, so the 1-arg API 24 overload behaves the same there.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) cm.registerDefaultNetworkCallback(cb, main);
             else cm.registerDefaultNetworkCallback(cb);
+            // v2.21: with a VPN (Tailscale) up, the default network is the VPN; the Wi-Fi/Ethernet under it and the
+            // tailnet coming and going are only seen by a callback on every network, VPNs included.
+            try {
+                cm.registerNetworkCallback(new NetworkRequest.Builder()
+                        .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN).build(),
+                        new ConnectivityManager.NetworkCallback() {
+                            @Override
+                            public void onAvailable(Network network) {
+                                bg.execute(OmarchyLink.this::rebind);
+                            }
+
+                            @Override
+                            public void onLost(Network network) {
+                                bg.execute(OmarchyLink.this::rebind);
+                            }
+                        });
+            } catch (RuntimeException e) {
+                Log.w(TAG, "network callback: " + e);
+            }
         }
         IntentFilter f = new IntentFilter();
         f.addAction(Intent.ACTION_DREAMING_STARTED);
@@ -589,37 +611,116 @@ public final class OmarchyLink implements LinkServer.Host {
         });
     }
 
-    /** Bind to the active network's IPv4 address (§3: not every interface). Link worker thread. */
+    private volatile String bindKey;
+
+    /**
+     * Bind to the LAN's IPv4 address (§3: not every interface). v2.21: with Tailscale allowed and a tailnet address
+     * on this TV, listen on all IPv4 interfaces instead; allowPeer still lets in only the LAN subnet and the tailnet.
+     * Link worker thread.
+     */
     private synchronized void rebind() {
         if (!live()) return;
+        Tailnet.allowed = LauncherConfig.get(app).tailscale;
         InetAddress a = lanAddress();
-        if (a != null && a.equals(bound)) return;
+        InetAddress ts = Tailnet.allowed ? tailnetAddress() : null;
+        InetAddress listen = ts != null ? anyV4() : a;
+        String key = a + "|" + ts;
+        if (listen != null && key.equals(bindKey) && bound != null) return;
         unadvertise();
         bound = null;
-        if (a == null) {
+        bindKey = null;
+        if (listen == null) {
             server.stopListening();
             return;
         }
         try {
-            server.start(a, LinkServer.PORT);
-            bound = a;
+            server.start(listen, LinkServer.PORT);
+            bound = a != null ? a : ts;
+            bindKey = key;
+            if (ts != null) Log.i(TAG, "Tailscale on: listening for the LAN " + a + " and the tailnet " + ts.getHostAddress());
             advertise();
         } catch (Exception e) {
-            Log.w(TAG, "listen " + a + ": " + e);   // no retry loop: the next network change tries again
+            Log.w(TAG, "listen " + listen + ": " + e);   // no retry loop: the next network change tries again
         }
     }
 
-    private LinkProperties activeLink() {
+    private static InetAddress anyV4() {
+        try {
+            return InetAddress.getByAddress(new byte[4]);
+        } catch (java.net.UnknownHostException e) {
+            return null;
+        }
+    }
+
+    /**
+     * The LAN under any VPN: the active network when it is not a VPN, else a Wi-Fi or Ethernet network with IPv4.
+     * Before v2.21 a VPN app (Tailscale) made the TV bind to the VPN address and refuse the PC next to it.
+     */
+    private LinkProperties lanLink() {
         ConnectivityManager cm = app.getSystemService(ConnectivityManager.class);
-        Network n = cm != null ? cm.getActiveNetwork() : null;
-        return n != null ? cm.getLinkProperties(n) : null;
+        if (cm == null) return null;
+        Network active = cm.getActiveNetwork();
+        if (active != null && !isVpn(cm, active)) return cm.getLinkProperties(active);
+        LinkProperties best = null;
+        for (Network n : cm.getAllNetworks()) {
+            NetworkCapabilities nc = cm.getNetworkCapabilities(n);
+            if (nc == null || nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue;
+            if (!nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) && !nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) continue;
+            LinkProperties lp = cm.getLinkProperties(n);
+            if (lp == null || v4(lp) == null) continue;
+            if (best == null || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) best = lp;   // wired first
+        }
+        return best;
+    }
+
+    private static boolean isVpn(ConnectivityManager cm, Network n) {
+        NetworkCapabilities nc = cm.getNetworkCapabilities(n);
+        return nc != null && nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN);
+    }
+
+    private static InetAddress v4(LinkProperties lp) {
+        for (LinkAddress la : lp.getLinkAddresses()) if (la.getAddress() instanceof Inet4Address) return la.getAddress();
+        return null;
     }
 
     private InetAddress lanAddress() {
-        LinkProperties lp = activeLink();
-        if (lp == null) return null;
-        for (LinkAddress la : lp.getLinkAddresses()) if (la.getAddress() instanceof Inet4Address) return la.getAddress();
+        LinkProperties lp = lanLink();
+        return lp == null ? null : v4(lp);
+    }
+
+    /** This TV's Tailscale address (100.64.0.0/10 on a VPN network), or null. */
+    private InetAddress tailnetAddress() {
+        ConnectivityManager cm = app.getSystemService(ConnectivityManager.class);
+        if (cm == null) return null;
+        for (Network n : cm.getAllNetworks()) {
+            if (!isVpn(cm, n)) continue;
+            LinkProperties lp = cm.getLinkProperties(n);
+            if (lp == null) continue;
+            for (LinkAddress la : lp.getLinkAddresses()) {
+                if (la.getAddress() instanceof Inet4Address && Tailnet.isTailnet(la.getAddress())) return la.getAddress();
+            }
+        }
         return null;
+    }
+
+    /** Settings: the TV's LAN address (under any VPN). */
+    static String lanIp() {
+        OmarchyLink r = runtime;
+        InetAddress a = r != null ? r.lanAddress() : null;
+        return a == null ? null : a.getHostAddress();
+    }
+
+    /** Settings: the TV's Tailscale address, or null when there is none. */
+    static String tailnetIp() {
+        OmarchyLink r = runtime;
+        InetAddress a = r != null ? r.tailnetAddress() : null;
+        return a == null ? null : a.getHostAddress();
+    }
+
+    /** Settings toggled Tailscale: bind again (all interfaces or the LAN only). */
+    static void tailscaleChanged() {
+        OmarchyLink r = runtime;
+        if (r != null) bg.execute(r::rebind);
     }
 
     /** mDNS _omarchytv._tcp; TXT v, id, name, pair (only). Re-registered when pair changes. */
@@ -702,26 +803,16 @@ public final class OmarchyLink implements LinkServer.Host {
         emit("pairing", new JSONObject());
     }
 
-    /** §3: only the active network's own subnet (LinkProperties prefix). */
+    /** §3: only the LAN's own subnet (LinkProperties prefix, under any VPN); v2.21 plus the tailnet when allowed. */
     @Override
     public boolean allowPeer(InetAddress peer) {
-        LinkProperties lp = activeLink();
-        if (lp == null || peer == null) return false;
+        if (peer == null) return false;
+        if (Tailnet.allowedPeer(peer)) return true;
+        LinkProperties lp = lanLink();
+        if (lp == null) return false;
         byte[] p = peer.getAddress();
         for (LinkAddress la : lp.getLinkAddresses()) {
-            byte[] a = la.getAddress().getAddress();
-            if (a.length != p.length) continue;
-            int bits = la.getPrefixLength();
-            if (bits < 8) continue;   // never "everything"
-            boolean same = true;
-            for (int i = 0; i < a.length && bits > 0; i++, bits -= 8) {
-                int mask = bits >= 8 ? 0xFF : (0xFF << (8 - bits)) & 0xFF;
-                if ((a[i] & mask) != (p[i] & mask)) {
-                    same = false;
-                    break;
-                }
-            }
-            if (same) return true;
+            if (Tailnet.samePrefix(la.getAddress().getAddress(), la.getPrefixLength(), p)) return true;
         }
         return false;
     }

@@ -56,6 +56,19 @@ public class RemotePanesUrlTest {
     }
 
     @Test
+    public void tailnetHostsOnlyWithTailscaleOn() {   // v2.21
+        try {
+            assertFalse(LanHttpDataSource.lanHost("100.101.1.2"));
+            com.omarchytv.home.link.Tailnet.allowed = true;
+            assertTrue(LanHttpDataSource.lanHost("100.101.1.2"));
+            assertFalse(LanHttpDataSource.lanHost("100.200.1.2"));
+            assertFalse(LanHttpDataSource.lanHost("box.tail1234.ts.net"));   // still no DNS names
+        } finally {
+            com.omarchytv.home.link.Tailnet.allowed = false;
+        }
+    }
+
+    @Test
     public void paneImagesArePngOrJpegByTheirBytes() {   // v2.15 (#115)
         assertTrue(RemotePanes.imageOk(new byte[]{(byte) 0x89, 'P', 'N', 'G', 13, 10, 26, 10}));
         assertTrue(RemotePanes.imageOk(new byte[]{(byte) 0xff, (byte) 0xd8, (byte) 0xff, (byte) 0xe0, 0, 16, 'J', 'F'}));
