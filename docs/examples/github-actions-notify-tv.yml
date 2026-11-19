@@ -11,6 +11,8 @@ on:
     types: [completed]
 jobs:
   notify:
+    # Only red builds? Uncomment the next line and green runs never reach the TV.
+    # if: github.event.workflow_run.conclusion != 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: tailscale/github-action@v3

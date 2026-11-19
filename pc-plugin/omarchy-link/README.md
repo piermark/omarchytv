@@ -78,7 +78,7 @@ New in OmarchyTV 2.21 (the TV needs **AI agent alerts while you watch** on for n
 
 ```bash
 omarchy-link notify "Tests green" --from "Claude Code" [--level warn|alert] [--speak] [--title T] [--quiet]
-omarchy-link watch -- make release          # ✓ / ✗ on the TV when it ends
+omarchy-link watch -- make release          # ✓ / ✗ on the TV when it ends [--speak] [--only-fail]
 omarchy-link ask "Merge?" --choice Merge --choice Wait [--timeout 120]
 omarchy-link page URL [URL…] | --close      # LAN / tailnet pages full screen, up to 4 tiled
 omarchy-link pages add ID NAME URL [--icon H] [--badge N] | badge ID N | show ID | remove ID

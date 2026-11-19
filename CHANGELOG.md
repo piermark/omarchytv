@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased] — 2.22
+
+- **`omarchy-link watch --only-fail`** (alias `--quiet-ok`): green runs stay off the TV, only failures show (as an
+  alert, spoken with `--speak`). The exit code is passed through as before. The GitHub Actions example has a
+  commented `if:` line that does the same for CI. Asked on X.
+
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 
 Built on the published 2.20.0. The theme of this version: **OmarchyTV as the screen of your agents and dashboards**,

@@ -211,6 +211,14 @@ class E2E(unittest.TestCase):
         self.assertIn("done-ok", r.stdout)
         self.assertIn("done-ok", self.tv.notes[-1][1])
         self.assertEqual(cli("watch", "--", "sh", "-c", "exit 3", check=False).returncode, 3)
+        # v2.22: --only-fail keeps green runs off the TV, failures still show
+        n = len(self.tv.notes)
+        r = cli("watch", "--only-fail", "--", "sh", "-c", "echo green", check=False)
+        self.assertEqual((r.returncode, len(self.tv.notes)), (0, n))
+        self.assertIn("green", r.stdout)
+        self.assertEqual(cli("watch", "--quiet-ok", "--", "sh", "-c", "echo red; exit 4", check=False).returncode, 4)
+        self.assertEqual(len(self.tv.notes), n + 1)
+        self.assertIn("red", self.tv.notes[-1][1])
         cli("notify", '{"type":"agent-turn-complete","last-assistant-message":"Refactor finished"}', "--from", "Codex")
         self.assertEqual(self.tv.notes[-1], ("Codex", "Refactor finished"))
         # v2.21: Link after boot and the Home wallpaper, from the PC

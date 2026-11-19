@@ -204,7 +204,7 @@ def cmd_watch(a, cfg):
     if argv[:1] == ["--"]:
         argv = argv[1:]
     if not argv:
-        print("omarchy-link watch [--speak] -- COMMAND …", file=sys.stderr)
+        print("omarchy-link watch [--speak] [--only-fail] -- COMMAND …", file=sys.stderr)
         return 2
     t0 = _t.monotonic()
     last = ""
@@ -218,6 +218,8 @@ def cmd_watch(a, cfg):
         if line.strip():
             last = line.strip()
     rc = p.wait()
+    if rc == 0 and getattr(a, "only_fail", False):
+        return 0  # v2.22: --only-fail keeps green runs off the TV
     secs = int(_t.monotonic() - t0)
     took = f"{secs // 60}m{secs % 60:02d}s" if secs >= 60 else f"{secs}s"
     name = " ".join(argv)[:50]
@@ -1347,6 +1349,8 @@ def main(argv=None) -> int:
     s = sub.add_parser("watch", help="run a command, then tell the TV how it went (✓ / ✗, time, last line)")
     s.add_argument("--from", dest="source")
     s.add_argument("--speak", action="store_true")
+    s.add_argument("--only-fail", "--quiet-ok", dest="only_fail", action="store_true",
+                   help="tell the TV only when the command fails")
     s.add_argument("argv", nargs=argparse.REMAINDER)
     s.set_defaults(fn=cmd_watch)
     s = sub.add_parser("ask", help="ask the person at the TV, print the answer (agent hooks, scripts)")
