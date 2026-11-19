@@ -36,7 +36,8 @@ class BridgeClient:
             raise AttributeError(name)
 
         def android_only(*_a, **_k):
-            raise BridgeError(404, {"error": "not_on_lg_samsung", "message": f"{name} is for Android TV (Omarchy Link)"})
+            raise BridgeError(404, {"error": "not_on_lg_samsung",
+                                    "message": f"not_on_lg_samsung: {name} is for Android TV (Omarchy Link)"})
         return android_only
 
     def request(self, method: str, path: str, body=None, timeout: float = 8.0):

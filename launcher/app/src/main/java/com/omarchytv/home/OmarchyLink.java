@@ -1428,12 +1428,21 @@ public final class OmarchyLink implements LinkServer.Host {
                     .put("home", new JSONObject().put("wallpaper", cfg.wallpaper).put("wallpaperBg", cfg.wallpaperBg)
                             .put("theme", cfg.theme == null ? JSONObject.NULL : cfg.theme.name)
                             .put("loop", cfg.wallpaperLoop).put("loopStutter", WallpaperLoopGuard.stuttered(app))
-                            .put("lightLoop", FractalView.preferPlain(app)))
+                            .put("intro", introPlan(cfg))
+                            .put("lightLoop", "light".equals(introPlan(cfg))))
                     .put("screen", new JSONObject().put("on", screenOn()).put("home", homeVisible).put("screensaver", screensaver))
                     .put("log", logs);
         } catch (Exception e) {
             return new JSONObject();
         }
+    }
+
+    /** v2.21 what the Home wallpaper plays here: "none" (a still), "full", "light" (540p copy) or "skip" (weak TV). */
+    private String introPlan(LauncherConfig cfg) {
+        String mp4 = WallpaperView.introAssetFor(app, cfg.wallpaper, cfg.wallpaperBg);
+        if (mp4 == null) return "none";
+        String light = mp4.substring(0, mp4.length() - 4) + "-light.mp4";
+        return WallpaperView.introPlan(FractalView.preferPlain(app), WallpaperView.assetExists(app, light));
     }
 
     @Override

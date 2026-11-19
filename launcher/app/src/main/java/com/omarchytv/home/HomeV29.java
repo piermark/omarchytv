@@ -836,11 +836,35 @@ final class HomeV29 extends FrameLayout {
         JSONObject cache = RemotePanes.cached(act, cfg.remotePanesUrl);
         JSONArray panes = cache != null ? cache.optJSONArray("panes") : null;
         long now = System.currentTimeMillis() / 1000L;
-        int shown = 0;
+        // v2.21: the panes the PC pushes (PUT /v1/widgets: rooms, widgets.json) share this row after the fetched ones;
+        // the "pc" pane is the PC box above, so it is not repeated here.
+        List<JSONObject> list = new ArrayList<>();
+        List<Long> ages = new ArrayList<>();
+        for (int i = 0; panes != null && i < panes.length(); i++) {
+            JSONObject p = panes.optJSONObject(i);
+            if (p == null) continue;
+            list.add(p);
+            ages.add(now - RemotePanes.paneAt(cache, p));
+        }
+        for (JSONObject p : pcPaneObjects(cfg)) {
+            list.add(p);
+            long at = p.optLong("at", 0L);
+            ages.add(at > 0 ? now - at : 0L);
+        }
+        int shown = 0, next = 0;
         for (int i = 0; i < remoteBox.length; i++) {
-            JSONObject p = panes != null ? panes.optJSONObject(i) : null;
-            long age = p != null ? now - RemotePanes.paneAt(cache, p) : 0;
-            boolean show = p != null && activeWs == 1 && age <= 2L * p.optInt("ttl", 180);
+            JSONObject p = null;
+            long age = 0;
+            while (next < list.size()) {   // the first panes still fresh enough fill the 3 boxes
+                JSONObject c = list.get(next);
+                long a = ages.get(next++);
+                if (a <= 2L * c.optInt("ttl", 180)) {
+                    p = c;
+                    age = a;
+                    break;
+                }
+            }
+            boolean show = p != null && activeWs == 1;
             remoteBox[i].setVisibility(show ? VISIBLE : GONE);
             remoteBody[i].removeAllViews();
             if (!show) continue;
@@ -882,6 +906,23 @@ final class HomeV29 extends FrameLayout {
             rl.topMargin = top;
             remoteRow.setLayoutParams(rl);
         }
+    }
+
+    /** v2.21 the PC's pushed panes as the same JSON shape as fetched ones (id, title, ttl, at, lines[label,value]). */
+    static List<JSONObject> pcPaneObjects(LauncherConfig cfg) {
+        List<JSONObject> out = new ArrayList<>();
+        if (!cfg.pcPanesOn) return out;
+        for (LauncherConfig.PcPane pp : cfg.pcPanes) {
+            if ("pc".equals(pp.id) || cfg.hiddenPcPanes.contains(pp.id)) continue;
+            try {
+                JSONArray ls = new JSONArray();
+                for (String[] l : pp.lines) ls.put(new JSONObject().put("label", l[0]).put("value", l[1]));
+                out.add(new JSONObject().put("id", pp.id).put("title", pp.title).put("ttl", pp.ttl)
+                        .put("at", pp.at > 0 ? pp.at : cfg.widgetsAt).put("lines", ls));
+            } catch (org.json.JSONException ignored) {
+            }
+        }
+        return out;
     }
 
     /** Fetched panes are read from across the room: larger than the 19 px widget text. */

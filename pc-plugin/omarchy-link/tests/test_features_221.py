@@ -134,12 +134,14 @@ class Approve(unittest.TestCase):
         f = agent_ask.claude_settings()
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps({"model": "x", "hooks": {"PermissionRequest": [{"matcher": "Bash", "hooks": [{"type": "command", "command": "mine"}]}]}}))
-        permission.install("/x/omarchy-link")
-        permission.install("/x/omarchy-link")   # twice: still one entry
+        permission.install("/x/my tools/omarchy-link")
+        permission.install("/x/my tools/omarchy-link")   # twice: still one entry, the backup is the user's file
+        self.assertNotIn("agents permission", f.with_suffix(".json.omarchy-link.bak").read_text())
         d = json.loads(f.read_text())
         self.assertEqual(len(d["hooks"]["PermissionRequest"]), 2)
         self.assertIn("agents permission", json.dumps(d["hooks"]["PermissionRequest"][1]))
         self.assertGreater(d["hooks"]["PermissionRequest"][1]["hooks"][0]["timeout"], permission.WAIT)
+        self.assertTrue(d["hooks"]["PermissionRequest"][1]["hooks"][0]["command"].startswith("'/x/my tools/omarchy-link'"))
         self.assertTrue(permission.remove())
         d = json.loads(f.read_text())
         self.assertEqual(d["hooks"]["PermissionRequest"][0]["hooks"][0]["command"], "mine")
@@ -163,6 +165,31 @@ class Console(unittest.TestCase):
                 urllib.request.urlopen(req, timeout=5)
         finally:
             srv.shutdown()
+        srv, url = console.serve("127.0.0.1", lambda: "x", "test", allow={"192.168.1.5"})
+        try:
+            with self.assertRaises(urllib.error.HTTPError) as e:   # not the TV: refused even with the path
+                urllib.request.urlopen(url + "text", timeout=5)
+            self.assertEqual(e.exception.code, 403)
+        finally:
+            srv.shutdown()
+
+    def test_remind_text_may_look_like_an_option(self):
+        with mock.patch.object(remind, "schedule", return_value={"id": "abc123", "at": "10:00:00", "text": "--level"}) as s:
+            self.assertEqual(cli.main(["remind", "10m", "--level"]), 0)
+            self.assertEqual(s.call_args[0][2], "--level")
+            cli.main(["remind", "10m", "--", "--level", "now"])
+            self.assertEqual(s.call_args[0][2], "--level now")
+
+
+class HomeMotion(unittest.TestCase):
+    def test_tv_home_says_what_really_moves(self):
+        m = cli.home_motion
+        self.assertEqual(m({"intro": "light", "loop": True}), "looping (light 540p copy)")
+        self.assertEqual(m({"intro": "full", "loop": True}), "looping")
+        self.assertEqual(m({"intro": "full", "loop": False}), "plays once, then the still")
+        self.assertIn("weak TV", m({"intro": "skip", "loop": True}))
+        self.assertIn("no animation", m({"intro": "none", "loop": True}))
+        self.assertIn("could not keep up", m({"intro": "light", "loop": True, "loopStutter": True}))
 
 
 class Anywhere(unittest.TestCase):

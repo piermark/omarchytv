@@ -96,7 +96,8 @@ omarchy-link console --file ~/build.log                            # or the end 
   switch windows; BACK closes.
 - **Rooms**: a pane with a room's last 5 lines and the time of each. At most 3 rooms; a room quiet for a day
   leaves the Home. `room clear NAME` removes one.
-- **Console**: the page refreshes once a second and nothing can be typed from the TV. Ctrl+C on the PC stops it and
+- **Console**: the page refreshes once a second, only the paired TV's address may open it, and nothing can be typed
+  from the TV. Ctrl+C on the PC stops it and
   closes the page. Run your agent in the tmux session of the Super+~ drop-down terminal and watch it from the sofa.
 
 ## 6. From anywhere: Tailscale

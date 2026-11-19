@@ -42,7 +42,7 @@ LABEL = "@tcballard's Agent Desktop v0.3.3"
 # same contract; OMARCHY_GROKBOT_DESKTOP_REF can point the reference elsewhere.
 TARGET_VERSION = "0.3.3"
 UPSTREAM_TAG = "v" + TARGET_VERSION
-UPSTREAM_COMMIT = "b6933e5424327f5133e5e66a169061b0b8d28a34"
+UPSTREAM_COMMIT = "c9badb2230f83c32368ab69e6cb27c1e479e4b1c"
 UPSTREAM_REF = os.environ.get("OMARCHY_GROKBOT_DESKTOP_REF") or UPSTREAM_TAG
 EXIT_SENT = 10            # his grokbot-ask: the webhook accepted the question, the answer follows via `reply`
 VERSION_RE = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$")

@@ -2,7 +2,8 @@
 
 `omarchy-link console` shows a tmux pane (the current one inside tmux, or --tmux TARGET) or the end of a log file
 (--file PATH) as a page on the TV, tiled like any page. A small HTTP server on this PC's LAN address serves it under
-a random path, refreshing once a second; nothing can be typed from the TV. Ctrl+C stops it and closes the page.
+a random path, refreshing once a second; only the paired TV's address may read it (plain HTTP
+on the LAN, like the TV's own pages), and nothing can be typed from the TV. Ctrl+C or SIGTERM stops it and closes the page.
 Keep an agent in the tmux session of your Super+~ drop-down terminal and watch it from the couch.
 """
 
@@ -61,7 +62,7 @@ tick();setInterval(tick,1000);
 </script>"""
 
 
-def make_handler(token: str, source, title: str):
+def make_handler(token: str, source, title: str, allow=None):
     class H(http.server.BaseHTTPRequestHandler):
         def log_message(self, *a):
             pass
@@ -76,6 +77,9 @@ def make_handler(token: str, source, title: str):
             self.wfile.write(b)
 
         def do_GET(self):
+            peer = self.client_address[0].split("%", 1)[0].removeprefix("::ffff:")
+            if allow and peer not in allow:   # only the paired TV reads it (and the random path on top)
+                return self._send(403, "forbidden", "text/plain")
             if self.path == f"/{token}/":
                 return self._send(200, PAGE.format(title=html.escape(title), token=token), "text/html; charset=utf-8")
             if self.path == f"/{token}/text":
@@ -98,12 +102,12 @@ def lan_ip(tv_host: str) -> str:
         s.close()
 
 
-def serve(bind: str, source, title: str):
+def serve(bind: str, source, title: str, allow=None):
     token = secrets.token_urlsafe(12)
     cls = http.server.ThreadingHTTPServer
     if ":" in bind:
         cls = type("V6", (http.server.ThreadingHTTPServer,), {"address_family": socket.AF_INET6})
-    srv = cls((bind, 0), make_handler(token, source, title))
+    srv = cls((bind, 0), make_handler(token, source, title, allow))
     threading.Thread(target=srv.serve_forever, daemon=True).start()
     host = f"[{bind}]" if ":" in bind else bind
     return srv, f"http://{host}:{srv.server_address[1]}/{token}/"

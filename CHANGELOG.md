@@ -147,7 +147,10 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 - **Spoken reminders**: `omarchy-link remind 20m "Pizza"` (or `18:45`), a systemd user timer; MCP `tv_remind`.
 - **Rooms on the Home**: `omarchy-link room post hermes "Backup done"` and MCP `tv_room_post`. A pane with a
   room's last 5 lines, for Hermes cron reports and other agents.
-- **Couch console**: `omarchy-link console` shows a tmux pane or a log on the TV, read-only, until Ctrl+C.
+- **Couch console**: `omarchy-link console` shows a tmux pane or a log on the TV, read-only, until Ctrl+C (or
+  SIGTERM). Only the paired TV's address may read it.
+- **Fixed: panes pushed by the PC** (`omarchy-link push-widgets`, rooms) now show on the Home in the row under the
+  widgets, after the fetched ones (up to 3). The 2.9 Home only drew fetched panes.
 - **TV anywhere**: `omarchy-link token add NAME --remote` also prints the curl, Claude Code and Hermes setup for a
   machine elsewhere on your tailnet.
 - **Theme intros on weak TVs**: only the light copy (Eyes Wide) plays; other themes show their still image. No

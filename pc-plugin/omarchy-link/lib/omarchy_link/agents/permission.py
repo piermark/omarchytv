@@ -9,6 +9,7 @@ alerts off print nothing, so Claude Code shows its own prompt as usual. Nothing 
 from __future__ import annotations
 
 import json
+import shlex
 import shutil
 import time
 from pathlib import Path
@@ -54,12 +55,13 @@ def install(exe: str) -> Path:
     data = config.read_json(f, {}) if f.exists() else {}
     if not isinstance(data, dict):
         raise ValueError(f"{f} is not a JSON object; not touching it")
-    if f.exists():
-        shutil.copy2(f, f.with_suffix(".json.omarchy-link.bak"))
+    bak = f.with_suffix(".json.omarchy-link.bak")
+    if f.exists() and MARK not in f.read_text() and not bak.exists():   # the user's own file, once
+        shutil.copy2(f, bak)
     hooks = data.setdefault("hooks", {})
     lst = [h for h in hooks.get("PermissionRequest", []) if MARK not in json.dumps(h)]
     hooks["PermissionRequest"] = lst + [{"matcher": "*", "hooks": [
-        {"type": "command", "command": f"{exe} {MARK}", "timeout": WAIT + 30}]}]
+        {"type": "command", "command": f"{shlex.quote(exe)} {MARK}", "timeout": WAIT + 30}]}]
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps(data, indent=2) + "\n")
     return f

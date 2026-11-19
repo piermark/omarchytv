@@ -316,6 +316,19 @@ def cmd_token(a, cfg):
     return 0
 
 
+def home_motion(h: dict) -> str:
+    """How the Home wallpaper moves, from the TV's diagnostics (2.21: "intro" none | full | light | skip)."""
+    plan = h.get("intro") or ("light" if h.get("lightLoop") else "full")
+    if plan == "none":
+        return "still image (no animation for this wallpaper)"
+    if plan == "skip":
+        return "still image (weak TV, no light copy of this animation)"
+    if h.get("loopStutter"):
+        return "still image (the loop stopped: the TV could not keep up)"
+    copy = " (light 540p copy)" if plan == "light" else ""
+    return ("looping" if h.get("loop") else "plays once, then the still") + copy
+
+
 def remote_setup(cfg, token: str) -> str:
     """v2.21 "TV anywhere": what a machine elsewhere on the tailnet needs to reach this TV with an app token."""
     try:
@@ -482,10 +495,7 @@ def cmd_tv(a, cfg):
             return 0
         wp = h.get("wallpaper")
         what = (f"the theme's wallpaper #{h.get('wallpaperBg', 0)}" if wp == "omarchy" else wp)
-        print(f"theme {h.get('theme')} · wallpaper {what} · "
-              f"{'looping' if h.get('loop') and not h.get('loopStutter') else 'still'}"
-              f"{' (light 540p copy)' if h.get('lightLoop') and h.get('loop') else ''}"
-              f"{' · loop stopped: the TV could not keep up' if h.get('loopStutter') else ''}")
+        print(f"theme {h.get('theme')} · wallpaper {what} · {home_motion(h)}")
         return 0
     d = _call(cfg, "GET", "/v1/diagnostics")
     if a.json or a.what == "diagnostics":
@@ -799,7 +809,8 @@ def cmd_remind(a, cfg):
             print('omarchy-link remind 10m "Pizza in the oven"   (90s, 10m, 1h30m, 45, HH:MM) | list | cancel ID',
                   file=sys.stderr)
             return 2
-        r = remind.schedule(_exe(), a.when, " ".join(a.text))
+        text = a.text[1:] if a.text[:1] == ["--"] else a.text
+        r = remind.schedule(_exe(), a.when, " ".join(text))
         print(f"Reminder {r['id']} at {r['at']}: {r['text']}")
         return 0
     except remind.RemindError as e:
@@ -864,7 +875,16 @@ def cmd_console(a, cfg):
     if not p.paired:
         return EXIT_NOT_PAIRED
     tv_host = str(p.tv["address"]).strip("[]")
-    srv, url = console.serve(console.lan_ip(tv_host), source, title)
+    srv, url = console.serve(console.lan_ip(tv_host), source, title, allow={tv_host})
+    import signal
+
+    def _stop(*_):
+        raise KeyboardInterrupt
+    for sig in (signal.SIGTERM, signal.SIGHUP):   # systemd, a closed terminal: close the page too
+        try:
+            signal.signal(sig, _stop)
+        except (ValueError, OSError):
+            pass
     try:
         _call(cfg, "POST", "/v1/page", {"url": url})
         print(f"On the TV (read-only): {url}  ·  Ctrl+C to stop")
@@ -1440,7 +1460,7 @@ def main(argv=None) -> int:
     s.set_defaults(fn=cmd_hook)
     s = sub.add_parser("remind", help="a spoken reminder on the TV: remind 10m TEXT | list | cancel ID")
     s.add_argument("when", nargs="?")
-    s.add_argument("text", nargs="*")
+    s.add_argument("text", nargs=argparse.REMAINDER)   # the text may look like an option ("--level")
     s.set_defaults(fn=cmd_remind)
     s = sub.add_parser("room", help="a room pane on the TV Home: room post NAME TEXT | clear NAME | list")
     s.add_argument("action", nargs="?", choices=["post", "clear", "list"], default="list")

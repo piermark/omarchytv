@@ -686,7 +686,7 @@ class Handler(BaseHTTPRequestHandler):
                      "device": {"ramMb": 2048, "lowRam": False},
                      "settings": {"keepAlive": ka, "keepAliveActive": ka == "on", "notifySound": True},
                      "home": {"wallpaper": "omarchy", "wallpaperBg": 0, "theme": "last-horizon", "loop": True,
-                              "loopStutter": False, "lightLoop": True}}
+                              "loopStutter": False, "intro": "light", "lightLoop": True}}
 
     def _keepalive(self, pc, a, body):
         mode = a.get("mode")

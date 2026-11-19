@@ -22,12 +22,20 @@ The TV never contacts AI services and never holds credentials. Everything stays 
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/omarchytv/omarchy-link.git --enable
+git clone https://github.com/piermark/omarchytv.git && cd omarchytv/pc-plugin
+# (or the GitLab mirror: https://gitlab.com/piermark/omarchytv.git)
+mkdir -p ~/.local/share ~/.local/bin ~/.config/omarchy/plugins
+cp -r omarchy-link ~/.local/share/omarchy-link
+ln -sf ~/.local/share/omarchy-link/bin/omarchy-link ~/.local/bin/omarchy-link
+# the OmarchyTV bar widget (Omarchy 4.5 shell plugins): the plugin lives in a folder of this repository,
+# so link it instead of `omarchy plugin add` (which wants a repository of its own)
+ln -sfn ~/.local/share/omarchy-link ~/.config/omarchy/plugins/com.omarchytv.link
+omarchy-shell shell rescanPlugins && omarchy plugin enable com.omarchytv.link
 omarchy-link hook add      # sync the theme to the TV on every `omarchy theme set`
 ```
 
-(Repository URL is a placeholder until the project is published.) Then add the **OmarchyTV**
-widget to your bar from the bar settings. It sits on the right by default.
+The widget sits on the right of the bar by default; move it from the bar settings. Every release also ships
+`omarchy-link-<version>.tar.gz` with the same folder.
 
 Requirements: `python3` (standard library only), `ffmpeg` or ImageMagick for the wallpaper,
 `playerctl` (optional, for "now playing"). All of these ship with Omarchy. The plugin opens no
