@@ -28,13 +28,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_webos: "webOS TV settings", sys_themes: "Themes", sys_trans: "Transparency", sys_widgets: "Home widgets",
       sys_arrange: "Arrange panels", sys_saver: "Screensaver", sys_text_size: "Text size", ts_small: "Small", ts_normal: "Normal", ts_large: "Large", ts_xlarge: "Extra large", sys_saver_idle: "Start screensaver after",
       t_themes_sub: "Select a theme", t_wp_dim: "Wallpaper dimming", t_walker_sub: "Filter and launch installed apps", t_walker_ph: "search apps…", t_hub_forget: "Forget the hub?", t_hub_forget_sub: "Remove the saved Hue / Home Assistant credentials from this TV?", t_lights: "Ambilight & Lights", t_lights_sub: "Sync Hue or Home Assistant lights with the theme and Cinemarchy", t_pulse_panels: "Pulse panels", t_pulse_panels_sub: "Which Pulse side panels show on the screensaver", t_grok_ai: "Grok Bot & AI", t_grok_ai_sub: "Grok Bot TUI, companion, PC agents and AI web apps", t_webapps: "Web apps", t_webapps_sub: "Opens in the TV browser · Back returns", t_pair_pc: "Pair Omarchy Linux PC", t_pair_pc_sub: "Enter your Omarchy PC's LAN IP", t_companion_keys: "Blue: chat · hold Blue: voice", arrange_sub: "OK moves a panel up · the order is kept", arrange_reset: "Reset order",
+      t_companion_chat: "Chat with the Grok Bot companion", t_companion_hide: "Hide the companion (Blue brings it back)", w_racing_bar: "racing countdown in the bar", w_devmode_extend: "dev mode · I just pressed EXTEND", t_companion_title: "Grok Bot companion",
       w_term: "terminal · logo", w_deploy: "deploys · pc", t_companion_settings: "Companion settings",
       w_racing: "racing", w_weather: "weather", w_ai: "ai credits · pc", w_devmode: "dev mode", w_pc: "omarchy · pc", t_plugins_sub: "Sandboxed JSON plugins (v1 schema · no native code runs)",
       walker_none: "no matching apps",
       sys_logo_anim: "Animated logo", sys_text_tiles: "Text tiles (terminal style)", sys_all: "All OmarchyTV settings", sys_about: "About & licences",
       tile_move: "Move", tile_hide: "Hide", tile_cancel: "Cancel", move_hint: "◀▶▲▼ move · OK save · Back cancel",
       app_hidden: "Hidden. Show it again in All settings › Hidden apps", hidden_apps: "Hidden apps", hidden_none: "No hidden apps",
-      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", agent_asks: "asks", agent_hint: "OK answers · ◀ ▶ choose · BACK later", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
+      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", agent_asks: "asks", agent_hint: "OK answers · ◀ ▶ choose · BACK later", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
       wx_title: "Weather", wx_auto: "Automatic (from IP)", wx_auto_fail: "Couldn't find your location, keeping the current city", wx_search: "Search city…", wx_unit: "Temperature unit",
       root_boot: "Open when the TV starts", root_home: "Home button opens OmarchyTV", root_needed: "rooted TV only",
       root_keep: "Keep loaded in the background", root_keep_na: "not on this TV",
@@ -161,6 +162,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_webos: "Impostazioni TV webOS", sys_themes: "Temi", sys_trans: "Trasparenza", sys_widgets: "Widget della Home",
       sys_arrange: "Disponi riquadri", sys_saver: "Salvaschermo", sys_text_size: "Dimensione testo", ts_small: "Piccolo", ts_normal: "Normale", ts_large: "Grande", ts_xlarge: "Molto grande", sys_saver_idle: "Avvia salvaschermo dopo",
       t_themes_sub: "Scegli un tema", t_wp_dim: "Oscuramento sfondo", t_walker_sub: "Filtra e apri le app installate", t_walker_ph: "cerca app…", t_hub_forget: "Dimenticare l'hub?", t_hub_forget_sub: "Rimuovere da questa TV le credenziali Hue / Home Assistant salvate?", t_lights: "Ambilight e luci", t_lights_sub: "Sincronizza le luci Hue o Home Assistant con il tema e Cinemarchy", t_pulse_panels: "Pannelli Pulse", t_pulse_panels_sub: "Quali pannelli laterali Pulse compaiono nel salvaschermo", t_grok_ai: "Grok Bot e AI", t_grok_ai_sub: "TUI di Grok Bot, companion, agenti del PC e web app IA", t_webapps: "Web app", t_webapps_sub: "Si apre nel browser della TV · Indietro torna", t_pair_pc: "Associa PC Omarchy Linux", t_pair_pc_sub: "Inserisci l'IP di rete del PC Omarchy", t_companion_keys: "Blu: chat · tieni premuto Blu: voce", arrange_sub: "OK sposta un riquadro in su · l'ordine resta", arrange_reset: "Ripristina ordine",
+      t_companion_chat: "Chatta con il companion Grok Bot", t_companion_hide: "Nascondi il companion (Blu lo riporta)", w_racing_bar: "conto alla rovescia corse nella barra", w_devmode_extend: "modalità sviluppatore · ho appena premuto EXTEND", t_companion_title: "Companion Grok Bot",
       w_term: "terminale · logo", w_deploy: "rilasci · pc", t_companion_settings: "Impostazioni companion",
       w_racing: "corse", w_weather: "meteo", w_ai: "crediti ia · pc", w_devmode: "modalità sviluppatore", w_pc: "omarchy · pc", t_plugins_sub: "Plugin JSON isolati (schema v1 · nessun codice nativo)",
       walker_none: "nessuna app trovata",
@@ -294,13 +296,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_webos: "webOS TV-Einstellungen", sys_themes: "Themen", sys_trans: "Transparenz", sys_widgets: "Startseiten-Widgets",
       sys_arrange: "Panels anordnen", sys_saver: "Bildschirmschoner", sys_text_size: "Textgröße", ts_small: "Klein", ts_normal: "Normal", ts_large: "Groß", ts_xlarge: "Sehr groß", sys_saver_idle: "Bildschirmschoner starten nach",
       t_themes_sub: "Thema wählen", t_wp_dim: "Hintergrund abdunkeln", t_walker_sub: "Installierte Apps filtern und starten", t_walker_ph: "Apps suchen…", t_hub_forget: "Hub vergessen?", t_hub_forget_sub: "Gespeicherte Hue- / Home-Assistant-Zugangsdaten von diesem TV entfernen?", t_lights: "Ambilight & Licht", t_lights_sub: "Hue- oder Home-Assistant-Licht mit Thema und Cinemarchy synchronisieren", t_pulse_panels: "Pulse-Panels", t_pulse_panels_sub: "Welche Pulse-Seitenpanels der Bildschirmschoner zeigt", t_grok_ai: "Grok Bot & KI", t_grok_ai_sub: "Grok-Bot-TUI, Begleiter, PC-Agenten und KI-Web-Apps", t_webapps: "Web-Apps", t_webapps_sub: "Öffnet im TV-Browser · Zurück kehrt zurück", t_pair_pc: "Omarchy-Linux-PC koppeln", t_pair_pc_sub: "LAN-IP deines Omarchy-PCs eingeben", t_companion_keys: "Blau: Chat · Blau halten: Sprache", arrange_sub: "OK schiebt ein Panel nach oben · die Reihenfolge bleibt", arrange_reset: "Reihenfolge zurücksetzen",
+      t_companion_chat: "Mit dem Grok-Bot-Begleiter chatten", t_companion_hide: "Begleiter ausblenden (Blau holt ihn zurück)", w_racing_bar: "Rennen-Countdown in der Leiste", w_devmode_extend: "Entwicklermodus · gerade EXTEND gedrückt", t_companion_title: "Grok-Bot-Begleiter",
       w_term: "Terminal · Logo", w_deploy: "Deploys · pc", t_companion_settings: "Begleiter-Einstellungen",
       w_racing: "Rennen", w_weather: "Wetter", w_ai: "KI-Guthaben · pc", w_devmode: "Entwicklermodus", w_pc: "omarchy · pc", t_plugins_sub: "Isolierte JSON-Plugins (Schema v1 · kein nativer Code)",
       walker_none: "keine passende App",
       sys_logo_anim: "Animiertes Logo", sys_text_tiles: "Text-Kacheln (Terminal-Stil)", sys_all: "Alle OmarchyTV-Einstellungen", sys_about: "Info & Lizenzen",
       tile_move: "Verschieben", tile_hide: "Ausblenden", tile_cancel: "Abbrechen", move_hint: "◀▶▲▼ verschieben · OK speichern · Zurück abbrechen",
       app_hidden: "Ausgeblendet. Wieder einblenden unter Alle Einstellungen › Ausgeblendete Apps", hidden_apps: "Ausgeblendete Apps", hidden_none: "Keine ausgeblendeten Apps",
-      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", agent_asks: "fragt", agent_hint: "OK antwortet · ◀ ▶ wählen · BACK später", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
+      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", agent_asks: "fragt", agent_hint: "OK antwortet · ◀ ▶ wählen · BACK später", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
       wx_title: "Wetter", wx_auto: "Automatisch (über IP)", wx_auto_fail: "Standort nicht gefunden, die aktuelle Stadt bleibt", wx_search: "Stadt suchen…", wx_unit: "Temperatureinheit",
       root_boot: "Beim Einschalten öffnen", root_home: "Home-Taste öffnet OmarchyTV", root_needed: "nur gerootete TVs",
       root_keep: "Im Hintergrund geladen lassen", root_keep_na: "nicht auf diesem TV",
@@ -1882,12 +1885,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("w_ai"), right: cfg.widgets.ai ? "on" : "off", act: function () { tog("ai"); } },
       { label: tr("w_deploy"), right: cfg.widgets.deploy ? "on" : "off", act: function () { tog("deploy"); } },
       { label: tr("w_racing"), right: cfg.widgets.racing ? "on" : "off", act: function () { tog("racing"); } },
-      { label: "racing countdown in the bar", right: cfg.racingBar ? "on" : "off", act: function () {
+      { label: tr("w_racing_bar"), right: cfg.racingBar ? "on" : "off", act: function () {
         cfg.racingBar = !cfg.racingBar; saveCfg(); racingKick(); renderAll(); openWidgetsModal();
       } }
     ].concat(cfg.widgets.racing || cfg.racingBar ? racingSeriesRows() : []).concat(window.OMARCHY_PLATFORM === "tizen" ? [] : [   // 2.15 (#131): LG Developer Mode's 1000-hour session
       { label: tr("w_devmode"), right: cfg.widgets.devmode ? "on" : "off", act: function () { tog("devmode"); } },
-      { label: "dev mode · I just pressed EXTEND", right: cfg.devModeUntil ? window.OmarchyDevMode.left(cfg.devModeUntil, Date.now()).text.split(" · ")[0] : "›", act: function () {
+      { label: tr("w_devmode_extend"), right: cfg.devModeUntil ? window.OmarchyDevMode.left(cfg.devModeUntil, Date.now()).text.split(" · ")[0] : "›", act: function () {
         cfg.devModeUntil = window.OmarchyDevMode.extended(Date.now()); cfg.widgets.devmode = true;
         saveCfg(); renderAll(); showToast("Developer Mode: 1000 hours from now"); openWidgetsModal();
       } }
@@ -4115,7 +4118,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   function openGrokBotHub() {
     openModal(tr("t_grok_ai"), tr("t_grok_ai_sub"), [
       { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
-      { label: "💬 Chat with the Grok Bot companion", right: "OK ›", act: function () { openCompanionChat(false); } },
+      { label: "💬 " + tr("t_companion_chat"), right: "OK ›", act: function () { openCompanionChat(false); } },
       { label: tr("t_companion_settings"), right: "›", act: function () { openGrokbotCompanionModal(0); } },
       { label: "TUI agent", right: tuiAgent().name + " ›", act: function () {
         var l = tuiAgents(), i = 0; for (; i < l.length; i++) if (l[i].id === tuiAgent().id) break;
@@ -4239,7 +4242,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       cfg.companionAgent = GB_AGENTS[(GB_AGENTS.indexOf(gbAgent()) + 1) % GB_AGENTS.length]; saveCfg(); openCompanionChat(false);
     } });
     if (hist.length) items.push({ label: "Clear this chat", right: "", act: function () { GBC.clear(store, key); gbFace.bubble = ""; openCompanionChat(false); } });
-    items.push({ label: "Hide the companion (Blue brings it back)", right: "", act: function () {
+    items.push({ label: tr("t_companion_hide"), right: "", act: function () {
       cfg.companionHidden = true; saveCfg(); closeModal(); showToast("Companion hidden · press Blue to bring it back");
     } });
     items.push({ label: tr("t_companion_settings"), right: "›", act: function () { openGrokbotCompanionModal(0); } });
@@ -4362,7 +4365,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         { label: "GrokBot Office (optional)", right: cfg.officeEnabled ? "on" : "off", act: function () { cfg.officeEnabled = !cfg.officeEnabled; saveCfg(); openGrokbotCompanionModal(offIdx); } },
         { label: "Open GrokBot Office", right: cfg.officeEnabled ? "O ›" : "turn it on first", act: function () { if (cfg.officeEnabled) openOffice(); else showToast("Turn GrokBot Office on first"); } });
     }
-    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.3.3 (MIT) · " + tr("t_companion_keys") + " · " +
+    openModal(tr("t_companion_title"), "Avatar, eyes and palette from @tcballard's Agent Desktop v0.3.3 (MIT) · " + tr("t_companion_keys") + " · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
   }

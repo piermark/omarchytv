@@ -587,4 +587,5 @@
     <string name="radio_animated_off">não</string>
     <string name="ss_pulse_panels">Painéis Pulse</string>
     <string name="ss_pulse_racing">painel de corridas no Pulse</string>
+    <string name="ss_pulse_graphics">Gráficos do Pulse</string>
 </resources>

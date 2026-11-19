@@ -587,4 +587,5 @@
     <string name="radio_animated_off">لا</string>
     <string name="ss_pulse_panels">لوحات Pulse</string>
     <string name="ss_pulse_racing">لوحة السباقات في Pulse</string>
+    <string name="ss_pulse_graphics">رسوميات Pulse</string>
 </resources>

@@ -587,4 +587,5 @@
     <string name="radio_animated_off">ні</string>
     <string name="ss_pulse_panels">Панелі Pulse</string>
     <string name="ss_pulse_racing">панель перегонів у Pulse</string>
+    <string name="ss_pulse_graphics">Графіка Pulse</string>
 </resources>

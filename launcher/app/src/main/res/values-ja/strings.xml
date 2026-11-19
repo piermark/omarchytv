@@ -587,4 +587,5 @@
     <string name="radio_animated_off">いいえ</string>
     <string name="ss_pulse_panels">Pulse パネル</string>
     <string name="ss_pulse_racing">Pulse のレースパネル</string>
+    <string name="ss_pulse_graphics">Pulse のグラフィック</string>
 </resources>

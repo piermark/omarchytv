@@ -591,4 +591,5 @@
     <string name="radio_animated_off">nein</string>
     <string name="ss_pulse_panels">Pulse-Panels</string>
     <string name="ss_pulse_racing">Rennpanel auf Pulse</string>
+    <string name="ss_pulse_graphics">Pulse-Grafik</string>
 </resources>

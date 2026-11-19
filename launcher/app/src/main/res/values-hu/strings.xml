@@ -587,4 +587,5 @@
     <string name="radio_animated_off">nem</string>
     <string name="ss_pulse_panels">Pulse panelek</string>
     <string name="ss_pulse_racing">versenypanel a Pulse-on</string>
+    <string name="ss_pulse_graphics">Pulse grafika</string>
 </resources>

@@ -587,4 +587,5 @@
     <string name="radio_animated_off">όχι</string>
     <string name="ss_pulse_panels">Πάνελ Pulse</string>
     <string name="ss_pulse_racing">πάνελ αγώνων στο Pulse</string>
+    <string name="ss_pulse_graphics">Γραφικά Pulse</string>
 </resources>

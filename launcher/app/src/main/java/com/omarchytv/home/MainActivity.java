@@ -397,7 +397,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
             @Override
             public void pairPc() {
-                OmarchyLink.openPairing();   // same as menu → Omarchy Link: a new code each time the page opens
+                OmarchyLink.openPairing();   // same as menu → Connect Omarchy Linux: a new code each time the page opens
                 showMenu("link", null);
             }
 

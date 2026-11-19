@@ -587,4 +587,5 @@
     <string name="radio_animated_off">否</string>
     <string name="ss_pulse_panels">Pulse 面板</string>
     <string name="ss_pulse_racing">Pulse 上的赛车面板</string>
+    <string name="ss_pulse_graphics">Pulse 图形</string>
 </resources>

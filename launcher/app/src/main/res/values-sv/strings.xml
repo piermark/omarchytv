@@ -587,4 +587,5 @@
     <string name="radio_animated_off">nej</string>
     <string name="ss_pulse_panels">Pulse-paneler</string>
     <string name="ss_pulse_racing">motorsportpanel i Pulse</string>
+    <string name="ss_pulse_graphics">Pulse-grafik</string>
 </resources>

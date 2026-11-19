@@ -18,7 +18,7 @@ import java.security.MessageDigest;
  * (or the one picked on the TV), so it answers even while the PC sleeps.
  * <ul>
  * <li>Read-only, no pairing needed, LAN (and tailnet, when enabled) only, like every Omarchy Link request.</li>
- * <li>Off with Settings → Omarchy Link → "Share theme with apps on the network" ({@code link.shareTheme}).</li>
+ * <li>Off with Settings → Connect Omarchy Linux → "Share theme with apps on the network" ({@code link.shareTheme}).</li>
  * <li>Wallpaper: the PC's pushed JPEG when the TV shows it, else the theme's own background (WebP, as bundled);
  *     none for procedural or animated wallpapers.</li>
  * </ul>

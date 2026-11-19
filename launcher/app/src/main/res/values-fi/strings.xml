@@ -587,4 +587,5 @@
     <string name="radio_animated_off">ei</string>
     <string name="ss_pulse_panels">Pulse-paneelit</string>
     <string name="ss_pulse_racing">kilpa-ajopaneeli Pulsessa</string>
+    <string name="ss_pulse_graphics">Pulse-grafiikka</string>
 </resources>
