@@ -83,7 +83,7 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ## What's New in `2.21.0` (`versionCode 30`)
 
-**OmarchyTV becomes the screen of your AI agents and dashboards.** [Watch the 68-second video](docs/media/omarchytv-2.21.mp4). Guides: the [2.21 user guide](docs/OMARCHYTV-2.21-GUIDE.md) (every switch and command), [remote access and AI agents](docs/REMOTE-AND-AI-GUIDE.md) (Tailscale, Cloudflare, MCP, Claude Code, Codex, Hermes), the [integrations reference](docs/INTEGRATIONS.md), a [five-minute tour](docs/WHATS-NEW-2.21.md), the [CHANGELOG](CHANGELOG.md).
+**OmarchyTV becomes the screen of your AI agents and dashboards.** [Watch the 68-second video](docs/media/omarchytv-2.21.mp4). Guides: the [2.21 user guide](docs/OMARCHYTV-2.21-GUIDE.md) (every switch and command), [remote access and AI agents](docs/REMOTE-AND-AI-GUIDE.md) (Tailscale, Cloudflare, MCP, Claude Code, Codex, Hermes), [agent skills](skills/README.md) (your agent sets up and uses the TV for you), the [integrations reference](docs/INTEGRATIONS.md), a [five-minute tour](docs/WHATS-NEW-2.21.md), the [CHANGELOG](CHANGELOG.md).
 
 - **Agents talk to you on the TV**: `omarchy-link notify` (mako-style, *info* waits during a film, *warn*/*alert* show at once, `--speak` reads it aloud), `omarchy-link watch -- make release`, and `omarchy-link ask` answered with the remote. The TV needs **Settings › Grok Bot & AI › AI agent alerts while you watch**.
 - **Approve from the couch**: `omarchy-link agents approvals on` sends Claude Code's permission prompts to the TV (Allow / Deny / On the PC). No answer means the usual prompt: nothing is allowed by itself.

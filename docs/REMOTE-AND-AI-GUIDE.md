@@ -117,6 +117,10 @@ Details, the Access policy and service tokens: [CLOUDFLARE.md](CLOUDFLARE.md).
 
 ## 4. AI agents, one by one
 
+**Let the agent do it:** the [omarchytv-setup skill](../skills/omarchytv-setup/SKILL.md) walks Claude Code, Codex or
+Hermes through every step below (install, pair, MCP, tokens, Tailscale) and asks you for the parts on the TV.
+Install it with the lines in [skills/README.md](../skills/README.md), then ask your agent to "set up OmarchyTV".
+
 ### Claude Code (on the PC)
 
 ```sh
