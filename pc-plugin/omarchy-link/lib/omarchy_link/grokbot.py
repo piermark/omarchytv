@@ -1,7 +1,7 @@
 """Bridge to @tcballard's Agent Desktop, the companion formerly called Grok Bot Desktop Companion
 (experimental).
 
-Built against his v0.2.0 release (tag v0.2.0, commit b6933e5) of
+Built against his v0.3.3 release (tag v0.3.3, commit c9badb2) of
 https://github.com/tcballard/omarchy-plugin-grokbot-desktop (MIT, (c) 2026 Tom Ballard).
 The palette values below come from his qml/palette.js. None of his QML or Python is
 copied here. I only use what his README documents:
@@ -35,12 +35,12 @@ from pathlib import Path
 
 COMPANION_ID = "io.github.tcballard.grokbot-desktop"
 UPSTREAM = "https://github.com/tcballard/omarchy-plugin-grokbot-desktop"
-LABEL = "@tcballard's Agent Desktop v0.2.0"
+LABEL = "@tcballard's Agent Desktop v0.3.3"
 
-# The bridge targets his v0.2.0 release (manifest.json "version" / VERSION file). An older 0.x checkout
+# The bridge targets his v0.3.3 release (same grokbot-ask contract, IPC and roster as v0.2.0) (manifest.json "version" / VERSION file). An older 0.x checkout
 # (v0.1.0, the first release the bridge was written against) and a later one are still tried with the
 # same contract; OMARCHY_GROKBOT_DESKTOP_REF can point the reference elsewhere.
-TARGET_VERSION = "0.2.0"
+TARGET_VERSION = "0.3.3"
 UPSTREAM_TAG = "v" + TARGET_VERSION
 UPSTREAM_COMMIT = "b6933e5424327f5133e5e66a169061b0b8d28a34"
 UPSTREAM_REF = os.environ.get("OMARCHY_GROKBOT_DESKTOP_REF") or UPSTREAM_TAG
@@ -51,14 +51,14 @@ VERSION_RE = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)(?:[-+].*)?$")
 DEFAULT_BOT = {"id": "e0195a7d-f804-4688-9191-e2cf3574a6d1", "name": "Bob", "shortName": "Bob",
                "avatarShape": "teardrop", "avatarColor": "orange", "isPrimary": True}
 
-# Fill colours of his palette names (v0.2.0 qml/palette.js, unchanged since v0.1.0, MIT, Tom Ballard).
+# Fill colours of his palette names (qml/palette.js, unchanged from v0.1.0 to v0.3.3, MIT, Tom Ballard).
 # Black is drawn white on a dark surface there, and the TV is always dark. "omarchy" means "the active
 # theme accent" over there; the TV gets None and uses its own accent.
 PALETTE = {"black": "#FFFFFF", "brown": "#936439", "red": "#FF263C", "orange": "#FF6700",
            "yellow": "#FF9800", "green": "#00C972", "cyan": "#00BCA6", "blue": "#1084FE",
            "violet": "#9159FE", "magenta": "#FF309B", "gray": "#777777", "omarchy": None}
 COLOR_ALIASES = {"purple": "violet", "grey": "gray", "teal": "cyan", "pink": "magenta", "amber": "yellow"}
-# His 14 v0.2.0 shape names (the avatar picker, qml/shapes.js, unchanged since v0.1.0), sent as "avatarShape"
+# His 14 shape names (the avatar picker, qml/shapes.js, unchanged from v0.1.0 to v0.3.3), sent as "avatarShape"
 # so a TV that vendors his shapes draws the exact outline; "shape" stays the older contour family.
 AVATAR_SHAPES = ("blob", "cloud", "squircle", "sparkle", "clover", "heart", "flower", "teardrop", "tablet",
                  "wedge", "gem", "burst", "hex", "pebble")
@@ -180,9 +180,9 @@ def companion_version(d: Path | None) -> str | None:
 
 
 def compatibility(version: str | None) -> str:
-    """"target" = v0.2.0 (the release or the branch reporting it); "branch" = no/older version
-    (the in-development branch before VERSION existed); "newer" = a later 0.x, still tried with
-    the v0.2.0 contract (v0.1.0 included); "unsupported" = a new major, where the documented IPC may
+    """"target" = v0.3.x (the release or the branch reporting it); "branch" = no/older version
+    (v0.1.0 and v0.2.0 included: same contract, still relayed); "newer" = a later 0.x, still tried with
+    the same contract; "unsupported" = a new major, where the documented IPC may
     have changed."""
     if not version:
         return "branch"

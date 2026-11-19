@@ -140,6 +140,9 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 - **LG and Samsung**: *Arrange panels* now really reorders the Home widgets (OK moves one up, the order is kept;
   #5). The last English-only titles (themes, wallpaper dimming, Walker, lights, Pulse panels, Grok Bot & AI, web
   apps, pairing) follow the TV's language in all 23 languages.
+- **Grok Bot: built for Tom Ballard's Agent Desktop v0.3.3** (was v0.2.0). The parts OmarchyTV uses
+  (`grokbot-ask`, the IPC commands, the roster, the avatar shapes, palette and faces) are unchanged, so v0.2.0 and
+  v0.1.0 checkouts still work.
 - **From the PC**: `omarchy-link tv keepalive [auto|on|off]` shows or sets *Keep Link reachable after boot*.
   `omarchy-link tv home` says what the Home shows: theme, wallpaper, looping or still, the light copy, a stutter
   fallback. `tv diagnostics` carries both.

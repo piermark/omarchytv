@@ -2184,7 +2184,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 : "Not linked to the desktop companion: questions open the Ask screen. Install omarchy-link and "
                 + "@tcballard's companion on the PC to mirror the bot here.";
         String msg = (cfg.grokbotMessage != null && !cfg.grokbotMessage.isEmpty() ? "Last: " + cfg.grokbotMessage + "\n\n" : "")
-                + state + "\n\nBuilt for @tcballard's Agent Desktop v0.2.0 (MIT)"
+                + state + "\n\nBuilt for @tcballard's Agent Desktop v0.3.3 (MIT)"
                 + (bridge && cfg.grokbotBotVersion != null && !cfg.grokbotBotVersion.isEmpty()
                 ? " · companion v" + cfg.grokbotBotVersion : "") + " · built for v0.2.0.";
         new android.app.AlertDialog.Builder(this)

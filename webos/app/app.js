@@ -4245,7 +4245,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         return '<div class="gb-msg ' + (m.role === "user" ? "gb-me" : "gb-bot") + '">' + escHtml(m.text.length > 400 ? m.text.slice(0, 397) + "…" : m.text) + "</div>";
       }).join("");
       subEl.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px;"><span class="gb-mark">' + gbAvatar(48) + "</span><div>" +
-        (rows || "Hi! Ask me anything, or tell me which app to open.") + '<div class="gb-credit">Avatar from @tcballard\'s Agent Desktop v0.2.0 (MIT)</div></div></div>';
+        (rows || "Hi! Ask me anything, or tell me which app to open.") + '<div class="gb-credit">Avatar from @tcballard\'s Agent Desktop v0.3.3 (MIT)</div></div></div>';
       subEl.style.display = "block";
     }
     if (voice && speechCtor()) listen(function (t) { askCompanion(t, true); });
@@ -4354,7 +4354,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         { label: "GrokBot Office (optional)", right: cfg.officeEnabled ? "on" : "off", act: function () { cfg.officeEnabled = !cfg.officeEnabled; saveCfg(); openGrokbotCompanionModal(offIdx); } },
         { label: "Open GrokBot Office", right: cfg.officeEnabled ? "O ›" : "turn it on first", act: function () { if (cfg.officeEnabled) openOffice(); else showToast("Turn GrokBot Office on first"); } });
     }
-    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.2.0 (MIT) · " + tr("t_companion_keys") + " · " +
+    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.3.3 (MIT) · " + tr("t_companion_keys") + " · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
   }

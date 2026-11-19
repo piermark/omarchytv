@@ -32,7 +32,7 @@ class WebOSBridgeTest(unittest.TestCase):
 
 
 class FakeGrokbot:
-    UPSTREAM, UPSTREAM_REF = "https://github.com/tcballard/omarchy-plugin-grokbot-desktop", "v0.2.0"
+    UPSTREAM, UPSTREAM_REF = "https://github.com/tcballard/omarchy-plugin-grokbot-desktop", "v0.3.3"
     PALETTE = {"orange": "#FF6700"}
 
     class GrokbotError(Exception):

@@ -134,7 +134,7 @@ public class CompanionChatActivity extends Activity implements OmarchyLink.Liste
             log.removeAllViews();
         });
         row.addView(clear);
-        TextView foot = text("Built for @tcballard's Agent Desktop v0.2.0 (MIT) · try \"open YouTube\"", 10, t.fgDim, false);
+        TextView foot = text("Built for @tcballard's Agent Desktop v0.3.3 (MIT) · try \"open YouTube\"", 10, t.fgDim, false);
         foot.setPadding(0, dp(8), 0, 0);
         panel.addView(foot);
 

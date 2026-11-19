@@ -7,7 +7,7 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
   GET /v1/themes                   -> JSON {"themes": [...]}
   GET /v1/wallpaper                -> active desktop wallpaper image (webp/png/jpg)
   GET /v1/grokbot                  -> JSON {available, bot, roster, dispatch, version}: @tcballard's Grok Bot
-                                      Desktop (Agent Desktop) v0.2.0 as omarchy-link's bridge sees it (no secrets)
+                                      Desktop (Agent Desktop) v0.3.3 as omarchy-link's bridge sees it (no secrets)
   GET /v1/office                   -> JSON {bots, usage?, providers_usage?, source}: GrokBot Office (2.20), what omarchy-tv office push saved,
                                       else the Agent Desktop roster (names and colours, never usage numbers).
   POST /v1/office/hire             -> same token as /v1/ai/ask; {name, provider: claude|chatgpt, role?, description?}:
