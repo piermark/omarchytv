@@ -3638,7 +3638,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         if (net != null) {
             p.add("LAN", net.isNull("lan") ? str(R.string.offline) : net.optString("lan", str(R.string.offline)), r -> true);
             p.add("Tailscale", net.isNull("tailnet") || !net.has("tailnet") ? "—" : net.optString("tailnet"), r -> true);
-            p.add("Omarchy Link", str(net.optBoolean("listening") ? R.string.on : R.string.off), r -> true);
+            p.add(str(R.string.menu_link), str(net.optBoolean("listening") ? R.string.on : R.string.off), r -> true);
         }
         if (lk != null) {
             p.add("PC", lk.optInt("pcs") + " · " + lk.optInt("events") + " online", r -> true);

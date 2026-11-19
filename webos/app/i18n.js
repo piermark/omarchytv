@@ -6,6 +6,7 @@
     "pt-PT": {
       "name": "Português (Portugal)",
       "strings": {
+        "chat_clear": "Limpar esta conversa", "agent_pc": "Grok Bot no meu PC (omarchy-link)", "agent_web": "Grok em grok.com (navegador da TV)", "chat_ph": "Pergunte algo ou diga “abrir Netflix”…",
         "chat_ask": "Perguntar a", "chat_thinking": "está a pensar…", "chat_type": "Escreva uma pergunta acima ou use 🎤", "chat_speak": "Falar", "chat_novoice": "Voz: indisponível nesta TV · só teclado", "chat_agent": "Agente", "t_companion_open": "Abrir definições do companheiro Grok Bot", "chat_play_cine": "Reproduzir no Cinemarchy", "chat_play_yt": "Reproduzir no YouTube", "chat_play_video": "Reproduzir vídeo no navegador da TV", "chat_open_link": "Abrir ligação no navegador da TV",
         "t_companion_chat": "Conversar com o companheiro Grok Bot", "t_companion_hide": "Ocultar o companheiro (Azul traz de volta)", "w_racing_bar": "contagem das corridas na barra", "w_devmode_extend": "modo programador · acabei de premir EXTEND", "t_companion_title": "Companheiro Grok Bot",
         "w_term": "terminal · logótipo", "w_deploy": "implementações · pc", "t_companion_settings": "Definições do companheiro",
@@ -239,6 +240,7 @@
     "pt-BR": {
       "name": "Português (Brasil)",
       "strings": {
+        "chat_clear": "Limpar esta conversa", "agent_pc": "Grok Bot no meu PC (omarchy-link)", "agent_web": "Grok em grok.com (navegador da TV)", "chat_ph": "Pergunte algo ou diga “abrir Netflix”…",
         "chat_ask": "Perguntar a", "chat_thinking": "está pensando…", "chat_type": "Digite uma pergunta acima ou use 🎤", "chat_speak": "Falar", "chat_novoice": "Voz: indisponível nesta TV · só teclado", "chat_agent": "Agente", "t_companion_open": "Abrir configurações do companheiro Grok Bot", "chat_play_cine": "Reproduzir no Cinemarchy", "chat_play_yt": "Reproduzir no YouTube", "chat_play_video": "Reproduzir vídeo no navegador da TV", "chat_open_link": "Abrir link no navegador da TV",
         "t_companion_chat": "Conversar com o companheiro Grok Bot", "t_companion_hide": "Ocultar o companheiro (Azul traz de volta)", "w_racing_bar": "contagem das corridas na barra", "w_devmode_extend": "modo desenvolvedor · acabei de apertar EXTEND", "t_companion_title": "Companheiro Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "deploys · pc", "t_companion_settings": "Configurações do companheiro",
@@ -472,6 +474,7 @@
     "es": {
       "name": "Español",
       "strings": {
+        "chat_clear": "Borrar este chat", "agent_pc": "Grok Bot en mi PC (omarchy-link)", "agent_web": "Grok en grok.com (navegador de la TV)", "chat_ph": "Pregunta lo que sea o di «abre Netflix»…",
         "chat_ask": "Preguntar a", "chat_thinking": "está pensando…", "chat_type": "Escribe una pregunta arriba o usa 🎤", "chat_speak": "Hablar", "chat_novoice": "Voz: no disponible en esta TV · solo teclado", "chat_agent": "Agente", "t_companion_open": "Abrir ajustes del compañero Grok Bot", "chat_play_cine": "Reproducir en Cinemarchy", "chat_play_yt": "Reproducir en YouTube", "chat_play_video": "Reproducir vídeo en el navegador de la TV", "chat_open_link": "Abrir enlace en el navegador de la TV",
         "t_companion_chat": "Chatear con el compañero Grok Bot", "t_companion_hide": "Ocultar el compañero (Azul lo devuelve)", "w_racing_bar": "cuenta atrás de carreras en la barra", "w_devmode_extend": "modo desarrollador · acabo de pulsar EXTEND", "t_companion_title": "Compañero Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "despliegues · pc", "t_companion_settings": "Ajustes del compañero",
@@ -705,6 +708,7 @@
     "fr": {
       "name": "Français",
       "strings": {
+        "chat_clear": "Effacer cette discussion", "agent_pc": "Grok Bot sur mon PC (omarchy-link)", "agent_web": "Grok sur grok.com (navigateur de la TV)", "chat_ph": "Demandez, ou dites « ouvre Netflix »…",
         "chat_ask": "Demander à", "chat_thinking": "réfléchit…", "chat_type": "Tapez une question ci-dessus ou utilisez 🎤", "chat_speak": "Parler", "chat_novoice": "Voix : indisponible sur cette TV · clavier seulement", "chat_agent": "Agent", "t_companion_open": "Ouvrir les réglages du compagnon Grok Bot", "chat_play_cine": "Lire dans Cinemarchy", "chat_play_yt": "Lire sur YouTube", "chat_play_video": "Lire la vidéo dans le navigateur de la TV", "chat_open_link": "Ouvrir le lien dans le navigateur de la TV",
         "t_companion_chat": "Discuter avec le compagnon Grok Bot", "t_companion_hide": "Masquer le compagnon (Bleu le ramène)", "w_racing_bar": "compte à rebours des courses dans la barre", "w_devmode_extend": "mode développeur · je viens d'appuyer sur EXTEND", "t_companion_title": "Compagnon Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "déploiements · pc", "t_companion_settings": "Réglages du compagnon",
@@ -938,6 +942,7 @@
     "nl": {
       "name": "Nederlands",
       "strings": {
+        "chat_clear": "Deze chat wissen", "agent_pc": "Grok Bot op mijn pc (omarchy-link)", "agent_web": "Grok op grok.com (tv-browser)", "chat_ph": "Vraag iets, of zeg “open Netflix”…",
         "chat_ask": "Vraag", "chat_thinking": "denkt na…", "chat_type": "Typ hierboven een vraag of gebruik 🎤", "chat_speak": "Spreek", "chat_novoice": "Spraak: niet beschikbaar op deze tv · alleen toetsenbord", "chat_agent": "Agent", "t_companion_open": "Grok Bot-companion-instellingen openen", "chat_play_cine": "Afspelen in Cinemarchy", "chat_play_yt": "Afspelen op YouTube", "chat_play_video": "Video afspelen in de tv-browser", "chat_open_link": "Link openen in de tv-browser",
         "t_companion_chat": "Chatten met de Grok Bot-companion", "t_companion_hide": "Companion verbergen (Blauw haalt hem terug)", "w_racing_bar": "race-aftelling in de balk", "w_devmode_extend": "ontwikkelaarsmodus · net op EXTEND gedrukt", "t_companion_title": "Grok Bot-companion",
         "w_term": "terminal · logo", "w_deploy": "deploys · pc", "t_companion_settings": "Companion-instellingen",
@@ -1171,6 +1176,7 @@
     "pl": {
       "name": "Polski",
       "strings": {
+        "chat_clear": "Wyczyść ten czat", "agent_pc": "Grok Bot na moim PC (omarchy-link)", "agent_web": "Grok na grok.com (przeglądarka TV)", "chat_ph": "Zapytaj o cokolwiek lub powiedz „otwórz Netflix”…",
         "chat_ask": "Zapytaj", "chat_thinking": "myśli…", "chat_type": "Wpisz pytanie powyżej lub użyj 🎤", "chat_speak": "Mów", "chat_novoice": "Głos: niedostępny na tym TV · tylko klawiatura", "chat_agent": "Agent", "t_companion_open": "Otwórz ustawienia towarzysza Grok Bot", "chat_play_cine": "Odtwórz w Cinemarchy", "chat_play_yt": "Odtwórz w YouTube", "chat_play_video": "Odtwórz wideo w przeglądarce TV", "chat_open_link": "Otwórz link w przeglądarce TV",
         "t_companion_chat": "Czat z towarzyszem Grok Bot", "t_companion_hide": "Ukryj towarzysza (Niebieski go przywraca)", "w_racing_bar": "odliczanie wyścigów na pasku", "w_devmode_extend": "tryb dewelopera · właśnie nacisnąłem EXTEND", "t_companion_title": "Towarzysz Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "wdrożenia · pc", "t_companion_settings": "Ustawienia towarzysza",
@@ -1404,6 +1410,7 @@
     "sv": {
       "name": "Svenska",
       "strings": {
+        "chat_clear": "Rensa den här chatten", "agent_pc": "Grok Bot på min dator (omarchy-link)", "agent_web": "Grok på grok.com (TV:ns webbläsare)", "chat_ph": "Fråga vad som helst, eller säg ”öppna Netflix”…",
         "chat_ask": "Fråga", "chat_thinking": "tänker…", "chat_type": "Skriv en fråga ovan eller använd 🎤", "chat_speak": "Tala", "chat_novoice": "Röst: inte tillgänglig på denna TV · bara tangentbord", "chat_agent": "Agent", "t_companion_open": "Öppna inställningar för Grok Bot-följeslagaren", "chat_play_cine": "Spela i Cinemarchy", "chat_play_yt": "Spela på YouTube", "chat_play_video": "Spela video i TV:ns webbläsare", "chat_open_link": "Öppna länken i TV:ns webbläsare",
         "t_companion_chat": "Chatta med Grok Bot-följeslagaren", "t_companion_hide": "Dölj följeslagaren (Blå tar tillbaka den)", "w_racing_bar": "motorsportnedräkning i fältet", "w_devmode_extend": "utvecklarläge · jag tryckte nyss på EXTEND", "t_companion_title": "Grok Bot-följeslagare",
         "w_term": "terminal · logga", "w_deploy": "driftsättningar · pc", "t_companion_settings": "Följeslagarens inställningar",
@@ -1637,6 +1644,7 @@
     "da": {
       "name": "Dansk",
       "strings": {
+        "chat_clear": "Ryd denne chat", "agent_pc": "Grok Bot på min pc (omarchy-link)", "agent_web": "Grok på grok.com (TV'ets browser)", "chat_ph": "Spørg om hvad som helst, eller sig »åbn Netflix«…",
         "chat_ask": "Spørg", "chat_thinking": "tænker…", "chat_type": "Skriv et spørgsmål ovenfor, eller brug 🎤", "chat_speak": "Tal", "chat_novoice": "Stemme: ikke tilgængelig på dette TV · kun tastatur", "chat_agent": "Agent", "t_companion_open": "Åbn indstillinger for Grok Bot-ledsageren", "chat_play_cine": "Afspil i Cinemarchy", "chat_play_yt": "Afspil på YouTube", "chat_play_video": "Afspil video i TV'ets browser", "chat_open_link": "Åbn link i TV'ets browser",
         "t_companion_chat": "Chat med Grok Bot-ledsageren", "t_companion_hide": "Skjul ledsageren (Blå henter den tilbage)", "w_racing_bar": "motorsportnedtælling i bjælken", "w_devmode_extend": "udviklertilstand · jeg har lige trykket EXTEND", "t_companion_title": "Grok Bot-ledsager",
         "w_term": "terminal · logo", "w_deploy": "udrulninger · pc", "t_companion_settings": "Ledsagerens indstillinger",
@@ -1870,6 +1878,7 @@
     "cs": {
       "name": "Čeština",
       "strings": {
+        "chat_clear": "Vymazat tento chat", "agent_pc": "Grok Bot na mém PC (omarchy-link)", "agent_web": "Grok na grok.com (prohlížeč TV)", "chat_ph": "Zeptejte se, nebo řekněte „otevři Netflix“…",
         "chat_ask": "Zeptat se", "chat_thinking": "přemýšlí…", "chat_type": "Napište otázku výše nebo použijte 🎤", "chat_speak": "Mluvit", "chat_novoice": "Hlas: na této TV není · jen klávesnice", "chat_agent": "Agent", "t_companion_open": "Otevřít nastavení společníka Grok Bot", "chat_play_cine": "Přehrát v Cinemarchy", "chat_play_yt": "Přehrát na YouTube", "chat_play_video": "Přehrát video v prohlížeči TV", "chat_open_link": "Otevřít odkaz v prohlížeči TV",
         "t_companion_chat": "Chat se společníkem Grok Bot", "t_companion_hide": "Skrýt společníka (Modrá ho vrátí)", "w_racing_bar": "odpočet závodů v liště", "w_devmode_extend": "vývojářský režim · právě jsem stiskl EXTEND", "t_companion_title": "Společník Grok Bot",
         "w_term": "terminál · logo", "w_deploy": "nasazení · pc", "t_companion_settings": "Nastavení společníka",
@@ -2103,6 +2112,7 @@
     "ro": {
       "name": "Română",
       "strings": {
+        "chat_clear": "Șterge acest chat", "agent_pc": "Grok Bot pe PC-ul meu (omarchy-link)", "agent_web": "Grok pe grok.com (browserul TV)", "chat_ph": "Întreabă orice sau spune „deschide Netflix”…",
         "chat_ask": "Întreabă", "chat_thinking": "se gândește…", "chat_type": "Scrie o întrebare mai sus sau folosește 🎤", "chat_speak": "Vorbește", "chat_novoice": "Voce: indisponibilă pe acest TV · doar tastatură", "chat_agent": "Agent", "t_companion_open": "Deschide setările companionului Grok Bot", "chat_play_cine": "Redă în Cinemarchy", "chat_play_yt": "Redă pe YouTube", "chat_play_video": "Redă video în browserul TV", "chat_open_link": "Deschide linkul în browserul TV",
         "t_companion_chat": "Chat cu companionul Grok Bot", "t_companion_hide": "Ascunde companionul (Albastru îl aduce înapoi)", "w_racing_bar": "numărătoare curse în bară", "w_devmode_extend": "mod dezvoltator · tocmai am apăsat EXTEND", "t_companion_title": "Companion Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "implementări · pc", "t_companion_settings": "Setări companion",
@@ -2336,6 +2346,7 @@
     "el": {
       "name": "Ελληνικά",
       "strings": {
+        "chat_clear": "Διαγραφή συνομιλίας", "agent_pc": "Grok Bot στο PC μου (omarchy-link)", "agent_web": "Grok στο grok.com (browser της TV)", "chat_ph": "Ρωτήστε ό,τι θέλετε ή πείτε «άνοιξε Netflix»…",
         "chat_ask": "Ρώτα", "chat_thinking": "σκέφτεται…", "chat_type": "Γράψτε μια ερώτηση παραπάνω ή χρησιμοποιήστε 🎤", "chat_speak": "Μίλα", "chat_novoice": "Φωνή: μη διαθέσιμη σε αυτή την TV · μόνο πληκτρολόγιο", "chat_agent": "Πράκτορας", "t_companion_open": "Άνοιγμα ρυθμίσεων συντρόφου Grok Bot", "chat_play_cine": "Αναπαραγωγή στο Cinemarchy", "chat_play_yt": "Αναπαραγωγή στο YouTube", "chat_play_video": "Αναπαραγωγή βίντεο στον browser της TV", "chat_open_link": "Άνοιγμα συνδέσμου στον browser της TV",
         "t_companion_chat": "Συνομιλία με τον σύντροφο Grok Bot", "t_companion_hide": "Απόκρυψη συντρόφου (το Μπλε τον επαναφέρει)", "w_racing_bar": "αντίστροφη μέτρηση αγώνων στη γραμμή", "w_devmode_extend": "λειτουργία προγραμματιστή · μόλις πάτησα EXTEND", "t_companion_title": "Σύντροφος Grok Bot",
         "w_term": "τερματικό · λογότυπο", "w_deploy": "αναπτύξεις · pc", "t_companion_settings": "Ρυθμίσεις συντρόφου",
@@ -2569,6 +2580,7 @@
     "ru": {
       "name": "Русский",
       "strings": {
+        "chat_clear": "Очистить этот чат", "agent_pc": "Grok Bot на моём ПК (omarchy-link)", "agent_web": "Grok на grok.com (браузер ТВ)", "chat_ph": "Спросите что угодно или скажите «открой Netflix»…",
         "chat_ask": "Спросить", "chat_thinking": "думает…", "chat_type": "Введите вопрос выше или используйте 🎤", "chat_speak": "Говорить", "chat_novoice": "Голос: недоступен на этом ТВ · только клавиатура", "chat_agent": "Агент", "t_companion_open": "Открыть настройки компаньона Grok Bot", "chat_play_cine": "Воспроизвести в Cinemarchy", "chat_play_yt": "Воспроизвести на YouTube", "chat_play_video": "Воспроизвести видео в браузере ТВ", "chat_open_link": "Открыть ссылку в браузере ТВ",
         "t_companion_chat": "Чат с компаньоном Grok Bot", "t_companion_hide": "Скрыть компаньона (Синяя вернёт его)", "w_racing_bar": "обратный отсчёт гонок в панели", "w_devmode_extend": "режим разработчика · только что нажал EXTEND", "t_companion_title": "Компаньон Grok Bot",
         "w_term": "терминал · логотип", "w_deploy": "развёртывания · pc", "t_companion_settings": "Настройки компаньона",
@@ -2802,6 +2814,7 @@
     "zh-CN": {
       "name": "简体中文",
       "strings": {
+        "chat_clear": "清除此聊天", "agent_pc": "我电脑上的 Grok Bot（omarchy-link）", "agent_web": "grok.com 上的 Grok（电视浏览器）", "chat_ph": "随便问，或说“打开 Netflix”…",
         "chat_ask": "询问", "chat_thinking": "正在思考…", "chat_type": "在上方输入问题，或使用 🎤", "chat_speak": "说话", "chat_novoice": "语音：此电视不可用 · 仅键盘", "chat_agent": "智能体", "t_companion_open": "打开 Grok Bot 伙伴设置", "chat_play_cine": "在 Cinemarchy 中播放", "chat_play_yt": "在 YouTube 上播放", "chat_play_video": "在电视浏览器中播放视频", "chat_open_link": "在电视浏览器中打开链接",
         "t_companion_chat": "与 Grok Bot 伙伴聊天", "t_companion_hide": "隐藏伙伴（蓝键可唤回）", "w_racing_bar": "栏中的赛车倒计时", "w_devmode_extend": "开发者模式 · 我刚按了 EXTEND", "t_companion_title": "Grok Bot 伙伴",
         "w_term": "终端 · 标志", "w_deploy": "部署 · pc", "t_companion_settings": "伙伴设置",
@@ -2869,7 +2882,7 @@
         "pulse_notice": "新屏保：Omarchy Pulse。在 设置 › 屏保 中更换或恢复。", "ss_pulse_scene": "Pulse 场景", "ss_restore_previous": "之前的屏保",
         "random_scope": "随机范围", "random_intros": "动画开场", "random_all": "全部主题",
         "random_wallpaper": "随机壁纸 / 开场",
-        "sys_plugins": "插件（SpaceX TV 和 Grok Bot）",
+        "sys_plugins": "插件（SpaceX TV · Grok Bot）",
         "reset_order": "重置应用顺序",
         "order_reset": "应用顺序已重置",
         "wx_title": "天气",
@@ -3035,6 +3048,7 @@
     "ja": {
       "name": "日本語",
       "strings": {
+        "chat_clear": "このチャットを消去", "agent_pc": "自分の PC の Grok Bot（omarchy-link）", "agent_web": "grok.com の Grok（テレビのブラウザ）", "chat_ph": "何でも質問、または「Netflix を開いて」…",
         "chat_ask": "質問:", "chat_thinking": "考え中…", "chat_type": "上に質問を入力するか 🎤 を使う", "chat_speak": "話す", "chat_novoice": "音声: このテレビでは使えません · キーボードのみ", "chat_agent": "エージェント", "t_companion_open": "Grok Bot コンパニオン設定を開く", "chat_play_cine": "Cinemarchy で再生", "chat_play_yt": "YouTube で再生", "chat_play_video": "テレビのブラウザで動画を再生", "chat_open_link": "テレビのブラウザでリンクを開く",
         "t_companion_chat": "Grok Bot コンパニオンとチャット", "t_companion_hide": "コンパニオンを隠す（青で戻す）", "w_racing_bar": "バーにレースのカウントダウン", "w_devmode_extend": "開発者モード · EXTEND を押した", "t_companion_title": "Grok Bot コンパニオン",
         "w_term": "ターミナル · ロゴ", "w_deploy": "デプロイ · pc", "t_companion_settings": "コンパニオン設定",
@@ -3102,7 +3116,7 @@
         "pulse_notice": "新しいスクリーンセーバー: Omarchy Pulse。変更や元に戻すには 設定 › スクリーンセーバー。", "ss_pulse_scene": "Pulse のシーン", "ss_restore_previous": "前のスクリーンセーバー",
         "random_scope": "ランダムの対象", "random_intros": "アニメーションのイントロ", "random_all": "すべてのテーマ",
         "random_wallpaper": "ランダムな壁紙 / イントロ",
-        "sys_plugins": "プラグイン（SpaceX TV と Grok Bot）",
+        "sys_plugins": "プラグイン（SpaceX TV · Grok Bot）",
         "reset_order": "アプリの順序をリセット",
         "order_reset": "アプリの順序をリセットしました",
         "wx_title": "天気",
@@ -3268,6 +3282,7 @@
     "ar": {
       "name": "العربية",
       "strings": {
+        "chat_clear": "مسح هذه الدردشة", "agent_pc": "Grok Bot على حاسوبي (omarchy-link)", "agent_web": "Grok على grok.com (متصفح التلفاز)", "chat_ph": "اسأل أي شيء أو قل «افتح Netflix»…",
         "chat_ask": "اسأل", "chat_thinking": "يفكّر…", "chat_type": "اكتب سؤالًا في الأعلى أو استخدم 🎤", "chat_speak": "تحدّث", "chat_novoice": "الصوت: غير متاح على هذا التلفاز · لوحة المفاتيح فقط", "chat_agent": "الوكيل", "t_companion_open": "فتح إعدادات رفيق Grok Bot", "chat_play_cine": "تشغيل في Cinemarchy", "chat_play_yt": "تشغيل على YouTube", "chat_play_video": "تشغيل الفيديو في متصفح التلفاز", "chat_open_link": "فتح الرابط في متصفح التلفاز",
         "t_companion_chat": "الدردشة مع رفيق Grok Bot", "t_companion_hide": "إخفاء الرفيق (الأزرق يعيده)", "w_racing_bar": "عدّ تنازلي للسباقات في الشريط", "w_devmode_extend": "وضع المطوّر · ضغطت EXTEND للتو", "t_companion_title": "رفيق Grok Bot",
         "w_term": "الطرفية · الشعار", "w_deploy": "عمليات النشر · pc", "t_companion_settings": "إعدادات الرفيق",
@@ -3501,6 +3516,7 @@
     "tr": {
       "name": "Türkçe",
       "strings": {
+        "chat_clear": "Bu sohbeti temizle", "agent_pc": "PC'mdeki Grok Bot (omarchy-link)", "agent_web": "grok.com'da Grok (TV tarayıcısı)", "chat_ph": "Bir şey sorun ya da “Netflix'i aç” deyin…",
         "chat_ask": "Sor:", "chat_thinking": "düşünüyor…", "chat_type": "Yukarıya bir soru yazın ya da 🎤 kullanın", "chat_speak": "Konuş", "chat_novoice": "Ses: bu TV'de yok · yalnızca klavye", "chat_agent": "Ajan", "t_companion_open": "Grok Bot yardımcı ayarlarını aç", "chat_play_cine": "Cinemarchy'de oynat", "chat_play_yt": "YouTube'da oynat", "chat_play_video": "Videoyu TV tarayıcısında oynat", "chat_open_link": "Bağlantıyı TV tarayıcısında aç",
         "t_companion_chat": "Grok Bot yardımcısıyla sohbet", "t_companion_hide": "Yardımcıyı gizle (Mavi geri getirir)", "w_racing_bar": "çubukta yarış geri sayımı", "w_devmode_extend": "geliştirici modu · EXTEND'e az önce bastım", "t_companion_title": "Grok Bot yardımcısı",
         "w_term": "terminal · logo", "w_deploy": "dağıtımlar · pc", "t_companion_settings": "Yardımcı ayarları",
@@ -3734,6 +3750,7 @@
     "uk": {
       "name": "Українська",
       "strings": {
+        "chat_clear": "Очистити цей чат", "agent_pc": "Grok Bot на моєму ПК (omarchy-link)", "agent_web": "Grok на grok.com (браузер ТБ)", "chat_ph": "Запитайте будь-що або скажіть «відкрий Netflix»…",
         "chat_ask": "Запитати", "chat_thinking": "думає…", "chat_type": "Введіть запитання вище або скористайтеся 🎤", "chat_speak": "Говорити", "chat_novoice": "Голос: недоступний на цьому ТБ · лише клавіатура", "chat_agent": "Агент", "t_companion_open": "Відкрити налаштування компаньйона Grok Bot", "chat_play_cine": "Відтворити в Cinemarchy", "chat_play_yt": "Відтворити на YouTube", "chat_play_video": "Відтворити відео в браузері ТБ", "chat_open_link": "Відкрити посилання в браузері ТБ",
         "t_companion_chat": "Чат із компаньйоном Grok Bot", "t_companion_hide": "Сховати компаньйона (Синя поверне його)", "w_racing_bar": "зворотний відлік перегонів у панелі", "w_devmode_extend": "режим розробника · щойно натиснув EXTEND", "t_companion_title": "Компаньйон Grok Bot",
         "w_term": "термінал · логотип", "w_deploy": "розгортання · pc", "t_companion_settings": "Налаштування компаньйона",
@@ -3967,6 +3984,7 @@
     "hu": {
       "name": "Magyar",
       "strings": {
+        "chat_clear": "Csevegés törlése", "agent_pc": "Grok Bot a gépemen (omarchy-link)", "agent_web": "Grok a grok.com-on (tévé böngészője)", "chat_ph": "Kérdezz bármit, vagy mondd: „nyisd meg a Netflixet”…",
         "chat_ask": "Kérdezd:", "chat_thinking": "gondolkodik…", "chat_type": "Írj fent egy kérdést, vagy használd a 🎤-t", "chat_speak": "Beszéd", "chat_novoice": "Hang: ezen a tévén nem elérhető · csak billentyűzet", "chat_agent": "Ügynök", "t_companion_open": "Grok Bot társ beállításai", "chat_play_cine": "Lejátszás a Cinemarchyban", "chat_play_yt": "Lejátszás a YouTube-on", "chat_play_video": "Videó lejátszása a tévé böngészőjében", "chat_open_link": "Link megnyitása a tévé böngészőjében",
         "t_companion_chat": "Csevegés a Grok Bot társsal", "t_companion_hide": "Társ elrejtése (a Kék visszahozza)", "w_racing_bar": "verseny-visszaszámlálás a sávban", "w_devmode_extend": "fejlesztői mód · most nyomtam meg az EXTEND-et", "t_companion_title": "Grok Bot társ",
         "w_term": "terminál · logó", "w_deploy": "telepítések · pc", "t_companion_settings": "Társ beállításai",
@@ -4200,6 +4218,7 @@
     "fi": {
       "name": "Suomi",
       "strings": {
+        "chat_clear": "Tyhjennä tämä keskustelu", "agent_pc": "Grok Bot koneellani (omarchy-link)", "agent_web": "Grok grok.comissa (TV:n selain)", "chat_ph": "Kysy mitä vain tai sano ”avaa Netflix”…",
         "chat_ask": "Kysy", "chat_thinking": "miettii…", "chat_type": "Kirjoita kysymys yllä tai käytä 🎤", "chat_speak": "Puhu", "chat_novoice": "Ääni: ei käytettävissä tässä TV:ssä · vain näppäimistö", "chat_agent": "Agentti", "t_companion_open": "Avaa Grok Bot -kumppanin asetukset", "chat_play_cine": "Toista Cinemarchyssa", "chat_play_yt": "Toista YouTubessa", "chat_play_video": "Toista video TV:n selaimessa", "chat_open_link": "Avaa linkki TV:n selaimessa",
         "t_companion_chat": "Keskustele Grok Bot -kumppanin kanssa", "t_companion_hide": "Piilota kumppani (Sininen tuo takaisin)", "w_racing_bar": "kilpa-ajojen laskuri palkissa", "w_devmode_extend": "kehittäjätila · painoin juuri EXTEND", "t_companion_title": "Grok Bot -kumppani",
         "w_term": "pääte · logo", "w_deploy": "julkaisut · pc", "t_companion_settings": "Kumppanin asetukset",
@@ -4433,6 +4452,7 @@
     "nb": {
       "name": "Norsk bokmål",
       "strings": {
+        "chat_clear": "Tøm denne chatten", "agent_pc": "Grok Bot på PC-en min (omarchy-link)", "agent_web": "Grok på grok.com (TV-nettleseren)", "chat_ph": "Spør om hva som helst, eller si «åpne Netflix»…",
         "chat_ask": "Spør", "chat_thinking": "tenker…", "chat_type": "Skriv et spørsmål over, eller bruk 🎤", "chat_speak": "Snakk", "chat_novoice": "Stemme: ikke tilgjengelig på denne TV-en · bare tastatur", "chat_agent": "Agent", "t_companion_open": "Åpne innstillinger for Grok Bot-følgesvennen", "chat_play_cine": "Spill av i Cinemarchy", "chat_play_yt": "Spill av på YouTube", "chat_play_video": "Spill av video i TV-nettleseren", "chat_open_link": "Åpne lenken i TV-nettleseren",
         "t_companion_chat": "Chat med Grok Bot-følgesvennen", "t_companion_hide": "Skjul følgesvennen (Blå henter den tilbake)", "w_racing_bar": "motorsportnedtelling i linjen", "w_devmode_extend": "utviklermodus · trykket nettopp EXTEND", "t_companion_title": "Grok Bot-følgesvenn",
         "w_term": "terminal · logo", "w_deploy": "utrullinger · pc", "t_companion_settings": "Innstillinger for følgesvenn",
