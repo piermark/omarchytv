@@ -49,12 +49,12 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 - **The TV is the theme server for your other apps** (asked for by a Hermes user who ran a second server just for
   this): `GET http://<tv>:47800/v1/theme` returns `background`, `foreground`, `accent`, `accent2`, the full
   `colors.toml` palette and the wallpaper (`/v1/theme/wallpaper`). No token, read-only, LAN / tailnet only,
-  `ETag`/`304`, CORS. The LG/Samsung bridge answers the same. Off switch in Settings › Omarchy Link.
+  `ETag`/`304`, CORS. The LG/Samsung bridge answers the same. Off switch in Settings › Connect Omarchy Linux.
 - **`omarchytv.js`**, served by the TV at `/v1/sdk/omarchytv.js`: `followTheme()` (CSS variables `--otv-*`, live),
   `state()`, `on()`, `notify()`, `ask()`, `badge()`, and `OmarchyTV.remote()`: arrows move the focus between the
   page's buttons and links, OK clicks, colour and media keys by name, the focus outlined in the theme's accent.
 - **App tokens**: a dashboard or an agent gets its own token with one scope, `read`, `notify` or `control`. Made on
-  the PC (`omarchy-link token add "Kitchen" --scope read`) or on the TV (Settings › Omarchy Link › New app token,
+  the PC (`omarchy-link token add "Kitchen" --scope read`) or on the TV (Settings › Connect Omarchy Linux › New app token,
   shown once as text and QR). Only a hash is kept; the last use is remembered; revoke one from the PC or all from
   the TV (a revoked token's live stream ends at once).
 
@@ -71,7 +71,7 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 ### Tailscale (optional, off by default)
 
 - **Use OmarchyTV from anywhere over your tailnet**: pairing, theme, remote, Radiomarchy, notifications,
-  questions, pages, MCP, casts and Remote panes. TV: install the official Tailscale app (Settings › Omarchy Link ›
+  questions, pages, MCP, casts and Remote panes. TV: install the official Tailscale app (Settings › Connect Omarchy Linux ›
   **Tailscale app** opens it or its Play Store page, or a QR code for the phone), then **Allow Tailscale**; the row
   shows the TV's tailnet address. PC: `omarchy-link tailscale on`; `discover` and `pair living-tv` find tailnet TVs
   and MagicDNS names through tailscaled; `tailscale status` shows each TV and whether the path is direct or relayed;
@@ -121,7 +121,7 @@ reachable from home, from your tailnet and, carefully, from the cloud.
   The demo after a minute is off by default there. Every quality choice uses the same 2.5 GB line.
 - **No audio analysis nobody sees**: the music's bands are computed only while the equaliser, a live fractal or the
   screensaver is on screen. Radiomarchy playing behind the Home costs only the decoding.
-- **Link after boot**: Settings › Omarchy Link › *Keep Link reachable after boot* (`"link": {"keepAlive": …}`).
+- **Link after boot**: Settings › Connect Omarchy Linux › *Keep Link reachable after boot* (`"link": {"keepAlive": …}`).
   *auto* keeps the resident service of #144 only on TVs with more than 2.5 GB of RAM. On a 1-2 GB TV, Link answers
   while OmarchyTV is open. *on* forces it, *off* turns it off.
 

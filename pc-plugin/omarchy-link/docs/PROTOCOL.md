@@ -296,7 +296,7 @@ Read-only, no pairing, no token. The TV answers it on the Link port (47800), and
   so a page served from another box can `fetch()` it.
 - LAN only, like every Link route: a peer outside the TV's subnet gets `403 not_lan`. Nothing here can change the
   TV; `PUT /v1/theme` still needs a paired, signed PC.
-- Off switch: Settings > Omarchy Link > "Share theme with apps on the network", or `"link": {"shareTheme": false}`
+- Off switch: Settings > Connect Omarchy Linux > "Share theme with apps on the network", or `"link": {"shareTheme": false}`
   in `omarchytv.json` → `403 theme_sharing_off`.
 
 ```sh

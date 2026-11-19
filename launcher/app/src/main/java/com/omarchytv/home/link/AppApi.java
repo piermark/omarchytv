@@ -464,7 +464,7 @@ final class AppApi {
             synchronized (asks) {
                 asks.remove(ask.id);
             }
-            return new LinkServer.Response(403, LinkServer.err(e, "turn on agent alerts on the TV (Settings > Omarchy Link)"));
+            return new LinkServer.Response(403, LinkServer.err(e, "turn on agent alerts on the TV (Settings > Grok Bot & AI > AI agent alerts while you watch)"));
         }
         return new LinkServer.Response(200, ask.json(now));
     }

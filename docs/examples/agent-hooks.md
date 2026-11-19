@@ -1,7 +1,7 @@
 # Agent hooks for OmarchyTV 2.21
 
 Every hook below calls `omarchy-link notify` on the paired PC. `-q` never fails the agent. On the TV, turn on agent
-alerts (Settings › Omarchy Link).
+alerts (Settings › Grok Bot & AI › AI agent alerts while you watch).
 
 ## Claude Code (`~/.claude/settings.json`)
 

@@ -254,14 +254,14 @@ def cmd_notify(a, cfg):
         far = getattr(e, "code", "") in NOT_REACHABLE
         if a.quiet:
             if getattr(a, "hint", False) and (off or far):   # watch: the command's result wins; say why the TV is silent
-                why = "turn on agent alerts (Settings > Omarchy Link)." if off else NOT_REACHABLE_HINT
+                why = "turn on agent alerts (Settings > Grok Bot & AI > AI agent alerts while you watch)." if off else NOT_REACHABLE_HINT
                 print("omarchy-link watch: the TV did not show it: " + why, file=sys.stderr)
             return 0
         if far:
             print(NOT_REACHABLE_HINT, file=sys.stderr)
             return 1
         if off:
-            print("The TV does not show notifications: turn on agent alerts (Settings > Omarchy Link).", file=sys.stderr)
+            print("The TV does not show notifications: turn on agent alerts (Settings > Grok Bot & AI > AI agent alerts while you watch).", file=sys.stderr)
             return 4
         print(f"omarchy-link notify: {e}", file=sys.stderr)
         return 1
@@ -269,7 +269,7 @@ def cmd_notify(a, cfg):
 
 NOT_REACHABLE = ("not_lan", "not_tailnet")
 NOT_REACHABLE_HINT = ("The TV refused this address (not on its LAN). Over Tailscale, turn on the TV's switch "
-                      "(Settings > Omarchy Link > Tailscale) and run omarchy-link tailscale on.")
+                      "(Settings > Connect Omarchy Linux > Allow Tailscale) and run omarchy-link tailscale on.")
 
 
 def _alerts_off(e) -> bool:
@@ -328,7 +328,7 @@ def remote_setup(cfg, token: str) -> str:
     base = f"http://{host}:47800"
     lines = ["", "From another machine on your tailnet:"]
     if not on:
-        lines.append("  first turn on the TV's switch: Settings > Omarchy Link > Tailscale")
+        lines.append("  first turn on the TV's switch: Settings > Connect Omarchy Linux > Allow Tailscale")
     lines += [
         f"  curl -s -X POST {base}/v1/notify -H 'Authorization: Bearer {token}' -d '{{\"text\":\"build done\"}}'",
         f"  claude mcp add --transport http omarchytv {base}/v1/mcp --header 'Authorization: Bearer {token}'",
@@ -357,7 +357,7 @@ def cmd_ask(a, cfg):
             print(NOT_REACHABLE_HINT, file=sys.stderr)
             return 1
         if _alerts_off(e):
-            print("The TV does not take questions: turn on agent alerts (Settings > Omarchy Link).", file=sys.stderr)
+            print("The TV does not take questions: turn on agent alerts (Settings > Grok Bot & AI > AI agent alerts while you watch).", file=sys.stderr)
             return 4
         raise
     import time as _t
@@ -1269,7 +1269,7 @@ def cmd_tailscale(a, cfg):
     if a.action in ("on", "off"):
         config.save_config({"tailscale": a.action == "on"})
         if a.action == "on":
-            print("Tailscale on for this PC. On the TV: Settings > Omarchy Link > Allow Tailscale (tailnet).")
+            print("Tailscale on for this PC. On the TV: Settings > Connect Omarchy Linux > Allow Tailscale (tailnet).")
             print("Then: omarchy-link discover   (or: omarchy-link pair <tv-name>)   See docs/TAILSCALE.md.")
         else:
             print("Tailscale off: Omarchy Link talks to the local network only.")

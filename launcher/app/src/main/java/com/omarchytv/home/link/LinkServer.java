@@ -425,7 +425,7 @@ public final class LinkServer {
             OutputStream out = sock.getOutputStream();
             if (!host.allowPeer(peer)) {
                 Response r = new Response(403, err("not_lan", Tailnet.isTailnet(peer)
-                        ? "a Tailscale address: turn on Settings > Omarchy Link > Allow Tailscale on the TV" : "LAN clients only"));
+                        ? "a Tailscale address: turn on Settings > Connect Omarchy Linux > Allow Tailscale on the TV" : "LAN clients only"));
                 r.close = true;
                 write(out, r);
                 return;
@@ -1074,7 +1074,7 @@ public final class LinkServer {
         } else {
             JSONObject theme = host.sharedTheme();
             if (theme == null) {
-                r = new Response(403, err("theme_sharing_off", "Settings > Omarchy Link > Share theme with apps on the network"));
+                r = new Response(403, err("theme_sharing_off", "Settings > Connect Omarchy Linux > Share theme with apps on the network"));
             } else if (!image) {
                 byte[] body = LinkCrypto.utf8(theme.toString());
                 r = conditional(req, new Response(200, body, "application/json"), sha256Hex(body));
@@ -1914,7 +1914,7 @@ public final class LinkServer {
         if (text.isEmpty() && title.isEmpty()) return new Response(400, err("bad_notify", "text is required"));
         if (from.isEmpty()) from = "PC";
         String r = host.notify(from, title, text, level);
-        if (r == null) return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Omarchy Link)"));
+        if (r == null) return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Grok Bot & AI > AI agent alerts while you watch)"));
         if (b.optBoolean("speak") && "shown".equals(r)) host.speak(title.isEmpty() ? text : title + ". " + text);
         host.log("notify from " + from + " (" + level + ", " + r + ")");
         app.event("notify", new JSONObject().put("from", from).put("title", title).put("text", text).put("level", level));

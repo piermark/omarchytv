@@ -57,7 +57,7 @@ Ethernet network under the VPN.
 
 **After a reboot.** On a TV with more than 2.5 GB of RAM, Link starts at boot and stays reachable. A 1-2 GB TV
 (the Sony class) keeps no resident service by default: Link answers once OmarchyTV is open, which is the case when
-it is your Home. To reach such a TV from far away right after it reboots, turn on Settings › Omarchy Link ›
+it is your Home. To reach such a TV from far away right after it reboots, turn on Settings › Connect Omarchy Linux ›
 *Keep Link reachable after boot*, or from the PC: `omarchy-link tv keepalive on` (`tv keepalive` shows the
 setting and whether it is active on that TV).
 
@@ -122,7 +122,7 @@ Tag the TV (`tag:tv`) in the admin console. `omarchy-link tailscale acl` prints 
 
 `GET /v1/theme` and `/v1/theme/wallpaper` need no token, on the tailnet as on the LAN: any tailnet device that can
 reach the TV, devices **shared** into your tailnet included, can read your colours and wallpaper (nothing else).
-If that matters, turn off Settings › Omarchy Link › Share theme with apps on the network, or narrow who reaches
+If that matters, turn off Settings › Connect Omarchy Linux › Share theme with apps on the network, or narrow who reaches
 port 47800 with an ACL (`omarchy-link tailscale acl`). Everything else needs pairing or an app token.
 
 ## Limits

@@ -79,6 +79,23 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ---
 
+## What's New in `2.21.0` (`versionCode 30`)
+
+**OmarchyTV becomes the screen of your AI agents and dashboards.** Guides: the [2.21 user guide](docs/OMARCHYTV-2.21-GUIDE.md) (every switch and command), [remote access and AI agents](docs/REMOTE-AND-AI-GUIDE.md) (Tailscale, Cloudflare, MCP, Claude Code, Codex, Hermes), the [integrations reference](docs/INTEGRATIONS.md), a [five-minute tour](docs/WHATS-NEW-2.21.md), the [CHANGELOG](CHANGELOG.md).
+
+- **Agents talk to you on the TV**: `omarchy-link notify` (mako-style, *info* waits during a film, *warn*/*alert* show at once, `--speak` reads it aloud), `omarchy-link watch -- make release`, and `omarchy-link ask` answered with the remote. The TV needs **Settings › Grok Bot & AI › AI agent alerts while you watch**.
+- **Approve from the couch**: `omarchy-link agents approvals on` sends Claude Code's permission prompts to the TV (Allow / Deny / On the PC). No answer means the usual prompt: nothing is allowed by itself.
+- **MCP everywhere**: `claude mcp add omarchytv -- omarchy-link mcp`, the TV's own `/v1/mcp` with app tokens, `omarchy-tv mcp --http --tailscale`, or a Cloudflare tunnel behind Access. Tools are scoped read < notify < control.
+- **The theme server for your other apps**: `GET /v1/theme`, app tokens (`omarchy-link token`, or a QR code on the TV), live state and Server-Sent Events, a JavaScript SDK (`/v1/sdk/omarchytv.js`), diagnostics, backup and restore.
+- **Pages and tiles, Hyprland style**: LAN pages full screen or up to 4 tiled, agent pages as Home tiles with badges, room panes on the Home (`omarchy-link room post`, MCP `tv_room_post`), and a read-only couch console of a tmux pane (`omarchy-link console`).
+- **Your PC talks to the TV**: the Omarchy hook pack (`omarchy-link hook add all`: boot, update, battery low spoken, font, theme) and spoken reminders (`omarchy-link remind 20m "Pizza"`).
+- **From anywhere**: Tailscale (off by default, IPv4 and IPv6, MagicDNS pairing, an ACL helper, `token add --remote` for a machine elsewhere), Cloudflare Tunnel with Access for cloud agents. LG and Samsung through a Raspberry Pi.
+- **Hermes Agent, Codex, GitHub Actions, Home Assistant**: ready-made configs, hooks and a Hermes skill in [docs/examples/](docs/examples/).
+- **Home is Last Horizon "Eyes Wide" again** (Erik Johansson's eyes, looping; a 540p / 15 fps copy on weak TVs, the still if a TV cannot keep up). Only if you never picked a wallpaper. Music on Home is off by default.
+- **Lighter on 2 GB TVs**: no live fractals in the demo or the Radiomarchy screensaver unless you ask, no audio analysis nobody sees, no resident service (*Keep Link reachable after boot*: auto), theme intros only as a light copy.
+- **LG and Samsung**: the same notifications, questions and pages through the PC bridge (agents have their own key and cannot answer themselves), Arrange panels for real, every title in the TV's language.
+- **Also**: Radiomarchy sleep timer and the song's QR code, the LG "music played once" fix, Grok Bot built for Tom Ballard's Agent Desktop v0.3.3, [install notes](docs/INSTALL-TIPS.md) for Hisense, TCL and Fire TV, eight community pull requests merged.
+
 ## What's New in `2.20.0` (`versionCode 29`)
 
 User guide: [docs/OMARCHYTV-2.20-GUIDE.md](docs/OMARCHYTV-2.20-GUIDE.md). Built on the published 2.15.1.
@@ -245,6 +262,7 @@ One shared web app, two version numbers: the Samsung widget is numbered 2.13.6 s
 - **GrokBot Office (2.20)**: optional, off by default. Your Grok Bot bots at their desks; Claude and ChatGPT through the paired PC, keys only on the PC. [docs/GROKBOT-DIRECT.md](docs/GROKBOT-DIRECT.md), [pc-plugin/omarchy-link/docs/OFFICE.md](pc-plugin/omarchy-link/docs/OFFICE.md).
 - **The screen of your agents and dashboards (2.21)**: the TV is the theme server for your other apps (`GET /v1/theme`), with app tokens, live state and events, a JavaScript SDK, notifications and questions you answer with the remote, LAN pages full screen, diagnostics, and MCP from your tailnet or, behind Cloudflare Access, from the cloud. [What's new](docs/WHATS-NEW-2.21.md) · [docs/INTEGRATIONS.md](docs/INTEGRATIONS.md) · [Tailscale](docs/TAILSCALE.md) · [Cloudflare](docs/CLOUDFLARE.md) · [Raspberry Pi](docs/RASPBERRY-PI.md).
 - **Tailscale (2.21)**: optional, off by default. Pair and use the TV over your tailnet; LG and Samsung through a Raspberry Pi subnet router. [docs/TAILSCALE.md](docs/TAILSCALE.md).
+- **AI agents on the TV (2.21)**: approve Claude Code's actions with the remote, room panes and spoken reminders for Hermes and other agents, the Omarchy hook pack, a read-only couch console. [Remote access and AI agents guide](docs/REMOTE-AND-AI-GUIDE.md) · [2.21 user guide](docs/OMARCHYTV-2.21-GUIDE.md).
 - **OmarchyTV Arcade (2.14–2.15)**: nine text-mode games, four of them for two players (PIPE DUEL, OMASLOT, PANE PONG, LAST WINDOW); on Android TV your phone is the gamepad (scan the QR in the arcade's sign, nothing to install).
 - **Racing widget (2.15)**: F1, MotoGP, Moto2, Moto3, NASCAR, Formula E and WEC weekends live from the official sources, with a countdown to the next session in the panel (2.15.1), and as a side panel of the Pulse screensaver (Android TV, LG, Samsung). In 2.20 the Motorsport column is 382 px, so Grand Prix names stay in full.
 - **SpaceX TV plugin (2.20)**: the top-bar pill is off by default. Turn it on in Settings › Plugins; a setting already saved is kept.

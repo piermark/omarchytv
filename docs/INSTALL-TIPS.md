@@ -46,7 +46,7 @@ setting on every reboot: see #58.
 
 On TVs with more than 2.5 GB of RAM, Link starts at boot. On 1-2 GB TVs it starts when OmarchyTV opens, which is
 right away if OmarchyTV is your Home. If agents must reach the TV before that, set
-**Settings › Omarchy Link › Keep Link reachable after boot** to *on*, or run `omarchy-link tv keepalive on` on the PC.
+**Settings › Connect Omarchy Linux › Keep Link reachable after boot** to *on*, or run `omarchy-link tv keepalive on` on the PC.
 
 Some TVs (for example Sharp in standby) turn Wi-Fi off while they sleep. Nothing on the TV can answer then. Use
 Ethernet, or wake the TV first.

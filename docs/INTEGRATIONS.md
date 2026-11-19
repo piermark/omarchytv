@@ -1,5 +1,8 @@
 # Integrations: dashboards, AI agents and scripts (v2.21)
 
+> Looking for the step-by-step version? [REMOTE-AND-AI-GUIDE.md](REMOTE-AND-AI-GUIDE.md) walks through Tailscale,
+> Cloudflare and each agent; [OMARCHYTV-2.21-GUIDE.md](OMARCHYTV-2.21-GUIDE.md) lists every switch on the TV.
+
 OmarchyTV can be the screen of your setup: a dashboard on a stick that matches your Omarchy theme, an AI agent that
 tells you on the TV when it is done, a script that switches the theme at sunset. This page lists every way in, from
 the simplest (read-only, no pairing) to full control (MCP).
@@ -20,6 +23,12 @@ the simplest (read-only, no pairing) to full control (MCP).
 | The same, from another box | `omarchy-tv mcp --http --tailscale` | Bearer token, tailnet peers only | 2.21 |
 | The same, from the cloud | `omarchy-tv mcp --cloudflare NAME --access` | Cloudflare Access + Bearer token; read + notify by default | 2.21 |
 | Live AI agents and PC stats on the TV | `omarchy-link agents`, widgets, Remote panes | paired PC | 2.10–2.15 |
+| Approve Claude Code's actions on the TV | `omarchy-link agents approvals on` | paired PC | 2.21 |
+| A room pane on the Home, reminders said aloud | `omarchy-link room post`, `omarchy-link remind`, MCP `tv_room_post`, `tv_remind` | paired PC (`omarchy-link mcp`) | 2.21 |
+| Omarchy's own events (boot, update, battery, font, theme) | `omarchy-link hook add all` | paired PC | 2.21 |
+| A tmux pane or a log on the TV, read-only | `omarchy-link console` | paired PC | 2.21 |
+| Setup for a machine elsewhere on the tailnet | `omarchy-link token add NAME --remote` | app token | 2.21 |
+| Settings, backup, Link after boot, the Home | `omarchy-link tv backup / restore / keepalive / home / diagnostics` | paired PC | 2.21 |
 
 Everything that changes something on the TV needs either the paired PC or an **app token**:
 
@@ -31,7 +40,7 @@ omarchy-link token                                           # list
 omarchy-link token revoke 1a2b3c4d
 ```
 
-The token (`otva_…`) is printed once; the TV keeps only its SHA-256. Settings › Omarchy Link › **App tokens** shows
+The token (`otva_…`) is printed once; the TV keeps only its SHA-256. Settings › Connect Omarchy Linux › **App tokens** shows
 how many there are and revokes them all. At most 16. Android TV only (LG and Samsung have the theme on the bridge).
 
 ## 1. One theme for every app
@@ -60,7 +69,7 @@ setInterval(syncTheme, 15000);
 ```
 
 The full schema (`omarchytv-theme/1`) is in [PROTOCOL.md](../pc-plugin/omarchy-link/docs/PROTOCOL.md), "Theme for
-apps". Turn it off on the TV in Settings › Omarchy Link › **Share theme with apps on the network**.
+apps". Turn it off on the TV in Settings › Connect Omarchy Linux › **Share theme with apps on the network**.
 
 The TV is the canonical source: when the PC pushes its Omarchy theme, the TV serves it (`"source": "omarchy-pc"`);
 when you pick a theme on the TV, the TV serves that (`"source": "tv"`). Pages keep their colours even when the PC
@@ -90,7 +99,7 @@ omarchy-link watch -- make release      # runs it, then ✓ / ✗, the time and 
 Codex: `notify = ["omarchy-link", "notify", "-q", "--from", "Codex"]` in `~/.codex/config.toml` (its JSON event is
 understood). More in [examples/agent-hooks.md](examples/agent-hooks.md).
 
-It needs **agent alerts** on the TV (Settings › Omarchy Link, off by default). Exit codes: 0 shown, 4 alerts off on
+It needs **agent alerts** on the TV (Settings › Grok Bot & AI › AI agent alerts while you watch, off by default). Exit codes: 0 shown, 4 alerts off on
 the TV, 3 not paired. `--quiet` never fails, for hooks. At most 3 messages per 10 s, one line, 200 characters.
 
 ### Claude Code hook
