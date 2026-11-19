@@ -26,6 +26,19 @@ class BridgeClient:
         self.host, self.port = host, port
         self.token = token if token is not None else webos.bridge_agent_token()   # the agents' key, not the TV's
 
+    def status(self):
+        """tv_status on LG / Samsung: the bridge's own status (host, theme, now playing)."""
+        return self.request("GET", "/v1/status")
+
+    def __getattr__(self, name: str):
+        # v2.21 review: the Android-only calls (apps, launch, key, ...) answer "for Android TV", not AttributeError
+        if name.startswith("_"):
+            raise AttributeError(name)
+
+        def android_only(*_a, **_k):
+            raise BridgeError(404, {"error": "not_on_lg_samsung", "message": f"{name} is for Android TV (Omarchy Link)"})
+        return android_only
+
     def request(self, method: str, path: str, body=None, timeout: float = 8.0):
         if method == "DELETE" and path == "/v1/page":
             method, body = "POST", {"close": True}

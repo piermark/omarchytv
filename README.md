@@ -483,6 +483,7 @@ Both are in the screensaver picker. **Omarchy Aquarium (homage)** (`saverArt = "
 #### WireGuard on Android TV
 ```bash
 omarchy-tv wg push wg0.conf --tv 192.168.1.9:5555   # copies the .conf to /sdcard/Download on the TV
+omarchy-tv wg clean wg0 --tv 192.168.1.9:5555  # after the import: deletes the .conf (it holds the private key)
 omarchy-tv wg up wg0  --tv 192.168.1.9:5555
 omarchy-tv wg down wg0 --tv 192.168.1.9:5555
 ```

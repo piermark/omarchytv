@@ -36,6 +36,10 @@ def push_cmd(serial, conf_path):
     return adb_base(serial) + ["push", conf_path, f"{REMOTE_DIR}/{os.path.basename(conf_path)}"]
 
 
+def clean_cmd(serial, name):
+    return adb_base(serial) + ["shell", "rm", "-f", f"{REMOTE_DIR}/{name}.conf"]
+
+
 def toggle_cmd(serial, name, up: bool):
     action = PKG + (".action.SET_TUNNEL_UP" if up else ".action.SET_TUNNEL_DOWN")
     return adb_base(serial) + ["shell", "am", "broadcast", "-a", action, "-n", RECEIVER, "-e", "tunnel", name]
@@ -52,12 +56,12 @@ def parse_args(args):
     return serial, rest
 
 
-USAGE = "omarchy-tv wg push <wg0.conf> | up <NAME> | down <NAME> [--tv IP:5555|DEVICE]"
+USAGE = "omarchy-tv wg push <wg0.conf> | clean <NAME> | up <NAME> | down <NAME> [--tv IP:5555|DEVICE]"
 
 
 def run(args, runner=subprocess.run, say=print) -> int:
     serial, rest = parse_args(args)
-    if len(rest) < 2 or rest[0] not in ("push", "up", "down"):
+    if len(rest) < 2 or rest[0] not in ("push", "clean", "up", "down"):
         say(USAGE); return 2
     if runner is subprocess.run and not shutil.which("adb"):
         say("✗ adb not found (pacman -S android-tools)"); return 1
@@ -72,9 +76,16 @@ def run(args, runner=subprocess.run, say=print) -> int:
         if r.returncode == 0:
             say(f"✓ pushed to {REMOTE_DIR}/{os.path.basename(arg)}. On the TV: WireGuard → + → Import from file, "
                 f"then enable Advanced → Allow remote control apps, and use 'omarchy-tv wg up {name}'.")
+            say(f"! that file holds the tunnel's private key and any app with storage access can read it: once "
+                f"imported, delete it with 'omarchy-tv wg clean {name}'.")
         return r.returncode
     if not NAME_RE.match(arg):
         say(f"✗ invalid tunnel name '{arg}'"); return 2
+    if op == "clean":   # v2.21: the pushed .conf (with its PrivateKey) off the TV's Download folder
+        r = runner(clean_cmd(serial, arg))
+        if r.returncode == 0:
+            say(f"✓ removed {REMOTE_DIR}/{arg}.conf from the TV (the tunnel stays in the WireGuard app)")
+        return r.returncode
     r = runner(toggle_cmd(serial, arg, op == "up"))
     if r.returncode == 0:
         say(f"✓ tunnel {arg} {op} requested (check the WireGuard app if remote control is not allowed)")

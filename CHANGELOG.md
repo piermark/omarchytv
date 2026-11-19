@@ -137,6 +137,13 @@ reachable from home, from your tailnet and, carefully, from the cloud.
   own pairings and panes).
 - Guides: **docs/INTEGRATIONS.md**, **docs/TAILSCALE.md**, **docs/CLOUDFLARE.md**, **docs/RASPBERRY-PI.md**,
   **docs/openapi.yaml**; PROTOCOL.md "Theme for apps" and "App API".
+- **Fixed: Radiomarchy could crash on a slow GPU** with live fractals (screensaver or demo). The safety switch that
+  turns them off ran on the wrong thread. It was in since 2.20.
+- `omarchy-tv wg clean NAME` deletes the pushed WireGuard file from the TV's Download folder once imported (it holds
+  the private key); `wg push` now says so.
+- `notify`, `watch` and `ask` tell "agent alerts are off" apart from "this address is not allowed" (Tailscale switch
+  off). On LG and Samsung a question answered or expired elsewhere leaves the screen, and `tv_status` works over
+  the bridge (Android-only tools say so).
 
 ### Pull requests merged
 

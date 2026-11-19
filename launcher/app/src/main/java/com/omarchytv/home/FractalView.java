@@ -702,6 +702,13 @@ final class FractalView extends GLSurfaceView {
 
     private void stopPump() {
         pumpOn = false;
+        // v2.21: tripSafety also runs on the GL thread, which has no Looper and so no Choreographer: hand it over
+        if (android.os.Looper.myLooper() != android.os.Looper.getMainLooper()) {
+            ui.post(() -> {
+                if (!pumpOn) Choreographer.getInstance().removeFrameCallback(pump);
+            });
+            return;
+        }
         Choreographer.getInstance().removeFrameCallback(pump);
     }
 

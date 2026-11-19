@@ -136,5 +136,18 @@ class BridgeClientTest(BridgeRoutesTest):
         self.assertTrue(r["result"]["isError"])   # Android TV only: a clear error, not a crash
 
 
+
+class BridgeAndroidOnlyTest(unittest.TestCase):
+    def test_android_only_tools_say_so(self):
+        from omarchy_tv import bridge_client, mcp_server
+        c = bridge_client.BridgeClient("127.0.0.1", 9, "k")
+        for tool in ("tv_list_apps", "tv_send_key", "tv_launch_app"):
+            with self.assertRaises(bridge_client.BridgeError) as e:
+                mcp_server._call_tool(tool, {"key": "home", "package": "x"}, c)
+            self.assertEqual(e.exception.code, "not_on_lg_samsung")
+        with mock.patch.object(c, "request", return_value={"host": "pc", "theme": "tokyo-night"}) as r:
+            self.assertEqual(mcp_server._call_tool("tv_status", {}, c)["host"], "pc")
+            r.assert_called_once_with("GET", "/v1/status")
+
 if __name__ == "__main__":
     unittest.main()

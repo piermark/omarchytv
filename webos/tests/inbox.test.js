@@ -73,6 +73,18 @@ test("a page opens, BACK closes it, the PC can close it too", () => {
   assert.strictEqual(ib.isOpen(), false, "never an internet page");
 });
 
+test("a question answered elsewhere (or expired) leaves the screen", () => {
+  const doc = fakeDoc();
+  const ib = IB.create({ doc, fetch: null, base: () => "", token: () => "" });
+  const q = { id: "a1b2c3d4e5f60718", from: "PC", question: "Merge?", choices: ["Merge", "Wait"] };
+  ib.apply({ seq: 1, notes: [], page: null, asks: [q] });
+  assert.strictEqual(ib.kind(), "ask");
+  ib.apply({ seq: 2, notes: [], page: null, asks: [q] });
+  assert.strictEqual(ib.kind(), "ask", "still pending: stays");
+  ib.apply({ seq: 3, notes: [], page: null, asks: [] });
+  assert.strictEqual(ib.isOpen(), false, "no longer pending: closed");
+});
+
 test("no PC or no ask code: no request", async () => {
   let called = false;
   const ib = IB.create({ doc: fakeDoc(), fetch: () => { called = true; }, base: () => "", token: () => "X" });

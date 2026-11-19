@@ -320,4 +320,4 @@ paths:
       x-scope: read
       responses:
         "200": { description: A JSON-RPC response }
-        "202": { description: A notification, accepted }
+        "202": { description: "A notification, accepted" }

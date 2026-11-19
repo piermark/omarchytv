@@ -250,17 +250,32 @@ def cmd_notify(a, cfg):
             print("held: shown when the TV is back on Home (use --level warn to show it now)", file=sys.stderr)
         return 0
     except (link.LinkError, OSError, ValueError) as e:
-        off = getattr(e, "code", "") == "notify_off" or getattr(e, "status", 0) == 403
+        off = _alerts_off(e)
+        far = getattr(e, "code", "") in NOT_REACHABLE
         if a.quiet:
-            if off and getattr(a, "hint", False):   # watch: the command's result still wins, but say why the TV is silent
-                print("omarchy-link watch: the TV did not show it: turn on agent alerts (Settings > Omarchy Link).",
-                      file=sys.stderr)
+            if getattr(a, "hint", False) and (off or far):   # watch: the command's result wins; say why the TV is silent
+                why = "turn on agent alerts (Settings > Omarchy Link)." if off else NOT_REACHABLE_HINT
+                print("omarchy-link watch: the TV did not show it: " + why, file=sys.stderr)
             return 0
+        if far:
+            print(NOT_REACHABLE_HINT, file=sys.stderr)
+            return 1
         if off:
             print("The TV does not show notifications: turn on agent alerts (Settings > Omarchy Link).", file=sys.stderr)
             return 4
         print(f"omarchy-link notify: {e}", file=sys.stderr)
         return 1
+
+
+NOT_REACHABLE = ("not_lan", "not_tailnet")
+NOT_REACHABLE_HINT = ("The TV refused this address (not on its LAN). Over Tailscale, turn on the TV's switch "
+                      "(Settings > Omarchy Link > Tailscale) and run omarchy-link tailscale on.")
+
+
+def _alerts_off(e) -> bool:
+    """403 because agent alerts are off; a 403 not_lan / not_tailnet is the address, not the setting."""
+    code = getattr(e, "code", "")
+    return code == "notify_off" or (getattr(e, "status", 0) == 403 and code not in NOT_REACHABLE)
 
 
 def _call(cfg, method, path, payload=None, timeout=8.0):
@@ -309,7 +324,10 @@ def cmd_ask(a, cfg):
         r = _call(cfg, "POST", "/v1/ask", {"question": q, "choices": a.choice or [], "timeout": a.timeout,
                                            "from": (a.source or "PC")[:40]})
     except link.LinkError as e:
-        if getattr(e, "status", 0) == 403:
+        if getattr(e, "code", "") in NOT_REACHABLE:
+            print(NOT_REACHABLE_HINT, file=sys.stderr)
+            return 1
+        if _alerts_off(e):
             print("The TV does not take questions: turn on agent alerts (Settings > Omarchy Link).", file=sys.stderr)
             return 4
         raise

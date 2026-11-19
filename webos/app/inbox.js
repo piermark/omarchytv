@@ -174,7 +174,12 @@
       var notes = box.notes || [];
       for (var i = 0; i < notes.length; i++) if (notes[i].seq > seq) note(notes[i]);
       if (typeof box.seq === "number") seq = box.seq;
-      if (open && open.kind === "ask") return;   // one thing at a time
+      if (open && open.kind === "ask") {   // one thing at a time; but answered or gone elsewhere: close it
+        var still = false, pend = box.asks || [];
+        for (var k = 0; k < pend.length; k++) if (pend[k].id === open.ask.id) still = true;
+        if (!still) close();
+        return;
+      }
       if (box.page && box.page.seq > pageSeq) {
         pageSeq = box.page.seq;
         showPage(box.page);
