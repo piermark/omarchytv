@@ -4,6 +4,10 @@
 command runs on your paired Omarchy PC. On the TV, turn on Settings › Grok Bot & AI › **AI agent alerts while you watch** for
 notifications and questions.
 
+[![OmarchyTV 2.21 in 68 seconds](media/omarchytv-2.21.png)](https://github.com/piermark/omarchytv/raw/main/docs/media/omarchytv-2.21.mp4)
+
+*Click the picture for the 68-second video (MP4, 6 MB, with music).*
+
 ## Your agents talk to you on the TV
 
 ```sh
