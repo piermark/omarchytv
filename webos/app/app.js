@@ -807,7 +807,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       var intro = cfg.wallpaperIntro && activeWp && DATA.wallpaperIntros && DATA.wallpaperIntros[activeWp];
       // v2.21 a weak TV (2.5 GB or less, a Mali-T8xx-class GPU) plays the 540p / 15 fps copy where there is one
       var FXw = window.OmarchyFractals, weakWp = !!(FXw && FXw.preferPlainHere && FXw.preferPlainHere(0));
-      if (intro && weakWp && DATA.wallpaperIntrosLight && DATA.wallpaperIntrosLight[activeWp]) intro = DATA.wallpaperIntrosLight[activeWp];
+      if (intro && weakWp) {   // the 540p / 15 fps copy where there is one (Eyes Wide), else the still
+        intro = (DATA.wallpaperIntrosLight && DATA.wallpaperIntrosLight[activeWp]) || null;
+      }
       var loopWp = !!cfg.wallpaperLoop && !cfg.wpLoopStutter;
       if (intro) {
         if (wv.getAttribute("src") !== intro || !loopWp) { wv.src = intro; wpGuard = {}; }   // once: restart like before

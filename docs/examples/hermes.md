@@ -52,7 +52,14 @@ Copy `hermes-skill/omarchytv/` to `~/.hermes/skills/omarchytv/`. It tells Hermes
 publish a page as a tile with a badge for things it keeps working on, notify when a task ends, ask before doing
 something irreversible, follow your theme.
 
-## 5. The "studio dubai" dashboard, OmarchyTV style
+## 5. A Hermes room on the TV Home
+
+A Hermes cron job (or a room's routine) can leave its report on the TV Home instead of in a notification:
+`tv_room_post` with `room: "hermes"` and one line, through `omarchy-link mcp`. The Home shows a pane titled
+"hermes · room" with the last 5 lines and the time of each. Up to 3 rooms; a room quiet for a day leaves the Home.
+The same from a shell: `omarchy-link room post hermes "Backup done, 412 GB" --from cron`.
+
+## 6. The "studio dubai" dashboard, OmarchyTV style
 
 What a Hermes user built by hand (a WebView app, a theme server, key handling) is now built in:
 

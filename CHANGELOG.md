@@ -140,6 +140,18 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 - **LG and Samsung**: *Arrange panels* now really reorders the Home widgets (OK moves one up, the order is kept;
   #5). The last English-only titles (themes, wallpaper dimming, Walker, lights, Pulse panels, Grok Bot & AI, web
   apps, pairing) follow the TV's language in all 23 languages.
+- **Approve on the TV**: `omarchy-link agents approvals on` sends Claude Code's permission prompts to the TV
+  (Allow / Deny / On the PC). No answer means Claude Code asks as usual: nothing is allowed by itself.
+- **Omarchy hook pack**: `omarchy-link hook add all` adds post-boot ("PC is up"), post-update ("Omarchy updated"),
+  battery-low (spoken, with the level) and font-set to the theme-set hook. All quiet and in the background.
+- **Spoken reminders**: `omarchy-link remind 20m "Pizza"` (or `18:45`), a systemd user timer; MCP `tv_remind`.
+- **Rooms on the Home**: `omarchy-link room post hermes "Backup done"` and MCP `tv_room_post`. A pane with a
+  room's last 5 lines, for Hermes cron reports and other agents.
+- **Couch console**: `omarchy-link console` shows a tmux pane or a log on the TV, read-only, until Ctrl+C.
+- **TV anywhere**: `omarchy-link token add NAME --remote` also prints the curl, Claude Code and Hermes setup for a
+  machine elsewhere on your tailnet.
+- **Theme intros on weak TVs**: only the light copy (Eyes Wide) plays; other themes show their still image. No
+  720p video on a 2 GB TV.
 - **Grok Bot: built for Tom Ballard's Agent Desktop v0.3.3** (was v0.2.0). The parts OmarchyTV uses
   (`grokbot-ask`, the IPC commands, the roster, the avatar shapes, palette and faces) are unchanged, so v0.2.0 and
   v0.1.0 checkouts still work.

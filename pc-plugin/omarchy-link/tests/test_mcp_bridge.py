@@ -39,7 +39,8 @@ class BridgeTest(unittest.TestCase):
     def test_scope_filters_before_the_tv(self):
         c, out = self.run_lines([{"jsonrpc": "2.0", "id": 1, "method": "tools/list"},
                                  {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "tv_send_key"}}], "notify")
-        self.assertEqual({t["name"] for t in out[0]["result"]["tools"]}, {"tv_status", "tv_notify"})
+        self.assertEqual({t["name"] for t in out[0]["result"]["tools"]},
+                         {"tv_status", "tv_notify", "tv_room_post", "tv_remind"})   # v2.21: two answered on this PC
         self.assertIn("Not allowed", out[1]["error"]["message"])
         self.assertEqual(len(c.sent), 1)   # the refused call never left the PC
 

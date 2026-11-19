@@ -295,6 +295,8 @@ def cmd_token(a, cfg):
             print(f"{r['name']} ({r['scope']}), id {r['id']}")
             print(r["token"])
             print("Shown once: keep it in your app's settings. Revoke: omarchy-link token revoke " + r["id"], file=sys.stderr)
+            if a.remote:
+                print(remote_setup(cfg, r["token"]))
         return 0
     if a.action == "revoke":
         if not a.name:
@@ -312,6 +314,33 @@ def cmd_token(a, cfg):
     for x in r.get("apps", []):
         print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}")
     return 0
+
+
+def remote_setup(cfg, token: str) -> str:
+    """v2.21 "TV anywhere": what a machine elsewhere on the tailnet needs to reach this TV with an app token."""
+    try:
+        d = _call(cfg, "GET", "/v1/diagnostics")
+    except Exception:
+        d = {}
+    ts = (d.get("network") or {}).get("tailnet")
+    on = (d.get("settings") or {}).get("tailscale")
+    host = (f"[{ts}]" if ts and ":" in ts else ts) or "<the TV's 100.x address>"
+    base = f"http://{host}:47800"
+    lines = ["", "From another machine on your tailnet:"]
+    if not on:
+        lines.append("  first turn on the TV's switch: Settings > Omarchy Link > Tailscale")
+    lines += [
+        f"  curl -s -X POST {base}/v1/notify -H 'Authorization: Bearer {token}' -d '{{\"text\":\"build done\"}}'",
+        f"  claude mcp add --transport http omarchytv {base}/v1/mcp --header 'Authorization: Bearer {token}'",
+        "  Hermes (~/.hermes/config.yaml):",
+        "    mcp_servers:",
+        "      omarchytv:",
+        f"        url: \"{base}/v1/mcp\"",
+        f"        headers: {{Authorization: \"Bearer {token}\"}}",
+        "        timeout: 130",
+        "  Limit who can reach port 47800: omarchy-link tailscale acl",
+    ]
+    return "\n".join(lines)
 
 
 def cmd_ask(a, cfg):
@@ -502,10 +531,13 @@ def cmd_sync(a, cfg):
 
 
 def cmd_push_widgets(a, cfg):
-    widgets = panes.load_widgets(Path(a.file) if a.file else None)
-    if cfg.get("pcPane", True):
-        widgets["panes"] = [panes.pc_pane()] + list(widgets.get("panes", []))
-    clean = panes.validate(widgets, cfg.get("actions", {}))
+    if a.file:
+        widgets = panes.load_widgets(Path(a.file))
+        if cfg.get("pcPane", True):
+            widgets["panes"] = [panes.pc_pane()] + list(widgets.get("panes", []))
+        clean = panes.validate(widgets, cfg.get("actions", {}))
+    else:
+        clean = panes.home_widgets(cfg)
     if a.dry_run:
         print(json.dumps(clean, indent=2))
         return 0
@@ -727,18 +759,126 @@ HOOK_NAME = "omarchy-link"
 
 
 def cmd_hook(a, cfg):
-    hook_dir = Path.home() / ".config/omarchy/hooks/theme-set.d"
-    dst = hook_dir / HOOK_NAME
+    """v2.21 Omarchy hooks: add [theme-set post-boot post-update battery-low font-set | all], remove [...], list."""
+    from . import hookpack
+    if a.action == "list":
+        on = hookpack.installed()
+        for ev in hookpack.EVENTS:
+            print(f"{'on ' if ev in on else 'off'}  {ev}")
+        return 0
+    try:
+        events = hookpack.parse(a.events) if (a.action == "add" or a.events) else hookpack.EVENTS
+    except ValueError as e:
+        print(f"omarchy-link hook: {e}", file=sys.stderr)
+        return 2
     if a.action == "add":
-        hook_dir.mkdir(parents=True, exist_ok=True)
-        src = (ROOT / "hooks/theme-set").read_text().replace("@OMARCHY_LINK_ROOT@", str(ROOT))
-        dst.write_text(src)
-        os.chmod(dst, 0o755)
-        print(f"Theme-set hook written to {dst}")
+        for f in hookpack.add(events, _exe()):
+            print(f"{f.parent.name[:-2]} hook written to {f}")
     else:
-        if dst.exists():
-            dst.unlink()
-        print("Theme-set hook removed.")
+        gone = hookpack.remove(events)
+        print(f"Removed: {', '.join(f.parent.name[:-2] for f in gone)}" if gone else "No omarchy-link hooks to remove.")
+    return 0
+
+
+def cmd_remind(a, cfg):
+    """v2.21 a spoken reminder on the TV at a time (systemd user timer): remind 10m TEXT | list | cancel ID."""
+    from . import remind
+    try:
+        if a.when == "list":
+            rows = remind.listing()
+            if not rows:
+                print("No reminders.")
+            for r in rows:
+                print(f"{r['id']}\t{r.get('left') or ''}")
+            return 0
+        if a.when == "cancel":
+            ok = bool(a.text) and remind.cancel(a.text[0])
+            print("cancelled" if ok else "no such reminder")
+            return 0 if ok else 1
+        if not a.when or not a.text:
+            print('omarchy-link remind 10m "Pizza in the oven"   (90s, 10m, 1h30m, 45, HH:MM) | list | cancel ID',
+                  file=sys.stderr)
+            return 2
+        r = remind.schedule(_exe(), a.when, " ".join(a.text))
+        print(f"Reminder {r['id']} at {r['at']}: {r['text']}")
+        return 0
+    except remind.RemindError as e:
+        print(f"omarchy-link remind: {e}", file=sys.stderr)
+        return 2
+
+
+def cmd_room(a, cfg):
+    """v2.21 rooms on the TV Home: room post NAME TEXT [--from WHO] | clear NAME | list."""
+    from . import rooms
+    try:
+        if a.action == "post":
+            if len(a.args) < 2:
+                print('omarchy-link room post hermes "Backup done"', file=sys.stderr)
+                return 2
+            rooms.post(a.args[0], " ".join(a.args[1:]), a.source or "")
+        elif a.action == "clear":
+            if not a.args or not rooms.clear(a.args[0]):
+                print("no such room", file=sys.stderr)
+                return 1
+        else:
+            for name, v in rooms.load().items():
+                print(f"{name}\t{len(v.get('msgs', []))} messages")
+            return 0
+    except ValueError as e:
+        print(f"omarchy-link room: {e}", file=sys.stderr)
+        return 2
+    try:
+        _client(cfg).put_widgets(panes.home_widgets(cfg))
+    except (SystemExit, Exception) as e:   # TV off or not paired: the Home gets it with the next pane push
+        if not a.quiet:
+            print(f"(the TV gets it when it connects: {str(e)[:80]})", file=sys.stderr)
+    return 0
+
+
+def cmd_console(a, cfg):
+    """v2.21 a tmux pane or a log file of this PC on the TV, read-only, until Ctrl+C."""
+    from . import console
+    if a.file:
+        title, source = Path(a.file).name, (lambda: console.file_text(a.file))
+        try:
+            source()
+        except OSError as e:
+            print(f"omarchy-link console: {e}", file=sys.stderr)
+            return 1
+    else:
+        if not shutil.which("tmux"):
+            print("omarchy-link console: needs tmux (or --file PATH)", file=sys.stderr)
+            return 1
+        target = a.tmux or (None if os.environ.get("TMUX") else "")
+        if target == "":
+            print("omarchy-link console: run it inside tmux, or give --tmux SESSION[:WINDOW.PANE] / --file PATH",
+                  file=sys.stderr)
+            return 2
+        title, source = f"tmux {target or 'pane'}", (lambda: console.tmux_text(target))
+        try:
+            source()
+        except RuntimeError as e:
+            print(f"omarchy-link console: {e}", file=sys.stderr)
+            return 1
+    p = config.Pairing.load()
+    if not p.paired:
+        return EXIT_NOT_PAIRED
+    tv_host = str(p.tv["address"]).strip("[]")
+    srv, url = console.serve(console.lan_ip(tv_host), source, title)
+    try:
+        _call(cfg, "POST", "/v1/page", {"url": url})
+        print(f"On the TV (read-only): {url}  ·  Ctrl+C to stop")
+        import time as _t
+        while True:
+            _t.sleep(3600)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        try:
+            _call(cfg, "DELETE", "/v1/page")
+        except Exception:
+            pass
+        srv.shutdown()
     return 0
 
 
@@ -976,6 +1116,31 @@ def cmd_agents(a, cfg):
         except (OSError, ValueError):
             pass
         return 0
+    if act == "permission":   # Claude Code's PermissionRequest hook: never fail it, print only a decision
+        from .agents import permission
+        try:
+            payload = json.loads(sys.stdin.read(1 << 20) or "{}")
+            p = config.Pairing.load()
+            if p.paired:
+                c = link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets"))
+                out = permission.decide(payload, permission.tv_ask(c))
+                if out:
+                    print(json.dumps(out))
+        except Exception:
+            pass
+        return 0
+    if act == "approvals":   # v2.21 approve Claude Code's permission prompts on the TV
+        from .agents import permission
+        if (a.args or ["status"])[0] == "on":
+            f = permission.install(_exe())
+            print(f"Claude Code asks the TV before its own prompt ({f}; backup next to it). "
+                  "Allow / Deny / On the PC; no answer = the usual prompt.")
+        elif a.args and a.args[0] == "off":
+            print("Removed." if permission.remove() else "Was not on.")
+        else:
+            on = permission.MARK in agent_ask.claude_settings().read_text() if agent_ask.claude_settings().exists() else False
+            print("on" if on else "off")
+        return 0
     if act == "approve":
         ok = bool(a.args) and agent_ask.approve(a.args[0])
         print("Approved: the agent runs now." if ok else "Nothing to approve (expired?).")
@@ -1156,6 +1321,7 @@ def main(argv=None) -> int:
     s.add_argument("action", nargs="?", choices=["list", "add", "revoke"], default="list")
     s.add_argument("name", nargs="*")
     s.add_argument("--scope", choices=["read", "notify", "control"], default="read")
+    s.add_argument("--remote", action="store_true", help="also print the setup for a machine on your tailnet")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_token)
     s = sub.add_parser("watch", help="run a command, then tell the TV how it went (✓ / ✗, time, last line)")
@@ -1267,9 +1433,25 @@ def main(argv=None) -> int:
     t = osub.add_parser("push", help="send it to the paired Android TV now")
     t.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_office)
-    s = sub.add_parser("hook", help="add/remove the Omarchy theme-set hook")
-    s.add_argument("action", choices=["add", "remove"])
+    s = sub.add_parser("hook", help="Omarchy hooks: add [theme-set post-boot post-update battery-low font-set | all] | "
+                                    "remove | list")
+    s.add_argument("action", choices=["add", "remove", "list"])
+    s.add_argument("events", nargs="*")
     s.set_defaults(fn=cmd_hook)
+    s = sub.add_parser("remind", help="a spoken reminder on the TV: remind 10m TEXT | list | cancel ID")
+    s.add_argument("when", nargs="?")
+    s.add_argument("text", nargs="*")
+    s.set_defaults(fn=cmd_remind)
+    s = sub.add_parser("room", help="a room pane on the TV Home: room post NAME TEXT | clear NAME | list")
+    s.add_argument("action", nargs="?", choices=["post", "clear", "list"], default="list")
+    s.add_argument("args", nargs="*")
+    s.add_argument("--from", dest="source")
+    s.add_argument("--quiet", action="store_true")
+    s.set_defaults(fn=cmd_room)
+    s = sub.add_parser("console", help="a tmux pane or a log of this PC on the TV, read-only (Ctrl+C stops)")
+    s.add_argument("--tmux", help="tmux target, e.g. agents:0.1 (default: this pane)")
+    s.add_argument("--file", help="show the end of this log file instead")
+    s.set_defaults(fn=cmd_console)
     s = sub.add_parser("action", help=argparse.SUPPRESS)
     s.add_argument("id")
     s.add_argument("--confirmed", action="store_true")
@@ -1305,7 +1487,7 @@ def main(argv=None) -> int:
     s = sub.add_parser("agents", help="live AI agent activity for the TV (off by default)",
                        description="list | preview | enable [agent…] | disable | hooks [install|remove]")
     s.add_argument("action", nargs="?", default="list",
-                   choices=["list", "preview", "enable", "disable", "hooks", "hook", "approve"])
+                   choices=["list", "preview", "enable", "disable", "hooks", "hook", "approve", "approvals", "permission"])
     s.add_argument("args", nargs="*")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_agents)

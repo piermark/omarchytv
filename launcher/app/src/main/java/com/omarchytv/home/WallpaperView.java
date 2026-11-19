@@ -267,6 +267,12 @@ public class WallpaperView extends View {
     }
 
     /** Optional MP4 video intro matching the current theme background (e.g. cumulus, last-horizon), or null. */
+    /** v2.21 which intro a TV plays: "full", "light" (a weak TV with a light copy) or "skip" (weak, none). */
+    static String introPlan(boolean weakTv, boolean hasLightCopy) {
+        if (!weakTv) return "full";
+        return hasLightCopy ? "light" : "skip";
+    }
+
     static boolean assetExists(Context c, String path) {
         try (java.io.InputStream in = c.getAssets().open(path)) {
             return true;

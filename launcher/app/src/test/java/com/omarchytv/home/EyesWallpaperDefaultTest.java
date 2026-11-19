@@ -77,4 +77,12 @@ public class EyesWallpaperDefaultTest {
         assertFalse(okTrip);
         assertTrue(slowTrip);
     }
+
+    @Test
+    public void weakTvsPlayOnlyALightCopy() {
+        assertEquals("full", WallpaperView.introPlan(false, true));
+        assertEquals("full", WallpaperView.introPlan(false, false));
+        assertEquals("light", WallpaperView.introPlan(true, true));
+        assertEquals("skip", WallpaperView.introPlan(true, false));   // Cumulus on the Sony: the still image
+    }
 }

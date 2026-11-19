@@ -288,7 +288,21 @@ omarchy-tv mcp --stdio --bridge                 # the same MCP tools for agents 
 | [examples/hermes.md](examples/hermes.md) | Hermes Agent: `mcp_servers` on the PC, on a box (straight to the TV with an app token), over Tailscale; the "studio dubai" dashboard |
 | [examples/hermes-skill/omarchytv/SKILL.md](examples/hermes-skill/omarchytv/SKILL.md) | a skill that teaches Hermes (and any agent with skills) when and how to use the TV |
 
-## 12. A dashboard on a stick, the way a Hermes user built it
+## 12. More from the PC (2.21)
+
+| Command | What |
+|---|---|
+| `omarchy-link agents approvals on` | Claude Code's permission prompts go to the TV first: **Allow**, **Deny** or **On the PC**. No answer within 90 s, the TV off or "On the PC" falls back to Claude Code's own prompt, so nothing is ever allowed without an answer. `off` removes it (a backup of `~/.claude/settings.json` is kept). |
+| `omarchy-link hook add all` | Omarchy's hooks tell the TV: `post-boot` "PC is up" and the theme follows, `post-update` "Omarchy updated", `battery-low` spoken warning with the level, `font-set` the new font, `theme-set` the theme (as before). `hook add` alone does only `theme-set`; `hook list`, `hook remove`. |
+| `omarchy-link remind 20m "Pizza"` | a spoken reminder on the TV later (a systemd user timer: nothing stays running). `90s`, `1h30m`, `45` (minutes), `18:45`; `remind list`, `remind cancel ID`. MCP: `tv_remind`. |
+| `omarchy-link room post hermes "Backup done"` | a pane on the TV Home with a room's last 5 lines (cron reports, agents). MCP: `tv_room_post`. |
+| `omarchy-link console` | the tmux pane you run it in (or `--tmux TARGET`, or `--file LOG`) on the TV, read-only, refreshed every second, until Ctrl+C. Put your agent in the tmux session of the Super+~ drop-down terminal and watch it from the couch. |
+| `omarchy-link token add NAME --scope notify --remote` | also prints what a machine elsewhere on your tailnet needs: the curl line, `claude mcp add --transport http …`, the Hermes `mcp_servers` block, the ACL hint ("TV anywhere"). |
+
+Agent meters, reset times and the active account of Omarchy's agents panel (23 agents and providers in 4.5) are
+already on the TV's AI credits pane (`omarchy-link ai sources` lists and enables the `omarchy-agents` source).
+
+## 13. A dashboard on a stick, the way a Hermes user built it
 
 1. An always-on box (a Raspberry Pi, a NAS) serves the dashboard page and its data, so the TV never goes blank when
    the laptop sleeps.

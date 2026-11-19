@@ -17,6 +17,11 @@ The owner's TV runs OmarchyTV and is reachable through the `omarchytv` MCP serve
 - **Work they will want to look at** (a dashboard, listings, a report page you serve on the LAN): publish it once
   with `tv_publish_page` (id, a short name, its http:// LAN or tailnet URL, a one-letter icon) and update its
   `tv_page_badge` when something new needs their attention. `tv_show_page` opens it now; `urls` tiles up to 4.
+- **Scheduled reports** (a cron job, a nightly check, a room's summary): `tv_room_post` with a room name
+  (`hermes`, `backups`, …) and one line. The TV Home keeps a pane per room with its last 5 lines, without
+  interrupting anyone. These tools are there when Hermes uses `omarchy-link mcp`.
+- **"Remind me in 20 minutes"**: `tv_remind` with `when` (`20m`, `1h30m`, `18:45`) and the text. The TV says it
+  aloud at that time.
 - **Pages you make for the TV**: include `http://<tv>:47800/v1/sdk/omarchytv.js` and call
   `OmarchyTV.connect({token}).followTheme(); OmarchyTV.remote();` so the page uses their Omarchy colours
   (`var(--otv-background)`, `var(--otv-accent)`, …) and works with the remote (arrows, OK). Large text (2.4vh+),

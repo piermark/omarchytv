@@ -3133,7 +3133,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         }
         boolean plain = FractalView.preferPlain(this);
         String light = mp4.substring(0, mp4.length() - 4) + "-light.mp4";
-        if (plain && WallpaperView.assetExists(this, light)) mp4 = light;   // v2.21 weak TV: 540p, 15 fps
+        // v2.21 weak TV: the 540p / 15 fps copy where there is one (Eyes Wide), else the still: no 720p video
+        String plan = WallpaperView.introPlan(plain, WallpaperView.assetExists(this, light));
+        if ("skip".equals(plan)) {
+            stopWallpaperIntro();
+            return;
+        }
+        if ("light".equals(plan)) mp4 = light;
         boolean loop = cfg.wallpaperLoop && !WallpaperLoopGuard.stuttered(this);
         String key = Theme.cur().name + ":" + mp4;
         // Played once already: stay on the still, unless "Always-animated wallpaper" loops it on every return.

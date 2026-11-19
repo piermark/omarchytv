@@ -66,6 +66,8 @@ test("weak TVs get the 540p / 15 fps copy, which ships next to the full one", ()
   const asset = path.join(__dirname, "../../launcher/app/src/main/assets/wallpapers/last-horizon/01-eyes-wide-light.mp4");
   assert.ok(fs.existsSync(asset) && fs.statSync(asset).size < 200 * 1024);
   assert.ok(app.indexOf("preferPlainHere(0)") > 0);
+  assert.ok(app.indexOf("intro = (DATA.wallpaperIntrosLight && DATA.wallpaperIntrosLight[activeWp]) || null;") > 0,
+    "a weak TV without a light copy shows the still");
 });
 
 test("stutter guard: a smooth loop keeps going, a slow one stops once", () => {
