@@ -529,6 +529,8 @@ omarchy-tv adb-lock --tv 192.168.1.9:5555                                 # clos
 | Telefunken D65U546A (Vestel MB230, Novatek) | not Android: Vestel Linux, Opera/OMI browser (Chromium 67) | — | 2.13.2-testing (web app) | ok (community, rooted) | the shared web app served by the TV itself; uses the `OMARCHY_LAUNCH`, `OMARCHY_PREFERS_24H` and `OMARCHY_FIT_SCREEN` hooks; field report by @ekollof1 ([#66](https://github.com/piermark/omarchytv/issues/66)) |
 Tested yours? Open an issue with the "TV report" template.
 
+TV-specific install notes (ADB, Hisense, TCL, accessibility after updates, Link after reboot): [docs/INSTALL-TIPS.md](docs/INSTALL-TIPS.md).
+
 ## Trademarks
 Netflix, Prime Video, YouTube, Google, Android, Android TV, Google TV, Chromecast, Sony, BRAVIA, Sharp, AQUOS, LG, webOS, X, Disney+, Spotify
 and all other product names, logos and app icons are trademarks of their respective owners. They appear only to

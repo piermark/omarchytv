@@ -137,6 +137,11 @@ reachable from home, from your tailnet and, carefully, from the cloud.
   own pairings and panes).
 - Guides: **docs/INTEGRATIONS.md**, **docs/TAILSCALE.md**, **docs/CLOUDFLARE.md**, **docs/RASPBERRY-PI.md**,
   **docs/openapi.yaml**; PROTOCOL.md "Theme for apps" and "App API".
+- **LG and Samsung**: *Arrange panels* now really reorders the Home widgets (OK moves one up, the order is kept;
+  #5). The last English-only titles (themes, wallpaper dimming, Walker, lights, Pulse panels, Grok Bot & AI, web
+  apps, pairing) follow the TV's language in all 23 languages.
+- **docs/INSTALL-TIPS.md**: ADB over the network, Hisense Ethernet ADB (#102), TCL Home and SmartConnect VPN (#75),
+  turning accessibility back on after an update, Link after a reboot on 1-2 GB TVs (#143).
 - **Fixed: Radiomarchy could crash on a slow GPU** with live fractals (screensaver or demo). The safety switch that
   turns them off ran on the wrong thread. It was in since 2.20.
 - `omarchy-tv wg clean NAME` deletes the pushed WireGuard file from the TV's Download folder once imported (it holds

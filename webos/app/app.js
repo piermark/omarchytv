@@ -27,6 +27,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       ws4_desc: "Pair the PC over LAN HTTP (http://<pc-ip>:8765/v1/status) to see live CPU/RAM, AI credits and deploys on LG webOS.",
       sys_webos: "webOS TV settings", sys_themes: "Themes", sys_trans: "Transparency", sys_widgets: "Home widgets",
       sys_arrange: "Arrange panels", sys_saver: "Screensaver", sys_text_size: "Text size", ts_small: "Small", ts_normal: "Normal", ts_large: "Large", ts_xlarge: "Extra large", sys_saver_idle: "Start screensaver after",
+      t_themes_sub: "Select a theme", t_wp_dim: "Wallpaper dimming", t_walker_sub: "Filter and launch installed apps", t_walker_ph: "search apps…", t_hub_forget: "Forget the hub?", t_hub_forget_sub: "Remove the saved Hue / Home Assistant credentials from this TV?", t_lights: "Ambilight & Lights", t_lights_sub: "Sync Hue or Home Assistant lights with the theme and Cinemarchy", t_pulse_panels: "Pulse panels", t_pulse_panels_sub: "Which Pulse side panels show on the screensaver", t_grok_ai: "Grok Bot & AI", t_grok_ai_sub: "Grok Bot TUI, companion, PC agents and AI web apps", t_webapps: "Web apps", t_webapps_sub: "Opens in the TV browser · Back returns", t_pair_pc: "Pair Omarchy Linux PC", t_pair_pc_sub: "Enter your Omarchy PC's LAN IP", t_companion_keys: "Blue: chat · hold Blue: voice", arrange_sub: "OK moves a panel up · the order is kept", arrange_reset: "Reset order",
       walker_none: "no matching apps",
       sys_logo_anim: "Animated logo", sys_text_tiles: "Text tiles (terminal style)", sys_all: "All OmarchyTV settings", sys_about: "About & licences",
       tile_move: "Move", tile_hide: "Hide", tile_cancel: "Cancel", move_hint: "◀▶▲▼ move · OK save · Back cancel",
@@ -157,6 +158,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       ws4_desc: "Abbina il PC via HTTP LAN (http://<ip-pc>:8765/v1/status) per vedere stato, crediti IA e deploy qui.",
       sys_webos: "Impostazioni TV webOS", sys_themes: "Temi", sys_trans: "Trasparenza", sys_widgets: "Widget della Home",
       sys_arrange: "Disponi pannelli", sys_saver: "Salvaschermo", sys_text_size: "Dimensione testo", ts_small: "Piccolo", ts_normal: "Normale", ts_large: "Grande", ts_xlarge: "Molto grande", sys_saver_idle: "Avvia salvaschermo dopo",
+      t_themes_sub: "Scegli un tema", t_wp_dim: "Oscuramento sfondo", t_walker_sub: "Filtra e apri le app installate", t_walker_ph: "cerca app…", t_hub_forget: "Dimenticare l'hub?", t_hub_forget_sub: "Rimuovere da questa TV le credenziali Hue / Home Assistant salvate?", t_lights: "Ambilight e luci", t_lights_sub: "Sincronizza le luci Hue o Home Assistant con il tema e Cinemarchy", t_pulse_panels: "Pannelli Pulse", t_pulse_panels_sub: "Quali pannelli laterali Pulse compaiono nel salvaschermo", t_grok_ai: "Grok Bot e IA", t_grok_ai_sub: "TUI di Grok Bot, companion, agenti del PC e web app IA", t_webapps: "Web app", t_webapps_sub: "Si apre nel browser della TV · Indietro torna", t_pair_pc: "Associa PC Omarchy Linux", t_pair_pc_sub: "Inserisci l'IP di rete del PC Omarchy", t_companion_keys: "Blu: chat · tieni premuto Blu: voce", arrange_sub: "OK sposta un pannello in su · l'ordine resta", arrange_reset: "Ripristina ordine",
       walker_none: "nessuna app trovata",
       sys_logo_anim: "Logo animato", sys_text_tiles: "Tile solo testo (stile terminale)", sys_all: "Tutte le impostazioni OmarchyTV", sys_about: "Info e licenze",
       tile_move: "Sposta", tile_hide: "Nascondi", tile_cancel: "Annulla", move_hint: "◀▶▲▼ sposta · OK salva · Indietro annulla",
@@ -287,6 +289,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       ws4_desc: "Koppeln Sie den PC über LAN HTTP (http://<pc-ip>:8765/v1/status), um Status, KI-Guthaben und Deploys anzuzeigen.",
       sys_webos: "webOS TV-Einstellungen", sys_themes: "Themen", sys_trans: "Transparenz", sys_widgets: "Startseiten-Widgets",
       sys_arrange: "Panels anordnen", sys_saver: "Bildschirmschoner", sys_text_size: "Textgröße", ts_small: "Klein", ts_normal: "Normal", ts_large: "Groß", ts_xlarge: "Sehr groß", sys_saver_idle: "Bildschirmschoner starten nach",
+      t_themes_sub: "Thema wählen", t_wp_dim: "Hintergrund abdunkeln", t_walker_sub: "Installierte Apps filtern und starten", t_walker_ph: "Apps suchen…", t_hub_forget: "Hub vergessen?", t_hub_forget_sub: "Gespeicherte Hue- / Home-Assistant-Zugangsdaten von diesem TV entfernen?", t_lights: "Ambilight & Licht", t_lights_sub: "Hue- oder Home-Assistant-Licht mit Thema und Cinemarchy synchronisieren", t_pulse_panels: "Pulse-Panels", t_pulse_panels_sub: "Welche Pulse-Seitenpanels der Bildschirmschoner zeigt", t_grok_ai: "Grok Bot & KI", t_grok_ai_sub: "Grok-Bot-TUI, Begleiter, PC-Agenten und KI-Web-Apps", t_webapps: "Web-Apps", t_webapps_sub: "Öffnet im TV-Browser · Zurück kehrt zurück", t_pair_pc: "Omarchy-Linux-PC koppeln", t_pair_pc_sub: "LAN-IP deines Omarchy-PCs eingeben", t_companion_keys: "Blau: Chat · Blau halten: Sprache", arrange_sub: "OK schiebt ein Panel nach oben · die Reihenfolge bleibt", arrange_reset: "Reihenfolge zurücksetzen",
       walker_none: "keine passende App",
       sys_logo_anim: "Animiertes Logo", sys_text_tiles: "Text-Kacheln (Terminal-Stil)", sys_all: "Alle OmarchyTV-Einstellungen", sys_about: "Info & Lizenzen",
       tile_move: "Verschieben", tile_hide: "Ausblenden", tile_cancel: "Abbrechen", move_hint: "◀▶▲▼ verschieben · OK speichern · Zurück abbrechen",
@@ -1386,9 +1389,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         saveCfg(); applyTheme(); renderAll();
       } },
       { label: tr("sys_widgets"), val: "›", act: openWidgetsModal },
-      { label: tr("sys_arrange"), val: "›", act: function () { showToast("Arrange panels: use D-pad on Home"); switchWorkspace(0); } },
+      { label: tr("sys_arrange"), val: "›", act: function () { openArrangeModal(0); } },
       { label: tr("sys_saver"), val: "›", act: openSaverModal },
-      { label: "Ambilight & Lights", val: (cfg.lightsHub || "off") + " ›", act: openLightsModal },
+      { label: tr("t_lights"), val: (cfg.lightsHub || "off") + " ›", act: openLightsModal },
       { label: tr("sys_saver_idle"), val: idleStr, act: function () {
         var opts = [1, 2.5, 5, 10, 0];
         cfg.saverIdleMin = opts[(opts.indexOf(cfg.saverIdleMin) + 1) % opts.length];
@@ -1585,7 +1588,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       };
     }));
     var curIdx = names.indexOf(cfg.theme);
-    openModal(tr("sys_themes") + " (" + names.length + ")", "Select a theme (MIT omarchy.webp + Liftoff Sunset)", items);
+    openModal(tr("sys_themes") + " (" + names.length + ")", tr("t_themes_sub") + " (MIT omarchy.webp + Liftoff Sunset)", items);
     if (keepFocus) { state.modalIdx = Math.min(focus, items.length - 1); renderModalList(); }
     else if (curIdx >= 0) { state.modalIdx = curIdx + 3; renderModalList(); }
   }
@@ -1822,6 +1825,31 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     cfg.weatherCity = name; cfg.weatherLat = lat; cfg.weatherLon = lon;
     state.weather.city = name;
     saveCfg(); fetchWeather(); renderAll(); closeModal();
+  }
+
+  // v2.21 (#5 point 8) Arrange panels: the order of the Home widgets (racing, weather, pc, ai credits, dev mode).
+  // OK moves the focused one up (the top one goes to the bottom); hidden ones keep their place for when they come back.
+  var ARRANGE_IDS = ["race-box", "wx-box", "pc-box", "ai-box", "devmode-box"];
+  var ARRANGE_NAMES = { "race-box": "racing", "wx-box": "weather", "pc-box": "omarchy · pc", "ai-box": "ai credits · pc", "devmode-box": "dev mode" };
+  function arrangeOrder() { return window.OmarchyArrange ? window.OmarchyArrange.order(cfg.widgetOrder, ARRANGE_IDS) : ARRANGE_IDS.slice(); }
+  function applyWidgetOrder() {
+    var row = document.getElementById("widgets-row1");
+    if (!row) return;
+    arrangeOrder().forEach(function (id) { var el = document.getElementById(id); if (el && el.parentNode === row) row.appendChild(el); });
+  }
+  function openArrangeModal(focus) {
+    var order = arrangeOrder();
+    var items = order.map(function (id, i) {
+      return { label: (i + 1) + ". " + ARRANGE_NAMES[id], right: "▲", act: function () {
+        cfg.widgetOrder = window.OmarchyArrange.up(order, i);
+        saveCfg(); applyWidgetOrder(); renderAll();
+        openArrangeModal(i === 0 ? order.length - 1 : i - 1);
+      } };
+    });
+    items.push({ label: tr("arrange_reset"), right: "", act: function () {
+      cfg.widgetOrder = null; saveCfg(); applyWidgetOrder(); renderAll(); openArrangeModal(0);
+    } });
+    openModal(tr("sys_arrange"), tr("arrange_sub"), items, null, null, { focusIdx: focus || 0 });
   }
 
   function openWidgetsModal() {
@@ -2081,7 +2109,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.lightWallpapers = cfg.lightWallpapers === undefined || cfg.lightWallpapers === null ? true : cfg.lightWallpapers === true ? false : null;
         saveCfg(); applyTheme(); openAllSettingsModal();
       } },
-      { label: "Wallpaper dimming", right: Math.round((cfg.wallpaperDim || 0) * 100) + "%", act: function () {
+      { label: tr("t_wp_dim"), right: Math.round((cfg.wallpaperDim || 0) * 100) + "%", act: function () {
         var d = [0, 0.25, 0.5];
         cfg.wallpaperDim = d[(d.indexOf(cfg.wallpaperDim) + 1) % d.length];
         saveCfg(); applyTheme(); openAllSettingsModal();
@@ -2233,7 +2261,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         return { label: a.name, right: a.appId, act: function () { closeModal(); launchApp(a); } };
       });
     }
-    openModal("Walker · > search", "Filter and launch installed webOS apps", buildList(""), "> search apps…", function (val) {
+    openModal("Walker · > search", tr("t_walker_sub"), buildList(""), "> " + tr("t_walker_ph"), function (val) {
       state.modalItems = buildList(val);
       state.modalIdx = 0;
       renderModalList();
@@ -2634,7 +2662,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } });
       items.push({ label: "Apply theme colours now", right: "▶", act: function () { pushLightsTheme(currentThemeObj(), false); showToast("Pushed theme to lights"); } });
       items.push({ label: "Forget hub credentials (confirm with OK)", right: "forget", act: function () {
-        openModal("Forget hub?", "Remove saved Hue / Home Assistant credentials from this TV?", [
+        openModal(tr("t_hub_forget"), tr("t_hub_forget_sub"), [
           { label: "Cancel", right: "", act: openLightsModal },
           { label: "Forget hub", right: "confirm", act: function () {
             cfg.lightsHub = "off"; cfg.hueUser = ""; cfg.haToken = ""; saveCfg(); openLightsModal();
@@ -2642,7 +2670,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         ]);
       } });
     }
-    openModal("Ambilight & Lights", "Sync Philips Hue or Home Assistant lights with Omarchy themes & Cinemarchy", items, "IP / URL / entity_id / token…");
+    openModal(tr("t_lights"), tr("t_lights_sub"), items, "IP / URL / entity_id / token…");
   }
 
   // v2.13 helpers: HTML-escape for modal labels built from feed data (renderModalList uses innerHTML).
@@ -3191,7 +3219,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return o;
   }
   function openPulsePanelsModal() {
-    openModal("Pulse panels", "Which Pulse side panels show on the screensaver", PULSE_PANEL_IDS.map(function (id) {
+    openModal(tr("t_pulse_panels"), tr("t_pulse_panels_sub"), PULSE_PANEL_IDS.map(function (id) {
       return { label: PULSE_PANEL_LABELS[id], right: pulsePanelOn(id) ? "on" : "off", act: function () {
         setPulsePanel(id, !pulsePanelOn(id)); saveCfg(); racingKick(); openPulsePanelsModal();
       } };
@@ -4077,7 +4105,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   var AI_WEBAPPS = [["Grok Web", "https://grok.com/"], ["Grok (X)", "https://x.com/i/grok"], ["ChatGPT", "https://chatgpt.com/"],
     ["Claude", "https://claude.ai/"], ["Hermes", "https://hermes.nousresearch.com"]];
   function openGrokBotHub() {
-    openModal("Grok Bot & AI", "Grok Bot TUI, companion, PC agents and AI web apps", [
+    openModal(tr("t_grok_ai"), tr("t_grok_ai_sub"), [
       { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
       { label: "💬 Chat with the Grok Bot companion", right: "OK ›", act: function () { openCompanionChat(false); } },
       { label: "Companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } },
@@ -4110,11 +4138,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         var u = cfg.webapps.indexOf(w); if (u >= 0) cfg.webapps.splice(u, 1); saveCfg(); showToast(w.name + " removed"); openWebAppsModal();
       } });
     });
-    openModal("Web apps", "Open in the TV browser · Back returns", items, "https://… or Name=https://…", function (v) { typed = v; }, { noAutoFocus: true });
+    openModal(tr("t_webapps"), tr("t_webapps_sub"), items, "https://… or Name=https://…", function (v) { typed = v; }, { noAutoFocus: true });
   }
   function openTuiWeb() {
     var W = [["Grok Web", "grok"], ["Grok (X)", "xgrok"], ["ChatGPT", "chatgpt"], ["Claude", "claude"], ["Hermes", "hermes"]];
-    openModal("grok bot · web & ai", "Opens in the TV browser · Back returns", W.map(function (w) {
+    openModal("grok bot · web & ai", tr("t_webapps_sub"), W.map(function (w) {
       var u = TUI.WEB_URLS[w[1]];
       return { label: w[0] + " (Web)", right: u.replace(/^https?:\/\//, "").replace(/\/$/, "") + " ›", act: function () { tuiOpenUrl(u, w[0]); } };
     }));
@@ -4326,7 +4354,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         { label: "GrokBot Office (optional)", right: cfg.officeEnabled ? "on" : "off", act: function () { cfg.officeEnabled = !cfg.officeEnabled; saveCfg(); openGrokbotCompanionModal(offIdx); } },
         { label: "Open GrokBot Office", right: cfg.officeEnabled ? "O ›" : "turn it on first", act: function () { if (cfg.officeEnabled) openOffice(); else showToast("Turn GrokBot Office on first"); } });
     }
-    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.2.0 (MIT) · Blue: chat · hold Blue: voice · " +
+    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.2.0 (MIT) · " + tr("t_companion_keys") + " · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
   }
@@ -4365,6 +4393,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   setInterval(function () { if (!document.hidden) syncGrokbotFromPc(false); }, 300000);
 
   function renderAll() {
+    applyWidgetOrder();
     renderTerminal();
     renderWidgets();
     renderDock();
@@ -4584,7 +4613,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
             { label: "Toggle simulated PC link", right: cfg.pcSimulated ? "on" : "off", act: function () { cfg.pcSimulated = !cfg.pcSimulated; saveCfg(); pollPcStatus(); closeModal(); } }
           ]);
           // With a recent PC to pick, don't pop the TV keyboard: ▲ from the first item still reaches the field.
-          openModal("Pair Omarchy Linux PC", "Enter your Omarchy PC LAN IP (serves http://<ip>:8765/v1/status):", pairItems.slice(), "192.168.1.x", function (v) {
+          openModal(tr("t_pair_pc"), tr("t_pair_pc_sub") + " (http://<ip>:8765/v1/status):", pairItems.slice(), "192.168.1.x", function (v) {
             pairTyped = (v || "").trim();
             var ok = /^(https?:\/\/)?[A-Za-z0-9.-]+(:\d{1,5})?\/?$/.test(pairTyped);
             state.modalItems = (ok ? [{ label: "Connect to " + pairTyped, right: "OK", act: function () {
