@@ -8,9 +8,9 @@ Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)]
 
 Published: **19 November 2026 (latest release: 2.21.0 — Android TV, LG webOS & Samsung Tizen)** (`versionCode 30`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
 
-[![OmarchyTV 2.21: your TV, wired into your AI agents. Click to watch the 68-second video](docs/media/omarchytv-2.21.png)](https://github.com/piermark/omarchytv/raw/main/docs/media/omarchytv-2.21.mp4)
+[![OmarchyTV 2.21: your TV, wired into your AI agents. Click to watch the 68-second video](docs/media/omarchytv-2.21.png)](docs/media/omarchytv-2.21.mp4)
 
-*OmarchyTV 2.21 in 68 seconds: click the picture for the video (MP4, 6 MB, with music; also on the [v2.21.0 release](https://github.com/piermark/omarchytv/releases/tag/v2.21.0)). Your AI agent asks the TV and you answer with the remote, builds and agent pages on the big screen, one theme for everything, MCP built in, lighter on 2 GB TVs. The 2.15 video (Pulse and the arcade) is [here](https://github.com/piermark/omarchytv/raw/main/docs/media/omarchytv-2.15.mp4). Everything new in this release is in [What's New in 2.21.0](#whats-new-in-2210-versioncode-30), and earlier in [What's New in 2.20.0](#whats-new-in-2200-versioncode-29), [What's New in 2.15.1](#whats-new-in-2151-versioncode-28) and [What's New in 2.15.0](#whats-new-in-2150-versioncode-27).*
+*OmarchyTV 2.21 in 68 seconds: click the picture for the video (MP4, 6 MB, with music; also on the [v2.21.0 release](https://github.com/piermark/omarchytv/releases/tag/v2.21.0)). Your AI agent asks the TV and you answer with the remote, builds and agent pages on the big screen, one theme for everything, MCP built in, lighter on 2 GB TVs. The 2.15 video (Pulse and the arcade) is [here](docs/media/omarchytv-2.15.mp4). Everything new in this release is in [What's New in 2.21.0](#whats-new-in-2210-versioncode-30), and earlier in [What's New in 2.20.0](#whats-new-in-2200-versioncode-29), [What's New in 2.15.1](#whats-new-in-2151-versioncode-28) and [What's New in 2.15.0](#whats-new-in-2150-versioncode-27).*
 
 > [!WARNING]
 > **Beta software.** Tested on Sony BRAVIA (Android 9), Google TV Streamer (Android 14), Sharp AQUOS, Noblex/Hisense (Android 11), LG webOS and the Android TV emulator. Some features may be missing on some TVs. It never roots or uninstalls anything, and you can always switch back to your stock home screen (see [INSTALL](launcher/docs/INSTALL.md)).
@@ -81,7 +81,7 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 
 ## What's New in `2.21.0` (`versionCode 30`)
 
-**OmarchyTV becomes the screen of your AI agents and dashboards.** [Watch the 68-second video](https://github.com/piermark/omarchytv/raw/main/docs/media/omarchytv-2.21.mp4). Guides: the [2.21 user guide](docs/OMARCHYTV-2.21-GUIDE.md) (every switch and command), [remote access and AI agents](docs/REMOTE-AND-AI-GUIDE.md) (Tailscale, Cloudflare, MCP, Claude Code, Codex, Hermes), the [integrations reference](docs/INTEGRATIONS.md), a [five-minute tour](docs/WHATS-NEW-2.21.md), the [CHANGELOG](CHANGELOG.md).
+**OmarchyTV becomes the screen of your AI agents and dashboards.** [Watch the 68-second video](docs/media/omarchytv-2.21.mp4). Guides: the [2.21 user guide](docs/OMARCHYTV-2.21-GUIDE.md) (every switch and command), [remote access and AI agents](docs/REMOTE-AND-AI-GUIDE.md) (Tailscale, Cloudflare, MCP, Claude Code, Codex, Hermes), the [integrations reference](docs/INTEGRATIONS.md), a [five-minute tour](docs/WHATS-NEW-2.21.md), the [CHANGELOG](CHANGELOG.md).
 
 - **Agents talk to you on the TV**: `omarchy-link notify` (mako-style, *info* waits during a film, *warn*/*alert* show at once, `--speak` reads it aloud), `omarchy-link watch -- make release`, and `omarchy-link ask` answered with the remote. The TV needs **Settings › Grok Bot & AI › AI agent alerts while you watch**.
 - **Approve from the couch**: `omarchy-link agents approvals on` sends Claude Code's permission prompts to the TV (Allow / Deny / On the PC). No answer means the usual prompt: nothing is allowed by itself.
