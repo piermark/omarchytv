@@ -99,6 +99,105 @@ final class GrokbotDirect {
                 .toString();
     }
 
+    // ---- v2.21 (#70): polling that ntfy.sh's rate limit does not starve -----------------------------------------
+
+    /**
+     * Wait before poll number {@code attempt} (0-based). Every 2 s for the first three, then slower up to 10 s:
+     * about 14 requests in 90 s instead of 45. After a 429, the server's Retry-After (at most 30 s), else 10 s.
+     */
+    static long pollDelay(int attempt, int lastStatus, long retryAfterSec) {
+        if (lastStatus == 429) return retryAfterSec > 0 ? Math.min(retryAfterSec, 30) * 1000L : 10_000L;
+        if (attempt < 3) return POLL_MS;
+        return Math.min(10_000L, POLL_MS + (attempt - 2) * 1000L);
+    }
+
+    /** The message when no reply came: says so when ntfy rate-limited the TV (HTTP 429). */
+    static String noAnswer(String server, boolean rateLimited) {
+        boolean shared = NTFY.equals(server(server));
+        if (rateLimited) {
+            return "No answer from Grok Bot: " + (shared ? "ntfy.sh" : "the reply server") + " is rate limiting this TV (HTTP 429)."
+                    + (shared ? " Set your own reply server in Settings › Grok Bot diretto, or try again later." : " Try again in a minute.");
+        }
+        return "No answer from Grok Bot within 90 s. Check the routine and its ntfy step (see docs/GROKBOT-DIRECT.md)."
+                + (shared ? " If ntfy.sh's daily quota ran out, set your own reply server in Settings." : "");
+    }
+
+    /** One poll: the status, the body (200 only) and Retry-After in seconds (0 = none). */
+    static final class Polled {
+        final int status;
+        final String body;
+        final long retryAfter;
+
+        Polled(int status, String body, long retryAfter) {
+            this.status = status;
+            this.body = body;
+            this.retryAfter = retryAfter;
+        }
+    }
+
+    interface Poller {
+        Polled get(String url) throws Exception;
+    }
+
+    interface Sleeper {
+        void sleep(long ms) throws InterruptedException;
+    }
+
+    /**
+     * Poll the reply topic until the reply for {@code id} arrives, {@code live} turns false or the deadline passes.
+     * Returns the ntdjson that holds the reply, or null; {@code rateLimited[0]} says whether a 429 was seen.
+     */
+    static String awaitReply(String server, String topic, String id, long sinceSec, Poller poller, Sleeper sleeper,
+                             java.util.function.LongSupplier clock, java.util.function.BooleanSupplier live, boolean[] rateLimited)
+            throws InterruptedException {
+        long end = clock.getAsLong() + TIMEOUT_MS;
+        int attempt = 0, last = 200;
+        long retryAfter = 0;
+        while (live.getAsBoolean() && clock.getAsLong() < end) {
+            sleeper.sleep(pollDelay(attempt++, last, retryAfter));
+            try {
+                Polled p = poller.get(pollUrl(server, topic, sinceSec));
+                last = p.status;
+                retryAfter = p.retryAfter;
+                if (p.status == 429 && rateLimited != null && rateLimited.length > 0) rateLimited[0] = true;
+                if (p.status == 200 && find(p.body, id) != null) return p.body;
+            } catch (InterruptedException e) {
+                throw e;
+            } catch (Exception ignored) {   // one failed poll: keep trying until the deadline
+                last = 0;
+            }
+        }
+        return null;
+    }
+
+    /** The real poller: HttpURLConnection, a bearer token for a protected ntfy, at most 512 KiB. */
+    static Polled httpGet(String url, String token) throws java.io.IOException {
+        java.net.HttpURLConnection c = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+        try {
+            if (validToken(token)) c.setRequestProperty("Authorization", "Bearer " + token);
+            c.setRequestProperty("User-Agent", "OmarchyTV-grokbot-direct");
+            c.setConnectTimeout(8_000);
+            c.setReadTimeout(10_000);
+            int code = c.getResponseCode();
+            long ra = 0;
+            try {
+                String h = c.getHeaderField("Retry-After");
+                if (h != null && h.trim().matches("\\d{1,6}")) ra = Long.parseLong(h.trim());
+            } catch (RuntimeException ignored) {
+            }
+            if (code != 200) return new Polled(code, "", ra);
+            try (java.io.InputStream in = c.getInputStream()) {
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) > 0 && out.size() < 512 * 1024) out.write(buf, 0, n);
+                return new Polled(200, out.toString("UTF-8"), 0);
+            }
+        } finally {
+            c.disconnect();
+        }
+    }
+
     static String pollUrl(String topic, long sinceSec) {
         return pollUrl(NTFY, topic, sinceSec);
     }

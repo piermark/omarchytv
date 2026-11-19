@@ -172,6 +172,7 @@
     <string name="search_prompt">Dites le nom d\'une app</string>
     <string name="link_service_on">en écoute</string>
     <string name="link_service_off">pas de réseau</string>
+    <string name="link_notification">Omarchy Link est actif</string>
     <string name="remote_service">Télécommande OmarchyTV</string>
     <string name="remote_service_desc">Permet à un PC Omarchy Linux appairé d\'appuyer sur Retour sur le téléviseur. Il ne lit rien à l\'écran.</string>
     <string name="keymap_service">Boutons de télécommande OmarchyTV</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Ouvre OmarchyTV quand Accueil affiche l\'écran d\'accueil d\'origine du téléviseur. Il voit seulement quel écran d\'accueil s\'est ouvert et ne lit rien à l\'écran.</string>
     <string name="set_home_override">Le bouton Accueil ouvre OmarchyTV</string>
     <string name="link_usage">Accès à l\'utilisation (app en cours)</string>
+    <string name="link_share_theme">Partager le thème avec les apps du réseau</string>
+    <string name="link_keep_alive">Garder Link joignable après le démarrage</string>
+    <string name="link_tailscale">Autoriser Tailscale (tailnet)</string>
+    <string name="agentq_asks">demande</string>
+    <string name="agentq_hint">Choisissez une réponse avec la télécommande · RETOUR : répondre plus tard</string>
+    <string name="link_app_tokens">Jetons d\'apps (tableaux de bord, agents)</string>
+    <string name="menu_system_info">Infos système</string>
+    <string name="walker_agent_tile">Pages des agents, en mosaïque</string>
+    <string name="walker_agent_questions">Questions des agents</string>
+    <string name="link_new_app_token">Nouveau jeton d\'app</string>
+    <string name="link_app_tokens_full">Déjà 16 jetons : révoquez-les d\'abord</string>
+    <string name="link_app_token_once">Affiché une seule fois. Scannez-le ou tapez-le dans votre app ; révocable ici ou avec omarchy-link token.</string>
+    <string name="link_tailscale_app">App Tailscale</string>
+    <string name="link_tailscale_open">ouvrir</string>
+    <string name="link_tailscale_get">installer</string>
+    <string name="link_tailscale_qr">Scannez avec votre téléphone pour ouvrir Tailscale sur Google Play</string>
     <string name="link_paired_toast">Appairé avec %1$s</string>
     <string name="link_online">connecté</string>
     <string name="ai_settings">Crédits IA</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">aléatoire (une nouvelle à chaque scène)</string>
     <string name="radio_auto_demo">Mode démo après 1 minute sans touche</string>
     <string name="radio_shuffle">Aléatoire</string>
+    <string name="radio_home_music">Musique sur l\'accueil</string>
+    <string name="radio_song_qr">Page du titre (QR pour le téléphone)</string>
+    <string name="radio_sleep">Minuterie de veille</string>
+    <string name="radio_sleep_left" formatted="true">encore %d min</string>
     <string name="radio_repeat">Répéter</string>
     <string name="radio_repeat_all">tout</string>
     <string name="radio_repeat_one">un</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">oui</string>
     <string name="radio_animated_off">non</string>
+    <string name="ss_pulse_panels">Panneaux Pulse</string>
+    <string name="ss_pulse_racing">panneau courses sur Pulse</string>
+    <string name="ss_pulse_graphics">Graphismes Pulse</string>
 </resources>

@@ -162,11 +162,37 @@
     };
   }
 
+  /** v2.21 the song's page on radio.omarchy.org as a QR code for the phone; any key closes it. */
+  function qrOverlay(doc, text, title) {
+    var Q = root.OmarchyQR;
+    if (!doc || !doc.body || !Q || !text) return null;
+    var cv = Q.canvas(doc, text, 360, "M");
+    if (!cv) return null;
+    var box = doc.createElement("div");
+    box.id = "radio-qr";
+    box.setAttribute("style", "position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;align-items:center;" +
+      "justify-content:center;gap:16px;background:rgba(0,0,0,.86);color:#fff;font-family:monospace;font-size:22px");
+    var h = doc.createElement("div");
+    h.textContent = title || "";
+    var u = doc.createElement("div");
+    u.textContent = text;
+    u.setAttribute("style", "opacity:.7;font-size:16px");
+    box.appendChild(h); box.appendChild(cv); box.appendChild(u);
+    doc.body.appendChild(box);
+    function close(ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      doc.removeEventListener("keydown", close, true);
+      if (box.parentNode) box.parentNode.removeChild(box);
+    }
+    doc.addEventListener("keydown", close, true);
+    return box;
+  }
+
   // ---- the engine: one per app, playing on while the UI is closed --------------------------------------
 
   function engine(opts) {
     var store = opts.store || null, doc = opts.document || root.document;
-    var P = { shuffle: true, repeat: "all", explicit: true, palette: 0, scene: -1, quality: 0, autoDemo: true, animated: "auto", pos: {} };
+    var P = { shuffle: true, repeat: "all", explicit: true, palette: 0, scene: -1, quality: 0, autoDemo: true, animated: "auto", homeMusic: false, pos: {} };
     try { var saved = store && JSON.parse(store.getItem(PREFS) || "null"); if (saved) for (var k in saved) if (Object.prototype.hasOwnProperty.call(saved, k)) P[k] = saved[k]; } catch (e) { /* defaults */ }
     function save() { try { if (store) store.setItem(PREFS, JSON.stringify(P)); } catch (e) { /* full or blocked */ } }
     var E = { songs: [], episodes: [], loading: true, offline: false, queue: [], order: [], at: -1, error: "", listeners: [], prefs: P, save: save, sheets: {} };
@@ -176,8 +202,9 @@
     var ctx = null, an = null, freq = null, bands = Bands(), lastAn = 0;
     function audio() { var t = cur(); return t && t.kind === "episode" ? plain : song; }
     function emit() { for (var i = 0; i < E.listeners.length; i++) try { E.listeners[i](); } catch (e) { /* a closed UI */ } }
+    var noGraph = false, checkT = 0;
     function analyser() {
-      if (an || !(root.AudioContext || root.webkitAudioContext)) return;
+      if (an || noGraph || !(root.AudioContext || root.webkitAudioContext)) return;
       try {
         ctx = new (root.AudioContext || root.webkitAudioContext)();
         var src = ctx.createMediaElementSource(song);
@@ -197,12 +224,12 @@
       var a = audio(), other = a === song ? plain : song;
       other.pause();
       if (a === song) analyser();
-      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ }
       a.src = t.url;
       var from = t.kind === "episode" ? Math.max(0, (P.pos[t.url] || 0) - 3) : 0;
       if (from > 0) { var seek = function () { a.removeEventListener("loadedmetadata", seek); try { a.currentTime = from; } catch (e) { /* not seekable */ } }; a.addEventListener("loadedmetadata", seek); }
       var pr = a.play();
       if (pr && pr.catch) pr.catch(function (e) { E.error = String(e && e.name || "error"); emit(); });
+      if (a === song) resumeAudio();
       emit();
     }
     var errorsInARow = 0;
@@ -222,14 +249,57 @@
       errorsInARow = 0;
       if (t && t.kind === "episode" && now - lastSave > 15000 && a.currentTime > 10) { lastSave = now; P.pos[t.url] = Math.floor(a.currentTime); save(); }
     }
-    for (var x = 0, els = [song, plain]; x < 2; x++) {
-      els[x].addEventListener("ended", onEnded);
-      els[x].addEventListener("error", onError);
-      els[x].addEventListener("timeupdate", onTime);
-      els[x].addEventListener("play", emit);
-      els[x].addEventListener("pause", emit);
-      els[x].addEventListener("waiting", emit);
-      els[x].addEventListener("playing", emit);
+    function listen(el) {
+      el.addEventListener("ended", onEnded);
+      el.addEventListener("error", onError);
+      el.addEventListener("timeupdate", onTime);
+      el.addEventListener("play", emit);
+      el.addEventListener("pause", emit);
+      el.addEventListener("waiting", emit);
+      el.addEventListener("playing", emit);
+    }
+    listen(song);
+    listen(plain);
+    /**
+     * v2.21 LG fix: createMediaElementSource sends the song ONLY through the AudioContext. webOS can leave that
+     * context suspended (started without a key press, or after the app went to the background) while the
+     * <audio> says "playing": silence. So: resume it on every key and on coming back; if it is still not
+     * running shortly after, move the song to a fresh <audio> with no graph (heard for sure, fractals then
+     * dance on their own beat instead of the music's) for the rest of this session.
+     */
+    function bypassGraph() {
+      if (noGraph) return;
+      noGraph = true;
+      var old = song, at = 0, was = !old.paused && !!cur();
+      try { at = old.currentTime || 0; } catch (e) { /* not seekable */ }
+      var fresh = doc.createElement("audio");
+      fresh.preload = "auto";
+      listen(fresh);
+      song = fresh;
+      try { old.pause(); old.removeAttribute("src"); old.load(); } catch (e) { /* gone */ }
+      try { if (ctx && ctx.close) ctx.close(); } catch (e) { /* closed */ }
+      ctx = null; an = null; freq = null;
+      var t = cur();
+      if (t && t.kind !== "episode") {
+        fresh.src = t.url;
+        if (at > 0) { var seek = function () { fresh.removeEventListener("loadedmetadata", seek); try { fresh.currentTime = at; } catch (e) { /* not seekable */ } }; fresh.addEventListener("loadedmetadata", seek); }
+        if (was) { var pr = fresh.play(); if (pr && pr.catch) pr.catch(function (e) { E.error = String(e && e.name || "error"); emit(); }); }
+      }
+      emit();
+    }
+    function resumeAudio() {
+      if (!ctx || noGraph) return;
+      if (ctx.state !== "running" && ctx.resume) {
+        try { var pr = ctx.resume(); if (pr && pr.catch) pr.catch(function () { /* checked below */ }); } catch (e) { /* checked below */ }
+      }
+      clearTimeout(checkT);
+      checkT = setTimeout(function () {
+        if (ctx && ctx.state && ctx.state !== "running" && cur() && audio() === song && !song.paused) bypassGraph();
+      }, 1500);
+    }
+    if (doc.addEventListener) {
+      doc.addEventListener("keydown", resumeAudio, true);   // a key press is the gesture webOS wants
+      doc.addEventListener("visibilitychange", function () { if (!doc.hidden) resumeAudio(); });
     }
 
     E.on = function (fn) { E.listeners.push(fn); return function () { var i = E.listeners.indexOf(fn); if (i >= 0) E.listeners.splice(i, 1); }; };
@@ -263,8 +333,7 @@
     E.toggle = function () {
       var a = audio();
       if (!cur()) return;
-      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* later */ }
-      if (a.paused) { var pr = a.play(); if (pr && pr.catch) pr.catch(function () { /* the TV said no */ }); } else a.pause();
+      if (a.paused) { var pr = a.play(); if (pr && pr.catch) pr.catch(function () { /* the TV said no */ }); resumeAudio(); } else a.pause();
       emit();
     };
     E.pause = function () { audio().pause(); };
@@ -273,8 +342,10 @@
       song.muted = false; plain.muted = false;
       try { song.volume = 1; plain.volume = 1; } catch (e) { /* some TVs freeze volume */ }
       if (cur() && audio() === song) analyser();
-      if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ }
+      resumeAudio();
     };
+    E.resumeAudio = resumeAudio;
+    E.graphBypassed = function () { return noGraph; };
     /**
      * Keep the song audible: the &lt;audio&gt; can report playing while an AudioContext left suspended
      * (idle/screensaver) is silent, because the analyser reroutes the element through it.
@@ -287,20 +358,41 @@
         if (pr && pr.catch) pr.catch(function () { /* the TV said no */ });
       }
     };
-    /** Home fractals wallpaper: keep a current unpaused track audible, or start the playlist once. */
+    /**
+     * Home fractals wallpaper. A song the owner started keeps playing (and audible). v2.21: with nothing playing, Home
+     * stays silent unless "Music on Home" is on (P.homeMusic, off by default); then the playlist starts once.
+     */
+    var homeTried = false;
     E.ensureWallpaperMusic = function () {
-      if (E.playing()) { if (ctx && ctx.resume) try { ctx.resume(); } catch (e) { /* not yet allowed */ } E.claimSession(); return; }
-      if (cur()) return;   // the owner paused it
-      function start() {
-        if (cur() || E.playing()) return;
+      if (E.playing()) { E.resumeAudio(); E.claimSession(); return; }
+      if (cur() || !P.homeMusic) return;   // the owner paused it, or Home is meant to be quiet
+      function begin() {
+        if (cur() || E.playing() || !P.homeMusic) return true;
         var list = visible(E.songs, P.explicit);
         if (!list.length) return false;
         E.play(list, P.shuffle ? Math.floor(Math.random() * list.length) : 0);
         return true;
       }
-      if (start()) return;
-      E.load(function () { start(); });
+      if (begin() || homeTried) return;
+      homeTried = true;
+      E.load(function () { begin(); });
     };
+    E.setHomeMusic = function (on) { P.homeMusic = !!on; if (!on) homeTried = false; save(); emit(); };
+    // v2.21 sleep timer: off → 15 → 30 → 60 → 90 min → off; stops the music.
+    var sleepMin = 0, sleepAt = 0, sleepT = 0;
+    E.cycleSleep = function () {
+      var steps = [0, 15, 30, 60, 90], i = steps.indexOf(sleepMin);
+      E.setSleep(steps[(i + 1) % steps.length]);
+      return sleepMin;
+    };
+    E.setSleep = function (m) {
+      clearTimeout(sleepT);
+      sleepMin = Math.max(0, m | 0);
+      sleepAt = sleepMin ? Date.now() + sleepMin * 60000 : 0;
+      if (sleepMin) sleepT = setTimeout(function () { sleepMin = 0; sleepAt = 0; E.stop(); }, sleepMin * 60000);
+      emit();
+    };
+    E.sleepLeft = function () { return sleepAt ? Math.max(1, Math.ceil((sleepAt - Date.now()) / 60000)) : 0; };
     E.seek = function (s) { var a = audio(), d = E.duration(); try { a.currentTime = Math.max(0, d ? Math.min(s, d - 0.5) : s); } catch (e) { /* not seekable */ } emit(); };
     E.seekBy = function (s) { E.seek(E.position() + s); };
     E.stop = function () { song.pause(); plain.pause(); song.removeAttribute("src"); plain.removeAttribute("src"); E.queue = []; E.order = []; E.at = -1; emit(); };
@@ -390,11 +482,11 @@
   // ---- the UI --------------------------------------------------------------------------------------
 
   var T = {
-    en: { songs: "Songs", queue: "Up next", demo: "Demo mode", settings: "Settings", explicit: "Explicit songs (E)", shown: "shown", hidden: "hidden", colours: "Fractal colours", random: "random", fractal: "Fractal", fractal_auto: "random (a new one each scene)", quality: "Picture quality", quality_auto: "auto, fits this TV (now %s)", animated: "Animated fractals", animated_auto: "auto", animated_on: "yes", animated_off: "no", auto_demo: "Demo mode after 1 minute idle", shuffle: "Shuffle", repeat: "Repeat", all: "all", one: "one", off: "off", on: "on", stop: "Stop and close the player", loading: "Loading Omarchy Radio…", offline: "radio.omarchy.org cannot be reached: showing the copy kept on this TV.", empty: "Nothing here yet.", by: "by %s", send: "Make one, send it: radio.omarchy.org", nothing: "Pick a song: OK plays it.", lyrics: "Lyrics", no_lyrics: "No lyrics for this one yet.", resume: "resume at %s", keys: "OK play · ▶❚❚ pause · ◀◀ ▶▶ · RED demo · BACK", play_all: "Play all", shuffle_all: "Shuffle all", about: "Songs from radio.omarchy.org: each one made by the person named on it and sent in as a pull request, streamed from the site. Podcast: Omarchy Stories. Fractals drawn live on this TV." },
-    it: { songs: "Brani", queue: "Prossimi", demo: "Modalità demo", settings: "Impostazioni", explicit: "Brani espliciti (E)", shown: "visibili", hidden: "nascosti", colours: "Colori dei frattali", random: "casuali", fractal: "Frattale", fractal_auto: "casuale (uno nuovo a ogni scena)", quality: "Qualità dell'immagine", quality_auto: "auto, si adatta a questa TV (ora %s)", animated: "Frattali animati", animated_auto: "auto", animated_on: "sì", animated_off: "no", auto_demo: "Modalità demo dopo 1 minuto senza tasti", shuffle: "Casuale", repeat: "Ripeti", all: "tutti", one: "uno", off: "off", on: "on", stop: "Ferma e chiudi il player", loading: "Carico Omarchy Radio…", offline: "radio.omarchy.org non risponde: mostro la copia salvata su questa TV.", empty: "Ancora niente qui.", by: "di %s", send: "Fanne uno e mandalo: radio.omarchy.org", nothing: "Scegli un brano: OK lo fa partire.", lyrics: "Testo", no_lyrics: "Nessun testo per questo brano, per ora.", resume: "riprendi da %s", keys: "OK play · ▶❚❚ pausa · ◀◀ ▶▶ · ROSSO demo · BACK", play_all: "Riproduci tutto", shuffle_all: "Tutto in casuale", about: "Brani da radio.omarchy.org: ognuno fatto da chi lo firma e arrivato come pull request, in streaming dal sito. Podcast: Omarchy Stories. Frattali disegnati dal vivo su questa TV." },
-    de: { songs: "Songs", queue: "Als Nächstes", demo: "Demo-Modus", settings: "Einstellungen", explicit: "Explizite Songs (E)", shown: "sichtbar", hidden: "ausgeblendet", colours: "Fraktal-Farben", random: "zufällig", fractal: "Fraktal", fractal_auto: "zufällig (jede Szene neu)", quality: "Bildqualität", quality_auto: "auto, passend zu diesem TV (jetzt %s)", animated: "Animierte Fraktale", animated_auto: "auto", animated_on: "ja", animated_off: "nein", auto_demo: "Demo-Modus nach 1 Minute ohne Taste", shuffle: "Zufall", repeat: "Wiederholen", all: "alle", one: "einen", off: "aus", on: "an", stop: "Stoppen und Player schließen", loading: "Omarchy Radio wird geladen…", offline: "radio.omarchy.org nicht erreichbar: die Kopie auf diesem TV wird gezeigt.", empty: "Hier ist noch nichts.", by: "von %s", send: "Mach einen, schick ihn: radio.omarchy.org", nothing: "Wähle einen Song: OK spielt ihn.", lyrics: "Songtext", no_lyrics: "Noch kein Songtext für diesen Song.", resume: "weiter bei %s", keys: "OK spielen · ▶❚❚ Pause · ◀◀ ▶▶ · ROT Demo · BACK", play_all: "Alle abspielen", shuffle_all: "Alle zufällig", about: "Songs von radio.omarchy.org: jeder von der Person, die darauf steht, als Pull Request eingereicht und von der Seite gestreamt. Podcast: Omarchy Stories. Fraktale live auf diesem TV gezeichnet." },
-    fr: { songs: "Titres", queue: "À suivre", demo: "Mode démo", settings: "Réglages", explicit: "Titres explicites (E)", shown: "affichés", hidden: "masqués", colours: "Couleurs des fractales", random: "aléatoires", fractal: "Fractale", fractal_auto: "aléatoire (une nouvelle à chaque scène)", quality: "Qualité d'image", quality_auto: "auto, adaptée à cette TV (actuellement %s)", animated: "Fractales animées", animated_auto: "auto", animated_on: "oui", animated_off: "non", auto_demo: "Mode démo après 1 minute sans touche", shuffle: "Aléatoire", repeat: "Répéter", all: "tout", one: "un", off: "non", on: "oui", stop: "Arrêter et fermer le lecteur", loading: "Chargement d'Omarchy Radio…", offline: "radio.omarchy.org ne répond pas : la copie gardée sur cette TV est affichée.", empty: "Rien ici pour l'instant.", by: "par %s", send: "Fais-en un, envoie-le : radio.omarchy.org", nothing: "Choisis un titre : OK le lance.", lyrics: "Paroles", no_lyrics: "Pas encore de paroles pour celui-ci.", resume: "reprendre à %s", keys: "OK lire · ▶❚❚ pause · ◀◀ ▶▶ · ROUGE démo · BACK", play_all: "Tout lire", shuffle_all: "Tout en aléatoire", about: "Titres de radio.omarchy.org : chacun fait par la personne qui le signe, envoyé en pull request et lu en streaming depuis le site. Podcast : Omarchy Stories. Fractales dessinées en direct sur cette TV." },
-    es: { songs: "Canciones", queue: "A continuación", demo: "Modo demo", settings: "Ajustes", explicit: "Canciones explícitas (E)", shown: "visibles", hidden: "ocultas", colours: "Colores de los fractales", random: "aleatorios", fractal: "Fractal", fractal_auto: "aleatorio (uno nuevo en cada escena)", quality: "Calidad de imagen", quality_auto: "auto, se adapta a esta TV (ahora %s)", animated: "Fractales animados", animated_auto: "auto", animated_on: "sí", animated_off: "no", auto_demo: "Modo demo tras 1 minuto sin teclas", shuffle: "Aleatorio", repeat: "Repetir", all: "todas", one: "una", off: "no", on: "sí", stop: "Parar y cerrar el reproductor", loading: "Cargando Omarchy Radio…", offline: "radio.omarchy.org no responde: se muestra la copia guardada en esta TV.", empty: "Todavía no hay nada aquí.", by: "de %s", send: "Haz una y envíala: radio.omarchy.org", nothing: "Elige una canción: OK la reproduce.", lyrics: "Letra", no_lyrics: "Aún no hay letra para esta.", resume: "seguir en %s", keys: "OK reproducir · ▶❚❚ pausa · ◀◀ ▶▶ · ROJO demo · BACK", play_all: "Reproducir todo", shuffle_all: "Todo aleatorio", about: "Canciones de radio.omarchy.org: cada una hecha por quien la firma, enviada como pull request y escuchada en streaming desde el sitio. Podcast: Omarchy Stories. Fractales dibujados en directo en esta TV." }
+    en: { song_qr: "Song page (QR for your phone)", home_music: "Music on Home", sleep: "Sleep timer", sleep_left: "%d min left", songs: "Songs", queue: "Up next", demo: "Demo mode", settings: "Settings", explicit: "Explicit songs (E)", shown: "shown", hidden: "hidden", colours: "Fractal colours", random: "random", fractal: "Fractal", fractal_auto: "random (a new one each scene)", quality: "Picture quality", quality_auto: "auto, fits this TV (now %s)", animated: "Animated fractals", animated_auto: "auto", animated_on: "yes", animated_off: "no", auto_demo: "Demo mode after 1 minute idle", shuffle: "Shuffle", repeat: "Repeat", all: "all", one: "one", off: "off", on: "on", stop: "Stop and close the player", loading: "Loading Omarchy Radio…", offline: "radio.omarchy.org cannot be reached: showing the copy kept on this TV.", empty: "Nothing here yet.", by: "by %s", send: "Make one, send it: radio.omarchy.org", nothing: "Pick a song: OK plays it.", lyrics: "Lyrics", no_lyrics: "No lyrics for this one yet.", resume: "resume at %s", keys: "OK play · ▶❚❚ pause · ◀◀ ▶▶ · RED demo · BACK", play_all: "Play all", shuffle_all: "Shuffle all", about: "Songs from radio.omarchy.org: each one made by the person named on it and sent in as a pull request, streamed from the site. Podcast: Omarchy Stories. Fractals drawn live on this TV." },
+    it: { song_qr: "Pagina del brano (QR per il telefono)", home_music: "Musica sulla Home", sleep: "Timer di spegnimento", sleep_left: "ancora %d min", songs: "Brani", queue: "Prossimi", demo: "Modalità demo", settings: "Impostazioni", explicit: "Brani espliciti (E)", shown: "visibili", hidden: "nascosti", colours: "Colori dei frattali", random: "casuali", fractal: "Frattale", fractal_auto: "casuale (uno nuovo a ogni scena)", quality: "Qualità dell'immagine", quality_auto: "auto, si adatta a questa TV (ora %s)", animated: "Frattali animati", animated_auto: "auto", animated_on: "sì", animated_off: "no", auto_demo: "Modalità demo dopo 1 minuto senza tasti", shuffle: "Casuale", repeat: "Ripeti", all: "tutti", one: "uno", off: "off", on: "on", stop: "Ferma e chiudi il player", loading: "Carico Omarchy Radio…", offline: "radio.omarchy.org non risponde: mostro la copia salvata su questa TV.", empty: "Ancora niente qui.", by: "di %s", send: "Fanne uno e mandalo: radio.omarchy.org", nothing: "Scegli un brano: OK lo fa partire.", lyrics: "Testo", no_lyrics: "Nessun testo per questo brano, per ora.", resume: "riprendi da %s", keys: "OK play · ▶❚❚ pausa · ◀◀ ▶▶ · ROSSO demo · BACK", play_all: "Riproduci tutto", shuffle_all: "Tutto in casuale", about: "Brani da radio.omarchy.org: ognuno fatto da chi lo firma e arrivato come pull request, in streaming dal sito. Podcast: Omarchy Stories. Frattali disegnati dal vivo su questa TV." },
+    de: { song_qr: "Songseite (QR fürs Handy)", home_music: "Musik auf dem Startbildschirm", sleep: "Sleep-Timer", sleep_left: "noch %d Min.", songs: "Songs", queue: "Als Nächstes", demo: "Demo-Modus", settings: "Einstellungen", explicit: "Explizite Songs (E)", shown: "sichtbar", hidden: "ausgeblendet", colours: "Fraktal-Farben", random: "zufällig", fractal: "Fraktal", fractal_auto: "zufällig (jede Szene neu)", quality: "Bildqualität", quality_auto: "auto, passend zu diesem TV (jetzt %s)", animated: "Animierte Fraktale", animated_auto: "auto", animated_on: "ja", animated_off: "nein", auto_demo: "Demo-Modus nach 1 Minute ohne Taste", shuffle: "Zufall", repeat: "Wiederholen", all: "alle", one: "einen", off: "aus", on: "an", stop: "Stoppen und Player schließen", loading: "Omarchy Radio wird geladen…", offline: "radio.omarchy.org nicht erreichbar: die Kopie auf diesem TV wird gezeigt.", empty: "Hier ist noch nichts.", by: "von %s", send: "Mach einen, schick ihn: radio.omarchy.org", nothing: "Wähle einen Song: OK spielt ihn.", lyrics: "Songtext", no_lyrics: "Noch kein Songtext für diesen Song.", resume: "weiter bei %s", keys: "OK spielen · ▶❚❚ Pause · ◀◀ ▶▶ · ROT Demo · BACK", play_all: "Alle abspielen", shuffle_all: "Alle zufällig", about: "Songs von radio.omarchy.org: jeder von der Person, die darauf steht, als Pull Request eingereicht und von der Seite gestreamt. Podcast: Omarchy Stories. Fraktale live auf diesem TV gezeichnet." },
+    fr: { song_qr: "Page du titre (QR pour le téléphone)", home_music: "Musique sur l'accueil", sleep: "Minuterie de veille", sleep_left: "encore %d min", songs: "Titres", queue: "À suivre", demo: "Mode démo", settings: "Réglages", explicit: "Titres explicites (E)", shown: "affichés", hidden: "masqués", colours: "Couleurs des fractales", random: "aléatoires", fractal: "Fractale", fractal_auto: "aléatoire (une nouvelle à chaque scène)", quality: "Qualité d'image", quality_auto: "auto, adaptée à cette TV (actuellement %s)", animated: "Fractales animées", animated_auto: "auto", animated_on: "oui", animated_off: "non", auto_demo: "Mode démo après 1 minute sans touche", shuffle: "Aléatoire", repeat: "Répéter", all: "tout", one: "un", off: "non", on: "oui", stop: "Arrêter et fermer le lecteur", loading: "Chargement d'Omarchy Radio…", offline: "radio.omarchy.org ne répond pas : la copie gardée sur cette TV est affichée.", empty: "Rien ici pour l'instant.", by: "par %s", send: "Fais-en un, envoie-le : radio.omarchy.org", nothing: "Choisis un titre : OK le lance.", lyrics: "Paroles", no_lyrics: "Pas encore de paroles pour celui-ci.", resume: "reprendre à %s", keys: "OK lire · ▶❚❚ pause · ◀◀ ▶▶ · ROUGE démo · BACK", play_all: "Tout lire", shuffle_all: "Tout en aléatoire", about: "Titres de radio.omarchy.org : chacun fait par la personne qui le signe, envoyé en pull request et lu en streaming depuis le site. Podcast : Omarchy Stories. Fractales dessinées en direct sur cette TV." },
+    es: { song_qr: "Página de la canción (QR para el móvil)", home_music: "Música en el inicio", sleep: "Temporizador", sleep_left: "quedan %d min", songs: "Canciones", queue: "A continuación", demo: "Modo demo", settings: "Ajustes", explicit: "Canciones explícitas (E)", shown: "visibles", hidden: "ocultas", colours: "Colores de los fractales", random: "aleatorios", fractal: "Fractal", fractal_auto: "aleatorio (uno nuevo en cada escena)", quality: "Calidad de imagen", quality_auto: "auto, se adapta a esta TV (ahora %s)", animated: "Fractales animados", animated_auto: "auto", animated_on: "sí", animated_off: "no", auto_demo: "Modo demo tras 1 minuto sin teclas", shuffle: "Aleatorio", repeat: "Repetir", all: "todas", one: "una", off: "no", on: "sí", stop: "Parar y cerrar el reproductor", loading: "Cargando Omarchy Radio…", offline: "radio.omarchy.org no responde: se muestra la copia guardada en esta TV.", empty: "Todavía no hay nada aquí.", by: "de %s", send: "Haz una y envíala: radio.omarchy.org", nothing: "Elige una canción: OK la reproduce.", lyrics: "Letra", no_lyrics: "Aún no hay letra para esta.", resume: "seguir en %s", keys: "OK reproducir · ▶❚❚ pausa · ◀◀ ▶▶ · ROJO demo · BACK", play_all: "Reproducir todo", shuffle_all: "Todo aleatorio", about: "Canciones de radio.omarchy.org: cada una hecha por quien la firma, enviada como pull request y escuchada en streaming desde el sitio. Podcast: Omarchy Stories. Fractales dibujados en directo en esta TV." }
   };
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function clock(s) {
@@ -537,6 +629,7 @@
         })(i, E.episodes[i]);
       } else if (S.src === 2) {
         if (cur) out.push({ tr: cur, num: "▶", label: cur.title, sub: cur.artist, act: E.toggle });
+        if (cur && cur.page) out.push({ num: "▣", label: t("song_qr"), sub: String(cur.page).replace(/^https?:\/\//, ""), act: function () { qrOverlay(el.ownerDocument || root.document, cur.page, cur.title); } });
         var up = E.upNext(60);
         if (!up.length && !cur) out.push({ label: t("nothing") });
         for (i = 0; i < up.length; i++) (function (k, e) { out.push({ tr: e, num: (k < 9 ? " " : "") + (k + 1), label: e.title, sub: e.artist, act: function () { for (var j = 0; j <= k; j++) E.next(true); } }); })(i, up[i]);
@@ -549,6 +642,8 @@
         out.push({ num: "›", label: t("animated"), sub: t("animated_" + animatedMode()), act: function () { P.animated = animatedMode() === "auto" ? "on" : animatedMode() === "on" ? "off" : "auto"; E.save(); } });
         out.push({ num: "›", label: t("fractal"), sub: P.scene < 0 ? t("fractal_auto") : FX.SCENES[P.scene], act: function () { P.scene = P.scene + 1 >= 5 ? -1 : P.scene + 1; E.save(); if (fx) fx.pin(P.scene); } });
         out.push({ num: "›", label: t("auto_demo"), sub: t(P.autoDemo ? "on" : "off"), act: function () { P.autoDemo = !P.autoDemo; E.save(); } });
+        out.push({ num: "›", label: t("home_music"), sub: t(P.homeMusic ? "on" : "off"), act: function () { E.setHomeMusic(!P.homeMusic); } });
+        out.push({ num: "›", label: t("sleep"), sub: E.sleepLeft() ? t("sleep_left").replace("%d", E.sleepLeft()) : t("off"), act: function () { E.cycleSleep(); } });
         out.push({ num: "›", label: t("shuffle"), sub: t(P.shuffle ? "on" : "off"), act: function () { E.setShuffle(!P.shuffle); } });
         out.push({ num: "›", label: t("repeat"), sub: t(P.repeat), act: E.cycleRepeat });
         out.push({ num: "■", label: t("stop"), sub: "", act: E.stop });
@@ -780,7 +875,7 @@
   }
 
   root.OmarchyRadio = {
-    engine: engine, open: open, mediaKey: mediaKey,
+    engine: engine, open: open, mediaKey: mediaKey, qrOverlay: qrOverlay,
     parseSongs: parseSongs, parseFeed: parseFeed, parseLyrics: parseLyrics, lineAt: lineAt, slug: slug, uniqueSlug: uniqueSlug, visible: visible,
     shuffled: shuffled, Bands: Bands, clock: clock, bar: bar, T: T
   };

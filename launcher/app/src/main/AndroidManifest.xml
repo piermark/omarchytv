@@ -29,6 +29,7 @@
 
     <!-- Android 11+ package visibility for the speech recognizer and TTS (no effect on Android 8/9). -->
     <queries>
+        <package android:name="com.tailscale.ipn" />
         <intent>
             <action android:name="android.speech.action.RECOGNIZE_SPEECH" />
         </intent>
@@ -85,7 +86,14 @@
          Wi-Fi stays awake while it streams. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- Android 13+: needed to update the now-playing notification after the service started (notify()). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Omarchy Link keep-alive, only while a PC is paired: a connectedDevice foreground service. Android 14 needs the
+         type permission plus one of CHANGE_NETWORK_STATE / CHANGE_WIFI_STATE / CHANGE_WIFI_MULTICAST_STATE (all normal;
+         CHANGE_NETWORK_STATE, unlike the Wi-Fi ones, implies no Wi-Fi hardware, so Ethernet-only TVs are unaffected). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
     <application
         android:name=".OmarchyApp"
@@ -151,16 +159,18 @@
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TvHome" />
 
-        <!-- After a reboot: if the stock launcher took the home screen back, ask once (never changes it). -->
         <!-- v2.14 Updater: PackageInstaller result (shows Android's confirm, reports failures). -->
         <receiver
             android:name=".Updater$Done"
             android:exported="false" />
+        <!-- After a reboot: start Omarchy Link (with a paired PC), and if the stock launcher took the home screen back,
+             ask once (never changes it). After an update of this app: start Omarchy Link again. -->
         <receiver
             android:name=".HomeCheck"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
 
@@ -284,6 +294,29 @@
 
         <!-- v2.13.8: "Grok Bot diretto (senza PC)" chat: the user's own webhook routine, replies via ntfy.sh. Not exported. -->
         <activity
+            android:name=".AgentQuestionActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
+        <activity
+            android:name=".QrActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
+        <activity
+            android:name=".AgentPageActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
+        <activity
             android:name=".GrokbotDirectActivity"
             android:exported="false"
             android:excludeFromRecents="true"
@@ -334,10 +367,12 @@
             </intent-filter>
         </service>
 
-        <!-- Omarchy Link (TV side, TCP 47800 on the LAN only). Plain started service: no notification,
-             no wakelock; the server itself lives with the launcher process. -->
+        <!-- Omarchy Link (TV side, TCP 47800 on the LAN only). While a PC is paired: a foreground service (quiet
+             low-importance notification, no wakelock) started at boot, after an update and from the launcher, so the
+             server stays reachable and keeps network access in doze. The server itself lives in this process. -->
         <service
             android:name=".OmarchyLink$KeepAlive"
+            android:foregroundServiceType="connectedDevice"
             android:exported="false" />
 
         <!-- Optional: lets a paired PC press Back. Off until the user enables it (Settings > Accessibility). -->

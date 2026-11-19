@@ -172,6 +172,7 @@
     <string name="search_prompt">Spune numele unei aplicații</string>
     <string name="link_service_on">ascultă</string>
     <string name="link_service_off">fără rețea</string>
+    <string name="link_notification">Omarchy Link rulează</string>
     <string name="remote_service">Telecomandă OmarchyTV</string>
     <string name="remote_service_desc">Permite unui PC asociat cu Omarchy Linux să apese Înapoi pe televizor. Nu citește nimic de pe ecran.</string>
     <string name="keymap_service">Butoane telecomandă OmarchyTV</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Deschide OmarchyTV când Acasă afișează ecranul de pornire original al televizorului. Vede doar ce ecran de pornire s-a deschis și nu citește nimic de pe ecran.</string>
     <string name="set_home_override">Butonul Acasă deschide OmarchyTV</string>
     <string name="link_usage">Acces la utilizare (aplicația curentă)</string>
+    <string name="link_share_theme">Partajează tema cu aplicațiile din rețea</string>
+    <string name="link_keep_alive">Link accesibil după pornire</string>
+    <string name="link_tailscale">Permite Tailscale (tailnet)</string>
+    <string name="agentq_asks">întreabă</string>
+    <string name="agentq_hint">Alege un răspuns cu telecomanda · ÎNAPOI: răspunde mai târziu</string>
+    <string name="link_app_tokens">Tokenuri de aplicații (panouri, agenți)</string>
+    <string name="menu_system_info">Informații sistem</string>
+    <string name="walker_agent_tile">Paginile agenților, alăturate</string>
+    <string name="walker_agent_questions">Întrebări de la agenți</string>
+    <string name="link_new_app_token">Token nou de aplicație</string>
+    <string name="link_app_tokens_full">Există deja 16 tokenuri: revocă-le întâi</string>
+    <string name="link_app_token_once">Afișat o singură dată. Scanează-l sau scrie-l în aplicație; îl revoci aici sau cu omarchy-link token.</string>
+    <string name="link_tailscale_app">Aplicația Tailscale</string>
+    <string name="link_tailscale_open">deschide</string>
+    <string name="link_tailscale_get">instalează</string>
+    <string name="link_tailscale_qr">Scanează cu telefonul pentru Tailscale pe Google Play</string>
     <string name="link_paired_toast">Asociat cu %1$s</string>
     <string name="link_online">conectat</string>
     <string name="ai_settings">Credite AI</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">aleatoriu (unul nou la fiecare scenă)</string>
     <string name="radio_auto_demo">Mod demo după 1 minut fără taste</string>
     <string name="radio_shuffle">Aleatoriu</string>
+    <string name="radio_home_music">Muzică pe ecranul principal</string>
+    <string name="radio_song_qr">Pagina piesei (QR pentru telefon)</string>
+    <string name="radio_sleep">Temporizator de oprire</string>
+    <string name="radio_sleep_left" formatted="true">încă %d min</string>
     <string name="radio_repeat">Repetă</string>
     <string name="radio_repeat_all">toate</string>
     <string name="radio_repeat_one">una</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">da</string>
     <string name="radio_animated_off">nu</string>
+    <string name="ss_pulse_panels">Panouri Pulse</string>
+    <string name="ss_pulse_racing">panou curse pe Pulse</string>
+    <string name="ss_pulse_graphics">Grafică Pulse</string>
 </resources>

@@ -397,7 +397,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
             @Override
             public void pairPc() {
-                OmarchyLink.openPairing();   // same as menu → Omarchy Link: a new code each time the page opens
+                OmarchyLink.openPairing();   // same as menu → Connect Omarchy Linux: a new code each time the page opens
                 showMenu("link", null);
             }
 
@@ -793,6 +793,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
         }
         items.add(new Walker.Item("X (x.com)", tApp, () -> WebAppActivity.open(this, LauncherConfig.X_WEBAPP)));
+        // v2.21 agents: their pages (all of them tiled, Hyprland style) and the questions waiting for you
+        if (!cfg.agentPages.isEmpty()) {
+            java.util.List<String> all = new java.util.ArrayList<>();
+            for (LauncherConfig.AgentPage pg : cfg.agentPages) if (all.size() < 4) all.add(pg.url);
+            if (all.size() > 1) items.add(new Walker.Item("▦ " + str(R.string.walker_agent_tile), tApp, () -> open(AgentPageActivity.intent(this, all))));
+        }
+        if (OmarchyLink.pendingAsks() > 0) {
+            items.add(new Walker.Item("● " + str(R.string.walker_agent_questions) + " (" + OmarchyLink.pendingAsks() + ")", tApp,
+                    () -> OmarchyLink.showPendingAsk(this)));
+        }
         if (cfg.pluginOmastorm) items.add(new Walker.Item("⛈ Omastorm (radar)", tApp, this::openOmastorm));
         items.add(new Walker.Item("🕹 OmarchyTV Arcade (V-HOLD · RICE WARS · FORK BOMB)", tApp, () -> ArcadeActivity.open(this)));
         items.add(new Walker.Item("🎬 Cinemarchy (Media, Streaming, Live TV & Snippets)", str(R.string.cinemarchy_hub), () -> open(new Intent(this, CinemarchyActivity.class))));
@@ -1030,13 +1040,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         super.onResume();
         BootScreenView.onResume(this, findViewById(R.id.root));
         // migrations first, then the wallpaper layers: a first launch must not attach OmaFire/fractals to the old default
-        LauncherConfig.update(this, j -> { LauncherConfig.pulseDefault(j); LauncherConfig.fractalWallpaperDefault(j); });
+        LauncherConfig.update(this, j -> {
+            LauncherConfig.pulseDefault(j);
+            LauncherConfig.eyesWallpaperDefault(j);     // v2.21 first: it marks the 2.20 fractals migration as done
+            LauncherConfig.fractalWallpaperDefault(j);
+        });
         OmaFireLayer.onResume(this, findViewById(R.id.wallpaper));   // v2.14 OmaFire animated wallpaper   // "wake" mode: replay after the screen came on
         FractalLayer.onResume(this, findViewById(R.id.wallpaper));  // v2.20 Radiomarchy fractals wallpaper
         RadioPlayer rp = RadioPlayer.peek();
         if (rp != null) rp.claimSession();   // v2.20: after YouTube took audio focus, media keys on Home still resume
         bindCompanion();
         OmarchyLink.sweepCasts(this);   // 24 h cleanup of cast uploads (no-op when nothing was ever cast)
+        OmarchyLink.showPendingAsk(this);   // v2.21: a question from an agent that waited for Home
+        OmarchyLink.flushHeldNotes(this);   // v2.21: notifications that waited while a film was on
         LauncherConfig cfg = LauncherConfig.get(this);
         if (cfg.pulseNotice) {
             Toast.makeText(this, R.string.pulse_notice, Toast.LENGTH_LONG).show();
@@ -1168,6 +1184,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (voiceSearch != null) voiceSearch.destroy();
         BootScreenView.onDestroy(this);
         LiftoffView.onDestroy();
         OmaFireLayer.onPause();
@@ -1927,6 +1944,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                     open(new Intent(Settings.ACTION_SETTINGS));
                     return false;
                 })
+                .add(str(R.string.menu_system_info), "›", r -> push(systemInfoPage()))
                 .add(str(R.string.menu_about), null, r -> {
                     handler.post(this::showAbout);
                     return false;
@@ -2166,7 +2184,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 : "Not linked to the desktop companion: questions open the Ask screen. Install omarchy-link and "
                 + "@tcballard's companion on the PC to mirror the bot here.";
         String msg = (cfg.grokbotMessage != null && !cfg.grokbotMessage.isEmpty() ? "Last: " + cfg.grokbotMessage + "\n\n" : "")
-                + state + "\n\nBuilt for @tcballard's Agent Desktop v0.2.0 (MIT)"
+                + state + "\n\nBuilt for @tcballard's Agent Desktop v0.3.3 (MIT)"
                 + (bridge && cfg.grokbotBotVersion != null && !cfg.grokbotBotVersion.isEmpty()
                 ? " · companion v" + cfg.grokbotBotVersion : "") + " · built for v0.2.0.";
         new android.app.AlertDialog.Builder(this)
@@ -3113,9 +3131,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             stopWallpaperIntro();
             return;
         }
+        boolean plain = FractalView.preferPlain(this);
+        String light = mp4.substring(0, mp4.length() - 4) + "-light.mp4";
+        // v2.21 weak TV: the 540p / 15 fps copy where there is one (Eyes Wide), else the still: no 720p video
+        String plan = WallpaperView.introPlan(plain, WallpaperView.assetExists(this, light));
+        if ("skip".equals(plan)) {
+            stopWallpaperIntro();
+            return;
+        }
+        if ("light".equals(plan)) mp4 = light;
+        boolean loop = cfg.wallpaperLoop && !WallpaperLoopGuard.stuttered(this);
         String key = Theme.cur().name + ":" + mp4;
         // Played once already: stay on the still, unless "Always-animated wallpaper" loops it on every return.
-        if (key.equals(lastIntroKey) && (!cfg.wallpaperLoop || introView != null)) return;
+        if (key.equals(lastIntroKey) && (!loop || introView != null)) return;
         lastIntroKey = key;
         stopWallpaperIntro();
         java.io.File tmp = new java.io.File(getCacheDir(), "wp_intro.mp4");
@@ -3128,6 +3156,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return;
         }
         android.view.TextureView tv = new android.view.TextureView(this);
+        WallpaperLoopGuard guard = new WallpaperLoopGuard(plain ? 15 : 24);
         tv.setFocusable(false);
         tv.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO);
         introView = tv;
@@ -3142,7 +3171,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                     mp.setSurface(new android.view.Surface(surface));
                     mp.setDataSource(tmp.getAbsolutePath());
                     mp.setVolume(0f, 0f);
-                    mp.setLooping(cfg.wallpaperLoop);
+                    mp.setLooping(loop);
                     mp.setOnCompletionListener(m -> {
                         if (introView != null) {
                             introView.animate().alpha(0f).setDuration(300).withEndAction(MainActivity.this::stopWallpaperIntro).start();
@@ -3162,7 +3191,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
             @Override public void onSurfaceTextureSizeChanged(android.graphics.SurfaceTexture s, int w, int h) {}
             @Override public boolean onSurfaceTextureDestroyed(android.graphics.SurfaceTexture s) { stopWallpaperIntro(); return true; }
-            @Override public void onSurfaceTextureUpdated(android.graphics.SurfaceTexture s) {}
+            @Override public void onSurfaceTextureUpdated(android.graphics.SurfaceTexture s) {
+                // v2.21: a loop that cannot keep half its frame rate settles on the still, here and next time
+                if (guard.frame(android.os.SystemClock.elapsedRealtime())) {
+                    WallpaperLoopGuard.remember(MainActivity.this);
+                    android.media.MediaPlayer mp = introPlayer;
+                    if (mp != null) try { mp.setLooping(false); } catch (Throwable ignored) {}
+                }
+            }
         });
     }
 
@@ -3393,6 +3429,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         String lLoop = str(R.string.wp_loop);
         p.add(lLoop, str(cfg.wallpaperLoop ? R.string.on : R.string.off), r -> {
             boolean n = !cfg.wallpaperLoop;
+            WallpaperLoopGuard.forget(this);   // v2.21 a new try after a stutter fallback
             applyLive("wallpaper", lLoop, j -> j.put("wallpaperLoop", n));   // recreate() replays it with the new mode
             return true;
         });
@@ -3426,6 +3463,13 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             });
         }
         return p;
+    }
+
+    private String keepAliveValue(String mode) {
+        if ("on".equals(mode)) return str(R.string.on);
+        if ("off".equals(mode)) return str(R.string.off);
+        boolean yes = LinkBoot.keepAliveAllowed("auto", LinkBoot.lowRam(this), FractalView.totalRam(this));
+        return str(R.string.radio_animated_auto) + " · " + str(yes ? R.string.on : R.string.off);
     }
 
     private AsciiMenu.Page screensaverPage() {
@@ -3578,6 +3622,40 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
      * Connect Omarchy Linux. While this page is visible pairing is open (at most 5 minutes) and the mDNS TXT
      * says pair=1. The code lives in memory only; tokens in internal storage; omarchytv.json gets link.pcs[].
      */
+    /** v2.21 Settings › System info: version, device, network (LAN, Tailscale), the link to the PC, the last log lines. */
+    private AsciiMenu.Page systemInfoPage() {
+        org.json.JSONObject d = OmarchyLink.systemInfo(this);
+        AsciiMenu.Page p = new AsciiMenu.Page(str(R.string.menu_system_info));
+        org.json.JSONObject dev = d.optJSONObject("device"), net = d.optJSONObject("network"), set = d.optJSONObject("settings"),
+                lk = d.optJSONObject("link");
+        p.add("OmarchyTV", d.optString("launcherVersion", "?"), r -> true);
+        if (dev != null) {
+            p.add("TV", dev.optString("manufacturer") + " " + dev.optString("model"), r -> true);
+            p.add("Android", dev.optString("android") + " (API " + dev.optInt("sdk") + ")", r -> true);
+            if (dev.has("ramMb")) p.add("RAM", dev.optLong("ramMb") + " MB" + (dev.optBoolean("lowRam") ? " · low-RAM" : ""), r -> true);
+            if (!dev.optString("gpu").isEmpty()) p.add("GPU", dev.optString("gpu"), r -> true);
+        }
+        if (net != null) {
+            p.add("LAN", net.isNull("lan") ? str(R.string.offline) : net.optString("lan", str(R.string.offline)), r -> true);
+            p.add("Tailscale", net.isNull("tailnet") || !net.has("tailnet") ? "—" : net.optString("tailnet"), r -> true);
+            p.add(str(R.string.menu_link), str(net.optBoolean("listening") ? R.string.on : R.string.off), r -> true);
+        }
+        if (lk != null) {
+            p.add("PC", lk.optInt("pcs") + " · " + lk.optInt("events") + " online", r -> true);
+            p.add(str(R.string.link_app_tokens), String.valueOf(lk.optInt("appTokens")), r -> true);
+        }
+        if (set != null) {
+            p.add(str(R.string.link_share_theme), str(set.optBoolean("shareTheme") ? R.string.on : R.string.off), r -> true);
+            p.add(str(R.string.link_tailscale), str(set.optBoolean("tailscale") ? R.string.on : R.string.off), r -> true);
+        }
+        org.json.JSONArray log = d.optJSONArray("log");
+        for (int i = log == null ? 0 : Math.max(0, log.length() - 12); log != null && i < log.length(); i++) {
+            String l = log.optString(i);
+            p.add(l.length() > 8 ? l.substring(0, 8) : l, l.length() > 9 ? l.substring(9) : "", r -> true);
+        }
+        return p;
+    }
+
     private AsciiMenu.Page linkPage() {
         String code = OmarchyLink.currentCode();
         if (code == null) code = OmarchyLink.openPairing();
@@ -3616,12 +3694,86 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             r.setValue(str(n ? R.string.on : R.string.off));
             return true;
         });
+        // v2.21: app tokens for dashboards and agents (also omarchy-link token add on the PC): how many, revoke them all,
+        // or make one here; it is shown once, as a QR code and as text.
+        int apps = OmarchyLink.appTokens();
+        p.add(str(R.string.link_app_tokens), apps == 0 ? "0" : apps + " · " + str(R.string.link_forget_short), r -> {
+            if (OmarchyLink.appTokens() > 0) OmarchyLink.revokeAppTokens();
+            r.setValue("0");
+            return true;
+        });
+        for (String scope : new String[]{"read", "notify", "control"}) {
+            p.add(str(R.string.link_new_app_token) + " · " + scope, "›", r -> {
+                String name = "TV " + new java.text.SimpleDateFormat("MM-dd HH:mm", java.util.Locale.ROOT).format(new java.util.Date());
+                String[] t = OmarchyLink.newAppToken(name, scope);
+                if (t == null) {
+                    android.widget.Toast.makeText(this, R.string.link_app_tokens_full, android.widget.Toast.LENGTH_LONG).show();
+                    return true;
+                }
+                startActivity(QrActivity.intent(this, name + " · " + scope, t[1], getString(R.string.link_app_token_once), true));
+                return true;
+            });
+        }
+        // v2.21: Tailscale (off by default). On: the TV also answers its tailnet address; the value shows it.
+        p.add(str(R.string.link_tailscale), tailscaleValue(LauncherConfig.get(this).tailscale), r -> {
+            boolean n = !LauncherConfig.get(this).tailscale;
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject l = j.optJSONObject("link");
+                if (l == null) j.put("link", l = new org.json.JSONObject());
+                l.put("tailscale", n);
+            });
+            OmarchyLink.tailscaleChanged();
+            r.setValue(tailscaleValue(n));
+            return true;
+        });
+        // v2.21: the official Tailscale app: open it, or install it (Play Store, or a QR code for the phone)
+        boolean tsApp = installed("com.tailscale.ipn");
+        p.add(str(R.string.link_tailscale_app), str(tsApp ? R.string.link_tailscale_open : R.string.link_tailscale_get), r -> {
+            if (installed("com.tailscale.ipn")) {
+                Intent li = getPackageManager().getLeanbackLaunchIntentForPackage("com.tailscale.ipn");
+                if (li == null) li = getPackageManager().getLaunchIntentForPackage("com.tailscale.ipn");
+                if (li != null) startActivity(li);
+                return true;
+            }
+            try {
+                startActivity(new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("market://details?id=com.tailscale.ipn")));
+            } catch (RuntimeException e) {
+                startActivity(QrActivity.intent(this, "Tailscale", "https://play.google.com/store/apps/details?id=com.tailscale.ipn",
+                        getString(R.string.link_tailscale_qr), false));
+            }
+            return true;
+        });
+        // v2.21: GET /v1/theme, the theme for dashboards and agent pages on the network (on by default).
+        p.add(str(R.string.link_share_theme), str(LauncherConfig.get(this).shareTheme ? R.string.on : R.string.off), r -> {
+            boolean n = !LauncherConfig.get(this).shareTheme;
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject c = j.optJSONObject("link");
+                if (c == null) j.put("link", c = new org.json.JSONObject());
+                c.put("shareTheme", n);
+            });
+            r.setValue(str(n ? R.string.on : R.string.off));
+            return true;
+        });
         p.add(str(R.string.link_new_code), null, r -> {
             OmarchyLink.openPairing();
             refreshMenu("link");
             return true;
         });
         p.add(str(R.string.link_service), OmarchyLink.running() ? str(R.string.link_service_on) : str(R.string.link_service_off), r -> true);
+        // v2.21: keep Link reachable after boot (a resident service); auto = only above 2.5 GB of RAM.
+        p.add(str(R.string.link_keep_alive), keepAliveValue(LauncherConfig.get(this).keepAlive), r -> {
+            String cur = LauncherConfig.get(this).keepAlive;
+            String n = "auto".equals(cur) ? "on" : "on".equals(cur) ? "off" : "auto";
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject l = j.optJSONObject("link");
+                if (l == null) j.put("link", l = new org.json.JSONObject());
+                if ("auto".equals(n)) l.remove("keepAlive");
+                else l.put("keepAlive", "on".equals(n));
+            });
+            LinkBoot.reconcile(this);
+            r.setValue(keepAliveValue(n));
+            return true;
+        });
         // Optional extras the PC can use (PROTOCOL.md §6): Back key and the app in front.
         p.add(str(R.string.link_remote), str(OmarchyRemote.enabled() ? R.string.on : R.string.off), r -> {
             open(new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS));
@@ -3790,7 +3942,25 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     /** IPv4 address of the active network (Wi-Fi or Ethernet), or null. */
+    /** "off", "on · 100.x.y.z", or "on · offline" when this TV has no Tailscale address. */
+    private String tailscaleValue(boolean on) {
+        if (!on) return str(R.string.off);
+        String ip = OmarchyLink.tailnetIp();
+        return str(R.string.on) + " · " + (ip != null ? ip + ":" + LINK_PORT : str(R.string.offline));
+    }
+
+    private boolean installed(String pkg) {
+        try {
+            getPackageManager().getPackageInfo(pkg, 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private String tvAddress() {
+        String lan = OmarchyLink.lanIp();   // v2.21: the LAN under a VPN, not the VPN's address
+        if (lan != null) return lan;
         ConnectivityManager cm = getSystemService(ConnectivityManager.class);
         if (cm == null || cm.getActiveNetwork() == null) return null;
         android.net.LinkProperties lp = cm.getLinkProperties(cm.getActiveNetwork());
@@ -5095,7 +5265,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
 
     // ---- v2.3: web apps, voice search, > ask --------------------------------------------------------
 
-    private static final int REQ_VOICE_SEARCH = 11;
+    private VoiceInput voiceSearch;
 
     private AsciiMenu.Page webAppsPage() {
         LauncherConfig cfg = LauncherConfig.get(this);
@@ -5296,18 +5466,36 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         return super.onKeyDown(keyCode, event);
     }
 
-    /** "> search": the system speech recognizer (Google's on Android TV), Italian or English. */
+    /** "> search": VoiceInput (the in-app recognizer, Google's dialog as a fallback), in the launcher's language. */
     private void startVoiceSearch() {
-        Intent i = new Intent(android.speech.RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE_MODEL, android.speech.RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(android.speech.RecognizerIntent.EXTRA_LANGUAGE, speechLanguage(this))
-                .putExtra(android.speech.RecognizerIntent.EXTRA_MAX_RESULTS, 5)
-                .putExtra(android.speech.RecognizerIntent.EXTRA_PROMPT, getString(R.string.search_prompt));
-        try {
-            startActivityForResult(i, REQ_VOICE_SEARCH);
-        } catch (ActivityNotFoundException e) {
-            typedSearch();   // no recognizer: type instead (the TV keyboard may still offer its mic)
-        }
+        if (voiceSearch == null) voiceSearch = new VoiceInput(this, getString(R.string.search_prompt), new VoiceInput.Callback() {
+            @Override public void onListening(String partial) {
+                if (partial.isEmpty()) Toast.makeText(MainActivity.this, "🎤 " + getString(R.string.search_prompt), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override public void onHeard(List<String> alts) {
+                if (walkerVoice && walker != null) {
+                    walkerVoice = false;
+                    walker.setQuery(alts.get(0));
+                    return;
+                }
+                walkerVoice = false;
+                runSearch(alts);
+            }
+
+            @Override public void onStopped(String message) {
+                walkerVoice = false;
+                if (VoiceInput.NO_RECOGNIZER.equals(message)) typedSearch();   // type instead (the TV keyboard may still offer its mic)
+                else if (message != null) Toast.makeText(MainActivity.this, message, Toast.LENGTH_SHORT).show();
+            }
+        });
+        voiceSearch.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
+        super.onRequestPermissionsResult(req, perms, res);
+        if (voiceSearch != null) voiceSearch.onRequestPermissionsResult(req, res);
     }
 
     static String speechLanguage(Context c) {
@@ -5325,15 +5513,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode != REQ_VOICE_SEARCH || resultCode != RESULT_OK || data == null) return;
-        List<String> alts = data.getStringArrayListExtra(android.speech.RecognizerIntent.EXTRA_RESULTS);
-        if (walkerVoice && walker != null && alts != null && !alts.isEmpty()) {
-            walkerVoice = false;
-            walker.setQuery(alts.get(0));
-            return;
-        }
-        walkerVoice = false;
-        if (alts != null && !alts.isEmpty()) runSearch(alts);
+        if (voiceSearch != null) voiceSearch.onActivityResult(requestCode, resultCode, data);
     }
 
     /** Fuzzy-matches apps, web apps and channels; launches a clear winner, else shows the matches. */

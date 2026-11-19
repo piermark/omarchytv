@@ -1,4 +1,8 @@
-"""LAN-only guard: the PC never talks to a TV outside private/link-local ranges."""
+"""LAN-only guard: the PC never talks to a TV outside private/link-local ranges.
+
+v2.21: with "tailscale": true in config.json, Tailscale's own ranges count too (100.64.0.0/10 and
+fd7a:115c:a1e0::/48), without the same-subnet rule (a tailnet is one flat network). Never the internet.
+"""
 
 from __future__ import annotations
 
@@ -8,11 +12,26 @@ import shutil
 import subprocess
 
 
+TAILNET_V4 = ipaddress.ip_network("100.64.0.0/10")
+TAILNET_V6 = ipaddress.ip_network("fd7a:115c:a1e0::/48")
+allow_tailnet = False   # set by config.load_config() from "tailscale"
+
+
+def is_tailnet(host: str) -> bool:
+    try:
+        ip = ipaddress.ip_address(host.split("%", 1)[0])
+    except ValueError:
+        return False
+    return ip in (TAILNET_V4 if ip.version == 4 else TAILNET_V6)
+
+
 def is_lan_address(host: str) -> bool:
     try:
         ip = ipaddress.ip_address(host.split("%", 1)[0])
     except ValueError:
         return False
+    if is_tailnet(host):   # Tailscale's own ranges (fd7a:… is also fc00::/7): only with the switch on
+        return allow_tailnet
     if ip.is_loopback:
         return True  # the mock TV and tests
     if ip.version == 4:
@@ -52,7 +71,11 @@ def on_local_subnet(host: str) -> bool | None:
 
 def check_host(host: str, strict_subnet: bool = True) -> None:
     if not is_lan_address(host):
-        raise ValueError(f"{host} is not a LAN address; Omarchy Link only talks to the local network")
+        hint = (" (a Tailscale address: turn it on with `omarchy-link tailscale on`, and on the TV in Settings >"
+                " Omarchy Link)") if is_tailnet(host) else ""
+        raise ValueError(f"{host} is not a LAN address; Omarchy Link only talks to the local network{hint}")
+    if allow_tailnet and is_tailnet(host):
+        return
     if strict_subnet and on_local_subnet(host) is False:
         raise ValueError(
             f"{host} is not on a subnet of this PC; set \"allowOtherSubnets\": true in config.json "

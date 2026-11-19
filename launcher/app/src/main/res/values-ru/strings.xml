@@ -172,6 +172,7 @@
     <string name="search_prompt">Назовите приложение</string>
     <string name="link_service_on">ожидает подключений</string>
     <string name="link_service_off">нет сети</string>
+    <string name="link_notification">Omarchy Link работает</string>
     <string name="remote_service">Пульт OmarchyTV</string>
     <string name="remote_service_desc">Позволяет сопряжённому ПК с Omarchy Linux нажимать «Назад» на телевизоре. Ничего не считывает с экрана.</string>
     <string name="keymap_service">Кнопки пульта OmarchyTV</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Открывает OmarchyTV, когда «Домой» показывает родной главный экран телевизора. Видит только, какой главный экран открылся, и ничего не считывает с экрана.</string>
     <string name="set_home_override">Кнопка «Домой» открывает OmarchyTV</string>
     <string name="link_usage">Доступ к истории использования (текущее приложение)</string>
+    <string name="link_share_theme">Делиться темой с приложениями в сети</string>
+    <string name="link_keep_alive">Link доступен после запуска</string>
+    <string name="link_tailscale">Разрешить Tailscale (tailnet)</string>
+    <string name="agentq_asks">спрашивает</string>
+    <string name="agentq_hint">Выберите ответ пультом · НАЗАД: ответить позже</string>
+    <string name="link_app_tokens">Токены приложений (панели, агенты)</string>
+    <string name="menu_system_info">Сведения о системе</string>
+    <string name="walker_agent_tile">Страницы агентов рядом</string>
+    <string name="walker_agent_questions">Вопросы от агентов</string>
+    <string name="link_new_app_token">Новый токен приложения</string>
+    <string name="link_app_tokens_full">Уже 16 токенов: сначала отзовите их</string>
+    <string name="link_app_token_once">Показывается один раз. Отсканируйте или введите в приложении; отзыв здесь или через omarchy-link token.</string>
+    <string name="link_tailscale_app">Приложение Tailscale</string>
+    <string name="link_tailscale_open">открыть</string>
+    <string name="link_tailscale_get">установить</string>
+    <string name="link_tailscale_qr">Отсканируйте телефоном, чтобы открыть Tailscale в Google Play</string>
     <string name="link_paired_toast">Сопряжено с %1$s</string>
     <string name="link_online">подключено</string>
     <string name="ai_settings">Кредиты ИИ</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">случайный (новый в каждой сцене)</string>
     <string name="radio_auto_demo">Демо-режим через 1 минуту без нажатий</string>
     <string name="radio_shuffle">Перемешать</string>
+    <string name="radio_home_music">Музыка на главном экране</string>
+    <string name="radio_song_qr">Страница песни (QR для телефона)</string>
+    <string name="radio_sleep">Таймер сна</string>
+    <string name="radio_sleep_left" formatted="true">осталось %d мин</string>
     <string name="radio_repeat">Повтор</string>
     <string name="radio_repeat_all">все</string>
     <string name="radio_repeat_one">одну</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">да</string>
     <string name="radio_animated_off">нет</string>
+    <string name="ss_pulse_panels">Панели Pulse</string>
+    <string name="ss_pulse_racing">панель гонок в Pulse</string>
+    <string name="ss_pulse_graphics">Графика Pulse</string>
 </resources>

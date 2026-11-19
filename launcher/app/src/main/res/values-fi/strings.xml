@@ -172,6 +172,7 @@
     <string name="search_prompt">Sano sovelluksen nimi</string>
     <string name="link_service_on">kuuntelee</string>
     <string name="link_service_off">ei verkkoa</string>
+    <string name="link_notification">Omarchy Link on käynnissä</string>
     <string name="remote_service">OmarchyTV-kaukosäädin</string>
     <string name="remote_service_desc">Antaa pariliitetyn Omarchy Linux -tietokoneen painaa televisiossa Takaisin. Se ei lue näytöltä mitään.</string>
     <string name="keymap_service">OmarchyTV-kaukosäätimen painikkeet</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Avaa OmarchyTV:n, kun Koti näyttää television oman aloitusnäytön. Se näkee vain, mikä aloitusnäyttö avautui, eikä lue näytöltä mitään.</string>
     <string name="set_home_override">Koti-painike avaa OmarchyTV:n</string>
     <string name="link_usage">Käyttötietojen käyttöoikeus (nykyinen sovellus)</string>
+    <string name="link_share_theme">Jaa teema verkon sovelluksille</string>
+    <string name="link_keep_alive">Pidä Link tavoitettavissa käynnistyksen jälkeen</string>
+    <string name="link_tailscale">Salli Tailscale (tailnet)</string>
+    <string name="agentq_asks">kysyy</string>
+    <string name="agentq_hint">Valitse vastaus kaukosäätimellä · TAKAISIN: vastaa myöhemmin</string>
+    <string name="link_app_tokens">Sovellustunnukset (koontinäytöt, agentit)</string>
+    <string name="menu_system_info">Järjestelmätiedot</string>
+    <string name="walker_agent_tile">Agenttien sivut rinnakkain</string>
+    <string name="walker_agent_questions">Agenttien kysymykset</string>
+    <string name="link_new_app_token">Uusi sovellustunnus</string>
+    <string name="link_app_tokens_full">Jo 16 tunnusta: peru ne ensin</string>
+    <string name="link_app_token_once">Näytetään kerran. Skannaa tai kirjoita se sovellukseesi; peru täällä tai komennolla omarchy-link token.</string>
+    <string name="link_tailscale_app">Tailscale-sovellus</string>
+    <string name="link_tailscale_open">avaa</string>
+    <string name="link_tailscale_get">asenna</string>
+    <string name="link_tailscale_qr">Skannaa puhelimella avataksesi Tailscalen Google Playssa</string>
     <string name="link_paired_toast">Pariliitetty laitteeseen %1$s</string>
     <string name="link_online">yhdistetty</string>
     <string name="ai_settings">AI-krediitit</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">satunnainen (uusi joka kohtauksessa)</string>
     <string name="radio_auto_demo">Demotila 1 minuutin jälkeen ilman näppäimiä</string>
     <string name="radio_shuffle">Satunnainen</string>
+    <string name="radio_home_music">Musiikki aloitusnäytössä</string>
+    <string name="radio_song_qr">Kappaleen sivu (QR puhelimelle)</string>
+    <string name="radio_sleep">Uniajastin</string>
+    <string name="radio_sleep_left" formatted="true">%d min jäljellä</string>
     <string name="radio_repeat">Toista</string>
     <string name="radio_repeat_all">kaikki</string>
     <string name="radio_repeat_one">yksi</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">kyllä</string>
     <string name="radio_animated_off">ei</string>
+    <string name="ss_pulse_panels">Pulse-paneelit</string>
+    <string name="ss_pulse_racing">kilpa-ajopaneeli Pulsessa</string>
+    <string name="ss_pulse_graphics">Pulse-grafiikka</string>
 </resources>

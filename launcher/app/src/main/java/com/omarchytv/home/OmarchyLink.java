@@ -16,6 +16,9 @@ import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import com.omarchytv.home.link.Tailnet;
 import android.net.Network;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
@@ -50,10 +53,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Omarchy Link, TV side (omarchy-link/docs/PROTOCOL.md): the Android {@link LinkServer.Host} plus the
  * plumbing around it (bind to the LAN address, NsdManager advert, status changes, keys).
  *
- * Lifetime: the server lives with the launcher process, which Android keeps because it is the HOME app.
- * {@link KeepAlive} is a plain started Service (no foreground notification, no wakelock) so the process
- * gets service priority while Android allows it; when Android stops it under background limits the
- * server keeps running in the process. Started from {@link MainActivity#onCreate}.
+ * Lifetime: the server lives in the launcher process. Once a PC is paired, {@link KeepAlive} is a foreground
+ * service (a quiet low-importance notification, type connectedDevice, no wakelock) started at boot and after an
+ * update by {@link HomeCheck}, from {@link MainActivity#onCreate} and on pairing, so the server stays reachable
+ * whether or not OmarchyTV is in front, and keeps network access while the TV dozes. START_STICKY brings it
+ * back if Android stops it. After sleep the existing SCREEN_ON and network-callback paths rebind the socket.
+ * With Link disabled or no PC paired there is no resident service (the in-process server still runs while
+ * the launcher is up, as before).
  */
 public final class OmarchyLink implements LinkServer.Host {
 
@@ -102,14 +108,12 @@ public final class OmarchyLink implements LinkServer.Host {
 
     // --------------------------------------------------------------- entry points used by the launcher
 
-    /** Called from MainActivity.onCreate (launcher in the foreground, so startService is allowed). */
+    /** Called from MainActivity.onCreate: runs the server in-process; promotes it to the foreground service when a PC is paired. */
     static void start(Context c) {
         ensure(c.getApplicationContext());
-        try {
-            c.startService(new Intent(c, KeepAlive.class));
-        } catch (IllegalStateException ignored) {
-            // background start refused: the in-process server already runs
-        }
+        // Never throws: a refused start leaves the in-process server running. Link switched off (or the last PC
+        // gone) since the service started: it stops, so the off switch takes effect without a reboot.
+        LinkBoot.reconcile(c);
     }
 
     /** Returns at once: the store load, socket bind and mDNS run on the Link worker, never on the UI thread. */
@@ -274,6 +278,67 @@ public final class OmarchyLink implements LinkServer.Host {
     }
 
     /** True when a PC is connected over the sealed link (the Grok Bot bridge needs one). */
+    // ---- v2.21 app API (dashboards, agents): questions, pages, app tokens -------------------------------------
+
+    /** The answer picked on the TV (AgentQuestionActivity). */
+    static boolean answerAsk(String id, String choice) {
+        OmarchyLink r = runtime;
+        return r != null && r.live() && r.server.answerAsk(id, choice);
+    }
+
+    /** Home came back: show the oldest question still waiting, if any. */
+    static void showPendingAsk(android.app.Activity a) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live()) return;
+        java.util.List<String[]> p = r.server.pendingAsks();
+        if (p.isEmpty()) return;
+        String[] q = p.get(0);
+        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(4, q.length));
+        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3])));
+    }
+
+    /** v2.21 Settings › System info: the same as /v1/diagnostics, with whole-server numbers when Link runs. */
+    static JSONObject systemInfo(Context c) {
+        OmarchyLink r = runtime;
+        if (r != null && r.live()) {
+            JSONObject d = r.diagnostics();
+            try {
+                d.put("link", new JSONObject().put("pcs", r.server.store().list().size()).put("events", r.server.connectedClients())
+                        .put("appTokens", r.server.appTokenCount()).put("pendingQuestions", r.server.pendingAsks().size()));
+            } catch (org.json.JSONException ignored) {
+            }
+            return d;
+        }
+        try {
+            return new JSONObject().put("launcherVersion", c.getPackageManager().getPackageInfo(c.getPackageName(), 0).versionName)
+                    .put("device", new JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL)
+                            .put("android", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT))
+                    .put("network", new JSONObject().put("listening", false));
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
+    static int pendingAsks() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.pendingAsks().size() : 0;
+    }
+
+    static int appTokens() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.appTokenCount() : 0;
+    }
+
+    static String[] newAppToken(String name, String scope) {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.newAppToken(name, scope) : null;
+    }
+
+    static int revokeAppTokens() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.revokeAppTokens() : 0;
+    }
+
     static boolean hasPc() {
         OmarchyLink r = runtime;
         return r != null && r.live() && r.server.connectedClients() > 0;
@@ -402,7 +467,10 @@ public final class OmarchyLink implements LinkServer.Host {
 
     // --------------------------------------------------------------- Service shell
 
-    /** Keeps the launcher process at service priority while Android allows it. Holds nothing itself. */
+    /**
+     * Foreground service (low-importance notification, connectedDevice) that keeps the launcher process, and so
+     * the Link server, alive. Holds nothing itself: no wakelock, no timer.
+     */
     public static final class KeepAlive extends Service {
         @Override
         public void onCreate() {
@@ -410,9 +478,38 @@ public final class OmarchyLink implements LinkServer.Host {
             ensure(getApplicationContext());
         }
 
+        private int lastStartId;
+
         @Override
         public int onStartCommand(Intent intent, int flags, int startId) {
+            lastStartId = startId;
+            // Always first, even for a sticky restart with a null intent: a startForegroundService call must be answered.
+            if (!LinkBoot.promote(this)) {
+                stopSelf(startId);
+                return START_NOT_STICKY;
+            }
+            if (!LinkBoot.wanted(getApplicationContext())) {   // Link off, or no PC paired: no resident service
+                retire();
+                return START_NOT_STICKY;
+            }
+            LinkBoot.promoted = this;
             return START_STICKY;
+        }
+
+        /**
+         * Main thread. stopSelf(lastStartId) does nothing when a newer start is already queued; that start's
+         * onStartCommand promotes and decides again, so a pending start is never stopped before startForeground.
+         */
+        void retire() {
+            if (LinkBoot.promoted == this) LinkBoot.promoted = null;
+            stopForeground(Service.STOP_FOREGROUND_REMOVE);
+            stopSelf(lastStartId);
+        }
+
+        @Override
+        public void onDestroy() {
+            if (LinkBoot.promoted == this) LinkBoot.promoted = null;
+            super.onDestroy();
         }
 
         @Override
@@ -453,6 +550,25 @@ public final class OmarchyLink implements LinkServer.Host {
             // hand off to bg, so the 1-arg API 24 overload behaves the same there.
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) cm.registerDefaultNetworkCallback(cb, main);
             else cm.registerDefaultNetworkCallback(cb);
+            // v2.21: with a VPN (Tailscale) up, the default network is the VPN; the Wi-Fi/Ethernet under it and the
+            // tailnet coming and going are only seen by a callback on every network, VPNs included.
+            try {
+                cm.registerNetworkCallback(new NetworkRequest.Builder()
+                        .removeCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN).build(),
+                        new ConnectivityManager.NetworkCallback() {
+                            @Override
+                            public void onAvailable(Network network) {
+                                bg.execute(OmarchyLink.this::rebind);
+                            }
+
+                            @Override
+                            public void onLost(Network network) {
+                                bg.execute(OmarchyLink.this::rebind);
+                            }
+                        });
+            } catch (RuntimeException e) {
+                Log.w(TAG, "network callback: " + e);
+            }
         }
         IntentFilter f = new IntentFilter();
         f.addAction(Intent.ACTION_DREAMING_STARTED);
@@ -556,37 +672,127 @@ public final class OmarchyLink implements LinkServer.Host {
         });
     }
 
-    /** Bind to the active network's IPv4 address (§3: not every interface). Link worker thread. */
+    private volatile String bindKey;
+
+    /**
+     * Bind to the LAN's IPv4 address (§3: not every interface). v2.21: with Tailscale allowed and a tailnet address
+     * on this TV, listen on all IPv4 interfaces instead; allowPeer still lets in only the LAN subnet and the tailnet.
+     * Link worker thread.
+     */
     private synchronized void rebind() {
         if (!live()) return;
+        Tailnet.allowed = LauncherConfig.get(app).tailscale;
         InetAddress a = lanAddress();
-        if (a != null && a.equals(bound)) return;
+        InetAddress ts = Tailnet.allowed ? tailnetAddress() : null;
+        InetAddress listen = ts != null ? anyV4() : a;
+        String key = a + "|" + ts;
+        if (listen != null && key.equals(bindKey) && bound != null) return;
         unadvertise();
         bound = null;
-        if (a == null) {
+        bindKey = null;
+        if (listen == null) {
             server.stopListening();
             return;
         }
         try {
-            server.start(a, LinkServer.PORT);
-            bound = a;
+            if (ts != null) {
+                // v2.21 Tailscale on: dual stack (::), so the tailnet's IPv6 (fd7a:115c:a1e0::/48) works too; a TV whose
+                // kernel has no IPv6 falls back to IPv4 only.
+                try {
+                    server.start(InetAddress.getByName("::"), LinkServer.PORT);
+                } catch (Exception v6) {
+                    Log.i(TAG, "no IPv6 listener (" + v6 + "): IPv4 only");
+                    server.start(listen, LinkServer.PORT);
+                }
+            } else {
+                server.start(listen, LinkServer.PORT);
+            }
+            bound = a != null ? a : ts;
+            bindKey = key;
+            if (ts != null) Log.i(TAG, "Tailscale on: listening for the LAN " + a + " and the tailnet " + ts.getHostAddress());
             advertise();
         } catch (Exception e) {
-            Log.w(TAG, "listen " + a + ": " + e);   // no retry loop: the next network change tries again
+            Log.w(TAG, "listen " + listen + ": " + e);   // no retry loop: the next network change tries again
         }
     }
 
-    private LinkProperties activeLink() {
+    private static InetAddress anyV4() {
+        try {
+            return InetAddress.getByAddress(new byte[4]);
+        } catch (java.net.UnknownHostException e) {
+            return null;
+        }
+    }
+
+    /**
+     * The LAN under any VPN: the active network when it is not a VPN, else a Wi-Fi or Ethernet network with IPv4.
+     * Before v2.21 a VPN app (Tailscale) made the TV bind to the VPN address and refuse the PC next to it.
+     */
+    private LinkProperties lanLink() {
         ConnectivityManager cm = app.getSystemService(ConnectivityManager.class);
-        Network n = cm != null ? cm.getActiveNetwork() : null;
-        return n != null ? cm.getLinkProperties(n) : null;
+        if (cm == null) return null;
+        Network active = cm.getActiveNetwork();
+        if (active != null && !isVpn(cm, active)) return cm.getLinkProperties(active);
+        LinkProperties best = null;
+        for (Network n : cm.getAllNetworks()) {
+            NetworkCapabilities nc = cm.getNetworkCapabilities(n);
+            if (nc == null || nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN)) continue;
+            if (!nc.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) && !nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) continue;
+            LinkProperties lp = cm.getLinkProperties(n);
+            if (lp == null || v4(lp) == null) continue;
+            if (best == null || nc.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) best = lp;   // wired first
+        }
+        return best;
+    }
+
+    private static boolean isVpn(ConnectivityManager cm, Network n) {
+        NetworkCapabilities nc = cm.getNetworkCapabilities(n);
+        return nc != null && nc.hasTransport(NetworkCapabilities.TRANSPORT_VPN);
+    }
+
+    private static InetAddress v4(LinkProperties lp) {
+        for (LinkAddress la : lp.getLinkAddresses()) if (la.getAddress() instanceof Inet4Address) return la.getAddress();
+        return null;
     }
 
     private InetAddress lanAddress() {
-        LinkProperties lp = activeLink();
-        if (lp == null) return null;
-        for (LinkAddress la : lp.getLinkAddresses()) if (la.getAddress() instanceof Inet4Address) return la.getAddress();
+        LinkProperties lp = lanLink();
+        return lp == null ? null : v4(lp);
+    }
+
+    /** This TV's Tailscale address (100.64.0.0/10 on a VPN network), or null. */
+    private InetAddress tailnetAddress() {
+        ConnectivityManager cm = app.getSystemService(ConnectivityManager.class);
+        if (cm == null) return null;
+        for (Network n : cm.getAllNetworks()) {
+            if (!isVpn(cm, n)) continue;
+            LinkProperties lp = cm.getLinkProperties(n);
+            if (lp == null) continue;
+            for (LinkAddress la : lp.getLinkAddresses()) {
+                if (la.getAddress() instanceof Inet4Address && Tailnet.isTailnet(la.getAddress())) return la.getAddress();
+            }
+        }
         return null;
+    }
+
+    /** Settings: the TV's LAN address (under any VPN). */
+    static String lanIp() {
+        OmarchyLink r = runtime;
+        InetAddress a = r != null ? r.lanAddress() : null;
+        return a == null ? null : a.getHostAddress();
+    }
+
+    /** Settings: the TV's Tailscale address, or null when there is none. */
+    static String tailnetIp() {
+        OmarchyLink r = runtime;
+        InetAddress a = r != null ? r.tailnetAddress() : null;
+        return a == null ? null : a.getHostAddress();
+    }
+
+    /** Settings toggled Tailscale: bind again (all interfaces or the LAN only). */
+    static void tailscaleChanged() {
+        OmarchyLink r = runtime;
+        if (r != null) bg.execute(r::rebind);
     }
 
     /** mDNS _omarchytv._tcp; TXT v, id, name, pair (only). Re-registered when pair changes. */
@@ -669,28 +875,18 @@ public final class OmarchyLink implements LinkServer.Host {
         emit("pairing", new JSONObject());
     }
 
-    /** §3: only the active network's own subnet (LinkProperties prefix). */
+    /** §3: only the LAN's own subnet (LinkProperties prefix, under any VPN); v2.21 plus the tailnet when allowed. */
     @Override
     public boolean allowPeer(InetAddress peer) {
-        LinkProperties lp = activeLink();
-        if (lp == null || peer == null) return false;
-        byte[] p = peer.getAddress();
-        for (LinkAddress la : lp.getLinkAddresses()) {
-            byte[] a = la.getAddress().getAddress();
-            if (a.length != p.length) continue;
-            int bits = la.getPrefixLength();
-            if (bits < 8) continue;   // never "everything"
-            boolean same = true;
-            for (int i = 0; i < a.length && bits > 0; i++, bits -= 8) {
-                int mask = bits >= 8 ? 0xFF : (0xFF << (8 - bits)) & 0xFF;
-                if ((a[i] & mask) != (p[i] & mask)) {
-                    same = false;
-                    break;
-                }
-            }
-            if (same) return true;
+        LinkProperties lp = peer == null || Tailnet.allowedPeer(peer) ? null : lanLink();
+        List<LinkAddress> las = lp == null ? java.util.Collections.emptyList() : lp.getLinkAddresses();
+        byte[][] addrs = new byte[las.size()][];
+        int[] bits = new int[las.size()];
+        for (int i = 0; i < las.size(); i++) {
+            addrs[i] = las.get(i).getAddress().getAddress();
+            bits[i] = las.get(i).getPrefixLength();
         }
-        return false;
+        return Tailnet.peerAllowed(peer, addrs, bits);
     }
 
     private boolean usageAccess() {
@@ -883,6 +1079,7 @@ public final class OmarchyLink implements LinkServer.Host {
         } catch (Exception ignored) {
         }
         emit("pcs", d);
+        LinkBoot.reconcile(app);   // re-reads link.json on the main thread: concurrent callbacks can't race
     }
 
     // --------------------------------------------------------------- cast (PROTOCOL.md §6 Cast)
@@ -905,6 +1102,31 @@ public final class OmarchyLink implements LinkServer.Host {
     @Override
     public String castControl(String id, String action, double position) {
         return CastRouter.control(app, id, action, position);
+    }
+
+    /** v2.21 GET /v1/theme: the theme on screen, unless the owner turned sharing off. Server thread. */
+    @Override
+    public JSONObject sharedTheme() {
+        LauncherConfig cfg = LauncherConfig.get(app);
+        if (!cfg.shareTheme) return null;
+        try {
+            ThemeShare.Wallpaper wp = ThemeShare.wallpaper(app);
+            return ThemeShare.payload(Theme.cur(), wp, ThemeShare.source(themeCfg()));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private JSONObject themeCfg() {
+        JSONObject j = LauncherConfig.readJson(app);
+        return j != null ? j.optJSONObject("theme") : null;
+    }
+
+    @Override
+    public com.omarchytv.home.link.LinkServer.Blob sharedWallpaper() {
+        if (!LauncherConfig.get(app).shareTheme) return null;
+        ThemeShare.Wallpaper wp = ThemeShare.wallpaper(app);
+        return wp == null ? null : new com.omarchytv.home.link.LinkServer.Blob(wp.bytes, wp.type, wp.sha256);
     }
 
     /** Player / viewer state for the PC (any thread). Socket I/O goes to the Link worker. No PC: returns at once. */
@@ -949,6 +1171,288 @@ public final class OmarchyLink implements LinkServer.Host {
         bg.execute(() -> CastRouter.sweep(r.app, r.live() ? r.server.currentCastFile() : null));
     }
 
+    /** v2.21 notifications that waited for Home (level info while an app was on screen); at most 10, oldest dropped. */
+    private static final java.util.ArrayDeque<String> HELD = new java.util.ArrayDeque<>();
+
+    /** v2.21 POST /v1/notify, MCP tv_notify: only with agent alerts on; "info" waits while an app is on screen. */
+    @Override
+    public String notify(String from, String title, String text, String level) {
+        if (!LauncherConfig.get(app).agentAlert) return null;
+        String body = title.isEmpty() ? text : text.isEmpty() ? title : title + " · " + text;
+        String msg = app.getString(R.string.agent_note, from, body);
+        try {
+            emit("agent", new JSONObject().put("name", from).put("text", body));
+        } catch (org.json.JSONException ignored) {
+        }
+        if ("info".equals(level) && !homeVisible && screenOn()) {
+            synchronized (HELD) {
+                if (HELD.size() >= 10) HELD.removeFirst();
+                HELD.addLast(msg);
+            }
+            return "deferred";
+        }
+        main.post(() -> android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show());
+        if (!"info".equals(level) && LauncherConfig.get(app).notifySound) chime("alert".equals(level));
+        return "shown";
+    }
+
+    /** v2.21 warn: one short tone; alert: two. On the notification stream, so the TV's own volume rules apply. */
+    private void chime(boolean twice) {
+        bg.execute(() -> {
+            android.media.ToneGenerator tg = null;
+            try {
+                tg = new android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 70);
+                tg.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 160);
+                if (twice) {
+                    Thread.sleep(260);
+                    tg.startTone(android.media.ToneGenerator.TONE_PROP_BEEP2, 220);
+                }
+                Thread.sleep(300);
+            } catch (Exception ignored) {
+                // no tone on this TV: the toast is enough
+            } finally {
+                if (tg != null) tg.release();
+            }
+        });
+    }
+
+    private android.speech.tts.TextToSpeech tts;
+    private boolean ttsReady;
+    private String ttsPending;
+
+    /** v2.21 notify "speak": read it aloud in the TV's language; the engine starts on first use. */
+    @Override
+    public void speak(String text) {
+        if (text == null || text.isEmpty() || !LauncherConfig.get(app).notifySound) return;   // notifySound: false = silent
+        String say = text.length() > 300 ? text.substring(0, 300) : text;
+        main.post(() -> {
+            if (tts == null) {
+                ttsPending = say;
+                tts = new android.speech.tts.TextToSpeech(app, st -> {
+                    ttsReady = st == android.speech.tts.TextToSpeech.SUCCESS;
+                    if (ttsReady && ttsPending != null) {
+                        tts.speak(ttsPending, android.speech.tts.TextToSpeech.QUEUE_ADD, null, "otv-notify");
+                        ttsPending = null;
+                    }
+                });
+            } else if (ttsReady) {
+                tts.speak(say, android.speech.tts.TextToSpeech.QUEUE_ADD, null, "otv-notify");
+            } else {
+                ttsPending = say;
+            }
+        });
+    }
+
+    /** Home is back: the notifications that waited, one toast (the last three lines). */
+    static void flushHeldNotes(Context c) {
+        StringBuilder b = new StringBuilder();
+        int n;
+        synchronized (HELD) {
+            n = HELD.size();
+            int skip = Math.max(0, n - 3);
+            for (String m : HELD) if (skip-- <= 0) b.append(b.length() == 0 ? "" : "\n").append(m);
+            HELD.clear();
+        }
+        if (n == 0) return;
+        if (n > 3) b.insert(0, "+" + (n - 3) + "\n");
+        android.widget.Toast.makeText(c.getApplicationContext(), b.toString(), android.widget.Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public JSONObject nowPlaying() {
+        String[] np = RadioPlayer.nowPlaying();
+        if (np == null) return null;
+        try {
+            return new JSONObject().put("title", np[0]).put("artist", np[1]).put("source", "radiomarchy");
+        } catch (org.json.JSONException e) {
+            return null;
+        }
+    }
+
+    /** v2.21 ask_user: only with agent alerts on; the dialog opens over the current app when Android allows it. */
+    @Override
+    public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs) {
+        if (!LauncherConfig.get(app).agentAlert) return "ask_off";
+        String msg = app.getString(R.string.agent_note, from, question);
+        main.post(() -> {
+            try {
+                app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "ask: " + e);
+            }
+            android.widget.Toast.makeText(app, msg, android.widget.Toast.LENGTH_LONG).show();   // seen even if the dialog waits for Home
+        });
+        log("question from " + from);
+        return null;
+    }
+
+    @Override
+    public String openPage(String url, String from) {
+        if (!AgentPageActivity.allowed(url)) return "not_lan_url";
+        main.post(() -> {
+            try {
+                app.startActivity(AgentPageActivity.intent(app, url));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "page: " + e);
+            }
+        });
+        log("page from " + from + ": " + android.net.Uri.parse(url).getHost());
+        return null;
+    }
+
+    @Override
+    public String openPages(java.util.List<String> urls, String from) {
+        java.util.List<String> ok = new java.util.ArrayList<>();
+        for (String u : urls) if (AgentPageActivity.allowed(u)) ok.add(u);
+        if (ok.isEmpty()) return "not_lan_url";
+        main.post(() -> {
+            try {
+                app.startActivity(AgentPageActivity.intent(app, ok));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "pages: " + e);
+            }
+        });
+        log("pages from " + from + ": " + ok.size());
+        return null;
+    }
+
+    @Override
+    public boolean closePage() {
+        return AgentPageActivity.closeOpen();
+    }
+
+    /** v2.21 Radiomarchy for agents; runs on the main thread (the player lives there), waits at most 3 s. */
+    @Override
+    public JSONObject radio(String action) {
+        final JSONObject[] out = {null};
+        java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
+        main.post(() -> {
+            try {
+                RadioPlayer p = RadioPlayer.get(app);
+                switch (action) {
+                    case "play": p.playOrStart(); break;
+                    case "pause": p.pause(); break;
+                    case "next": p.advance(1, true); break;
+                    case "previous": p.advance(-1, true); break;
+                    case "stop": p.stop(); break;
+                    default: break;
+                }
+                RadioCatalog.Track t = p.current();
+                out[0] = new JSONObject().put("playing", p.playing()).put("title", t == null ? JSONObject.NULL : t.title)
+                        .put("artist", t == null ? JSONObject.NULL : t.artist).put("sleepMinutes", p.sleepLeft());
+            } catch (Exception e) {
+                Log.w(TAG, "radio " + action + ": " + e);
+            } finally {
+                done.countDown();
+            }
+        });
+        try {
+            done.await(3, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        log("radio " + action);
+        return out[0];
+    }
+
+    @Override
+    public String openTarget(String target) {
+        Class<?> c;
+        switch (target == null ? "" : target) {
+            case "home": c = MainActivity.class; break;
+            case "radiomarchy": c = RadioActivity.class; break;
+            case "cinemarchy": c = CinemarchyActivity.class; break;
+            case "arcade": c = ArcadeActivity.class; break;
+            case "office": c = OfficeActivity.class; break;
+            default: return "no_such_target";
+        }
+        Class<?> fc = c;
+        main.post(() -> {
+            try {
+                app.startActivity(new Intent(app, fc).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "open " + target + ": " + e);
+            }
+        });
+        log("open " + target);
+        return null;
+    }
+
+    @Override
+    public JSONObject config() {
+        return LauncherConfig.readJson(app);
+    }
+
+    @Override
+    public byte[] sdk() {
+        try (java.io.InputStream in = app.getAssets().open("sdk/omarchytv.js")) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] b = new byte[8192];
+            int n;
+            while ((n = in.read(b)) > 0) out.write(b, 0, n);
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            return null;
+        }
+    }
+
+    /** v2.21 GET /v1/diagnostics, MCP tv_diagnostics: what a bug report needs. No tokens, no keys, no file paths. */
+    @Override
+    public JSONObject diagnostics() {
+        try {
+            LauncherConfig cfg = LauncherConfig.get(app);
+            android.app.ActivityManager am = app.getSystemService(android.app.ActivityManager.class);
+            android.app.ActivityManager.MemoryInfo mi = new android.app.ActivityManager.MemoryInfo();
+            if (am != null) am.getMemoryInfo(mi);
+            String gpu = app.getSharedPreferences("omarchytv", Context.MODE_PRIVATE).getString(FractalView.PREF_GPU, "");
+            InetAddress ts = tailnetAddress();
+            JSONArray logs = new JSONArray();
+            synchronized (LOG) {
+                for (String l : LOG) logs.put(l);
+            }
+            return new JSONObject()
+                    .put("launcherVersion", version())
+                    .put("device", new JSONObject().put("manufacturer", Build.MANUFACTURER).put("model", Build.MODEL)
+                            .put("android", Build.VERSION.RELEASE).put("sdk", Build.VERSION.SDK_INT)
+                            .put("ramMb", mi.totalMem / (1024 * 1024)).put("lowRam", am != null && am.isLowRamDevice())
+                            .put("gpu", gpu))
+                    .put("network", new JSONObject().put("lan", lanIp() == null ? JSONObject.NULL : lanIp())
+                            .put("tailnet", ts == null ? JSONObject.NULL : ts.getHostAddress())
+                            .put("listening", bound != null))
+                    .put("settings", new JSONObject().put("shareTheme", cfg.shareTheme).put("tailscale", cfg.tailscale)
+                            .put("agentAlerts", cfg.agentAlert).put("cast", cfg.castEnabled)
+                            // v2.21: what the PC could not see before (keep-alive after boot, the Home wallpaper)
+                            .put("keepAlive", cfg.keepAlive)
+                            .put("keepAliveActive", LinkBoot.keepAliveAllowed(cfg.keepAlive, am != null && am.isLowRamDevice(), mi.totalMem))
+                            .put("notifySound", cfg.notifySound))
+                    .put("home", new JSONObject().put("wallpaper", cfg.wallpaper).put("wallpaperBg", cfg.wallpaperBg)
+                            .put("theme", cfg.theme == null ? JSONObject.NULL : cfg.theme.name)
+                            .put("loop", cfg.wallpaperLoop).put("loopStutter", WallpaperLoopGuard.stuttered(app))
+                            .put("intro", introPlan(cfg))
+                            .put("lightLoop", "light".equals(introPlan(cfg))))
+                    .put("screen", new JSONObject().put("on", screenOn()).put("home", homeVisible).put("screensaver", screensaver))
+                    .put("log", logs);
+        } catch (Exception e) {
+            return new JSONObject();
+        }
+    }
+
+    /** v2.21 what the Home wallpaper plays here: "none" (a still), "full", "light" (540p copy) or "skip" (weak TV). */
+    private String introPlan(LauncherConfig cfg) {
+        String mp4 = WallpaperView.introAssetFor(app, cfg.wallpaper, cfg.wallpaperBg);
+        if (mp4 == null) return "none";
+        String light = mp4.substring(0, mp4.length() - 4) + "-light.mp4";
+        return WallpaperView.introPlan(FractalView.preferPlain(app), WallpaperView.assetExists(app, light));
+    }
+
+    @Override
+    public void onKeepAliveChanged() {
+        try {
+            LinkBoot.reconcile(app);
+        } catch (RuntimeException ignored) {
+        }
+    }
+
     @Override
     public void onEvent(String pcId, String type, JSONObject data) {
         if ("living".equals(type)) {   // v2.14: kept for the screensaver page, not an event for the UI
@@ -982,8 +1486,17 @@ public final class OmarchyLink implements LinkServer.Host {
         emit(type, data);
     }
 
+    /** The last 100 Link log lines, in memory only, for /v1/diagnostics. */
+    private static final java.util.ArrayDeque<String> LOG = new java.util.ArrayDeque<>();
+
     @Override
     public void log(String message) {
         Log.i(TAG, message);
+        String line = new java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.ROOT).format(new java.util.Date()) + " "
+                + (message.length() > 200 ? message.substring(0, 200) : message);
+        synchronized (LOG) {
+            if (LOG.size() >= 100) LOG.removeFirst();
+            LOG.addLast(line);
+        }
     }
 }

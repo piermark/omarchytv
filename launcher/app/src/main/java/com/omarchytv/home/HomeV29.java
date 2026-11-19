@@ -287,12 +287,13 @@ final class HomeV29 extends FrameLayout {
         term.addView(termLogo, ll);
         term.addView(termInfo);
 
-        // ---- 3.3 widgets: right 32, y 76, w 1120, 3 equal columns, gap 16 ----
+        // ---- 3.3 widgets: right 32, y 76, w 1200 (widgetsWidth), 3 columns, gap 16 ----
         widgets = new LinearLayout(a);
         widgets.setOrientation(LinearLayout.VERTICAL);
-        // Extend the row 80 px to the left so Weather fills the unused margin beside the terminal widget.
-        // Keep the right edge fixed and align Weather's left and right gutters to 16 px.
-        LayoutParams wl = new LayoutParams(px(1200), -2, Gravity.END | Gravity.TOP);
+        // The row runs from the term box gutter to the right margin: Weather takes the 80 px beside the terminal
+        // widget (#126), so the three columns add up to 1200, never 1120. apply() sets this width again from
+        // widgetsWidth(), which must agree, or the AI panel ends up past the right edge of the screen.
+        LayoutParams wl = new LayoutParams(px(widgetsWidth(false)), -2, Gravity.END | Gravity.TOP);
         wl.rightMargin = px(32);
         wl.topMargin = px(76);
         addView(widgets, wl);
@@ -317,9 +318,9 @@ final class HomeV29 extends FrameLayout {
         pcBox = widget(r1, "omarchy · pc", 16);
         BoxView ai = widget(r1, "ai credits · pc", 16);
         // Keep the PC and AI panels one column wide. Give Weather the 80 px used to fill the left gutter.
-        float colWidth = (1120 - 32) / 3f;
+        float colWidth = sideColWidth(false);
         LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
-        wxl.width = px(colWidth + 80);
+        wxl.width = px(weatherColWidth(false));
         wxl.weight = 0f;
         for (View col : new View[]{raceBox, pcBox, ai}) {   // #123 the racing panel: one column too
             LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
@@ -835,11 +836,35 @@ final class HomeV29 extends FrameLayout {
         JSONObject cache = RemotePanes.cached(act, cfg.remotePanesUrl);
         JSONArray panes = cache != null ? cache.optJSONArray("panes") : null;
         long now = System.currentTimeMillis() / 1000L;
-        int shown = 0;
+        // v2.21: the panes the PC pushes (PUT /v1/widgets: rooms, widgets.json) share this row after the fetched ones;
+        // the "pc" pane is the PC box above, so it is not repeated here.
+        List<JSONObject> list = new ArrayList<>();
+        List<Long> ages = new ArrayList<>();
+        for (int i = 0; panes != null && i < panes.length(); i++) {
+            JSONObject p = panes.optJSONObject(i);
+            if (p == null) continue;
+            list.add(p);
+            ages.add(now - RemotePanes.paneAt(cache, p));
+        }
+        for (JSONObject p : pcPaneObjects(cfg)) {
+            list.add(p);
+            long at = p.optLong("at", 0L);
+            ages.add(at > 0 ? now - at : 0L);
+        }
+        int shown = 0, next = 0;
         for (int i = 0; i < remoteBox.length; i++) {
-            JSONObject p = panes != null ? panes.optJSONObject(i) : null;
-            long age = p != null ? now - RemotePanes.paneAt(cache, p) : 0;
-            boolean show = p != null && activeWs == 1 && age <= 2L * p.optInt("ttl", 180);
+            JSONObject p = null;
+            long age = 0;
+            while (next < list.size()) {   // the first panes still fresh enough fill the 3 boxes
+                JSONObject c = list.get(next);
+                long a = ages.get(next++);
+                if (a <= 2L * c.optInt("ttl", 180)) {
+                    p = c;
+                    age = a;
+                    break;
+                }
+            }
+            boolean show = p != null && activeWs == 1;
             remoteBox[i].setVisibility(show ? VISIBLE : GONE);
             remoteBody[i].removeAllViews();
             if (!show) continue;
@@ -881,6 +906,23 @@ final class HomeV29 extends FrameLayout {
             rl.topMargin = top;
             remoteRow.setLayoutParams(rl);
         }
+    }
+
+    /** v2.21 the PC's pushed panes as the same JSON shape as fetched ones (id, title, ttl, at, lines[label,value]). */
+    static List<JSONObject> pcPaneObjects(LauncherConfig cfg) {
+        List<JSONObject> out = new ArrayList<>();
+        if (!cfg.pcPanesOn) return out;
+        for (LauncherConfig.PcPane pp : cfg.pcPanes) {
+            if ("pc".equals(pp.id) || cfg.hiddenPcPanes.contains(pp.id)) continue;
+            try {
+                JSONArray ls = new JSONArray();
+                for (String[] l : pp.lines) ls.put(new JSONObject().put("label", l[0]).put("value", l[1]));
+                out.add(new JSONObject().put("id", pp.id).put("title", pp.title).put("ttl", pp.ttl)
+                        .put("at", pp.at > 0 ? pp.at : cfg.widgetsAt).put("lines", ls));
+            } catch (org.json.JSONException ignored) {
+            }
+        }
+        return out;
     }
 
     /** Fetched panes are read from across the room: larger than the 19 px widget text. */
@@ -1290,7 +1332,10 @@ final class HomeV29 extends FrameLayout {
     }
 
     private void updateAi(LinearLayout aiBody) {
+        int width = aiBody.getWidth();   // before removeAllViews: the room the rows had last time (0 the first time)
         aiBody.removeAllViews();
+        BoxView box = aiBody.getParent() instanceof BoxView ? (BoxView) aiBody.getParent() : null;
+        if (box != null) box.setLegend(AI_LEGEND + "pc", px(14), px(18));
         if (!OmarchyLink.connected() && cfg.aiAt > 0 || cfg.ai.isEmpty() && !OmarchyLink.connected()) {
             aiBody.addView(offline());
             return;
@@ -1299,22 +1344,32 @@ final class HomeV29 extends FrameLayout {
             aiBody.addView(line(act.getString(R.string.ai_empty)));
             return;
         }
-        int nameW = 4;
-        for (LauncherConfig.AiEntry a : cfg.ai) nameW = Math.max(nameW, Math.min(8, a.name.length()));
-        int shown = 0;
-        for (LauncherConfig.AiEntry a : cfg.ai) {
-            if (shown++ >= 5) break;
+        // The rows shown (at most 5). Words they all start with ("Claude" in "Claude session" / "Claude week") go to
+        // the legend, so each row keeps what tells it apart; the label column takes the room the widget has.
+        List<LauncherConfig.AiEntry> rows = cfg.ai.subList(0, Math.min(5, cfg.ai.size()));
+        List<String> names = new ArrayList<>();
+        for (LauncherConfig.AiEntry a : rows) names.add(a.name);
+        String prefix = AiLabels.commonPrefix(names);
+        if (box != null && !prefix.isEmpty()) box.setLegend(AI_LEGEND + prefix.toLowerCase(Locale.getDefault()), px(14), px(18));
+        List<String> labels = new ArrayList<>();
+        for (String n : names) labels.add(AiLabels.strip(n, prefix));
+        float cw = text("M", 19, false).getPaint().measureText("M");
+        int nameW = AiLabels.labelCols(labels, width > 0 ? (int) (width / cw) : 0);
+        for (int i = 0; i < rows.size(); i++) {
+            LauncherConfig.AiEntry a = rows.get(i);
             double f = a.fraction();
             if (f >= 0) {
                 int col = f > 0.9 ? t.red : f >= 0.7 ? t.yellow : t.green;
-                aiBody.addView(barRow(a.name, nameW, f, col, 10, Math.round(f * 100) + "%"));
+                aiBody.addView(barRow(labels.get(i), nameW, f, col, 10, Math.round(f * 100) + "%"));
             } else {
-                TextView v = line(a.name + "  " + (a.usedUnknown() ? "?" : MainActivity.amountText(a.used, a.unit)));
+                TextView v = line(labels.get(i) + "  " + (a.usedUnknown() ? "?" : MainActivity.amountText(a.used, a.unit)));
                 v.setTextColor(t.fg);
                 aiBody.addView(v);
             }
         }
     }
+
+    private static final String AI_LEGEND = "ai credits · ";
 
     // ---- bar tooltip (network name only in the menu shown while the icon is focused) ----
 
@@ -2162,9 +2217,13 @@ final class HomeV29 extends FrameLayout {
     // (1200 - 382 - 3*16 - 80) is divisible by 3 so weather/pc/ai still fill the 1200 row exactly.
     static final int HOME_W = 1920, HOME_MARGIN = 32, TERM_W = 640, WIDGET_GAP = 16, WIDGETS_W = 1120, RACE_COL_W = 382;
 
-    /** Right-aligned widgets row width in design px. With racing on, the row uses the space from the term gutter to the right margin (1200), never the term box. */
+    /**
+     * Right-aligned widgets row width in design px: the space from the term box gutter to the right margin (1200),
+     * never the term box. Since #126 Weather is 80 px wider than a column in both layouts, so the row is 1200 with
+     * racing off too; at WIDGETS_W the three columns (442 + 362 + 362 + two gaps = 1198) overflowed the right edge of
+     * the screen and the AI panel lost its numbers.
+     */
     static int widgetsWidth(boolean racing) {
-        if (!racing) return WIDGETS_W;
         return HOME_W - HOME_MARGIN - (HOME_MARGIN + TERM_W + WIDGET_GAP);
     }
 

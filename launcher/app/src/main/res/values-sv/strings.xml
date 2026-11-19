@@ -172,6 +172,7 @@
     <string name="search_prompt">Säg ett appnamn</string>
     <string name="link_service_on">lyssnar</string>
     <string name="link_service_off">inget nätverk</string>
+    <string name="link_notification">Omarchy Link körs</string>
     <string name="remote_service">OmarchyTV-fjärrkontroll</string>
     <string name="remote_service_desc">Låter en parkopplad Omarchy Linux-dator trycka på Bakåt på tv:n. Den läser ingenting på skärmen.</string>
     <string name="keymap_service">OmarchyTV-fjärrkontrollknappar</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Öppnar OmarchyTV när Hem visar tv:ns egen startskärm. Den ser bara vilken startskärm som öppnades och läser ingenting på skärmen.</string>
     <string name="set_home_override">Hemknappen öppnar OmarchyTV</string>
     <string name="link_usage">Användningsåtkomst (aktuell app)</string>
+    <string name="link_share_theme">Dela temat med appar i nätverket</string>
+    <string name="link_keep_alive">Håll Link nåbart efter start</string>
+    <string name="link_tailscale">Tillåt Tailscale (tailnet)</string>
+    <string name="agentq_asks">frågar</string>
+    <string name="agentq_hint">Välj ett svar med fjärrkontrollen · BAKÅT: svara senare</string>
+    <string name="link_app_tokens">App-token (instrumentpaneler, agenter)</string>
+    <string name="menu_system_info">Systeminfo</string>
+    <string name="walker_agent_tile">Agentsidor, sida vid sida</string>
+    <string name="walker_agent_questions">Frågor från agenter</string>
+    <string name="link_new_app_token">Ny app-token</string>
+    <string name="link_app_tokens_full">Redan 16 app-token: återkalla dem först</string>
+    <string name="link_app_token_once">Visas en gång. Skanna eller skriv in i din app; återkalla här eller med omarchy-link token.</string>
+    <string name="link_tailscale_app">Tailscale-appen</string>
+    <string name="link_tailscale_open">öppna</string>
+    <string name="link_tailscale_get">installera</string>
+    <string name="link_tailscale_qr">Skanna med mobilen för att öppna Tailscale på Google Play</string>
     <string name="link_paired_toast">Parkopplad med %1$s</string>
     <string name="link_online">ansluten</string>
     <string name="ai_settings">AI-krediter</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">slumpad (en ny för varje scen)</string>
     <string name="radio_auto_demo">Demoläge efter 1 minut utan knapptryck</string>
     <string name="radio_shuffle">Blanda</string>
+    <string name="radio_home_music">Musik på startskärmen</string>
+    <string name="radio_song_qr">Låtens sida (QR för mobilen)</string>
+    <string name="radio_sleep">Insomningstimer</string>
+    <string name="radio_sleep_left" formatted="true">%d min kvar</string>
     <string name="radio_repeat">Upprepa</string>
     <string name="radio_repeat_all">alla</string>
     <string name="radio_repeat_one">en</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">ja</string>
     <string name="radio_animated_off">nej</string>
+    <string name="ss_pulse_panels">Pulse-paneler</string>
+    <string name="ss_pulse_racing">motorsportpanel i Pulse</string>
+    <string name="ss_pulse_graphics">Pulse-grafik</string>
 </resources>

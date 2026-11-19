@@ -18,6 +18,11 @@ USER_AGENT = "omarchy-link/0.1"
 JSON_MAX = 1 << 20
 
 
+def _hp(host: str, port: int) -> str:
+    """host:port for messages, [v6]:port for an IPv6 address."""
+    return f"[{host}]:{port}" if ":" in str(host) else f"{host}:{port}"
+
+
 class LinkError(Exception):
     def __init__(self, message: str, status: int = 0, code: str = ""):
         super().__init__(message)
@@ -36,13 +41,13 @@ def probe(host: str, port: int, timeout: float = 3.0) -> dict:
         r = c.getresponse()
         body = r.read(65536)
         if r.status != 200:
-            raise LinkError(f"{host}:{port} answered {r.status}", r.status)
+            raise LinkError(f"{_hp(host, port)} answered {r.status}", r.status)
         info = json.loads(body)
         if info.get("service") != "omarchytv-link":
-            raise LinkError(f"{host}:{port} is not an OmarchyTV launcher")
+            raise LinkError(f"{_hp(host, port)} is not an OmarchyTV launcher")
         return info
     except (OSError, ValueError) as e:
-        raise LinkError(f"cannot reach {host}:{port}: {e}") from e
+        raise LinkError(f"cannot reach {_hp(host, port)}: {e}") from e
     finally:
         c.close()
 
@@ -70,7 +75,7 @@ def _post_plain(host: str, port: int, path: str, payload: dict, timeout: float =
             raise LinkError(obj.get("message") or f"HTTP {r.status}", r.status, obj.get("error", ""))
         return obj
     except OSError as e:
-        raise LinkError(f"cannot reach {host}:{port}: {e}") from e
+        raise LinkError(f"cannot reach {_hp(host, port)}: {e}") from e
     finally:
         c.close()
 

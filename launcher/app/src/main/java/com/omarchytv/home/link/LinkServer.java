@@ -100,6 +100,10 @@ public final class LinkServer {
 
         void log(String message);
 
+        /** v2.21 link.keepAlive changed from the PC: start or stop the keep-alive service now. */
+        default void onKeepAliveChanged() {
+        }
+
         /** Cast kinds the launcher can open right now (PROTOCOL.md, Cast). Empty = no "cast" capability. */
         List<String> castKinds();
 
@@ -114,6 +118,100 @@ public final class LinkServer {
 
         /** play / pause / stop / seek on the open cast. Returns null when done, or an error code ("nothing_playing"). */
         String castControl(String id, String action, double position);
+
+        /**
+         * v2.21 GET /v1/theme: the theme the TV shows, for other apps on the network (ThemeShare.payload), or null
+         * when the owner turned "Share theme with apps on the network" off.
+         */
+        default JSONObject sharedTheme() {
+            return null;
+        }
+
+        /** v2.21 GET /v1/theme/wallpaper: the wallpaper that goes with it, or null (none to share, or sharing off). */
+        default Blob sharedWallpaper() {
+            return null;
+        }
+
+        /**
+         * v2.21 POST /v1/notify and the MCP tv_notify tool: a short message from an agent or a script.
+         * Level "info" waits while an app (a film, a match) is on screen and shows when Home comes back; "warn" and
+         * "alert" show at once. Returns "shown", "deferred", or null when the owner did not allow it ("agentAlert").
+         */
+        default String notify(String from, String title, String text, String level) {
+            return null;
+        }
+
+        /** v2.21 notify {"speak": true}: the TV reads the message aloud (Android TextToSpeech). */
+        default void speak(String text) {
+        }
+
+        /** v2.21 GET /v1/state: what is playing ({title, artist, source}), or null. */
+        default JSONObject nowPlaying() {
+            return null;
+        }
+
+        /**
+         * v2.21 POST /v1/ask: show the question with its answers; the TV calls LinkServer.answerAsk(id, choice).
+         * Null when shown, else an error code ("ask_off" when agent alerts are off).
+         */
+        default String askUser(String id, String from, String question, List<String> choices, long deadlineMs) {
+            return "ask_off";
+        }
+
+        /** v2.21 POST /v1/page: open a LAN / tailnet page full screen. Null when opened, else an error code. */
+        default String openPage(String url, String from) {
+            return "no_page";
+        }
+
+        /** v2.21 up to four pages tiled (Hyprland style). Null when opened, else an error code. */
+        default String openPages(List<String> urls, String from) {
+            return urls.isEmpty() ? "not_lan_url" : openPage(urls.get(0), from);
+        }
+
+        default boolean closePage() {
+            return false;
+        }
+
+        /** v2.21 GET /v1/diagnostics: version, device, network, the last log lines. No tokens, no keys. */
+        default JSONObject diagnostics() {
+            return null;
+        }
+
+        /**
+         * v2.21 Radiomarchy from agents: "now" (read) or "play", "pause", "next", "previous", "stop".
+         * {playing, title, artist, sleepMinutes} after the action; null when there is no Radiomarchy.
+         */
+        default JSONObject radio(String action) {
+            return null;
+        }
+
+        /** v2.21 open a part of OmarchyTV: home, radiomarchy, cinemarchy, arcade, office. Null when opened. */
+        default String openTarget(String target) {
+            return "no_such_target";
+        }
+
+        /** v2.21 the launcher's omarchytv.json as it is now (read only), or null. */
+        default JSONObject config() {
+            return null;
+        }
+
+        /** v2.21 GET /v1/sdk/omarchytv.js. */
+        default byte[] sdk() {
+            return null;
+        }
+    }
+
+    /** Bytes with their media type (an image served as is). */
+    public static final class Blob {
+        public final byte[] bytes;
+        public final String type;
+        public final String sha256;
+
+        public Blob(byte[] bytes, String type, String sha256) {
+            this.bytes = bytes;
+            this.type = type;
+            this.sha256 = sha256;
+        }
     }
 
     public interface ConfigEdit {
@@ -122,6 +220,8 @@ public final class LinkServer {
 
     private final Host host;
     private final LinkStore store;
+    /** v2.21 app tokens, /v1/state, /v1/stream, /v1/ask, /v1/page, /v1/diagnostics. */
+    final AppApi app;
     private volatile ServerSocket server;
     private volatile boolean running;
     private final ThreadPoolExecutor pool;
@@ -165,6 +265,7 @@ public final class LinkServer {
     public LinkServer(Host host, LinkStore store) {
         this.host = host;
         this.store = store;
+        this.app = new AppApi(this, host, new AppTokens(new File(store.dir(), "link-apps.json")));
         pool = new ThreadPoolExecutor(0, MAX_CONN, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), r -> {
             Thread t = new Thread(r, "otv-link");
             t.setDaemon(true);
@@ -301,9 +402,17 @@ public final class LinkServer {
         final Map<String, String> headers = new java.util.LinkedHashMap<>();
         boolean close;
 
+        String contentType = "application/json";
+
         Response(int status, JSONObject obj) {
             this.status = status;
             this.body = obj == null ? new byte[0] : LinkCrypto.utf8(obj.toString());
+        }
+
+        Response(int status, byte[] body, String contentType) {
+            this.status = status;
+            this.body = body == null ? new byte[0] : body;
+            this.contentType = contentType;
         }
     }
 
@@ -315,7 +424,8 @@ public final class LinkServer {
             InputStream in = new BufferedInputStream(sock.getInputStream());
             OutputStream out = sock.getOutputStream();
             if (!host.allowPeer(peer)) {
-                Response r = new Response(403, err("not_lan", "LAN clients only"));
+                Response r = new Response(403, err("not_lan", Tailnet.isTailnet(peer)
+                        ? "a Tailscale address: turn on Settings > Connect Omarchy Linux > Allow Tailscale (tailnet) on the TV" : "LAN clients only"));
                 r.close = true;
                 write(out, r);
                 return;
@@ -404,17 +514,19 @@ public final class LinkServer {
     static void write(OutputStream out, Response r) throws IOException {
         StringBuilder h = new StringBuilder();
         h.append("HTTP/1.1 ").append(r.status).append(' ').append(reason(r.status)).append("\r\n");
-        if (r.status != 101) {
-            h.append("Content-Type: application/json\r\n");
+        if (r.status != 101 && r.status != 202 && r.status != 204 && r.status != 304) {
+            h.append("Content-Type: ").append(r.contentType).append("\r\n");
             h.append("Content-Length: ").append(r.body.length).append("\r\n");
+        } else if (r.status == 202 || r.status == 204 || r.status == 304) {
+            h.append("Content-Length: 0\r\n");
         }
-        h.append("Cache-Control: no-store\r\n");
+        if (!r.headers.containsKey("Cache-Control")) h.append("Cache-Control: no-store\r\n");
         h.append("X-OTV-Time: ").append(System.currentTimeMillis() / 1000).append("\r\n");
         for (Map.Entry<String, String> e : r.headers.entrySet()) h.append(e.getKey()).append(": ").append(e.getValue()).append("\r\n");
         if (r.close) h.append("Connection: close\r\n");
         h.append("\r\n");
         out.write(h.toString().getBytes(StandardCharsets.ISO_8859_1));
-        if (r.status != 101) out.write(r.body);
+        if (r.status != 101 && r.status != 204 && r.status != 304) out.write(r.body);
         out.flush();
     }
 
@@ -422,6 +534,9 @@ public final class LinkServer {
         switch (s) {
             case 101: return "Switching Protocols";
             case 200: return "OK";
+            case 202: return "Accepted";
+            case 204: return "No Content";
+            case 304: return "Not Modified";
             case 400: return "Bad Request";
             case 401: return "Unauthorized";
             case 403: return "Forbidden";
@@ -656,6 +771,10 @@ public final class LinkServer {
             }
             return new Response(200, o);
         }
+        if (sharePath(path) && ("GET".equals(req.method) || "HEAD".equals(req.method) || "OPTIONS".equals(req.method))) {
+            return sharedTheme(req, path);
+        }
+        if (app.wants(req)) return app.handle(req, out, sock);   // v2.21 app tokens (and the SDK, preflights)
         if ("POST".equals(req.method) && ("/v1/pair/start".equals(path) || "/v1/pair/confirm".equals(path))) {
             long retry = limited(req.peer + "|" + path, 1, 2000);
             if (retry > 0) return retryAfter(new Response(429, err("rate_limited", "1 pairing request per 2 s")), retry);
@@ -689,6 +808,7 @@ public final class LinkServer {
             else if ("PUT".equals(req.method) && "/v1/office".equals(path)) retry = limited(req.peer + "|office", 2, 5_000);
             else if ("PUT".equals(req.method) && "/v1/stats".equals(path)) retry = limited(req.peer + "|stats", 1, 1_500);
             else if ("PUT".equals(req.method) && "/v1/screensaver".equals(path)) retry = limited(req.peer + "|saver", 1, 5_000);
+            else if (notifyCall(req.method, path, req.body)) retry = limited(req.peer + "|notify", 3, 10_000);
         }
         if (retry > 0) return sign(a, retryAfter(new Response(429, err("rate_limited", "slow down")), retry));
 
@@ -735,7 +855,7 @@ public final class LinkServer {
     }
 
     /** Fixed-window limiter: at most {@code max} per {@code windowMs}; returns 0 or the seconds to wait. */
-    private long limited(String key, int max, long windowMs) {
+    long limited(String key, int max, long windowMs) {
         if (!limits) return 0;
         long t = System.currentTimeMillis();
         synchronized (rates) {
@@ -932,6 +1052,84 @@ public final class LinkServer {
 
     // ---- endpoints (§6) ----------------------------------------------------------------------------
 
+    /** v2.21: the read-only theme for apps (no pairing): GET /v1/theme and GET /v1/theme/wallpaper. */
+    static boolean sharePath(String target) {
+        String p = target == null ? "" : target.split("\\?", 2)[0];
+        return "/v1/theme".equals(p) || "/v1/theme/wallpaper".equals(p);
+    }
+
+    /**
+     * GET /v1/theme (JSON) and /v1/theme/wallpaper (the image), for dashboards, Remote panes and agent pages on the
+     * LAN. CORS for web pages, an ETag so polling costs a 304, at most 10 requests per 10 s per client. 403
+     * theme_sharing_off when the owner turned it off. Never anything private: colours, a theme name, an image.
+     */
+    private Response sharedTheme(Request req, String target) {
+        String path = target.split("\\?", 2)[0];
+        boolean image = path.endsWith("/wallpaper");
+        Response r;
+        if ("OPTIONS".equals(req.method)) {
+            r = new Response(204, new byte[0], "text/plain");
+        } else if (limited(req.peer + "|theme", 10, 10_000) > 0) {
+            r = retryAfter(new Response(429, err("rate_limited", "10 theme requests per 10 s")), 2);
+        } else {
+            JSONObject theme = host.sharedTheme();
+            if (theme == null) {
+                r = new Response(403, err("theme_sharing_off", "Settings > Connect Omarchy Linux > Share theme with apps on the network"));
+            } else if (!image) {
+                byte[] body = LinkCrypto.utf8(theme.toString());
+                r = conditional(req, new Response(200, body, "application/json"), sha256Hex(body));
+            } else {
+                Blob wp = host.sharedWallpaper();
+                if (wp == null) r = new Response(404, err("no_wallpaper", "the TV shows no wallpaper image right now"));
+                else r = conditional(req, new Response(200, wp.bytes, wp.type), wp.sha256);
+            }
+        }
+        r.headers.put("Access-Control-Allow-Origin", "*");
+        r.headers.put("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        r.headers.put("Access-Control-Allow-Headers", "If-None-Match");
+        r.headers.put("Access-Control-Expose-Headers", "ETag");
+        r.headers.put("Access-Control-Allow-Private-Network", "true");
+        r.headers.put("Access-Control-Max-Age", "600");
+        if ("HEAD".equals(req.method) && r.status == 200) {
+            Response h = new Response(200, new byte[0], r.contentType);
+            h.headers.putAll(r.headers);
+            h.headers.put("X-Content-Length", String.valueOf(r.body.length));
+            return h;
+        }
+        return r;
+    }
+
+    /** ETag + If-None-Match: 304 when the client already has it; no-cache so browsers always revalidate. */
+    static Response conditional(Request req, Response ok, String sha) {
+        String etag = "\"" + sha.substring(0, Math.min(32, sha.length())) + "\"";
+        String inm = req.header("If-None-Match");
+        Response r = ok;
+        if (!inm.isEmpty()) {
+            for (String t : inm.split(",")) {
+                String v = t.trim();
+                if (v.startsWith("W/")) v = v.substring(2);
+                if (v.equals(etag) || "*".equals(v)) {
+                    r = new Response(304, new byte[0], ok.contentType);
+                    break;
+                }
+            }
+        }
+        r.headers.put("ETag", etag);
+        r.headers.put("Cache-Control", "no-cache");
+        return r;
+    }
+
+    static String sha256Hex(byte[] b) {
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256").digest(b);
+            StringBuilder s = new StringBuilder(64);
+            for (byte x : d) s.append(String.format(Locale.ROOT, "%02x", x & 0xFF));
+            return s.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            return "0";
+        }
+    }
+
     private Response route(Request req, Auth a, JSONObject body) throws Exception {
         String m = req.method, p = req.target;
         if ("GET".equals(m) && "/v1/status".equals(p)) return new Response(200, status());
@@ -985,6 +1183,7 @@ public final class LinkServer {
         if ("PUT".equals(m) && "/v1/widgets".equals(p)) return widgets(body);
         if ("PUT".equals(m) && "/v1/stats".equals(p)) return stats(body, a.pcId);
         if ("PUT".equals(m) && "/v1/screensaver".equals(p)) return screensaver(body);
+        if ("PUT".equals(m) && "/v1/link/keepalive".equals(p)) return keepAlive(body);
         if ("PUT".equals(m) && "/v1/ai".equals(p)) return ai(body, a.pcId);
         if ("PUT".equals(m) && "/v1/ai/providers".equals(p)) return providers(body, a.pcId);
         if ("PUT".equals(m) && "/v1/agents".equals(p)) return agentsPut(body, a.pcId);
@@ -1004,9 +1203,12 @@ public final class LinkServer {
         if ("PUT".equals(m) && "/v1/plugins".equals(p)) return pluginsPut(body, a.pcId);
         if ("GET".equals(m) && "/v1/plugins/grokbot".equals(p)) return new Response(200, pluginsGrokbotGet());
         if (("POST".equals(m) || "PUT".equals(m)) && "/v1/plugins/grokbot".equals(p)) return pluginsGrokbotPost(body, a.pcId);
+        if ("POST".equals(m) && "/v1/notify".equals(p)) return notifyPost(body);
         if ("POST".equals(m) && ("/mcp".equals(p) || "/v1/mcp".equals(p))) {
-            return mcp(body);
+            return mcp(body, AppApi.Principal.pc(a.pcId));
         }
+        Response ar = app.route(AppApi.Principal.pc(a.pcId), req, body);   // v2.21 state, ask, page, diagnostics, tokens
+        if (ar != null) return ar;
         if ("POST".equals(m) && "/v1/unpair".equals(p)) {
             closeClients(a.pcId, false);
             store.remove(a.pcId);
@@ -1048,7 +1250,7 @@ public final class LinkServer {
      * Native Model Context Protocol (MCP) JSON-RPC 2.0 endpoint (/mcp and /v1/mcp) for Grok Bot, Claude,
      * Hermes, and desktop MCP clients. Authenticated via OTV1 HMAC or Authorization: Bearer <paired-token>.
      */
-    private Response mcp(JSONObject req) throws Exception {
+    Response mcp(JSONObject req, AppApi.Principal who) throws Exception {
         Object id = req.has("id") ? req.get("id") : JSONObject.NULL;
         String method = req.optString("method", "");
         JSONObject params = req.optJSONObject("params");
@@ -1062,24 +1264,18 @@ public final class LinkServer {
                         .put("serverInfo", new JSONObject().put("name", "omarchytv-mcp").put("version", launcherVersion()));
                 return new Response(200, res.put("result", r));
             }
-            case "notifications/initialized":
             case "ping":
                 return new Response(200, res.put("result", new JSONObject()));
+            default:
+                break;
+        }
+        if (method.startsWith("notifications/") && !req.has("id")) {
+            return new Response(202, (JSONObject) null);   // MCP Streamable HTTP: a notification gets 202, no body
+        }
+        switch (method) {
             case "tools/list": {
-                JSONArray tools = new JSONArray()
-                        .put(mcpTool("tv_status", "Read OmarchyTV status, active theme, capabilities, and paired PCs.", new JSONObject()))
-                        .put(mcpTool("tv_list_themes", "List bundled MIT Omarchy themes and custom themes installed on the TV.", new JSONObject()))
-                        .put(mcpTool("tv_set_theme", "Switch the active Omarchy theme on the TV.",
-                                new JSONObject().put("name", new JSONObject().put("type", "string").put("description", "Theme slug (e.g. tokyo-night, jade-horse, hermarchy)"))))
-                        .put(mcpTool("tv_send_key", "Send a remote key to the TV (home, back, up, down, left, right, select, play_pause, volume_up, volume_down, mute).",
-                                new JSONObject().put("key", new JSONObject().put("type", "string").put("description", "Key name"))))
-                        .put(mcpTool("tv_list_apps", "List installed Android TV apps and WebApps.", new JSONObject()))
-                        .put(mcpTool("tv_launch_app", "Launch an Android TV app by package name.",
-                                new JSONObject().put("package", new JSONObject().put("type", "string").put("description", "Android package name"))))
-                        .put(mcpTool("tv_screensaver", "Set or reset custom ASCII screensaver text on the TV.",
-                                new JSONObject().put("text", new JSONObject().put("type", "string").put("description", "ASCII text (empty string resets to default)"))))
-                        .put(mcpTool("tv_ai_status", "Read live AI agents and PC stats displayed on OmarchyTV.", new JSONObject()))
-                        .put(mcpTool("tv_cinemarchy", "Read Cinemarchy media library and video snippets on OmarchyTV.", new JSONObject()));
+                JSONArray tools = new JSONArray();
+                for (Object[] t : mcpTools()) if (who.can((String) t[3])) tools.put(mcpTool((String) t[0], (String) t[1], (JSONObject) t[2]));
                 return new Response(200, res.put("result", new JSONObject().put("tools", tools)));
             }
             case "tools/call": {
@@ -1087,6 +1283,10 @@ public final class LinkServer {
                 final JSONObject args = params.optJSONObject("arguments") != null ? params.optJSONObject("arguments") : new JSONObject();
                 JSONObject out;
                 boolean isError = false;
+                String need = mcpScope(name);
+                if (need != null && !who.can(need)) {   // v2.21: an app token only gets the tools of its scope
+                    return new Response(200, res.put("error", new JSONObject().put("code", -32601).put("message", "Not allowed for this app token: " + name)));
+                }
                 switch (name) {
                     case "tv_status":
                         out = status();
@@ -1145,6 +1345,81 @@ public final class LinkServer {
                     case "tv_cinemarchy":
                         out = new JSONObject().put("library", cinemarchyLibrary()).put("snippets", cinemarchySnippets());
                         break;
+                    case "tv_get_state":
+                        out = app.state();
+                        break;
+                    case "tv_ask_user": {   // v2.21: waits for the answer (at most "wait" s, default 60, max 110)
+                        JSONObject b = new JSONObject().put("question", args.optString("question", ""))
+                                .put("choices", args.optJSONArray("choices") != null ? args.optJSONArray("choices") : new JSONArray())
+                                .put("timeout", Math.max(10, Math.min(300, args.optInt("timeout", 120))))
+                                .put("from", args.optString("from", ""));
+                        Response ar = app.askPost(who, b);
+                        out = new JSONObject(new String(ar.body, StandardCharsets.UTF_8));
+                        isError = ar.status != 200;
+                        if (!isError) {
+                            JSONObject done = app.await(out.getString("id"), Math.max(0, Math.min(110, args.optInt("wait", 60))) * 1000L);
+                            if (done != null) out = done;
+                        }
+                        break;
+                    }
+                    case "tv_ask_result": {
+                        JSONObject r = app.await(args.optString("id", ""), Math.max(0, Math.min(25, args.optInt("wait", 0))) * 1000L);
+                        out = r != null ? r : err("no_such_ask", null);
+                        isError = r == null;
+                        break;
+                    }
+                    case "tv_show_page": {   // v2.21: "url", or "urls" (up to 4, tiled)
+                        List<String> us = AppApi.urls(args);
+                        String e = host.openPages(us, who.name);
+                        out = e == null ? ok().put("urls", new JSONArray(us)) : err(e, "http:// pages on the LAN or tailnet, by IP address");
+                        isError = e != null;
+                        break;
+                    }
+                    case "tv_list_pages":
+                        out = new JSONObject().put("pages", app.pages());
+                        break;
+                    case "tv_publish_page":
+                    case "tv_page_badge":
+                    case "tv_remove_page": {
+                        String pid = args.optString("id", "");
+                        Response pr = "tv_publish_page".equals(name) ? app.publishPage(pid, args, who)
+                                : "tv_page_badge".equals(name) ? app.pageBadge(pid, args.optInt("badge", 0))
+                                : app.removePage(pid);
+                        out = new JSONObject(new String(pr.body, StandardCharsets.UTF_8));
+                        isError = pr.status != 200;
+                        break;
+                    }
+                    case "tv_close_page":
+                        out = ok().put("closed", host.closePage());
+                        break;
+                    case "tv_diagnostics":
+                        out = app.diagnostics();
+                        break;
+                    case "tv_radio_now":
+                    case "tv_radio": {
+                        String act = "tv_radio_now".equals(name) ? "now" : args.optString("action", "");
+                        Response rr = app.radio(act);
+                        out = new JSONObject(new String(rr.body, StandardCharsets.UTF_8));
+                        isError = rr.status != 200;
+                        break;
+                    }
+                    case "tv_open": {
+                        String e = host.openTarget(args.optString("target", ""));
+                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office");
+                        isError = e != null;
+                        break;
+                    }
+                    case "tv_get_theme": {   // v2.21: the same payload as GET /v1/theme, even with sharing off (paired)
+                        JSONObject t = host.sharedTheme();
+                        out = t != null ? t : new JSONObject().put("name", status().optString("theme", "")).put("shared", false);
+                        break;
+                    }
+                    case "tv_notify": {
+                        Response nr = notifyPost(args);
+                        out = new JSONObject(new String(nr.body, StandardCharsets.UTF_8));
+                        isError = nr.status != 200;
+                        break;
+                    }
                     default:
                         return new Response(200, res.put("error", new JSONObject().put("code", -32601).put("message", "Unknown tool: " + name)));
                 }
@@ -1154,6 +1429,73 @@ public final class LinkServer {
             default:
                 return new Response(200, res.put("error", new JSONObject().put("code", -32601).put("message", "Method not found: " + method)));
         }
+    }
+
+    private static JSONObject prop(String type, String description) throws JSONException {
+        return new JSONObject().put("type", type).put("description", description);
+    }
+
+    /** {name, description, properties, scope}: read &lt; notify &lt; control (a paired PC has them all). */
+    static List<Object[]> mcpTools() throws JSONException {
+        List<Object[]> t = new ArrayList<>();
+        t.add(new Object[]{"tv_status", "Read OmarchyTV status, active theme, capabilities, and paired PCs.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_get_state", "What is on the TV now: screen (home, app, screensaver, off), the app, the theme, the music.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_get_theme", "Read the TV's current theme: background, foreground, accent, the full colors.toml palette and the wallpaper URL (schema omarchytv-theme/1).", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_list_themes", "List bundled MIT Omarchy themes and custom themes installed on the TV.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_list_apps", "List installed Android TV apps and WebApps.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_ai_status", "Read live AI agents and PC stats displayed on OmarchyTV.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_cinemarchy", "Read Cinemarchy media library and video snippets on OmarchyTV.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_notify", "Show a short message on the TV (e.g. 'build finished'). level info waits while a film or an app is on screen; warn and alert show at once. Needs agent alerts on in the TV's settings.",
+                new JSONObject().put("text", prop("string", "The message, one line, at most 200 characters"))
+                        .put("title", prop("string", "Optional title, at most 60 characters"))
+                        .put("level", prop("string", "info (default) | warn | alert"))
+                        .put("speak", prop("boolean", "Also read it aloud on the TV"))
+                        .put("from", prop("string", "Who is talking, e.g. Claude Code (at most 40 characters)")), "notify"});
+        t.add(new Object[]{"tv_ask_user", "Ask the person in front of the TV a question; they pick an answer with the remote. Waits for the answer (up to 'wait' seconds).",
+                new JSONObject().put("question", prop("string", "One line, at most 200 characters"))
+                        .put("choices", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "Up to 4 short answers (default Yes / No)"))
+                        .put("timeout", prop("integer", "Seconds the question stays on the TV (10-300, default 120)"))
+                        .put("wait", prop("integer", "Seconds to wait here for the answer (0-110, default 60); then use tv_ask_result"))
+                        .put("from", prop("string", "Who asks, e.g. Claude Code")), "notify"});
+        t.add(new Object[]{"tv_ask_result", "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
+                new JSONObject().put("id", prop("string", "The id tv_ask_user returned")).put("wait", prop("integer", "Seconds to wait (0-25)")), "notify"});
+        t.add(new Object[]{"tv_radio_now", "What Radiomarchy (Omarchy Radio on the TV) is playing.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_radio", "Control Radiomarchy: play (resume or start the playlist), pause, next, previous, stop.",
+                new JSONObject().put("action", prop("string", "play | pause | next | previous | stop")), "control"});
+        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
+                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office")), "control"});
+        t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
+                new JSONObject().put("name", prop("string", "Theme slug (e.g. tokyo-night, jade-horse, hermarchy)")), "control"});
+        t.add(new Object[]{"tv_send_key", "Send a remote key to the TV (home, back, up, down, left, right, select, play_pause, volume_up, volume_down, mute).",
+                new JSONObject().put("key", prop("string", "Key name")), "control"});
+        t.add(new Object[]{"tv_launch_app", "Launch an Android TV app by package name.",
+                new JSONObject().put("package", prop("string", "Android package name")), "control"});
+        t.add(new Object[]{"tv_screensaver", "Set or reset custom ASCII screensaver text on the TV.",
+                new JSONObject().put("text", prop("string", "ASCII text (empty string resets to default)")), "control"});
+        t.add(new Object[]{"tv_show_page", "Open a web page of the LAN or tailnet full screen on the TV (http:// and an IP address, e.g. a dashboard), or up to 4 tiled like Hyprland windows (1-4 or the colour keys switch). BACK closes it.",
+                new JSONObject().put("url", prop("string", "http://<LAN or 100.x address>[:port]/path"))
+                        .put("urls", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "2-4 pages to tile")), "control"});
+        t.add(new Object[]{"tv_close_page", "Close the page opened with tv_show_page.", new JSONObject(), "control"});
+        t.add(new Object[]{"tv_list_pages", "The agent pages published as tiles on the TV's Home.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_publish_page", "Publish (or update) a LAN / tailnet page as a tile on the TV's Home, with a name, a one-letter icon and an optional badge count. At most 16.",
+                new JSONObject().put("id", prop("string", "Short id: a-z, 0-9, dashes (e.g. dubai-flats)"))
+                        .put("name", prop("string", "Tile name, at most 32 characters"))
+                        .put("url", prop("string", "http://<LAN or 100.x address>[:port]/path"))
+                        .put("icon", prop("string", "One letter or emoji (optional)"))
+                        .put("badge", prop("integer", "A count shown on the tile (0 hides it)")), "control"});
+        t.add(new Object[]{"tv_page_badge", "Set the badge count of a published page (0 hides it), e.g. new replies.",
+                new JSONObject().put("id", prop("string", "The page id")).put("badge", prop("integer", "0-999")), "notify"});
+        t.add(new Object[]{"tv_remove_page", "Remove a published page from the TV's Home.", new JSONObject().put("id", prop("string", "The page id")), "control"});
+        t.add(new Object[]{"tv_diagnostics", "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, recent log lines. No secrets.", new JSONObject(), "control"});
+        return t;
+    }
+
+    static String mcpScope(String tool) {
+        try {
+            for (Object[] t : mcpTools()) if (t[0].equals(tool)) return (String) t[3];
+        } catch (JSONException ignored) {
+        }
+        return null;
     }
 
     private static JSONObject mcpTool(String name, String description, JSONObject props) throws JSONException {
@@ -1178,6 +1520,7 @@ public final class LinkServer {
             caps0.put("plugins");
             caps0.put("enc-a256gcm");
             caps0.put("mcp");   // v-next: PUT/DELETE /v1/banners/<package> (PNG), GET /v1/banners   // v2.10.1: PUT/DELETE /v1/themes/<name>, GET /v1/themes, POST /v1/themes/<name>/select   // §6 Agents: PUT/GET /v1/agents, agent_activity, agent_ask
+            if (host.sharedTheme() != null) caps0.put("theme-share");   // v2.21 GET /v1/theme, /v1/theme/wallpaper (no token)
             caps0.put("office");   // v2.20 GrokBot Office: PUT/GET /v1/office, office_hire / office_hire_result
             List<String> kinds = host.castKinds();
             if (kinds != null && !kinds.isEmpty()) {
@@ -1546,6 +1889,54 @@ public final class LinkServer {
     }
 
     /** v2.9: {text: screensaver.txt} (at most 16 KiB, 60 lines x 240 cols); "" restores the OMARCHY TV logo. */
+    /** v2.21: the REST route, or an MCP tools/call of tv_notify (both share the notify rate limit). */
+    static boolean notifyCall(String method, String path, byte[] body) {
+        if (!"POST".equals(method)) return false;
+        if ("/v1/notify".equals(path)) return true;
+        if (!"/mcp".equals(path) && !"/v1/mcp".equals(path)) return false;
+        String b = new String(body, StandardCharsets.UTF_8);
+        return b.contains("tv_notify");
+    }
+
+    /** {text, from?} → 200 {ok, shown:true} / 403 notify_off / 400 bad_notify. Plain text, one line, 200 chars. */
+    static final java.util.Set<String> LEVELS = new java.util.HashSet<>(java.util.Arrays.asList("info", "warn", "alert"));
+
+    /**
+     * {text | body, title?, level?: info|warn|alert, from?} → {ok, shown|deferred} / 403 notify_off / 400 bad_notify.
+     * One line each: title 60 chars, text 200.
+     */
+    Response notifyPost(JSONObject b) throws Exception {
+        String text = printable((b.has("text") ? b.optString("text", "") : b.optString("body", "")).replace('\n', ' ').trim(), 200);
+        String title = printable(b.optString("title", "").replace('\n', ' ').trim(), 60);
+        String from = printable(b.optString("from", b.optString("source", "")).trim(), 40);
+        String level = b.optString("level", "info");
+        if (!LEVELS.contains(level)) level = "info";
+        if (text.isEmpty() && title.isEmpty()) return new Response(400, err("bad_notify", "text is required"));
+        if (from.isEmpty()) from = "PC";
+        String r = host.notify(from, title, text, level);
+        if (r == null) return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Grok Bot & AI > AI agent alerts while you watch)"));
+        if (b.optBoolean("speak") && "shown".equals(r)) host.speak(title.isEmpty() ? text : title + ". " + text);
+        host.log("notify from " + from + " (" + level + ", " + r + ")");
+        app.event("notify", new JSONObject().put("from", from).put("title", title).put("text", text).put("level", level));
+        return new Response(200, ok().put("shown", "shown".equals(r)).put("deferred", "deferred".equals(r)));
+    }
+
+    /** v2.21 PUT /v1/link/keepalive {"mode": "auto" | "on" | "off"}: Link after boot, set from the PC. */
+    private Response keepAlive(JSONObject b) throws Exception {
+        String mode = b.optString("mode", "");
+        if (!"auto".equals(mode) && !"on".equals(mode) && !"off".equals(mode)) {
+            return new Response(400, err("bad_mode", "auto, on or off"));
+        }
+        host.editConfig(j -> {
+            JSONObject link = j.optJSONObject("link");
+            if (link == null) j.put("link", link = new JSONObject());
+            if ("auto".equals(mode)) link.remove("keepAlive");
+            else link.put("keepAlive", "on".equals(mode));
+        });
+        host.onKeepAliveChanged();
+        return new Response(200, ok().put("mode", mode));
+    }
+
     private Response screensaver(JSONObject b) throws Exception {
         String t = b.optString("text", "");
         String[] lines = t.split("\n", -1);
@@ -2386,7 +2777,50 @@ public final class LinkServer {
     }
 
     /** Sends an event to every connected PC. */
+    // ---- v2.21 app API, for the TV's own UI ----
+
+    /** The answer picked on the remote. False when the question is gone or expired. */
+    public boolean answerAsk(String id, String choice) {
+        return app.answer(id, choice);
+    }
+
+    /** Questions still waiting: [id, from, question, deadlineMs, choice...]. */
+    public List<String[]> pendingAsks() {
+        List<String[]> out = new ArrayList<>();
+        for (AppApi.Ask a : app.pending()) {
+            List<String> row = new ArrayList<>();
+            row.add(a.id);
+            row.add(a.from);
+            row.add(a.question);
+            row.add(String.valueOf(a.deadline));
+            row.addAll(a.choices);
+            out.add(row.toArray(new String[0]));
+        }
+        return out;
+    }
+
+    public int appTokenCount() {
+        return app.tokens.size();
+    }
+
+    public int revokeAppTokens() {
+        app.closeAppStreams();   // a revoked token's /v1/stream ends now, not after its hour
+        return app.tokens.clear();
+    }
+
+    /** v2.21 a token made on the TV itself (Settings): {id, token}, or null when 16 exist. */
+    public String[] newAppToken(String name, String scope) {
+        String[] t = app.tokens.add(printable(name, 40), scope, System.currentTimeMillis() / 1000);
+        if (t != null) host.log("app token added on the TV: " + name + " (" + scope + ")");
+        return t;
+    }
+
+    boolean isRunning() {
+        return running;
+    }
+
     public void broadcast(String type, JSONObject data) {
+        app.event(type, data);
         for (WsClient c : clients) {
             try {
                 c.send(type, data);

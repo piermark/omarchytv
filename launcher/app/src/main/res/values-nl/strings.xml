@@ -172,6 +172,7 @@
     <string name="search_prompt">Zeg een appnaam</string>
     <string name="link_service_on">luistert</string>
     <string name="link_service_off">geen netwerk</string>
+    <string name="link_notification">Omarchy Link is actief</string>
     <string name="remote_service">OmarchyTV-afstandsbediening</string>
     <string name="remote_service_desc">Laat een gekoppelde Omarchy Linux-pc op Terug drukken op de tv. Het leest niets op het scherm.</string>
     <string name="keymap_service">OmarchyTV-afstandsbedieningsknoppen</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Opent OmarchyTV als Home het eigen startscherm van de tv toont. Het ziet alleen welk startscherm openging en leest niets op het scherm.</string>
     <string name="set_home_override">Home-knop opent OmarchyTV</string>
     <string name="link_usage">Gebruikstoegang (huidige app)</string>
+    <string name="link_share_theme">Thema delen met apps op het netwerk</string>
+    <string name="link_keep_alive">Link bereikbaar houden na opstarten</string>
+    <string name="link_tailscale">Tailscale toestaan (tailnet)</string>
+    <string name="agentq_asks">vraagt</string>
+    <string name="agentq_hint">Kies een antwoord met de afstandsbediening · TERUG: later antwoorden</string>
+    <string name="link_app_tokens">App-tokens (dashboards, agents)</string>
+    <string name="menu_system_info">Systeeminfo</string>
+    <string name="walker_agent_tile">Agentpagina\'s, naast elkaar</string>
+    <string name="walker_agent_questions">Vragen van agents</string>
+    <string name="link_new_app_token">Nieuwe app-token</string>
+    <string name="link_app_tokens_full">Al 16 app-tokens: trek ze eerst in</string>
+    <string name="link_app_token_once">Eén keer getoond. Scan of typ hem in je app; intrekken hier of met omarchy-link token.</string>
+    <string name="link_tailscale_app">Tailscale-app</string>
+    <string name="link_tailscale_open">openen</string>
+    <string name="link_tailscale_get">installeren</string>
+    <string name="link_tailscale_qr">Scan met je telefoon om Tailscale op Google Play te openen</string>
     <string name="link_paired_toast">Gekoppeld met %1$s</string>
     <string name="link_online">verbonden</string>
     <string name="ai_settings">AI-tegoed</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">willekeurig (elke scène een nieuwe)</string>
     <string name="radio_auto_demo">Demomodus na 1 minuut zonder toets</string>
     <string name="radio_shuffle">Willekeurig</string>
+    <string name="radio_home_music">Muziek op het startscherm</string>
+    <string name="radio_song_qr">Nummerpagina (QR voor je telefoon)</string>
+    <string name="radio_sleep">Slaaptimer</string>
+    <string name="radio_sleep_left" formatted="true">nog %d min</string>
     <string name="radio_repeat">Herhalen</string>
     <string name="radio_repeat_all">alle</string>
     <string name="radio_repeat_one">één</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">ja</string>
     <string name="radio_animated_off">nee</string>
+    <string name="ss_pulse_panels">Pulse-panelen</string>
+    <string name="ss_pulse_racing">racepaneel op Pulse</string>
+    <string name="ss_pulse_graphics">Pulse-graphics</string>
 </resources>

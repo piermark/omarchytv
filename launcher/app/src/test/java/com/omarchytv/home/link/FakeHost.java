@@ -23,6 +23,76 @@ class FakeHost implements LinkServer.Host {
     final List<String> keys = new ArrayList<>();
     LinkServer server;
     int codes;
+    volatile JSONObject theme;               // GET /v1/theme (null = sharing off)
+    volatile LinkServer.Blob wallpaper;      // GET /v1/theme/wallpaper
+
+    @Override
+    public JSONObject sharedTheme() {
+        return theme;
+    }
+
+    @Override
+    public LinkServer.Blob sharedWallpaper() {
+        return wallpaper;
+    }
+
+    volatile boolean notifyOn;
+    final List<String> asked = new java.util.concurrent.CopyOnWriteArrayList<>();
+    final List<String> pages = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    @Override
+    public String askUser(String id, String from, String question, List<String> choices, long deadlineMs) {
+        if (!notifyOn) return "ask_off";
+        asked.add(id + "|" + from + "|" + question + "|" + choices);
+        return null;
+    }
+
+    @Override
+    public String openPage(String url, String from) {
+        if (!url.startsWith("http://192.168.")) return "not_lan_url";
+        pages.add(url);
+        return null;
+    }
+
+    @Override
+    public String openPages(List<String> urls, String from) {
+        if (urls.isEmpty()) return "not_lan_url";
+        for (String u : urls) {
+            String e = openPage(u, from);
+            if (e != null) return e;
+        }
+        return null;
+    }
+
+    @Override
+    public JSONObject diagnostics() {
+        try {
+            return new JSONObject().put("launcherVersion", "2.21.0").put("log", new JSONArray().put("12:00:00 hello"));
+        } catch (org.json.JSONException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public byte[] sdk() {
+        return "/* omarchytv.js */".getBytes(StandardCharsets.UTF_8);
+    }
+    final java.util.List<String> notes = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    volatile boolean watching;   // an app is on screen: "info" waits
+    final List<String> spoken = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    @Override
+    public void speak(String text) {
+        spoken.add(text);
+    }
+
+    @Override
+    public String notify(String from, String title, String text, String level) {
+        if (!notifyOn) return null;
+        notes.add(from + ": " + (title.isEmpty() ? "" : title + " · ") + text);
+        return watching && "info".equals(level) ? "deferred" : "shown";
+    }
 
     FakeHost(File dir) {
         this.dir = dir;
@@ -102,6 +172,11 @@ class FakeHost implements LinkServer.Host {
         if ("back".equals(key)) return back ? 200 : 409;
         if (key.matches("play_pause|play|pause|stop|next|previous|rewind|fast_forward|volume_up|volume_down|mute")) return 200;
         return 409;
+    }
+
+    @Override
+    public JSONObject config() {
+        return readConfig();
     }
 
     synchronized JSONObject readConfig() {

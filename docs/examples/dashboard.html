@@ -1,0 +1,44 @@
+<!doctype html>
+<!-- OmarchyTV 2.21: a minimal dashboard for the TV. Serve it from any box of the LAN or tailnet
+     (python3 -m http.server 8080), then: omarchy-link pages add home "Home" http://<this box>:8080/dashboard.html
+     Put your TV's address and a token below: omarchy-link token add "Dashboard" --scope notify
+     (read is enough without the two buttons). -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>OmarchyTV dashboard</title>
+<script src="http://192.168.1.50:47800/v1/sdk/omarchytv.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: var(--otv-background, #1a1b26); color: var(--otv-foreground, #a9b1d6);
+    font-family: monospace; font-size: 2.4vh; }
+  body { background-image: var(--otv-wallpaper); background-size: cover; }
+  main { display: grid; grid-template-columns: 1fr 1fr; gap: 2vh; padding: 4vh; height: calc(100% - 8vh); box-sizing: border-box; }
+  section { background: color-mix(in srgb, var(--otv-background, #1a1b26) 88%, transparent); border: 2px solid var(--otv-accent, #7aa2f7); padding: 2vh; }
+  h2 { margin: 0 0 1vh; color: var(--otv-accent, #7aa2f7); font-size: 2.6vh; }
+  button { font: inherit; color: inherit; background: none; border: 2px solid var(--otv-color8, #565f89); padding: 1vh 2vh; margin: 0.5vh; }
+  #log div { opacity: .85; }
+</style>
+</head>
+<body>
+<main>
+  <section><h2>● TV</h2><div id="state">…</div></section>
+  <section><h2>♫ Radiomarchy</h2><div id="music">…</div></section>
+  <section><h2>✉ Notifications</h2><div id="log"></div></section>
+  <section><h2>⌁ Actions</h2>
+    <button data-otv-focus onclick="tv.notify('Hello from the dashboard')">Say hello</button>
+    <button data-otv-focus onclick="tv.ask('Pizza tonight?', ['Yes', 'No']).then(function (a) { log('You said: ' + a); })">Ask me</button>
+  </section>
+</main>
+<script>
+  var tv = OmarchyTV.connect({ token: "otva_…" });   // the TV is where the SDK came from
+  tv.followTheme();
+  function log(t) { var d = document.createElement("div"); d.textContent = new Date().toLocaleTimeString() + "  " + t; document.getElementById("log").prepend(d); }
+  tv.on("state", function (s) {
+    document.getElementById("state").textContent = s.screen + (s.app ? " · " + s.app.label : "") + " · " + (s.theme || "");
+    document.getElementById("music").textContent = s.nowPlaying ? s.nowPlaying.title + " — " + s.nowPlaying.artist : "silence";
+  });
+  tv.on("notify", function (n) { log(n.from + ": " + (n.title ? n.title + " · " : "") + n.text); });
+  OmarchyTV.remote();   // arrows move between the buttons, OK clicks
+</script>
+</body>
+</html>

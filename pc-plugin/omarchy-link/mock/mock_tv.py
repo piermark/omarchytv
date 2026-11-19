@@ -366,6 +366,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_PUT(self):
         self._route("PUT")
 
+    def do_DELETE(self):
+        self._route("DELETE")
+
     def _route(self, method: str):
         if not self._lan_only():
             return
@@ -413,7 +416,23 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/v1/cast"): self._cast, ("PUT", "/v1/cast/file"): self._cast_file,
             ("POST", "/v1/cast/control"): self._cast_control,
             ("PUT", "/v1/plugins/grokbot"): self._grokbot_put,
+            ("POST", "/v1/notify"): self._notify,
+            ("POST", "/v1/tokens"): self._token_add, ("GET", "/v1/tokens"): self._token_list,
+            ("POST", "/v1/ask"): self._ask, ("GET", "/v1/diagnostics"): self._diag,
+            ("PUT", "/v1/link/keepalive"): self._keepalive,
+            ("POST", "/v1/page"): self._page, ("DELETE", "/v1/page"): self._page_close,
+            ("GET", "/v1/config"): lambda pc, a, b: (200, {"config": self.tv.config()}),
+            ("PUT", "/v1/config"): self._config_put,
+            ("GET", "/v1/radio"): self._radio, ("POST", "/v1/radio"): self._radio, ("POST", "/v1/open"): self._open,
         }.get((method, path))
+        if not handler and path == "/v1/pages" and method == "GET":
+            handler = lambda pc, a, b: (200, {"pages": getattr(self.tv, "agent_pages", [])})
+        if not handler and path.startswith("/v1/pages/"):
+            handler = lambda pc, a, b, m=method, p=path: self._page_tile(m, p, a)
+        if not handler and method == "GET" and path.split("?")[0].startswith("/v1/ask/"):
+            handler = self._ask_get
+        if not handler and method == "DELETE" and path.startswith("/v1/tokens/"):
+            handler = lambda pc, a, b, p=path: self._token_del(p.rsplit("/", 1)[1])
         if not handler:
             return self._json(404, {"error": "not_found"}, sign)
         status, obj = handler(pc_id, payload, body)
@@ -566,6 +585,125 @@ class Handler(BaseHTTPRequestHandler):
             return 400, {"error": "bad_agents"}
         self.tv.update_config(lambda j: j.setdefault("link", {}).update(agents=a, agentsAt=int(time.time())))
         return 200, {"ok": True}
+
+    def _notify(self, pc, a, body):   # v2.21: shown only with agent alerts on (agentAlert)
+        text = " ".join(str(a.get("text", "")).split())[:200]
+        if not text:
+            return 400, {"error": "bad_notify"}
+        if not self.tv.config().get("agentAlert"):
+            return 403, {"error": "notify_off", "message": "turn on agent alerts on the TV"}
+        self.tv.notes = getattr(self.tv, "notes", []) + [(str(a.get("from") or "PC")[:40], text)]
+        held = a.get("level", "info") == "info" and getattr(self.tv, "watching", False)
+        return 200, {"ok": True, "shown": not held, "deferred": held}
+
+    # v2.21 app API (a small model of the TV's AppApi)
+    def _token_add(self, pc, a, body):
+        apps = getattr(self.tv, "app_tokens", [])
+        tok = {"id": f"{len(apps) + 1:08x}", "name": a.get("name", ""), "scope": a.get("scope", "read")}
+        self.tv.app_tokens = apps + [tok]
+        return 200, dict(tok, token="otva_mock" + tok["id"])
+
+    def _token_list(self, pc, a, body):
+        return 200, {"apps": getattr(self.tv, "app_tokens", []), "max": 16}
+
+    def _token_del(self, tid):
+        apps = getattr(self.tv, "app_tokens", [])
+        if not any(x["id"] == tid for x in apps):
+            return 404, {"error": "no_such_app"}
+        self.tv.app_tokens = [x for x in apps if x["id"] != tid]
+        return 200, {"ok": True}
+
+    def _ask(self, pc, a, body):
+        if not self.tv.config().get("agentAlert"):
+            return 403, {"error": "ask_off"}
+        self.tv.ask = {"id": "0123456789abcdef", "question": a.get("question"), "choices": a.get("choices") or ["Yes", "No"],
+                       "state": "pending", "answer": None}
+        return 200, dict(self.tv.ask)
+
+    def _ask_get(self, pc, a, body):
+        ask = getattr(self.tv, "ask", None)
+        if not ask:
+            return 404, {"error": "no_such_ask"}
+        if getattr(self.tv, "answer_with", None):
+            ask.update(state="answered", answer=self.tv.answer_with)
+        return 200, dict(ask)
+
+    def _config_put(self, pc, a, body):
+        new = a.get("config")
+        if not isinstance(new, dict):
+            return 400, {"error": "bad_config"}
+
+        def edit(j):
+            link = j.get("link")
+            j.clear()
+            j.update({k: v for k, v in new.items() if k != "link"})
+            if link is not None:
+                j["link"] = link
+        self.tv.update_config(edit)
+        return 200, {"ok": True}
+
+    def _radio(self, pc, a, body):
+        act = a.get("action", "now")
+        if act == "play":
+            self.tv.radio = {"playing": True, "title": "Hyprland Nights", "artist": "omarchy"}
+        elif act in ("pause", "stop"):
+            self.tv.radio = dict(getattr(self.tv, "radio", {}) or {}, playing=False)
+        return 200, getattr(self.tv, "radio", None) or {"playing": False, "title": None, "artist": None}
+
+    def _open(self, pc, a, body):
+        if a.get("target") not in ("home", "radiomarchy", "cinemarchy", "arcade", "office"):
+            return 400, {"error": "no_such_target"}
+        self.tv.opened = a["target"]
+        return 200, {"ok": True, "target": a["target"]}
+
+    def _page_tile(self, method, path, a):
+        parts = path.split("/")[3:]
+        pid, sub = parts[0], (parts[1] if len(parts) > 1 else "")
+        pages = getattr(self.tv, "agent_pages", [])
+        cur = next((x for x in pages if x["id"] == pid), None)
+        if method == "PUT" and not sub:
+            if not str(a.get("url", "")).startswith("http://192.168."):
+                return 400, {"error": "not_lan_url"}
+            new = {"id": pid, "name": a.get("name"), "url": a.get("url"), "icon": a.get("icon", ""), "badge": a.get("badge", 0)}
+            self.tv.agent_pages = [x for x in pages if x["id"] != pid] + [new]
+            return 200, {"ok": True, "id": pid}
+        if cur is None:
+            return 404, {"error": "no_such_page"}
+        if method == "POST" and sub == "badge":
+            cur["badge"] = int(a.get("badge", 0))
+            return 200, {"ok": True, "badge": cur["badge"]}
+        if method == "POST" and sub == "show":
+            self.tv.page = cur["url"]
+            return 200, {"ok": True}
+        if method == "DELETE" and not sub:
+            self.tv.agent_pages = [x for x in pages if x["id"] != pid]
+            return 200, {"ok": True}
+        return 404, {"error": "not_found"}
+
+    def _diag(self, pc, a, body):
+        ka = getattr(self.tv, "keep_alive", "auto")
+        return 200, {"launcherVersion": "2.21.0", "log": ["12:00:00 listening", "12:00:01 question from PC"],
+                     "device": {"ramMb": 2048, "lowRam": False},
+                     "settings": {"keepAlive": ka, "keepAliveActive": ka == "on", "notifySound": True},
+                     "home": {"wallpaper": "omarchy", "wallpaperBg": 0, "theme": "last-horizon", "loop": True,
+                              "loopStutter": False, "intro": "light", "lightLoop": True}}
+
+    def _keepalive(self, pc, a, body):
+        mode = a.get("mode")
+        if mode not in ("auto", "on", "off"):
+            return 400, {"error": "bad_mode", "message": "auto, on or off"}
+        self.tv.keep_alive = mode
+        return 200, {"ok": True, "mode": mode}
+
+    def _page(self, pc, a, body):
+        urls = a.get("urls") or ([a["url"]] if a.get("url") else [])
+        self.tv.page, self.tv.pages = urls[0] if urls else None, urls
+        return 200, {"ok": True, "url": self.tv.page, "urls": urls}
+
+    def _page_close(self, pc, a, body):
+        was = bool(getattr(self.tv, "page", None))
+        self.tv.page = None
+        return 200, {"ok": True, "closed": was}
 
     def _agents_get(self, pc, a, body):
         return 200, self.tv.config().get("link", {}).get("agents") or {"agents": [], "at": None}

@@ -42,7 +42,8 @@ def pc_pane() -> dict:
         lines.append({"label": "Up", "value": f"{up // 86400}d {up % 86400 // 3600}h" if up >= 86400 else f"{up // 3600}h {up % 3600 // 60}m"})
     except (OSError, ValueError):
         pass
-    lines.append({"label": "Theme", "value": theme.theme_name().replace("-", " ").title()})
+    if theme.theme_name():   # a PC without an Omarchy theme (macOS) has no line to show
+        lines.append({"label": "Theme", "value": theme.theme_name().replace("-", " ").title()})
     if shutil.which("playerctl"):
         try:
             r = subprocess.run(["playerctl", "metadata", "--format", "{{status}}\t{{artist}} - {{title}}"],
@@ -100,4 +101,23 @@ def validate(widgets: dict, actions: dict) -> dict:
 
 
 def load_widgets(path=None) -> dict:
-    return config.read_json(path or config.WIDGETS_FILE, {"panes": [], "shortcuts": []})
+    w = config.read_json(path or config.WIDGETS_FILE, {"panes": [], "shortcuts": []})
+    if not isinstance(w, dict):
+        return w
+    try:   # v2.21 rooms (omarchy-link room post) ride along with the user's panes
+        from . import rooms
+        extra = rooms.panes()
+    except (OSError, ValueError):
+        extra = []
+    if extra:
+        mine = [p for p in (w.get("panes") or []) if not str(p.get("id", "")).startswith("room-")]
+        w = {**w, "panes": mine + extra}
+    return w
+
+
+def home_widgets(cfg: dict) -> dict:
+    """What the TV's Home shows from this PC, validated: the PC pane, widgets.json panes, rooms, shortcuts."""
+    w = load_widgets()
+    if cfg.get("pcPane", True):
+        w = {**w, "panes": [pc_pane()] + list(w.get("panes", []))}
+    return validate(w, cfg.get("actions", {}))

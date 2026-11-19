@@ -44,6 +44,11 @@ public class FractalViewQualityTest {
         assertEquals(1, FractalView.firstLevel("Mali-G52", false, 4L * 1024 * 1024 * 1024));
         assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Adreno (TM) 630", false, 1900L * 1024 * 1024));
         assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Mali-G52", false, 4L * 1024 * 1024 * 1024, true));
+        // v2.21 the same 2.5 GB line as preferPlain: a "2 GB" TV reporting 2.3 GiB starts light at 24 fps
+        long twoPointThree = 2355L * 1024 * 1024;
+        assertEquals(FractalView.LIGHT_LEVEL, FractalView.firstLevel("Mali-G52", false, twoPointThree));
+        assertEquals(FractalView.HOME_FPS, FractalView.sceneFps("Mali-G52", twoPointThree));
+        assertEquals(1, FractalView.firstLevel("Mali-G52", false, 3L * 1024 * 1024 * 1024));
         assertEquals("light", FractalView.LEVELS[FractalView.LIGHT_LEVEL].name);
         assertTrue(FractalView.isLight(4));
         assertFalse(FractalView.isLight(2));

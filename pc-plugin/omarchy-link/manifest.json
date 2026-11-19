@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "com.omarchytv.link",
   "name": "Omarchy Link",
-  "version": "2.20.0",
+  "version": "2.21.0",
   "author": "Marco Porro",
   "license": "MIT",
-  "homepage": "https://github.com/omarchytv/omarchy-link",
+  "homepage": "https://github.com/piermark/omarchytv/tree/main/pc-plugin/omarchy-link",
   "description": "Pair Omarchy with the OmarchyTV Android TV launcher: theme and wallpaper sync, info panes, AI credits, and a TV remote in the bar",
   "kinds": [
     "bar-widget"

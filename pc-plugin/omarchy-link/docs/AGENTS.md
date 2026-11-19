@@ -11,6 +11,7 @@ Optionally the TV can also send an instruction to an agent session that is idle.
 omarchy-link agents preview           # what the TV would see (works while the monitor is off)
 omarchy-link agents enable            # turn the monitor on (all supported agents)
 omarchy-link agents enable claude-code codex   # only these
+omarchy-link agents enable claude-code codex t3-code   # include T3 threads
 omarchy-link agents disable
 omarchy-link agents hooks install     # optional: Claude Code hooks, a sharper "needs your input"
 omarchy-link agents --json
@@ -34,6 +35,7 @@ omarchy-link agents --json
 
 | Agent | Monitor | How | Ask from the TV | How |
 |---|---|---|---|---|
+| **T3 Code** | yes | Read-only active-run metadata in `~/.t3/userdata/statev2.sqlite` (`T3CODE_HOME` overrides the base). Sends a redacted thread title, project basename, and status. Conversation, event, payload, and credential data are excluded. | **no** | Read-only: the TV shows the thread title, project and status in the agents widget. |
 | **Claude Code** | yes | `~/.claude/projects/*/<session>.jsonl` (`tool_use`/`tool_result`/`stop_reason`). Optional hooks (`PreToolUse`, `PostToolUse`, `Notification`, `Stop`, …) write a sanitized event to `~/.local/state/omarchy-link/agent-events.jsonl`, giving the exact permission question. | yes, when the session is idle or done | `claude -p --resume <session> --permission-mode default` in that cwd, with the text on stdin. Tools that need approval are refused, not approved. |
 | **Codex CLI** | yes | `~/.codex/sessions/**/rollout-*.jsonl` (`function_call`, `exec_approval_request` gives the question, `task_complete`) | yes, when idle | `codex exec resume <session> -c sandbox_mode="read-only" -c approval_policy="never" -` |
 | **Grok CLI** | yes | `~/.grok/sessions/<cwd>/<session>/updates.jsonl` (ACP `tool_call`/`tool_call_update`), `summary.json` title, `active_sessions.json` for live sessions | yes, when idle | `grok -p … --resume <session> --cwd <cwd> --permission-mode default --no-auto-update` |
@@ -42,6 +44,8 @@ omarchy-link agents --json
 | Gemini CLI | best effort | `~/.gemini/tmp/*/chats/*.json` | no | monitor only |
 | opencode | not yet | | | |
 | Omarchy Agents panel | no | It exposes usage limits only, not activity (used for the AI credits pane) | | |
+
+The T3 reader samples at most once every five seconds. It prefers a running or waiting run over a queued next run for the same thread. Pending input requests show **waiting**; queued starts show **queued**. Completed and archived threads are excluded. Missing T3 installation produces no rows. An unsupported schema, read timeout, or active snapshot older than two minutes produces **Status unavailable**.
 
 **"Waiting for you":**
 - **Codex:** taken from its approval events, with the command as the question.

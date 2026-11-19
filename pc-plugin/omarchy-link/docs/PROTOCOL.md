@@ -162,6 +162,8 @@ fake status or swallow commands.
 | Method & path | Auth | Body → Response |
 |---|---|---|
 | `GET /v1/info` | none | → `{service:"omarchytv-link", protocol:1, tvId, name, pairingOpen}`. Nothing else. |
+| `GET /v1/theme` | none, LAN only (v2.21) | → the current theme for other apps (§6, Theme for apps). `403 theme_sharing_off` when turned off. |
+| `GET /v1/theme/wallpaper` | none, LAN only (v2.21) | → the current wallpaper image (`image/jpeg`, `png` or `webp`) / `404 no_wallpaper` |
 | `POST /v1/pair/start` | none, pairing window | §4 |
 | `POST /v1/pair/confirm` | none, pairing window | §4 |
 | `GET /v1/status` | ✓ | → Status (below) |
@@ -179,6 +181,10 @@ fake status or swallow commands.
 | `POST /v1/cast` | ✓ | Cast → `{id, state:"opening", app}` (§6, Cast) |
 | `PUT /v1/cast/file` | ✓ | raw bytes, `Content-Type` = media type, ≤ `castUploadMax` → `{file:<sha256 hex>, size}` |
 | `POST /v1/cast/control` | ✓ | `{action:"play"\|"pause"\|"stop"\|"seek", id?, position?}` → `{ok:true}` |
+| `POST /v1/notify` | ✓ (v2.21) | `{text, from?}` → `{ok:true, shown:true}` / `403 notify_off` (agent alerts off on the TV) / `400 bad_notify`. One line, 200 chars; 3 per 10 s. |
+| `POST /v1/mcp` | ✓ or `Bearer <pc token>` | MCP JSON-RPC 2.0: `tv_status`, `tv_get_theme`, `tv_notify`, themes, keys, apps… (docs/INTEGRATIONS.md) |
+| `GET/POST /v1/tokens`, `DELETE /v1/tokens/<id>` | ✓ (v2.21) | app tokens: list / `{name, scope}` → `{id, token, name, scope}` (token shown once) / revoke |
+| `GET /v1/state`, `GET /v1/stream`, `POST /v1/ask`, `GET /v1/ask/<id>`, `POST`/`DELETE /v1/page`, `GET /v1/diagnostics` | ✓ or app token (v2.21) | §6, App API |
 | `POST /v1/unpair` | ✓ | `{}` → `{ok:true}`. The TV deletes this PC. |
 | `GET /v1/events` | ✓ (on the upgrade) | WebSocket, §7 |
 
@@ -257,6 +263,87 @@ same theme as the current one does nothing. The normal PC → TV sync then pushe
 theme the PC doesn't have changes only the TV (logged on the PC). LG/Samsung use the bridge instead:
 `POST /v1/theme/set` on `omarchy-tv webos-serve`, header `X-Omarchy-Token`, body `{"name"}` →
 `{"result": "ok"|"same"}` 200, `"unknown"` 404, `"busy"` 429, 403 when `themeFromTv` is off, 503 without omarchy-link.
+
+### Theme for apps (`GET /v1/theme`, v2.21)
+
+One canonical theme for every app on the network: a WebView dashboard, a Home Assistant panel, an agent page.
+Read-only, no pairing, no token. The TV answers it on the Link port (47800), and the LG/Samsung bridge
+(`omarchy-tv webos-serve`, port 8765) answers the same paths from the live Omarchy theme on the PC.
+
+```json
+{
+  "schema": "omarchytv-theme/1",
+  "name": "tokyo-night",
+  "mode": "dark",
+  "source": "omarchy-pc",
+  "background": "#1a1b26",
+  "foreground": "#a9b1d6",
+  "accent": "#7aa2f7",
+  "accent2": "#bb9af7",
+  "colors": { "background": "#1a1b26", "foreground": "#a9b1d6", "color0": "#32344a", "...": "every colors.toml key" },
+  "wallpaper": { "url": "/v1/theme/wallpaper", "type": "image/webp", "sha256": "<hex>", "bytes": 812345 }
+}
+```
+
+- `source`: `omarchy-pc` when the PC pushed the theme (Omarchy Link or the bridge), `tv` when it was picked on the TV.
+- `colors`: the theme's `colors.toml` (`#rrggbb`, and `rgba(rrggbbaa)` for keys such as borders). On the TV, keys the
+  theme lacks are filled with what the TV draws (Tokyo Night). `wallpaper` is `null` for a procedural or fractal
+  background.
+- Caching: `ETag` on both paths, `Cache-Control: no-cache`. Send `If-None-Match` and get `304` with no body
+  until the theme or the wallpaper changes. Poll every 10–30 s; the TV allows 10 requests per 10 s per address
+  (`429` above that).
+- CORS: `Access-Control-Allow-Origin: *`, `HEAD` and `OPTIONS` preflight, `Access-Control-Allow-Private-Network`,
+  so a page served from another box can `fetch()` it.
+- LAN only, like every Link route: a peer outside the TV's subnet gets `403 not_lan`. Nothing here can change the
+  TV; `PUT /v1/theme` still needs a paired, signed PC.
+- Off switch: Settings > Connect Omarchy Linux > "Share theme with apps on the network", or `"link": {"shareTheme": false}`
+  in `omarchytv.json` → `403 theme_sharing_off`.
+
+```sh
+curl -s http://<tv>:47800/v1/theme | jq '{background, foreground, accent}'
+curl -s -o wall.webp http://<tv>:47800/v1/theme/wallpaper
+etag=$(curl -sI http://<tv>:47800/v1/theme | awk -F': ' 'tolower($1)=="etag"{print $2}' | tr -d '\r')
+curl -s -o /dev/null -w '%{http_code}\n' -H "If-None-Match: $etag" http://<tv>:47800/v1/theme   # 304
+```
+
+### App API (v2.21): app tokens, state, stream, questions, pages
+
+For dashboards, agent pages and agents that are not the paired PC. Same port, same LAN/tailnet rule (`403 not_lan`).
+
+**App tokens.** Made by a paired PC (`POST /v1/tokens {name, scope}`), shown once (`otva_` + 32 base64url chars), kept
+on the TV as SHA-256 only (`link-apps.json` in internal storage, never `omarchytv.json`). At most 16. Scopes:
+`read` < `notify` < `control`. Sent as `Authorization: Bearer otva_…`; on `GET /v1/state` and `GET /v1/stream` also as
+`?token=` (a browser `EventSource` cannot send headers). App routes answer CORS (`*`, preflight without a token) and
+allow 30 requests per 10 s per token. A paired PC can do everything an app can, signed as usual. Unknown or revoked:
+`401 unauthorized`; outside the scope: `403 scope`.
+
+| Route | Scope | Body → response |
+|---|---|---|
+| `GET /v1/state` | read | `{screen: "home"\|"app"\|"screensaver"\|"off"\|"unknown", app: {package, label}\|null, theme, nowPlaying: {title, artist, source}\|null, launcherVersion, time}` |
+| `GET /v1/stream` | read | `text/event-stream`: `state` (on change, checked every 2 s), `theme` (every 5 s), `notify`, `ask_answer` (the asker's only), `: ping` every 20 s. At most 4 streams; each ends after 1 h. |
+| `POST /v1/notify` | notify | `{text \| body, title?, level?: info\|warn\|alert, speak?: bool, from?}` → `{ok, shown, deferred}`. *info* waits while an app is on screen (shown when Home comes back); an app's message carries the app's name as `from` |
+| `POST /v1/ask` | notify | `{question, choices?[≤4, ≤24 chars], timeout?: 10-300 (120), from?}` → `{id, state: "pending", choices, expires}` / `403 ask_off` (agent alerts off) / `429 busy` (4 waiting) |
+| `GET /v1/ask/<id>?wait=0-25` | notify | `{id, state: "pending"\|"answered"\|"expired", answer}`; waits up to `wait` s for the answer. Only the asker (or a PC). |
+| `POST /v1/page` | control | `{url}` or `{urls: [≤4]}`: `http://` to literal LAN / tailnet addresses, tiled when several → `{ok, url, urls}` / `400 not_lan_url`. `DELETE` closes. |
+| `GET /v1/pages` | read | `{pages: [{id, name, url, icon, badge, by, updated}]}`: the agent pages shown as Home tiles (`omarchytv.json` `agentPages`) |
+| `PUT /v1/pages/<id>` | control | `{name ≤32, url, icon?, badge?}`: publish or update a tile; `id` is `[a-z0-9-]{1,40}`; at most 16 (`409 too_many_pages`) |
+| `POST /v1/pages/<id>/badge` | notify | `{badge: 0-999}` |
+| `POST /v1/pages/<id>/show`, `DELETE /v1/pages/<id>` | control | open it full screen / remove the tile |
+| `GET /v1/radio`, `POST /v1/radio` | read / control | `{action: play\|pause\|next\|previous\|stop}` → `{playing, title, artist, sleepMinutes}` |
+| `POST /v1/open` | control | `{target: home\|radiomarchy\|cinemarchy\|arcade\|office}` |
+| `GET /v1/diagnostics` | control | `{launcherVersion, device, network, settings, screen, link, log[]}`; no tokens, keys or paths |
+| `POST /v1/mcp` | any | MCP; `tools/list` and `tools/call` limited to the token's scope |
+| `GET /v1/sdk/omarchytv.js` | none | the JavaScript SDK (docs/INTEGRATIONS.md) |
+
+The answer to a question is also sent to the PCs as the event `ask_answer {id, answer}`.
+
+Paired PC only: `GET /v1/config` → `{config}` (the TV's `omarchytv.json`) and `PUT /v1/config {config}` (restore; the
+TV keeps its own `link` object: pairings and panes). Apps never read or write it (`401`).
+
+**LG / Samsung (the bridge).** `omarchy-tv webos-serve` answers `POST /v1/notify`, `POST /v1/page` (`{url}` or
+`{close: true}`; one page), `POST /v1/ask`, `GET /v1/ask/<id>?wait=` with the same bodies, and the TV app reads
+`GET /v1/inbox?since=<seq>` → `{seq, notes[], page, asks[]}` and answers `POST /v1/ask/<id> {answer}`. All with the
+ask code (`X-Omarchy-Token`), memory only.
 
 ### Power together and liftoff (v2.14)
 
@@ -419,7 +506,7 @@ the PC until the user enables it. The TV advertises capability `agents` once it 
 | field | meaning |
 |---|---|
 | `id` | opaque, stable per session. Use it in `agent_ask`. |
-| `agent` | `claude-code` \| `codex` \| `grok` \| `hermes` \| `gemini` \| `grok-bot` (more may come) |
+| `agent` | `claude-code` \| `codex` \| `grok` \| `hermes` \| `gemini` \| `grok-bot` \| `t3-code` (more may come) |
 | `status` | `thinking` \| `running` (a tool) \| `waiting` (needs the user) \| `idle` \| `done` \| `error` |
 | `step` | current step, ≤ 72 characters, already sanitised. Plain text only. |
 | `since` / `elapsed` | when the current step began, and seconds at send time. The TV counts up from `since`. |
@@ -429,6 +516,8 @@ the PC until the user enables it. The TV advertises capability `agents` once it 
 
 At most 8 agents, sorted waiting → running → thinking → error → done → idle. `enabled:false` with
 an empty list means the user turned the monitor off: hide the widget.
+
+`t3-code` rows contain active-thread metadata and always set `canAsk:false`. Their IDs are hashes rather than raw thread IDs. An idle placeholder means no active threads; an error placeholder means metadata is unavailable. Neither placeholder contains a thread title. T3 does not support `agent_ask`.
 
 **Event `agent_activity`** (PC → TV):
 - sent on every change, at most **2 per second**;
@@ -746,11 +835,16 @@ during the screensaver (that is when the PC shows "screensaver"), with at most
 - This section covers Omarchy Link (Android TV). The LG webOS / Samsung Tizen bridge
   (`omarchy-tv webos serve`) is plain HTTP with a static ask code in the
   `X-Omarchy-Token` header: no encryption and no per-request signing.
-- No unauthenticated endpoint does anything: `/v1/info` is read-only and minimal,
+- No unauthenticated endpoint does anything: `/v1/info` and `GET /v1/theme` (colours and wallpaper, v2.21) are read-only,
   and `pair/*` only work while the user has the pairing page open.
 - LAN only, enforced on both sides. The TV checks its subnet. The PC refuses
   non-private targets and, by default, targets outside its own subnets
   (`allowOtherSubnets`).
+  v2.21 Tailscale (off by default on both sides): with `link.tailscale` on the TV and
+  `"tailscale": true` on the PC, Tailscale's ranges (`100.64.0.0/10`,
+  `fd7a:115c:a1e0::/48`) count as local too; the TV then listens on all IPv4 interfaces
+  and still refuses every other peer with `403 not_lan`. Under any VPN the TV's LAN is
+  the Wi-Fi/Ethernet network beneath it. docs/TAILSCALE.md.
 - No shell or arbitrary intents from either side. Shortcuts that run on the PC are
   ids, mapped to argv lists the user wrote in `config.json` and confirmed per run.
 - The assistant passes TV text to AI tools on the PC. Only a paired TV can send `ask`

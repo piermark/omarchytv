@@ -7,11 +7,10 @@ const path = require("path");
 const APP = path.join(__dirname, "../app");
 const app = fs.readFileSync(path.join(APP, "app.js"), "utf8");
 
-test("Radiomarchy fractals is the default Home wallpaper; OmaFire stays selectable", () => {
+test("Radiomarchy fractals stay selectable after OmaFire (2.21: no longer the default Home)", () => {
   assert.ok(app.indexOf('cfg.wallpaper === "radiomarchy:fractals"') > 0);
   assert.ok(app.indexOf('pick("radiomarchy:fractals")') > 0);
   assert.ok(app.indexOf('tr("wp_radiomarchy_fractals")') > 0);
-  assert.match(app, /wallpaper:\s*"radiomarchy:fractals"/);
   assert.match(app, /randomWallpaper:\s*false/);
   assert.match(app, /fractalWp220/);
   const oma = app.indexOf('pick("omafire:embers")');

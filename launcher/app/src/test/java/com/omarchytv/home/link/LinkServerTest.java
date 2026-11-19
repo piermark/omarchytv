@@ -1,5 +1,6 @@
 package com.omarchytv.home.link;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -191,6 +192,18 @@ public class LinkServerTest {
     }
 
     @Test
+    public void keepAliveFromThePc() throws Exception {   // v2.21: omarchy-link tv keepalive auto|on|off
+        pair("123456");
+        assertEquals(200, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"on\"}").status);
+        assertTrue(host.readConfig().getJSONObject("link").getBoolean("keepAlive"));
+        assertEquals(200, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"off\"}").status);
+        assertFalse(host.readConfig().getJSONObject("link").getBoolean("keepAlive"));
+        assertEquals(200, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"auto\"}").status);
+        assertFalse(host.readConfig().getJSONObject("link").has("keepAlive"));
+        assertEquals(400, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"always\"}").status);
+    }
+
+    @Test
     public void widgetPaneOptionalAt() throws Exception {
         pair("123456");
         long now = System.currentTimeMillis() / 1000;
@@ -230,6 +243,62 @@ public class LinkServerTest {
         assertFalse(f.exists());
         assertEquals(404, signed("DELETE", "/v1/banners/com.netflix.ninja", "").status);
         assertTrue(host.events.stream().anyMatch(e -> e.startsWith("banners ")));
+    }
+
+    @Test
+    public void themeForAppsNeedsNoPairingHasEtagCorsAndCanBeTurnedOff() throws Exception {
+        server.limits = false;
+        host.theme = new JSONObject().put("schema", "omarchytv-theme/1").put("name", "tokyo-night").put("background", "#1a1b26");
+        Resp r = http("GET", "/v1/theme", new byte[0], null);
+        assertEquals(200, r.status);
+        assertEquals("tokyo-night", r.json().getString("name"));
+        assertEquals("*", r.headers.get("access-control-allow-origin"));
+        assertEquals("no-cache", r.headers.get("cache-control"));
+        String etag = r.headers.get("etag");
+        assertNotNull(etag);
+        Map<String, String> h = new HashMap<>();
+        h.put("If-None-Match", etag);
+        Resp same = http("GET", "/v1/theme?x=1", new byte[0], h);
+        assertEquals(304, same.status);
+        assertEquals(0, same.body.length);
+        // a new theme, a new tag
+        host.theme.put("name", "gruvbox");
+        assertEquals(200, http("GET", "/v1/theme", new byte[0], h).status);
+        // CORS preflight
+        Resp pre = http("OPTIONS", "/v1/theme", new byte[0], null);
+        assertEquals(204, pre.status);
+        assertTrue(pre.headers.get("access-control-allow-headers").contains("If-None-Match"));
+        // the wallpaper, served as the image it is
+        assertEquals(404, http("GET", "/v1/theme/wallpaper", new byte[0], null).status);
+        byte[] img = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 1, 2, 3};
+        host.wallpaper = new LinkServer.Blob(img, "image/jpeg", "abc123");
+        Resp wp = http("GET", "/v1/theme/wallpaper", new byte[0], null);
+        assertEquals(200, wp.status);
+        assertEquals("image/jpeg", wp.headers.get("content-type"));
+        assertArrayEquals(img, wp.body);
+        assertEquals("\"abc123\"", wp.headers.get("etag"));
+        // writing the theme still needs a paired, signed PC
+        assertEquals(401, http("PUT", "/v1/theme", "{}".getBytes(), null).status);
+        // the owner turned sharing off
+        host.theme = null;
+        Resp off = http("GET", "/v1/theme", new byte[0], null);
+        assertEquals(403, off.status);
+        assertEquals("theme_sharing_off", off.json().getString("error"));
+    }
+
+    @Test
+    public void themeForAppsIsLanOnlyAndRateLimited() throws Exception {
+        host.theme = new JSONObject().put("name", "tokyo-night");
+        int ok = 0, limited = 0;
+        for (int i = 0; i < 12; i++) {
+            int st = http("GET", "/v1/theme", new byte[0], null).status;
+            if (st == 200) ok++;
+            if (st == 429) limited++;
+        }
+        assertEquals(10, ok);
+        assertEquals(2, limited);
+        host.allowLoopback = false;
+        assertEquals(403, http("GET", "/v1/theme", new byte[0], null).status);
     }
 
     @Test
@@ -511,6 +580,258 @@ public class LinkServerTest {
         done.elapsed = 10;
         assertEquals(15, a.elapsedNow(run, 1_005_000));
         assertEquals(10, a.elapsedNow(done, 1_005_000));
+    }
+
+    @Test
+    public void notifyNeedsPairingTheOwnersSwitchAndStaysShort() throws Exception {
+        assertEquals(401, http("POST", "/v1/notify", "{\"text\":\"hi\"}".getBytes(StandardCharsets.UTF_8), null).status);
+        pair("123456");
+        server.limits = false;
+        Resp off = signed("POST", "/v1/notify", "{\"text\":\"build done\"}");
+        assertEquals(403, off.status);
+        assertEquals("notify_off", off.json().getString("error"));
+        host.notifyOn = true;
+        assertEquals(400, signed("POST", "/v1/notify", "{\"text\":\"  \"}").status);
+        StringBuilder longText = new StringBuilder();
+        for (int i = 0; i < 50; i++) longText.append("words ");
+        Resp ok = signed("POST", "/v1/notify", new JSONObject().put("text", "line one\nline two " + longText).put("from", "Claude Code").toString());
+        assertEquals(200, ok.status);
+        String shown = host.notes.get(0);
+        assertTrue(shown.startsWith("Claude Code: line one line two"));
+        assertTrue(shown.length() <= "Claude Code: ".length() + 200);
+        assertEquals(1, host.notes.size());
+        // MCP: tv_notify and tv_get_theme
+        host.theme = new JSONObject().put("schema", "omarchytv-theme/1").put("accent", "#7aa2f7");
+        Resp list = signed("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}");
+        String names = list.json().getJSONObject("result").getJSONArray("tools").toString();
+        assertTrue(names.contains("tv_notify") && names.contains("tv_get_theme"));
+        Resp call = signed("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 2).put("method", "tools/call")
+                .put("params", new JSONObject().put("name", "tv_notify").put("arguments", new JSONObject().put("text", "tests pass").put("from", "Hermes"))).toString());
+        assertFalse(call.json().getJSONObject("result").getBoolean("isError"));
+        assertEquals("Hermes: tests pass", host.notes.get(1));
+        // v2.21 title and level: info waits while a film is on, alert shows at once
+        host.watching = true;
+        Resp held = signed("POST", "/v1/notify", "{\"title\":\"Build\",\"text\":\"green\",\"level\":\"info\"}");
+        assertTrue(held.json().getBoolean("deferred"));
+        Resp now = signed("POST", "/v1/notify", "{\"text\":\"prod is down\",\"level\":\"alert\"}");
+        assertTrue(now.json().getBoolean("shown"));
+        assertEquals("PC: Build · green", host.notes.get(2));
+        assertTrue(host.spoken.isEmpty());
+        signed("POST", "/v1/notify", "{\"title\":\"Deploy\",\"text\":\"done\",\"level\":\"warn\",\"speak\":true}");
+        assertEquals("Deploy. done", host.spoken.get(0));
+        signed("POST", "/v1/notify", "{\"text\":\"quiet\",\"speak\":true}");   // held while watching: not spoken
+        assertEquals(1, host.spoken.size());
+        host.watching = false;
+        Resp th = signed("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 3).put("method", "tools/call")
+                .put("params", new JSONObject().put("name", "tv_get_theme")).toString());
+        String txt = th.json().getJSONObject("result").getJSONArray("content").getJSONObject(0).getString("text");
+        assertEquals("#7aa2f7", new JSONObject(txt).getString("accent"));
+    }
+
+    // ---- v2.21 app API ----
+
+    String appToken(String name, String scope) throws Exception {
+        Resp r = signed("POST", "/v1/tokens", new JSONObject().put("name", name).put("scope", scope).toString());
+        assertEquals(200, r.status);
+        assertTrue(r.json().getString("token").startsWith("otva_"));
+        return r.json().getString("token");
+    }
+
+    Resp app(String method, String target, String body, String tok) throws Exception {
+        Map<String, String> h = new HashMap<>();
+        if (tok != null) h.put("Authorization", "Bearer " + tok);
+        return http(method, target, body == null ? new byte[0] : body.getBytes(StandardCharsets.UTF_8), h);
+    }
+
+    @Test
+    public void appTokensAreMadeByAPairedPcAndScoped() throws Exception {
+        pair("123456");
+        server.limits = false;
+        assertEquals(401, app("POST", "/v1/tokens", "{\"name\":\"x\"}", null).status);   // not without a PC
+        String read = appToken("Dashboard", "read"), ctl = appToken("Hermes", "control");
+        Resp list = signed("GET", "/v1/tokens", "");
+        assertEquals(2, list.json().getJSONArray("apps").length());
+        assertFalse(list.toString().contains("otva_"));
+        assertFalse(new String(list.body, StandardCharsets.UTF_8).contains(read));   // never shown again
+        // read: state yes, notify no
+        Resp st = app("GET", "/v1/state", null, read);
+        assertEquals(200, st.status);
+        assertEquals("home", st.json().getString("screen"));
+        assertEquals("*", st.headers.get("access-control-allow-origin"));
+        assertEquals(200, app("GET", "/v1/state?token=" + read, null, null).status);   // EventSource-style
+        Resp no = app("POST", "/v1/notify", "{\"text\":\"x\"}", read);
+        assertEquals(403, no.status);
+        assertEquals("scope", no.json().getString("error"));
+        assertEquals(403, app("GET", "/v1/diagnostics", null, read).status);
+        // an app cannot manage tokens
+        assertEquals(401, app("GET", "/v1/tokens", null, read).status);
+        // control: diagnostics, page
+        Resp d = app("GET", "/v1/diagnostics", null, ctl);
+        assertEquals(200, d.status);
+        assertEquals(2, d.json().getJSONObject("link").getInt("appTokens"));
+        assertEquals(200, app("POST", "/v1/page", "{\"url\":\"http://192.168.1.9:8080/\"}", ctl).status);
+        assertEquals(400, app("POST", "/v1/page", "{\"url\":\"https://evil.example/\"}", ctl).status);
+        assertEquals("http://192.168.1.9:8080/", host.pages.get(0));
+        // v2.21 tiled: up to 4, LAN only, no duplicates
+        Resp tiled = app("POST", "/v1/page", "{\"urls\":[\"http://192.168.1.9:1/\",\"https://x.example/\",\"http://192.168.1.9:1/\",\"http://192.168.1.2/\",\"http://192.168.1.3/\",\"http://192.168.1.4/\",\"http://192.168.1.5/\"]}", ctl);
+        assertEquals(4, tiled.json().getJSONArray("urls").length());
+        // MCP Streamable HTTP: a notification gets 202 and no body (Hermes, the MCP SDKs)
+        Resp nt = app("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}", read);
+        assertEquals(202, nt.status);
+        assertEquals(0, nt.body.length);
+        // MCP: a read token sees read tools only
+        Resp tl = app("POST", "/v1/mcp", "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/list\"}", read);
+        String tools = tl.json().getJSONObject("result").getJSONArray("tools").toString();
+        assertTrue(tools.contains("tv_get_state") && tools.contains("tv_get_theme"));
+        assertFalse(tools.contains("tv_send_key") || tools.contains("tv_notify"));
+        Resp key = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 2).put("method", "tools/call")
+                .put("params", new JSONObject().put("name", "tv_send_key").put("arguments", new JSONObject().put("key", "home"))).toString(), read);
+        assertTrue(key.json().has("error"));
+        assertTrue(host.keys.isEmpty());
+        // revoke
+        String id = list.json().getJSONArray("apps").getJSONObject(0).getString("id");
+        assertEquals(200, signed("DELETE", "/v1/tokens/" + id, "").status);
+        assertEquals(401, app("GET", "/v1/state", null, read).status);
+        assertEquals(401, app("GET", "/v1/state", null, "otva_forged").status);
+        // preflight and SDK need no token
+        assertEquals(204, app("OPTIONS", "/v1/state", null, null).status);
+        Resp sdk = app("GET", "/v1/sdk/omarchytv.js", null, null);
+        assertEquals(200, sdk.status);
+        assertTrue(sdk.headers.get("content-type").startsWith("text/javascript"));
+        // tokens survive a restart (only their hash is on disk)
+        assertEquals(1, new AppTokens(new File(dir, "link-apps.json")).size());
+        assertFalse(new String(java.nio.file.Files.readAllBytes(new File(dir, "link-apps.json").toPath()), StandardCharsets.UTF_8).contains(ctl));
+    }
+
+    @Test
+    public void agentPagesBecomeHomeTilesWithABadge() throws Exception {
+        pair("123456");
+        server.limits = false;
+        String ctl = appToken("Hermes", "control"), note = appToken("Watcher", "notify");
+        Resp put = app("PUT", "/v1/pages/dubai-flats", "{\"name\":\"Dubai flats\",\"url\":\"http://192.168.1.20:8080/\",\"icon\":\"D\",\"badge\":2}", ctl);
+        assertEquals(200, put.status);
+        assertEquals(400, app("PUT", "/v1/pages/x", "{\"name\":\"x\",\"url\":\"https://example.com/\"}", ctl).status);
+        assertEquals(403, app("PUT", "/v1/pages/y", "{\"name\":\"y\",\"url\":\"http://192.168.1.2/\"}", note).status);
+        assertEquals(200, app("POST", "/v1/pages/dubai-flats/badge", "{\"badge\":5}", note).status);   // notify may update the count
+        JSONObject cfg = host.readConfig();
+        JSONObject pg = cfg.getJSONArray("agentPages").getJSONObject(0);
+        assertEquals("Dubai flats", pg.getString("name"));
+        assertEquals(5, pg.getInt("badge"));
+        assertEquals("Hermes", pg.getString("by"));
+        assertEquals(1, app("GET", "/v1/pages", null, note).json().getJSONArray("pages").length());
+        assertEquals(200, app("POST", "/v1/pages/dubai-flats/show", null, ctl).status);
+        assertEquals("http://192.168.1.20:8080/", host.pages.get(0));
+        assertEquals(200, app("DELETE", "/v1/pages/dubai-flats", null, ctl).status);
+        assertEquals(0, host.readConfig().getJSONArray("agentPages").length());
+        assertEquals(404, app("POST", "/v1/pages/dubai-flats/badge", "{\"badge\":1}", note).status);
+    }
+
+    @Test
+    public void configBackupAndRestoreKeepTheTvsOwnLink() throws Exception {
+        pair("123456");
+        server.limits = false;
+        JSONObject cfg = signed("GET", "/v1/config", "").json().getJSONObject("config");
+        cfg.put("wallpaper", "plain").put("link", new JSONObject().put("evil", true));
+        assertEquals(200, signed("PUT", "/v1/config", new JSONObject().put("config", cfg).toString()).status);
+        JSONObject now = host.readConfig();
+        assertEquals("plain", now.getString("wallpaper"));
+        assertFalse(now.optJSONObject("link") != null && now.getJSONObject("link").has("evil"));
+        String app = appToken("x", "control");
+        assertEquals(401, app("GET", "/v1/config", null, app).status);   // apps never read or write it
+    }
+
+    @Test
+    public void askIsAnsweredOnTheRemoteAndOnlyItsAppSeesIt() throws Exception {
+        pair("123456");
+        server.limits = false;
+        String a = appToken("Claude Code", "notify"), b = appToken("Other", "notify");
+        assertEquals(403, app("POST", "/v1/ask", "{\"question\":\"Deploy?\"}", a).status);   // agent alerts off
+        host.notifyOn = true;
+        Resp q = app("POST", "/v1/ask", "{\"question\":\"Deploy now?\",\"choices\":[\"Yes\",\"Not now\",\"Yes\"],\"timeout\":60}", a);
+        assertEquals(200, q.status);
+        String id = q.json().getString("id");
+        assertEquals("pending", q.json().getString("state"));
+        assertEquals(2, q.json().getJSONArray("choices").length());
+        assertTrue(host.asked.get(0).contains("|Claude Code|Deploy now?|[Yes, Not now]"));
+        assertEquals(404, app("GET", "/v1/ask/" + id, null, b).status);   // another app's question
+        new Thread(() -> {
+            try {
+                Thread.sleep(300);
+            } catch (InterruptedException ignored) {
+            }
+            assertFalse(server.answerAsk(id, "Maybe"));   // not one of the choices
+            assertTrue(server.answerAsk(id, "Not now"));
+        }).start();
+        long t0 = System.currentTimeMillis();
+        Resp r = app("GET", "/v1/ask/" + id + "?wait=5", null, a);
+        assertEquals("answered", r.json().getString("state"));
+        assertEquals("Not now", r.json().getString("answer"));
+        assertTrue(System.currentTimeMillis() - t0 < 4000);
+        assertFalse(server.answerAsk(id, "Yes"));   // once
+        assertTrue(server.pendingAsks().isEmpty());
+        // the PC sees it too, and MCP tv_ask_result
+        assertEquals("answered", signed("GET", "/v1/ask/" + id, "").json().getString("state"));
+    }
+
+    @Test
+    public void streamSendsStateAndNotify() throws Exception {
+        pair("123456");
+        server.limits = false;
+        host.notifyOn = true;
+        host.theme = new JSONObject().put("name", "nord");
+        String tok = appToken("Board", "notify");
+        try (java.net.Socket sk = new java.net.Socket(InetAddress.getLoopbackAddress(), port)) {
+            sk.setSoTimeout(8000);
+            sk.getOutputStream().write(("GET /v1/stream?token=" + tok + " HTTP/1.1\r\nHost: tv\r\n\r\n").getBytes(StandardCharsets.ISO_8859_1));
+            java.io.BufferedReader in = new java.io.BufferedReader(new java.io.InputStreamReader(sk.getInputStream(), StandardCharsets.UTF_8));
+            StringBuilder seen = new StringBuilder();
+            String line;
+            boolean sent = false;
+            long until = System.currentTimeMillis() + 7000;
+            while (System.currentTimeMillis() < until && (line = in.readLine()) != null) {
+                seen.append(line).append('\n');
+                if (!sent && seen.indexOf("event: theme") >= 0 && seen.indexOf("event: state") >= 0) {
+                    sent = true;
+                    assertEquals(200, app("POST", "/v1/notify", "{\"text\":\"tests pass\"}", tok).status);
+                }
+                if (seen.indexOf("event: notify") >= 0 && line.startsWith("data:") && line.contains("tests pass")) break;
+            }
+            String all = seen.toString();
+            assertTrue(all, all.startsWith("HTTP/1.1 200 OK"));
+            assertTrue(all, all.contains("text/event-stream"));
+            assertTrue(all, all.contains("\"screen\":\"home\""));
+            assertTrue(all, all.contains("\"name\":\"nord\""));
+            assertTrue(all, all.contains("\"from\":\"Board\""));   // an app's notify carries its own name
+            // v2.21 revoking every token from the TV ends their streams at once
+            server.revokeAppTokens();
+            long until2 = System.currentTimeMillis() + 5000;
+            boolean ended = false;
+            try {
+                while (System.currentTimeMillis() < until2) {
+                    if (in.readLine() == null) {
+                        ended = true;
+                        break;
+                    }
+                }
+            } catch (java.io.IOException e) {
+                ended = true;
+            }
+            assertTrue("stream closed after revoke", ended);
+        }
+    }
+
+    @Test
+    public void notifyIsRateLimited() throws Exception {
+        pair("123456");
+        host.notifyOn = true;
+        int ok = 0, limited = 0;
+        for (int i = 0; i < 5; i++) {
+            int st = signed("POST", "/v1/notify", "{\"text\":\"n" + i + "\"}").status;
+            if (st == 200) ok++;
+            if (st == 429) limited++;
+        }
+        assertEquals(3, ok);
+        assertEquals(2, limited);
     }
 
     @Test

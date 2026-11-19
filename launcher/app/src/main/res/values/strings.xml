@@ -204,6 +204,8 @@
 
     <string name="link_service_on">listening</string>
     <string name="link_service_off">no network</string>
+    <string name="link_notification">Omarchy Link is running</string>
+    <string name="link_notification_channel" translatable="false">Omarchy Link</string>
     <string name="remote_service">OmarchyTV remote</string>
     <string name="remote_service_desc">Lets a paired Omarchy Linux PC press Back on the TV. It reads nothing on screen.</string>
     <string name="keymap_service">OmarchyTV remote buttons</string>
@@ -213,6 +215,23 @@
     <string name="home_service_desc">Opens OmarchyTV when Home shows the TV\'s own home screen. It only sees which home screen opened and reads nothing on screen.</string>
     <string name="set_home_override">Home button opens OmarchyTV</string>
     <string name="link_usage">Usage access (current app)</string>
+    <string name="link_share_theme">Share theme with apps on the network</string>
+    <string name="link_keep_alive">Keep Link reachable after boot</string>
+    <string name="link_tailscale">Allow Tailscale (tailnet)</string>
+    <string name="agentq_asks">asks</string>
+    <string name="agentq_hint">Pick an answer with the remote · BACK: answer later</string>
+    <string name="link_app_tokens">App tokens (dashboards, agents)</string>
+    <string name="menu_system_info">System info</string>
+    <string name="walker_agent_tile">Agent pages, tiled</string>
+    <string name="walker_agent_questions">Questions from agents</string>
+    <string name="link_new_app_token">New app token</string>
+    <string name="link_app_tokens_full">16 app tokens already: revoke them first</string>
+    <string name="link_app_token_once">Shown once. Scan it or type it into your app; revoke it here or with omarchy-link token.</string>
+    <string name="link_tailscale_app">Tailscale app</string>
+    <string name="link_tailscale_open">open</string>
+    <string name="link_tailscale_get">install</string>
+    <string name="link_tailscale_qr">Scan with your phone to open the Tailscale page on Google Play</string>
+    <string name="agent_note" formatted="true" translatable="false">● %1$s: %2$s</string>
     <string name="link_paired_toast">Paired with %1$s</string>
     <string name="link_online">connected</string>
     <string name="ai_settings">AI credits</string>
@@ -363,9 +382,9 @@
     <string name="v210_w_deploys">─ deploys · pc ─</string>
     <string name="w_racing" translatable="false">─ racing · f1 · motogp ─</string>
     <string name="w_racing_bar" translatable="false">racing countdown in the bar</string>
-    <string name="ss_pulse_graphics" translatable="false">Pulse graphics</string>
-    <string name="ss_pulse_racing" translatable="false">racing panel on Pulse</string>
-    <string name="ss_pulse_panels" translatable="false">Pulse panels</string>
+    <string name="ss_pulse_graphics">Pulse graphics</string>
+    <string name="ss_pulse_racing">racing panel on Pulse</string>
+    <string name="ss_pulse_panels">Pulse panels</string>
     <string name="ss_pulse_panel_weather" translatable="false">weather</string>
     <string name="ss_pulse_panel_air" translatable="false">air</string>
     <string name="ss_pulse_panel_system" translatable="false">TV stats</string>
@@ -593,6 +612,10 @@
     <string name="radio_auto">random (a new one each scene)</string>
     <string name="radio_auto_demo">Demo mode after 1 minute idle</string>
     <string name="radio_shuffle">Shuffle</string>
+    <string name="radio_home_music">Music on Home</string>
+    <string name="radio_song_qr">Song page (QR for your phone)</string>
+    <string name="radio_sleep">Sleep timer</string>
+    <string name="radio_sleep_left" formatted="true">%d min left</string>
     <string name="radio_repeat">Repeat</string>
     <string name="radio_repeat_all">all</string>
     <string name="radio_repeat_one">one</string>

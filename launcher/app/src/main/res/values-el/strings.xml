@@ -172,6 +172,7 @@
     <string name="search_prompt">Πείτε το όνομα μιας εφαρμογής</string>
     <string name="link_service_on">σε ακρόαση</string>
     <string name="link_service_off">χωρίς δίκτυο</string>
+    <string name="link_notification">Το Omarchy Link εκτελείται</string>
     <string name="remote_service">Τηλεχειριστήριο OmarchyTV</string>
     <string name="remote_service_desc">Επιτρέπει σε έναν συζευγμένο υπολογιστή Omarchy Linux να πατά Πίσω στην τηλεόραση. Δεν διαβάζει τίποτα στην οθόνη.</string>
     <string name="keymap_service">Κουμπιά τηλεχειριστηρίου OmarchyTV</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Ανοίγει το OmarchyTV όταν η Αρχική δείχνει την αρχική οθόνη της τηλεόρασης. Βλέπει μόνο ποια αρχική οθόνη άνοιξε και δεν διαβάζει τίποτα στην οθόνη.</string>
     <string name="set_home_override">Το κουμπί Αρχικής ανοίγει το OmarchyTV</string>
     <string name="link_usage">Πρόσβαση χρήσης (τρέχουσα εφαρμογή)</string>
+    <string name="link_share_theme">Κοινή χρήση θέματος με εφαρμογές του δικτύου</string>
+    <string name="link_keep_alive">Link διαθέσιμο μετά την εκκίνηση</string>
+    <string name="link_tailscale">Να επιτρέπεται το Tailscale (tailnet)</string>
+    <string name="agentq_asks">ρωτά</string>
+    <string name="agentq_hint">Επιλέξτε απάντηση με το τηλεχειριστήριο · ΠΙΣΩ: απάντηση αργότερα</string>
+    <string name="link_app_tokens">Διακριτικά εφαρμογών (πίνακες, πράκτορες)</string>
+    <string name="menu_system_info">Πληροφορίες συστήματος</string>
+    <string name="walker_agent_tile">Σελίδες πρακτόρων δίπλα-δίπλα</string>
+    <string name="walker_agent_questions">Ερωτήσεις πρακτόρων</string>
+    <string name="link_new_app_token">Νέο διακριτικό εφαρμογής</string>
+    <string name="link_app_tokens_full">Υπάρχουν ήδη 16: ανακαλέστε τα πρώτα</string>
+    <string name="link_app_token_once">Εμφανίζεται μία φορά. Σαρώστε ή πληκτρολογήστε το στην εφαρμογή· ανάκληση εδώ ή με omarchy-link token.</string>
+    <string name="link_tailscale_app">Εφαρμογή Tailscale</string>
+    <string name="link_tailscale_open">άνοιγμα</string>
+    <string name="link_tailscale_get">εγκατάσταση</string>
+    <string name="link_tailscale_qr">Σαρώστε με το κινητό για το Tailscale στο Google Play</string>
     <string name="link_paired_toast">Σύζευξη με %1$s</string>
     <string name="link_online">συνδεδεμένο</string>
     <string name="ai_settings">Μονάδες AI</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">τυχαίο (νέο σε κάθε σκηνή)</string>
     <string name="radio_auto_demo">Λειτουργία demo μετά από 1 λεπτό αδράνειας</string>
     <string name="radio_shuffle">Τυχαία</string>
+    <string name="radio_home_music">Μουσική στην αρχική οθόνη</string>
+    <string name="radio_song_qr">Σελίδα τραγουδιού (QR για το κινητό)</string>
+    <string name="radio_sleep">Χρονοδιακόπτης ύπνου</string>
+    <string name="radio_sleep_left" formatted="true">απομένουν %d λεπ.</string>
     <string name="radio_repeat">Επανάληψη</string>
     <string name="radio_repeat_all">όλα</string>
     <string name="radio_repeat_one">ένα</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">ναι</string>
     <string name="radio_animated_off">όχι</string>
+    <string name="ss_pulse_panels">Πάνελ Pulse</string>
+    <string name="ss_pulse_racing">πάνελ αγώνων στο Pulse</string>
+    <string name="ss_pulse_graphics">Γραφικά Pulse</string>
 </resources>

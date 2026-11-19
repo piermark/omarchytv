@@ -4,7 +4,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.20.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.21.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)
@@ -27,11 +27,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       ws4_desc: "Pair the PC over LAN HTTP (http://<pc-ip>:8765/v1/status) to see live CPU/RAM, AI credits and deploys on LG webOS.",
       sys_webos: "webOS TV settings", sys_themes: "Themes", sys_trans: "Transparency", sys_widgets: "Home widgets",
       sys_arrange: "Arrange panels", sys_saver: "Screensaver", sys_text_size: "Text size", ts_small: "Small", ts_normal: "Normal", ts_large: "Large", ts_xlarge: "Extra large", sys_saver_idle: "Start screensaver after",
+      t_themes_sub: "Select a theme", t_wp_dim: "Wallpaper dimming", t_walker_sub: "Filter and launch installed apps", t_walker_ph: "search apps…", t_hub_forget: "Forget the hub?", t_hub_forget_sub: "Remove the saved Hue / Home Assistant credentials from this TV?", t_lights: "Ambilight & Lights", t_lights_sub: "Sync Hue or Home Assistant lights with the theme and Cinemarchy", t_pulse_panels: "Pulse panels", t_pulse_panels_sub: "Which Pulse side panels show on the screensaver", t_grok_ai: "Grok Bot & AI", t_grok_ai_sub: "Grok Bot TUI, companion, PC agents and AI web apps", t_webapps: "Web apps", t_webapps_sub: "Opens in the TV browser · Back returns", t_pair_pc: "Pair Omarchy Linux PC", t_pair_pc_sub: "Enter your Omarchy PC's LAN IP", t_companion_keys: "Blue: chat · hold Blue: voice", arrange_sub: "OK moves a panel up · the order is kept", arrange_reset: "Reset order",
+      chat_clear: "Clear this chat", agent_pc: "Grok Bot on my PC (omarchy-link)", agent_web: "Grok on grok.com (TV browser)", chat_ph: "Ask anything, or say “open Netflix”…",
+      chat_ask: "Ask", chat_thinking: "is thinking…", chat_type: "Type a question above, or use 🎤", chat_speak: "Speak", chat_novoice: "Voice: not available on this TV · keyboard only", chat_agent: "Agent", t_companion_open: "Open Grok Bot companion settings", chat_play_cine: "Play in Cinemarchy", chat_play_yt: "Play on YouTube", chat_play_video: "Play video in the TV browser", chat_open_link: "Open link in the TV browser",
+      t_companion_chat: "Chat with the Grok Bot companion", t_companion_hide: "Hide the companion (Blue brings it back)", w_racing_bar: "racing countdown in the bar", w_devmode_extend: "dev mode · I just pressed EXTEND", t_companion_title: "Grok Bot companion",
+      w_term: "terminal · logo", w_deploy: "deploys · pc", t_companion_settings: "Companion settings",
+      w_racing: "racing", w_weather: "weather", w_ai: "ai credits · pc", w_devmode: "dev mode", w_pc: "omarchy · pc", t_plugins_sub: "Sandboxed JSON plugins (v1 schema · no native code runs)",
       walker_none: "no matching apps",
       sys_logo_anim: "Animated logo", sys_text_tiles: "Text tiles (terminal style)", sys_all: "All OmarchyTV settings", sys_about: "About & licences",
       tile_move: "Move", tile_hide: "Hide", tile_cancel: "Cancel", move_hint: "◀▶▲▼ move · OK save · Back cancel",
       app_hidden: "Hidden. Show it again in All settings › Hidden apps", hidden_apps: "Hidden apps", hidden_none: "No hidden apps",
-      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
+      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", agent_asks: "asks", agent_hint: "OK answers · ◀ ▶ choose · BACK later", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
       wx_title: "Weather", wx_auto: "Automatic (from IP)", wx_auto_fail: "Couldn't find your location, keeping the current city", wx_search: "Search city…", wx_unit: "Temperature unit",
       root_boot: "Open when the TV starts", root_home: "Home button opens OmarchyTV", root_needed: "rooted TV only",
       root_keep: "Keep loaded in the background", root_keep_na: "not on this TV",
@@ -156,12 +162,18 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       ws4_heading: "Collega Omarchy Linux",
       ws4_desc: "Abbina il PC via HTTP LAN (http://<ip-pc>:8765/v1/status) per vedere stato, crediti IA e deploy qui.",
       sys_webos: "Impostazioni TV webOS", sys_themes: "Temi", sys_trans: "Trasparenza", sys_widgets: "Widget della Home",
-      sys_arrange: "Disponi pannelli", sys_saver: "Salvaschermo", sys_text_size: "Dimensione testo", ts_small: "Piccolo", ts_normal: "Normale", ts_large: "Grande", ts_xlarge: "Molto grande", sys_saver_idle: "Avvia salvaschermo dopo",
+      sys_arrange: "Disponi riquadri", sys_saver: "Salvaschermo", sys_text_size: "Dimensione testo", ts_small: "Piccolo", ts_normal: "Normale", ts_large: "Grande", ts_xlarge: "Molto grande", sys_saver_idle: "Avvia salvaschermo dopo",
+      t_themes_sub: "Scegli un tema", t_wp_dim: "Oscuramento sfondo", t_walker_sub: "Filtra e apri le app installate", t_walker_ph: "cerca app…", t_hub_forget: "Dimenticare l'hub?", t_hub_forget_sub: "Rimuovere da questa TV le credenziali Hue / Home Assistant salvate?", t_lights: "Ambilight e luci", t_lights_sub: "Sincronizza le luci Hue o Home Assistant con il tema e Cinemarchy", t_pulse_panels: "Pannelli Pulse", t_pulse_panels_sub: "Quali pannelli laterali Pulse compaiono nel salvaschermo", t_grok_ai: "Grok Bot e AI", t_grok_ai_sub: "TUI di Grok Bot, companion, agenti del PC e web app IA", t_webapps: "Web app", t_webapps_sub: "Si apre nel browser della TV · Indietro torna", t_pair_pc: "Associa PC Omarchy Linux", t_pair_pc_sub: "Inserisci l'IP di rete del PC Omarchy", t_companion_keys: "Blu: chat · tieni premuto Blu: voce", arrange_sub: "OK sposta un riquadro in su · l'ordine resta", arrange_reset: "Ripristina ordine",
+      chat_clear: "Cancella questa chat", agent_pc: "Grok Bot sul mio PC (omarchy-link)", agent_web: "Grok su grok.com (browser della TV)", chat_ph: "Chiedi qualsiasi cosa, o di' “apri Netflix”…",
+      chat_ask: "Chiedi a", chat_thinking: "sta pensando…", chat_type: "Scrivi una domanda qui sopra, o usa 🎤", chat_speak: "Parla", chat_novoice: "Voce: non disponibile su questa TV · solo tastiera", chat_agent: "Agente", t_companion_open: "Apri le impostazioni del companion Grok Bot", chat_play_cine: "Riproduci in Cinemarchy", chat_play_yt: "Riproduci su YouTube", chat_play_video: "Riproduci il video nel browser della TV", chat_open_link: "Apri il link nel browser della TV",
+      t_companion_chat: "Chatta con il companion Grok Bot", t_companion_hide: "Nascondi il companion (Blu lo riporta)", w_racing_bar: "conto alla rovescia corse nella barra", w_devmode_extend: "modalità sviluppatore · ho appena premuto EXTEND", t_companion_title: "Companion Grok Bot",
+      w_term: "terminale · logo", w_deploy: "rilasci · pc", t_companion_settings: "Impostazioni companion",
+      w_racing: "corse", w_weather: "meteo", w_ai: "crediti ia · pc", w_devmode: "modalità sviluppatore", w_pc: "omarchy · pc", t_plugins_sub: "Plugin JSON isolati (schema v1 · nessun codice nativo)",
       walker_none: "nessuna app trovata",
       sys_logo_anim: "Logo animato", sys_text_tiles: "Tile solo testo (stile terminale)", sys_all: "Tutte le impostazioni OmarchyTV", sys_about: "Info e licenze",
       tile_move: "Sposta", tile_hide: "Nascondi", tile_cancel: "Annulla", move_hint: "◀▶▲▼ sposta · OK salva · Indietro annulla",
       app_hidden: "Nascosta. Mostrala di nuovo in Tutte le impostazioni › App nascoste", hidden_apps: "App nascoste", hidden_none: "Nessuna app nascosta",
-      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV e Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
+      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", agent_asks: "chiede", agent_hint: "OK risponde · ◀ ▶ scegli · BACK dopo", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV · Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
       wx_title: "Meteo", wx_auto: "Automatica (da IP)", wx_auto_fail: "Posizione non trovata, resta la città attuale", wx_search: "Cerca città…", wx_unit: "Unità temperatura",
       root_boot: "Apri all'avvio della TV", root_home: "Il tasto Home apre OmarchyTV", root_needed: "solo TV con root",
       root_keep: "Tieni caricata in background", root_keep_na: "non su questa TV",
@@ -287,11 +299,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       ws4_desc: "Koppeln Sie den PC über LAN HTTP (http://<pc-ip>:8765/v1/status), um Status, KI-Guthaben und Deploys anzuzeigen.",
       sys_webos: "webOS TV-Einstellungen", sys_themes: "Themen", sys_trans: "Transparenz", sys_widgets: "Startseiten-Widgets",
       sys_arrange: "Panels anordnen", sys_saver: "Bildschirmschoner", sys_text_size: "Textgröße", ts_small: "Klein", ts_normal: "Normal", ts_large: "Groß", ts_xlarge: "Sehr groß", sys_saver_idle: "Bildschirmschoner starten nach",
+      t_themes_sub: "Thema wählen", t_wp_dim: "Hintergrund abdunkeln", t_walker_sub: "Installierte Apps filtern und starten", t_walker_ph: "Apps suchen…", t_hub_forget: "Hub vergessen?", t_hub_forget_sub: "Gespeicherte Hue- / Home-Assistant-Zugangsdaten von diesem TV entfernen?", t_lights: "Ambilight & Licht", t_lights_sub: "Hue- oder Home-Assistant-Licht mit Thema und Cinemarchy synchronisieren", t_pulse_panels: "Pulse-Panels", t_pulse_panels_sub: "Welche Pulse-Seitenpanels der Bildschirmschoner zeigt", t_grok_ai: "Grok Bot & KI", t_grok_ai_sub: "Grok-Bot-TUI, Begleiter, PC-Agenten und KI-Web-Apps", t_webapps: "Web-Apps", t_webapps_sub: "Öffnet im TV-Browser · Zurück kehrt zurück", t_pair_pc: "Omarchy-Linux-PC koppeln", t_pair_pc_sub: "LAN-IP deines Omarchy-PCs eingeben", t_companion_keys: "Blau: Chat · Blau halten: Sprache", arrange_sub: "OK schiebt ein Panel nach oben · die Reihenfolge bleibt", arrange_reset: "Reihenfolge zurücksetzen",
+      chat_clear: "Diesen Chat löschen", agent_pc: "Grok Bot auf meinem PC (omarchy-link)", agent_web: "Grok auf grok.com (TV-Browser)", chat_ph: "Frag etwas oder sag „öffne Netflix“…",
+      chat_ask: "Frag", chat_thinking: "denkt nach…", chat_type: "Oben eine Frage tippen oder 🎤 nutzen", chat_speak: "Sprechen", chat_novoice: "Sprache: auf diesem TV nicht verfügbar · nur Tastatur", chat_agent: "Agent", t_companion_open: "Grok-Bot-Begleiter-Einstellungen öffnen", chat_play_cine: "In Cinemarchy abspielen", chat_play_yt: "Auf YouTube abspielen", chat_play_video: "Video im TV-Browser abspielen", chat_open_link: "Link im TV-Browser öffnen",
+      t_companion_chat: "Mit dem Grok-Bot-Begleiter chatten", t_companion_hide: "Begleiter ausblenden (Blau holt ihn zurück)", w_racing_bar: "Rennen-Countdown in der Leiste", w_devmode_extend: "Entwicklermodus · gerade EXTEND gedrückt", t_companion_title: "Grok-Bot-Begleiter",
+      w_term: "Terminal · Logo", w_deploy: "Deploys · pc", t_companion_settings: "Begleiter-Einstellungen",
+      w_racing: "Rennen", w_weather: "Wetter", w_ai: "KI-Guthaben · pc", w_devmode: "Entwicklermodus", w_pc: "omarchy · pc", t_plugins_sub: "Isolierte JSON-Plugins (Schema v1 · kein nativer Code)",
       walker_none: "keine passende App",
       sys_logo_anim: "Animiertes Logo", sys_text_tiles: "Text-Kacheln (Terminal-Stil)", sys_all: "Alle OmarchyTV-Einstellungen", sys_about: "Info & Lizenzen",
       tile_move: "Verschieben", tile_hide: "Ausblenden", tile_cancel: "Abbrechen", move_hint: "◀▶▲▼ verschieben · OK speichern · Zurück abbrechen",
       app_hidden: "Ausgeblendet. Wieder einblenden unter Alle Einstellungen › Ausgeblendete Apps", hidden_apps: "Ausgeblendete Apps", hidden_none: "Keine ausgeblendeten Apps",
-      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV & Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
+      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", agent_asks: "fragt", agent_hint: "OK antwortet · ◀ ▶ wählen · BACK später", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
       wx_title: "Wetter", wx_auto: "Automatisch (über IP)", wx_auto_fail: "Standort nicht gefunden, die aktuelle Stadt bleibt", wx_search: "Stadt suchen…", wx_unit: "Temperatureinheit",
       root_boot: "Beim Einschalten öffnen", root_home: "Home-Taste öffnet OmarchyTV", root_needed: "nur gerootete TVs",
       root_keep: "Im Hintergrund geladen lassen", root_keep_na: "nicht auf diesem TV",
@@ -408,7 +426,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   var DEFAULT_CFG = {
     theme: "last-horizon",
-    randomTheme: true,
+    randomTheme: false,     // 2.21: Last Horizon (Eyes Wide) stays; a theme picked by hand locks it too
     randomScope: "intros",   // v2.15 (#71): "all" = every bundled theme
     randomWallpaper: false, // 2.20: default wallpaper is Radiomarchy fractals; do not rotate it away
     pluginSpacexTv: false,   // 2.20: off until turned on in Settings
@@ -428,7 +446,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     opacity: 0.75,
     wallpaperDim: 0,
     wallpaperIdx: 0,
-    wallpaper: "radiomarchy:fractals",  // 2.20 default Home animated background; OmaFire and stills stay selectable
+    wallpaper: "omarchy",   // 2.21 default Home: the theme's own wallpaper, Last Horizon (Eyes Wide) looping; fractals stay selectable
     radiomarchyAnimated: "auto",  // auto / on / off — same key as Radiomarchy prefs
     proceduralBg: false,
     tempUnit: "C",
@@ -448,7 +466,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saverLogoScale: 0.65,
     saverShowClock: false,
     wallpaperIntro: true,
-    wallpaperLoop: false,   // v2.14 "Always-animated wallpaper": loop the intro while Home is on screen
+    wallpaperLoop: true,    // v2.14 "Always-animated wallpaper" (2.21: on, the eyes open and close while Home is on screen)
     living: false,          // v2.14 Living screensaver: weather, GitHub, PC notifications, X in ASCII boxes (living.js)
     livingNotes: false,     // ...with every notification from the Omarchy PC (POST /v1/living)
     livingX: "off",         // ..."off" | "notify" (X notifications shown on the PC, free) | "api" (X API on the PC, paid)
@@ -515,6 +533,31 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     // only these keys are written: the rest of the saved settings stays exactly as it was
     try { localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(pulseWas)); } catch (e) {}
   }
+
+  // v2.21: Last Horizon (Eyes Wide) by Erik Johansson is the default Home again, looping, once. Only where nobody
+  // chose: a new install, or the fractals 2.20 set by default (a wallpaper picked by hand carries wallpaperPicked).
+  // Anything picked is left alone; a theme picked by hand (randomTheme false) is kept with its own wallpaper.
+  (function eyesWallpaperDefault() {
+    if (cfg.eyesWp221) return;
+    var had = {};
+    try { had = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {}; } catch (e) { had = {}; }
+    var set = { eyesWp221: true, fractalWp220: true };
+    var wp = Object.prototype.hasOwnProperty.call(had, "wallpaper") ? String(had.wallpaper || "") : "";
+    var fresh = wp === "" || (wp === "omarchy" && had.randomWallpaper !== false);
+    var defaultFractals = wp === "radiomarchy:fractals" && !!had.fractalWp220;
+    if (!had.wallpaperPicked && (fresh || defaultFractals)) {
+      set.wallpaper = "omarchy";
+      set.wallpaperIdx = 0;
+      set.randomWallpaper = false;
+      set.wallpaperLoop = true;
+      if (had.randomTheme !== false) { set.theme = "last-horizon"; set.randomTheme = false; }
+    }
+    try {
+      var persist = JSON.parse(localStorage.getItem("omarchytv_cfg_2110") || "null") || {};
+      Object.keys(set).forEach(function (k) { cfg[k] = persist[k] = set[k]; });
+      localStorage.setItem("omarchytv_cfg_2110", JSON.stringify(persist));   // only these keys change
+    } catch (e) { Object.keys(set).forEach(function (k) { cfg[k] = set[k]; }); }
+  })();
 
   // v2.20: default Home wallpaper is Radiomarchy fractals, once. An explicit saved wallpaper is left alone.
   (function fractalWallpaperDefault() {
@@ -777,9 +820,16 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     }
     if (wv) {
       var intro = cfg.wallpaperIntro && activeWp && DATA.wallpaperIntros && DATA.wallpaperIntros[activeWp];
+      // v2.21 a weak TV (2.5 GB or less, a Mali-T8xx-class GPU) plays the 540p / 15 fps copy where there is one
+      var FXw = window.OmarchyFractals, weakWp = !!(FXw && FXw.preferPlainHere && FXw.preferPlainHere(0));
+      if (intro && weakWp) {   // the 540p / 15 fps copy where there is one (Eyes Wide), else the still
+        intro = (DATA.wallpaperIntrosLight && DATA.wallpaperIntrosLight[activeWp]) || null;
+      }
+      var loopWp = !!cfg.wallpaperLoop && !cfg.wpLoopStutter;
       if (intro) {
-        if (wv.getAttribute("src") !== intro || !cfg.wallpaperLoop) wv.src = intro;   // once: restart like before
-        wv.loop = !!cfg.wallpaperLoop;
+        if (wv.getAttribute("src") !== intro || !loopWp) { wv.src = intro; wpGuard = {}; }   // once: restart like before
+        wv.loop = loopWp;
+        wpGuardFps = weakWp ? 15 : 24;
         wv.style.display = "block";
         wv.onended = function () { if (!wv.loop) wv.style.display = "none"; };
         wv.onerror = function () { wv.style.display = "none"; };
@@ -1356,9 +1406,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         saveCfg(); applyTheme(); renderAll();
       } },
       { label: tr("sys_widgets"), val: "›", act: openWidgetsModal },
-      { label: tr("sys_arrange"), val: "›", act: function () { showToast("Arrange panels: use D-pad on Home"); switchWorkspace(0); } },
+      { label: tr("sys_arrange"), val: "›", act: function () { openArrangeModal(0); } },
       { label: tr("sys_saver"), val: "›", act: openSaverModal },
-      { label: "Ambilight & Lights", val: (cfg.lightsHub || "off") + " ›", act: openLightsModal },
+      { label: tr("t_lights"), val: (cfg.lightsHub || "off") + " ›", act: openLightsModal },
       { label: tr("sys_saver_idle"), val: idleStr, act: function () {
         var opts = [1, 2.5, 5, 10, 0];
         cfg.saverIdleMin = opts[(opts.indexOf(cfg.saverIdleMin) + 1) % opts.length];
@@ -1555,7 +1605,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       };
     }));
     var curIdx = names.indexOf(cfg.theme);
-    openModal(tr("sys_themes") + " (" + names.length + ")", "Select a theme (MIT omarchy.webp + Liftoff Sunset)", items);
+    openModal(tr("sys_themes") + " (" + names.length + ")", tr("t_themes_sub") + " (MIT omarchy.webp + Liftoff Sunset)", items);
     if (keepFocus) { state.modalIdx = Math.min(focus, items.length - 1); renderModalList(); }
     else if (curIdx >= 0) { state.modalIdx = curIdx + 3; renderModalList(); }
   }
@@ -1794,6 +1844,31 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     saveCfg(); fetchWeather(); renderAll(); closeModal();
   }
 
+  // v2.21 (#5 point 8) Arrange panels: the order of the Home widgets (racing, weather, pc, ai credits, dev mode).
+  // OK moves the focused one up (the top one goes to the bottom); hidden ones keep their place for when they come back.
+  var ARRANGE_IDS = ["race-box", "wx-box", "pc-box", "ai-box", "devmode-box"];
+  var ARRANGE_KEYS = { "race-box": "w_racing", "wx-box": "w_weather", "pc-box": "w_pc", "ai-box": "w_ai", "devmode-box": "w_devmode" };
+  function arrangeOrder() { return window.OmarchyArrange ? window.OmarchyArrange.order(cfg.widgetOrder, ARRANGE_IDS) : ARRANGE_IDS.slice(); }
+  function applyWidgetOrder() {
+    var row = document.getElementById("widgets-row1");
+    if (!row) return;
+    arrangeOrder().forEach(function (id) { var el = document.getElementById(id); if (el && el.parentNode === row) row.appendChild(el); });
+  }
+  function openArrangeModal(focus) {
+    var order = arrangeOrder();
+    var items = order.map(function (id, i) {
+      return { label: (i + 1) + ". " + tr(ARRANGE_KEYS[id]), right: "▲", act: function () {
+        cfg.widgetOrder = window.OmarchyArrange.up(order, i);
+        saveCfg(); applyWidgetOrder(); renderAll();
+        openArrangeModal(i === 0 ? order.length - 1 : i - 1);
+      } };
+    });
+    items.push({ label: tr("arrange_reset"), right: "", act: function () {
+      cfg.widgetOrder = null; saveCfg(); applyWidgetOrder(); renderAll(); openArrangeModal(0);
+    } });
+    openModal(tr("sys_arrange"), tr("arrange_sub"), items, null, null, { focusIdx: focus || 0 });
+  }
+
   function openWidgetsModal() {
     function tog(k) { cfg.widgets[k] = !cfg.widgets[k]; saveCfg(); if (k === "racing") racingKick(); renderAll(); openWidgetsModal(); }
     function racingSeriesRows() {
@@ -1810,18 +1885,18 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       return rows;
     }
     openModal(tr("sys_widgets"), "", [
-      { label: "terminal · logo", right: cfg.widgets.term ? "on" : "off", act: function () { tog("term"); } },
-      { label: "weather", right: cfg.widgets.weather ? "on" : "off", act: function () { tog("weather"); } },
+      { label: tr("w_term"), right: cfg.widgets.term ? "on" : "off", act: function () { tog("term"); } },
+      { label: tr("w_weather"), right: cfg.widgets.weather ? "on" : "off", act: function () { tog("weather"); } },
       { label: "omarchy · pc", right: cfg.widgets.pc ? "on" : "off", act: function () { tog("pc"); } },
-      { label: "ai credits · pc", right: cfg.widgets.ai ? "on" : "off", act: function () { tog("ai"); } },
-      { label: "deploys · pc", right: cfg.widgets.deploy ? "on" : "off", act: function () { tog("deploy"); } },
-      { label: "racing", right: cfg.widgets.racing ? "on" : "off", act: function () { tog("racing"); } },
-      { label: "racing countdown in the bar", right: cfg.racingBar ? "on" : "off", act: function () {
+      { label: tr("w_ai"), right: cfg.widgets.ai ? "on" : "off", act: function () { tog("ai"); } },
+      { label: tr("w_deploy"), right: cfg.widgets.deploy ? "on" : "off", act: function () { tog("deploy"); } },
+      { label: tr("w_racing"), right: cfg.widgets.racing ? "on" : "off", act: function () { tog("racing"); } },
+      { label: tr("w_racing_bar"), right: cfg.racingBar ? "on" : "off", act: function () {
         cfg.racingBar = !cfg.racingBar; saveCfg(); racingKick(); renderAll(); openWidgetsModal();
       } }
     ].concat(cfg.widgets.racing || cfg.racingBar ? racingSeriesRows() : []).concat(window.OMARCHY_PLATFORM === "tizen" ? [] : [   // 2.15 (#131): LG Developer Mode's 1000-hour session
-      { label: "dev mode countdown", right: cfg.widgets.devmode ? "on" : "off", act: function () { tog("devmode"); } },
-      { label: "dev mode · I just pressed EXTEND", right: cfg.devModeUntil ? window.OmarchyDevMode.left(cfg.devModeUntil, Date.now()).text.split(" · ")[0] : "›", act: function () {
+      { label: tr("w_devmode"), right: cfg.widgets.devmode ? "on" : "off", act: function () { tog("devmode"); } },
+      { label: tr("w_devmode_extend"), right: cfg.devModeUntil ? window.OmarchyDevMode.left(cfg.devModeUntil, Date.now()).text.split(" · ")[0] : "›", act: function () {
         cfg.devModeUntil = window.OmarchyDevMode.extended(Date.now()); cfg.widgets.devmode = true;
         saveCfg(); renderAll(); showToast("Developer Mode: 1000 hours from now"); openWidgetsModal();
       } }
@@ -2044,14 +2119,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         cfg.wallpaperIdx++; cfg.wallpaper = ""; saveCfg(); applyTheme(); openAllSettingsModal();
       } },
       { label: "Always-animated wallpaper", right: cfg.wallpaperLoop ? "on" : "off", act: function () {
-        cfg.wallpaperLoop = !cfg.wallpaperLoop; saveCfg(); applyTheme(); openAllSettingsModal();
+        cfg.wallpaperLoop = !cfg.wallpaperLoop; cfg.wpLoopStutter = false; saveCfg(); applyTheme(); openAllSettingsModal();
       } },
       { label: "Light wallpapers (1080p)", right: cfg.lightWallpapers === true ? "on" : cfg.lightWallpapers === false ? "off" : "auto", act: function () {
         // 2.15 (#47): auto = on a 1080p panel only; on = always (faster start on a UHD set); off = always 4K
         cfg.lightWallpapers = cfg.lightWallpapers === undefined || cfg.lightWallpapers === null ? true : cfg.lightWallpapers === true ? false : null;
         saveCfg(); applyTheme(); openAllSettingsModal();
       } },
-      { label: "Wallpaper dimming", right: Math.round((cfg.wallpaperDim || 0) * 100) + "%", act: function () {
+      { label: tr("t_wp_dim"), right: Math.round((cfg.wallpaperDim || 0) * 100) + "%", act: function () {
         var d = [0, 0.25, 0.5];
         cfg.wallpaperDim = d[(d.indexOf(cfg.wallpaperDim) + 1) % d.length];
         saveCfg(); applyTheme(); openAllSettingsModal();
@@ -2203,7 +2278,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         return { label: a.name, right: a.appId, act: function () { closeModal(); launchApp(a); } };
       });
     }
-    openModal("Walker · > search", "Filter and launch installed webOS apps", buildList(""), "> search apps…", function (val) {
+    openModal("Walker · > search", tr("t_walker_sub"), buildList(""), "> " + tr("t_walker_ph"), function (val) {
       state.modalItems = buildList(val);
       state.modalIdx = 0;
       renderModalList();
@@ -2385,7 +2460,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
   function openWallpaperModal(keepFocus) {
     var focus = state.modalIdx;
-    function pick(v) { cfg.wallpaper = v; cfg.randomWallpaper = false; saveCfg(); applyTheme(); openWallpaperModal(true); }
+    function pick(v) { cfg.wallpaper = v; cfg.randomWallpaper = false; cfg.wallpaperPicked = true; saveCfg(); applyTheme(); openWallpaperModal(true); }
     var items = [
       { label: tr("random_wallpaper"), right: cfg.randomWallpaper ? "on" : "off", act: function () {
         cfg.randomWallpaper = !cfg.randomWallpaper; saveCfg(); openWallpaperModal(true);
@@ -2514,10 +2589,29 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   window.addEventListener("pagehide", lightsLeave);
   document.addEventListener("webOSRelaunch", lightsBack);
 
+  // v2.21 a loop the TV cannot keep up with settles on the still, here and from then on (wpLoopStutter);
+  // toggling "Always-animated wallpaper" gives it another try.
+  var wpGuard = {}, wpGuardFps = 24;
+  function wallpaperStutterCheck(wv, L) {
+    if (!wv.loop || !L.stutter) return;
+    var dec = 0, drop = 0, q = null;
+    try { q = wv.getVideoPlaybackQuality ? wv.getVideoPlaybackQuality() : null; } catch (e) { q = null; }
+    if (q) { dec = q.totalVideoFrames || 0; drop = q.droppedVideoFrames || 0; }
+    else if (typeof wv.webkitDecodedFrameCount === "number") { dec = wv.webkitDecodedFrameCount; drop = wv.webkitDroppedFrameCount || 0; }
+    else return;   // this browser cannot tell: keep looping
+    if (wv.paused) return;
+    if (L.stutter(wpGuard, Date.now(), dec, drop, wpGuardFps)) {
+      wv.loop = false;   // the clip finishes and the still stays
+      cfg.wpLoopStutter = true;
+      saveCfg();
+    }
+  }
+
   // v2.14 Always-animated wallpaper: pause the loop behind Cinemarchy, the screensaver or another app; resume on Home.
   function wallpaperLoopTick() {
     var wv = document.getElementById("wallpaper-video"), L = window.OmarchyWpLoop;
     if (!wv || !L || !cfg.wallpaperLoop || wv.style.display !== "block") return;
+    wallpaperStutterCheck(wv, L);
     var play = L.shouldPlay({ loop: true, hidden: document.hidden,
       saver: document.getElementById("saver-overlay").className === "active",
       cinemarchy: !!cineUi });
@@ -2585,7 +2679,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       } });
       items.push({ label: "Apply theme colours now", right: "▶", act: function () { pushLightsTheme(currentThemeObj(), false); showToast("Pushed theme to lights"); } });
       items.push({ label: "Forget hub credentials (confirm with OK)", right: "forget", act: function () {
-        openModal("Forget hub?", "Remove saved Hue / Home Assistant credentials from this TV?", [
+        openModal(tr("t_hub_forget"), tr("t_hub_forget_sub"), [
           { label: "Cancel", right: "", act: openLightsModal },
           { label: "Forget hub", right: "confirm", act: function () {
             cfg.lightsHub = "off"; cfg.hueUser = ""; cfg.haToken = ""; saveCfg(); openLightsModal();
@@ -2593,7 +2687,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         ]);
       } });
     }
-    openModal("Ambilight & Lights", "Sync Philips Hue or Home Assistant lights with Omarchy themes & Cinemarchy", items, "IP / URL / entity_id / token…");
+    openModal(tr("t_lights"), tr("t_lights_sub"), items, "IP / URL / entity_id / token…");
   }
 
   // v2.13 helpers: HTML-escape for modal labels built from feed data (renderModalList uses innerHTML).
@@ -3142,7 +3236,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     return o;
   }
   function openPulsePanelsModal() {
-    openModal("Pulse panels", "Which Pulse side panels show on the screensaver", PULSE_PANEL_IDS.map(function (id) {
+    openModal(tr("t_pulse_panels"), tr("t_pulse_panels_sub"), PULSE_PANEL_IDS.map(function (id) {
       return { label: PULSE_PANEL_LABELS[id], right: pulsePanelOn(id) ? "on" : "off", act: function () {
         setPulsePanel(id, !pulsePanelOn(id)); saveCfg(); racingKick(); openPulsePanelsModal();
       } };
@@ -3622,7 +3716,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
 
   function openPluginsModal() {
-    openModal(tr("sys_plugins"), "Sandboxed declarative JSON plugins (v1 schema · zero native code execution)", [
+    openModal(tr("sys_plugins"), tr("t_plugins_sub"), [
       { label: "🚀 SpaceX TV (@sighmon · MIT)", right: cfg.pluginSpacexTv ? "on" : "off", act: function () {
         cfg.pluginSpacexTv = !cfg.pluginSpacexTv; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
@@ -3630,7 +3724,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "🤖 Omarchy Agent Desktop (@tcballard · MIT)", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
         cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
-      { label: "🤖 Open Grok Bot companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } },
+      { label: "🤖 " + tr("t_companion_open"), right: "›", act: function () { openGrokbotCompanionModal(0); } },
       { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
       { label: "📺 " + tr("plugin_retro_crt"), right: tr(cfg.pluginRetroCrt === "strong" ? "crt_strong" : cfg.pluginRetroCrt === "light" ? "crt_light" : "off"), act: function () {
         var m = ["off", "light", "strong"];
@@ -3681,7 +3775,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   // register them; hold Blue everywhere. The webOS Magic Remote mic always belongs to the system.
   var COMPANION_CORNERS = ["bottom-right", "bottom-left", "top-right", "top-left"];
   var GB_AGENTS = ["grokbot", "grok-web"];
-  var GB_AGENT_NAMES = { "grokbot": "Grok Bot on my PC (omarchy-link)", "grok-web": "Grok on grok.com (TV browser)" };
+  function gbAgentName(a) { return tr(a === "grok-web" ? "agent_web" : "agent_pc"); }
   function placeCompanion(el) {
     var c = COMPANION_CORNERS.indexOf(cfg.companionCorner) >= 0 ? cfg.companionCorner : "bottom-right";
     var d = GBC && gbAnim() ? GBC.drift(Date.now()) : { x: 0, y: 0 };   // burn-in safe: never parked on one pixel
@@ -4028,17 +4122,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   var AI_WEBAPPS = [["Grok Web", "https://grok.com/"], ["Grok (X)", "https://x.com/i/grok"], ["ChatGPT", "https://chatgpt.com/"],
     ["Claude", "https://claude.ai/"], ["Hermes", "https://hermes.nousresearch.com"]];
   function openGrokBotHub() {
-    openModal("Grok Bot & AI", "Grok Bot TUI, companion, PC agents and AI web apps", [
+    openModal(tr("t_grok_ai"), tr("t_grok_ai_sub"), [
       { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
-      { label: "💬 Chat with the Grok Bot companion", right: "OK ›", act: function () { openCompanionChat(false); } },
-      { label: "Companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } },
+      { label: "💬 " + tr("t_companion_chat"), right: "OK ›", act: function () { openCompanionChat(false); } },
+      { label: tr("t_companion_settings"), right: "›", act: function () { openGrokbotCompanionModal(0); } },
       { label: "TUI agent", right: tuiAgent().name + " ›", act: function () {
         var l = tuiAgents(), i = 0; for (; i < l.length; i++) if (l[i].id === tuiAgent().id) break;
         cfg.tuiAgent = l[(i + 1) % l.length].id; tuiSession = null; saveCfg(); openGrokBotHub(); state.modalIdx = 3; renderModalList();
       } },
       { label: "Read the agents signed in on the PC", right: "›", act: function () { tuiRefreshAgents(false); showToast("Asking the PC for its agents…"); } },
       { label: "🌐 Web apps (Grok, ChatGPT, Claude, Hermes…)", right: "›", act: openWebAppsModal },
-      { label: "🧩 Plugins (SpaceX TV · Grok Bot)", right: "›", act: openPluginsModal }
+      { label: "🧩 " + tr("sys_plugins"), right: "›", act: openPluginsModal }
     ]);
   }
   function webApps() {
@@ -4061,11 +4155,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         var u = cfg.webapps.indexOf(w); if (u >= 0) cfg.webapps.splice(u, 1); saveCfg(); showToast(w.name + " removed"); openWebAppsModal();
       } });
     });
-    openModal("Web apps", "Open in the TV browser · Back returns", items, "https://… or Name=https://…", function (v) { typed = v; }, { noAutoFocus: true });
+    openModal(tr("t_webapps"), tr("t_webapps_sub"), items, "https://… or Name=https://…", function (v) { typed = v; }, { noAutoFocus: true });
   }
   function openTuiWeb() {
     var W = [["Grok Web", "grok"], ["Grok (X)", "xgrok"], ["ChatGPT", "chatgpt"], ["Claude", "claude"], ["Hermes", "hermes"]];
-    openModal("grok bot · web & ai", "Opens in the TV browser · Back returns", W.map(function (w) {
+    openModal("grok bot · web & ai", tr("t_webapps_sub"), W.map(function (w) {
       var u = TUI.WEB_URLS[w[1]];
       return { label: w[0] + " (Web)", right: u.replace(/^https?:\/\//, "").replace(/\/$/, "") + " ›", act: function () { tuiOpenUrl(u, w[0]); } };
     }));
@@ -4078,12 +4172,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         q = ""; var inp = document.getElementById("modal-input"); if (inp) inp.value = "";
         tuiRun(v);
       } },
-      speechCtor() ? { label: "🎤 Speak", right: "OK", act: function () { listen(function (t) { tuiRun(t); }); } }
-        : { label: "🎤 Voice: not available on this TV · keyboard only", right: "", act: function () {} },
+      speechCtor() ? { label: "🎤 " + tr("chat_speak"), right: "OK", act: function () { listen(function (t) { tuiRun(t); }); } }
+        : { label: "🎤 " + tr("chat_novoice"), right: "", act: function () {} },
       { label: "help", right: "›", act: function () { tuiRun("help"); } },
       { label: "status", right: "›", act: function () { tuiRun("status"); } },
       { label: "next theme", right: "›", act: function () { tuiRun("next theme"); } },
-      { label: "Agent", right: tuiAgent().name + " ›", act: function () {
+      { label: tr("chat_agent"), right: tuiAgent().name + " ›", act: function () {
         var l = tuiAgents(), i = 0; for (; i < l.length; i++) if (l[i].id === tuiAgent().id) break;
         tuiSetAgent(l[(i + 1) % l.length]); openGrokTui(5);
       } },
@@ -4134,14 +4228,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var last = null;
     for (var h = hist.length - 1; h >= 0; h--) if (hist[h].role === "bot") { last = hist[h]; break; }
     var items = [
-      { label: gbFace.busy ? "⏳ " + escHtml(gbName()) + " is thinking…" : "➤ Ask " + escHtml(gbName()), right: "OK", act: function () {
-        if (q.trim()) askCompanion(q, true); else showToast("Type a question above, or use 🎤");
+      { label: gbFace.busy ? "⏳ " + escHtml(gbName()) + " " + tr("chat_thinking") : "➤ " + tr("chat_ask") + " " + escHtml(gbName()), right: "OK", act: function () {
+        if (q.trim()) askCompanion(q, true); else showToast(tr("chat_type"));
       } },
-      speechCtor() ? { label: "🎤 Speak", right: "OK", act: function () { listen(function (t) { askCompanion(t, true); }); } }
-        : { label: "🎤 Voice: not available on this TV · keyboard only", right: "", act: function () {} }
+      speechCtor() ? { label: "🎤 " + tr("chat_speak"), right: "OK", act: function () { listen(function (t) { askCompanion(t, true); }); } }
+        : { label: "🎤 " + tr("chat_novoice"), right: "", act: function () {} }
     ];
     ((last && last.links) || []).forEach(function (l) {
-      var lbl = l.kind === "youtube" ? (cfg.embedPlayer ? "▶ Play in Cinemarchy" : "▶ Play on YouTube") : l.kind === "video" ? "▶ Play video in the TV browser" : "🔗 Open link in the TV browser";
+      var lbl = l.kind === "youtube" ? (cfg.embedPlayer ? "▶ " + tr("chat_play_cine") : "▶ " + tr("chat_play_yt")) : l.kind === "video" ? "▶ " + tr("chat_play_video") : "🔗 " + tr("chat_open_link");
       items.push({ label: lbl + " · " + escHtml(l.url.replace(/^https?:\/\//, "").slice(0, 48)), right: "OK ›", act: function () { playLink(l); } });
     });
     var roster = (gbPc && gbPc.roster) || [];
@@ -4150,16 +4244,16 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       for (var k = 0; k < roster.length; k++) if (cur && roster[k].id === cur.id) i = k;
       cfg.companionBot = roster[(i + 1) % roster.length].id; saveCfg(); renderPluginsUI(); openCompanionChat(false);
     } });
-    items.push({ label: "Agent", right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
+    items.push({ label: tr("chat_agent"), right: gbAgentName(gbAgent()) + " ›", act: function () {
       cfg.companionAgent = GB_AGENTS[(GB_AGENTS.indexOf(gbAgent()) + 1) % GB_AGENTS.length]; saveCfg(); openCompanionChat(false);
     } });
-    if (hist.length) items.push({ label: "Clear this chat", right: "", act: function () { GBC.clear(store, key); gbFace.bubble = ""; openCompanionChat(false); } });
-    items.push({ label: "Hide the companion (Blue brings it back)", right: "", act: function () {
+    if (hist.length) items.push({ label: tr("chat_clear"), right: "", act: function () { GBC.clear(store, key); gbFace.bubble = ""; openCompanionChat(false); } });
+    items.push({ label: tr("t_companion_hide"), right: "", act: function () {
       cfg.companionHidden = true; saveCfg(); closeModal(); showToast("Companion hidden · press Blue to bring it back");
     } });
-    items.push({ label: "Companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } });
+    items.push({ label: tr("t_companion_settings"), right: "›", act: function () { openGrokbotCompanionModal(0); } });
     items.push({ label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui });
-    openModal("💬 " + gbName(), "", items, "Ask anything, or say “open Netflix”… (on-screen or Bluetooth keyboard)", function (v) { q = v; },
+    openModal("💬 " + gbName(), "", items, tr("chat_ph"), function (v) { q = v; },
       { noAutoFocus: true, focusIdx: voice && speechCtor() ? 1 : 0 });
     state.gbChat = true;
     var subEl = document.getElementById("modal-sub");
@@ -4168,7 +4262,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         return '<div class="gb-msg ' + (m.role === "user" ? "gb-me" : "gb-bot") + '">' + escHtml(m.text.length > 400 ? m.text.slice(0, 397) + "…" : m.text) + "</div>";
       }).join("");
       subEl.innerHTML = '<div style="display:flex;align-items:flex-start;gap:12px;"><span class="gb-mark">' + gbAvatar(48) + "</span><div>" +
-        (rows || "Hi! Ask me anything, or tell me which app to open.") + '<div class="gb-credit">Avatar from @tcballard\'s Agent Desktop v0.2.0 (MIT)</div></div></div>';
+        (rows || "Hi! Ask me anything, or tell me which app to open.") + '<div class="gb-credit">Avatar from @tcballard\'s Agent Desktop v0.3.3 (MIT)</div></div></div>';
       subEl.style.display = "block";
     }
     if (voice && speechCtor()) listen(function (t) { askCompanion(t, true); });
@@ -4202,7 +4296,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "Animation (bob, blink, look around, sleep, drift)", right: gbAnim() ? "on" : "off", act: function () {
         cfg.companionAnim = !gbAnim(); saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(7);
       } },
-      { label: "Agent", right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
+      { label: tr("chat_agent"), right: gbAgentName(gbAgent()) + " ›", act: function () {
         cfg.companionAgent = cycle(GB_AGENTS, gbAgent()); saveCfg(); openGrokbotCompanionModal(8);
       } },
       { label: "Save the PC ask code typed above", right: cfg.grokbotCode ? "set ✓" : "not set", act: function () {
@@ -4277,7 +4371,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         { label: "GrokBot Office (optional)", right: cfg.officeEnabled ? "on" : "off", act: function () { cfg.officeEnabled = !cfg.officeEnabled; saveCfg(); openGrokbotCompanionModal(offIdx); } },
         { label: "Open GrokBot Office", right: cfg.officeEnabled ? "O ›" : "turn it on first", act: function () { if (cfg.officeEnabled) openOffice(); else showToast("Turn GrokBot Office on first"); } });
     }
-    openModal("Grok Bot companion", "Avatar, eyes and palette from @tcballard's Agent Desktop v0.2.0 (MIT) · Blue: chat · hold Blue: voice · " +
+    openModal(tr("t_companion_title"), "Avatar, eyes and palette from @tcballard's Agent Desktop v0.3.3 (MIT) · " + tr("t_companion_keys") + " · " +
       (window.OMARCHY_PLATFORM === "tizen" ? "the remote's voice key opens it when the TV lets apps have it" : "the Magic Remote mic stays with webOS"),
       items, "PC ask code (printed by: omarchy-tv webos serve)", function (v) { code = v; }, { noAutoFocus: true, focusIdx: focusIdx || 0 });
   }
@@ -4316,6 +4410,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   setInterval(function () { if (!document.hidden) syncGrokbotFromPc(false); }, 300000);
 
   function renderAll() {
+    applyWidgetOrder();
     renderTerminal();
     renderWidgets();
     renderDock();
@@ -4360,6 +4455,8 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       return;
     }
 
+    // v2.21 an agent's page or question is on screen: its keys first (BACK closes it, never the app)
+    if (agentInbox && agentInbox.key(e.keyCode)) { e.preventDefault(); e.stopPropagation(); return; }
     var code = e.keyCode;
     // webOS 3.x (Chrome 38) has no KeyboardEvent.key: derive it from the remote's keyCode
     var k = e.key || LEGACY_KEYS[code] || (code >= 48 && code <= 57 ? String(code - 48) : "");
@@ -4533,7 +4630,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
             { label: "Toggle simulated PC link", right: cfg.pcSimulated ? "on" : "off", act: function () { cfg.pcSimulated = !cfg.pcSimulated; saveCfg(); pollPcStatus(); closeModal(); } }
           ]);
           // With a recent PC to pick, don't pop the TV keyboard: ▲ from the first item still reaches the field.
-          openModal("Pair Omarchy Linux PC", "Enter your Omarchy PC LAN IP (serves http://<ip>:8765/v1/status):", pairItems.slice(), "192.168.1.x", function (v) {
+          openModal(tr("t_pair_pc"), tr("t_pair_pc_sub") + " (http://<ip>:8765/v1/status):", pairItems.slice(), "192.168.1.x", function (v) {
             pairTyped = (v || "").trim();
             var ok = /^(https?:\/\/)?[A-Za-z0-9.-]+(:\d{1,5})?\/?$/.test(pairTyped);
             state.modalItems = (ok ? [{ label: "Connect to " + pairTyped, right: "OK", act: function () {
@@ -4740,4 +4837,15 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     pcPollPending = true;
     pollPcStatus().then(function () { pcPollPending = false; }, function () { pcPollPending = false; });
   }, 5000);
+
+  // v2.21 agents on LG / Samsung: notifications, pages and questions kept by the PC bridge (inbox.js).
+  var agentInbox = null;
+  if (window.OmarchyInbox) {
+    agentInbox = window.OmarchyInbox.create({
+      base: pcBase, token: function () { return cfg.grokbotCode || ""; },
+      asks: function () { return tr("agent_asks"); }, hint: function () { return tr("agent_hint"); },
+      sound: function () { return cfg.notifySound !== false; }   // like Android's "link": {"notifySound": false}
+    });
+    setInterval(function () { if (!document.hidden) agentInbox.tick(); }, 3000);
+  }
 })();

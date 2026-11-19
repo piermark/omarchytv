@@ -2,7 +2,8 @@
 
 Pair your [Omarchy](https://omarchy.org) PC with the **OmarchyTV** Android TV launcher over your home network.
 
-- **Theme sync**: `omarchy theme set …` turns the TV the same colours, with your wallpaper as a 4K JPEG.
+- **Theme sync**: `omarchy theme set …` turns the TV the same colours, with your wallpaper as a 4K JPEG. A PC
+  without an Omarchy theme (macOS) sends none: the TV keeps the theme picked on the remote.
 - **Bar widget** with the TV's status (connected, the app on screen, screensaver). Click it for a
   remote (home, back, play/pause, volume) and an app launcher.
 - **Panes and shortcuts on the TV**: a live PC pane (CPU, RAM, uptime, now playing) plus your own panes and
@@ -21,12 +22,21 @@ The TV never contacts AI services and never holds credentials. Everything stays 
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/omarchytv/omarchy-link.git --enable
+git clone https://github.com/piermark/omarchytv.git && cd omarchytv/pc-plugin
+# (or the GitLab mirror: https://gitlab.com/piermark/omarchytv.git)
+mkdir -p ~/.local/share ~/.local/bin ~/.config/omarchy/plugins
+cp -r omarchy-link ~/.local/share/omarchy-link
+ln -sf ~/.local/share/omarchy-link/bin/omarchy-link ~/.local/bin/omarchy-link
+# the OmarchyTV bar widget (Omarchy 4.5 shell plugins): the plugin lives in a folder of this repository,
+# so link it instead of `omarchy plugin add` (which wants a repository of its own)
+ln -sfn ~/.local/share/omarchy-link ~/.config/omarchy/plugins/com.omarchytv.link
+omarchy-shell shell rescanPlugins && omarchy plugin enable com.omarchytv.link
+# (if it times out on a busy desktop: OMARCHY_SHELL_IPC_TIMEOUT=20s omarchy plugin enable com.omarchytv.link)
 omarchy-link hook add      # sync the theme to the TV on every `omarchy theme set`
 ```
 
-(Repository URL is a placeholder until the project is published.) Then add the **OmarchyTV**
-widget to your bar from the bar settings. It sits on the right by default.
+The widget sits on the right of the bar by default; move it from the bar settings. Every release also ships
+`omarchy-link-<version>.tar.gz` with the same folder.
 
 Requirements: `python3` (standard library only), `ffmpeg` or ImageMagick for the wallpaper,
 `playerctl` (optional, for "now playing"). All of these ship with Omarchy. The plugin opens no
@@ -63,6 +73,29 @@ omarchy-link x setup                 # optional: X API bearer token for mentions
 omarchy-link x status                # configured? estimated spend this month vs xMonthlyUsd
 omarchy-link unpair
 ```
+
+New in OmarchyTV 2.21 (the TV needs **AI agent alerts while you watch** on for notifications and questions):
+
+```bash
+omarchy-link notify "Tests green" --from "Claude Code" [--level warn|alert] [--speak] [--title T] [--quiet]
+omarchy-link watch -- make release          # ✓ / ✗ on the TV when it ends
+omarchy-link ask "Merge?" --choice Merge --choice Wait [--timeout 120]
+omarchy-link page URL [URL…] | --close      # LAN / tailnet pages full screen, up to 4 tiled
+omarchy-link pages add ID NAME URL [--icon H] [--badge N] | badge ID N | show ID | remove ID
+omarchy-link radio [now|play|pause|next|previous|stop]; omarchy-link open radiomarchy|cinemarchy|arcade|office|home
+omarchy-link token add NAME --scope read|notify|control [--remote] | list | revoke ID
+omarchy-link mcp [--scope notify]           # claude mcp add omarchytv -- omarchy-link mcp
+omarchy-link agents approvals on|off        # Claude Code's permission prompts on the TV
+omarchy-link hook add [all|theme-set post-boot post-update battery-low font-set] | remove | list
+omarchy-link remind 20m TEXT | list | cancel ID
+omarchy-link room post NAME TEXT [--from WHO] | clear NAME | list
+omarchy-link console [--tmux TARGET | --file LOG]
+omarchy-link tailscale on|off|status|acl
+omarchy-link tv logs | diagnostics | backup [FILE] | restore FILE | keepalive [auto|on|off] | home
+```
+
+Guides: [OmarchyTV 2.21](../../docs/OMARCHYTV-2.21-GUIDE.md), [remote access and AI agents](../../docs/REMOTE-AND-AI-GUIDE.md),
+[integrations reference](../../docs/INTEGRATIONS.md).
 
 GrokBot Office (OmarchyTV 2.20): Claude and ChatGPT bots, their keys and spend are in
 [docs/OFFICE.md](docs/OFFICE.md).

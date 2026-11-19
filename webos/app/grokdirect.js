@@ -43,6 +43,18 @@
   function server(u) { return validServer(u) ? (u.slice(-1) === "/" ? u : u + "/") : NTFY; }
   function serverHost(u) { return /^https?:\/\/([^\/:]+)/.exec(server(u))[1]; }
   function validToken(t) { return typeof t === "string" && /^tk_[A-Za-z0-9]{8,64}$/.test(t); }
+  /** v2.21 (#70): every 2 s three times, then slower up to 10 s; after a 429 its Retry-After (max 30 s) or 10 s. */
+  function pollDelay(attempt, lastStatus, retryAfter) {
+    if (lastStatus === 429) return retryAfter > 0 ? Math.min(retryAfter, 30) * 1000 : 10000;
+    if (attempt < 3) return POLL_MS;
+    return Math.min(10000, POLL_MS + (attempt - 2) * 1000);
+  }
+  function noAnswer(srv, limited) {
+    var shared = !validServer(srv);
+    if (limited) return "No answer from Grok Bot: " + (shared ? "ntfy.sh" : "the reply server") + " is rate limiting this TV (HTTP 429)." +
+      (shared ? " Set your own reply server in Settings › Grok Bot diretto, or try again later." : " Try again in a minute.");
+    return "No answer from Grok Bot within 90 s. Check the routine and its ntfy step." + (shared ? " If ntfy.sh's daily quota ran out, set your own reply server in Settings." : "");
+  }
   function pollUrl(topic, since, srv) { return server(srv) + topic + "/json?poll=1&since=" + since; }
   function clean(s, max) { return String(s == null ? "" : s).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "").trim().slice(0, max); }
   function isYoutube(url) {
@@ -153,20 +165,25 @@
     var id = rand(16), since = Math.floor(now() / 1000) - 5, end = now() + TIMEOUT_MS;
     f(s.url, { method: "POST", headers: headers(s.key), body: body(q, lang, s.topic, id, apps, context, s.server) }).then(function (r) {
       if (!r.ok) { cb(r.status === 401 || r.status === 403 ? "The webhook refused the key (HTTP " + r.status + "): check it in Settings." : "The webhook answered HTTP " + r.status + "."); return; }
+      var attempt = 0, last = 200, retryAfter = 0, limited = false;
       (function poll() {
-        if (now() >= end) { cb("No answer from Grok Bot within 90 s. Check the routine and its ntfy step." + (validServer(s.server) ? "" : " If ntfy.sh's daily quota ran out, set your own reply server in Settings.")); return; }
+        if (now() >= end) { cb(noAnswer(s.server, limited)); return; }
         wait(function () {
-          f(pollUrl(s.topic, since, s.server), validToken(s.ntfyToken) ? { headers: { "Authorization": "Bearer " + s.ntfyToken } } : undefined).then(function (p) { return p.ok ? p.text() : ""; }).then(function (t) {
+          f(pollUrl(s.topic, since, s.server), validToken(s.ntfyToken) ? { headers: { "Authorization": "Bearer " + s.ntfyToken } } : undefined).then(function (p) {
+            last = p.status; retryAfter = 0;
+            if (p.status === 429) { limited = true; var ra = p.headers && p.headers.get ? parseInt(p.headers.get("Retry-After"), 10) : 0; retryAfter = ra > 0 ? ra : 0; }
+            return p.ok ? p.text() : "";
+          }).then(function (t) {
             var rep = find(t, id);
             if (rep) cb(null, rep); else poll();
-          }).catch(poll);
-        }, POLL_MS);
+          }).catch(function () { last = 0; poll(); });
+        }, pollDelay(attempt++, last, retryAfter));
       })();
     }).catch(function () { cb("Could not reach the webhook."); });
   }
 
   var api = { KEY: KEY, POLL_MS: POLL_MS, TIMEOUT_MS: TIMEOUT_MS, newTopic: newTopic, validTopic: validTopic, validLang: validLang, validUrl: validUrl,
-    validKey: validKey, mask: mask, headers: headers, body: body, pollUrl: pollUrl, validServer: validServer, server: server, serverHost: serverHost, validToken: validToken, isYoutube: isYoutube, action: action,
+    validKey: validKey, mask: mask, headers: headers, body: body, pollUrl: pollUrl, pollDelay: pollDelay, noAnswer: noAnswer, validServer: validServer, server: server, serverHost: serverHost, validToken: validToken, isYoutube: isYoutube, action: action,
     parse: parse, dropped: dropped, validVoice: validVoice, ttsBody: ttsBody, voices: voices, xaiOn: xaiOn, xaiAudio: xaiAudio, xaiVoices: xaiVoices, XAI_TIMEOUT_MS: XAI_TIMEOUT_MS, find: find, youtubeSearchUrl: youtubeSearchUrl, load: load, save: save, enabled: enabled, ask: ask };
   root.OmarchyGrokDirect = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

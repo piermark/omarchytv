@@ -230,7 +230,12 @@ public class WallpaperView extends View {
      * for "RIFF"); unwrap it so the bounds probe, the region decode and the full decode all see the WebP.
      */
     private byte[] assetBytes(String asset) {
-        try (java.io.InputStream in = getContext().getAssets().open(asset)) {
+        return assetBytes(getContext(), asset);
+    }
+
+    /** A bundled wallpaper's bytes, base64-unwrapped (some themes ship their WebP as base64 text); null if missing. */
+    static byte[] assetBytes(android.content.Context c, String asset) {
+        try (java.io.InputStream in = c.getAssets().open(asset)) {
             java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
             byte[] buf = new byte[16384];
             int n;
@@ -262,6 +267,20 @@ public class WallpaperView extends View {
     }
 
     /** Optional MP4 video intro matching the current theme background (e.g. cumulus, last-horizon), or null. */
+    /** v2.21 which intro a TV plays: "full", "light" (a weak TV with a light copy) or "skip" (weak, none). */
+    static String introPlan(boolean weakTv, boolean hasLightCopy) {
+        if (!weakTv) return "full";
+        return hasLightCopy ? "light" : "skip";
+    }
+
+    static boolean assetExists(Context c, String path) {
+        try (java.io.InputStream in = c.getAssets().open(path)) {
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     static String introAssetFor(Context c, String which, int idx) {
         String img = assetFor(c, which, idx);
         if (img == null || !img.endsWith(".webp")) return null;

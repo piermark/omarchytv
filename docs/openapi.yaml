@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: OmarchyTV app API
+  version: 2.21.0
+  description: |
+    What dashboards, agent pages and AI agents use on an OmarchyTV (Android TV), on port 47800, LAN or tailnet only.
+    Authentication: an app token (`Authorization: Bearer otva_…`, made with `omarchy-link token add`), with one scope:
+    read < notify < control (each operation's `x-scope`). `GET /v1/theme`, `/v1/theme/wallpaper` and `/v1/sdk/omarchytv.js` need no token.
+    A paired PC uses the same routes with its OTV1-signed requests (PROTOCOL.md). Guide: docs/INTEGRATIONS.md.
+  license:
+    name: MIT
+servers:
+  - url: http://{tv}:47800
+    variables:
+      tv:
+        default: 192.168.1.50
+security:
+  - appToken: []
+components:
+  securitySchemes:
+    appToken:
+      type: http
+      scheme: bearer
+      bearerFormat: otva_ token
+  responses:
+    Error:
+      description: An error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: scope }
+        message: { type: string }
+    Theme:
+      type: object
+      properties:
+        schema: { type: string, example: omarchytv-theme/1 }
+        name: { type: string, example: tokyo-night }
+        mode: { type: string, enum: [dark, light] }
+        source: { type: string, enum: [omarchy-pc, tv] }
+        background: { type: string, example: "#1a1b26" }
+        foreground: { type: string, example: "#a9b1d6" }
+        accent: { type: string, example: "#7aa2f7" }
+        accent2: { type: string, example: "#bb9af7" }
+        colors:
+          type: object
+          additionalProperties: { type: string }
+        wallpaper:
+          type: object
+          nullable: true
+          properties:
+            url: { type: string, example: /v1/theme/wallpaper }
+            type: { type: string, example: image/webp }
+            sha256: { type: string }
+            bytes: { type: integer }
+    State:
+      type: object
+      properties:
+        screen: { type: string, enum: [home, app, screensaver, off, unknown] }
+        app:
+          type: object
+          nullable: true
+          properties:
+            package: { type: string }
+            label: { type: string }
+        theme: { type: string, nullable: true }
+        nowPlaying:
+          type: object
+          nullable: true
+          properties:
+            title: { type: string }
+            artist: { type: string }
+            source: { type: string }
+        launcherVersion: { type: string }
+        time: { type: integer }
+    Ask:
+      type: object
+      properties:
+        id: { type: string, example: 0123456789abcdef }
+        state: { type: string, enum: [pending, answered, expired] }
+        answer: { type: string, nullable: true }
+        question: { type: string }
+        choices: { type: array, items: { type: string } }
+        expires: { type: integer }
+    Page:
+      type: object
+      properties:
+        id: { type: string, example: dubai-flats }
+        name: { type: string }
+        url: { type: string, example: "http://192.168.1.20:8080/" }
+        icon: { type: string }
+        badge: { type: integer }
+        by: { type: string }
+        updated: { type: integer }
+paths:
+  /v1/theme:
+    get:
+      summary: The current theme (no token)
+      security: []
+      parameters:
+        - { in: header, name: If-None-Match, schema: { type: string } }
+      responses:
+        "200": { description: The theme, content: { application/json: { schema: { $ref: "#/components/schemas/Theme" } } } }
+        "304": { description: Unchanged since the ETag }
+        "403": { $ref: "#/components/responses/Error" }
+  /v1/theme/wallpaper:
+    get:
+      summary: The current wallpaper image (no token)
+      security: []
+      responses:
+        "200": { description: The image, content: { image/webp: {}, image/jpeg: {}, image/png: {} } }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/sdk/omarchytv.js:
+    get:
+      summary: The JavaScript SDK (no token)
+      security: []
+      responses:
+        "200": { description: JavaScript, content: { text/javascript: {} } }
+  /v1/state:
+    get:
+      summary: What is on screen (read)
+      x-scope: read
+      parameters:
+        - { in: query, name: token, schema: { type: string }, description: "The app token, for clients that cannot send headers" }
+      responses:
+        "200": { description: The state, content: { application/json: { schema: { $ref: "#/components/schemas/State" } } } }
+        "401": { $ref: "#/components/responses/Error" }
+  /v1/stream:
+    get:
+      summary: Server-Sent Events (read) — state, theme, notify, ask_answer
+      x-scope: read
+      description: Ends when its token is revoked (from the PC, or every token at once from the TV).
+      parameters:
+        - { in: query, name: token, schema: { type: string }, description: "The app token, for EventSource (no headers)" }
+      responses:
+        "200": { description: An event stream, content: { text/event-stream: {} } }
+        "503": { $ref: "#/components/responses/Error" }
+  /v1/notify:
+    post:
+      summary: One line on the TV (notify)
+      x-scope: notify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text: { type: string, maxLength: 200 }
+                title: { type: string, maxLength: 60 }
+                level: { type: string, enum: [info, warn, alert], default: info }
+                speak: { type: boolean, default: false, description: Also read it aloud on the TV }
+      responses:
+        "200":
+          description: Shown, or held until Home (level info while an app is on screen)
+          content: { application/json: { schema: { type: object, properties: { shown: { type: boolean }, deferred: { type: boolean } } } } }
+        "403": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /v1/ask:
+    post:
+      summary: Ask the person at the TV (notify)
+      x-scope: notify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question: { type: string, maxLength: 200 }
+                choices: { type: array, maxItems: 4, items: { type: string, maxLength: 24 } }
+                timeout: { type: integer, minimum: 10, maximum: 300, default: 120 }
+      responses:
+        "200": { description: Pending, content: { application/json: { schema: { $ref: "#/components/schemas/Ask" } } } }
+        "403": { $ref: "#/components/responses/Error" }
+        "429": { $ref: "#/components/responses/Error" }
+  /v1/ask/{id}:
+    get:
+      summary: The question's state; waits up to `wait` seconds for the answer (notify)
+      x-scope: notify
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+        - { in: query, name: wait, schema: { type: integer, minimum: 0, maximum: 25 } }
+      responses:
+        "200": { description: The question, content: { application/json: { schema: { $ref: "#/components/schemas/Ask" } } } }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/page:
+    post:
+      summary: Open LAN / tailnet pages full screen, tiled when several (control)
+      x-scope: control
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string }
+                urls: { type: array, maxItems: 4, items: { type: string } }
+      responses:
+        "200": { description: Opened }
+        "400": { $ref: "#/components/responses/Error" }
+    delete:
+      summary: Close the pages (control)
+      x-scope: control
+      responses:
+        "200": { description: Closed }
+  /v1/pages:
+    get:
+      summary: Agent pages shown as Home tiles (read)
+      x-scope: read
+      responses:
+        "200":
+          description: The pages
+          content: { application/json: { schema: { type: object, properties: { pages: { type: array, items: { $ref: "#/components/schemas/Page" } } } } } }
+  /v1/pages/{id}:
+    put:
+      summary: Publish or update a Home tile (control)
+      x-scope: control
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string, pattern: "^[a-z0-9][a-z0-9-]{0,39}$" } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, url]
+              properties:
+                name: { type: string, maxLength: 32 }
+                url: { type: string }
+                icon: { type: string, maxLength: 2 }
+                badge: { type: integer, minimum: 0, maximum: 999 }
+      responses:
+        "200": { description: Published }
+        "400": { $ref: "#/components/responses/Error" }
+        "409": { $ref: "#/components/responses/Error" }
+    delete:
+      summary: Remove the tile (control)
+      x-scope: control
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Removed }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/pages/{id}/badge:
+    post:
+      summary: Set the tile's badge (notify)
+      x-scope: notify
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { badge: { type: integer } } } } }
+      responses:
+        "200": { description: Set }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/pages/{id}/show:
+    post:
+      summary: Open the tile's page (control)
+      x-scope: control
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string } }
+      responses:
+        "200": { description: Opened }
+  /v1/radio:
+    get:
+      summary: What Radiomarchy plays (read)
+      x-scope: read
+      responses:
+        "200": { description: Now playing }
+    post:
+      summary: Control Radiomarchy (control)
+      x-scope: control
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, properties: { action: { type: string, enum: [play, pause, next, previous, stop] } } }
+      responses:
+        "200": { description: "{playing, title, artist, sleepMinutes}" }
+  /v1/open:
+    post:
+      summary: Open a part of OmarchyTV (control)
+      x-scope: control
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, properties: { target: { type: string, enum: [home, radiomarchy, cinemarchy, arcade, office] } } }
+      responses:
+        "200": { description: Opened }
+  /v1/diagnostics:
+    get:
+      summary: Version, device, network, Link, recent log lines; no secrets (control)
+      x-scope: control
+      responses:
+        "200": { description: Diagnostics }
+  /v1/mcp:
+    post:
+      summary: MCP (JSON-RPC 2.0); the tools of the token's scope (read)
+      x-scope: read
+      description: |
+        tools/list shows only the tools the token's scope allows; a tools/call above it is refused.
+        Tool scopes: read — tv_status, tv_get_state, tv_get_theme, tv_list_themes, tv_list_apps, tv_ai_status,
+        tv_cinemarchy, tv_radio_now, tv_list_pages; notify — tv_notify, tv_ask_user, tv_ask_result, tv_page_badge;
+        control — everything else.
+      responses:
+        "200": { description: A JSON-RPC response }
+        "202": { description: "A notification (no id, e.g. notifications/initialized): accepted, no body" }
+        "401": { $ref: "#/components/responses/Error" }
+  /mcp:
+    post:
+      summary: The same as /v1/mcp, for MCP clients that expect /mcp (read)
+      x-scope: read
+      responses:
+        "200": { description: A JSON-RPC response }
+        "202": { description: "A notification, accepted" }

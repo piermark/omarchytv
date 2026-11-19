@@ -134,9 +134,12 @@ test("full-screen Radiomarchy uses the same 1080p/720p fractal budget as Home", 
   assert.match(src, /1000 \/ uiFps\(\)/);
 });
 
-test("Home fractals wallpaper can start or keep the music audible", () => {
+test("Home fractals wallpaper keeps playing music audible but never starts it (v2.21)", () => {
   const src = fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8");
   assert.match(src, /E\.ensureWallpaperMusic/);
+  const body = src.slice(src.indexOf("E.ensureWallpaperMusic ="), src.indexOf("E.seek ="));
+  assert.ok(/if \(cur\(\) \|\| !P\.homeMusic\) return;/.test(body), "Home starts music only with Music on Home on");
+  assert.match(src, /homeMusic: false/);
   const app = fs.readFileSync(path.join(__dirname, "../app/app.js"), "utf8");
   assert.match(app, /ensureWallpaperMusic/);
 });
@@ -181,4 +184,91 @@ test("weak TVs throttle the equalizer and scroller to about 12 fps", () => {
   assert.match(src, /function uiFps\(\) \{ return \(FX0 && FX0\.preferPlainHere && FX0\.preferPlainHere\(ramGb\)\) \? 12 : 24; \}/);
   assert.match(src, /1000 \/ uiFps\(\)/);
   assert.ok(src.indexOf("}, 42)") < 0);
+});
+
+function fakeAudioWorld(stateAfterResume) {
+  const els = [];
+  function el() {
+    const l = {};
+    const a = { paused: true, ended: false, currentTime: 0, readyState: 4, src: "", volume: 1, muted: false,
+      addEventListener: (n, f) => { (l[n] = l[n] || []).push(f); }, removeEventListener() {},
+      removeAttribute(k) { if (k === "src") a.src = ""; }, load() {},
+      play() { a.paused = false; return Promise.resolve(); }, pause() { a.paused = true; } };
+    els.push(a);
+    return a;
+  }
+  const docL = {};
+  const doc = { hidden: false, createElement: el, addEventListener: (n, f) => { (docL[n] = docL[n] || []).push(f); } };
+  const ctxs = [];
+  function AC() {
+    this.state = "suspended"; this.sampleRate = 48000; ctxs.push(this);
+    this.createMediaElementSource = () => ({ connect() {} });
+    this.createAnalyser = () => ({ frequencyBinCount: 1024, connect() {}, getByteFrequencyData() {} });
+    this.resume = () => { this.state = stateAfterResume; return Promise.resolve(); };
+    this.close = () => { this.state = "closed"; };
+    this.destination = {};
+  }
+  return { els, doc, docL, ctxs, AC };
+}
+
+function engineIn(world) {
+  const ctx = { AudioContext: world.AC, setTimeout, clearTimeout };
+  ctx.window = ctx;
+  require("vm").runInNewContext(fs.readFileSync(path.join(__dirname, "../app/radio.js"), "utf8"), ctx);
+  return ctx.OmarchyRadio.engine({ document: world.doc, store: null });
+}
+
+const SONG = [{ kind: "song", title: "a", artist: "b", url: "https://radio.omarchy.org/a.mp3", explicit: false }];
+
+test("LG: a context that resumes keeps the analyser (fractals follow the music)", async () => {
+  const w = fakeAudioWorld("running");
+  const E = engineIn(w);
+  E.play(SONG, 0);
+  await new Promise((r) => setTimeout(r, 1700));
+  assert.equal(w.ctxs[0].state, "running");
+  assert.equal(E.graphBypassed(), false);
+});
+
+test("LG: a context webOS keeps suspended moves the song to a plain <audio> at the same point", async () => {
+  const w = fakeAudioWorld("suspended");
+  const E = engineIn(w);
+  E.play(SONG, 0);
+  w.els[0].currentTime = 42;
+  await new Promise((r) => setTimeout(r, 1700));
+  assert.equal(E.graphBypassed(), true);
+  const fresh = w.els[w.els.length - 1];
+  assert.notEqual(fresh, w.els[0]);
+  assert.equal(fresh.src, SONG[0].url);
+  assert.equal(fresh.paused, false);
+  assert.equal(w.els[0].paused, true);
+  assert.equal(E.playing(), true);
+  assert.equal(w.ctxs[0].state, "closed");
+  E.toggle();
+  assert.equal(fresh.paused, true, "pause now acts on the plain element");
+});
+
+test("LG: a key press resumes a suspended context", () => {
+  const w = fakeAudioWorld("running");
+  const E = engineIn(w);
+  E.play(SONG, 0);
+  w.ctxs[0].state = "suspended";   // webOS suspended it in the background
+  w.docL.keydown.forEach((f) => f({}));
+  assert.equal(w.ctxs[0].state, "running");
+  E.stop();
+});
+
+test("v2.21 Music on Home: off = silence, on = the playlist starts once; sleep timer stops it", async () => {
+  const w = fakeAudioWorld("running");
+  const E = engineIn(w);
+  E.songs = SONG.slice();
+  E.ensureWallpaperMusic();
+  assert.strictEqual(E.current(), null, "silent by default");
+  E.setHomeMusic(true);
+  E.ensureWallpaperMusic();
+  assert.ok(E.current(), "plays with the switch on");
+  assert.strictEqual(E.sleepLeft(), 0);
+  assert.strictEqual(E.cycleSleep(), 15);
+  assert.strictEqual(E.sleepLeft(), 15);
+  E.setSleep(0);
+  E.stop();
 });

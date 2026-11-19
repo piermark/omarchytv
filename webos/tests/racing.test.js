@@ -177,7 +177,7 @@ test("2.15.1 LG and Samsung: racing toggle, pulseUrl, scene row unchanged", () =
   assert.ok(/OmarchyRacing\.pulseRows/.test(APP) && /c\.racing = /.test(APP), "pulseCfg passes the rows");
   assert.ok(/function pulseCfg\(\)/.test(APP) && /window\.OmarchySaver\.pulse/.test(APP) && /pulseTV: "cfg"/.test(APP),
     "the screensaver host and a postMessage carry racing, not only the URL hash");
-  assert.ok(/label: "racing"/.test(APP) && /racing countdown in the bar/.test(APP), "Settings › Home widgets");
+  assert.ok(/label: tr\("w_racing"\)/.test(APP) && /racing countdown in the bar/.test(APP), "Settings › Home widgets");
   assert.ok(/racing panel on Pulse/.test(APP), "Settings › Screensaver");
   assert.ok(/id="race-box"/.test(HTML) && /id="bar-race"/.test(HTML) && /src="racing.js"/.test(HTML), "the Home panel and the bar");
   const line = APP.split("\n").find((l) => /var sc = \["sphere"/.test(l));

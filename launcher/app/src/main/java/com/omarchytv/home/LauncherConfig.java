@@ -119,6 +119,42 @@ final class LauncherConfig {
         return null;
     }
 
+    /** v2.21 agent pages (omarchytv.json "agentPages"): LAN / tailnet pages an agent published as Home tiles. */
+    final List<AgentPage> agentPages;
+
+    static final class AgentPage {
+        final String id, name, url, icon, by;
+        final int badge;
+
+        AgentPage(String id, String name, String url, String icon, int badge, String by) {
+            this.id = id;
+            this.name = name;
+            this.url = url;
+            this.icon = icon;
+            this.badge = badge;
+            this.by = by;
+        }
+
+        /** The tile's label: the name, and the badge when there is one ("Dubai flats · 3"). */
+        String label() {
+            return badge > 0 ? name + " · " + (badge > 99 ? "99+" : String.valueOf(badge)) : name;
+        }
+    }
+
+    static List<AgentPage> parsePages(JSONObject j) {
+        List<AgentPage> out = new ArrayList<>();
+        JSONArray a = j != null ? j.optJSONArray("agentPages") : null;
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        for (int i = 0; a != null && i < a.length() && out.size() < 16; i++) {
+            JSONObject o = a.optJSONObject(i);
+            if (o == null) continue;
+            String id = o.optString("id"), name = o.optString("name").trim(), url = o.optString("url").trim();
+            if (!id.matches("[a-z0-9][a-z0-9-]{0,39}") || name.isEmpty() || !url.startsWith("http://") || !ids.add(id)) continue;
+            out.add(new AgentPage(id, name, url, o.optString("icon", ""), Math.max(0, o.optInt("badge", 0)), o.optString("by", "")));
+        }
+        return out;
+    }
+
     static final class WebApp {
         final String id, name, url, icon, ua;
 
@@ -264,6 +300,15 @@ final class LauncherConfig {
 
     /** Omarchy Link server on/off (omarchytv.json "link": {"enabled": false}); default on. */
     final boolean linkEnabled;
+    /** v2.21: GET /v1/theme answers apps on the network ("link": {"shareTheme": false} turns it off); default on. */
+    final boolean shareTheme;
+    /** v2.21: Tailscale peers (100.64.0.0/10, fd7a:115c:a1e0::/48) may use Omarchy Link, casts and panes; default off. */
+    final boolean tailscale;
+    /** v2.21: tones with warn / alert notifications and spoken ones ("link": {"notifySound": false} silences both). */
+    final boolean notifySound;
+    /** v2.21: the keep-alive service after boot ("link": {"keepAlive": "auto" | true | false}): "auto" keeps it
+     *  only on TVs with more than 2.5 GB of RAM, so a 1-2 GB TV keeps no resident process. */
+    final String keepAlive;
     /** AI pane when no PC is connected and the data is old: "stale" (dim, "pc offline · 3h ago") or "hide". */
     final String aiOffline;
     /** Unix seconds of the last PUT /v1/ai (omarchytv.json "aiAt"), 0 if never. */
@@ -650,6 +695,13 @@ final class LauncherConfig {
         paneOverflow = wg != null && "skip".equals(wg.optString("overflow")) ? "skip" : "row2";
         hiddenPcPanes = strings(wg, "hidden", Collections.<String>emptyList());
         linkEnabled = lkc == null || lkc.optBoolean("enabled", true);
+        shareTheme = lkc == null || lkc.optBoolean("shareTheme", true);
+        tailscale = lkc != null && lkc.optBoolean("tailscale", false);
+        notifySound = lkc == null || lkc.optBoolean("notifySound", true);
+        Object ka = lkc == null ? null : lkc.opt("keepAlive");
+        keepAlive = Boolean.TRUE.equals(ka) || "on".equals(ka) ? "on"
+                : Boolean.FALSE.equals(ka) || "off".equals(ka) ? "off" : "auto";
+        com.omarchytv.home.link.Tailnet.allowed = tailscale;
         JSONObject ap = j != null ? j.optJSONObject("aiPane") : null;
         aiOffline = ap != null && "hide".equals(ap.optString("offline")) ? "hide" : "stale";
         aiAt = j != null ? j.optLong("aiAt", 0) : 0;
@@ -696,6 +748,7 @@ final class LauncherConfig {
             }
         }
         webapps = Collections.unmodifiableList(web);
+        agentPages = Collections.unmodifiableList(parsePages(j));
         List<Provider> provs = new ArrayList<>();
         JSONObject lk = j != null ? j.optJSONObject("link") : null;
         JSONArray pa = lk != null ? lk.optJSONArray("aiProviders") : null;
@@ -958,6 +1011,33 @@ final class LauncherConfig {
      * (random locked off, or a wallpaper other than the old factory default "omarchy" / empty) is left alone.
      * New and implicit installs get the fractals and random_wallpaper is locked off so rotation cannot replace them.
      */
+    /**
+     * v2.21: "Last Horizon (Eyes Wide)" by Erik Johansson is the default Home again, the eyes opening and closing in
+     * a loop, once per config. Only where nobody chose: a new install, an untouched "omarchy" with random on, or the
+     * fractals the 2.20 migration set (not picked by hand: lockWallpaper marks "wallpaperPicked"). A picked
+     * wallpaper, a locked random, OmaFire or a still are left alone; a theme picked by hand (random_theme false) is
+     * kept and gets its own wallpaper. Fractals stay in Settings › Wallpaper and in the screensaver.
+     */
+    static boolean eyesWallpaperDefault(JSONObject j) throws org.json.JSONException {
+        if (j == null || j.optBoolean("eyesWp221", false)) return false;
+        j.put("eyesWp221", true);
+        boolean migrated220 = j.optBoolean("fractalWp220", false);
+        j.put("fractalWp220", true);   // the 2.20 fractals migration never runs after this one
+        if (j.optBoolean("wallpaperPicked", false)) return true;
+        boolean randomOff = (j.has("random_wallpaper") && !j.optBoolean("random_wallpaper", true))
+                || (j.has("randomWallpaper") && !j.optBoolean("randomWallpaper", true));
+        String wp = j.has("wallpaper") ? j.optString("wallpaper", "").trim() : "";
+        boolean fresh = wp.isEmpty() || ("omarchy".equals(wp) && !randomOff);
+        boolean defaultFractals = FractalLayer.ID.equals(wp) && migrated220;
+        if (!fresh && !defaultFractals) return true;
+        j.put("wallpaper", "omarchy");
+        j.put("wallpaper_bg", 0);
+        j.put("random_wallpaper", false);
+        if (!j.has("random_theme") || j.optBoolean("random_theme", true)) lockTheme(j, "last-horizon");
+        j.put("wallpaperLoop", true);   // the eyes open and close in a loop, not once (nobody chose this either)
+        return true;
+    }
+
     static boolean fractalWallpaperDefault(JSONObject j) throws org.json.JSONException {
         if (j == null || j.optBoolean("fractalWp220", false)) return false;
         j.put("fractalWp220", true);
@@ -1138,6 +1218,7 @@ final class LauncherConfig {
     }
 
     static void lockWallpaper(JSONObject j, String wallpaper, int bgIdx) throws org.json.JSONException {
+        j.put("wallpaperPicked", true);   // v2.21: a choice by hand; default migrations never touch it
         j.put("wallpaper", wallpaper);
         j.put("wallpaper_bg", bgIdx);
         j.put("random_wallpaper", false);

@@ -1,5 +1,189 @@
 # Changelog
 
+## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
+
+Built on the published 2.20.0. The theme of this version: **OmarchyTV as the screen of your agents and dashboards**,
+reachable from home, from your tailnet and, carefully, from the cloud.
+
+### The screen of your AI agents
+
+- **Notifications**: `omarchy-link notify "Build green" --from "Claude Code"` puts one line on the TV over
+  whatever is playing. `--title`, `--level info|warn|alert`: *info* waits while a film or an app is on screen and
+  shows when you are back on Home (do not disturb), *warn* and *alert* show at once. Text from stdin, `--quiet` for
+  hooks. Shown only with agent alerts on; 3 per 10 s.
+- **Questions you answer with the remote**: `omarchy-link ask "Merge the PR?" --choice Merge --choice Wait` prints
+  your answer; MCP `tv_ask_user` waits for it. The question opens over what is playing, in the theme's colours
+  (or waits for Home), with up to four answers. BACK answers later; Walker lists the questions still waiting.
+- **Agent pages as Home tiles**: an agent publishes its page (`tv_publish_page`, `omarchy-link pages add`) and it
+  becomes a tile in the app row, with a **badge** it can update (`tv_page_badge`: new replies, open tasks).
+- **Pages full screen, or tiled like Hyprland**: `omarchy-link page URL [URL …]` or `tv_show_page` opens up to four
+  LAN / tailnet pages side by side, with gaps, the accent border on the active window and the dwindle layout for
+  three; 1-4 or the colour keys switch windows, BACK closes. Walker opens all your agent pages tiled in one go.
+- **Live state and events**: `GET /v1/state` (home, app, screensaver or off; the app; the theme; the music) and
+  `GET /v1/stream`, Server-Sent Events for pages (`state`, `theme`, `notify`, `ask_answer`).
+- **The TV speaks and chimes**: `--speak` (and `"speak": true`, MCP `speak`) reads a notification aloud with the
+  TV's voice; *warn* plays one short tone and *alert* two (`"link": {"notifySound": false}` silences the tones
+  and the voice). LG and Samsung too, where the browser can.
+- **`omarchy-link watch -- make release`**: runs any command and tells the TV how it went: ✓ or ✗ with the exit
+  code, how long it took and the last line (an alert when it fails; `--speak` to hear it).
+- **Hooks for every agent**: Claude Code (Stop, Notification), Codex (`notify = ["omarchy-link", "notify", …]`, its
+  JSON event is understood), any script or cron job with an app token.
+- **Hermes Agent, fully supported**: `docs/examples/hermes.md` has the `mcp_servers` entries for Hermes on the PC
+  (`omarchy-link mcp`), on an always-on box straight to the TV (`/v1/mcp` with an app token: the token's scope is the
+  set of tools), or over Tailscale; and an `omarchytv` skill that teaches it when to notify, when to ask before acting,
+  and how to publish its pages as Home tiles in your theme. The dashboard a Hermes user built by hand is now three
+  calls.
+- **Ready-made examples** in `docs/examples/`: a GitHub Actions job that tells the TV when CI fails (over Tailscale),
+  Home Assistant (doorbell → Radiomarchy paused, alert spoken aloud, camera full screen; washing machine done), agent
+  hooks, and a dashboard page for the TV that follows the theme and the remote.
+- **Radiomarchy and OmarchyTV for agents**: `tv_radio` (play, pause, next, previous, stop), `tv_radio_now`, `tv_open`
+  (home, radiomarchy, cinemarchy, arcade, office); `omarchy-link radio …`, `omarchy-link open …`.
+- **MCP everywhere**: new tools on the TV and on the PC, each with a scope; `omarchy-link mcp` gives desktop agents
+  the TV's own MCP over the paired link (`claude mcp add omarchytv -- omarchy-link mcp`, no token to copy).
+- **Diagnostics**: Settings › **System info** on the TV, `omarchy-link tv logs` / `tv diagnostics` and MCP
+  `tv_diagnostics`: version, device, GPU, RAM, LAN and tailnet address, each PC with how it connects, the last 100
+  Link log lines. No secrets. Calls from apps and agents are in the log too.
+
+### One theme for every app, and a JavaScript SDK
+
+- **The TV is the theme server for your other apps** (asked for by a Hermes user who ran a second server just for
+  this): `GET http://<tv>:47800/v1/theme` returns `background`, `foreground`, `accent`, `accent2`, the full
+  `colors.toml` palette and the wallpaper (`/v1/theme/wallpaper`). No token, read-only, LAN / tailnet only,
+  `ETag`/`304`, CORS. The LG/Samsung bridge answers the same. Off switch in Settings › Connect Omarchy Linux.
+- **`omarchytv.js`**, served by the TV at `/v1/sdk/omarchytv.js`: `followTheme()` (CSS variables `--otv-*`, live),
+  `state()`, `on()`, `notify()`, `ask()`, `badge()`, and `OmarchyTV.remote()`: arrows move the focus between the
+  page's buttons and links, OK clicks, colour and media keys by name, the focus outlined in the theme's accent.
+- **App tokens**: a dashboard or an agent gets its own token with one scope, `read`, `notify` or `control`. Made on
+  the PC (`omarchy-link token add "Kitchen" --scope read`) or on the TV (Settings › Connect Omarchy Linux › New app token,
+  shown once as text and QR). Only a hash is kept; the last use is remembered; revoke one from the PC or all from
+  the TV (a revoked token's live stream ends at once).
+
+### LG and Samsung too
+
+- The PC bridge (`omarchy-tv webos-serve`) keeps an inbox for the TV: notifications (mako style, in the theme's
+  colours), a page full screen, questions answered with the remote. `omarchy-tv notify | page | ask` and
+  `omarchy-tv mcp --bridge` use the same calls as an Android TV, so agents do not care which TV you have.
+- Agents and the TV hold different keys on the bridge: agents post and wait with their own key
+  (`~/.config/omarchy-tv/bridge-agent-token`), and only the TV, with its ask code, reads the inbox and answers. An
+  agent can never approve its own question. The inbox routes accept this PC, the LAN, and the tailnet only with the
+  switch on. Pages open in a sandboxed frame.
+
+### Tailscale (optional, off by default)
+
+- **Use OmarchyTV from anywhere over your tailnet**: pairing, theme, remote, Radiomarchy, notifications,
+  questions, pages, MCP, casts and Remote panes. TV: install the official Tailscale app (Settings › Connect Omarchy Linux ›
+  **Tailscale app** opens it or its Play Store page, or a QR code for the phone), then **Allow Tailscale (tailnet)**; the row
+  shows the TV's tailnet address. PC: `omarchy-link tailscale on`; `discover` and `pair living-tv` find tailnet TVs
+  and MagicDNS names through tailscaled; `tailscale status` shows each TV and whether the path is direct or relayed;
+  `tailscale acl` prints a tagged policy. Casts warn when Tailscale goes through a relay.
+- Only Tailscale's own addresses (`100.64.0.0/10`, `fd7a:115c:a1e0::/48`) are added, over IPv4 and IPv6 (the TV
+  listens dual stack when the switch is on); `omarchy-link pair` takes IPv6 addresses and MagicDNS names, also the
+  ones that look like hex (`cafe`, `beef`). No Funnel, no Serve, nothing opened to the internet; pairing, signing and encryption are
+  the same.
+- **Fixed: a VPN app on the TV broke Omarchy Link**: the TV listened on the VPN address and refused the PC on the
+  same Wi-Fi. It now always finds the Wi-Fi or Ethernet network under the VPN.
+- LG / Samsung, and Android TVs without the app: a Raspberry Pi subnet router (docs/TAILSCALE.md,
+  docs/RASPBERRY-PI.md).
+
+### Cloudflare Tunnel, for agents in the cloud
+
+- `omarchy-tv mcp --cloudflare NAME --access-team TEAM --access-aud AUD`: the PC's MCP through a named Cloudflare
+  tunnel on your domain, behind **Cloudflare Access**. The server verifies the Access JWT (RS256 signature against
+  your team's keys, audience, issuer, expiry) before the Bearer token. Tools: read + notify unless
+  `--scope control`. The TV's own port is never exposed.
+- `omarchy-tv cloudflare setup NAME HOSTNAME` makes the tunnel and its DNS route (asks first);
+  `omarchy-tv cloudflare service …` writes a systemd user unit. `omarchy-tv mcp --tunnel` (a temporary
+  trycloudflare URL) also defaults to read + notify now.
+
+### Home and Radiomarchy
+
+- **Last Horizon "Eyes Wide" is the default Home again**: the eyes by Erik Johansson (@erikrjohansson) open and close
+  in a loop, on Android TV, LG and Samsung. Only for new installs and for anyone still on the fractals that 2.20 set
+  by default. A wallpaper or theme you picked yourself stays. The fractals remain in Settings › Wallpaper and in the
+  screensaver. Weak TVs (2.5 GB or less, or a GPU like the Sony's) play a 540p, 15 fps copy of the loop (134 KB).
+  A TV that can't keep at least half its frames goes back to the still image, and remembers it. Turning
+  *Always-animated wallpaper* off and on again gives it another try. No music on Home.
+- **Home is quiet**: the fractals wallpaper no longer starts music by itself. Radiomarchy › Settings › **Music on
+  Home** brings it back for those who liked it. A song you started keeps playing and the fractals follow it.
+- **Sleep timer** in Radiomarchy (15, 30, 60, 90 minutes), and the **song's page as a QR code** for your phone.
+- **Fixed on LG: the music played once, then never again.** The song went only through the WebAudio graph that
+  makes the fractals dance, and webOS can leave that graph suspended. Every key press and every return to the app
+  now wakes it; if webOS keeps it asleep, the song moves to a plain player at the same second.
+
+### Lighter fractals
+
+- **Each fractal is now its own small shader**, built the first time it is needed (two during a cross-fade),
+  instead of one big shader with all five (four times over with supersampling). Same picture, less work per pixel.
+- **Auto quality stops at "high"**: "ultra" (2x2 supersampling, 500 iterations) only when you pick it.
+- Same on Android TV, LG and Samsung.
+- **Weak TVs stay light** (2 GB class or a GPU like the Sony's): the Radiomarchy demo after a minute without keys and
+  the Radiomarchy screensaver show the still slides instead of live fractals, unless *Frattali animati* is *yes*.
+  The demo after a minute is off by default there. Every quality choice uses the same 2.5 GB line.
+- **No audio analysis nobody sees**: the music's bands are computed only while the equaliser, a live fractal or the
+  screensaver is on screen. Radiomarchy playing behind the Home costs only the decoding.
+- **Link after boot**: Settings › Connect Omarchy Linux › *Keep Link reachable after boot* (`"link": {"keepAlive": …}`).
+  *auto* keeps the resident service of #144 only on TVs with more than 2.5 GB of RAM. On a 1-2 GB TV, Link answers
+  while OmarchyTV is open. *on* forces it, *off* turns it off.
+
+### Grok Bot diretto and GrokBot Office: replies that ntfy.sh does not block (#70)
+
+- The reply topic is polled every 2 s only at first, then slower up to 10 s: about 14 requests per question instead
+  of 45. On HTTP 429 the TV waits what the server asks (`Retry-After`, at most 30 s) and says that ntfy.sh is rate
+  limiting it, with how to use your own reply server. Android TV, LG and Samsung.
+
+### Also
+
+- **Backup and restore** of the TV's settings: `omarchy-link tv backup [FILE]`, `tv restore FILE` (the TV keeps its
+  own pairings and panes).
+- Guides: **docs/INTEGRATIONS.md**, **docs/TAILSCALE.md**, **docs/CLOUDFLARE.md**, **docs/RASPBERRY-PI.md**,
+  **docs/openapi.yaml**; PROTOCOL.md "Theme for apps" and "App API".
+- **LG and Samsung**: *Arrange panels* now really reorders the Home widgets (OK moves one up, the order is kept;
+  #5). The last English-only titles (themes, wallpaper dimming, Walker, lights, Pulse panels, Grok Bot & AI, web
+  apps, pairing) follow the TV's language in all 23 languages.
+- **Approve on the TV**: `omarchy-link agents approvals on` sends Claude Code's permission prompts to the TV
+  (Allow / Deny / On the PC). No answer means Claude Code asks as usual: nothing is allowed by itself.
+- **Omarchy hook pack**: `omarchy-link hook add all` adds post-boot ("PC is up"), post-update ("Omarchy updated"),
+  battery-low (spoken, with the level) and font-set to the theme-set hook. All quiet and in the background.
+- **Spoken reminders**: `omarchy-link remind 20m "Pizza"` (or `18:45`), a systemd user timer; MCP `tv_remind`.
+- **Rooms on the Home**: `omarchy-link room post hermes "Backup done"` and MCP `tv_room_post`. A pane with a
+  room's last 5 lines, for Hermes cron reports and other agents.
+- **Couch console**: `omarchy-link console` shows a tmux pane or a log on the TV, read-only, until Ctrl+C (or
+  SIGTERM). Only the paired TV's address may read it.
+- **Fixed: panes pushed by the PC** (`omarchy-link push-widgets`, rooms) now show on the Home in the row under the
+  widgets, after the fetched ones (up to 3). The 2.9 Home only drew fetched panes.
+- **TV anywhere**: `omarchy-link token add NAME --remote` also prints the curl, Claude Code and Hermes setup for a
+  machine elsewhere on your tailnet.
+- **Theme intros on weak TVs**: only the light copy (Eyes Wide) plays; other themes show their still image. No
+  720p video on a 2 GB TV.
+- **Grok Bot: built for Tom Ballard's Agent Desktop v0.3.3** (was v0.2.0). The parts OmarchyTV uses
+  (`grokbot-ask`, the IPC commands, the roster, the avatar shapes, palette and faces) are unchanged, so v0.2.0 and
+  v0.1.0 checkouts still work.
+- **From the PC**: `omarchy-link tv keepalive [auto|on|off]` shows or sets *Keep Link reachable after boot*.
+  `omarchy-link tv home` says what the Home shows: theme, wallpaper, looping or still, the light copy, a stutter
+  fallback. `tv diagnostics` carries both.
+- **docs/INSTALL-TIPS.md**: ADB over the network, Hisense Ethernet ADB (#102), TCL Home and SmartConnect VPN (#75),
+  turning accessibility back on after an update, Link after a reboot on 1-2 GB TVs (#143).
+- **Fixed: Radiomarchy could crash on a slow GPU** with live fractals (screensaver or demo). The safety switch that
+  turns them off ran on the wrong thread. It was in since 2.20.
+- `omarchy-tv wg clean NAME` deletes the pushed WireGuard file from the TV's Download folder once imported (it holds
+  the private key); `wg push` now says so.
+- `notify`, `watch` and `ask` tell "agent alerts are off" apart from "this address is not allowed" (Tailscale switch
+  off). On LG and Samsung a question answered or expired elsewhere leaves the screen, and `tv_status` works over
+  the bridge (Android-only tools say so).
+
+### Pull requests merged
+
+- #155 Radiomarchy declares POST_NOTIFICATIONS and guards the now-playing notification.
+- #152 omarchy-link cast: optional fixed port for the served file, `castPort`.
+- #153 omarchy-link agents: T3 Code as a read-only agent source.
+- #146 omarchy-link: a PC without an Omarchy theme (macOS) leaves the TV's theme alone.
+- #149 Home: the widgets row is 1200 px with racing off too, so the AI panel stays on screen.
+- #156 Home: AI credit rows keep what tells them apart.
+- #144 Omarchy Link stays reachable after boot, an update and sleep.
+- #147 One VoiceInput for every mic, the in-app recognizer first.
+
+Thanks to the contributors of these pull requests.
+
 ## [2.20.0] — 2026-11-14 (`versionCode 29`; webOS 2.20.0, Tizen 2.20.0, PC plugins 2.20.0)
 
 Built on the published 2.15.1: everything fixed there is in here.

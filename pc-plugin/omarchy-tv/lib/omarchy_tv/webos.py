@@ -7,7 +7,7 @@ AI credit balances, and desktop wallpaper over LAN HTTP with CORS enabled:
   GET /v1/themes                   -> JSON {"themes": [...]}
   GET /v1/wallpaper                -> active desktop wallpaper image (webp/png/jpg)
   GET /v1/grokbot                  -> JSON {available, bot, roster, dispatch, version}: @tcballard's Grok Bot
-                                      Desktop (Agent Desktop) v0.2.0 as omarchy-link's bridge sees it (no secrets)
+                                      Desktop (Agent Desktop) v0.3.3 as omarchy-link's bridge sees it (no secrets)
   GET /v1/office                   -> JSON {bots, usage?, providers_usage?, source}: GrokBot Office (2.20), what omarchy-tv office push saved,
                                       else the Agent Desktop roster (names and colours, never usage numbers).
   POST /v1/office/hire             -> same token as /v1/ai/ask; {name, provider: claude|chatgpt, role?, description?}:
@@ -53,6 +53,7 @@ import shutil
 import socket
 import subprocess
 import time
+import hashlib
 import hmac
 import secrets
 import threading
@@ -83,6 +84,26 @@ def bridge_token() -> str:
     t = "".join(secrets.choice("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") for _ in range(8))
     TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
     fd = os.open(str(TOKEN_FILE), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(t + "\n")
+    return t
+
+
+AGENT_TOKEN_FILE = TOKEN_FILE.with_name("bridge-agent-token")
+
+
+def bridge_agent_token() -> str:
+    """v2.21 the agents' key to the inbox (notify, page, ask), not the TV's ask code: an agent cannot answer its own
+    question, only the TV can. 32 characters, file mode 0600, next to the ask code; read by omarchy-tv on this PC."""
+    try:
+        t = AGENT_TOKEN_FILE.read_text(encoding="utf-8").strip()
+        if len(t) >= 24:
+            return t
+    except OSError:
+        pass
+    t = secrets.token_urlsafe(24)
+    AGENT_TOKEN_FILE.parent.mkdir(parents=True, exist_ok=True)
+    fd = os.open(str(AGENT_TOKEN_FILE), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
     with os.fdopen(fd, "w", encoding="utf-8") as f:
         f.write(t + "\n")
     return t
@@ -272,6 +293,83 @@ def current_wallpaper_path() -> Path | None:
     return None
 
 
+THEME_SCHEMA = "omarchytv-theme/1"
+_TN = {"background": "#1a1b26", "foreground": "#a9b1d6", "accent": "#7aa2f7", "accent2": "#bb9af7"}
+_wp_cache: dict = {}
+
+
+def current_theme_dir() -> Path | None:
+    """The live theme folder (colors.toml, light.mode): state dir first, then the older config path."""
+    for root in _current_dirs():
+        d = root / "theme"
+        try:
+            if (d / "colors.toml").is_file():
+                return d
+        except OSError:
+            pass
+    return None
+
+
+def _image_type(data: bytes, name: str = "") -> str:
+    if data[:3] == b"\xff\xd8\xff":
+        return "image/jpeg"
+    if data[:4] == b"\x89PNG":
+        return "image/png"
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    ext = Path(name).suffix.lower()
+    return "image/webp" if ext == ".webp" else ("image/png" if ext == ".png" else "image/jpeg")
+
+
+def theme_wallpaper() -> tuple[bytes, str, str] | None:
+    """(bytes, type, sha256) of the live wallpaper, hashed once per file change."""
+    wp = current_wallpaper_path()
+    if not wp:
+        return None
+    try:
+        st = wp.stat()
+        if st.st_size > 32 * 1024 * 1024:
+            return None
+        key = (str(wp), st.st_mtime_ns, st.st_size)
+        hit = _wp_cache.get("wp")
+        if hit and hit[0] == key:
+            return hit[1]
+        data = wp.read_bytes()
+    except OSError:
+        return None
+    val = (data, _image_type(data, wp.name), hashlib.sha256(data).hexdigest())
+    _wp_cache["wp"] = (key, val)
+    return val
+
+
+def build_theme_payload() -> dict:
+    """GET /v1/theme: the same schema the TV serves (PROTOCOL.md 6.x), read from the live Omarchy theme."""
+    d = current_theme_dir()
+    c: dict = {}
+    if d:
+        try:
+            c = themes.parse_colors((d / "colors.toml").read_text())
+        except OSError:
+            c = {}
+    colors = dict(c)
+    for k in ("background", "foreground"):
+        colors.setdefault(k, _TN[k])
+    accent = c.get("accent") or c.get("color4") or _TN["accent"]
+    wp = theme_wallpaper()
+    return {
+        "schema": THEME_SCHEMA,
+        "name": current_theme_name(),
+        "mode": "light" if d and (d / "light.mode").exists() else "dark",
+        "source": "omarchy-pc",
+        "background": colors["background"],
+        "foreground": colors["foreground"],
+        "accent": accent,
+        "accent2": c.get("color5") or accent,
+        "colors": colors,
+        "wallpaper": {"url": "/v1/theme/wallpaper", "type": wp[1], "sha256": wp[2], "bytes": len(wp[0])} if wp else None,
+    }
+
+
 def now_playing() -> dict | None:
     if not shutil.which("playerctl"):
         return None
@@ -363,22 +461,41 @@ class WebOSHandler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(204)
         self.send_header("Access-Control-Allow-Origin", "*")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token")   # Chrome 38 has no "*"
+        self.send_header("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-Omarchy-Token, X-Omarchy-Agent, If-None-Match")   # Chrome 38 has no "*"
+        self.send_header("Access-Control-Allow-Private-Network", "true")
         self.end_headers()
 
     def _authorized(self) -> bool:
         got = (self.headers.get("X-Omarchy-Token") or "").strip().upper()
         return bool(got) and hmac.compare_digest(got.encode(), bridge_token().upper().encode())
 
+    def _agent_authorized(self) -> bool:
+        got = (self.headers.get("X-Omarchy-Agent") or "").strip()
+        return bool(got) and hmac.compare_digest(got.encode(), bridge_agent_token().encode())
+
+    def _peer_ok(self) -> bool:
+        """v2.21 inbox routes: loopback, a private LAN address, or the tailnet when omarchy-link's switch is on."""
+        from .agent_inbox import peer_ok
+        return peer_ok(self.client_address[0])
+
     def do_POST(self):
         global _last_ask
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
-                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse", "/v1/office/hire"):
+                        "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse", "/v1/office/hire",
+                        "/v1/notify", "/v1/page", "/v1/ask") and not re.fullmatch(r"/v1/ask/[0-9a-f]{16}", path):
             self._send_json({"error": "not found"}, 404)
             return
-        if not self._authorized():
+        agent_route = path in ("/v1/notify", "/v1/page", "/v1/ask")
+        if agent_route or path.startswith("/v1/ask/"):
+            if not self._peer_ok():
+                self._send_json({"error": "not_lan"}, 403)
+                return
+            if not (self._agent_authorized() if agent_route else self._authorized()):   # only the TV answers
+                self._send_json({"error": "unauthorized", "message": "wrong or missing key"}, 401)
+                return
+        elif not self._authorized():
             self._send_json({"error": "unauthorized", "message": "wrong or missing ask code"}, 401)
             return
         try:
@@ -394,6 +511,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
             body = None
         if not isinstance(body, dict):
             self._send_json({"error": "bad_request"}, 400)
+            return
+        if path in ("/v1/notify", "/v1/page", "/v1/ask") or path.startswith("/v1/ask/"):
+            self._agent_post(path, body)
             return
         if path.startswith("/v1/ai/"):
             self._ai(path, body)
@@ -542,8 +662,60 @@ class WebOSHandler(BaseHTTPRequestHandler):
         except Exception as e:   # ProviderError, timeouts: the TV shows the message
             self._send_json({"error": "provider_error", "message": str(e)[:200]}, 502)
 
+    # ---- v2.21 agents on LG / Samsung (agent_inbox) ----
+    def _agent_post(self, path: str, body: dict) -> None:
+        from .agent_inbox import INBOX
+        try:
+            if path == "/v1/notify":
+                self._send_json(INBOX.notify(body.get("text") or body.get("body") or "", body.get("title", ""),
+                                             body.get("level", "info"), body.get("from") or "PC", body.get("speak") is True))
+            elif path == "/v1/page":
+                urls = body.get("urls") or []   # LG / Samsung show one page: the first
+                url = "" if body.get("close") else str(body.get("url") or (urls[0] if urls else ""))
+                self._send_json(INBOX.set_page(url or None, body.get("from") or "PC"))
+            elif path == "/v1/ask":
+                self._send_json(INBOX.ask(body.get("question", ""), body.get("choices"), body.get("timeout", 120),
+                                          body.get("from") or "PC"))
+            else:   # the TV's answer: POST /v1/ask/<id> {answer}
+                ok = INBOX.answer(path.rsplit("/", 1)[1], str(body.get("answer", "")))
+                self._send_json({"ok": ok}, 200 if ok else 409)
+        except OverflowError:
+            self._send_json({"error": "busy"}, 429)
+        except ValueError as e:
+            self._send_json({"error": str(e) if str(e) == "not_lan_url" else "bad_request", "message": str(e)}, 400)
+
+    def _agent_get(self, path: str) -> bool:
+        if path != "/v1/inbox" and not re.fullmatch(r"/v1/ask/[0-9a-f]{16}", path):
+            return False
+        if not self._peer_ok():
+            self._send_json({"error": "not_lan"}, 403)
+            return True
+        ok = self._authorized() if path == "/v1/inbox" else self._agent_authorized()   # the inbox is the TV's
+        if not ok:
+            self._send_json({"error": "unauthorized", "message": "wrong or missing key"}, 401)
+            return True
+        from urllib.parse import parse_qs, urlsplit
+        from .agent_inbox import INBOX
+        q = parse_qs(urlsplit(self.path).query)
+        if path == "/v1/inbox":
+            try:
+                since = int((q.get("since") or ["0"])[0])
+            except ValueError:
+                since = 0
+            self._send_json(INBOX.since(since))
+            return True
+        try:
+            wait = float((q.get("wait") or ["0"])[0])
+        except ValueError:
+            wait = 0
+        a = INBOX.get_ask(path.rsplit("/", 1)[1], wait)
+        self._send_json(a if a else {"error": "no_such_ask"}, 200 if a else 404)
+        return True
+
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if self._agent_get(path):
+            return
         if path in ("/v1/status", "/status.json", "/"):
             self._send_json(build_status_payload())
             return
@@ -555,6 +727,9 @@ class WebOSHandler(BaseHTTPRequestHandler):
             return
         if path == "/v1/themes":
             self._send_json(build_themes_payload())
+            return
+        if path in ("/v1/theme", "/v1/theme/wallpaper"):
+            self._shared_theme(path)
             return
         if path == "/v1/media/list":
             self._media_list()
@@ -660,10 +835,47 @@ class WebOSHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             pass
 
+    # ---- v2.21 one canonical theme for every app on the LAN (read-only, no token) ----
+    def _shared_theme(self, path: str, head: bool = False) -> None:
+        if path == "/v1/theme":
+            body = json.dumps(build_theme_payload(), sort_keys=True).encode("utf-8")
+            ctype = "application/json; charset=utf-8"
+            tag = hashlib.sha256(body).hexdigest()[:32]
+        else:
+            wp = theme_wallpaper()
+            if not wp:
+                self._send_json({"error": "no_wallpaper"}, 404)
+                return
+            body, ctype, tag = wp[0], wp[1], wp[2][:32]
+        etag = f'"{tag}"'
+        inm = [t.strip() for t in (self.headers.get("If-None-Match") or "").split(",")]
+        if etag in inm or "*" in inm:
+            self.send_response(304)
+            self._theme_headers(etag)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        self._theme_headers(etag)
+        self.end_headers()
+        if not head:
+            self.wfile.write(body)
+
+    def _theme_headers(self, etag: str) -> None:
+        self.send_header("ETag", etag)
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Expose-Headers", "ETag")
+
     def do_HEAD(self):
         path = self.path.split("?", 1)[0]
         if path.startswith("/v1/media/f/"):
             self._media_file(path)
+            return
+        if path in ("/v1/theme", "/v1/theme/wallpaper"):
+            self._shared_theme(path, head=True)
         else:
             self.send_response(404)
             self.end_headers()

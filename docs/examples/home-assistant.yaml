@@ -1,0 +1,50 @@
+# OmarchyTV 2.21 and Home Assistant: notifications, the camera full screen, Radiomarchy paused when the bell rings.
+# App token: omarchy-link token add "Home Assistant" --scope control   (notify is enough for notifications only)
+# secrets.yaml:  omarchytv_auth: "Bearer otva_…"
+# On the TV: agent alerts on (Settings › Omarchy Link). 192.168.1.50 is the TV, 192.168.1.30:8123 Home Assistant.
+
+rest_command:
+  omarchytv_notify:
+    url: http://192.168.1.50:47800/v1/notify
+    method: post
+    headers:
+      Authorization: !secret omarchytv_auth
+    content_type: application/json
+    payload: '{"title": "{{ title }}", "text": "{{ text }}", "level": "{{ level | default(''info'') }}", "speak": {{ speak | default(false) | tojson }}}'
+  omarchytv_page:
+    url: http://192.168.1.50:47800/v1/page
+    method: post
+    headers:
+      Authorization: !secret omarchytv_auth
+    content_type: application/json
+    payload: '{"url": "{{ url }}"}'
+  omarchytv_radio:
+    url: http://192.168.1.50:47800/v1/radio
+    method: post
+    headers:
+      Authorization: !secret omarchytv_auth
+    content_type: application/json
+    payload: '{"action": "{{ action }}"}'
+
+automation:
+  - alias: "Doorbell on the TV"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.doorbell
+        to: "on"
+    action:
+      - service: rest_command.omarchytv_radio
+        data: { action: pause }
+      - service: rest_command.omarchytv_notify
+        data: { title: "Doorbell", text: "Someone is at the door", level: alert, speak: true }
+      - service: rest_command.omarchytv_page   # a LAN page that shows the camera, e.g. go2rtc's stream page
+        data: { url: "http://192.168.1.30:1984/stream.html?src=door" }
+
+  - alias: "Washing machine done"
+    trigger:
+      - platform: state
+        entity_id: sensor.washing_machine_status
+        to: "finished"
+    action:
+      - service: rest_command.omarchytv_notify
+        data: { title: "Laundry", text: "The washing machine is done", level: info }

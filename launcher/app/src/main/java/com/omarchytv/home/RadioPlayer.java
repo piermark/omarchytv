@@ -63,6 +63,13 @@ final class RadioPlayer {
     private final Handler h = new Handler(Looper.getMainLooper());
     private final CopyOnWriteArrayList<Listener> listeners = new CopyOnWriteArrayList<>();
     final AudioBands bands = new AudioBands();
+    /** v2.21 when something last asked for the music's bands (the equaliser, a live fractal, the saver). */
+    private volatile long lastFrameAt;
+
+    /** The audio thread analyses only while a picture reads the bands: within the last 2 s. */
+    private boolean bandsWanted() {
+        return SystemClock.elapsedRealtime() - lastFrameAt < 2000;
+    }
     private ExoPlayer player;
     private MediaSession session;
     private final List<RadioCatalog.Track> queue = new ArrayList<>();
@@ -87,6 +94,14 @@ final class RadioPlayer {
     static RadioPlayer get(Context c) {
         if (inst == null) inst = new RadioPlayer(c.getApplicationContext());
         return inst;
+    }
+
+    /** v2.21 GET /v1/state: {title, artist} of the song playing, or null. Never creates the player. */
+    static String[] nowPlaying() {
+        RadioPlayer p = inst;
+        if (p == null || !active()) return null;
+        RadioCatalog.Track t = p.current();
+        return t == null ? null : new String[]{t.title, t.artist};
     }
 
     /** Is there one, and is it playing (or about to)? Never creates the player. */
@@ -141,6 +156,12 @@ final class RadioPlayer {
 
             @Override
             public void handleBuffer(ByteBuffer buffer) {
+                hasAudio = true;
+                if (!bandsWanted()) {   // v2.21 no equaliser, fractal or saver on screen: no FFT on the audio thread
+                    int bytes = encoding == C.ENCODING_PCM_FLOAT ? 4 : 2;
+                    bands.skip(buffer.remaining() / bytes / channels);
+                    return;
+                }
                 ByteBuffer b = buffer.duplicate().order(ByteOrder.nativeOrder());
                 if (encoding == C.ENCODING_PCM_FLOAT) {
                     int n = b.remaining() / 4;
@@ -153,7 +174,6 @@ final class RadioPlayer {
                     b.asShortBuffer().get(s16, 0, n);
                     bands.pcm16(s16, n / channels, channels);
                 }
-                hasAudio = true;
             }
         });
         DefaultRenderersFactory rf = new DefaultRenderersFactory(app) {
@@ -404,6 +424,7 @@ final class RadioPlayer {
      */
     boolean frame(AudioBands.Frame out) {
         long now = SystemClock.elapsedRealtime();
+        lastFrameAt = now;
         if (player != null && hasAudio && clockRunning) {
             long pos = clockPosMs + (now - clockAtMs);
             if (bands.at(pos * 1000, out)) {
@@ -532,10 +553,21 @@ final class RadioPlayer {
 
     private boolean wallpaperMusicTried;
 
+    /** v2.21 "Music on Home" (Radiomarchy settings): off by default, so Home is silent until you press play. */
+    boolean homeMusic() {
+        return prefs().getBoolean("homeMusic", false);
+    }
+
+    void setHomeMusic(boolean on) {
+        prefs().edit().putBoolean("homeMusic", on).apply();
+        if (!on) wallpaperMusicTried = false;
+    }
+
     /**
-     * Home fractals wallpaper is music-reactive, like the screensaver. If a track is already current
-     * and not user-paused, keep it audible (volume and audio focus). If nothing is current, start the
-     * cached playlist, or fetch radio.omarchy.org once. Never un-pauses a track the owner paused.
+     * Home fractals wallpaper is music-reactive, like the screensaver. A song already playing stays audible (volume and
+     * audio focus); a paused one keeps its media session so PLAY on Home resumes it. Nothing current: silence, unless
+     * the owner turned "Music on Home" on (v2.21): then the cached playlist starts, or radio.omarchy.org is fetched
+     * once. Never un-pauses a track the owner paused.
      */
     void ensureWallpaperMusic() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
@@ -547,10 +579,11 @@ final class RadioPlayer {
             else claimSession();
             return;
         }
+        if (!homeMusic()) return;
         List<RadioCatalog.Track> list = cachedSongs();
         if (!list.isEmpty()) {
             wallpaperMusicTried = true;
-            play(list, shuffle && !list.isEmpty() ? new Random().nextInt(list.size()) : 0);
+            play(list, shuffle ? new Random().nextInt(list.size()) : 0);
             return;
         }
         if (wallpaperMusicTried) return;
@@ -560,7 +593,7 @@ final class RadioPlayer {
             if (txt != null) RadioCatalog.writeCache(new File(app.getFilesDir(), "radio-playlist.json"), txt);
             List<RadioCatalog.Track> songs = txt != null ? RadioCatalog.parseSongs(txt) : java.util.Collections.emptyList();
             h.post(() -> {
-                if (current() != null || songs.isEmpty()) return;
+                if (current() != null || songs.isEmpty() || !homeMusic()) return;
                 List<RadioCatalog.Track> vis = visibleSongs(songs);
                 if (!vis.isEmpty()) play(vis, shuffle ? new Random().nextInt(vis.size()) : 0);
             });
@@ -570,6 +603,57 @@ final class RadioPlayer {
     private List<RadioCatalog.Track> cachedSongs() {
         String a = RadioCatalog.readCache(new File(app.getFilesDir(), "radio-playlist.json"));
         return a == null ? java.util.Collections.emptyList() : visibleSongs(RadioCatalog.parseSongs(a));
+    }
+
+    /** v2.21 MCP tv_radio "play": resume the current song, or start the playlist (cached, else fetched once). */
+    void playOrStart() {
+        if (current() != null) {
+            if (!playing()) toggle();
+            return;
+        }
+        List<RadioCatalog.Track> list = cachedSongs();
+        if (!list.isEmpty()) {
+            play(list, shuffle ? new Random().nextInt(list.size()) : 0);
+            return;
+        }
+        com.omarchytv.home.lights.Lights.run(() -> {
+            String txt = RadioCatalog.fetch(RadioCatalog.PLAYLIST);
+            if (txt != null) RadioCatalog.writeCache(new File(app.getFilesDir(), "radio-playlist.json"), txt);
+            List<RadioCatalog.Track> songs = txt != null ? visibleSongs(RadioCatalog.parseSongs(txt)) : java.util.Collections.emptyList();
+            h.post(() -> {
+                if (current() == null && !songs.isEmpty()) play(songs, shuffle ? new Random().nextInt(songs.size()) : 0);
+            });
+        });
+    }
+
+    // ---- v2.21 sleep timer: stop the music after 15 / 30 / 60 / 90 minutes ----
+    static final int[] SLEEP_MIN = {0, 15, 30, 60, 90};
+    private int sleepMin;
+    private long sleepAt;
+    private final Runnable sleepStop = () -> {
+        sleepMin = 0;
+        sleepAt = 0;
+        stop();
+    };
+
+    /** Next step of the timer (off → 15 → 30 → 60 → 90 → off); returns the minutes now set. */
+    int cycleSleep() {
+        int i = 0;
+        while (i < SLEEP_MIN.length && SLEEP_MIN[i] != sleepMin) i++;
+        setSleep(SLEEP_MIN[(i + 1) % SLEEP_MIN.length]);
+        return sleepMin;
+    }
+
+    void setSleep(int minutes) {
+        h.removeCallbacks(sleepStop);
+        sleepMin = Math.max(0, minutes);
+        sleepAt = sleepMin == 0 ? 0 : SystemClock.elapsedRealtime() + sleepMin * 60_000L;
+        if (sleepMin > 0) h.postDelayed(sleepStop, sleepMin * 60_000L);
+    }
+
+    /** Minutes left (rounded up), 0 when off. */
+    int sleepLeft() {
+        return sleepAt == 0 ? 0 : (int) Math.max(1, (sleepAt - SystemClock.elapsedRealtime() + 59_999) / 60_000);
     }
 
     private List<RadioCatalog.Track> visibleSongs(List<RadioCatalog.Track> songs) {
@@ -693,9 +777,14 @@ final class RadioPlayer {
         return !FractalView.preferPlain(c);
     }
 
-    /** Demo (and the fractals screensaver): live on every TV unless the setting is off (then the still slideshow). */
+    /** Live GL in the demo and the Radiomarchy screensaver: "on" always, "off" never, "auto" only on a capable TV
+     *  (a weak one, 2 GB class or a Mali-T8xx like the Sony, gets the still slides). */
     static boolean wantLiveDemo(Context c) {
-        return !"off".equals(animatedMode(c));
+        return liveDemo(animatedMode(c), FractalView.preferPlain(c));
+    }
+
+    static boolean liveDemo(String mode, boolean preferPlain) {
+        return "on".equals(mode) || ("auto".equals(mode) && !preferPlain);
     }
 
     /** Equaliser / progress redraws: 12 fps on a weak TV, 24 on a capable one. Does not change audio analysis. */

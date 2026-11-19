@@ -60,6 +60,7 @@ DEFAULTS = {
     "prompt": None,             # {"user", "host"} for the TV's home prompt; None = not sent    # the TV may switch mirror sources on/off ("ai_sources" event)
     "assistant": True,          # answer voice questions from the TV (assistant.json, signed-in CLIs)
     "allowOtherSubnets": False,
+    "tailscale": False,   # v2.21: also talk to TVs on this PC's tailnet (100.64.0.0/10), see docs/TAILSCALE.md
     "actions": {},              # id -> {"label", "exec": [argv], "confirm": true}
 }
 
@@ -108,6 +109,8 @@ def load_config() -> dict:
     user = read_json(CONFIG_FILE, {})
     if isinstance(user, dict):
         cfg.update(user)
+    from . import netcheck
+    netcheck.allow_tailnet = cfg.get("tailscale") is True
     return cfg
 
 

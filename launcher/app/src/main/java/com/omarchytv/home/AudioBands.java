@@ -107,6 +107,13 @@ final class AudioBands {
         }
     }
 
+    /** v2.21 nobody is drawing the music: keep the clock, skip the FFT. The window restarts, so the next analysis
+     *  after a reader comes back starts from fresh samples (one window, about 20 ms, later). */
+    void skip(int frames) {
+        samples += Math.max(0, frames);
+        fill = 0;
+    }
+
     private void push(float s) {
         win[fill++] = s;
         samples++;

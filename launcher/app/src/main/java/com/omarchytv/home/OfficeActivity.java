@@ -1,7 +1,6 @@
 package com.omarchytv.home;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -17,7 +16,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -60,7 +58,6 @@ import java.util.Set;
  */
 public class OfficeActivity extends Activity implements OmarchyLink.Listener {
     static final String PREFS = "office";
-    private static final int REQ_MIC = 46, REQ_VOICE = 47;
     private final Handler ui = new Handler(Looper.getMainLooper());
     private Theme t;
     private Typeface mono;
@@ -79,7 +76,7 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
     private TextToSpeech tts;
     private volatile boolean ttsReady;
     private String queuedSpeech;
-    private android.speech.SpeechRecognizer recognizer;
+    private VoiceInput voice;
     private boolean listening;
     private static final String[] HIRE_PROVIDERS = {"grok", "claude", "chatgpt"};
     private TextView provStart, provOffice, hireProv;
@@ -747,17 +744,14 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
             try {
                 long since = System.currentTimeMillis() / 1000 - 5;
                 post(url, GrokbotDirect.headers(key), Office.requestBody(GrokbotDirect.body(req.question, lang, topic, id, apps, "OmarchyTV on Android TV · GrokBot Office", server), req.office));
-                long end = System.currentTimeMillis() + GrokbotDirect.TIMEOUT_MS;
-                while (r == null && id.equals(pendingId) && System.currentTimeMillis() < end) {
-                    Thread.sleep(GrokbotDirect.POLL_MS);
-                    try {
-                        String nd = get(GrokbotDirect.pollUrl(server, topic, since), token);
-                        r = GrokbotDirect.find(nd, id);
-                        if (r != null) off = Office.findOffice(nd, id);
-                    } catch (Exception ignored) {   // one failed poll: keep trying until the deadline
-                    }
+                boolean[] limited = new boolean[1];   // v2.21 (#70): gentler polling, 429 said out loud
+                String nd = GrokbotDirect.awaitReply(server, topic, id, since, u -> GrokbotDirect.httpGet(u, token), Thread::sleep,
+                        System::currentTimeMillis, () -> id.equals(pendingId), limited);
+                if (nd != null) {
+                    r = GrokbotDirect.find(nd, id);
+                    off = Office.findOffice(nd, id);
                 }
-                if (r == null && id.equals(pendingId)) err = "No answer from Grok Bot within 90 s. Check the routine and its ntfy step (see docs/GROKBOT-DIRECT.md).";
+                if (r == null && id.equals(pendingId)) err = GrokbotDirect.noAnswer(server, limited[0]);
             } catch (HttpCode e) {
                 err = e.code == 401 || e.code == 403 ? "The webhook refused the key (HTTP " + e.code + "): check it in Settings." : "The webhook answered HTTP " + e.code + ".";
             } catch (Exception e) {
@@ -810,26 +804,47 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         super.onBackPressed();
     }
 
-    // ---- voice: the in-app SpeechRecognizer (as GrokbotDirectActivity), the system recognizer as fallback ----
+    // ---- voice (VoiceInput: the in-app recognizer, the system dialog only as a fallback) ----
 
     private void voice() {
-        if (!android.speech.SpeechRecognizer.isRecognitionAvailable(this)) {
-            voiceIntent();
-            return;
-        }
-        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO}, REQ_MIC);
-            return;
-        }
-        listen();
+        if (voice == null) voice = new VoiceInput(this, getString(R.string.office_ask), new VoiceInput.Callback() {
+            @Override public void onListening(String partial) {
+                if (!listening) {
+                    listening = true;
+                    if (tts != null) tts.stop();
+                }
+                showListening(partial);
+            }
+
+            @Override public void onHeard(List<String> words) {
+                stopListening();
+                submit(words.get(0));
+            }
+
+            @Override public void onStopped(String message) {
+                stopListening();
+                if (message == null) return;
+                if (VoiceInput.NO_RECOGNIZER.equals(message)) {
+                    say(getString(R.string.office_no_mic));
+                    input().requestFocus();
+                } else {
+                    say(VoiceInput.NO_PERMISSION.equals(message) ? message : getString(R.string.office_heard));
+                }
+            }
+        });
+        voice.start();
     }
 
     @Override
     public void onRequestPermissionsResult(int req, String[] perms, int[] res) {
         super.onRequestPermissionsResult(req, perms, res);
-        if (req != REQ_MIC) return;
-        if (res.length > 0 && res[0] == PackageManager.PERMISSION_GRANTED) listen();
-        else voiceIntent();
+        if (voice != null) voice.onRequestPermissionsResult(req, res);
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent d) {
+        super.onActivityResult(req, res, d);
+        if (voice != null) voice.onActivityResult(req, res, d);
     }
 
     private void showListening(String extra) {
@@ -838,96 +853,13 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
         officeInput.setHint(s);
     }
 
-    private void listen() {
-        stopListening();
-        try {
-            recognizer = android.speech.SpeechRecognizer.createSpeechRecognizer(this);
-        } catch (Exception e) {
-            voiceIntent();
-            return;
-        }
-        listening = true;
-        if (tts != null) tts.stop();
-        showListening("");
-        recognizer.setRecognitionListener(new android.speech.RecognitionListener() {
-            @Override public void onReadyForSpeech(Bundle p) { }
-            @Override public void onBeginningOfSpeech() { }
-            @Override public void onRmsChanged(float v) { }
-            @Override public void onBufferReceived(byte[] b) { }
-            @Override public void onEndOfSpeech() { }
-            @Override public void onEvent(int type, Bundle p) { }
-
-            @Override public void onPartialResults(Bundle r) {
-                String s = first(r);
-                if (!s.isEmpty()) showListening(s);
-            }
-
-            @Override public void onResults(Bundle r) {
-                String s = first(r);
-                stopListening();
-                if (!s.isEmpty()) submit(s);
-                else say(getString(R.string.office_heard));
-            }
-
-            @Override public void onError(int err) {
-                stopListening();
-                say(err == android.speech.SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS ? "The microphone permission is off for OmarchyTV." : getString(R.string.office_heard));
-            }
-        });
-        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, MainActivity.speechLanguage(this))
-                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, getPackageName());
-        try {
-            recognizer.startListening(i);
-        } catch (Exception e) {
-            stopListening();
-            voiceIntent();
-        }
-    }
-
-    private static String first(Bundle r) {
-        if (r == null) return "";
-        List<String> l = r.getStringArrayList(android.speech.SpeechRecognizer.RESULTS_RECOGNITION);
-        return l != null && !l.isEmpty() && l.get(0) != null ? l.get(0).trim() : "";
-    }
-
     private void stopListening() {
+        if (voice != null) voice.destroy();
         if (listening) {
             listening = false;
             if (status != null) status.setText("");
             if (officeInput != null) officeInput.setHint(R.string.office_anything);
         }
-        if (recognizer != null) {
-            try {
-                recognizer.destroy();
-            } catch (Exception ignored) {
-            }
-            recognizer = null;
-        }
-    }
-
-    private void voiceIntent() {
-        Intent i = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, MainActivity.speechLanguage(this))
-                .putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.office_ask));
-        try {
-            startActivityForResult(i, REQ_VOICE);
-        } catch (ActivityNotFoundException e) {
-            say(getString(R.string.office_no_mic));
-            input().requestFocus();
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int req, int res, Intent d) {
-        super.onActivityResult(req, res, d);
-        if (req != REQ_VOICE || res != RESULT_OK || d == null) return;
-        List<String> r = d.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-        String q = r != null && !r.isEmpty() ? r.get(0) : d.getStringExtra("query");
-        if (q != null && !q.trim().isEmpty()) submit(q);
     }
 
     // ---- HTTP (no logging: the key and the URL never reach logcat) ----
@@ -955,25 +887,6 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
             }
             int code = c.getResponseCode();
             if (code < 200 || code >= 300) throw new HttpCode(code);
-        } finally {
-            c.disconnect();
-        }
-    }
-
-    private static String get(String url, String token) throws Exception {
-        HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
-        try {
-            if (GrokbotDirect.validToken(token)) c.setRequestProperty("Authorization", "Bearer " + token);
-            c.setConnectTimeout(8_000);
-            c.setReadTimeout(10_000);
-            if (c.getResponseCode() != 200) return "";
-            try (InputStream in = c.getInputStream()) {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                byte[] buf = new byte[8192];
-                int n;
-                while ((n = in.read(buf)) > 0 && out.size() < 512 * 1024) out.write(buf, 0, n);
-                return out.toString("UTF-8");
-            }
         } finally {
             c.disconnect();
         }

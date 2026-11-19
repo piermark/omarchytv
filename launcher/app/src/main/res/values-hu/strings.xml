@@ -172,6 +172,7 @@
     <string name="search_prompt">Mondjon egy alkalmazásnevet</string>
     <string name="link_service_on">figyel</string>
     <string name="link_service_off">nincs hálózat</string>
+    <string name="link_notification">Az Omarchy Link fut</string>
     <string name="remote_service">OmarchyTV távvezérlés</string>
     <string name="remote_service_desc">Lehetővé teszi, hogy egy párosított Omarchy Linux számítógép megnyomja a Vissza gombot a tévén. Semmit sem olvas a képernyőről.</string>
     <string name="keymap_service">OmarchyTV távirányító-gombok</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Megnyitja az OmarchyTV-t, ha a Kezdőlap a tévé saját kezdőképernyőjét mutatja. Csak azt látja, melyik kezdőképernyő nyílt meg, és semmit sem olvas a képernyőről.</string>
     <string name="set_home_override">A Kezdőlap gomb az OmarchyTV-t nyitja meg</string>
     <string name="link_usage">Használati hozzáférés (aktuális alkalmazás)</string>
+    <string name="link_share_theme">Téma megosztása a hálózat alkalmazásaival</string>
+    <string name="link_keep_alive">Link elérhető indítás után</string>
+    <string name="link_tailscale">Tailscale engedélyezése (tailnet)</string>
+    <string name="agentq_asks">kérdezi</string>
+    <string name="agentq_hint">Válassz választ a távirányítóval · VISSZA: válasz később</string>
+    <string name="link_app_tokens">Alkalmazás-tokenek (irányítópultok, ügynökök)</string>
+    <string name="menu_system_info">Rendszerinformáció</string>
+    <string name="walker_agent_tile">Ügynökoldalak egymás mellett</string>
+    <string name="walker_agent_questions">Ügynökök kérdései</string>
+    <string name="link_new_app_token">Új alkalmazás-token</string>
+    <string name="link_app_tokens_full">Már 16 token van: előbb vond vissza őket</string>
+    <string name="link_app_token_once">Csak egyszer jelenik meg. Olvasd be vagy írd be az alkalmazásba; itt vagy az omarchy-link token paranccsal vonhatod vissza.</string>
+    <string name="link_tailscale_app">Tailscale alkalmazás</string>
+    <string name="link_tailscale_open">megnyitás</string>
+    <string name="link_tailscale_get">telepítés</string>
+    <string name="link_tailscale_qr">Olvasd be a telefonnal a Tailscale Google Play oldalához</string>
     <string name="link_paired_toast">Párosítva: %1$s</string>
     <string name="link_online">csatlakozva</string>
     <string name="ai_settings">AI-kreditek</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">véletlen (minden jelenetben új)</string>
     <string name="radio_auto_demo">Demó mód 1 perc tétlenség után</string>
     <string name="radio_shuffle">Keverés</string>
+    <string name="radio_home_music">Zene a kezdőképernyőn</string>
+    <string name="radio_song_qr">A dal oldala (QR a telefonhoz)</string>
+    <string name="radio_sleep">Elalváskapcsoló</string>
+    <string name="radio_sleep_left" formatted="true">még %d perc</string>
     <string name="radio_repeat">Ismétlés</string>
     <string name="radio_repeat_all">mind</string>
     <string name="radio_repeat_one">egy</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">igen</string>
     <string name="radio_animated_off">nem</string>
+    <string name="ss_pulse_panels">Pulse panelek</string>
+    <string name="ss_pulse_racing">versenypanel a Pulse-on</string>
+    <string name="ss_pulse_graphics">Pulse grafika</string>
 </resources>

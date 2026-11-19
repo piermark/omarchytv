@@ -46,16 +46,21 @@ public class AppSizeTest {
     public void racingSlotFitsBesideTheTermBox() {
         int termRight = HomeV29.HOME_MARGIN + HomeV29.TERM_W;
         assertEquals(672, termRight);
-        assertEquals(1120, HomeV29.widgetsWidth(false));
+        assertEquals(1200, HomeV29.widgetsWidth(false));
         assertEquals(1200, HomeV29.widgetsWidth(true));
         assertEquals(382, HomeV29.raceColWidth());
-        assertEquals(768, HomeV29.widgetsLeft(false));
+        assertEquals(688, HomeV29.widgetsLeft(false));
         assertEquals(688, HomeV29.widgetsLeft(true));
-        assertTrue("racing-off row stays right of the term box", HomeV29.widgetsLeft(false) >= termRight);
+        assertTrue("racing-off row stays right of the term box", HomeV29.widgetsLeft(false) >= termRight + HomeV29.WIDGET_GAP);
         assertTrue("racing-on row stays right of the term box", HomeV29.widgetsLeft(true) >= termRight + HomeV29.WIDGET_GAP);
         int gap = HomeV29.WIDGET_GAP;
         int sum = HomeV29.raceColWidth() + HomeV29.weatherColWidth(true) + 2 * HomeV29.sideColWidth(true) + 3 * gap;
         assertEquals("four columns fill the 1200 row", 1200, sum);
+        // racing off (the default): the wider Weather plus PC and AI must fit the row, or AI runs off the screen
+        int sumOff = HomeV29.weatherColWidth(false) + 2 * HomeV29.sideColWidth(false) + 2 * gap;
+        assertTrue("three columns fit the racing-off row (" + sumOff + ")", sumOff <= HomeV29.widgetsWidth(false));
+        assertTrue("the AI panel ends on screen",
+                HomeV29.widgetsLeft(false) + sumOff <= HomeV29.HOME_W - HomeV29.HOME_MARGIN);
         // 18 px pad each side: name + 10 px gap + "sun 22 nov 05:00" at 19 px Caskaydia (cell 11.140625)
         assertTrue("racing fits a full GP name and session time", HomeV29.raceColWidth() - 36 >= 333);
         assertTrue("weather still fits a city and condition line", HomeV29.weatherColWidth(true) - 36 >= 246);

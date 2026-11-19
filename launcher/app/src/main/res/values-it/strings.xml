@@ -172,6 +172,7 @@
 
     <string name="link_service_on">in ascolto</string>
     <string name="link_service_off">nessuna rete</string>
+    <string name="link_notification">Omarchy Link è attivo</string>
     <string name="remote_service">OmarchyTV remote</string>
     <string name="remote_service_desc">Permette a un PC Omarchy Linux associato di premere Indietro sulla TV. Non legge nulla dallo schermo.</string>
     <string name="keymap_service">OmarchyTV tasti telecomando</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">Apre OmarchyTV quando Home mostra la home della TV. Vede solo quale home si è aperta e non legge nulla dallo schermo.</string>
     <string name="set_home_override">Il tasto Home apre OmarchyTV</string>
     <string name="link_usage">Accesso utilizzo (app attuale)</string>
+    <string name="link_share_theme">Condividi il tema con le app della rete</string>
+    <string name="link_keep_alive">Link raggiungibile dopo l\'avvio</string>
+    <string name="link_tailscale">Consenti Tailscale (tailnet)</string>
+    <string name="agentq_asks">chiede</string>
+    <string name="agentq_hint">Scegli la risposta col telecomando · BACK: rispondi dopo</string>
+    <string name="link_app_tokens">Token delle app (dashboard, agenti)</string>
+    <string name="menu_system_info">Info sistema</string>
+    <string name="walker_agent_tile">Pagine degli agenti, affiancate</string>
+    <string name="walker_agent_questions">Domande degli agenti</string>
+    <string name="link_new_app_token">Nuovo token app</string>
+    <string name="link_app_tokens_full">Ci sono già 16 token: prima revocali</string>
+    <string name="link_app_token_once">Mostrato una sola volta. Scansionalo o scrivilo nella tua app; lo revochi qui o con omarchy-link token.</string>
+    <string name="link_tailscale_app">App Tailscale</string>
+    <string name="link_tailscale_open">apri</string>
+    <string name="link_tailscale_get">installa</string>
+    <string name="link_tailscale_qr">Inquadra con il telefono per aprire Tailscale su Google Play</string>
     <string name="link_paired_toast">Associato a %1$s</string>
     <string name="link_online">connesso</string>
     <string name="ai_settings">Crediti AI</string>
@@ -543,6 +560,10 @@
     <string name="radio_auto">casuale (uno nuovo a ogni scena)</string>
     <string name="radio_auto_demo">Modalità demo dopo 1 minuto senza tasti</string>
     <string name="radio_shuffle">Casuale</string>
+    <string name="radio_home_music">Musica sulla Home</string>
+    <string name="radio_song_qr">Pagina del brano (QR per il telefono)</string>
+    <string name="radio_sleep">Timer di spegnimento</string>
+    <string name="radio_sleep_left" formatted="true">ancora %d min</string>
     <string name="radio_repeat">Ripeti</string>
     <string name="radio_repeat_all">tutti</string>
     <string name="radio_repeat_one">uno</string>
@@ -568,4 +589,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">sì</string>
     <string name="radio_animated_off">no</string>
+    <string name="ss_pulse_panels">Pannelli Pulse</string>
+    <string name="ss_pulse_racing">pannello corse su Pulse</string>
+    <string name="ss_pulse_graphics">Grafica di Pulse</string>
 </resources>

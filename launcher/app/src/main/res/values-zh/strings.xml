@@ -172,6 +172,7 @@
     <string name="search_prompt">说出应用名称</string>
     <string name="link_service_on">监听中</string>
     <string name="link_service_off">无网络</string>
+    <string name="link_notification">Omarchy Link 正在运行</string>
     <string name="remote_service">OmarchyTV 遥控</string>
     <string name="remote_service_desc">允许已配对的 Omarchy Linux 电脑在电视上按返回键。它不读取屏幕上的任何内容。</string>
     <string name="keymap_service">OmarchyTV 遥控器按键</string>
@@ -181,6 +182,22 @@
     <string name="home_service_desc">当主页键显示电视自带的主屏幕时打开 OmarchyTV。它只能看到打开了哪个主屏幕，不读取屏幕上的任何内容。</string>
     <string name="set_home_override">主页键打开 OmarchyTV</string>
     <string name="link_usage">使用情况访问权限（当前应用）</string>
+    <string name="link_share_theme">与网络中的应用共享主题</string>
+    <string name="link_keep_alive">开机后保持 Link 可连接</string>
+    <string name="link_tailscale">允许 Tailscale (tailnet)</string>
+    <string name="agentq_asks">提问</string>
+    <string name="agentq_hint">用遥控器选择答案 · 返回：稍后回答</string>
+    <string name="link_app_tokens">应用令牌（仪表板、代理）</string>
+    <string name="menu_system_info">系统信息</string>
+    <string name="walker_agent_tile">代理页面平铺</string>
+    <string name="walker_agent_questions">来自代理的问题</string>
+    <string name="link_new_app_token">新建应用令牌</string>
+    <string name="link_app_tokens_full">已有 16 个令牌：请先撤销</string>
+    <string name="link_app_token_once">仅显示一次。扫描或输入到你的应用；可在此处或用 omarchy-link token 撤销。</string>
+    <string name="link_tailscale_app">Tailscale 应用</string>
+    <string name="link_tailscale_open">打开</string>
+    <string name="link_tailscale_get">安装</string>
+    <string name="link_tailscale_qr">用手机扫描，在 Google Play 打开 Tailscale</string>
     <string name="link_paired_toast">已与 %1$s 配对</string>
     <string name="link_online">已连接</string>
     <string name="ai_settings">AI 额度</string>
@@ -539,6 +556,10 @@
     <string name="radio_auto">随机（每个场景换新）</string>
     <string name="radio_auto_demo">闲置 1 分钟后进入演示模式</string>
     <string name="radio_shuffle">随机播放</string>
+    <string name="radio_home_music">主屏幕音乐</string>
+    <string name="radio_song_qr">歌曲页面（手机二维码）</string>
+    <string name="radio_sleep">睡眠定时</string>
+    <string name="radio_sleep_left" formatted="true">剩余 %d 分钟</string>
     <string name="radio_repeat">重复</string>
     <string name="radio_repeat_all">全部</string>
     <string name="radio_repeat_one">单曲</string>
@@ -564,4 +585,7 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">是</string>
     <string name="radio_animated_off">否</string>
+    <string name="ss_pulse_panels">Pulse 面板</string>
+    <string name="ss_pulse_racing">Pulse 上的赛车面板</string>
+    <string name="ss_pulse_graphics">Pulse 图形</string>
 </resources>

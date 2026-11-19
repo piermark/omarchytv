@@ -5,7 +5,7 @@ string that leaves this module went through redact.short(): tool name plus a sho
 (command first line, file basename, host, pattern), never file contents or tool output, never
 env values or secrets, project = basename of the cwd only.
 
-Supported (see docs/AGENTS.md): Claude Code, Codex CLI, Grok CLI, Hermes Agent, Gemini CLI
+Supported (see docs/AGENTS.md): T3 Code, Claude Code, Codex CLI, Grok CLI, Hermes Agent, Gemini CLI
 (best effort), Grok Bot (presence only).
 """
 from __future__ import annotations
@@ -24,7 +24,7 @@ from .redact import base, short, tool_step
 
 STATUSES = ("thinking", "running", "waiting", "idle", "done", "error")
 NAMES = {"claude-code": "Claude", "codex": "Codex", "grok": "Grok", "hermes": "Hermes", "gemini": "Gemini",
-         "grok-bot": "Grok Bot"}
+         "grok-bot": "Grok Bot", "t3-code": "T3 Code"}
 DEFAULTS = {"enabled": False, "agents": None, "projects": None, "hideProjects": [], "steps": 8,
             "activeMinutes": 30, "maxAgents": 8}
 TAIL = 384 * 1024
@@ -493,8 +493,10 @@ def read_grok_bot(st: dict) -> list[dict]:
              "question": None, "canAsk": False, "steps": [], "elapsed": None}]
 
 
+from .t3 import read_t3
+
 READERS = {"claude-code": read_claude, "codex": read_codex, "grok": read_grok, "hermes": read_hermes,
-           "gemini": read_gemini, "grok-bot": read_grok_bot}
+           "gemini": read_gemini, "grok-bot": read_grok_bot, "t3-code": read_t3}
 
 
 def snapshot(cfg: dict) -> dict:

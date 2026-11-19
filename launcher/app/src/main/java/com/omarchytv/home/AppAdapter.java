@@ -59,6 +59,8 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
         boolean system;
         /** Web app (omarchytv.json "webapps"): opened in WebAppActivity; pkg is "web:<id>". */
         LauncherConfig.WebApp web;
+        /** v2.21 agent page (omarchytv.json "agentPages"): opened in AgentPageActivity; pkg is "page:<id>". */
+        LauncherConfig.AgentPage page;
         int ambient;
 
         Entry(String label, ComponentName component, Drawable banner, Drawable icon) {
@@ -125,6 +127,15 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
             Entry en = new Entry(label, new ComponentName(pkg, ri.activityInfo.name), banner, icon);
             en.system = (ri.activityInfo.applicationInfo.flags
                     & (android.content.pm.ApplicationInfo.FLAG_SYSTEM | android.content.pm.ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0;
+            fresh.add(en);
+        }
+        for (LauncherConfig.AgentPage pg : cfg.agentPages) {   // v2.21: pages agents published, before the web apps
+            String key = "page:" + pg.id;
+            if (cfg.isHidden(key)) continue;
+            Entry en = new Entry(pg.label(), new ComponentName(ctx.getPackageName(), AgentPageActivity.class.getName() + "#" + pg.id),
+                    key, null, ctx.getDrawable(R.drawable.ic_web));
+            en.system = true;
+            en.page = pg;
             fresh.add(en);
         }
         for (LauncherConfig.WebApp w : cfg.webapps) {
@@ -356,6 +367,10 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.Holder> {
 
     private void launch(Entry e) {
         AmbilightController.restoreFollowVideo(ctx);
+        if (e.page != null) {
+            ctx.startActivity(AgentPageActivity.intent(ctx, e.page.url));
+            return;
+        }
         if (e.web != null) {
             if ("grok-bot".equals(e.web.id)) {
                 AskActivity.open(ctx);

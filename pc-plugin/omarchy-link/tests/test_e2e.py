@@ -3,6 +3,7 @@ import base64
 import http.client
 import json
 import os
+import shutil
 import subprocess
 import threading
 import time
@@ -13,6 +14,11 @@ import helpers
 from helpers import cli
 from mock_tv import MockTV
 from omarchy_link import client as link, config, crypto, mdns, netcheck
+
+
+def config_not_paired():
+    from omarchy_link import cli as c
+    return c.EXIT_NOT_PAIRED
 
 
 class E2E(unittest.TestCase):
@@ -151,6 +157,71 @@ class E2E(unittest.TestCase):
         self.assertEqual(cli("key", "reboot", check=False).returncode, 2)
         self.assertEqual(cli("launch", "com.not.installed", check=False).returncode, 1)
 
+    def test_notify_for_agent_hooks(self):   # v2.21
+        self.assertEqual(cli("notify", "hi", check=False).returncode, config_not_paired())
+        self.assertEqual(cli("notify", "-q", "hi").returncode, 0)
+        self.pair()
+        self.assertEqual(cli("notify", "build", "done", check=False).returncode, 4)   # agent alerts off on the TV
+        self.tv.update_config(lambda j: j.update(agentAlert=True))
+        cli("notify", "build   done", "--from", "Claude Code")
+        self.assertEqual(self.tv.notes[-1], ("Claude Code", "build done"))
+
+    def test_app_tokens_ask_page_and_logs(self):   # v2.21
+        self.pair()
+        out = cli("token", "add", "My", "dashboard", "--scope", "notify").stdout.splitlines()
+        self.assertIn("My dashboard (notify)", out[0])
+        self.assertTrue(out[1].startswith("otva_"))
+        self.assertIn("My dashboard", cli("token").stdout)
+        cli("token", "revoke", "00000001")
+        self.assertIn("No app tokens", cli("token").stdout)
+        self.assertEqual(cli("ask", "Deploy?", check=False).returncode, 4)
+        self.tv.update_config(lambda j: j.update(agentAlert=True))
+        self.tv.answer_with = "Not now"
+        r = cli("ask", "Deploy?", "--choice", "Yes", "--choice", "Not now", "--timeout", "10")
+        self.assertEqual(r.stdout.strip(), "Not now")
+        cli("page", "http://192.168.1.20:8080/")
+        self.assertEqual(self.tv.page, "http://192.168.1.20:8080/")
+        cli("page", "http://192.168.1.20:8080/", "http://192.168.1.21:3000/")
+        self.assertEqual(self.tv.pages, ["http://192.168.1.20:8080/", "http://192.168.1.21:3000/"])
+        self.assertEqual(cli("page", "--close").stdout.strip(), "closed")
+        self.assertIn("question from PC", cli("tv", "logs").stdout)
+        self.assertEqual(cli("radio").stdout.strip(), "nothing playing")
+        self.assertIn("Hyprland Nights", cli("radio", "play").stdout)
+        cli("open", "radiomarchy")
+        self.assertEqual(self.tv.opened, "radiomarchy")
+        cli("pages", "add", "dubai", "Dubai flats", "http://192.168.1.20:8080/", "--icon", "D", "--badge", "2")
+        cli("pages", "badge", "dubai", "5")
+        self.assertIn("Dubai flats (5)", cli("pages").stdout)
+        cli("pages", "show", "dubai")
+        self.assertEqual(self.tv.page, "http://192.168.1.20:8080/")
+        cli("pages", "remove", "dubai")
+        self.assertIn("No pages", cli("pages").stdout)
+        bk = helpers.TMP / "tv-backup.json"
+        cli("tv", "backup", str(bk))
+        saved = json.loads(bk.read_text())
+        saved["wallpaper"] = "plain"
+        saved["link"] = {"evil": True}
+        bk.write_text(json.dumps(saved))
+        cli("tv", "restore", str(bk))
+        self.assertEqual(self.tvconf()["wallpaper"], "plain")
+        self.assertNotIn("evil", self.tvconf().get("link", {}))
+        self.tv.notes = []
+        r = cli("watch", "--", "sh", "-c", "echo building; echo done-ok", check=False)
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("done-ok", r.stdout)
+        self.assertIn("done-ok", self.tv.notes[-1][1])
+        self.assertEqual(cli("watch", "--", "sh", "-c", "exit 3", check=False).returncode, 3)
+        cli("notify", '{"type":"agent-turn-complete","last-assistant-message":"Refactor finished"}', "--from", "Codex")
+        self.assertEqual(self.tv.notes[-1], ("Codex", "Refactor finished"))
+        # v2.21: Link after boot and the Home wallpaper, from the PC
+        self.assertIn("auto -> off", cli("tv", "keepalive").stdout)
+        self.assertIn("on -> on", cli("tv", "keepalive", "on").stdout)
+        self.assertEqual(cli("tv", "keepalive", "sometimes", check=False).returncode, 2)
+        self.assertIn("last-horizon", cli("tv", "home").stdout)
+        self.assertIn("looping (light 540p copy)", cli("tv", "home").stdout)
+        self.tv.watching = True
+        self.assertIn("held", cli("notify", "--title", "Build", "green").stderr)
+
     def test_status_offline_and_unpaired(self):
         self.assertEqual(json.loads(cli("status", "--waybar").stdout)["class"], "unpaired")
         self.pair()
@@ -181,6 +252,14 @@ class E2E(unittest.TestCase):
         # wallpaper not re-sent when the TV already has it
         cli("sync-theme", "--force")
         self.assertEqual(sum(1 for m, p, _ in self.tv.log if p == "/v1/wallpaper" and m == "PUT"), 2)
+
+    def test_pc_without_a_theme_leaves_the_tv_theme(self):
+        # macOS (or a Linux without Omarchy): nothing under ~/.local/state/omarchy/current
+        shutil.rmtree(helpers.OMARCHY, ignore_errors=True)
+        self.pair()
+        self.assertNotIn("theme", self.tvconf())
+        self.assertIn("This PC has no Omarchy theme", cli("sync-theme", "--force").stdout)
+        self.assertEqual([p for m, p, _ in self.tv.log if p in ("/v1/theme", "/v1/wallpaper")], [])
 
     def test_hook_script(self):
         self.pair()
