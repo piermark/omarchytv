@@ -10,6 +10,8 @@ Published: **19 November 2026 (latest release: 2.21.0 — Android TV, LG webOS &
 
 [![OmarchyTV 2.21: your TV, wired into your AI agents. Click to watch the 68-second video](docs/media/omarchytv-2.21.png)](docs/media/omarchytv-2.21.mp4)
 
+https://github.com/user-attachments/assets/13760cd7-a92b-41d0-9f0f-252ed7c78f7c
+
 *OmarchyTV 2.21 in 68 seconds: click the picture for the video (MP4, 6 MB, with music; also on the [v2.21.0 release](https://github.com/piermark/omarchytv/releases/tag/v2.21.0)). Your AI agent asks the TV and you answer with the remote, builds and agent pages on the big screen, one theme for everything, MCP built in, lighter on 2 GB TVs. The 2.15 video (Pulse and the arcade) is [here](docs/media/omarchytv-2.15.mp4). Everything new in this release is in [What's New in 2.21.0](#whats-new-in-2210-versioncode-30), and earlier in [What's New in 2.20.0](#whats-new-in-2200-versioncode-29), [What's New in 2.15.1](#whats-new-in-2151-versioncode-28) and [What's New in 2.15.0](#whats-new-in-2150-versioncode-27).*
 
 > [!WARNING]
