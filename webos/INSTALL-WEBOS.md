@@ -96,7 +96,7 @@ On an unrooted TV, OmarchyTV runs through LG's Developer Mode, and a Developer M
 41 days). When it runs out, Developer Mode turns off and the TV **removes the sideloaded app**. To keep it, open the
 **Developer Mode** app on the TV before then and press **EXTEND**: that starts a new 1000 hours.
 
-OmarchyTV can remind you (2.15, idea by @XanderHalloran, #131): Settings › Widgets › **dev mode countdown** adds a box
+OmarchyTV can remind you (2.15, idea by @XanderHalloran, #131): Settings › Home widgets › **dev mode** adds a box
 to the widget row with the days left (hours under 48 h; yellow under 14 days, red under 7). The app can't read LG's
 timer, so after each EXTEND choose **dev mode · I just pressed EXTEND** and it counts the next 1000 hours. Rooted TVs
 (Method C) don't need any of this.

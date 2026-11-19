@@ -8,6 +8,8 @@ This guide answers two questions:
 It is the practical path, step by step. The full reference is in [TAILSCALE.md](TAILSCALE.md),
 [CLOUDFLARE.md](CLOUDFLARE.md) and [INTEGRATIONS.md](INTEGRATIONS.md).
 
+"Settings" means OmarchyTV's own settings: the logo menu (or the system page, key 5) › **All OmarchyTV settings**.
+
 Before anything else, on the TV turn on **Settings › Grok Bot & AI › AI agent alerts while you watch**. Without it the
 TV accepts no notifications or questions (`omarchy-link notify` exits with 4).
 

@@ -585,4 +585,6 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">igen</string>
     <string name="radio_animated_off">nem</string>
+    <string name="ss_pulse_panels">Pulse panelek</string>
+    <string name="ss_pulse_racing">versenypanel a Pulse-on</string>
 </resources>

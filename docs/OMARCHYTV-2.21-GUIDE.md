@@ -18,11 +18,15 @@ Platforms:
 
 ## 1. The switches on the TV (Android)
 
+"Settings" in this guide means OmarchyTV's own settings: the logo menu (or the system page, key 5) › **All OmarchyTV
+settings** (on LG and Samsung: the System menu › **All OmarchyTV settings**). The row called "Settings" inside it
+opens Android's system settings, which this guide never needs.
+
 | Where | Setting | Default | What it does |
 |---|---|---|---|
 | Settings › Grok Bot & AI | **AI agent alerts while you watch** | off | Lets notifications and questions from your PC, agents and apps appear on the TV. Turn it on first. |
 | Settings › Connect Omarchy Linux | **Share theme with apps on the network** | on | Other apps on your LAN can read the theme colours and the wallpaper. Nothing else is shared without a token. |
-| Settings › Connect Omarchy Linux | **App tokens** | 0 | How many app tokens exist. OK revokes them all. Any app still connected is cut off at once. |
+| Settings › Connect Omarchy Linux | **App tokens (dashboards, agents)** | 0 | How many app tokens exist. OK revokes them all. Any app still connected is cut off at once. |
 | Settings › Connect Omarchy Linux | **New app token** | | Makes a token and shows it once, as text and as a QR code. |
 | Settings › Connect Omarchy Linux | **Allow Tailscale (tailnet)** | off | Accepts your tailnet as well as the LAN (section 6). |
 | Settings › Connect Omarchy Linux | **Tailscale app** | | Opens or installs the official Tailscale app. |

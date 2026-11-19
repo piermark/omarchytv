@@ -55,7 +55,8 @@ def clean(text: str) -> str:
 def command(exe: str, secs: int, text: str, rid: str) -> list[str]:
     return ["systemd-run", "--user", "--quiet", f"--unit={PREFIX}{rid}", f"--on-active={secs}",
             f"--description=OmarchyTV reminder: {text[:60]}", "--timer-property=AccuracySec=1s",
-            exe, "notify", "--quiet", "--level", "warn", "--speak", "--from", "Reminder", "--title", "Reminder", text]
+            exe, "notify", "--quiet", "--level", "warn", "--speak", "--from", "Reminder", "--title", "Reminder",
+            "--", text]   # the text may start with "-"
 
 
 def schedule(exe: str, when: str, text: str, run=subprocess.run, which=shutil.which) -> dict:

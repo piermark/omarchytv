@@ -585,4 +585,6 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">ano</string>
     <string name="radio_animated_off">ne</string>
+    <string name="ss_pulse_panels">Panely Pulse</string>
+    <string name="ss_pulse_racing">panel závodů v Pulse</string>
 </resources>

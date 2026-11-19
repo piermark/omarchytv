@@ -61,7 +61,7 @@ token (shown as a QR code).
 
 ## From anywhere: Tailscale
 
-Install the Tailscale app on the TV, then turn on Settings › Connect Omarchy Linux › Allow Tailscale. On the PC:
+Install the Tailscale app on the TV, then turn on Settings › Connect Omarchy Linux › Allow Tailscale (tailnet). On the PC:
 
 ```sh
 omarchy-link tailscale on

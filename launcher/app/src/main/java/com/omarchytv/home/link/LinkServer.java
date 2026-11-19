@@ -425,7 +425,7 @@ public final class LinkServer {
             OutputStream out = sock.getOutputStream();
             if (!host.allowPeer(peer)) {
                 Response r = new Response(403, err("not_lan", Tailnet.isTailnet(peer)
-                        ? "a Tailscale address: turn on Settings > Connect Omarchy Linux > Allow Tailscale on the TV" : "LAN clients only"));
+                        ? "a Tailscale address: turn on Settings > Connect Omarchy Linux > Allow Tailscale (tailnet) on the TV" : "LAN clients only"));
                 r.close = true;
                 write(out, r);
                 return;

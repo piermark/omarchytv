@@ -48,7 +48,7 @@ class BridgeClient:
             return {"screen": "unknown", "app": None, "theme": st.get("theme"), "nowPlaying": None, "tv": "webos-or-tizen"}
         base = path.split("?", 1)[0]
         if not (base in self.SUPPORTED or base.startswith("/v1/ask/")):
-            raise BridgeError(404, {"error": "not_on_lg_samsung", "message": f"{base} is for Android TV (Omarchy Link)"})
+            raise BridgeError(404, {"error": "not_on_lg_samsung", "message": f"not_on_lg_samsung: {base} is for Android TV (Omarchy Link)"})
         c = http.client.HTTPConnection(self.host, self.port, timeout=timeout)
         try:
             data = json.dumps(body).encode() if body is not None else None

@@ -72,7 +72,7 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 
 - **Use OmarchyTV from anywhere over your tailnet**: pairing, theme, remote, Radiomarchy, notifications,
   questions, pages, MCP, casts and Remote panes. TV: install the official Tailscale app (Settings › Connect Omarchy Linux ›
-  **Tailscale app** opens it or its Play Store page, or a QR code for the phone), then **Allow Tailscale**; the row
+  **Tailscale app** opens it or its Play Store page, or a QR code for the phone), then **Allow Tailscale (tailnet)**; the row
   shows the TV's tailnet address. PC: `omarchy-link tailscale on`; `discover` and `pair living-tv` find tailnet TVs
   and MagicDNS names through tailscaled; `tailscale status` shows each TV and whether the path is direct or relayed;
   `tailscale acl` prints a tagged policy. Casts warn when Tailscale goes through a relay.

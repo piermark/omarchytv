@@ -6,6 +6,7 @@
     "pt-PT": {
       "name": "Português (Portugal)",
       "strings": {
+        "w_term": "terminal · logótipo", "w_deploy": "implementações · pc", "t_companion_settings": "Definições do companheiro",
         "w_racing": "corridas", "w_weather": "tempo", "w_ai": "créditos ia · pc", "w_devmode": "modo programador", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON isolados (esquema v1 · sem código nativo)",
         "t_themes_sub": "Escolha um tema", "t_wp_dim": "Escurecer fundo", "t_walker_sub": "Filtrar e abrir apps instaladas", "t_walker_ph": "procurar apps…", "t_hub_forget": "Esquecer o hub?", "t_hub_forget_sub": "Remover desta TV as credenciais Hue / Home Assistant guardadas?", "t_lights": "Ambilight e luzes", "t_lights_sub": "Sincronizar luzes Hue ou Home Assistant com o tema e o Cinemarchy", "t_pulse_panels": "Painéis Pulse", "t_pulse_panels_sub": "Que painéis laterais Pulse aparecem na proteção de ecrã", "t_grok_ai": "Grok Bot e IA", "t_grok_ai_sub": "TUI do Grok Bot, companheiro, agentes do PC e web apps de IA", "t_webapps": "Web apps", "t_webapps_sub": "Abre no navegador da TV · Retroceder volta", "t_pair_pc": "Emparelhar PC Omarchy Linux", "t_pair_pc_sub": "Introduza o IP de rede do PC Omarchy", "t_companion_keys": "Azul: chat · manter Azul: voz", "arrange_sub": "OK sobe um painel · a ordem é guardada", "arrange_reset": "Repor ordem",
         "agent_asks": "pergunta", "agent_hint": "OK responde · ◀ ▶ escolher · RETROCEDER depois",
@@ -236,6 +237,7 @@
     "pt-BR": {
       "name": "Português (Brasil)",
       "strings": {
+        "w_term": "terminal · logo", "w_deploy": "deploys · pc", "t_companion_settings": "Configurações do companheiro",
         "w_racing": "corridas", "w_weather": "clima", "w_ai": "créditos ia · pc", "w_devmode": "modo desenvolvedor", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON isolados (esquema v1 · sem código nativo)",
         "t_themes_sub": "Escolha um tema", "t_wp_dim": "Escurecer fundo", "t_walker_sub": "Filtrar e abrir apps instalados", "t_walker_ph": "buscar apps…", "t_hub_forget": "Esquecer o hub?", "t_hub_forget_sub": "Remover desta TV as credenciais Hue / Home Assistant salvas?", "t_lights": "Ambilight e luzes", "t_lights_sub": "Sincronizar luzes Hue ou Home Assistant com o tema e o Cinemarchy", "t_pulse_panels": "Painéis Pulse", "t_pulse_panels_sub": "Quais painéis laterais Pulse aparecem no protetor de tela", "t_grok_ai": "Grok Bot e IA", "t_grok_ai_sub": "TUI do Grok Bot, companheiro, agentes do PC e web apps de IA", "t_webapps": "Web apps", "t_webapps_sub": "Abre no navegador da TV · Voltar retorna", "t_pair_pc": "Parear PC Omarchy Linux", "t_pair_pc_sub": "Digite o IP de rede do PC Omarchy", "t_companion_keys": "Azul: chat · segurar Azul: voz", "arrange_sub": "OK sobe um painel · a ordem é mantida", "arrange_reset": "Restaurar ordem",
         "agent_asks": "pergunta", "agent_hint": "OK responde · ◀ ▶ escolher · VOLTAR depois",
@@ -466,6 +468,7 @@
     "es": {
       "name": "Español",
       "strings": {
+        "w_term": "terminal · logo", "w_deploy": "despliegues · pc", "t_companion_settings": "Ajustes del compañero",
         "w_racing": "carreras", "w_weather": "tiempo", "w_ai": "créditos ia · pc", "w_devmode": "modo desarrollador", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON aislados (esquema v1 · sin código nativo)",
         "t_themes_sub": "Elige un tema", "t_wp_dim": "Atenuar fondo", "t_walker_sub": "Filtra y abre las apps instaladas", "t_walker_ph": "buscar apps…", "t_hub_forget": "¿Olvidar el hub?", "t_hub_forget_sub": "¿Quitar de esta TV las credenciales de Hue / Home Assistant guardadas?", "t_lights": "Ambilight y luces", "t_lights_sub": "Sincroniza las luces Hue o Home Assistant con el tema y Cinemarchy", "t_pulse_panels": "Paneles Pulse", "t_pulse_panels_sub": "Qué paneles laterales Pulse muestra el salvapantallas", "t_grok_ai": "Grok Bot e IA", "t_grok_ai_sub": "TUI de Grok Bot, compañero, agentes del PC y web apps de IA", "t_webapps": "Web apps", "t_webapps_sub": "Se abre en el navegador de la TV · Atrás vuelve", "t_pair_pc": "Vincular PC Omarchy Linux", "t_pair_pc_sub": "Escribe la IP de red del PC Omarchy", "t_companion_keys": "Azul: chat · mantener Azul: voz", "arrange_sub": "OK sube un panel · el orden se guarda", "arrange_reset": "Restablecer orden",
         "agent_asks": "pregunta", "agent_hint": "OK responde · ◀ ▶ elegir · ATRÁS luego",
@@ -696,6 +699,7 @@
     "fr": {
       "name": "Français",
       "strings": {
+        "w_term": "terminal · logo", "w_deploy": "déploiements · pc", "t_companion_settings": "Réglages du compagnon",
         "w_racing": "courses", "w_weather": "météo", "w_ai": "crédits ia · pc", "w_devmode": "mode développeur", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON isolés (schéma v1 · aucun code natif)",
         "t_themes_sub": "Choisissez un thème", "t_wp_dim": "Assombrir le fond", "t_walker_sub": "Filtrer et lancer les apps installées", "t_walker_ph": "rechercher des apps…", "t_hub_forget": "Oublier le hub ?", "t_hub_forget_sub": "Supprimer de ce téléviseur les identifiants Hue / Home Assistant enregistrés ?", "t_lights": "Ambilight et lumières", "t_lights_sub": "Synchroniser les lumières Hue ou Home Assistant avec le thème et Cinemarchy", "t_pulse_panels": "Panneaux Pulse", "t_pulse_panels_sub": "Les panneaux latéraux Pulse affichés par l'économiseur", "t_grok_ai": "Grok Bot et IA", "t_grok_ai_sub": "TUI Grok Bot, compagnon, agents du PC et web apps IA", "t_webapps": "Web apps", "t_webapps_sub": "S'ouvre dans le navigateur de la TV · Retour revient", "t_pair_pc": "Associer un PC Omarchy Linux", "t_pair_pc_sub": "Saisissez l'IP réseau du PC Omarchy", "t_companion_keys": "Bleu : chat · Bleu maintenu : voix", "arrange_sub": "OK monte un panneau · l'ordre est gardé", "arrange_reset": "Réinitialiser l'ordre",
         "agent_asks": "demande", "agent_hint": "OK répond · ◀ ▶ choisir · RETOUR plus tard",
@@ -926,6 +930,7 @@
     "nl": {
       "name": "Nederlands",
       "strings": {
+        "w_term": "terminal · logo", "w_deploy": "deploys · pc", "t_companion_settings": "Companion-instellingen",
         "w_racing": "races", "w_weather": "weer", "w_ai": "ai-tegoed · pc", "w_devmode": "ontwikkelaarsmodus", "w_pc": "omarchy · pc", "t_plugins_sub": "Geïsoleerde JSON-plugins (schema v1 · geen native code)",
         "t_themes_sub": "Kies een thema", "t_wp_dim": "Achtergrond dimmen", "t_walker_sub": "Geïnstalleerde apps filteren en openen", "t_walker_ph": "apps zoeken…", "t_hub_forget": "Hub vergeten?", "t_hub_forget_sub": "Opgeslagen Hue- / Home Assistant-gegevens van deze tv verwijderen?", "t_lights": "Ambilight en lampen", "t_lights_sub": "Hue- of Home Assistant-lampen synchroniseren met thema en Cinemarchy", "t_pulse_panels": "Pulse-panelen", "t_pulse_panels_sub": "Welke Pulse-zijpanelen de schermbeveiliging toont", "t_grok_ai": "Grok Bot & AI", "t_grok_ai_sub": "Grok Bot-TUI, companion, pc-agents en AI-webapps", "t_webapps": "Webapps", "t_webapps_sub": "Opent in de tv-browser · Terug keert terug", "t_pair_pc": "Omarchy Linux-pc koppelen", "t_pair_pc_sub": "Voer het LAN-IP van je Omarchy-pc in", "t_companion_keys": "Blauw: chat · Blauw ingedrukt: spraak", "arrange_sub": "OK zet een paneel hoger · de volgorde blijft", "arrange_reset": "Volgorde herstellen",
         "agent_asks": "vraagt", "agent_hint": "OK antwoordt · ◀ ▶ kiezen · TERUG later",
@@ -1156,6 +1161,7 @@
     "pl": {
       "name": "Polski",
       "strings": {
+        "w_term": "terminal · logo", "w_deploy": "wdrożenia · pc", "t_companion_settings": "Ustawienia towarzysza",
         "w_racing": "wyścigi", "w_weather": "pogoda", "w_ai": "kredyty ai · pc", "w_devmode": "tryb dewelopera", "w_pc": "omarchy · pc", "t_plugins_sub": "Izolowane wtyczki JSON (schemat v1 · bez kodu natywnego)",
         "t_themes_sub": "Wybierz motyw", "t_wp_dim": "Przyciemnienie tła", "t_walker_sub": "Filtruj i uruchamiaj zainstalowane aplikacje", "t_walker_ph": "szukaj aplikacji…", "t_hub_forget": "Zapomnieć hub?", "t_hub_forget_sub": "Usunąć z tego telewizora zapisane dane Hue / Home Assistant?", "t_lights": "Ambilight i światła", "t_lights_sub": "Synchronizuj światła Hue lub Home Assistant z motywem i Cinemarchy", "t_pulse_panels": "Panele Pulse", "t_pulse_panels_sub": "Które panele boczne Pulse pokazuje wygaszacz", "t_grok_ai": "Grok Bot i AI", "t_grok_ai_sub": "TUI Grok Bot, towarzysz, agenci PC i aplikacje webowe AI", "t_webapps": "Aplikacje webowe", "t_webapps_sub": "Otwiera się w przeglądarce TV · Wstecz wraca", "t_pair_pc": "Sparuj komputer Omarchy Linux", "t_pair_pc_sub": "Wpisz adres IP komputera Omarchy w sieci LAN", "t_companion_keys": "Niebieski: czat · przytrzymaj Niebieski: głos", "arrange_sub": "OK przesuwa panel wyżej · kolejność zostaje", "arrange_reset": "Przywróć kolejność",
         "agent_asks": "pyta", "agent_hint": "OK odpowiada · ◀ ▶ wybierz · WSTECZ później",
@@ -1386,7 +1392,8 @@
     "sv": {
       "name": "Svenska",
       "strings": {
-        "w_racing": "racing", "w_weather": "väder", "w_ai": "ai-krediter · pc", "w_devmode": "utvecklarläge", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerade JSON-tillägg (schema v1 · ingen inbyggd kod)",
+        "w_term": "terminal · logga", "w_deploy": "driftsättningar · pc", "t_companion_settings": "Följeslagarens inställningar",
+        "w_racing": "motorsport", "w_weather": "väder", "w_ai": "ai-krediter · pc", "w_devmode": "utvecklarläge", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerade JSON-tillägg (schema v1 · ingen inbyggd kod)",
         "t_themes_sub": "Välj ett tema", "t_wp_dim": "Dämpa bakgrund", "t_walker_sub": "Filtrera och starta installerade appar", "t_walker_ph": "sök appar…", "t_hub_forget": "Glöm hubben?", "t_hub_forget_sub": "Ta bort sparade Hue- / Home Assistant-uppgifter från denna TV?", "t_lights": "Ambilight och ljus", "t_lights_sub": "Synka Hue- eller Home Assistant-ljus med tema och Cinemarchy", "t_pulse_panels": "Pulse-paneler", "t_pulse_panels_sub": "Vilka Pulse-sidopaneler skärmsläckaren visar", "t_grok_ai": "Grok Bot & AI", "t_grok_ai_sub": "Grok Bot-TUI, följeslagare, PC-agenter och AI-webbappar", "t_webapps": "Webbappar", "t_webapps_sub": "Öppnas i TV:ns webbläsare · Tillbaka återgår", "t_pair_pc": "Para Omarchy Linux-dator", "t_pair_pc_sub": "Ange Omarchy-datorns LAN-IP", "t_companion_keys": "Blå: chatt · håll Blå: röst", "arrange_sub": "OK flyttar en panel uppåt · ordningen sparas", "arrange_reset": "Återställ ordning",
         "agent_asks": "frågar", "agent_hint": "OK svarar · ◀ ▶ välj · BAKÅT senare",
         "menu_plugins": "Plugin", "menu_apps": "Appar", "menu_setup": "Inställningar", "menu_terminal": "Terminal", "menu_hint": "↑↓ välj   OK öppna   Bakåt stäng",
@@ -1616,7 +1623,8 @@
     "da": {
       "name": "Dansk",
       "strings": {
-        "w_racing": "racing", "w_weather": "vejr", "w_ai": "ai-kreditter · pc", "w_devmode": "udviklertilstand", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerede JSON-plugins (skema v1 · ingen native kode)",
+        "w_term": "terminal · logo", "w_deploy": "udrulninger · pc", "t_companion_settings": "Ledsagerens indstillinger",
+        "w_racing": "motorsport", "w_weather": "vejr", "w_ai": "ai-kreditter · pc", "w_devmode": "udviklertilstand", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerede JSON-plugins (skema v1 · ingen native kode)",
         "t_themes_sub": "Vælg et tema", "t_wp_dim": "Dæmp baggrund", "t_walker_sub": "Filtrer og start installerede apps", "t_walker_ph": "søg apps…", "t_hub_forget": "Glem hubben?", "t_hub_forget_sub": "Fjern gemte Hue- / Home Assistant-oplysninger fra dette TV?", "t_lights": "Ambilight og lys", "t_lights_sub": "Synkronisér Hue- eller Home Assistant-lys med tema og Cinemarchy", "t_pulse_panels": "Pulse-paneler", "t_pulse_panels_sub": "Hvilke Pulse-sidepaneler pauseskærmen viser", "t_grok_ai": "Grok Bot & AI", "t_grok_ai_sub": "Grok Bot-TUI, ledsager, pc-agenter og AI-webapps", "t_webapps": "Webapps", "t_webapps_sub": "Åbner i TV'ets browser · Tilbage vender tilbage", "t_pair_pc": "Par Omarchy Linux-pc", "t_pair_pc_sub": "Indtast Omarchy-pc'ens LAN-IP", "t_companion_keys": "Blå: chat · hold Blå: stemme", "arrange_sub": "OK flytter et panel op · rækkefølgen gemmes", "arrange_reset": "Nulstil rækkefølge",
         "agent_asks": "spørger", "agent_hint": "OK svarer · ◀ ▶ vælg · TILBAGE senere",
         "menu_plugins": "Plugins", "menu_apps": "Apps", "menu_setup": "Opsætning", "menu_terminal": "Terminal", "menu_hint": "↑↓ vælg   OK åbn   Tilbage luk",
@@ -1846,6 +1854,7 @@
     "cs": {
       "name": "Čeština",
       "strings": {
+        "w_term": "terminál · logo", "w_deploy": "nasazení · pc", "t_companion_settings": "Nastavení společníka",
         "w_racing": "závody", "w_weather": "počasí", "w_ai": "kredity ai · pc", "w_devmode": "vývojářský režim", "w_pc": "omarchy · pc", "t_plugins_sub": "Izolované JSON pluginy (schéma v1 · žádný nativní kód)",
         "t_themes_sub": "Vyberte motiv", "t_wp_dim": "Ztmavení pozadí", "t_walker_sub": "Filtrovat a spouštět nainstalované aplikace", "t_walker_ph": "hledat aplikace…", "t_hub_forget": "Zapomenout hub?", "t_hub_forget_sub": "Odebrat z této TV uložené údaje Hue / Home Assistant?", "t_lights": "Ambilight a světla", "t_lights_sub": "Synchronizovat světla Hue nebo Home Assistant s motivem a Cinemarchy", "t_pulse_panels": "Panely Pulse", "t_pulse_panels_sub": "Které boční panely Pulse spořič ukazuje", "t_grok_ai": "Grok Bot a AI", "t_grok_ai_sub": "TUI Grok Bot, společník, agenti PC a webové AI aplikace", "t_webapps": "Webové aplikace", "t_webapps_sub": "Otevře se v prohlížeči TV · Zpět se vrátí", "t_pair_pc": "Spárovat PC Omarchy Linux", "t_pair_pc_sub": "Zadejte IP adresu PC Omarchy v síti LAN", "t_companion_keys": "Modrá: chat · podržet Modrou: hlas", "arrange_sub": "OK posune panel nahoru · pořadí zůstane", "arrange_reset": "Obnovit pořadí",
         "agent_asks": "se ptá", "agent_hint": "OK odpoví · ◀ ▶ vybrat · ZPĚT později",
@@ -2076,6 +2085,7 @@
     "ro": {
       "name": "Română",
       "strings": {
+        "w_term": "terminal · logo", "w_deploy": "implementări · pc", "t_companion_settings": "Setări companion",
         "w_racing": "curse", "w_weather": "vremea", "w_ai": "credite ai · pc", "w_devmode": "mod dezvoltator", "w_pc": "omarchy · pc", "t_plugins_sub": "Pluginuri JSON izolate (schema v1 · fără cod nativ)",
         "t_themes_sub": "Alege o temă", "t_wp_dim": "Estompare fundal", "t_walker_sub": "Filtrează și pornește aplicațiile instalate", "t_walker_ph": "caută aplicații…", "t_hub_forget": "Uiți hubul?", "t_hub_forget_sub": "Elimini de pe acest TV datele Hue / Home Assistant salvate?", "t_lights": "Ambilight și lumini", "t_lights_sub": "Sincronizează luminile Hue sau Home Assistant cu tema și Cinemarchy", "t_pulse_panels": "Panouri Pulse", "t_pulse_panels_sub": "Ce panouri laterale Pulse arată protecția de ecran", "t_grok_ai": "Grok Bot și AI", "t_grok_ai_sub": "TUI Grok Bot, companion, agenți PC și aplicații web AI", "t_webapps": "Aplicații web", "t_webapps_sub": "Se deschide în browserul TV · Înapoi revine", "t_pair_pc": "Asociază PC Omarchy Linux", "t_pair_pc_sub": "Introdu IP-ul de rețea al PC-ului Omarchy", "t_companion_keys": "Albastru: chat · ține Albastru: voce", "arrange_sub": "OK mută un panou în sus · ordinea rămâne", "arrange_reset": "Resetează ordinea",
         "agent_asks": "întreabă", "agent_hint": "OK răspunde · ◀ ▶ alege · ÎNAPOI mai târziu",
@@ -2306,6 +2316,7 @@
     "el": {
       "name": "Ελληνικά",
       "strings": {
+        "w_term": "τερματικό · λογότυπο", "w_deploy": "αναπτύξεις · pc", "t_companion_settings": "Ρυθμίσεις συντρόφου",
         "w_racing": "αγώνες", "w_weather": "καιρός", "w_ai": "μονάδες ai · pc", "w_devmode": "λειτουργία προγραμματιστή", "w_pc": "omarchy · pc", "t_plugins_sub": "Απομονωμένα πρόσθετα JSON (σχήμα v1 · χωρίς εγγενή κώδικα)",
         "t_themes_sub": "Επιλέξτε θέμα", "t_wp_dim": "Σκίαση φόντου", "t_walker_sub": "Φιλτράρισμα και άνοιγμα εφαρμογών", "t_walker_ph": "αναζήτηση εφαρμογών…", "t_hub_forget": "Διαγραφή του hub;", "t_hub_forget_sub": "Αφαίρεση των αποθηκευμένων στοιχείων Hue / Home Assistant από την τηλεόραση;", "t_lights": "Ambilight και φώτα", "t_lights_sub": "Συγχρονισμός φώτων Hue ή Home Assistant με το θέμα και το Cinemarchy", "t_pulse_panels": "Πάνελ Pulse", "t_pulse_panels_sub": "Ποια πλαϊνά πάνελ Pulse δείχνει η προφύλαξη οθόνης", "t_grok_ai": "Grok Bot & AI", "t_grok_ai_sub": "TUI Grok Bot, σύντροφος, πράκτορες PC και web εφαρμογές AI", "t_webapps": "Web εφαρμογές", "t_webapps_sub": "Ανοίγει στον browser της TV · Πίσω επιστρέφει", "t_pair_pc": "Σύζευξη PC Omarchy Linux", "t_pair_pc_sub": "Εισαγάγετε την IP LAN του PC Omarchy", "t_companion_keys": "Μπλε: συνομιλία · κράτημα Μπλε: φωνή", "arrange_sub": "Το OK μετακινεί ένα πάνελ πάνω · η σειρά διατηρείται", "arrange_reset": "Επαναφορά σειράς",
         "agent_asks": "ρωτά", "agent_hint": "OK απαντά · ◀ ▶ επιλογή · ΠΙΣΩ αργότερα",
@@ -2536,6 +2547,7 @@
     "ru": {
       "name": "Русский",
       "strings": {
+        "w_term": "терминал · логотип", "w_deploy": "развёртывания · pc", "t_companion_settings": "Настройки компаньона",
         "w_racing": "гонки", "w_weather": "погода", "w_ai": "кредиты ии · pc", "w_devmode": "режим разработчика", "w_pc": "omarchy · pc", "t_plugins_sub": "Изолированные JSON-плагины (схема v1 · без нативного кода)",
         "t_themes_sub": "Выберите тему", "t_wp_dim": "Затемнение фона", "t_walker_sub": "Фильтр и запуск установленных приложений", "t_walker_ph": "поиск приложений…", "t_hub_forget": "Забыть хаб?", "t_hub_forget_sub": "Удалить с этого ТВ сохранённые данные Hue / Home Assistant?", "t_lights": "Ambilight и свет", "t_lights_sub": "Синхронизировать свет Hue или Home Assistant с темой и Cinemarchy", "t_pulse_panels": "Панели Pulse", "t_pulse_panels_sub": "Какие боковые панели Pulse показывает заставка", "t_grok_ai": "Grok Bot и ИИ", "t_grok_ai_sub": "TUI Grok Bot, компаньон, агенты ПК и веб-приложения ИИ", "t_webapps": "Веб-приложения", "t_webapps_sub": "Открывается в браузере ТВ · Назад возвращает", "t_pair_pc": "Подключить ПК Omarchy Linux", "t_pair_pc_sub": "Введите IP ПК Omarchy в локальной сети", "t_companion_keys": "Синяя: чат · удерживать Синюю: голос", "arrange_sub": "OK поднимает панель · порядок сохраняется", "arrange_reset": "Сбросить порядок",
         "agent_asks": "спрашивает", "agent_hint": "OK — ответ · ◀ ▶ выбор · НАЗАД — позже",
@@ -2766,6 +2778,7 @@
     "zh-CN": {
       "name": "简体中文",
       "strings": {
+        "w_term": "终端 · 标志", "w_deploy": "部署 · pc", "t_companion_settings": "伙伴设置",
         "w_racing": "赛车", "w_weather": "天气", "w_ai": "AI 额度 · pc", "w_devmode": "开发者模式", "w_pc": "omarchy · pc", "t_plugins_sub": "隔离的 JSON 插件（v1 架构 · 不运行原生代码）",
         "t_themes_sub": "选择主题", "t_wp_dim": "壁纸调暗", "t_walker_sub": "筛选并打开已安装的应用", "t_walker_ph": "搜索应用…", "t_hub_forget": "忘记此中枢？", "t_hub_forget_sub": "从此电视删除已保存的 Hue / Home Assistant 凭据？", "t_lights": "Ambilight 与灯光", "t_lights_sub": "将 Hue 或 Home Assistant 灯光与主题和 Cinemarchy 同步", "t_pulse_panels": "Pulse 面板", "t_pulse_panels_sub": "屏保显示哪些 Pulse 侧边面板", "t_grok_ai": "Grok Bot 与 AI", "t_grok_ai_sub": "Grok Bot TUI、伙伴、电脑智能体和 AI 网页应用", "t_webapps": "网页应用", "t_webapps_sub": "在电视浏览器中打开 · 返回键回来", "t_pair_pc": "配对 Omarchy Linux 电脑", "t_pair_pc_sub": "输入 Omarchy 电脑的局域网 IP", "t_companion_keys": "蓝键：聊天 · 长按蓝键：语音", "arrange_sub": "确定键上移面板 · 顺序会保留", "arrange_reset": "重置顺序",
         "agent_asks": "提问", "agent_hint": "OK 回答 · ◀ ▶ 选择 · 返回 稍后",
@@ -2996,6 +3009,7 @@
     "ja": {
       "name": "日本語",
       "strings": {
+        "w_term": "ターミナル · ロゴ", "w_deploy": "デプロイ · pc", "t_companion_settings": "コンパニオン設定",
         "w_racing": "レース", "w_weather": "天気", "w_ai": "AI クレジット · pc", "w_devmode": "開発者モード", "w_pc": "omarchy · pc", "t_plugins_sub": "サンドボックス化された JSON プラグイン（v1 スキーマ・ネイティブコードなし）",
         "t_themes_sub": "テーマを選択", "t_wp_dim": "壁紙を暗く", "t_walker_sub": "インストール済みアプリを絞り込んで起動", "t_walker_ph": "アプリを検索…", "t_hub_forget": "ハブを削除しますか？", "t_hub_forget_sub": "このテレビに保存した Hue / Home Assistant の認証情報を削除しますか？", "t_lights": "Ambilight とライト", "t_lights_sub": "Hue / Home Assistant のライトをテーマと Cinemarchy に同期", "t_pulse_panels": "Pulse パネル", "t_pulse_panels_sub": "スクリーンセーバーに出す Pulse サイドパネル", "t_grok_ai": "Grok Bot と AI", "t_grok_ai_sub": "Grok Bot TUI、コンパニオン、PC エージェント、AI ウェブアプリ", "t_webapps": "ウェブアプリ", "t_webapps_sub": "テレビのブラウザで開く · 戻るで戻る", "t_pair_pc": "Omarchy Linux PC をペアリング", "t_pair_pc_sub": "Omarchy PC の LAN IP を入力", "t_companion_keys": "青: チャット · 青長押し: 音声", "arrange_sub": "OK でパネルを上へ · 順序は保存", "arrange_reset": "順序をリセット",
         "agent_asks": "からの質問", "agent_hint": "OK で回答 · ◀ ▶ 選択 · 戻る であとで",
@@ -3226,6 +3240,7 @@
     "ar": {
       "name": "العربية",
       "strings": {
+        "w_term": "الطرفية · الشعار", "w_deploy": "عمليات النشر · pc", "t_companion_settings": "إعدادات الرفيق",
         "w_racing": "سباقات", "w_weather": "الطقس", "w_ai": "أرصدة الذكاء · pc", "w_devmode": "وضع المطوّر", "w_pc": "omarchy · pc", "t_plugins_sub": "إضافات JSON معزولة (مخطط v1 · بلا شيفرة أصلية)",
         "t_themes_sub": "اختر سمة", "t_wp_dim": "تعتيم الخلفية", "t_walker_sub": "تصفية التطبيقات المثبتة وتشغيلها", "t_walker_ph": "ابحث عن تطبيقات…", "t_hub_forget": "نسيان الموزّع؟", "t_hub_forget_sub": "إزالة بيانات Hue / Home Assistant المحفوظة من هذا التلفاز؟", "t_lights": "Ambilight والأضواء", "t_lights_sub": "مزامنة أضواء Hue أو Home Assistant مع السمة وCinemarchy", "t_pulse_panels": "لوحات Pulse", "t_pulse_panels_sub": "لوحات Pulse الجانبية التي تظهر في شاشة التوقف", "t_grok_ai": "Grok Bot والذكاء الاصطناعي", "t_grok_ai_sub": "واجهة Grok Bot الطرفية والرفيق ووكلاء الحاسوب وتطبيقات الويب للذكاء الاصطناعي", "t_webapps": "تطبيقات الويب", "t_webapps_sub": "يفتح في متصفح التلفاز · رجوع للعودة", "t_pair_pc": "إقران حاسوب Omarchy Linux", "t_pair_pc_sub": "أدخل عنوان IP المحلي لحاسوب Omarchy", "t_companion_keys": "الأزرق: دردشة · ضغط مطوّل على الأزرق: صوت", "arrange_sub": "OK ينقل اللوحة لأعلى · يُحفظ الترتيب", "arrange_reset": "إعادة تعيين الترتيب",
         "agent_asks": "يسأل", "agent_hint": "OK للإجابة · ◀ ▶ اختيار · رجوع لاحقًا",
@@ -3456,6 +3471,7 @@
     "tr": {
       "name": "Türkçe",
       "strings": {
+        "w_term": "terminal · logo", "w_deploy": "dağıtımlar · pc", "t_companion_settings": "Yardımcı ayarları",
         "w_racing": "yarış", "w_weather": "hava", "w_ai": "yz kredileri · pc", "w_devmode": "geliştirici modu", "w_pc": "omarchy · pc", "t_plugins_sub": "Yalıtılmış JSON eklentileri (v1 şeması · yerel kod yok)",
         "t_themes_sub": "Bir tema seçin", "t_wp_dim": "Duvar kâğıdı karartma", "t_walker_sub": "Yüklü uygulamaları süz ve aç", "t_walker_ph": "uygulama ara…", "t_hub_forget": "Hub unutulsun mu?", "t_hub_forget_sub": "Kayıtlı Hue / Home Assistant bilgileri bu TV'den silinsin mi?", "t_lights": "Ambilight ve ışıklar", "t_lights_sub": "Hue veya Home Assistant ışıklarını tema ve Cinemarchy ile eşitle", "t_pulse_panels": "Pulse panelleri", "t_pulse_panels_sub": "Ekran koruyucuda hangi Pulse yan panelleri görünsün", "t_grok_ai": "Grok Bot ve YZ", "t_grok_ai_sub": "Grok Bot TUI, yardımcı, PC ajanları ve YZ web uygulamaları", "t_webapps": "Web uygulamaları", "t_webapps_sub": "TV tarayıcısında açılır · Geri döner", "t_pair_pc": "Omarchy Linux PC eşleştir", "t_pair_pc_sub": "Omarchy PC'nin yerel ağ IP'sini girin", "t_companion_keys": "Mavi: sohbet · Maviyi basılı tut: ses", "arrange_sub": "OK paneli yukarı taşır · sıra korunur", "arrange_reset": "Sırayı sıfırla",
         "agent_asks": "soruyor", "agent_hint": "OK yanıtlar · ◀ ▶ seç · GERİ sonra",
@@ -3686,6 +3702,7 @@
     "uk": {
       "name": "Українська",
       "strings": {
+        "w_term": "термінал · логотип", "w_deploy": "розгортання · pc", "t_companion_settings": "Налаштування компаньйона",
         "w_racing": "перегони", "w_weather": "погода", "w_ai": "кредити ші · pc", "w_devmode": "режим розробника", "w_pc": "omarchy · pc", "t_plugins_sub": "Ізольовані JSON-плагіни (схема v1 · без нативного коду)",
         "t_themes_sub": "Виберіть тему", "t_wp_dim": "Затемнення фону", "t_walker_sub": "Фільтр і запуск встановлених застосунків", "t_walker_ph": "пошук застосунків…", "t_hub_forget": "Забути хаб?", "t_hub_forget_sub": "Видалити з цього ТБ збережені дані Hue / Home Assistant?", "t_lights": "Ambilight і світло", "t_lights_sub": "Синхронізувати світло Hue або Home Assistant з темою та Cinemarchy", "t_pulse_panels": "Панелі Pulse", "t_pulse_panels_sub": "Які бічні панелі Pulse показує заставка", "t_grok_ai": "Grok Bot і ШІ", "t_grok_ai_sub": "TUI Grok Bot, компаньйон, агенти ПК і веб-застосунки ШІ", "t_webapps": "Веб-застосунки", "t_webapps_sub": "Відкривається в браузері ТБ · Назад повертає", "t_pair_pc": "Під'єднати ПК Omarchy Linux", "t_pair_pc_sub": "Введіть IP ПК Omarchy у локальній мережі", "t_companion_keys": "Синя: чат · утримувати Синю: голос", "arrange_sub": "OK піднімає панель · порядок зберігається", "arrange_reset": "Скинути порядок",
         "agent_asks": "питає", "agent_hint": "OK — відповідь · ◀ ▶ вибір · НАЗАД — пізніше",
@@ -3916,6 +3933,7 @@
     "hu": {
       "name": "Magyar",
       "strings": {
+        "w_term": "terminál · logó", "w_deploy": "telepítések · pc", "t_companion_settings": "Társ beállításai",
         "w_racing": "verseny", "w_weather": "időjárás", "w_ai": "mi kreditek · pc", "w_devmode": "fejlesztői mód", "w_pc": "omarchy · pc", "t_plugins_sub": "Elszigetelt JSON-bővítmények (v1 séma · nincs natív kód)",
         "t_themes_sub": "Válassz témát", "t_wp_dim": "Háttér sötétítése", "t_walker_sub": "Telepített appok szűrése és indítása", "t_walker_ph": "appok keresése…", "t_hub_forget": "Elfelejted a hubot?", "t_hub_forget_sub": "Törlöd a tévéről a mentett Hue / Home Assistant adatokat?", "t_lights": "Ambilight és fények", "t_lights_sub": "Hue vagy Home Assistant fények szinkronizálása a témával és a Cinemarchyval", "t_pulse_panels": "Pulse panelek", "t_pulse_panels_sub": "Mely Pulse oldalpanelek látszanak a képernyővédőn", "t_grok_ai": "Grok Bot és MI", "t_grok_ai_sub": "Grok Bot TUI, társ, PC-ügynökök és MI webappok", "t_webapps": "Webappok", "t_webapps_sub": "A tévé böngészőjében nyílik · Vissza visszalép", "t_pair_pc": "Omarchy Linux PC párosítása", "t_pair_pc_sub": "Add meg az Omarchy PC helyi IP-címét", "t_companion_keys": "Kék: csevegés · Kék nyomva tartva: hang", "arrange_sub": "OK feljebb viszi a panelt · a sorrend megmarad", "arrange_reset": "Sorrend visszaállítása",
         "agent_asks": "kérdezi", "agent_hint": "OK válaszol · ◀ ▶ választás · VISSZA később",
@@ -4146,6 +4164,7 @@
     "fi": {
       "name": "Suomi",
       "strings": {
+        "w_term": "pääte · logo", "w_deploy": "julkaisut · pc", "t_companion_settings": "Kumppanin asetukset",
         "w_racing": "kilpa-ajot", "w_weather": "sää", "w_ai": "tekoälysaldot · pc", "w_devmode": "kehittäjätila", "w_pc": "omarchy · pc", "t_plugins_sub": "Eristetyt JSON-laajennukset (v1-skeema · ei natiivikoodia)",
         "t_themes_sub": "Valitse teema", "t_wp_dim": "Taustan himmennys", "t_walker_sub": "Suodata ja avaa asennetut sovellukset", "t_walker_ph": "hae sovelluksia…", "t_hub_forget": "Unohdetaanko keskitin?", "t_hub_forget_sub": "Poistetaanko tallennetut Hue / Home Assistant -tunnukset tästä TV:stä?", "t_lights": "Ambilight ja valot", "t_lights_sub": "Synkronoi Hue- tai Home Assistant -valot teeman ja Cinemarchyn kanssa", "t_pulse_panels": "Pulse-paneelit", "t_pulse_panels_sub": "Mitkä Pulse-sivupaneelit näytönsäästäjä näyttää", "t_grok_ai": "Grok Bot ja tekoäly", "t_grok_ai_sub": "Grok Bot -TUI, kumppani, PC-agentit ja tekoälyverkkosovellukset", "t_webapps": "Verkkosovellukset", "t_webapps_sub": "Avautuu TV:n selaimessa · Takaisin palaa", "t_pair_pc": "Yhdistä Omarchy Linux -tietokone", "t_pair_pc_sub": "Anna Omarchy-koneen lähiverkon IP", "t_companion_keys": "Sininen: chat · pidä Sinistä: ääni", "arrange_sub": "OK siirtää paneelia ylöspäin · järjestys säilyy", "arrange_reset": "Palauta järjestys",
         "agent_asks": "kysyy", "agent_hint": "OK vastaa · ◀ ▶ valitse · TAKAISIN myöhemmin",
@@ -4376,7 +4395,8 @@
     "nb": {
       "name": "Norsk bokmål",
       "strings": {
-        "w_racing": "racing", "w_weather": "vær", "w_ai": "ki-kreditter · pc", "w_devmode": "utviklermodus", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerte JSON-tillegg (skjema v1 · ingen innebygd kode)",
+        "w_term": "terminal · logo", "w_deploy": "utrullinger · pc", "t_companion_settings": "Innstillinger for følgesvenn",
+        "w_racing": "motorsport", "w_weather": "vær", "w_ai": "ki-kreditter · pc", "w_devmode": "utviklermodus", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerte JSON-tillegg (skjema v1 · ingen innebygd kode)",
         "t_themes_sub": "Velg et tema", "t_wp_dim": "Demp bakgrunn", "t_walker_sub": "Filtrer og åpne installerte apper", "t_walker_ph": "søk etter apper…", "t_hub_forget": "Glemme huben?", "t_hub_forget_sub": "Fjerne lagrede Hue- / Home Assistant-opplysninger fra denne TV-en?", "t_lights": "Ambilight og lys", "t_lights_sub": "Synkroniser Hue- eller Home Assistant-lys med tema og Cinemarchy", "t_pulse_panels": "Pulse-paneler", "t_pulse_panels_sub": "Hvilke Pulse-sidepaneler skjermspareren viser", "t_grok_ai": "Grok Bot og KI", "t_grok_ai_sub": "Grok Bot-TUI, følgesvenn, PC-agenter og KI-webapper", "t_webapps": "Webapper", "t_webapps_sub": "Åpnes i TV-nettleseren · Tilbake går tilbake", "t_pair_pc": "Koble til Omarchy Linux-PC", "t_pair_pc_sub": "Skriv inn LAN-IP-en til Omarchy-PC-en", "t_companion_keys": "Blå: chat · hold Blå: stemme", "arrange_sub": "OK flytter et panel opp · rekkefølgen beholdes", "arrange_reset": "Tilbakestill rekkefølge",
         "agent_asks": "spør", "agent_hint": "OK svarer · ◀ ▶ velg · TILBAKE senere",
         "menu_plugins": "Tillegg", "menu_apps": "Apper", "menu_setup": "Oppsett", "menu_terminal": "Terminal", "menu_hint": "↑↓ velg   OK åpne   Tilbake lukk",

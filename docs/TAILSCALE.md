@@ -20,9 +20,9 @@ TV talk over Tailscale as if they were on the same LAN, from another room, anoth
 
 1. Install the official **Tailscale** app on the TV (Google Play on Android TV / Google TV) and sign in to the same
    tailnet as your PC.
-   OmarchyTV › Settings › **Omarchy Link** › **Tailscale app** opens it, or, when it is missing, opens its Play
+   OmarchyTV › Settings › **Connect Omarchy Linux** › **Tailscale app** opens it, or, when it is missing, opens its Play
    Store page (or shows a QR code of it for your phone).
-2. OmarchyTV › Settings › **Omarchy Link** › **Allow Tailscale (tailnet)** → *on*. The row shows the TV's tailnet
+2. OmarchyTV › Settings › **Connect Omarchy Linux** › **Allow Tailscale (tailnet)** → *on*. The row shows the TV's tailnet
    address, for example `on · 100.101.2.3:47800`, or `offline` when Tailscale is not connected.
 3. On the PC:
 

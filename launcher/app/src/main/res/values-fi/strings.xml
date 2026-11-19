@@ -585,4 +585,6 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">kyllä</string>
     <string name="radio_animated_off">ei</string>
+    <string name="ss_pulse_panels">Pulse-paneelit</string>
+    <string name="ss_pulse_racing">kilpa-ajopaneeli Pulsessa</string>
 </resources>

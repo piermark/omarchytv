@@ -40,7 +40,7 @@ omarchy-link token                                           # list
 omarchy-link token revoke 1a2b3c4d
 ```
 
-The token (`otva_…`) is printed once; the TV keeps only its SHA-256. Settings › Connect Omarchy Linux › **App tokens** shows
+The token (`otva_…`) is printed once; the TV keeps only its SHA-256. Settings › Connect Omarchy Linux › **App tokens (dashboards, agents)** shows
 how many there are and revokes them all. At most 16. Android TV only (LG and Samsung have the theme on the bridge).
 
 ## 1. One theme for every app

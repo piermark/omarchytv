@@ -269,7 +269,7 @@ def cmd_notify(a, cfg):
 
 NOT_REACHABLE = ("not_lan", "not_tailnet")
 NOT_REACHABLE_HINT = ("The TV refused this address (not on its LAN). Over Tailscale, turn on the TV's switch "
-                      "(Settings > Connect Omarchy Linux > Allow Tailscale) and run omarchy-link tailscale on.")
+                      "(Settings > Connect Omarchy Linux > Allow Tailscale (tailnet)) and run omarchy-link tailscale on.")
 
 
 def _alerts_off(e) -> bool:
@@ -341,7 +341,7 @@ def remote_setup(cfg, token: str) -> str:
     base = f"http://{host}:47800"
     lines = ["", "From another machine on your tailnet:"]
     if not on:
-        lines.append("  first turn on the TV's switch: Settings > Connect Omarchy Linux > Allow Tailscale")
+        lines.append("  first turn on the TV's switch: Settings > Connect Omarchy Linux > Allow Tailscale (tailnet)")
     lines += [
         f"  curl -s -X POST {base}/v1/notify -H 'Authorization: Bearer {token}' -d '{{\"text\":\"build done\"}}'",
         f"  claude mcp add --transport http omarchytv {base}/v1/mcp --header 'Authorization: Bearer {token}'",

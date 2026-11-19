@@ -589,4 +589,6 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">sì</string>
     <string name="radio_animated_off">no</string>
+    <string name="ss_pulse_panels">Pannelli Pulse</string>
+    <string name="ss_pulse_racing">pannello corse su Pulse</string>
 </resources>

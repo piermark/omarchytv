@@ -585,4 +585,6 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">evet</string>
     <string name="radio_animated_off">hayır</string>
+    <string name="ss_pulse_panels">Pulse panelleri</string>
+    <string name="ss_pulse_racing">Pulse\'ta yarış paneli</string>
 </resources>

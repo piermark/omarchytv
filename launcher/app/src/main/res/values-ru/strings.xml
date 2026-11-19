@@ -585,4 +585,6 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">да</string>
     <string name="radio_animated_off">нет</string>
+    <string name="ss_pulse_panels">Панели Pulse</string>
+    <string name="ss_pulse_racing">панель гонок в Pulse</string>
 </resources>

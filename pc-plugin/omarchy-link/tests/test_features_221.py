@@ -62,7 +62,7 @@ class Remind(unittest.TestCase):
         c = calls[0]
         self.assertEqual(c[:3], ["systemd-run", "--user", "--quiet"])
         self.assertIn("--on-active=600", c)
-        self.assertEqual(c[-1], "Pizza in the oven")
+        self.assertEqual(c[-2:], ["--", "Pizza in the oven"])
         self.assertIn("--speak", c)
         self.assertEqual(r["in"], 600)
         with self.assertRaises(remind.RemindError):

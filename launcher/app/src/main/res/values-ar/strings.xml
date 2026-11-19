@@ -585,4 +585,6 @@
     <string name="radio_animated_auto">auto</string>
     <string name="radio_animated_on">نعم</string>
     <string name="radio_animated_off">لا</string>
+    <string name="ss_pulse_panels">لوحات Pulse</string>
+    <string name="ss_pulse_racing">لوحة السباقات في Pulse</string>
 </resources>

@@ -31,6 +31,7 @@ ln -sf ~/.local/share/omarchy-link/bin/omarchy-link ~/.local/bin/omarchy-link
 # so link it instead of `omarchy plugin add` (which wants a repository of its own)
 ln -sfn ~/.local/share/omarchy-link ~/.config/omarchy/plugins/com.omarchytv.link
 omarchy-shell shell rescanPlugins && omarchy plugin enable com.omarchytv.link
+# (if it times out on a busy desktop: OMARCHY_SHELL_IPC_TIMEOUT=20s omarchy plugin enable com.omarchytv.link)
 omarchy-link hook add      # sync the theme to the TV on every `omarchy theme set`
 ```
 
