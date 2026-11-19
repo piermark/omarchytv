@@ -1420,11 +1420,27 @@ public final class OmarchyLink implements LinkServer.Host {
                             .put("tailnet", ts == null ? JSONObject.NULL : ts.getHostAddress())
                             .put("listening", bound != null))
                     .put("settings", new JSONObject().put("shareTheme", cfg.shareTheme).put("tailscale", cfg.tailscale)
-                            .put("agentAlerts", cfg.agentAlert).put("cast", cfg.castEnabled))
+                            .put("agentAlerts", cfg.agentAlert).put("cast", cfg.castEnabled)
+                            // v2.21: what the PC could not see before (keep-alive after boot, the Home wallpaper)
+                            .put("keepAlive", cfg.keepAlive)
+                            .put("keepAliveActive", LinkBoot.keepAliveAllowed(cfg.keepAlive, am != null && am.isLowRamDevice(), mi.totalMem))
+                            .put("notifySound", cfg.notifySound))
+                    .put("home", new JSONObject().put("wallpaper", cfg.wallpaper).put("wallpaperBg", cfg.wallpaperBg)
+                            .put("theme", cfg.theme == null ? JSONObject.NULL : cfg.theme.name)
+                            .put("loop", cfg.wallpaperLoop).put("loopStutter", WallpaperLoopGuard.stuttered(app))
+                            .put("lightLoop", FractalView.preferPlain(app)))
                     .put("screen", new JSONObject().put("on", screenOn()).put("home", homeVisible).put("screensaver", screensaver))
                     .put("log", logs);
         } catch (Exception e) {
             return new JSONObject();
+        }
+    }
+
+    @Override
+    public void onKeepAliveChanged() {
+        try {
+            LinkBoot.reconcile(app);
+        } catch (RuntimeException ignored) {
         }
     }
 

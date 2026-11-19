@@ -213,6 +213,12 @@ class E2E(unittest.TestCase):
         self.assertEqual(cli("watch", "--", "sh", "-c", "exit 3", check=False).returncode, 3)
         cli("notify", '{"type":"agent-turn-complete","last-assistant-message":"Refactor finished"}', "--from", "Codex")
         self.assertEqual(self.tv.notes[-1], ("Codex", "Refactor finished"))
+        # v2.21: Link after boot and the Home wallpaper, from the PC
+        self.assertIn("auto -> off", cli("tv", "keepalive").stdout)
+        self.assertIn("on -> on", cli("tv", "keepalive", "on").stdout)
+        self.assertEqual(cli("tv", "keepalive", "sometimes", check=False).returncode, 2)
+        self.assertIn("last-horizon", cli("tv", "home").stdout)
+        self.assertIn("looping (light 540p copy)", cli("tv", "home").stdout)
         self.tv.watching = True
         self.assertIn("held", cli("notify", "--title", "Build", "green").stderr)
 

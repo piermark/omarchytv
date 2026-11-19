@@ -100,6 +100,10 @@ public final class LinkServer {
 
         void log(String message);
 
+        /** v2.21 link.keepAlive changed from the PC: start or stop the keep-alive service now. */
+        default void onKeepAliveChanged() {
+        }
+
         /** Cast kinds the launcher can open right now (PROTOCOL.md, Cast). Empty = no "cast" capability. */
         List<String> castKinds();
 
@@ -1179,6 +1183,7 @@ public final class LinkServer {
         if ("PUT".equals(m) && "/v1/widgets".equals(p)) return widgets(body);
         if ("PUT".equals(m) && "/v1/stats".equals(p)) return stats(body, a.pcId);
         if ("PUT".equals(m) && "/v1/screensaver".equals(p)) return screensaver(body);
+        if ("PUT".equals(m) && "/v1/link/keepalive".equals(p)) return keepAlive(body);
         if ("PUT".equals(m) && "/v1/ai".equals(p)) return ai(body, a.pcId);
         if ("PUT".equals(m) && "/v1/ai/providers".equals(p)) return providers(body, a.pcId);
         if ("PUT".equals(m) && "/v1/agents".equals(p)) return agentsPut(body, a.pcId);
@@ -1914,6 +1919,22 @@ public final class LinkServer {
         host.log("notify from " + from + " (" + level + ", " + r + ")");
         app.event("notify", new JSONObject().put("from", from).put("title", title).put("text", text).put("level", level));
         return new Response(200, ok().put("shown", "shown".equals(r)).put("deferred", "deferred".equals(r)));
+    }
+
+    /** v2.21 PUT /v1/link/keepalive {"mode": "auto" | "on" | "off"}: Link after boot, set from the PC. */
+    private Response keepAlive(JSONObject b) throws Exception {
+        String mode = b.optString("mode", "");
+        if (!"auto".equals(mode) && !"on".equals(mode) && !"off".equals(mode)) {
+            return new Response(400, err("bad_mode", "auto, on or off"));
+        }
+        host.editConfig(j -> {
+            JSONObject link = j.optJSONObject("link");
+            if (link == null) j.put("link", link = new JSONObject());
+            if ("auto".equals(mode)) link.remove("keepAlive");
+            else link.put("keepAlive", "on".equals(mode));
+        });
+        host.onKeepAliveChanged();
+        return new Response(200, ok().put("mode", mode));
     }
 
     private Response screensaver(JSONObject b) throws Exception {

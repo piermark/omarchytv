@@ -192,6 +192,18 @@ public class LinkServerTest {
     }
 
     @Test
+    public void keepAliveFromThePc() throws Exception {   // v2.21: omarchy-link tv keepalive auto|on|off
+        pair("123456");
+        assertEquals(200, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"on\"}").status);
+        assertTrue(host.readConfig().getJSONObject("link").getBoolean("keepAlive"));
+        assertEquals(200, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"off\"}").status);
+        assertFalse(host.readConfig().getJSONObject("link").getBoolean("keepAlive"));
+        assertEquals(200, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"auto\"}").status);
+        assertFalse(host.readConfig().getJSONObject("link").has("keepAlive"));
+        assertEquals(400, signed("PUT", "/v1/link/keepalive", "{\"mode\":\"always\"}").status);
+    }
+
+    @Test
     public void widgetPaneOptionalAt() throws Exception {
         pair("123456");
         long now = System.currentTimeMillis() / 1000;

@@ -140,6 +140,9 @@ reachable from home, from your tailnet and, carefully, from the cloud.
 - **LG and Samsung**: *Arrange panels* now really reorders the Home widgets (OK moves one up, the order is kept;
   #5). The last English-only titles (themes, wallpaper dimming, Walker, lights, Pulse panels, Grok Bot & AI, web
   apps, pairing) follow the TV's language in all 23 languages.
+- **From the PC**: `omarchy-link tv keepalive [auto|on|off]` shows or sets *Keep Link reachable after boot*.
+  `omarchy-link tv home` says what the Home shows: theme, wallpaper, looping or still, the light copy, a stutter
+  fallback. `tv diagnostics` carries both.
 - **docs/INSTALL-TIPS.md**: ADB over the network, Hisense Ethernet ADB (#102), TCL Home and SmartConnect VPN (#75),
   turning accessibility back on after an update, Link after a reboot on 1-2 GB TVs (#143).
 - **Fixed: Radiomarchy could crash on a slow GPU** with live fractals (screensaver or demo). The safety switch that

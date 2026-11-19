@@ -58,7 +58,8 @@ Ethernet network under the VPN.
 **After a reboot.** On a TV with more than 2.5 GB of RAM, Link starts at boot and stays reachable. A 1-2 GB TV
 (the Sony class) keeps no resident service by default: Link answers once OmarchyTV is open, which is the case when
 it is your Home. To reach such a TV from far away right after it reboots, turn on Settings › Omarchy Link ›
-*Keep Link reachable after boot*.
+*Keep Link reachable after boot*, or from the PC: `omarchy-link tv keepalive on` (`tv keepalive` shows the
+setting and whether it is active on that TV).
 
 What the switch changes on the TV: Omarchy Link listens on all IPv4 interfaces instead of the LAN address only, and
 a peer is let in when it is on the LAN subnet **or** has a Tailscale address. Everything else still gets

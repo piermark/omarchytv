@@ -429,6 +429,35 @@ def cmd_tv(a, cfg):
         _call(cfg, "PUT", "/v1/config", {"config": data})
         print("restored (this TV's pairings and panes were kept)")
         return 0
+    if a.what == "keepalive":   # v2.21: Link after boot (auto: only on TVs above 2.5 GB of RAM)
+        if a.file:
+            if a.file not in ("auto", "on", "off"):
+                print("omarchy-link tv keepalive [auto|on|off]", file=sys.stderr)
+                return 2
+            _call(cfg, "PUT", "/v1/link/keepalive", {"mode": a.file})
+        d = _call(cfg, "GET", "/v1/diagnostics")
+        s, dev = d.get("settings", {}), d.get("device", {})
+        if a.json:
+            print(json.dumps({"keepAlive": s.get("keepAlive"), "active": s.get("keepAliveActive"), "ramMb": dev.get("ramMb")}))
+            return 0
+        print(f"keep Link reachable after boot: {s.get('keepAlive', '?')} -> "
+              f"{'on' if s.get('keepAliveActive') else 'off'} on this TV ({dev.get('ramMb', '?')} MB RAM)")
+        return 0
+    if a.what == "home":   # v2.21: what the Home shows (Eyes Wide default, loop, light copy, stutter fallback)
+        h = _call(cfg, "GET", "/v1/diagnostics").get("home", {})
+        if a.json:
+            print(json.dumps(h))
+            return 0
+        if not h:
+            print("this TV does not report its Home (OmarchyTV before 2.21)")
+            return 0
+        wp = h.get("wallpaper")
+        what = (f"the theme's wallpaper #{h.get('wallpaperBg', 0)}" if wp == "omarchy" else wp)
+        print(f"theme {h.get('theme')} · wallpaper {what} · "
+              f"{'looping' if h.get('loop') and not h.get('loopStutter') else 'still'}"
+              f"{' (light 540p copy)' if h.get('lightLoop') and h.get('loop') else ''}"
+              f"{' · loop stopped: the TV could not keep up' if h.get('loopStutter') else ''}")
+        return 0
     d = _call(cfg, "GET", "/v1/diagnostics")
     if a.json or a.what == "diagnostics":
         print(json.dumps(d, indent=2))
@@ -1159,8 +1188,10 @@ def main(argv=None) -> int:
     s = sub.add_parser("mcp", help="the TV's MCP tools on stdio for AI agents (claude mcp add omarchytv -- omarchy-link mcp)")
     s.add_argument("--scope", choices=["read", "notify", "control"], default="control")
     s.set_defaults(fn=cmd_mcp)
-    s = sub.add_parser("tv", help="tv logs | diagnostics (bug reports) | backup [FILE] | restore FILE")
-    s.add_argument("what", nargs="?", choices=["logs", "diagnostics", "backup", "restore"], default="logs")
+    s = sub.add_parser("tv", help="tv logs | diagnostics (bug reports) | backup [FILE] | restore FILE | "
+                                  "keepalive [auto|on|off] | home")
+    s.add_argument("what", nargs="?", choices=["logs", "diagnostics", "backup", "restore", "keepalive", "home"],
+                   default="logs")
     s.add_argument("file", nargs="?")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_tv)

@@ -419,6 +419,7 @@ class Handler(BaseHTTPRequestHandler):
             ("POST", "/v1/notify"): self._notify,
             ("POST", "/v1/tokens"): self._token_add, ("GET", "/v1/tokens"): self._token_list,
             ("POST", "/v1/ask"): self._ask, ("GET", "/v1/diagnostics"): self._diag,
+            ("PUT", "/v1/link/keepalive"): self._keepalive,
             ("POST", "/v1/page"): self._page, ("DELETE", "/v1/page"): self._page_close,
             ("GET", "/v1/config"): lambda pc, a, b: (200, {"config": self.tv.config()}),
             ("PUT", "/v1/config"): self._config_put,
@@ -680,7 +681,19 @@ class Handler(BaseHTTPRequestHandler):
         return 404, {"error": "not_found"}
 
     def _diag(self, pc, a, body):
-        return 200, {"launcherVersion": "2.21.0", "log": ["12:00:00 listening", "12:00:01 question from PC"]}
+        ka = getattr(self.tv, "keep_alive", "auto")
+        return 200, {"launcherVersion": "2.21.0", "log": ["12:00:00 listening", "12:00:01 question from PC"],
+                     "device": {"ramMb": 2048, "lowRam": False},
+                     "settings": {"keepAlive": ka, "keepAliveActive": ka == "on", "notifySound": True},
+                     "home": {"wallpaper": "omarchy", "wallpaperBg": 0, "theme": "last-horizon", "loop": True,
+                              "loopStutter": False, "lightLoop": True}}
+
+    def _keepalive(self, pc, a, body):
+        mode = a.get("mode")
+        if mode not in ("auto", "on", "off"):
+            return 400, {"error": "bad_mode", "message": "auto, on or off"}
+        self.tv.keep_alive = mode
+        return 200, {"ok": True, "mode": mode}
 
     def _page(self, pc, a, body):
         urls = a.get("urls") or ([a["url"]] if a.get("url") else [])
