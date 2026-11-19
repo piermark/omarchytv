@@ -46,7 +46,7 @@ final class LanHttpDataSource extends BaseDataSource {
 
     /**
      * A literal 10/8, 172.16/12, 192.168/16, fc00::/7 or link-local address (plain Java, also used by RemotePanes);
-     * v2.21 also a Tailscale address when Tailscale is on in Omarchy Link settings.
+     * v2.21 also a Tailscale address when Allow Tailscale (tailnet) is on in Connect Omarchy Linux.
      */
     static boolean lanHost(String h) {
         if (h == null) return false;

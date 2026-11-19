@@ -28,6 +28,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_webos: "webOS TV settings", sys_themes: "Themes", sys_trans: "Transparency", sys_widgets: "Home widgets",
       sys_arrange: "Arrange panels", sys_saver: "Screensaver", sys_text_size: "Text size", ts_small: "Small", ts_normal: "Normal", ts_large: "Large", ts_xlarge: "Extra large", sys_saver_idle: "Start screensaver after",
       t_themes_sub: "Select a theme", t_wp_dim: "Wallpaper dimming", t_walker_sub: "Filter and launch installed apps", t_walker_ph: "search apps…", t_hub_forget: "Forget the hub?", t_hub_forget_sub: "Remove the saved Hue / Home Assistant credentials from this TV?", t_lights: "Ambilight & Lights", t_lights_sub: "Sync Hue or Home Assistant lights with the theme and Cinemarchy", t_pulse_panels: "Pulse panels", t_pulse_panels_sub: "Which Pulse side panels show on the screensaver", t_grok_ai: "Grok Bot & AI", t_grok_ai_sub: "Grok Bot TUI, companion, PC agents and AI web apps", t_webapps: "Web apps", t_webapps_sub: "Opens in the TV browser · Back returns", t_pair_pc: "Pair Omarchy Linux PC", t_pair_pc_sub: "Enter your Omarchy PC's LAN IP", t_companion_keys: "Blue: chat · hold Blue: voice", arrange_sub: "OK moves a panel up · the order is kept", arrange_reset: "Reset order",
+      chat_ask: "Ask", chat_thinking: "is thinking…", chat_type: "Type a question above, or use 🎤", chat_speak: "Speak", chat_novoice: "Voice: not available on this TV · keyboard only", chat_agent: "Agent", t_companion_open: "Open Grok Bot companion settings", chat_play_cine: "Play in Cinemarchy", chat_play_yt: "Play on YouTube", chat_play_video: "Play video in the TV browser", chat_open_link: "Open link in the TV browser",
       t_companion_chat: "Chat with the Grok Bot companion", t_companion_hide: "Hide the companion (Blue brings it back)", w_racing_bar: "racing countdown in the bar", w_devmode_extend: "dev mode · I just pressed EXTEND", t_companion_title: "Grok Bot companion",
       w_term: "terminal · logo", w_deploy: "deploys · pc", t_companion_settings: "Companion settings",
       w_racing: "racing", w_weather: "weather", w_ai: "ai credits · pc", w_devmode: "dev mode", w_pc: "omarchy · pc", t_plugins_sub: "Sandboxed JSON plugins (v1 schema · no native code runs)",
@@ -162,6 +163,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_webos: "Impostazioni TV webOS", sys_themes: "Temi", sys_trans: "Trasparenza", sys_widgets: "Widget della Home",
       sys_arrange: "Disponi riquadri", sys_saver: "Salvaschermo", sys_text_size: "Dimensione testo", ts_small: "Piccolo", ts_normal: "Normale", ts_large: "Grande", ts_xlarge: "Molto grande", sys_saver_idle: "Avvia salvaschermo dopo",
       t_themes_sub: "Scegli un tema", t_wp_dim: "Oscuramento sfondo", t_walker_sub: "Filtra e apri le app installate", t_walker_ph: "cerca app…", t_hub_forget: "Dimenticare l'hub?", t_hub_forget_sub: "Rimuovere da questa TV le credenziali Hue / Home Assistant salvate?", t_lights: "Ambilight e luci", t_lights_sub: "Sincronizza le luci Hue o Home Assistant con il tema e Cinemarchy", t_pulse_panels: "Pannelli Pulse", t_pulse_panels_sub: "Quali pannelli laterali Pulse compaiono nel salvaschermo", t_grok_ai: "Grok Bot e AI", t_grok_ai_sub: "TUI di Grok Bot, companion, agenti del PC e web app IA", t_webapps: "Web app", t_webapps_sub: "Si apre nel browser della TV · Indietro torna", t_pair_pc: "Associa PC Omarchy Linux", t_pair_pc_sub: "Inserisci l'IP di rete del PC Omarchy", t_companion_keys: "Blu: chat · tieni premuto Blu: voce", arrange_sub: "OK sposta un riquadro in su · l'ordine resta", arrange_reset: "Ripristina ordine",
+      chat_ask: "Chiedi a", chat_thinking: "sta pensando…", chat_type: "Scrivi una domanda qui sopra, o usa 🎤", chat_speak: "Parla", chat_novoice: "Voce: non disponibile su questa TV · solo tastiera", chat_agent: "Agente", t_companion_open: "Apri le impostazioni del companion Grok Bot", chat_play_cine: "Riproduci in Cinemarchy", chat_play_yt: "Riproduci su YouTube", chat_play_video: "Riproduci il video nel browser della TV", chat_open_link: "Apri il link nel browser della TV",
       t_companion_chat: "Chatta con il companion Grok Bot", t_companion_hide: "Nascondi il companion (Blu lo riporta)", w_racing_bar: "conto alla rovescia corse nella barra", w_devmode_extend: "modalità sviluppatore · ho appena premuto EXTEND", t_companion_title: "Companion Grok Bot",
       w_term: "terminale · logo", w_deploy: "rilasci · pc", t_companion_settings: "Impostazioni companion",
       w_racing: "corse", w_weather: "meteo", w_ai: "crediti ia · pc", w_devmode: "modalità sviluppatore", w_pc: "omarchy · pc", t_plugins_sub: "Plugin JSON isolati (schema v1 · nessun codice nativo)",
@@ -169,7 +171,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Logo animato", sys_text_tiles: "Tile solo testo (stile terminale)", sys_all: "Tutte le impostazioni OmarchyTV", sys_about: "Info e licenze",
       tile_move: "Sposta", tile_hide: "Nascondi", tile_cancel: "Annulla", move_hint: "◀▶▲▼ sposta · OK salva · Indietro annulla",
       app_hidden: "Nascosta. Mostrala di nuovo in Tutte le impostazioni › App nascoste", hidden_apps: "App nascoste", hidden_none: "Nessuna app nascosta",
-      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", agent_asks: "chiede", agent_hint: "OK risponde · ◀ ▶ scegli · BACK dopo", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV e Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
+      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", agent_asks: "chiede", agent_hint: "OK risponde · ◀ ▶ scegli · BACK dopo", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV · Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
       wx_title: "Meteo", wx_auto: "Automatica (da IP)", wx_auto_fail: "Posizione non trovata, resta la città attuale", wx_search: "Cerca città…", wx_unit: "Unità temperatura",
       root_boot: "Apri all'avvio della TV", root_home: "Il tasto Home apre OmarchyTV", root_needed: "solo TV con root",
       root_keep: "Tieni caricata in background", root_keep_na: "non su questa TV",
@@ -296,6 +298,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_webos: "webOS TV-Einstellungen", sys_themes: "Themen", sys_trans: "Transparenz", sys_widgets: "Startseiten-Widgets",
       sys_arrange: "Panels anordnen", sys_saver: "Bildschirmschoner", sys_text_size: "Textgröße", ts_small: "Klein", ts_normal: "Normal", ts_large: "Groß", ts_xlarge: "Sehr groß", sys_saver_idle: "Bildschirmschoner starten nach",
       t_themes_sub: "Thema wählen", t_wp_dim: "Hintergrund abdunkeln", t_walker_sub: "Installierte Apps filtern und starten", t_walker_ph: "Apps suchen…", t_hub_forget: "Hub vergessen?", t_hub_forget_sub: "Gespeicherte Hue- / Home-Assistant-Zugangsdaten von diesem TV entfernen?", t_lights: "Ambilight & Licht", t_lights_sub: "Hue- oder Home-Assistant-Licht mit Thema und Cinemarchy synchronisieren", t_pulse_panels: "Pulse-Panels", t_pulse_panels_sub: "Welche Pulse-Seitenpanels der Bildschirmschoner zeigt", t_grok_ai: "Grok Bot & KI", t_grok_ai_sub: "Grok-Bot-TUI, Begleiter, PC-Agenten und KI-Web-Apps", t_webapps: "Web-Apps", t_webapps_sub: "Öffnet im TV-Browser · Zurück kehrt zurück", t_pair_pc: "Omarchy-Linux-PC koppeln", t_pair_pc_sub: "LAN-IP deines Omarchy-PCs eingeben", t_companion_keys: "Blau: Chat · Blau halten: Sprache", arrange_sub: "OK schiebt ein Panel nach oben · die Reihenfolge bleibt", arrange_reset: "Reihenfolge zurücksetzen",
+      chat_ask: "Frag", chat_thinking: "denkt nach…", chat_type: "Oben eine Frage tippen oder 🎤 nutzen", chat_speak: "Sprechen", chat_novoice: "Sprache: auf diesem TV nicht verfügbar · nur Tastatur", chat_agent: "Agent", t_companion_open: "Grok-Bot-Begleiter-Einstellungen öffnen", chat_play_cine: "In Cinemarchy abspielen", chat_play_yt: "Auf YouTube abspielen", chat_play_video: "Video im TV-Browser abspielen", chat_open_link: "Link im TV-Browser öffnen",
       t_companion_chat: "Mit dem Grok-Bot-Begleiter chatten", t_companion_hide: "Begleiter ausblenden (Blau holt ihn zurück)", w_racing_bar: "Rennen-Countdown in der Leiste", w_devmode_extend: "Entwicklermodus · gerade EXTEND gedrückt", t_companion_title: "Grok-Bot-Begleiter",
       w_term: "Terminal · Logo", w_deploy: "Deploys · pc", t_companion_settings: "Begleiter-Einstellungen",
       w_racing: "Rennen", w_weather: "Wetter", w_ai: "KI-Guthaben · pc", w_devmode: "Entwicklermodus", w_pc: "omarchy · pc", t_plugins_sub: "Isolierte JSON-Plugins (Schema v1 · kein nativer Code)",
@@ -3718,7 +3721,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "🤖 Omarchy Agent Desktop (@tcballard · MIT)", right: cfg.pluginGrokbot ? "on" : "off", act: function () {
         cfg.pluginGrokbot = !cfg.pluginGrokbot; saveCfg(); renderPluginsUI(); openPluginsModal();
       } },
-      { label: "🤖 Open Grok Bot companion settings", right: "›", act: function () { openGrokbotCompanionModal(0); } },
+      { label: "🤖 " + tr("t_companion_open"), right: "›", act: function () { openGrokbotCompanionModal(0); } },
       { label: "⌨ Grok Bot (Omarchy TUI)", right: "›", act: openGrokTui },
       { label: "📺 " + tr("plugin_retro_crt"), right: tr(cfg.pluginRetroCrt === "strong" ? "crt_strong" : cfg.pluginRetroCrt === "light" ? "crt_light" : "off"), act: function () {
         var m = ["off", "light", "strong"];
@@ -4166,12 +4169,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         q = ""; var inp = document.getElementById("modal-input"); if (inp) inp.value = "";
         tuiRun(v);
       } },
-      speechCtor() ? { label: "🎤 Speak", right: "OK", act: function () { listen(function (t) { tuiRun(t); }); } }
-        : { label: "🎤 Voice: not available on this TV · keyboard only", right: "", act: function () {} },
+      speechCtor() ? { label: "🎤 " + tr("chat_speak"), right: "OK", act: function () { listen(function (t) { tuiRun(t); }); } }
+        : { label: "🎤 " + tr("chat_novoice"), right: "", act: function () {} },
       { label: "help", right: "›", act: function () { tuiRun("help"); } },
       { label: "status", right: "›", act: function () { tuiRun("status"); } },
       { label: "next theme", right: "›", act: function () { tuiRun("next theme"); } },
-      { label: "Agent", right: tuiAgent().name + " ›", act: function () {
+      { label: tr("chat_agent"), right: tuiAgent().name + " ›", act: function () {
         var l = tuiAgents(), i = 0; for (; i < l.length; i++) if (l[i].id === tuiAgent().id) break;
         tuiSetAgent(l[(i + 1) % l.length]); openGrokTui(5);
       } },
@@ -4222,14 +4225,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     var last = null;
     for (var h = hist.length - 1; h >= 0; h--) if (hist[h].role === "bot") { last = hist[h]; break; }
     var items = [
-      { label: gbFace.busy ? "⏳ " + escHtml(gbName()) + " is thinking…" : "➤ Ask " + escHtml(gbName()), right: "OK", act: function () {
-        if (q.trim()) askCompanion(q, true); else showToast("Type a question above, or use 🎤");
+      { label: gbFace.busy ? "⏳ " + escHtml(gbName()) + " " + tr("chat_thinking") : "➤ " + tr("chat_ask") + " " + escHtml(gbName()), right: "OK", act: function () {
+        if (q.trim()) askCompanion(q, true); else showToast(tr("chat_type"));
       } },
-      speechCtor() ? { label: "🎤 Speak", right: "OK", act: function () { listen(function (t) { askCompanion(t, true); }); } }
-        : { label: "🎤 Voice: not available on this TV · keyboard only", right: "", act: function () {} }
+      speechCtor() ? { label: "🎤 " + tr("chat_speak"), right: "OK", act: function () { listen(function (t) { askCompanion(t, true); }); } }
+        : { label: "🎤 " + tr("chat_novoice"), right: "", act: function () {} }
     ];
     ((last && last.links) || []).forEach(function (l) {
-      var lbl = l.kind === "youtube" ? (cfg.embedPlayer ? "▶ Play in Cinemarchy" : "▶ Play on YouTube") : l.kind === "video" ? "▶ Play video in the TV browser" : "🔗 Open link in the TV browser";
+      var lbl = l.kind === "youtube" ? (cfg.embedPlayer ? "▶ " + tr("chat_play_cine") : "▶ " + tr("chat_play_yt")) : l.kind === "video" ? "▶ " + tr("chat_play_video") : "🔗 " + tr("chat_open_link");
       items.push({ label: lbl + " · " + escHtml(l.url.replace(/^https?:\/\//, "").slice(0, 48)), right: "OK ›", act: function () { playLink(l); } });
     });
     var roster = (gbPc && gbPc.roster) || [];
@@ -4238,7 +4241,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       for (var k = 0; k < roster.length; k++) if (cur && roster[k].id === cur.id) i = k;
       cfg.companionBot = roster[(i + 1) % roster.length].id; saveCfg(); renderPluginsUI(); openCompanionChat(false);
     } });
-    items.push({ label: "Agent", right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
+    items.push({ label: tr("chat_agent"), right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
       cfg.companionAgent = GB_AGENTS[(GB_AGENTS.indexOf(gbAgent()) + 1) % GB_AGENTS.length]; saveCfg(); openCompanionChat(false);
     } });
     if (hist.length) items.push({ label: "Clear this chat", right: "", act: function () { GBC.clear(store, key); gbFace.bubble = ""; openCompanionChat(false); } });
@@ -4290,7 +4293,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: "Animation (bob, blink, look around, sleep, drift)", right: gbAnim() ? "on" : "off", act: function () {
         cfg.companionAnim = !gbAnim(); saveCfg(); renderPluginsUI(); openGrokbotCompanionModal(7);
       } },
-      { label: "Agent", right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
+      { label: tr("chat_agent"), right: GB_AGENT_NAMES[gbAgent()] + " ›", act: function () {
         cfg.companionAgent = cycle(GB_AGENTS, gbAgent()); saveCfg(); openGrokbotCompanionModal(8);
       } },
       { label: "Save the PC ask code typed above", right: cfg.grokbotCode ? "set ✓" : "not set", act: function () {

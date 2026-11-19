@@ -3622,7 +3622,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
      * Connect Omarchy Linux. While this page is visible pairing is open (at most 5 minutes) and the mDNS TXT
      * says pair=1. The code lives in memory only; tokens in internal storage; omarchytv.json gets link.pcs[].
      */
-    /** v2.21 Settings › System info: version, device, network (LAN, Tailscale), Omarchy Link, the last log lines. */
+    /** v2.21 Settings › System info: version, device, network (LAN, Tailscale), the link to the PC, the last log lines. */
     private AsciiMenu.Page systemInfoPage() {
         org.json.JSONObject d = OmarchyLink.systemInfo(this);
         AsciiMenu.Page p = new AsciiMenu.Page(str(R.string.menu_system_info));

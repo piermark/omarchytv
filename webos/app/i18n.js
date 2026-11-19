@@ -6,6 +6,7 @@
     "pt-PT": {
       "name": "Português (Portugal)",
       "strings": {
+        "chat_ask": "Perguntar a", "chat_thinking": "está a pensar…", "chat_type": "Escreva uma pergunta acima ou use 🎤", "chat_speak": "Falar", "chat_novoice": "Voz: indisponível nesta TV · só teclado", "chat_agent": "Agente", "t_companion_open": "Abrir definições do companheiro Grok Bot", "chat_play_cine": "Reproduzir no Cinemarchy", "chat_play_yt": "Reproduzir no YouTube", "chat_play_video": "Reproduzir vídeo no navegador da TV", "chat_open_link": "Abrir ligação no navegador da TV",
         "t_companion_chat": "Conversar com o companheiro Grok Bot", "t_companion_hide": "Ocultar o companheiro (Azul traz de volta)", "w_racing_bar": "contagem das corridas na barra", "w_devmode_extend": "modo programador · acabei de premir EXTEND", "t_companion_title": "Companheiro Grok Bot",
         "w_term": "terminal · logótipo", "w_deploy": "implementações · pc", "t_companion_settings": "Definições do companheiro",
         "w_racing": "corridas", "w_weather": "tempo", "w_ai": "créditos ia · pc", "w_devmode": "modo programador", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON isolados (esquema v1 · sem código nativo)",
@@ -72,7 +73,7 @@
         "pulse_notice": "Nova proteção de ecrã: Omarchy Pulse. Definições › Proteção de ecrã para mudar ou voltar atrás.", "ss_pulse_scene": "Cena do Pulse", "ss_restore_previous": "Proteção de ecrã anterior",
         "random_scope": "Aleatório entre", "random_intros": "intros animadas", "random_all": "todos os temas",
         "random_wallpaper": "Fundo / intro aleatório",
-        "sys_plugins": "Plugins (SpaceX TV e Grok Bot)",
+        "sys_plugins": "Plugins (SpaceX TV · Grok Bot)",
         "reset_order": "Repor ordem das apps",
         "order_reset": "Ordem das apps reposta",
         "wx_title": "Meteorologia",
@@ -238,6 +239,7 @@
     "pt-BR": {
       "name": "Português (Brasil)",
       "strings": {
+        "chat_ask": "Perguntar a", "chat_thinking": "está pensando…", "chat_type": "Digite uma pergunta acima ou use 🎤", "chat_speak": "Falar", "chat_novoice": "Voz: indisponível nesta TV · só teclado", "chat_agent": "Agente", "t_companion_open": "Abrir configurações do companheiro Grok Bot", "chat_play_cine": "Reproduzir no Cinemarchy", "chat_play_yt": "Reproduzir no YouTube", "chat_play_video": "Reproduzir vídeo no navegador da TV", "chat_open_link": "Abrir link no navegador da TV",
         "t_companion_chat": "Conversar com o companheiro Grok Bot", "t_companion_hide": "Ocultar o companheiro (Azul traz de volta)", "w_racing_bar": "contagem das corridas na barra", "w_devmode_extend": "modo desenvolvedor · acabei de apertar EXTEND", "t_companion_title": "Companheiro Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "deploys · pc", "t_companion_settings": "Configurações do companheiro",
         "w_racing": "corridas", "w_weather": "clima", "w_ai": "créditos ia · pc", "w_devmode": "modo desenvolvedor", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON isolados (esquema v1 · sem código nativo)",
@@ -304,7 +306,7 @@
         "pulse_notice": "Novo protetor de tela: Omarchy Pulse. Configurações › Protetor de tela para mudar ou voltar.", "ss_pulse_scene": "Cena do Pulse", "ss_restore_previous": "Protetor de tela anterior",
         "random_scope": "Aleatório entre", "random_intros": "intros animadas", "random_all": "todos os temas",
         "random_wallpaper": "Fundo / intro aleatório",
-        "sys_plugins": "Plugins (SpaceX TV e Grok Bot)",
+        "sys_plugins": "Plugins (SpaceX TV · Grok Bot)",
         "reset_order": "Redefinir ordem dos apps",
         "order_reset": "Ordem dos apps redefinida",
         "wx_title": "Meteorologia",
@@ -470,6 +472,7 @@
     "es": {
       "name": "Español",
       "strings": {
+        "chat_ask": "Preguntar a", "chat_thinking": "está pensando…", "chat_type": "Escribe una pregunta arriba o usa 🎤", "chat_speak": "Hablar", "chat_novoice": "Voz: no disponible en esta TV · solo teclado", "chat_agent": "Agente", "t_companion_open": "Abrir ajustes del compañero Grok Bot", "chat_play_cine": "Reproducir en Cinemarchy", "chat_play_yt": "Reproducir en YouTube", "chat_play_video": "Reproducir vídeo en el navegador de la TV", "chat_open_link": "Abrir enlace en el navegador de la TV",
         "t_companion_chat": "Chatear con el compañero Grok Bot", "t_companion_hide": "Ocultar el compañero (Azul lo devuelve)", "w_racing_bar": "cuenta atrás de carreras en la barra", "w_devmode_extend": "modo desarrollador · acabo de pulsar EXTEND", "t_companion_title": "Compañero Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "despliegues · pc", "t_companion_settings": "Ajustes del compañero",
         "w_racing": "carreras", "w_weather": "tiempo", "w_ai": "créditos ia · pc", "w_devmode": "modo desarrollador", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON aislados (esquema v1 · sin código nativo)",
@@ -536,7 +539,7 @@
         "pulse_notice": "Nuevo salvapantallas: Omarchy Pulse. Ajustes › Salvapantallas para cambiarlo o volver.", "ss_pulse_scene": "Escena de Pulse", "ss_restore_previous": "Salvapantallas anterior",
         "random_scope": "Al azar entre", "random_intros": "intros animadas", "random_all": "todos los temas",
         "random_wallpaper": "Fondo / intro aleatorio",
-        "sys_plugins": "Plugins (SpaceX TV y Grok Bot)",
+        "sys_plugins": "Plugins (SpaceX TV · Grok Bot)",
         "reset_order": "Restablecer orden de apps",
         "order_reset": "Orden de apps restablecido",
         "wx_title": "Tiempo",
@@ -702,6 +705,7 @@
     "fr": {
       "name": "Français",
       "strings": {
+        "chat_ask": "Demander à", "chat_thinking": "réfléchit…", "chat_type": "Tapez une question ci-dessus ou utilisez 🎤", "chat_speak": "Parler", "chat_novoice": "Voix : indisponible sur cette TV · clavier seulement", "chat_agent": "Agent", "t_companion_open": "Ouvrir les réglages du compagnon Grok Bot", "chat_play_cine": "Lire dans Cinemarchy", "chat_play_yt": "Lire sur YouTube", "chat_play_video": "Lire la vidéo dans le navigateur de la TV", "chat_open_link": "Ouvrir le lien dans le navigateur de la TV",
         "t_companion_chat": "Discuter avec le compagnon Grok Bot", "t_companion_hide": "Masquer le compagnon (Bleu le ramène)", "w_racing_bar": "compte à rebours des courses dans la barre", "w_devmode_extend": "mode développeur · je viens d'appuyer sur EXTEND", "t_companion_title": "Compagnon Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "déploiements · pc", "t_companion_settings": "Réglages du compagnon",
         "w_racing": "courses", "w_weather": "météo", "w_ai": "crédits ia · pc", "w_devmode": "mode développeur", "w_pc": "omarchy · pc", "t_plugins_sub": "Plugins JSON isolés (schéma v1 · aucun code natif)",
@@ -768,7 +772,7 @@
         "pulse_notice": "Nouvel économiseur : Omarchy Pulse. Réglages › Économiseur pour le changer ou revenir en arrière.", "ss_pulse_scene": "Scène de Pulse", "ss_restore_previous": "Économiseur précédent",
         "random_scope": "Au hasard parmi", "random_intros": "intros animées", "random_all": "tous les thèmes",
         "random_wallpaper": "Fond / intro aléatoire",
-        "sys_plugins": "Plugins (SpaceX TV & Grok Bot)",
+        "sys_plugins": "Plugins (SpaceX TV · Grok Bot)",
         "reset_order": "Réinitialiser l'ordre des apps",
         "order_reset": "Ordre des apps réinitialisé",
         "wx_title": "Météo",
@@ -934,6 +938,7 @@
     "nl": {
       "name": "Nederlands",
       "strings": {
+        "chat_ask": "Vraag", "chat_thinking": "denkt na…", "chat_type": "Typ hierboven een vraag of gebruik 🎤", "chat_speak": "Spreek", "chat_novoice": "Spraak: niet beschikbaar op deze tv · alleen toetsenbord", "chat_agent": "Agent", "t_companion_open": "Grok Bot-companion-instellingen openen", "chat_play_cine": "Afspelen in Cinemarchy", "chat_play_yt": "Afspelen op YouTube", "chat_play_video": "Video afspelen in de tv-browser", "chat_open_link": "Link openen in de tv-browser",
         "t_companion_chat": "Chatten met de Grok Bot-companion", "t_companion_hide": "Companion verbergen (Blauw haalt hem terug)", "w_racing_bar": "race-aftelling in de balk", "w_devmode_extend": "ontwikkelaarsmodus · net op EXTEND gedrukt", "t_companion_title": "Grok Bot-companion",
         "w_term": "terminal · logo", "w_deploy": "deploys · pc", "t_companion_settings": "Companion-instellingen",
         "w_racing": "races", "w_weather": "weer", "w_ai": "ai-tegoed · pc", "w_devmode": "ontwikkelaarsmodus", "w_pc": "omarchy · pc", "t_plugins_sub": "Geïsoleerde JSON-plugins (schema v1 · geen native code)",
@@ -1000,7 +1005,7 @@
         "pulse_notice": "Nieuwe schermbeveiliging: Omarchy Pulse. Instellingen › Schermbeveiliging om te wijzigen of terug te gaan.", "ss_pulse_scene": "Pulse-scène", "ss_restore_previous": "Vorige schermbeveiliging",
         "random_scope": "Willekeurig uit", "random_intros": "geanimeerde intro's", "random_all": "alle thema's",
         "random_wallpaper": "Willekeurige achtergrond / intro",
-        "sys_plugins": "Plug-ins (SpaceX TV & Grok Bot)",
+        "sys_plugins": "Plug-ins (SpaceX TV · Grok Bot)",
         "reset_order": "App-volgorde herstellen",
         "order_reset": "App-volgorde hersteld",
         "wx_title": "Weer",
@@ -1166,6 +1171,7 @@
     "pl": {
       "name": "Polski",
       "strings": {
+        "chat_ask": "Zapytaj", "chat_thinking": "myśli…", "chat_type": "Wpisz pytanie powyżej lub użyj 🎤", "chat_speak": "Mów", "chat_novoice": "Głos: niedostępny na tym TV · tylko klawiatura", "chat_agent": "Agent", "t_companion_open": "Otwórz ustawienia towarzysza Grok Bot", "chat_play_cine": "Odtwórz w Cinemarchy", "chat_play_yt": "Odtwórz w YouTube", "chat_play_video": "Odtwórz wideo w przeglądarce TV", "chat_open_link": "Otwórz link w przeglądarce TV",
         "t_companion_chat": "Czat z towarzyszem Grok Bot", "t_companion_hide": "Ukryj towarzysza (Niebieski go przywraca)", "w_racing_bar": "odliczanie wyścigów na pasku", "w_devmode_extend": "tryb dewelopera · właśnie nacisnąłem EXTEND", "t_companion_title": "Towarzysz Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "wdrożenia · pc", "t_companion_settings": "Ustawienia towarzysza",
         "w_racing": "wyścigi", "w_weather": "pogoda", "w_ai": "kredyty ai · pc", "w_devmode": "tryb dewelopera", "w_pc": "omarchy · pc", "t_plugins_sub": "Izolowane wtyczki JSON (schemat v1 · bez kodu natywnego)",
@@ -1232,7 +1238,7 @@
         "pulse_notice": "Nowy wygaszacz: Omarchy Pulse. Ustawienia › Wygaszacz, aby go zmienić lub wrócić.", "ss_pulse_scene": "Scena Pulse", "ss_restore_previous": "Poprzedni wygaszacz",
         "random_scope": "Losowo spośród", "random_intros": "animowanych intro", "random_all": "wszystkich motywów",
         "random_wallpaper": "Losowa tapeta / intro",
-        "sys_plugins": "Wtyczki (SpaceX TV i Grok Bot)",
+        "sys_plugins": "Wtyczki (SpaceX TV · Grok Bot)",
         "reset_order": "Przywróć kolejność aplikacji",
         "order_reset": "Przywrócono kolejność aplikacji",
         "wx_title": "Pogoda",
@@ -1398,6 +1404,7 @@
     "sv": {
       "name": "Svenska",
       "strings": {
+        "chat_ask": "Fråga", "chat_thinking": "tänker…", "chat_type": "Skriv en fråga ovan eller använd 🎤", "chat_speak": "Tala", "chat_novoice": "Röst: inte tillgänglig på denna TV · bara tangentbord", "chat_agent": "Agent", "t_companion_open": "Öppna inställningar för Grok Bot-följeslagaren", "chat_play_cine": "Spela i Cinemarchy", "chat_play_yt": "Spela på YouTube", "chat_play_video": "Spela video i TV:ns webbläsare", "chat_open_link": "Öppna länken i TV:ns webbläsare",
         "t_companion_chat": "Chatta med Grok Bot-följeslagaren", "t_companion_hide": "Dölj följeslagaren (Blå tar tillbaka den)", "w_racing_bar": "motorsportnedräkning i fältet", "w_devmode_extend": "utvecklarläge · jag tryckte nyss på EXTEND", "t_companion_title": "Grok Bot-följeslagare",
         "w_term": "terminal · logga", "w_deploy": "driftsättningar · pc", "t_companion_settings": "Följeslagarens inställningar",
         "w_racing": "motorsport", "w_weather": "väder", "w_ai": "ai-krediter · pc", "w_devmode": "utvecklarläge", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerade JSON-tillägg (schema v1 · ingen inbyggd kod)",
@@ -1464,7 +1471,7 @@
         "pulse_notice": "Ny skärmsläckare: Omarchy Pulse. Inställningar › Skärmsläckare för att byta eller gå tillbaka.", "ss_pulse_scene": "Pulse-scen", "ss_restore_previous": "Föregående skärmsläckare",
         "random_scope": "Slumpa bland", "random_intros": "animerade intron", "random_all": "alla teman",
         "random_wallpaper": "Slumpmässig bakgrund / intro",
-        "sys_plugins": "Insticksprogram (SpaceX TV & Grok Bot)",
+        "sys_plugins": "Insticksprogram (SpaceX TV · Grok Bot)",
         "reset_order": "Återställ appordning",
         "order_reset": "Appordningen återställd",
         "wx_title": "Väder",
@@ -1630,6 +1637,7 @@
     "da": {
       "name": "Dansk",
       "strings": {
+        "chat_ask": "Spørg", "chat_thinking": "tænker…", "chat_type": "Skriv et spørgsmål ovenfor, eller brug 🎤", "chat_speak": "Tal", "chat_novoice": "Stemme: ikke tilgængelig på dette TV · kun tastatur", "chat_agent": "Agent", "t_companion_open": "Åbn indstillinger for Grok Bot-ledsageren", "chat_play_cine": "Afspil i Cinemarchy", "chat_play_yt": "Afspil på YouTube", "chat_play_video": "Afspil video i TV'ets browser", "chat_open_link": "Åbn link i TV'ets browser",
         "t_companion_chat": "Chat med Grok Bot-ledsageren", "t_companion_hide": "Skjul ledsageren (Blå henter den tilbage)", "w_racing_bar": "motorsportnedtælling i bjælken", "w_devmode_extend": "udviklertilstand · jeg har lige trykket EXTEND", "t_companion_title": "Grok Bot-ledsager",
         "w_term": "terminal · logo", "w_deploy": "udrulninger · pc", "t_companion_settings": "Ledsagerens indstillinger",
         "w_racing": "motorsport", "w_weather": "vejr", "w_ai": "ai-kreditter · pc", "w_devmode": "udviklertilstand", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerede JSON-plugins (skema v1 · ingen native kode)",
@@ -1696,7 +1704,7 @@
         "pulse_notice": "Ny pauseskærm: Omarchy Pulse. Indstillinger › Pauseskærm for at skifte eller gå tilbage.", "ss_pulse_scene": "Pulse-scene", "ss_restore_previous": "Forrige pauseskærm",
         "random_scope": "Tilfældigt blandt", "random_intros": "animerede intros", "random_all": "alle temaer",
         "random_wallpaper": "Tilfældig baggrund / intro",
-        "sys_plugins": "Plugins (SpaceX TV & Grok Bot)",
+        "sys_plugins": "Plugins (SpaceX TV · Grok Bot)",
         "reset_order": "Nulstil apprækkefølge",
         "order_reset": "Apprækkefølgen er nulstillet",
         "wx_title": "Vejr",
@@ -1862,6 +1870,7 @@
     "cs": {
       "name": "Čeština",
       "strings": {
+        "chat_ask": "Zeptat se", "chat_thinking": "přemýšlí…", "chat_type": "Napište otázku výše nebo použijte 🎤", "chat_speak": "Mluvit", "chat_novoice": "Hlas: na této TV není · jen klávesnice", "chat_agent": "Agent", "t_companion_open": "Otevřít nastavení společníka Grok Bot", "chat_play_cine": "Přehrát v Cinemarchy", "chat_play_yt": "Přehrát na YouTube", "chat_play_video": "Přehrát video v prohlížeči TV", "chat_open_link": "Otevřít odkaz v prohlížeči TV",
         "t_companion_chat": "Chat se společníkem Grok Bot", "t_companion_hide": "Skrýt společníka (Modrá ho vrátí)", "w_racing_bar": "odpočet závodů v liště", "w_devmode_extend": "vývojářský režim · právě jsem stiskl EXTEND", "t_companion_title": "Společník Grok Bot",
         "w_term": "terminál · logo", "w_deploy": "nasazení · pc", "t_companion_settings": "Nastavení společníka",
         "w_racing": "závody", "w_weather": "počasí", "w_ai": "kredity ai · pc", "w_devmode": "vývojářský režim", "w_pc": "omarchy · pc", "t_plugins_sub": "Izolované JSON pluginy (schéma v1 · žádný nativní kód)",
@@ -1928,7 +1937,7 @@
         "pulse_notice": "Nový spořič: Omarchy Pulse. Nastavení › Spořič obrazovky pro změnu nebo návrat.", "ss_pulse_scene": "Scéna Pulse", "ss_restore_previous": "Předchozí spořič",
         "random_scope": "Náhodně z", "random_intros": "animovaných úvodů", "random_all": "všech motivů",
         "random_wallpaper": "Náhodné pozadí / intro",
-        "sys_plugins": "Pluginy (SpaceX TV a Grok Bot)",
+        "sys_plugins": "Pluginy (SpaceX TV · Grok Bot)",
         "reset_order": "Obnovit pořadí aplikací",
         "order_reset": "Pořadí aplikací obnoveno",
         "wx_title": "Počasí",
@@ -2094,6 +2103,7 @@
     "ro": {
       "name": "Română",
       "strings": {
+        "chat_ask": "Întreabă", "chat_thinking": "se gândește…", "chat_type": "Scrie o întrebare mai sus sau folosește 🎤", "chat_speak": "Vorbește", "chat_novoice": "Voce: indisponibilă pe acest TV · doar tastatură", "chat_agent": "Agent", "t_companion_open": "Deschide setările companionului Grok Bot", "chat_play_cine": "Redă în Cinemarchy", "chat_play_yt": "Redă pe YouTube", "chat_play_video": "Redă video în browserul TV", "chat_open_link": "Deschide linkul în browserul TV",
         "t_companion_chat": "Chat cu companionul Grok Bot", "t_companion_hide": "Ascunde companionul (Albastru îl aduce înapoi)", "w_racing_bar": "numărătoare curse în bară", "w_devmode_extend": "mod dezvoltator · tocmai am apăsat EXTEND", "t_companion_title": "Companion Grok Bot",
         "w_term": "terminal · logo", "w_deploy": "implementări · pc", "t_companion_settings": "Setări companion",
         "w_racing": "curse", "w_weather": "vremea", "w_ai": "credite ai · pc", "w_devmode": "mod dezvoltator", "w_pc": "omarchy · pc", "t_plugins_sub": "Pluginuri JSON izolate (schema v1 · fără cod nativ)",
@@ -2160,7 +2170,7 @@
         "pulse_notice": "Protector de ecran nou: Omarchy Pulse. Setări › Protector de ecran pentru a-l schimba sau a reveni.", "ss_pulse_scene": "Scena Pulse", "ss_restore_previous": "Protectorul de ecran anterior",
         "random_scope": "Aleatoriu din", "random_intros": "intro animate", "random_all": "toate temele",
         "random_wallpaper": "Fundal / intro aleatoriu",
-        "sys_plugins": "Pluginuri (SpaceX TV și Grok Bot)",
+        "sys_plugins": "Pluginuri (SpaceX TV · Grok Bot)",
         "reset_order": "Resetează ordinea aplicațiilor",
         "order_reset": "Ordinea aplicațiilor a fost resetată",
         "wx_title": "Vreme",
@@ -2326,6 +2336,7 @@
     "el": {
       "name": "Ελληνικά",
       "strings": {
+        "chat_ask": "Ρώτα", "chat_thinking": "σκέφτεται…", "chat_type": "Γράψτε μια ερώτηση παραπάνω ή χρησιμοποιήστε 🎤", "chat_speak": "Μίλα", "chat_novoice": "Φωνή: μη διαθέσιμη σε αυτή την TV · μόνο πληκτρολόγιο", "chat_agent": "Πράκτορας", "t_companion_open": "Άνοιγμα ρυθμίσεων συντρόφου Grok Bot", "chat_play_cine": "Αναπαραγωγή στο Cinemarchy", "chat_play_yt": "Αναπαραγωγή στο YouTube", "chat_play_video": "Αναπαραγωγή βίντεο στον browser της TV", "chat_open_link": "Άνοιγμα συνδέσμου στον browser της TV",
         "t_companion_chat": "Συνομιλία με τον σύντροφο Grok Bot", "t_companion_hide": "Απόκρυψη συντρόφου (το Μπλε τον επαναφέρει)", "w_racing_bar": "αντίστροφη μέτρηση αγώνων στη γραμμή", "w_devmode_extend": "λειτουργία προγραμματιστή · μόλις πάτησα EXTEND", "t_companion_title": "Σύντροφος Grok Bot",
         "w_term": "τερματικό · λογότυπο", "w_deploy": "αναπτύξεις · pc", "t_companion_settings": "Ρυθμίσεις συντρόφου",
         "w_racing": "αγώνες", "w_weather": "καιρός", "w_ai": "μονάδες ai · pc", "w_devmode": "λειτουργία προγραμματιστή", "w_pc": "omarchy · pc", "t_plugins_sub": "Απομονωμένα πρόσθετα JSON (σχήμα v1 · χωρίς εγγενή κώδικα)",
@@ -2392,7 +2403,7 @@
         "pulse_notice": "Νέα προφύλαξη οθόνης: Omarchy Pulse. Ρυθμίσεις › Προφύλαξη οθόνης για αλλαγή ή επιστροφή.", "ss_pulse_scene": "Σκηνή Pulse", "ss_restore_previous": "Προηγούμενη προφύλαξη",
         "random_scope": "Τυχαία από", "random_intros": "κινούμενα intro", "random_all": "όλα τα θέματα",
         "random_wallpaper": "Τυχαίο φόντο / intro",
-        "sys_plugins": "Πρόσθετα (SpaceX TV & Grok Bot)",
+        "sys_plugins": "Πρόσθετα (SpaceX TV · Grok Bot)",
         "reset_order": "Επαναφορά σειράς εφαρμογών",
         "order_reset": "Η σειρά εφαρμογών επανήλθε",
         "wx_title": "Καιρός",
@@ -2558,6 +2569,7 @@
     "ru": {
       "name": "Русский",
       "strings": {
+        "chat_ask": "Спросить", "chat_thinking": "думает…", "chat_type": "Введите вопрос выше или используйте 🎤", "chat_speak": "Говорить", "chat_novoice": "Голос: недоступен на этом ТВ · только клавиатура", "chat_agent": "Агент", "t_companion_open": "Открыть настройки компаньона Grok Bot", "chat_play_cine": "Воспроизвести в Cinemarchy", "chat_play_yt": "Воспроизвести на YouTube", "chat_play_video": "Воспроизвести видео в браузере ТВ", "chat_open_link": "Открыть ссылку в браузере ТВ",
         "t_companion_chat": "Чат с компаньоном Grok Bot", "t_companion_hide": "Скрыть компаньона (Синяя вернёт его)", "w_racing_bar": "обратный отсчёт гонок в панели", "w_devmode_extend": "режим разработчика · только что нажал EXTEND", "t_companion_title": "Компаньон Grok Bot",
         "w_term": "терминал · логотип", "w_deploy": "развёртывания · pc", "t_companion_settings": "Настройки компаньона",
         "w_racing": "гонки", "w_weather": "погода", "w_ai": "кредиты ии · pc", "w_devmode": "режим разработчика", "w_pc": "omarchy · pc", "t_plugins_sub": "Изолированные JSON-плагины (схема v1 · без нативного кода)",
@@ -2624,7 +2636,7 @@
         "pulse_notice": "Новая заставка: Omarchy Pulse. Настройки › Заставка, чтобы сменить её или вернуть прежнюю.", "ss_pulse_scene": "Сцена Pulse", "ss_restore_previous": "Прежняя заставка",
         "random_scope": "Случайно из", "random_intros": "анимированных заставок", "random_all": "всех тем",
         "random_wallpaper": "Случайный фон / интро",
-        "sys_plugins": "Плагины (SpaceX TV и Grok Bot)",
+        "sys_plugins": "Плагины (SpaceX TV · Grok Bot)",
         "reset_order": "Сбросить порядок приложений",
         "order_reset": "Порядок приложений сброшен",
         "wx_title": "Погода",
@@ -2790,6 +2802,7 @@
     "zh-CN": {
       "name": "简体中文",
       "strings": {
+        "chat_ask": "询问", "chat_thinking": "正在思考…", "chat_type": "在上方输入问题，或使用 🎤", "chat_speak": "说话", "chat_novoice": "语音：此电视不可用 · 仅键盘", "chat_agent": "智能体", "t_companion_open": "打开 Grok Bot 伙伴设置", "chat_play_cine": "在 Cinemarchy 中播放", "chat_play_yt": "在 YouTube 上播放", "chat_play_video": "在电视浏览器中播放视频", "chat_open_link": "在电视浏览器中打开链接",
         "t_companion_chat": "与 Grok Bot 伙伴聊天", "t_companion_hide": "隐藏伙伴（蓝键可唤回）", "w_racing_bar": "栏中的赛车倒计时", "w_devmode_extend": "开发者模式 · 我刚按了 EXTEND", "t_companion_title": "Grok Bot 伙伴",
         "w_term": "终端 · 标志", "w_deploy": "部署 · pc", "t_companion_settings": "伙伴设置",
         "w_racing": "赛车", "w_weather": "天气", "w_ai": "AI 额度 · pc", "w_devmode": "开发者模式", "w_pc": "omarchy · pc", "t_plugins_sub": "隔离的 JSON 插件（v1 架构 · 不运行原生代码）",
@@ -3022,6 +3035,7 @@
     "ja": {
       "name": "日本語",
       "strings": {
+        "chat_ask": "質問:", "chat_thinking": "考え中…", "chat_type": "上に質問を入力するか 🎤 を使う", "chat_speak": "話す", "chat_novoice": "音声: このテレビでは使えません · キーボードのみ", "chat_agent": "エージェント", "t_companion_open": "Grok Bot コンパニオン設定を開く", "chat_play_cine": "Cinemarchy で再生", "chat_play_yt": "YouTube で再生", "chat_play_video": "テレビのブラウザで動画を再生", "chat_open_link": "テレビのブラウザでリンクを開く",
         "t_companion_chat": "Grok Bot コンパニオンとチャット", "t_companion_hide": "コンパニオンを隠す（青で戻す）", "w_racing_bar": "バーにレースのカウントダウン", "w_devmode_extend": "開発者モード · EXTEND を押した", "t_companion_title": "Grok Bot コンパニオン",
         "w_term": "ターミナル · ロゴ", "w_deploy": "デプロイ · pc", "t_companion_settings": "コンパニオン設定",
         "w_racing": "レース", "w_weather": "天気", "w_ai": "AI クレジット · pc", "w_devmode": "開発者モード", "w_pc": "omarchy · pc", "t_plugins_sub": "サンドボックス化された JSON プラグイン（v1 スキーマ・ネイティブコードなし）",
@@ -3254,6 +3268,7 @@
     "ar": {
       "name": "العربية",
       "strings": {
+        "chat_ask": "اسأل", "chat_thinking": "يفكّر…", "chat_type": "اكتب سؤالًا في الأعلى أو استخدم 🎤", "chat_speak": "تحدّث", "chat_novoice": "الصوت: غير متاح على هذا التلفاز · لوحة المفاتيح فقط", "chat_agent": "الوكيل", "t_companion_open": "فتح إعدادات رفيق Grok Bot", "chat_play_cine": "تشغيل في Cinemarchy", "chat_play_yt": "تشغيل على YouTube", "chat_play_video": "تشغيل الفيديو في متصفح التلفاز", "chat_open_link": "فتح الرابط في متصفح التلفاز",
         "t_companion_chat": "الدردشة مع رفيق Grok Bot", "t_companion_hide": "إخفاء الرفيق (الأزرق يعيده)", "w_racing_bar": "عدّ تنازلي للسباقات في الشريط", "w_devmode_extend": "وضع المطوّر · ضغطت EXTEND للتو", "t_companion_title": "رفيق Grok Bot",
         "w_term": "الطرفية · الشعار", "w_deploy": "عمليات النشر · pc", "t_companion_settings": "إعدادات الرفيق",
         "w_racing": "سباقات", "w_weather": "الطقس", "w_ai": "أرصدة الذكاء · pc", "w_devmode": "وضع المطوّر", "w_pc": "omarchy · pc", "t_plugins_sub": "إضافات JSON معزولة (مخطط v1 · بلا شيفرة أصلية)",
@@ -3320,7 +3335,7 @@
         "pulse_notice": "شاشة توقف جديدة: Omarchy Pulse. الإعدادات › شاشة التوقف لتغييرها أو للعودة.", "ss_pulse_scene": "مشهد Pulse", "ss_restore_previous": "شاشة التوقف السابقة",
         "random_scope": "عشوائي من", "random_intros": "المقدمات المتحركة", "random_all": "كل السمات",
         "random_wallpaper": "خلفية / مقدمة عشوائية",
-        "sys_plugins": "الإضافات (SpaceX TV وGrok Bot)",
+        "sys_plugins": "الإضافات (SpaceX TV · Grok Bot)",
         "reset_order": "إعادة ضبط ترتيب التطبيقات",
         "order_reset": "تمت إعادة ضبط ترتيب التطبيقات",
         "wx_title": "الطقس",
@@ -3486,6 +3501,7 @@
     "tr": {
       "name": "Türkçe",
       "strings": {
+        "chat_ask": "Sor:", "chat_thinking": "düşünüyor…", "chat_type": "Yukarıya bir soru yazın ya da 🎤 kullanın", "chat_speak": "Konuş", "chat_novoice": "Ses: bu TV'de yok · yalnızca klavye", "chat_agent": "Ajan", "t_companion_open": "Grok Bot yardımcı ayarlarını aç", "chat_play_cine": "Cinemarchy'de oynat", "chat_play_yt": "YouTube'da oynat", "chat_play_video": "Videoyu TV tarayıcısında oynat", "chat_open_link": "Bağlantıyı TV tarayıcısında aç",
         "t_companion_chat": "Grok Bot yardımcısıyla sohbet", "t_companion_hide": "Yardımcıyı gizle (Mavi geri getirir)", "w_racing_bar": "çubukta yarış geri sayımı", "w_devmode_extend": "geliştirici modu · EXTEND'e az önce bastım", "t_companion_title": "Grok Bot yardımcısı",
         "w_term": "terminal · logo", "w_deploy": "dağıtımlar · pc", "t_companion_settings": "Yardımcı ayarları",
         "w_racing": "yarış", "w_weather": "hava", "w_ai": "yz kredileri · pc", "w_devmode": "geliştirici modu", "w_pc": "omarchy · pc", "t_plugins_sub": "Yalıtılmış JSON eklentileri (v1 şeması · yerel kod yok)",
@@ -3552,7 +3568,7 @@
         "pulse_notice": "Yeni ekran koruyucu: Omarchy Pulse. Değiştirmek ya da geri dönmek için Ayarlar › Ekran koruyucu.", "ss_pulse_scene": "Pulse sahnesi", "ss_restore_previous": "Önceki ekran koruyucu",
         "random_scope": "Rastgele seçim", "random_intros": "animasyonlu girişler", "random_all": "tüm temalar",
         "random_wallpaper": "Rastgele duvar kâğıdı / intro",
-        "sys_plugins": "Eklentiler (SpaceX TV ve Grok Bot)",
+        "sys_plugins": "Eklentiler (SpaceX TV · Grok Bot)",
         "reset_order": "Uygulama sırasını sıfırla",
         "order_reset": "Uygulama sırası sıfırlandı",
         "wx_title": "Hava durumu",
@@ -3718,6 +3734,7 @@
     "uk": {
       "name": "Українська",
       "strings": {
+        "chat_ask": "Запитати", "chat_thinking": "думає…", "chat_type": "Введіть запитання вище або скористайтеся 🎤", "chat_speak": "Говорити", "chat_novoice": "Голос: недоступний на цьому ТБ · лише клавіатура", "chat_agent": "Агент", "t_companion_open": "Відкрити налаштування компаньйона Grok Bot", "chat_play_cine": "Відтворити в Cinemarchy", "chat_play_yt": "Відтворити на YouTube", "chat_play_video": "Відтворити відео в браузері ТБ", "chat_open_link": "Відкрити посилання в браузері ТБ",
         "t_companion_chat": "Чат із компаньйоном Grok Bot", "t_companion_hide": "Сховати компаньйона (Синя поверне його)", "w_racing_bar": "зворотний відлік перегонів у панелі", "w_devmode_extend": "режим розробника · щойно натиснув EXTEND", "t_companion_title": "Компаньйон Grok Bot",
         "w_term": "термінал · логотип", "w_deploy": "розгортання · pc", "t_companion_settings": "Налаштування компаньйона",
         "w_racing": "перегони", "w_weather": "погода", "w_ai": "кредити ші · pc", "w_devmode": "режим розробника", "w_pc": "omarchy · pc", "t_plugins_sub": "Ізольовані JSON-плагіни (схема v1 · без нативного коду)",
@@ -3784,7 +3801,7 @@
         "pulse_notice": "Нова заставка: Omarchy Pulse. Налаштування › Заставка, щоб змінити її або повернути попередню.", "ss_pulse_scene": "Сцена Pulse", "ss_restore_previous": "Попередня заставка",
         "random_scope": "Випадково з", "random_intros": "анімованих заставок", "random_all": "усіх тем",
         "random_wallpaper": "Випадковий фон / інтро",
-        "sys_plugins": "Плагіни (SpaceX TV і Grok Bot)",
+        "sys_plugins": "Плагіни (SpaceX TV · Grok Bot)",
         "reset_order": "Скинути порядок застосунків",
         "order_reset": "Порядок застосунків скинуто",
         "wx_title": "Погода",
@@ -3950,6 +3967,7 @@
     "hu": {
       "name": "Magyar",
       "strings": {
+        "chat_ask": "Kérdezd:", "chat_thinking": "gondolkodik…", "chat_type": "Írj fent egy kérdést, vagy használd a 🎤-t", "chat_speak": "Beszéd", "chat_novoice": "Hang: ezen a tévén nem elérhető · csak billentyűzet", "chat_agent": "Ügynök", "t_companion_open": "Grok Bot társ beállításai", "chat_play_cine": "Lejátszás a Cinemarchyban", "chat_play_yt": "Lejátszás a YouTube-on", "chat_play_video": "Videó lejátszása a tévé böngészőjében", "chat_open_link": "Link megnyitása a tévé böngészőjében",
         "t_companion_chat": "Csevegés a Grok Bot társsal", "t_companion_hide": "Társ elrejtése (a Kék visszahozza)", "w_racing_bar": "verseny-visszaszámlálás a sávban", "w_devmode_extend": "fejlesztői mód · most nyomtam meg az EXTEND-et", "t_companion_title": "Grok Bot társ",
         "w_term": "terminál · logó", "w_deploy": "telepítések · pc", "t_companion_settings": "Társ beállításai",
         "w_racing": "verseny", "w_weather": "időjárás", "w_ai": "mi kreditek · pc", "w_devmode": "fejlesztői mód", "w_pc": "omarchy · pc", "t_plugins_sub": "Elszigetelt JSON-bővítmények (v1 séma · nincs natív kód)",
@@ -4016,7 +4034,7 @@
         "pulse_notice": "Új képernyővédő: Omarchy Pulse. Beállítások › Képernyővédő a módosításhoz vagy a visszaállításhoz.", "ss_pulse_scene": "Pulse jelenet", "ss_restore_previous": "Előző képernyővédő",
         "random_scope": "Véletlenszerűen", "random_intros": "animált intrók", "random_all": "összes téma",
         "random_wallpaper": "Véletlenszerű háttér / intró",
-        "sys_plugins": "Bővítmények (SpaceX TV és Grok Bot)",
+        "sys_plugins": "Bővítmények (SpaceX TV · Grok Bot)",
         "reset_order": "Alkalmazássorrend visszaállítása",
         "order_reset": "Alkalmazássorrend visszaállítva",
         "wx_title": "Időjárás",
@@ -4182,6 +4200,7 @@
     "fi": {
       "name": "Suomi",
       "strings": {
+        "chat_ask": "Kysy", "chat_thinking": "miettii…", "chat_type": "Kirjoita kysymys yllä tai käytä 🎤", "chat_speak": "Puhu", "chat_novoice": "Ääni: ei käytettävissä tässä TV:ssä · vain näppäimistö", "chat_agent": "Agentti", "t_companion_open": "Avaa Grok Bot -kumppanin asetukset", "chat_play_cine": "Toista Cinemarchyssa", "chat_play_yt": "Toista YouTubessa", "chat_play_video": "Toista video TV:n selaimessa", "chat_open_link": "Avaa linkki TV:n selaimessa",
         "t_companion_chat": "Keskustele Grok Bot -kumppanin kanssa", "t_companion_hide": "Piilota kumppani (Sininen tuo takaisin)", "w_racing_bar": "kilpa-ajojen laskuri palkissa", "w_devmode_extend": "kehittäjätila · painoin juuri EXTEND", "t_companion_title": "Grok Bot -kumppani",
         "w_term": "pääte · logo", "w_deploy": "julkaisut · pc", "t_companion_settings": "Kumppanin asetukset",
         "w_racing": "kilpa-ajot", "w_weather": "sää", "w_ai": "tekoälysaldot · pc", "w_devmode": "kehittäjätila", "w_pc": "omarchy · pc", "t_plugins_sub": "Eristetyt JSON-laajennukset (v1-skeema · ei natiivikoodia)",
@@ -4248,7 +4267,7 @@
         "pulse_notice": "Uusi näytönsäästäjä: Omarchy Pulse. Asetukset › Näytönsäästäjä vaihtaaksesi tai palataksesi.", "ss_pulse_scene": "Pulse-näkymä", "ss_restore_previous": "Edellinen näytönsäästäjä",
         "random_scope": "Satunnaisesti", "random_intros": "animoiduista introista", "random_all": "kaikista teemoista",
         "random_wallpaper": "Satunnainen tausta / intro",
-        "sys_plugins": "Laajennukset (SpaceX TV ja Grok Bot)",
+        "sys_plugins": "Laajennukset (SpaceX TV · Grok Bot)",
         "reset_order": "Palauta sovellusten järjestys",
         "order_reset": "Sovellusten järjestys palautettu",
         "wx_title": "Sää",
@@ -4414,6 +4433,7 @@
     "nb": {
       "name": "Norsk bokmål",
       "strings": {
+        "chat_ask": "Spør", "chat_thinking": "tenker…", "chat_type": "Skriv et spørsmål over, eller bruk 🎤", "chat_speak": "Snakk", "chat_novoice": "Stemme: ikke tilgjengelig på denne TV-en · bare tastatur", "chat_agent": "Agent", "t_companion_open": "Åpne innstillinger for Grok Bot-følgesvennen", "chat_play_cine": "Spill av i Cinemarchy", "chat_play_yt": "Spill av på YouTube", "chat_play_video": "Spill av video i TV-nettleseren", "chat_open_link": "Åpne lenken i TV-nettleseren",
         "t_companion_chat": "Chat med Grok Bot-følgesvennen", "t_companion_hide": "Skjul følgesvennen (Blå henter den tilbake)", "w_racing_bar": "motorsportnedtelling i linjen", "w_devmode_extend": "utviklermodus · trykket nettopp EXTEND", "t_companion_title": "Grok Bot-følgesvenn",
         "w_term": "terminal · logo", "w_deploy": "utrullinger · pc", "t_companion_settings": "Innstillinger for følgesvenn",
         "w_racing": "motorsport", "w_weather": "vær", "w_ai": "ki-kreditter · pc", "w_devmode": "utviklermodus", "w_pc": "omarchy · pc", "t_plugins_sub": "Isolerte JSON-tillegg (skjema v1 · ingen innebygd kode)",
@@ -4480,7 +4500,7 @@
         "pulse_notice": "Ny skjermsparer: Omarchy Pulse. Innstillinger › Skjermsparer for å bytte eller gå tilbake.", "ss_pulse_scene": "Pulse-scene", "ss_restore_previous": "Forrige skjermsparer",
         "random_scope": "Tilfeldig blant", "random_intros": "animerte intro", "random_all": "alle temaer",
         "random_wallpaper": "Tilfeldig bakgrunn / intro",
-        "sys_plugins": "Programtillegg (SpaceX TV og Grok Bot)",
+        "sys_plugins": "Programtillegg (SpaceX TV · Grok Bot)",
         "reset_order": "Tilbakestill apprekkefølgen",
         "order_reset": "Apprekkefølgen er tilbakestilt",
         "wx_title": "Vær",
