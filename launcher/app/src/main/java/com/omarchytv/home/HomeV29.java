@@ -317,6 +317,7 @@ final class HomeV29 extends FrameLayout {
         };
         rightScroll.setClipChildren(true);
         rightScroll.setClipToPadding(true);
+        rightScroll.setFillViewport(true);
         rightScroll.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
         rightScroll.setFocusable(false);
         rightScroll.setContentDescription("home widgets");
@@ -922,7 +923,7 @@ final class HomeV29 extends FrameLayout {
         int available = Math.max(0, Math.round(appWin.getTop() + appWin.getTranslationY()) - rightScroll.getTop() - px(16));
         boolean overflow = widgets.getHeight() > available;
         LayoutParams lp = (LayoutParams) rightScroll.getLayoutParams();
-        int height = overflow ? available : -2;
+        int height = available;
         if (lp.height != height) { lp.height = height; rightScroll.setLayoutParams(lp); }
         if (!overflow && rightScroll.isFocused()) focusApp(lastApp);
         rightScroll.setFocusable(overflow && available > 0);
