@@ -150,6 +150,8 @@
     <string name="live_on_air">på lufta i %1$d min</string>
     <string name="live_answer">svar</string>
     <string name="live_end">Slutt på opptaket</string>
+    <string name="talk_phone">Snakk fra telefonen</string>
+    <string name="talk_needs_web">Slå først på Connect Omarchy Linux › Nettinnstillinger</string>
     <string name="web_settings_row">Nettinnstillinger</string>
     <string name="web_settings_open">Åpne nettinnstillinger</string>
     <string name="web_settings_hint">Skann den med en telefon på samme nett, eller skriv adressen på en datamaskin. Godkjenn så nettleseren på TV-en.</string>

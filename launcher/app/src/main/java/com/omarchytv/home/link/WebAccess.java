@@ -201,6 +201,21 @@ final class WebAccess {
             if (!who.can("control")) return error(403, "scope", "this browser is read-only (needs control)");
             return tokens(m, p, body, a);
         }
+        // v2.22 talk to the TV: the phone is the microphone (its keyboard's dictation, or the browser's), the question
+        // goes to an agent on the PC like the TV's own "> agents" line; the answer comes back on the TV, spoken
+        if ("GET".equals(m) && "/v1/settings/agents".equals(p)) return json(200, s.talkAgents());
+        if ("POST".equals(m) && "/v1/settings/talk".equals(p)) {
+            if (!who.can("control")) return error(403, "scope", "this browser is read-only (needs control)");
+            String text = LinkServer.printable(body.optString("text", "").replace('\n', ' '), Agents.ASK_MAX).trim();
+            String agentId = body.optString("agentId", "");
+            if (text.isEmpty() || agentId.isEmpty()) return error(400, "bad_request", "agentId and text");
+            String id = "talk-" + LinkCrypto.hex(LinkCrypto.randomBytes(6));
+            String e = s.agentAsk(id, agentId, text);
+            if (e != null) return error("busy".equals(e) ? 429 : "bad_request".equals(e) ? 400 : 409, e, "the PC with that agent is not connected, or it is busy");
+            LiveFeed.get().event("📱 " + a.name.substring(NAME_PREFIX.length()), "talk", text, System.currentTimeMillis());
+            host.log("talk from " + a.name + " to an agent");
+            return json(200, LinkServer.ok().put("id", id));
+        }
         if (write) host.log("web " + a.name + ": " + m + " " + p);
         LinkServer.Response r = app.route(who, req, body);   // the same routes as app tokens: settings, radio, widgets, …
         if (r == null) return error(404, "not_found", null);

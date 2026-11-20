@@ -150,6 +150,8 @@
     <string name="live_on_air">ve vysílání %1$d min</string>
     <string name="live_answer">odpovědět</string>
     <string name="live_end">Konec záznamu</string>
+    <string name="talk_phone">Mluvit z telefonu</string>
+    <string name="talk_needs_web">Nejprve zapněte Connect Omarchy Linux › Webová nastavení</string>
     <string name="web_settings_row">Webové nastavení</string>
     <string name="web_settings_open">Otevřít webové nastavení</string>
     <string name="web_settings_hint">Naskenujte ho telefonem ve stejné síti nebo zadejte adresu na počítači. Pak ten prohlížeč schvalte na TV.</string>

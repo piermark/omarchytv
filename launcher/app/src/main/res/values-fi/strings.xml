@@ -150,6 +150,8 @@
     <string name="live_on_air">lähetyksessä %1$d min</string>
     <string name="live_answer">vastaa</string>
     <string name="live_end">Tallenne päättyi</string>
+    <string name="talk_phone">Puhu puhelimesta</string>
+    <string name="talk_needs_web">Ota ensin käyttöön Connect Omarchy Linux › Verkkoasetukset</string>
     <string name="web_settings_row">Verkkoasetukset</string>
     <string name="web_settings_open">Avaa verkkoasetukset</string>
     <string name="web_settings_hint">Skannaa se puhelimella samassa verkossa tai kirjoita osoite tietokoneella. Hyväksy sitten selain televisiossa.</string>

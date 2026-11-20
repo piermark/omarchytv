@@ -150,6 +150,8 @@
     <string name="live_on_air">en directo desde hace %1$d min</string>
     <string name="live_answer">responder</string>
     <string name="live_end">Fin de la grabación</string>
+    <string name="talk_phone">Hablar desde el móvil</string>
+    <string name="talk_needs_web">Activa primero Connect Omarchy Linux › Ajustes web</string>
     <string name="web_settings_row">Ajustes web</string>
     <string name="web_settings_open">Abrir los ajustes web</string>
     <string name="web_settings_hint">Escanéalo con un móvil en la misma red o escribe la dirección en un ordenador. Luego aprueba ese navegador en la TV.</string>

@@ -149,6 +149,8 @@
     <string name="live_on_air">seit %1$d Min. auf Sendung</string>
     <string name="live_answer">antworten</string>
     <string name="live_end">Ende der Aufnahme</string>
+    <string name="talk_phone">Vom Handy aus sprechen</string>
+    <string name="talk_needs_web">Zuerst Connect Omarchy Linux › Web-Einstellungen einschalten</string>
     <string name="web_settings_row">Web-Einstellungen</string>
     <string name="web_settings_open">Web-Einstellungen öffnen</string>
     <string name="web_settings_hint">Mit einem Handy im selben Netz scannen oder die Adresse am Computer eingeben. Dann den Browser am Fernseher erlauben.</string>

@@ -179,6 +179,8 @@
     <string name="live_on_air">on air for %1$d min</string>
     <string name="live_answer">answer</string>
     <string name="live_end">End of the recording</string>
+    <string name="talk_phone">Talk from the phone</string>
+    <string name="talk_needs_web">Turn on Connect Omarchy Linux › Web settings first</string>
     <string name="web_settings_row">Web settings</string>
     <string name="web_settings_open">Open web settings</string>
     <string name="web_settings_hint">Scan it on a phone on the same network, or type the address on a computer. Then approve that browser on the TV.</string>

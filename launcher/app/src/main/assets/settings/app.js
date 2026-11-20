@@ -72,7 +72,10 @@ async function ask() {
   msg.className = 'msg';
   msg.textContent = 'Asking the TV…';
   const r = await call('POST', '/v1/settings/session', { device: $('device').value.trim(), code });
-  if (code) history.replaceState(null, '', location.pathname);   // one use: do not resend it
+  if (code) {   // one use: do not resend it (the tab stays)
+    const tab = new URLSearchParams(location.search).get('tab');
+    history.replaceState(null, '', location.pathname + (tab === 'talk' ? '?tab=talk' : ''));
+  }
   if (r.status !== 200) {
     msg.className = 'msg bad';
     msg.textContent = reason(r);
@@ -197,12 +200,62 @@ async function accessPane() {
   return out;
 }
 
+// ---- v2.22 talk: the phone is the microphone ---------------------------------------------------------------
+async function talkPane() {
+  const card = el('section', { class: 'card' }, el('h2', { text: 'Talk to your agents' }));
+  card.append(el('p', { class: 'dim', text: 'Say it with your keyboard\'s microphone (or the button below where the browser can), send it, and the answer comes back on the TV, spoken.' }));
+  const r = await call('GET', '/v1/settings/agents');
+  const agents = (r.json.agents || []).filter((a) => a.canAsk);
+  if (!agents.length) {
+    card.append(el('p', { text: 'No agent takes questions right now: start one on the PC with the agent monitor on (omarchy-link agents on).' }));
+    return card;
+  }
+  const pick = el('select', { 'aria-label': 'Agent' }, ...agents.map((a) => el('option', { value: a.id, text: a.name + (a.project ? ' · ' + a.project : '') })));
+  const text = el('textarea', { rows: 4, maxlength: 500, placeholder: 'e.g. why is the build red?', 'aria-label': 'Question' });
+  const msg = el('p', { class: 'msg', role: 'status' });
+  const send = el('button', { type: 'button', text: 'Send', disabled: readOnly(), onclick: async () => {
+    const q = text.value.trim();
+    if (!q) return;
+    send.disabled = true;
+    const s = await call('POST', '/v1/settings/talk', { agentId: pick.value, text: q });
+    send.disabled = false;
+    if (s.status === 200) { msg.className = 'msg ok'; msg.textContent = 'Sent ✓ The answer comes on the TV.'; text.value = ''; }
+    else { msg.className = 'msg bad'; msg.textContent = reason(s); }
+  } });
+  const row = el('div', { class: 'inline' }, send);
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR && !readOnly()) {   // the browser's own dictation, only while held
+    const hold = el('button', { type: 'button', text: '🎙 Hold to talk' });
+    let rec = null;
+    const start = (e) => {
+      e.preventDefault();
+      if (rec) return;
+      rec = new SR();
+      rec.lang = document.documentElement.lang || navigator.language || 'en';
+      rec.interimResults = true;
+      rec.onresult = (ev) => { text.value = Array.from(ev.results).map((x) => x[0].transcript).join(' '); };
+      rec.onend = () => { rec = null; hold.textContent = '🎙 Hold to talk'; };
+      rec.start();
+      hold.textContent = '● Listening…';
+    };
+    const stop = () => { if (rec) rec.stop(); };
+    hold.addEventListener('pointerdown', start);
+    hold.addEventListener('pointerup', stop);
+    hold.addEventListener('pointerleave', stop);
+    row.prepend(hold);
+  }
+  card.append(pick, text, row, msg);
+  return card;
+}
+
 async function render() {
   const tabs = $('tabs'), panes = $('panes');
   tabs.hidden = false;
   tabs.replaceChildren();
-  const all = state.schema.sections.map((s) => ({ id: s.id, label: s.label })).concat([{ id: 'access', label: 'Access' }]);
-  if (!all.some((t) => t.id === state.tab)) state.tab = all[0].id;
+  const all = [{ id: 'talk', label: '🎙 Talk' }].concat(state.schema.sections.map((s) => ({ id: s.id, label: s.label })))
+    .concat([{ id: 'access', label: 'Access' }]);
+  if (!state.tab) state.tab = new URLSearchParams(location.search).get('tab') === 'talk' ? 'talk' : all[1].id;
+  if (!all.some((t) => t.id === state.tab)) state.tab = all[1].id;
   for (const t of all) {
     tabs.append(el('button', { type: 'button', role: 'tab', 'aria-selected': t.id === state.tab ? 'true' : 'false', text: t.label,
       onclick: () => { state.tab = t.id; render(); } }));
@@ -210,6 +263,7 @@ async function render() {
   const kids = [];
   if (readOnly()) kids.push(el('div', { class: 'banner', text: 'Read-only: approve this browser with "Allow" on the TV to change settings.' }));
   if (state.tab === 'access') kids.push(await accessPane());
+  else if (state.tab === 'talk') kids.push(await talkPane());
   else kids.push(sectionPane(state.schema.sections.find((s) => s.id === state.tab)));
   panes.replaceChildren(...kids);
 }
@@ -237,7 +291,7 @@ async function start() {
 
 document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState !== 'visible' || !state.me || !state.schema) return;
-  try { await loadValues(); if (state.tab !== 'access') await render(); } catch (_) { /* signed out */ }
+  try { await loadValues(); if (state.tab !== 'access' && state.tab !== 'talk') await render(); } catch (_) { /* signed out */ }
 });
 
 start().catch((e) => { $('panes').replaceChildren(el('p', { class: 'bad', text: String(e.message || e) })); });

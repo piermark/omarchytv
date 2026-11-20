@@ -2364,6 +2364,30 @@ public final class LinkServer {
         return a != null ? a : new JSONObject().put("agents", new JSONArray()).put("at", JSONObject.NULL);
     }
 
+    /** v2.22 the agent's name for the channel, from the last agent list. */
+    String agentName(String agentId) {
+        JSONObject j = agentsNow;
+        JSONArray a = j == null ? null : j.optJSONArray("agents");
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject g = a.optJSONObject(i);
+            if (g != null && agentId.equals(g.optString("id"))) return g.optString("agentName", g.optString("agent", "agent"));
+        }
+        return "agent";
+    }
+
+    /** v2.22 the agents a phone can talk to: id, name, project, whether it takes questions. */
+    JSONObject talkAgents() throws JSONException {
+        JSONObject j = agentsNow;
+        JSONArray a = j == null ? null : j.optJSONArray("agents"), out = new JSONArray();
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject g = a.optJSONObject(i);
+            if (g == null) continue;
+            out.put(new JSONObject().put("id", g.optString("id")).put("name", g.optString("agentName", g.optString("agent")))
+                    .put("project", g.optString("project", "")).put("status", g.optString("status", "")).put("canAsk", g.optBoolean("canAsk")));
+        }
+        return new JSONObject().put("agents", out);
+    }
+
     private JSONObject setAgents(Agents a) {
         JSONObject j = a.toJson();
         try {
@@ -2986,9 +3010,16 @@ public final class LinkServer {
                 break;
             case "agent_ask_state":
             case "agent_answer":
-            case "agent_ask_error":
-                host.onEvent(c.pcId, type, agentReply(type, data));
+            case "agent_ask_error": {
+                JSONObject rep = agentReply(type, data);
+                if ("agent_answer".equals(type)) {   // v2.22 AI LIVE; an answer to the phone is read aloud on the TV
+                    String who = agentName(rep.optString("agentId"));
+                    LiveFeed.get().event(who, "answer", rep.optString("text"), now());
+                    if (rep.optString("id").startsWith("talk-")) host.speak(who + ". " + rep.optString("text"));
+                }
+                host.onEvent(c.pcId, type, rep);
                 break;
+            }
             case "grokbot_answer":
             case "grokbot_error":
                 host.onEvent(c.pcId, type, grokbotReply(type, data));

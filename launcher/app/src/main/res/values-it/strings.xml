@@ -149,6 +149,8 @@
     <string name="live_on_air">in onda da %1$d min</string>
     <string name="live_answer">rispondi</string>
     <string name="live_end">Fine della registrazione</string>
+    <string name="talk_phone">Parla dal telefono</string>
+    <string name="talk_needs_web">Prima attiva Connect Omarchy Linux › Impostazioni web</string>
     <string name="web_settings_row">Impostazioni web</string>
     <string name="web_settings_open">Apri le impostazioni web</string>
     <string name="web_settings_hint">Inquadralo con un telefono sulla stessa rete, o scrivi l\'indirizzo su un computer. Poi approva quel browser sulla TV.</string>

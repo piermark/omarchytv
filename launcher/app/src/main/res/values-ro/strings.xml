@@ -150,6 +150,8 @@
     <string name="live_on_air">în emisie de %1$d min</string>
     <string name="live_answer">răspunde</string>
     <string name="live_end">Sfârșitul înregistrării</string>
+    <string name="talk_phone">Vorbește de pe telefon</string>
+    <string name="talk_needs_web">Activează mai întâi Connect Omarchy Linux › Setări web</string>
     <string name="web_settings_row">Setări web</string>
     <string name="web_settings_open">Deschide setările web</string>
     <string name="web_settings_hint">Scanează-l cu un telefon din aceeași rețea sau scrie adresa pe un computer. Apoi aprobă browserul pe televizor.</string>

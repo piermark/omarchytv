@@ -150,6 +150,8 @@
     <string name="live_on_air">已直播 %1$d 分钟</string>
     <string name="live_answer">回答</string>
     <string name="live_end">录像结束</string>
+    <string name="talk_phone">用手机说话</string>
+    <string name="talk_needs_web">请先开启 Connect Omarchy Linux › 网页设置</string>
     <string name="web_settings_row">网页设置</string>
     <string name="web_settings_open">打开网页设置</string>
     <string name="web_settings_hint">用同一网络中的手机扫描，或在电脑上输入地址。然后在电视上批准该浏览器。</string>

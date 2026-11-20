@@ -150,6 +150,8 @@
     <string name="live_on_air">放送中 %1$d 分</string>
     <string name="live_answer">回答</string>
     <string name="live_end">録画の終わり</string>
+    <string name="talk_phone">スマホから話す</string>
+    <string name="talk_needs_web">先に Connect Omarchy Linux › Web 設定 をオンにしてください</string>
     <string name="web_settings_row">Web設定</string>
     <string name="web_settings_open">Web設定を開く</string>
     <string name="web_settings_hint">同じネットワークのスマホで読み取るか、パソコンでアドレスを入力してください。その後、テレビでそのブラウザを許可します。</string>

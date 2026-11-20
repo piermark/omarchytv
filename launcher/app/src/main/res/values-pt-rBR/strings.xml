@@ -150,6 +150,8 @@
     <string name="live_on_air">no ar há %1$d min</string>
     <string name="live_answer">responder</string>
     <string name="live_end">Fim da gravação</string>
+    <string name="talk_phone">Falar pelo celular</string>
+    <string name="talk_needs_web">Ative primeiro Connect Omarchy Linux › Configurações web</string>
     <string name="web_settings_row">Configurações web</string>
     <string name="web_settings_open">Abrir as configurações web</string>
     <string name="web_settings_hint">Escaneie com um celular na mesma rede ou digite o endereço num computador. Depois aprove esse navegador na TV.</string>

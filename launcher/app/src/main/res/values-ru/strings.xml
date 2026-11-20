@@ -150,6 +150,8 @@
     <string name="live_on_air">в эфире %1$d мин</string>
     <string name="live_answer">ответить</string>
     <string name="live_end">Конец записи</string>
+    <string name="talk_phone">Говорить с телефона</string>
+    <string name="talk_needs_web">Сначала включите Connect Omarchy Linux › Веб-настройки</string>
     <string name="web_settings_row">Веб-настройки</string>
     <string name="web_settings_open">Открыть веб-настройки</string>
     <string name="web_settings_hint">Отсканируйте телефоном в той же сети или введите адрес на компьютере. Затем разрешите этот браузер на телевизоре.</string>

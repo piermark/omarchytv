@@ -150,6 +150,8 @@
     <string name="live_on_air">à l’antenne depuis %1$d min</string>
     <string name="live_answer">répondre</string>
     <string name="live_end">Fin de l’enregistrement</string>
+    <string name="talk_phone">Parler depuis le téléphone</string>
+    <string name="talk_needs_web">Activez d’abord Connect Omarchy Linux › Réglages web</string>
     <string name="web_settings_row">Réglages web</string>
     <string name="web_settings_open">Ouvrir les réglages web</string>
     <string name="web_settings_hint">Scannez-le avec un téléphone sur le même réseau ou tapez l\'adresse sur un ordinateur. Puis autorisez ce navigateur sur la TV.</string>

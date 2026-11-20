@@ -150,6 +150,8 @@
     <string name="live_on_air">στον αέρα %1$d λεπτά</string>
     <string name="live_answer">απάντηση</string>
     <string name="live_end">Τέλος εγγραφής</string>
+    <string name="talk_phone">Μιλήστε από το κινητό</string>
+    <string name="talk_needs_web">Ενεργοποιήστε πρώτα Connect Omarchy Linux › Ρυθμίσεις web</string>
     <string name="web_settings_row">Ρυθμίσεις web</string>
     <string name="web_settings_open">Άνοιγμα ρυθμίσεων web</string>
     <string name="web_settings_hint">Σαρώστε το με κινητό στο ίδιο δίκτυο ή πληκτρολογήστε τη διεύθυνση σε υπολογιστή. Μετά εγκρίνετε τον browser στην TV.</string>

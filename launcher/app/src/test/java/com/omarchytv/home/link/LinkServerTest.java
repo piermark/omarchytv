@@ -995,6 +995,11 @@ public class LinkServerTest {
         assertFalse(got.toString().contains("abc.def"));
         web("PATCH", "/v1/settings", "{\"ha.url\":\"http://192.168.1.6:8123\"}", c, csrf, origin);
         assertEquals("", host.haToken);   // a new address forgets the old token
+        // v2.22 talk: the agents a phone can talk to; no PC connected: refused, nothing sent
+        assertEquals(200, web("GET", "/v1/settings/agents", null, c, null, null).status);
+        assertEquals(400, web("POST", "/v1/settings/talk", "{\"text\":\"\"}", c, csrf, origin).status);
+        assertEquals(409, web("POST", "/v1/settings/talk", "{\"agentId\":\"a1\",\"text\":\"why red?\"}", c, csrf, origin).status);
+        assertEquals(403, web("POST", "/v1/settings/talk", "{\"agentId\":\"a1\",\"text\":\"x\"}", rc, rcsrf, origin).status);
         // tokens from the page; revoking the browser's own token ends the session
         Resp nt = web("POST", "/v1/settings/tokens", "{\"name\":\"hermes\",\"scope\":\"notify\"}", c, csrf, origin);
         assertEquals(200, nt.status);

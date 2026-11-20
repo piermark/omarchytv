@@ -36,3 +36,6 @@ button:disabled, input:disabled, select:disabled { opacity: .5; cursor: not-allo
 .banner { border: 1px solid var(--accent2); color: var(--accent2); padding: .5rem .75rem; margin-bottom: 1rem; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .82rem; margin: 0; }
 .token { color: var(--green); user-select: all; overflow-wrap: anywhere; }
+
+/* v2.22 talk */
+textarea, select { width: 100%; box-sizing: border-box; margin: .5rem 0; font: inherit; background: var(--bg); color: var(--fg); border: 1px solid var(--muted); padding: .6rem; }

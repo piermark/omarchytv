@@ -4128,6 +4128,17 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> startActivity(LiveActivity.intent(this, false)));
             return false;
         });
+        p.add("🎙 " + str(R.string.talk_phone), "QR ›", r -> {   // v2.22 the phone is the microphone (the web settings page)
+            String wIp = OmarchyLink.lanIp(), wCode = OmarchyLink.webCode();
+            org.json.JSONObject lk = LauncherConfig.readJson(this).optJSONObject("link");
+            if (lk == null || !lk.optBoolean("webSettings") || wIp == null || wCode == null) {
+                android.widget.Toast.makeText(this, str(R.string.talk_needs_web), android.widget.Toast.LENGTH_LONG).show();
+                return true;
+            }
+            String url = "http://" + wIp + ":" + com.omarchytv.home.link.LinkServer.PORT + "/settings/?tab=talk&code=" + wCode;
+            handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.talk_phone), url, str(R.string.web_settings_hint), false)));
+            return false;
+        });
         p.add(str(R.string.shift_title), "🌙 ›", r -> {
             handler.post(() -> startActivity(ShiftActivity.intent(this, false)));
             return false;

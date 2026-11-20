@@ -150,6 +150,8 @@
     <string name="live_on_air">%1$d min in de uitzending</string>
     <string name="live_answer">antwoorden</string>
     <string name="live_end">Einde van de opname</string>
+    <string name="talk_phone">Praten via de telefoon</string>
+    <string name="talk_needs_web">Zet eerst Connect Omarchy Linux › Webinstellingen aan</string>
     <string name="web_settings_row">Webinstellingen</string>
     <string name="web_settings_open">Webinstellingen openen</string>
     <string name="web_settings_hint">Scan hem met een telefoon op hetzelfde netwerk of typ het adres op een computer. Keur die browser daarna goed op de tv.</string>

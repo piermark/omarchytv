@@ -150,6 +150,8 @@
     <string name="live_on_air">على الهواء منذ %1$d دقيقة</string>
     <string name="live_answer">الرد</string>
     <string name="live_end">نهاية التسجيل</string>
+    <string name="talk_phone">تحدّث من الهاتف</string>
+    <string name="talk_needs_web">فعّل أولاً Connect Omarchy Linux › إعدادات الويب</string>
     <string name="web_settings_row">إعدادات الويب</string>
     <string name="web_settings_open">فتح إعدادات الويب</string>
     <string name="web_settings_hint">امسحه بهاتف على الشبكة نفسها أو اكتب العنوان على حاسوب. ثم وافق على ذلك المتصفح من التلفاز.</string>

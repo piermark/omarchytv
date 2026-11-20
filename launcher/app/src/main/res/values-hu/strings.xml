@@ -150,6 +150,8 @@
     <string name="live_on_air">%1$d perce adásban</string>
     <string name="live_answer">válasz</string>
     <string name="live_end">A felvétel vége</string>
+    <string name="talk_phone">Beszéd a telefonról</string>
+    <string name="talk_needs_web">Előbb kapcsold be: Connect Omarchy Linux › Webes beállítások</string>
     <string name="web_settings_row">Webes beállítások</string>
     <string name="web_settings_open">Webes beállítások megnyitása</string>
     <string name="web_settings_hint">Olvasd be egy ugyanazon a hálózaton lévő telefonnal, vagy írd be a címet egy számítógépen. Utána engedélyezd a böngészőt a TV-n.</string>
