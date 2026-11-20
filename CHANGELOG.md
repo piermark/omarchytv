@@ -2,6 +2,13 @@
 
 ## [Unreleased] — 2.22
 
+- **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
+  extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
+  terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from
+  the reserved panes `native-pc-details`, `native-mac` and `native-ai` of the existing cached panes feed (no new
+  endpoint or poller); those panes no longer also show in the lower row. The right-hand widgets scroll when they
+  overflow. `homeWidgets.grokbot: false` hides the Grok Bot tile on Home (default on). Details:
+  [docs/native-home-details.md](docs/native-home-details.md). Not taken from the PR: the date stamp in the bar.
 - **`omarchy-link watch --only-fail`** (alias `--quiet-ok`): green runs stay off the TV, only failures show (as an
   alert, spoken with `--speak`). The exit code is passed through as before. The GitHub Actions example has a
   commented `if:` line that does the same for CI. Asked on X.

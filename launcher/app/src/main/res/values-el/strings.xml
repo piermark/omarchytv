@@ -124,6 +124,7 @@
     <string name="pane_ai">μονάδες ai</string>
     <string name="set_pane_ai">Πλαίσιο: μονάδες AI</string>
     <string name="ai_empty">συνδέστε το Omarchy Linux για να δείτε τις μονάδες AI</string>
+    <string name="native_unavailable">μη διαθέσιμο</string>
     <string name="ai_stale">παλιό %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">κανένα αποτέλεσμα</string>

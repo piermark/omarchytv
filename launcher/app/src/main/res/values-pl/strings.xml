@@ -124,6 +124,7 @@
     <string name="pane_ai">kredyty ai</string>
     <string name="set_pane_ai">Panel: kredyty AI</string>
     <string name="ai_empty">połącz Omarchy Linux, aby zobaczyć kredyty AI</string>
+    <string name="native_unavailable">niedostępne</string>
     <string name="ai_stale">nieaktualne %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">brak wyników</string>

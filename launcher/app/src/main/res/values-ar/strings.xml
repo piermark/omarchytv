@@ -124,6 +124,7 @@
     <string name="pane_ai">أرصدة ai</string>
     <string name="set_pane_ai">لوحة: أرصدة AI</string>
     <string name="ai_empty">صِل Omarchy Linux لعرض أرصدة AI</string>
+    <string name="native_unavailable">غير متاح</string>
     <string name="ai_stale">قديم %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">لا توجد نتائج</string>

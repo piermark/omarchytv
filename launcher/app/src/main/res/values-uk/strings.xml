@@ -124,6 +124,7 @@
     <string name="pane_ai">кредити ші</string>
     <string name="set_pane_ai">Панель: кредити ШІ</string>
     <string name="ai_empty">підключіть Omarchy Linux, щоб бачити кредити ШІ</string>
+    <string name="native_unavailable">недоступно</string>
     <string name="ai_stale">застаріло %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">немає збігів</string>

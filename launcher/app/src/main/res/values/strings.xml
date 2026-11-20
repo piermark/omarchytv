@@ -153,6 +153,7 @@
     <string name="pane_ai">ai credits</string>
     <string name="set_pane_ai">Pane: AI credits</string>
     <string name="ai_empty">connect Omarchy Linux to show AI credits</string>
+    <string name="native_unavailable">unavailable</string>
     <string name="ai_stale">stale %1$s</string>
     <string name="tv_prompt" translatable="false">&gt; TV</string>
     <string name="apps_prompt" translatable="false">&gt; Apps</string>

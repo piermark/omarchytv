@@ -123,6 +123,7 @@
     <string name="pane_ai">crediti ai</string>
     <string name="set_pane_ai">Pannello: crediti AI</string>
     <string name="ai_empty">collega Omarchy Linux per vedere i crediti AI</string>
+    <string name="native_unavailable">non disponibile</string>
     <string name="ai_stale">vecchio di %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">nessun risultato</string>

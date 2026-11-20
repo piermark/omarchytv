@@ -2,13 +2,6 @@ plugins {
     id 'com.android.application'
 }
 
-def buildRevision = providers.gradleProperty('buildRevision').getOrElse('0')
-if (!(buildRevision ==~ /0|[1-9][0-9]*/)) {
-    throw new GradleException('buildRevision must be 0 or a positive integer')
-}
-def buildStamp = "v${new Date().format('yyyy.MM.dd')}"
-if (buildRevision != '0') buildStamp += ".${buildRevision}"
-
 android {
     namespace 'com.omarchytv.home'
     compileSdk 34
@@ -19,7 +12,6 @@ android {
         targetSdk 34
         versionCode 30
         versionName '2.21.0'
-        resValue 'string', 'build_stamp', buildStamp
     }
 
     buildTypes {

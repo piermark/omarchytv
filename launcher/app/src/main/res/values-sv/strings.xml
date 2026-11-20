@@ -124,6 +124,7 @@
     <string name="pane_ai">ai-krediter</string>
     <string name="set_pane_ai">Panel: AI-krediter</string>
     <string name="ai_empty">anslut Omarchy Linux för att visa AI-krediter</string>
+    <string name="native_unavailable">inte tillgänglig</string>
     <string name="ai_stale">gammal %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen träff</string>

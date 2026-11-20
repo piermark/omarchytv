@@ -124,6 +124,7 @@
     <string name="pane_ai">кредиты ии</string>
     <string name="set_pane_ai">Панель: кредиты ИИ</string>
     <string name="ai_empty">подключите Omarchy Linux, чтобы видеть кредиты ИИ</string>
+    <string name="native_unavailable">недоступно</string>
     <string name="ai_stale">устарело %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">нет совпадений</string>

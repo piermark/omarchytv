@@ -124,6 +124,7 @@
     <string name="pane_ai">ai kredileri</string>
     <string name="set_pane_ai">Panel: AI kredileri</string>
     <string name="ai_empty">AI kredilerini görmek için Omarchy Linux\'u bağlayın</string>
+    <string name="native_unavailable">kullanılamıyor</string>
     <string name="ai_stale">eski %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">eşleşme yok</string>

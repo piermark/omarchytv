@@ -124,6 +124,7 @@
     <string name="pane_ai">ai-kreditter</string>
     <string name="set_pane_ai">Panel: AI-kreditter</string>
     <string name="ai_empty">forbind Omarchy Linux for at se AI-kreditter</string>
+    <string name="native_unavailable">ikke tilgængelig</string>
     <string name="ai_stale">forældet %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">intet resultat</string>

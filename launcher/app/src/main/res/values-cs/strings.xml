@@ -124,6 +124,7 @@
     <string name="pane_ai">ai kredity</string>
     <string name="set_pane_ai">Panel: AI kredity</string>
     <string name="ai_empty">připojte Omarchy Linux pro zobrazení AI kreditů</string>
+    <string name="native_unavailable">nedostupné</string>
     <string name="ai_stale">zastaralé %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">žádná shoda</string>

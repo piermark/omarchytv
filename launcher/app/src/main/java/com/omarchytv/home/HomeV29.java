@@ -100,7 +100,6 @@ final class HomeV29 extends FrameLayout {
     // bar
     private final FrameLayout bar;
     private final TextView clock;
-    private final TextView buildStamp;
     private final TextView[] ws = new TextView[5];
     private final View menuBtn;
     private final List<View> barIcons = new ArrayList<>();
@@ -194,10 +193,6 @@ final class HomeV29 extends FrameLayout {
             ws[i] = w;
             left.addView(w, new LinearLayout.LayoutParams(-2, -1));
         }
-        buildStamp = text(a.getString(R.string.build_stamp), 16, false);
-        buildStamp.setGravity(Gravity.CENTER_VERTICAL);
-        buildStamp.setPadding(px(12), 0, 0, 0);
-        left.addView(buildStamp, new LinearLayout.LayoutParams(-2, -1));
         barRace = text("", 20, false);
         barRace.setSingleLine(true);
         barRace.setGravity(Gravity.CENTER_VERTICAL);
@@ -757,7 +752,6 @@ final class HomeV29 extends FrameLayout {
         int winBg = Theme.withAlpha(t.bg, Math.min(0.98f, op + nb));
         bar.setBackgroundColor(Theme.withAlpha(t.bg, Math.min(0.95f, op + 0.10f) + nb > 0.98f ? 0.98f : Math.min(0.95f, op + 0.10f) + nb));
         clock.setTextColor(t.fgBright);
-        buildStamp.setTextColor(t.fgDim);
         for (int i = 0; i < 5; i++) {
             boolean on = c.workspaceAt(i + 1) == activeWs;
             ws[i].setTextColor(on ? accent() : t.fg);
@@ -877,7 +871,7 @@ final class HomeV29 extends FrameLayout {
         macBox.setVisibility(cfg.wPc && mac != null ? VISIBLE : GONE);
         macBody.removeAllViews();
         nativeMac(mac);
-        if (mac != null && macBody.getChildCount() == 0) macBody.addView(line("unavailable"));
+        if (mac != null && macBody.getChildCount() == 0) macBody.addView(line(act.getString(R.string.native_unavailable)));
         updateAi(aiBody);
         post(this::positionLeftWidgets);
         updateRacing();
@@ -1533,7 +1527,7 @@ final class HomeV29 extends FrameLayout {
                             + (reset.isEmpty() ? "" : " · " + reset), true));
                 } else aiBody.addView(line(label + "  " + value));
             }
-            if (aiBody.getChildCount() == 0) aiBody.addView(line("unavailable"));
+            if (aiBody.getChildCount() == 0) aiBody.addView(line(act.getString(R.string.native_unavailable)));
             return;
         }
         if (!OmarchyLink.connected() && cfg.aiAt > 0 || cfg.ai.isEmpty() && !OmarchyLink.connected()) {

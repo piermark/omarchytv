@@ -124,6 +124,7 @@
     <string name="pane_ai">ai-krediitit</string>
     <string name="set_pane_ai">Paneeli: AI-krediitit</string>
     <string name="ai_empty">yhdistä Omarchy Linux nähdäksesi AI-krediitit</string>
+    <string name="native_unavailable">ei saatavilla</string>
     <string name="ai_stale">vanhentunut %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ei osumia</string>

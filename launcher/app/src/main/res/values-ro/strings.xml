@@ -124,6 +124,7 @@
     <string name="pane_ai">credite ai</string>
     <string name="set_pane_ai">Panou: credite AI</string>
     <string name="ai_empty">conectează Omarchy Linux pentru a vedea creditele AI</string>
+    <string name="native_unavailable">indisponibil</string>
     <string name="ai_stale">vechi %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">niciun rezultat</string>

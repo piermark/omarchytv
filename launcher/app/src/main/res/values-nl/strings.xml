@@ -124,6 +124,7 @@
     <string name="pane_ai">ai-tegoed</string>
     <string name="set_pane_ai">Paneel: AI-tegoed</string>
     <string name="ai_empty">verbind Omarchy Linux om het AI-tegoed te zien</string>
+    <string name="native_unavailable">niet beschikbaar</string>
     <string name="ai_stale">verouderd %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">geen resultaat</string>
