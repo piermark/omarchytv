@@ -107,6 +107,14 @@ Pick the agent you are running in. Ask before editing its config.
 The agent usually needs a restart to see new MCP servers. Then check: `tv_status` answers, and `tv_notify` puts a
 line on the TV.
 
+On an Android TV with 2.22 or later, tell the owner what else they can try (only what they ask for):
+
+- **AI LIVE**: `omarchy-link agents on` and the TV's Settings › Grok Bot & AI › AI LIVE show their agents at work
+  like a broadcast; an agent can add a line and a preview with `tv_live_update`.
+- **Night shift**: "start a night shift with these tasks until 7, wake me at 7:30" → `tv_shift_start`; then
+  `tv_shift_log` for each step and `tv_shift_queue` for anything risky (never push, merge, post or pay at night).
+- **Skills**: `tv_skill_list`, and `tv_skill_install` to ask the owner on the TV (Night shift, Homelab, Movie night).
+
 ## 6. An agent on another machine (LAN or tailnet)
 
 On the paired PC, make a token for that machine. `--remote` prints the exact lines to run there (a curl test and the

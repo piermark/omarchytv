@@ -541,6 +541,30 @@ scope read or control, 30 days) as an `HttpOnly; SameSite=Strict` cookie. With t
 /v1/settings/tokens`, `DELETE /v1/settings/tokens/{id}` (control), and the app routes above. Every write needs
 `X-Omarchy-CSRF` and `Origin: http://<Host>`; the Host must be an IP address or a `*.ts.net` name. No CORS headers.
 
+### AI LIVE, the night shift, talk and skills (v2.22, Android TV)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| POST | `/v1/live` | notify | `{text ≤120, progress 0-100 / -1, preview?}`: what the agent does now (memory only) |
+| GET | `/v1/live` | read | `{agents: [{agent, text, progress, at, since, waiting?: {id, question}, preview?}], events: [{seq, at, agent, kind, text}]}` |
+| GET | `/v1/shift` | read | `{state: none | running | ended, startedAt, until, wake, by, tasks[], counts: {ok, fail, info, waiting}}` |
+| POST | `/v1/shift/start` | control | `{tasks[1-20], until: "07:00" or ms (≤16 h), wake?, replace?}` |
+| POST | `/v1/shift/end` | control | |
+| POST | `/v1/shift/log` | notify | `{level: ok | fail | info, text ≤200, detail?, task?}`; 409 `no_shift` outside a shift (2 h of grace after `until`) |
+| POST | `/v1/shift/queue` | notify | `{title ≤120, detail?, risk?}` → `{item: {id: "q1", state: "pending"}}`; 50 waiting at most |
+| GET | `/v1/shift/queue/{id}` | notify | `pending | approved | denied`; only the TV's Night shift page answers |
+| GET | `/v1/skills` | read | `{catalog: [{id, name, author, version, description, permissions}], installed: {id: {…, agent}}}` |
+| POST | `/v1/skills/{id}/install` | control | shows the skill and its permissions on the TV; the owner answers there |
+| DELETE | `/v1/skills/{id}` | control | removes its widgets and its page |
+
+A preview (on `/v1/live` and `/v1/ask`): `{kind: image, url}` (https, or http to a LAN / tailnet IP),
+`{kind: diff | text, text}`, `{kind: chart, points[], label?}`, optional `title`; anything else is 400 `bad_preview`.
+During a running shift `POST /v1/notify` answers `kept_for_morning` (the note goes to the diary), and speech is off.
+Events: `live`, `shift_changed {op}`. Talk (web settings session, control): `GET /v1/settings/agents`,
+`POST /v1/settings/talk {agentId, text}` → the PC's `agent_ask`; the `agent_answer` is spoken on the TV.
+`tv_open` targets `live` and `replay`. MCP: `tv_live_update`, `tv_live`, `tv_shift_start | end | status | log | queue |
+decision`, `tv_skill_list | install | remove`.
+
 ### AI credits (`PUT /v1/ai`)
 
 ```json

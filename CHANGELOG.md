@@ -2,6 +2,40 @@
 
 ## [Unreleased] — 2.22
 
+### The TV that runs your AI (Android TV)
+
+- **AI LIVE, your agents as a TV broadcast**: Settings › Grok Bot & AI › AI LIVE (or `tv_open live`). The ● LIVE
+  bug, the channel logo and the clock, the studios strip, one agent on camera (its avatar, what it does, the progress,
+  the preview of its work on the studio monitor), a news lower third at every cut, the red BREAKING banner when an
+  agent waits for your yes (OK opens its question), the NEWS ticker. The director cuts every 12 s to the next agent
+  that is working; LEFT / RIGHT change camera. It goes on air by itself: every agent the PC's agent monitor reports
+  (Claude Code, Codex, Grok, Hermes, Gemini, T3 Code, already redacted on the PC) is on it with its current step,
+  and agents can say more with `tv_live_update` (a line, a progress, a preview). `POST/GET /v1/live`, `tv_live`.
+- **See the work before you approve it**: a question can carry a preview (`/v1/ask` `preview`, or the agent's last
+  `tv_live_update`): an image (https or LAN), a diff, a text or a few numbers, shown in the question dialog.
+- **The night shift, the TV as a night worker**: an agent starts a shift (`tv_shift_start`: the tasks, the end, the
+  wake-up time). All night the TV stays silent: notes go to the diary, nothing rings or speaks. Agents write the
+  diary (`tv_shift_log`: ok / fail / info) and leave anything risky (push, merge, post, payment) for the morning
+  (`tv_shift_queue`, then `tv_shift_decision`): only you answer it, on the TV (Deny has the focus, Approve waits
+  1.5 s); there is no way to answer from the network. In the morning the TV opens the Night shift page (an alarm
+  clock where exact alarms are allowed, otherwise the first Home after the wake-up time).
+- **The VCR is back**: the night plays back like a tape (Night shift › Replay of the night, or `tv_open replay`),
+  with the VCR's on-screen display (PLAY, ×2, ×4, PAUSE, STOP and the recording's date and time), the timeline with
+  its highlights (failures in red, steps left for the morning in yellow), LEFT / RIGHT from one highlight to the
+  next, and at the end the decisions that wait.
+- **Talk to your agents**: the remote's microphone in "> agents" as before, and now the phone: Settings › Grok Bot
+  & AI › Talk from the phone shows a QR to the Talk tab of the web settings (on, and the browser allowed on the
+  TV): say it with the phone keyboard's microphone, or hold to talk where the browser has dictation, only while held.
+  The answer is read aloud on the TV (silent during a night shift) and goes on AI LIVE.
+- **Skills from the community**: Settings › Grok Bot & AI › Skills. A skill is data, never code: widgets on a page
+  of its own (the same checks as `tv_widget_create`), the permissions it asks for, and instructions for your agent.
+  Installing shows the permissions in plain words (Cancel has the focus, Install waits 1.5 s); removing takes its
+  widgets and its page away. Three to start: Night shift, Homelab dashboard, Movie night. New skills arrive by pull
+  request in `launcher/app/src/main/assets/skills/` (`SkillsTest` checks them). Signatures come later.
+  `/v1/skills`, `tv_skill_list`, `tv_skill_install` (asks you on the TV), `tv_skill_remove`.
+- Not on LG / Samsung in 2.22: AI LIVE, the night shift, talking from the phone and skills (their agents' tools
+  answer `not_on_lg_samsung`).
+
 - **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
   page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,
   `tv_widget_list`, `tv_widget_create`, `tv_widget_update` (content only, a notify token is enough), `tv_widget_move`
