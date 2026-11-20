@@ -32,6 +32,18 @@ public class LiveFeedTest {
     }
 
     @Test
+    public void thePcsAgentMonitorGoesOnAirByItself() throws Exception {
+        LiveFeed f = LiveFeed.forTest();
+        f.fromMonitor(new JSONObject().put("agents", new JSONArray()
+                .put(new JSONObject().put("agentName", "Claude").put("project", "omarchytv").put("status", "running").put("step", "Bash · npm test"))
+                .put(new JSONObject().put("agentName", "Codex").put("status", "idle").put("step", "x"))), 1000);
+        JSONArray a = f.snapshot(1000, 10).getJSONArray("agents");
+        assertEquals(1, a.length());
+        assertEquals("Claude · omarchytv", a.getJSONObject(0).getString("agent"));
+        assertEquals("Bash · npm test", a.getJSONObject(0).getString("text"));
+    }
+
+    @Test
     public void previewsAreChecked() throws Exception {
         assertNull(LiveFeed.preview(new JSONObject().put("kind", "image").put("url", "http://8.8.8.8/x.png")));
         assertNull(LiveFeed.preview(new JSONObject().put("kind", "image").put("url", "javascript:alert(1)")));

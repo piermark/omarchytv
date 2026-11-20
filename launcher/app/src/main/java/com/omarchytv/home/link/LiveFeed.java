@@ -113,6 +113,30 @@ public final class LiveFeed {
         return json(n);
     }
 
+    /**
+     * The PC's agent monitor (PROTOCOL §6, already redacted on the PC: tool and a short target, never contents):
+     * every agent it reports goes on air with its current step, without the agent doing anything.
+     */
+    public void fromMonitor(JSONObject snap, long now) {
+        JSONArray a = snap == null ? null : snap.optJSONArray("agents");
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject g = a.optJSONObject(i);
+            if (g == null) continue;
+            String name = g.optString("agentName", g.optString("agent", ""));
+            String project = g.optString("project", "");
+            if (name.isEmpty()) continue;
+            String status = g.optString("status", "");
+            if ("idle".equals(status) || "done".equals(status)) continue;
+            String step = g.optString("step", "");
+            String text = (step.isEmpty() ? status : step) + (g.optBoolean("needsInput") ? " · ⌛" : "");
+            try {
+                now((project.isEmpty() ? name : name + " · " + project), new JSONObject().put("text", text), now);
+            } catch (JSONException ignored) {
+                // plain values
+            }
+        }
+    }
+
     /** A question waits on the TV (the director cuts to it). */
     public synchronized void waiting(String agent, String id, String question, long now) {
         Now n = agent(agent, now);

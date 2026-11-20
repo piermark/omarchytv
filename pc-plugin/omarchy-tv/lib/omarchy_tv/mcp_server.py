@@ -193,6 +193,32 @@ ALLOWED_TOOLS = (
                                                                     "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office", "skill"]}},
                         "required": ["target"]},
     },
+    {"name": "tv_live_update", "description": "Tell the TV's AI LIVE channel what you are doing now, like a live broadcast: a short line, "
+                                             "a progress 0-100 and a preview (image URL, diff, text or numbers). The preview also shows "
+                                             "on your next question, so the owner sees the work before approving it.",
+     "inputSchema": {"type": "object", "properties": {"text": {"type": "string"}, "progress": {"type": "integer"},
+                                                      "preview": {"type": "object"}}}},
+    {"name": "tv_live", "description": "The AI LIVE channel: every agent on it and the last events.",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_shift_start", "description": "Start a night shift: the owner's tasks, its end (\"07:00\" or epoch ms, within 16 h) and "
+                                             "when the TV shows the morning page (wake). The TV stays silent; write the diary with "
+                                             "tv_shift_log and leave anything risky for the morning with tv_shift_queue.",
+     "inputSchema": {"type": "object", "properties": {"tasks": {"type": "array", "items": {"type": "string"}},
+                                                      "until": {"type": "string"}, "wake": {"type": "string"},
+                                                      "replace": {"type": "boolean"}}, "required": ["tasks", "until"]}},
+    {"name": "tv_shift_end", "description": "End the night shift now.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_shift_status", "description": "The night shift: running / ended / none, tasks, end, wake, counts.",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_shift_log", "description": "A line in the night shift's diary: level ok | fail | info, text, optional detail and task index.",
+     "inputSchema": {"type": "object", "properties": {"level": {"type": "string", "enum": ["ok", "fail", "info"]},
+                                                      "text": {"type": "string"}, "detail": {"type": "string"},
+                                                      "task": {"type": "integer"}}, "required": ["text"]}},
+    {"name": "tv_shift_queue", "description": "Leave a risky step (push, merge, post, payment) for the owner's morning instead of doing it. "
+                                             "Returns an id for tv_shift_decision. Only the owner answers, on the TV.",
+     "inputSchema": {"type": "object", "properties": {"title": {"type": "string"}, "detail": {"type": "string"},
+                                                      "risk": {"type": "string"}}, "required": ["title"]}},
+    {"name": "tv_shift_decision", "description": "The owner's answer to a queued step: pending, approved or denied.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
     {"name": "tv_settings_get", "description": "The TV's settings (theme, Home, plugins, Home Assistant URL, agents…) as "
                                               "{values, secrets}; secrets only say whether they are set.",
      "inputSchema": {"type": "object", "properties": {"section": {"type": "string", "enum": [
@@ -314,6 +340,9 @@ TOOL_SCOPE = {
     "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
     "tv_radio_sleep": "control", "tv_skill_qr": "control",
     "tv_settings_get": "read", "tv_settings_set": "control",
+    "tv_shift_start": "control", "tv_shift_end": "control", "tv_shift_status": "read",
+    "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
+    "tv_live_update": "notify", "tv_live": "read",
     "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
@@ -538,6 +567,22 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         return c.request("DELETE", f"/v1/radio/stations/{sid}")
     if name == "tv_radio_sleep":
         return c.request("POST", "/v1/radio", {"action": "sleep", "minutes": int(args.get("minutes", 0))})
+    if name == "tv_live":   # v2.22 AI LIVE
+        return c.request("GET", "/v1/live")
+    if name == "tv_live_update":
+        return c.request("POST", "/v1/live", {k: args[k] for k in ("text", "progress", "preview") if k in args})
+    if name.startswith("tv_shift_"):   # v2.22 the night shift
+        if name == "tv_shift_status":
+            return c.request("GET", "/v1/shift")
+        if name == "tv_shift_decision":
+            qid = str(args.get("id", ""))
+            if not re.fullmatch(r"q\d{1,6}", qid):
+                raise ValueError("bad id")
+            return c.request("GET", f"/v1/shift/queue/{qid}")
+        op = name[len("tv_shift_"):]
+        keys = {"start": ("tasks", "until", "wake", "replace"), "end": (), "log": ("level", "text", "detail", "task"),
+                "queue": ("title", "detail", "risk")}[op]
+        return c.request("POST", f"/v1/shift/{op}", {k: args[k] for k in keys if k in args})
     if name == "tv_settings_get":
         sec = str(args.get("section", "") or "")
         if sec and not sec.isalpha():

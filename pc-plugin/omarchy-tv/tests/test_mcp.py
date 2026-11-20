@@ -228,6 +228,16 @@ class TestMcpV221(unittest.TestCase):
         self.assertEqual(len(sent), n)
         call("tv_radio_sleep", {"minutes": 30})
         self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "sleep", "minutes": 30}))
+        call("tv_live_update", {"text": "running tests", "progress": 40, "x": 1}, "notify")   # v2.22 AI LIVE
+        self.assertEqual(sent[-1], ("POST", "/v1/live", {"text": "running tests", "progress": 40}))
+        call("tv_shift_log", {"level": "ok", "text": "tests green", "junk": 1}, "notify")   # v2.22 night shift
+        self.assertEqual(sent[-1], ("POST", "/v1/shift/log", {"level": "ok", "text": "tests green"}))
+        call("tv_shift_decision", {"id": "q3"}, "notify")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/shift/queue/q3"))
+        n = len(sent)
+        self.assertTrue(call("tv_shift_decision", {"id": "../x"}, "notify")["result"]["isError"])
+        self.assertIn("error", call("tv_shift_start", {"tasks": ["x"], "until": "07:00"}, "notify"))
+        self.assertEqual(len(sent), n)
         call("tv_settings_get", {"section": "plugins"}, "read")   # v2.22 #163
         self.assertEqual(sent[-1][:2], ("GET", "/v1/settings?section=plugins"))
         call("tv_settings_set", {"key": "uiSize", "value": "large"})

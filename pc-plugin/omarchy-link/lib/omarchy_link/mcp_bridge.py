@@ -36,6 +36,10 @@ TOOL_SCOPE = {
     "tv_radio_sleep": "control",
     "tv_skill_qr": "control",   # v2.22 #161
     "tv_settings_get": "read", "tv_settings_set": "control",   # v2.22 #163
+    "tv_live_update": "notify", "tv_live": "read",   # v2.22 AI LIVE
+    # v2.22 the night shift
+    "tv_shift_start": "control", "tv_shift_end": "control", "tv_shift_status": "read",
+    "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
 }
 
 # v2.21 tools this PC answers itself (they push to the TV with the link it already has)

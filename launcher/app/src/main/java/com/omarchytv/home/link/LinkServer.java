@@ -2371,6 +2371,7 @@ public final class LinkServer {
         } catch (JSONException ignored) {
         }
         agentsNow = j;
+        LiveFeed.get().fromMonitor(j, System.currentTimeMillis());   // v2.22 AI LIVE goes on air by itself
         return j;
     }
 
