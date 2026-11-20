@@ -814,7 +814,11 @@ public final class LinkServer {
             else if ("PUT".equals(req.method) && "/v1/office".equals(path)) retry = limited(req.peer + "|office", 2, 5_000);
             else if ("PUT".equals(req.method) && "/v1/stats".equals(path)) retry = limited(req.peer + "|stats", 1, 1_500);
             else if ("PUT".equals(req.method) && "/v1/screensaver".equals(path)) retry = limited(req.peer + "|saver", 1, 5_000);
-            else if (notifyCall(req.method, path, req.body)) retry = limited(req.peer + "|notify", 3, 10_000);
+            else if (notifyCall(req.method, path, req.body)) {   // v2.22: per sender; alerts have their own, wider bucket
+                String[] k = notifyBucket(path, req.body);
+                retry = "alert".equals(k[1]) ? limited(req.peer + "|notify-alert|" + k[0], ALERTS_PER_10S, 10_000)
+                        : limited(req.peer + "|notify|" + k[0], 3, 10_000);
+            }
         }
         if (retry > 0) return sign(a, retryAfter(new Response(429, err("rate_limited", "slow down")), retry));
 
@@ -1900,6 +1904,25 @@ public final class LinkServer {
 
     /** v2.9: {text: screensaver.txt} (at most 16 KiB, 60 lines x 240 cols); "" restores the OMARCHY TV logo. */
     /** v2.21: the REST route, or an MCP tools/call of tv_notify (both share the notify rate limit). */
+    /** v2.22: alerts allowed per sender in 10 s, apart from the 3 info / warn ones, so a red build is never crowded out. */
+    static final int ALERTS_PER_10S = 10;
+
+    /** v2.22 {sender, level} of a notify call (POST /v1/notify, or tv_notify over MCP), for its rate bucket. */
+    static String[] notifyBucket(String path, byte[] body) {
+        try {
+            JSONObject j = new JSONObject(new String(body, StandardCharsets.UTF_8));
+            if (!"/v1/notify".equals(path)) {
+                JSONObject p = j.optJSONObject("params");
+                j = p != null && p.optJSONObject("arguments") != null ? p.optJSONObject("arguments") : new JSONObject();
+            }
+            String from = printable(j.optString("from", j.optString("source", "")), 40).toLowerCase(java.util.Locale.ROOT);
+            String level = j.optString("level", "info");
+            return new String[]{from, LEVELS.contains(level) ? level : "info"};
+        } catch (JSONException e) {
+            return new String[]{"", "info"};
+        }
+    }
+
     static boolean notifyCall(String method, String path, byte[] body) {
         if (!"POST".equals(method)) return false;
         if ("/v1/notify".equals(path)) return true;

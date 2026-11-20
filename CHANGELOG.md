@@ -28,6 +28,10 @@
   the sender). The paired PC is never capped. Asked on X ("letting Claude pick its own severity would cry wolf").
   The PC's own MCP server does the same: `omarchy-tv mcp --max-level info|warn` (default `warn` through a tunnel,
   `alert` on the LAN or tailnet), since its calls reach the TV as the paired PC.
+- **One chatty agent never drowns out a red build** (asked on X): the TV's notification rate limit counted per PC;
+  now it counts per sender (3 info / warn per 10 s each) and alerts have their own allowance (10 per 10 s per
+  sender). Each token can also have its own floor: `token add --min-level warn`, `token floor ID LEVEL`
+  (`minLevel`), next to the global one on the remote.
 - **Nothing stays authed after the TV is gone** (found on X): `omarchy-link forget-tv [--dry-run] [--yes]` revokes
   the TV's app tokens, unpairs, removes the omarchytv MCP server from Claude Code (`claude mcp remove`), Codex and
   Hermes, every omarchy-link hook in Claude Code's settings, the Omarchy hook pack, the Tailscale switch and the PC

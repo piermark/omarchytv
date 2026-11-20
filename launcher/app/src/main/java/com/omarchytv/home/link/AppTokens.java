@@ -32,6 +32,8 @@ public final class AppTokens {
         public final String scope;
         /** v2.22: the highest notification level this app may use (info, warn, alert); higher is lowered to it. */
         public volatile String maxLevel = "alert";
+        /** v2.22: the lowest level shown from this app (its own floor); lower ones are dropped. */
+        public volatile String minLevel = "info";
         /** v2.22: revoked by itself after this many days without use (0 = never); counted from the last use. */
         public volatile int expireDays = DEFAULT_EXPIRE_DAYS;
         final String hash;
@@ -53,7 +55,7 @@ public final class AppTokens {
         }
 
         JSONObject json() throws org.json.JSONException {
-            return new JSONObject().put("id", id).put("name", name).put("scope", scope).put("maxLevel", maxLevel)
+            return new JSONObject().put("id", id).put("name", name).put("scope", scope).put("maxLevel", maxLevel).put("minLevel", minLevel)
                     .put("expireDays", expireDays).put("created", created)
                     .put("lastUsed", lastUsed == 0 ? JSONObject.NULL : (Object) lastUsed);
         }
@@ -108,10 +110,21 @@ public final class AppTokens {
 
     /** v2.22: change an app's highest notification level. False for an unknown id or level. */
     public synchronized boolean setMaxLevel(String id, String level) {
-        if (levelRank(level) < 0) return false;
+        return setLevels(id, null, level);
+    }
+
+    /**
+     * v2.22: an app's floor (min) and/or ceiling (max); null keeps one. False for an unknown id, a bad level, or a
+     * floor above the ceiling.
+     */
+    public synchronized boolean setLevels(String id, String min, String max) {
+        if (min != null && levelRank(min) < 0 || max != null && levelRank(max) < 0) return false;
         for (App a : apps) {
             if (a.id.equals(id)) {
-                a.maxLevel = level;
+                String lo = min != null ? min : a.minLevel, hi = max != null ? max : a.maxLevel;
+                if (levelRank(lo) > levelRank(hi)) return false;
+                a.minLevel = lo;
+                a.maxLevel = hi;
                 save();
                 return true;
             }
@@ -216,6 +229,8 @@ public final class AppTokens {
                 App app = new App(o.optString("id"), o.optString("name"), scope, hash, o.optLong("created"), o.optLong("lastUsed"));
                 String ml = o.optString("maxLevel", "alert");
                 app.maxLevel = levelRank(ml) >= 0 ? ml : "alert";
+                String mn = o.optString("minLevel", "info");
+                app.minLevel = levelRank(mn) >= 0 && levelRank(mn) <= levelRank(app.maxLevel) ? mn : "info";
                 int ed = o.optInt("expireDays", DEFAULT_EXPIRE_DAYS);   // tokens from 2.21 get the default
                 app.expireDays = ed >= 0 && ed <= MAX_EXPIRE_DAYS ? ed : DEFAULT_EXPIRE_DAYS;
                 apps.add(app);

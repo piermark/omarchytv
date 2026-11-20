@@ -353,6 +353,8 @@ def cmd_token(a, cfg):
         body = {"name": " ".join(a.name), "scope": a.scope}
         if a.max_level:
             body["maxLevel"] = a.max_level   # v2.22: higher levels from this app are lowered on the TV
+        if a.min_level:
+            body["minLevel"] = a.min_level   # v2.22: this app's own floor; lower levels are dropped on the TV
         if a.expire_days is not None:
             body["expireDays"] = a.expire_days   # v2.22: days without use before the TV drops it (0 = never)
         r = _call(cfg, "POST", "/v1/tokens", body)
@@ -360,6 +362,7 @@ def cmd_token(a, cfg):
             print(json.dumps(r, indent=2))
         else:
             cap = f", at most {r['maxLevel']}" if r.get("maxLevel", "alert") != "alert" else ""
+            cap += f", at least {r['minLevel']}" if r.get("minLevel", "info") != "info" else ""
             ed = r.get("expireDays")
             exp = "" if ed is None else (", never expires" if ed == 0 else f", expires after {ed} days unused")
             print(f"{r['name']} ({r['scope']}{cap}{exp}), id {r['id']}")
@@ -368,12 +371,17 @@ def cmd_token(a, cfg):
             if a.remote:
                 print(remote_setup(cfg, r["token"]))
         return 0
-    if a.action == "level":   # v2.22: token level ID info|warn|alert
+    if a.action in ("level", "floor"):   # v2.22: token level ID MAX (ceiling) | token floor ID MIN
         if len(a.name) != 2 or a.name[1] not in ("info", "warn", "alert"):
-            print("omarchy-link token level ID info|warn|alert", file=sys.stderr)
+            print(f"omarchy-link token {a.action} ID info|warn|alert", file=sys.stderr)
             return 2
-        _call(cfg, "PUT", "/v1/tokens/" + a.name[0], {"maxLevel": a.name[1]})
-        print(f"{a.name[0]}: at most {a.name[1]}")
+        key = "maxLevel" if a.action == "level" else "minLevel"
+        try:
+            _call(cfg, "PUT", "/v1/tokens/" + a.name[0], {key: a.name[1]})
+        except link.LinkError as e:
+            print(f"omarchy-link token {a.action}: {e}", file=sys.stderr)
+            return 1
+        print(f"{a.name[0]}: " + (f"at most {a.name[1]}" if a.action == "level" else f"at least {a.name[1]}"))
         return 0
     if a.action == "revoke":
         if not a.name:
@@ -389,8 +397,9 @@ def cmd_token(a, cfg):
     if not r.get("apps"):
         print("No app tokens. Add one: omarchy-link token add \"My dashboard\" --scope read")
     for x in r.get("apps", []):
-        lvl = x.get("maxLevel", "alert")
-        print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}" + (f"\t(at most {lvl})" if lvl != "alert" else ""))
+        lvl, low = x.get("maxLevel", "alert"), x.get("minLevel", "info")
+        notes = ([f"at least {low}"] if low != "info" else []) + ([f"at most {lvl}"] if lvl != "alert" else [])
+        print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}" + (f"\t({', '.join(notes)})" if notes else ""))
     return 0
 
 
@@ -1425,9 +1434,11 @@ def main(argv=None) -> int:
     s.add_argument("--dry-run", action="store_true", help="only list what would change")
     s.set_defaults(fn=cmd_forget_tv)
     s = sub.add_parser("token", help="app tokens for dashboards and agents: list | add NAME --scope | revoke ID")
-    s.add_argument("action", nargs="?", choices=["list", "add", "revoke", "level"], default="list")
+    s.add_argument("action", nargs="?", choices=["list", "add", "revoke", "level", "floor"], default="list")
     s.add_argument("name", nargs="*")
     s.add_argument("--scope", choices=["read", "notify", "control"], default="read")
+    s.add_argument("--min-level", choices=["info", "warn", "alert"],
+                   help="2.22: this app's own floor; the TV drops anything below it")
     s.add_argument("--expire-days", type=int, metavar="N",
                    help="2.22: the TV drops the token after N days without use (default 90; 0 = never)")
     s.add_argument("--max-level", choices=["info", "warn", "alert"],

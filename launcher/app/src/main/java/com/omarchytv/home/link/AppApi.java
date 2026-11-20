@@ -285,27 +285,34 @@ final class AppApi {
             if ("GET".equals(m)) return new LinkServer.Response(200, new JSONObject().put("apps", tokens.list()).put("max", AppTokens.MAX));
             if ("POST".equals(m)) {
                 String name = LinkServer.printable(body.optString("name", ""), 40), scope = body.optString("scope", "read");
-                String maxLevel = body.optString("maxLevel", "alert");
+                String maxLevel = body.optString("maxLevel", "alert"), minLevel = body.optString("minLevel", "info");
                 if (name.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_name", "name is required"));
                 if (!AppTokens.validScope(scope)) return new LinkServer.Response(400, LinkServer.err("bad_scope", "read, notify or control"));
-                if (AppTokens.levelRank(maxLevel) < 0) return new LinkServer.Response(400, LinkServer.err("bad_level", "info, warn or alert"));
+                if (AppTokens.levelRank(maxLevel) < 0 || AppTokens.levelRank(minLevel) < 0 || AppTokens.levelRank(minLevel) > AppTokens.levelRank(maxLevel)) {
+                    return new LinkServer.Response(400, LinkServer.err("bad_level", "info, warn or alert; the floor not above the ceiling"));
+                }
                 int expireDays = body.optInt("expireDays", AppTokens.DEFAULT_EXPIRE_DAYS);
                 if (expireDays < 0 || expireDays > AppTokens.MAX_EXPIRE_DAYS) {
                     return new LinkServer.Response(400, LinkServer.err("bad_expiry", "expireDays 0 (never) to " + AppTokens.MAX_EXPIRE_DAYS));
                 }
                 String[] t = tokens.add(name, scope, maxLevel, expireDays, System.currentTimeMillis() / 1000);
+                if (t != null && !"info".equals(minLevel)) tokens.setLevels(t[0], minLevel, null);
                 if (t == null) return new LinkServer.Response(409, LinkServer.err("too_many_apps", AppTokens.MAX + " app tokens; revoke one"));
                 host.log("app token added: " + name + " (" + scope + ")");
                 return new LinkServer.Response(200, new JSONObject().put("id", t[0]).put("token", t[1]).put("name", name).put("scope", scope)
-                        .put("maxLevel", maxLevel).put("expireDays", expireDays));
+                        .put("maxLevel", maxLevel).put("minLevel", minLevel).put("expireDays", expireDays));
             }
         }
         Matcher tm = TOKEN_PATH.matcher(p);
-        if (who.pc && "PUT".equals(m) && tm.matches()) {   // v2.22 {"maxLevel": "info" | "warn" | "alert"}
-            String lvl = body.optString("maxLevel", "");
-            if (AppTokens.levelRank(lvl) < 0) return new LinkServer.Response(400, LinkServer.err("bad_level", "info, warn or alert"));
-            return tokens.setMaxLevel(tm.group(1), lvl) ? new LinkServer.Response(200, LinkServer.ok().put("maxLevel", lvl))
-                    : new LinkServer.Response(404, LinkServer.err("no_such_app", null));
+        if (who.pc && "PUT".equals(m) && tm.matches()) {   // v2.22 {"maxLevel"?, "minLevel"?}: info | warn | alert
+            String max = body.has("maxLevel") ? body.optString("maxLevel") : null, min = body.has("minLevel") ? body.optString("minLevel") : null;
+            if (max == null && min == null || max != null && AppTokens.levelRank(max) < 0 || min != null && AppTokens.levelRank(min) < 0) {
+                return new LinkServer.Response(400, LinkServer.err("bad_level", "maxLevel / minLevel: info, warn or alert"));
+            }
+            if (tokens.byId(tm.group(1)) == null) return new LinkServer.Response(404, LinkServer.err("no_such_app", null));
+            if (!tokens.setLevels(tm.group(1), min, max)) return new LinkServer.Response(400, LinkServer.err("bad_level", "the floor is above the ceiling"));
+            AppTokens.App x = tokens.byId(tm.group(1));
+            return new LinkServer.Response(200, LinkServer.ok().put("minLevel", x.minLevel).put("maxLevel", x.maxLevel));
         }
         if (who.pc && "DELETE".equals(m) && tm.matches()) {
             closeStreams("app:" + tm.group(1));
@@ -453,6 +460,12 @@ final class AppApi {
             b.put("from", who.name);
             String max = who.app != null ? who.app.maxLevel : "alert";
             String lvl = b.optString("level", "info");
+            if (!LinkServer.LEVELS.contains(lvl)) lvl = "info";
+            String min = who.app != null ? who.app.minLevel : "info";
+            if (AppTokens.levelRank(lvl) < AppTokens.levelRank(min)) {   // v2.22: below this app's own floor
+                host.log("notify from " + who.name + " (" + lvl + ", below its floor " + min + ")");
+                return new LinkServer.Response(200, LinkServer.ok().put("shown", false).put("deferred", false).put("filtered", true));
+            }
             if (AppTokens.levelRank(lvl) > AppTokens.levelRank(max)) {
                 b.put("level", max).remove("speak");
                 capped = true;

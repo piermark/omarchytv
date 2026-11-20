@@ -75,7 +75,11 @@ Give each machine the smallest scope it needs, and revoke with `omarchy-link tok
 
 From 2.22 you also decide how loud each one may be: `--max-level warn` (or `info`) lowers anything above it on the TV,
 without the voice, whatever level the agent picked. Change it later with `omarchy-link token level ID warn`. The rule is
-yours, not the model's.
+yours, not the model's. A chatty agent gets its own floor too: `--min-level warn` (or `omarchy-link token floor ID warn`)
+drops its info chatter while its warnings and alerts still show.
+
+Rate limits are per sender: each agent on the paired PC (by its `from`) and each token has its own 3 notifications per
+10 s, and alerts have a separate allowance of 10, so a busy agent can never push a red build out.
 
 ### 2.3 Through the PC instead (an MCP server on the tailnet)
 

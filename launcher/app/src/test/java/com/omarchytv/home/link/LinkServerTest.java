@@ -809,6 +809,44 @@ public class LinkServerTest {
     }
 
     @Test
+    public void aChattyAgentNeverCrowdsOutARedBuild() throws Exception {   // v2.22: rate buckets per sender, alerts apart
+        pair("123456");
+        host.notifyOn = true;
+        server.limits = true;
+        for (int i = 0; i < 3; i++) assertEquals(200, signed("POST", "/v1/notify", "{\"text\":\"hi\",\"from\":\"Chatty\"}").status);
+        assertEquals(429, signed("POST", "/v1/notify", "{\"text\":\"hi\",\"from\":\"Chatty\"}").status);
+        assertEquals(200, signed("POST", "/v1/notify", "{\"text\":\"tests pass\",\"from\":\"CI\"}").status);
+        assertEquals(200, signed("POST", "/v1/notify", "{\"text\":\"build failed\",\"from\":\"CI\",\"level\":\"alert\"}").status);
+        assertEquals(200, signed("POST", "/v1/notify", "{\"text\":\"me too\",\"from\":\"chatty\",\"level\":\"alert\"}").status);
+        String[] k = LinkServer.notifyBucket("/v1/mcp", ("{\"params\":{\"name\":\"tv_notify\",\"arguments\":"
+                + "{\"from\":\"Hermes\",\"level\":\"alert\"}}}").getBytes(StandardCharsets.UTF_8));
+        assertEquals("hermes", k[0]);
+        assertEquals("alert", k[1]);
+        assertEquals("", LinkServer.notifyBucket("/v1/notify", "not json".getBytes(StandardCharsets.UTF_8))[0]);
+    }
+
+    @Test
+    public void appTokenFloorDropsItsOwnNoise() throws Exception {   // v2.22: per-agent floor, beside the global one
+        pair("123456");
+        server.limits = false;
+        host.notifyOn = true;
+        Resp t = signed("POST", "/v1/tokens", "{\"name\":\"chatty\",\"scope\":\"notify\",\"minLevel\":\"warn\"}");
+        assertEquals("warn", t.json().getString("minLevel"));
+        String tok = t.json().getString("token"), id = t.json().getString("id");
+        int n = host.notes.size();
+        Resp r = app("POST", "/v1/notify", "{\"text\":\"step 3 of 40\"}", tok);
+        assertTrue(r.json().getBoolean("filtered"));
+        assertEquals(n, host.notes.size());
+        app("POST", "/v1/notify", "{\"text\":\"disk full\",\"level\":\"alert\"}", tok);
+        assertEquals(n + 1, host.notes.size());
+        assertEquals(400, signed("PUT", "/v1/tokens/" + id, "{\"minLevel\":\"alert\",\"maxLevel\":\"warn\"}").status);
+        Resp u = signed("PUT", "/v1/tokens/" + id, "{\"minLevel\":\"info\"}");
+        assertEquals("info", u.json().getString("minLevel"));
+        assertEquals(400, signed("POST", "/v1/tokens", "{\"name\":\"x\",\"scope\":\"notify\",\"minLevel\":\"alert\",\"maxLevel\":\"info\"}").status);
+        assertEquals(404, signed("PUT", "/v1/tokens/0000ffff", "{\"minLevel\":\"warn\"}").status);
+    }
+
+    @Test
     public void askCarriesTheFullDetail() throws Exception {   // v2.22: the whole command under the question
         pair("123456");
         server.limits = false;
