@@ -193,6 +193,13 @@ ALLOWED_TOOLS = (
                                                                     "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office", "skill"]}},
                         "required": ["target"]},
     },
+    {"name": "tv_skill_list", "description": "The skills the TV can install (id, name, author, permissions) and the installed ones "
+                                            "with their instructions for you (agent).", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_skill_install", "description": "Ask the owner to install a skill: the TV shows it with its permissions and the owner "
+                                               "answers with the remote.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_skill_remove", "description": "Remove an installed skill with its widgets and its page.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
     {"name": "tv_live_update", "description": "Tell the TV's AI LIVE channel what you are doing now, like a live broadcast: a short line, "
                                              "a progress 0-100 and a preview (image URL, diff, text or numbers). The preview also shows "
                                              "on your next question, so the owner sees the work before approving it.",
@@ -343,6 +350,7 @@ TOOL_SCOPE = {
     "tv_shift_start": "control", "tv_shift_end": "control", "tv_shift_status": "read",
     "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
     "tv_live_update": "notify", "tv_live": "read",
+    "tv_skill_list": "read", "tv_skill_install": "control", "tv_skill_remove": "control",
     "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
@@ -567,6 +575,15 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         return c.request("DELETE", f"/v1/radio/stations/{sid}")
     if name == "tv_radio_sleep":
         return c.request("POST", "/v1/radio", {"action": "sleep", "minutes": int(args.get("minutes", 0))})
+    if name == "tv_skill_list":   # v2.22 skills
+        return c.request("GET", "/v1/skills")
+    if name in ("tv_skill_install", "tv_skill_remove"):
+        sid = str(args.get("id", ""))
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,39}", sid):
+            raise ValueError("bad skill id")
+        if name == "tv_skill_install":
+            return c.request("POST", f"/v1/skills/{sid}/install", {})
+        return c.request("DELETE", f"/v1/skills/{sid}")
     if name == "tv_live":   # v2.22 AI LIVE
         return c.request("GET", "/v1/live")
     if name == "tv_live_update":

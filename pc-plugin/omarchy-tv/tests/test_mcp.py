@@ -228,6 +228,9 @@ class TestMcpV221(unittest.TestCase):
         self.assertEqual(len(sent), n)
         call("tv_radio_sleep", {"minutes": 30})
         self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "sleep", "minutes": 30}))
+        call("tv_skill_install", {"id": "homelab"})   # v2.22 skills
+        self.assertEqual(sent[-1][:2], ("POST", "/v1/skills/homelab/install"))
+        self.assertTrue(call("tv_skill_remove", {"id": "../x"})["result"]["isError"])
         call("tv_live_update", {"text": "running tests", "progress": 40, "x": 1}, "notify")   # v2.22 AI LIVE
         self.assertEqual(sent[-1], ("POST", "/v1/live", {"text": "running tests", "progress": 40}))
         call("tv_shift_log", {"level": "ok", "text": "tests green", "junk": 1}, "notify")   # v2.22 night shift
