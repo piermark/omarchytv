@@ -207,9 +207,7 @@ final class AppApi {
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
             if (!who.can("notify")) return forbidden("notify");
-            JSONObject b = new JSONObject(body.toString());
-            if (!who.pc) b.put("from", who.name);
-            return s.notifyPost(b);
+            return notifyAs(who, body);
         }
         if ("POST".equals(m) && "/v1/ask".equals(p)) return who.can("notify") ? askPost(who, body) : forbidden("notify");
         Matcher am = ASK_PATH.matcher(p);
@@ -287,15 +285,24 @@ final class AppApi {
             if ("GET".equals(m)) return new LinkServer.Response(200, new JSONObject().put("apps", tokens.list()).put("max", AppTokens.MAX));
             if ("POST".equals(m)) {
                 String name = LinkServer.printable(body.optString("name", ""), 40), scope = body.optString("scope", "read");
+                String maxLevel = body.optString("maxLevel", "alert");
                 if (name.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_name", "name is required"));
                 if (!AppTokens.validScope(scope)) return new LinkServer.Response(400, LinkServer.err("bad_scope", "read, notify or control"));
-                String[] t = tokens.add(name, scope, System.currentTimeMillis() / 1000);
+                if (AppTokens.levelRank(maxLevel) < 0) return new LinkServer.Response(400, LinkServer.err("bad_level", "info, warn or alert"));
+                String[] t = tokens.add(name, scope, maxLevel, System.currentTimeMillis() / 1000);
                 if (t == null) return new LinkServer.Response(409, LinkServer.err("too_many_apps", AppTokens.MAX + " app tokens; revoke one"));
                 host.log("app token added: " + name + " (" + scope + ")");
-                return new LinkServer.Response(200, new JSONObject().put("id", t[0]).put("token", t[1]).put("name", name).put("scope", scope));
+                return new LinkServer.Response(200, new JSONObject().put("id", t[0]).put("token", t[1]).put("name", name).put("scope", scope)
+                        .put("maxLevel", maxLevel));
             }
         }
         Matcher tm = TOKEN_PATH.matcher(p);
+        if (who.pc && "PUT".equals(m) && tm.matches()) {   // v2.22 {"maxLevel": "info" | "warn" | "alert"}
+            String lvl = body.optString("maxLevel", "");
+            if (AppTokens.levelRank(lvl) < 0) return new LinkServer.Response(400, LinkServer.err("bad_level", "info, warn or alert"));
+            return tokens.setMaxLevel(tm.group(1), lvl) ? new LinkServer.Response(200, LinkServer.ok().put("maxLevel", lvl))
+                    : new LinkServer.Response(404, LinkServer.err("no_such_app", null));
+        }
         if (who.pc && "DELETE".equals(m) && tm.matches()) {
             closeStreams("app:" + tm.group(1));
             return tokens.remove(tm.group(1)) ? new LinkServer.Response(200, LinkServer.ok()) : new LinkServer.Response(404, LinkServer.err("no_such_app", null));
@@ -429,6 +436,28 @@ final class AppApi {
 
     private static String newAskId() {
         return LinkCrypto.hex(LinkCrypto.randomBytes(8));
+    }
+
+    /**
+     * POST /v1/notify and MCP tv_notify on behalf of a caller. An app token: its name is the sender, and (v2.22) a level
+     * above its maxLevel is lowered to it, without the voice, and the answer says "capped". A paired PC is not capped.
+     */
+    LinkServer.Response notifyAs(Principal who, JSONObject body) throws Exception {
+        JSONObject b = new JSONObject(body.toString());
+        boolean capped = false;
+        if (!who.pc) {
+            b.put("from", who.name);
+            String max = who.app != null ? who.app.maxLevel : "alert";
+            String lvl = b.optString("level", "info");
+            if (AppTokens.levelRank(lvl) > AppTokens.levelRank(max)) {
+                b.put("level", max).remove("speak");
+                capped = true;
+            }
+        }
+        LinkServer.Response r = s.notifyPost(b);
+        if (!capped || r.status != 200) return r;
+        return new LinkServer.Response(200, new JSONObject(new String(r.body, java.nio.charset.StandardCharsets.UTF_8))
+                .put("capped", b.optString("level")));
     }
 
     /** v2.22 "detail": at most 40 lines and 2000 characters, each line printable (tabs become spaces). */

@@ -30,6 +30,8 @@ public final class AppTokens {
         public final String id;
         public final String name;
         public final String scope;
+        /** v2.22: the highest notification level this app may use (info, warn, alert); higher is lowered to it. */
+        public volatile String maxLevel = "alert";
         final String hash;
         public final long created;
         public volatile long lastUsed;
@@ -49,7 +51,7 @@ public final class AppTokens {
         }
 
         JSONObject json() throws org.json.JSONException {
-            return new JSONObject().put("id", id).put("name", name).put("scope", scope).put("created", created)
+            return new JSONObject().put("id", id).put("name", name).put("scope", scope).put("maxLevel", maxLevel).put("created", created)
                     .put("lastUsed", lastUsed == 0 ? JSONObject.NULL : (Object) lastUsed);
         }
     }
@@ -71,16 +73,44 @@ public final class AppTokens {
         return rank(s) >= 0;
     }
 
+    /** v2.22 notification levels, lowest first. */
+    static final String[] LEVELS = {"info", "warn", "alert"};
+
+    public static int levelRank(String level) {
+        for (int i = 0; i < LEVELS.length; i++) if (LEVELS[i].equals(level)) return i;
+        return -1;
+    }
+
+    /** v2.22: change an app's highest notification level. False for an unknown id or level. */
+    public synchronized boolean setMaxLevel(String id, String level) {
+        if (levelRank(level) < 0) return false;
+        for (App a : apps) {
+            if (a.id.equals(id)) {
+                a.maxLevel = level;
+                save();
+                return true;
+            }
+        }
+        return false;
+    }
+
     static String hashOf(String token) {
         return LinkCrypto.hex(LinkCrypto.sha256(token.getBytes(StandardCharsets.UTF_8)));
     }
 
     /** A new token: {id, token}. Null when 16 already exist. The name is plain text, at most 40 chars. */
     public synchronized String[] add(String name, String scope, long nowS) {
-        if (apps.size() >= MAX || !validScope(scope)) return null;
+        return add(name, scope, "alert", nowS);
+    }
+
+    /** v2.22: with the highest notification level the app may use. */
+    public synchronized String[] add(String name, String scope, String maxLevel, long nowS) {
+        if (apps.size() >= MAX || !validScope(scope) || levelRank(maxLevel) < 0) return null;
         String token = PREFIX + LinkCrypto.b64u(LinkCrypto.randomBytes(24));
         String id = LinkCrypto.hex(LinkCrypto.randomBytes(4));
-        apps.add(new App(id, name, scope, hashOf(token), nowS, 0));
+        App app = new App(id, name, scope, hashOf(token), nowS, 0);
+        app.maxLevel = maxLevel;
+        apps.add(app);
         save();
         return new String[]{id, token};
     }
@@ -144,7 +174,10 @@ public final class AppTokens {
                 JSONObject o = a.getJSONObject(i);
                 String scope = o.optString("scope"), hash = o.optString("hash");
                 if (!validScope(scope) || !hash.matches("[0-9a-f]{64}")) continue;
-                apps.add(new App(o.optString("id"), o.optString("name"), scope, hash, o.optLong("created"), o.optLong("lastUsed")));
+                App app = new App(o.optString("id"), o.optString("name"), scope, hash, o.optLong("created"), o.optLong("lastUsed"));
+                String ml = o.optString("maxLevel", "alert");
+                app.maxLevel = levelRank(ml) >= 0 ? ml : "alert";
+                apps.add(app);
             }
         } catch (Exception ignored) {
             // a damaged file: no app tokens, the paired PCs still work

@@ -775,6 +775,31 @@ public class LinkServerTest {
     }
 
     @Test
+    public void appTokenLevelIsCappedByThePc() throws Exception {   // v2.22: the rule is the owner's, not the model's
+        pair("123456");
+        server.limits = false;
+        host.notifyOn = true;
+        Resp t = signed("POST", "/v1/tokens", new JSONObject().put("name", "hermes-nas").put("scope", "notify").put("maxLevel", "warn").toString());
+        assertEquals("warn", t.json().getString("maxLevel"));
+        String tok = t.json().getString("token"), id = t.json().getString("id");
+        Resp r = app("POST", "/v1/notify", "{\"text\":\"disk 91%\",\"level\":\"alert\",\"speak\":true}", tok);
+        assertEquals(200, r.status);
+        assertEquals("warn", r.json().getString("capped"));
+        assertEquals("warn", host.levels.get(host.levels.size() - 1));
+        assertTrue(host.notes.get(host.notes.size() - 1).startsWith("hermes-nas: "));
+        assertTrue(host.spoken.isEmpty());   // a capped alert does not talk
+        assertFalse(app("POST", "/v1/notify", "{\"text\":\"ok\",\"level\":\"warn\"}", tok).json().has("capped"));
+        assertEquals(200, signed("PUT", "/v1/tokens/" + id, "{\"maxLevel\":\"info\"}").status);
+        assertEquals("info", app("POST", "/v1/notify", "{\"text\":\"x\",\"level\":\"warn\"}", tok).json().getString("capped"));
+        assertEquals(400, signed("PUT", "/v1/tokens/" + id, "{\"maxLevel\":\"loud\"}").status);
+        assertEquals(400, signed("POST", "/v1/tokens", "{\"name\":\"x\",\"scope\":\"notify\",\"maxLevel\":\"loud\"}").status);
+        assertTrue(signed("GET", "/v1/tokens", "").json().getJSONArray("apps").getJSONObject(0).getString("maxLevel").equals("info"));
+        // the paired PC itself is never capped
+        signed("POST", "/v1/notify", "{\"text\":\"red\",\"level\":\"alert\"}");
+        assertEquals("alert", host.levels.get(host.levels.size() - 1));
+    }
+
+    @Test
     public void askCarriesTheFullDetail() throws Exception {   // v2.22: the whole command under the question
         pair("123456");
         server.limits = false;

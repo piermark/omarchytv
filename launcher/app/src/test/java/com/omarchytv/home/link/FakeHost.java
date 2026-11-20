@@ -39,6 +39,7 @@ class FakeHost implements LinkServer.Host {
     volatile boolean notifyOn;
     final List<String> asked = new java.util.concurrent.CopyOnWriteArrayList<>();
     final List<String> details = new java.util.concurrent.CopyOnWriteArrayList<>();
+    final List<String> levels = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     @Override
     public String askUser(String id, String from, String question, List<String> choices, long deadlineMs, String detail) {
@@ -98,6 +99,7 @@ class FakeHost implements LinkServer.Host {
     public String notify(String from, String title, String text, String level) {
         if (!notifyOn) return null;
         notes.add(from + ": " + (title.isEmpty() ? "" : title + " · ") + text);
+        levels.add(level);
         return watching && "info".equals(level) ? "deferred" : "shown";
     }
 

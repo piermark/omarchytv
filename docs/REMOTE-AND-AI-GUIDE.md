@@ -73,6 +73,10 @@ Scopes:
 
 Give each machine the smallest scope it needs, and revoke with `omarchy-link token revoke ID`.
 
+From 2.22 you also decide how loud each one may be: `--max-level warn` (or `info`) lowers anything above it on the TV,
+without the voice, whatever level the agent picked. Change it later with `omarchy-link token level ID warn`. The rule is
+yours, not the model's.
+
 ### 2.3 Through the PC instead (an MCP server on the tailnet)
 
 ```sh

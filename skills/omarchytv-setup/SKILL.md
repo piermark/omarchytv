@@ -111,7 +111,7 @@ On the paired PC, make a token for that machine. `--remote` prints the exact lin
 `claude mcp add --transport http …` command with the TV's address and the token):
 
 ```sh
-omarchy-link token add "NAS" --scope notify --remote
+omarchy-link token add "NAS" --scope notify --remote          # 2.22: add --max-level warn so it can never alert
 omarchy-link token list
 omarchy-link token revoke ID          # when that machine no longer needs it
 ```

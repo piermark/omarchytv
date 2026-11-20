@@ -22,6 +22,10 @@
 - **The diff for file changes**: when Claude Code wants to edit or write a file (Edit, MultiEdit, Write), the box
   shows the path and the diff, `+` lines in the theme's green and `-` lines in its red. Read aloud it says only the
   file and the size ("app.py: 2 lines added, 1 removed. The diff is on screen."). Asked on X.
+- **The owner decides how loud each agent may be**: `omarchy-link token add NAME --max-level info|warn` and
+  `omarchy-link token level ID LEVEL`. The TV lowers a notification above the token's level, drops its voice and
+  answers `capped`, for `POST /v1/notify` and MCP `tv_notify` alike (which now also always uses the token's name as
+  the sender). The paired PC is never capped. Asked on X ("letting Claude pick its own severity would cry wolf").
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 

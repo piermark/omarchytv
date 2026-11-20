@@ -1422,8 +1422,8 @@ public final class LinkServer {
                         out = t != null ? t : new JSONObject().put("name", status().optString("theme", "")).put("shared", false);
                         break;
                     }
-                    case "tv_notify": {
-                        Response nr = notifyPost(args);
+                    case "tv_notify": {   // v2.22: as the caller, so an app token's name and level cap apply
+                        Response nr = app.notifyAs(who, args);
                         out = new JSONObject(new String(nr.body, StandardCharsets.UTF_8));
                         isError = nr.status != 200;
                         break;

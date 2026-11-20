@@ -183,7 +183,7 @@ fake status or swallow commands.
 | `POST /v1/cast/control` | ✓ | `{action:"play"\|"pause"\|"stop"\|"seek", id?, position?}` → `{ok:true}` |
 | `POST /v1/notify` | ✓ (v2.21) | `{text, from?}` → `{ok:true, shown:true}` / `403 notify_off` (agent alerts off on the TV) / `400 bad_notify`. One line, 200 chars; 3 per 10 s. |
 | `POST /v1/mcp` | ✓ or `Bearer <pc token>` | MCP JSON-RPC 2.0: `tv_status`, `tv_get_theme`, `tv_notify`, themes, keys, apps… (docs/INTEGRATIONS.md) |
-| `GET/POST /v1/tokens`, `DELETE /v1/tokens/<id>` | ✓ (v2.21) | app tokens: list / `{name, scope}` → `{id, token, name, scope}` (token shown once) / revoke |
+| `GET/POST /v1/tokens`, `PUT/DELETE /v1/tokens/<id>` | ✓ (v2.21) | app tokens: list / `{name, scope, maxLevel?}` → `{id, token, name, scope, maxLevel}` (token shown once) / `PUT {maxLevel}` (2.22) / revoke. `maxLevel` (info, warn, alert; default alert): a notification above it is lowered to it, without the voice, and the answer carries `capped` |
 | `GET /v1/state`, `GET /v1/stream`, `POST /v1/ask`, `GET /v1/ask/<id>`, `POST`/`DELETE /v1/page`, `GET /v1/diagnostics` | ✓ or app token (v2.21) | §6, App API |
 | `POST /v1/unpair` | ✓ | `{}` → `{ok:true}`. The TV deletes this PC. |
 | `GET /v1/events` | ✓ (on the upgrade) | WebSocket, §7 |

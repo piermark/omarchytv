@@ -293,15 +293,26 @@ def cmd_token(a, cfg):
         if not a.name:
             print("omarchy-link token add NAME [--scope read|notify|control]", file=sys.stderr)
             return 2
-        r = _call(cfg, "POST", "/v1/tokens", {"name": " ".join(a.name), "scope": a.scope})
+        body = {"name": " ".join(a.name), "scope": a.scope}
+        if a.max_level:
+            body["maxLevel"] = a.max_level   # v2.22: higher levels from this app are lowered on the TV
+        r = _call(cfg, "POST", "/v1/tokens", body)
         if a.json:
             print(json.dumps(r, indent=2))
         else:
-            print(f"{r['name']} ({r['scope']}), id {r['id']}")
+            cap = f", at most {r['maxLevel']}" if r.get("maxLevel", "alert") != "alert" else ""
+            print(f"{r['name']} ({r['scope']}{cap}), id {r['id']}")
             print(r["token"])
             print("Shown once: keep it in your app's settings. Revoke: omarchy-link token revoke " + r["id"], file=sys.stderr)
             if a.remote:
                 print(remote_setup(cfg, r["token"]))
+        return 0
+    if a.action == "level":   # v2.22: token level ID info|warn|alert
+        if len(a.name) != 2 or a.name[1] not in ("info", "warn", "alert"):
+            print("omarchy-link token level ID info|warn|alert", file=sys.stderr)
+            return 2
+        _call(cfg, "PUT", "/v1/tokens/" + a.name[0], {"maxLevel": a.name[1]})
+        print(f"{a.name[0]}: at most {a.name[1]}")
         return 0
     if a.action == "revoke":
         if not a.name:
@@ -317,7 +328,8 @@ def cmd_token(a, cfg):
     if not r.get("apps"):
         print("No app tokens. Add one: omarchy-link token add \"My dashboard\" --scope read")
     for x in r.get("apps", []):
-        print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}")
+        lvl = x.get("maxLevel", "alert")
+        print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}" + (f"\t(at most {lvl})" if lvl != "alert" else ""))
     return 0
 
 
@@ -1348,9 +1360,11 @@ def main(argv=None) -> int:
     s.add_argument("--quiet", "-q", action="store_true", help="never fail (for hooks)")
     s.set_defaults(fn=cmd_notify)
     s = sub.add_parser("token", help="app tokens for dashboards and agents: list | add NAME --scope | revoke ID")
-    s.add_argument("action", nargs="?", choices=["list", "add", "revoke"], default="list")
+    s.add_argument("action", nargs="?", choices=["list", "add", "revoke", "level"], default="list")
     s.add_argument("name", nargs="*")
     s.add_argument("--scope", choices=["read", "notify", "control"], default="read")
+    s.add_argument("--max-level", choices=["info", "warn", "alert"],
+                   help="2.22: the highest notification level this app may use; the TV lowers anything above it")
     s.add_argument("--remote", action="store_true", help="also print the setup for a machine on your tailnet")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_token)

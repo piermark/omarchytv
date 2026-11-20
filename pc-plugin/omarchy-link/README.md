@@ -83,7 +83,7 @@ omarchy-link ask "Merge?" --choice Merge --choice Wait [--timeout 120]
 omarchy-link page URL [URL…] | --close      # LAN / tailnet pages full screen, up to 4 tiled
 omarchy-link pages add ID NAME URL [--icon H] [--badge N] | badge ID N | show ID | remove ID
 omarchy-link radio [now|play|pause|next|previous|stop]; omarchy-link open radiomarchy|cinemarchy|arcade|office|home
-omarchy-link token add NAME --scope read|notify|control [--remote] | list | revoke ID
+omarchy-link token add NAME --scope read|notify|control [--max-level info|warn] [--remote] | list | level ID LEVEL | revoke ID
 omarchy-link mcp [--scope notify]           # claude mcp add omarchytv -- omarchy-link mcp
 omarchy-link agents approvals on|off [--speak]   # Claude Code's permission prompts on the TV (2.22: read aloud)
 omarchy-link hook add [all|theme-set post-boot post-update battery-low font-set] | remove | list
