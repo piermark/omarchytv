@@ -478,6 +478,14 @@ On the TV: the navigator `⌂ ‹ 1 2 3 4 5 › 8 / 42 · Casa` (OK opens a page
 five, LEFT on the first the previous five, a long press lists every page); CH+ / CH- (PAGE UP / DOWN) go through the
 classic Home and the visible pages, then on to the workspaces. The number keys keep switching workspaces as before.
 
+**LG / Samsung (the bridge, v2.22).** `omarchy-tv webos-serve` keeps the widgets and pages itself
+(`~/.config/omarchy-tv/home-widgets.json`, 0600) and answers the same `/v1/widgets/*` and `/v1/widget-pages*` paths,
+bodies and errors, with the agents' key (`X-Omarchy-Agent`; GET, POST, PATCH, PUT, DELETE; bodies up to 32 KB), so
+`omarchy-tv mcp --bridge` needs nothing else. The TV app reads `GET /v1/home` with its ask code (`X-Omarchy-Token`) →
+`{grid, widgets[], pages[], visible[], show: {index, at}, now}` every 10 s and reports the page on screen with
+`POST /v1/home/shown {index}` (what `/v1/widget-pages/current` answers). Home Assistant widgets call Home Assistant
+from the TV. Not on LG / Samsung in 2.22: editing with the remote, `/v1/ha/*` and `tv_ha_*`.
+
 ### Home Assistant (`/v1/ha/*`, v2.22, #160)
 
 The TV talks to Home Assistant itself, with the URL and long-lived token of Settings › Ambilight & Lights (also

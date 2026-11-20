@@ -22,7 +22,14 @@
   remote (✓ / ✗ on the button, optional confirmation, `"items": "all"` for every scene), `homeassistant.entities`
   widgets show states live over the HA websocket while on screen (a 30 s poll as fallback) and toggle lights,
   switches, fans. `/v1/ha/*` and `tv_ha_status`, `tv_ha_list`, `tv_ha_run`. One HA setup (URL and token in Settings ›
-  Ambilight & Lights, now also without the lights hub); the token never leaves the TV. Android TV; LG / Samsung follow.
+  Ambilight & Lights, now also without the lights hub); the token never leaves the TV.
+- **Widget pages on LG and Samsung** (#157, #158, #159, #160): the PC bridge (`omarchy-tv webos-serve`) keeps the
+  widgets and pages with the same rules and answers as an Android TV, so an agent's `tv_widget_*` / `tv_page_*` calls
+  (`omarchy-tv mcp --bridge`) work unchanged; the TV app reads them with its ask code. CH+ / CH- on the Home go ⌂ → 1 →
+  2 … → ⌂, BACK returns, the navigator sits at the bottom, `tv_page_show` brings a page up, pages marked `rotate` turn
+  (Settings › Home widgets › Rotate widget pages). Home Assistant scenes and switches run from the TV with the URL
+  and token of Ambilight & Lights (`confirm` asks for OK twice). Not on LG / Samsung in 2.22: moving and resizing
+  widgets with the remote (agents and the PC place them), the `tv_ha_*` tools, Android app and PC shortcuts.
 - **Radio plugin** (#162, `plugins.radio`, off by default): the `♪ Radio` pill in the bar opens a mini panel (play /
   pause, next, previous, the radio's own volume, sleep timer, stations, Radiomarchy) without leaving the Home; a
   `radio` widget shows what plays with ⏮ ⏯ ⏭ ☰; an optional play / pause key (a colour key or PLAY_PAUSE). Internet

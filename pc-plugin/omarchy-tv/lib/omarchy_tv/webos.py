@@ -443,6 +443,19 @@ def build_themes_payload() -> dict:
     return {"themes": out}
 
 
+_home_store = None
+_home_shown = 0   # the widget page the TV shows now (POST /v1/home/shown); 0: the classic Home
+
+
+def home_store():
+    """v2.22 #157-#159 the widgets and pages of an LG / Samsung TV, kept by this bridge (home_grid)."""
+    global _home_store
+    if _home_store is None:
+        from .home_grid import Store
+        _home_store = Store()
+    return _home_store
+
+
 class WebOSHandler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         pass
@@ -481,6 +494,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         global _last_ask
+        if self._home_route("POST"):
+            return
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
                         "/v1/update/tv", "/v1/power", "/v1/living", "/v1/pulse", "/v1/office/hire",
@@ -684,6 +699,67 @@ class WebOSHandler(BaseHTTPRequestHandler):
         except ValueError as e:
             self._send_json({"error": str(e) if str(e) == "not_lan_url" else "bad_request", "message": str(e)}, 400)
 
+    # ---- v2.22 #157-#159 Home widgets and pages on LG / Samsung (home_grid) ----
+    def _home_route(self, method: str) -> bool:
+        """Agents (their key) use the Android paths; the TV (its ask code) reads GET /v1/home, reports /v1/home/shown."""
+        global _home_shown
+        from . import home_grid
+        path = self.path.split("?", 1)[0]
+        tv = path in ("/v1/home", "/v1/home/shown")
+        if not tv and not home_grid.handles(path):
+            return False
+        if not self._peer_ok():
+            self._send_json({"error": "not_lan"}, 403)
+            return True
+        if not (self._authorized() if tv else self._agent_authorized()):
+            self._send_json({"error": "unauthorized", "message": "wrong or missing key"}, 401)
+            return True
+        body = {}
+        if method in ("POST", "PATCH", "PUT", "DELETE"):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                n = -1
+            if n < 0 or n > 32 * 1024:
+                self._send_json({"error": "too_big", "message": "32 KB at most"}, 413 if n > 0 else 400)
+                return True
+            try:
+                body = json.loads(self.rfile.read(n).decode("utf-8") or "{}") if n else {}
+            except (ValueError, UnicodeDecodeError):
+                body = None
+            if not isinstance(body, dict):
+                self._send_json({"error": "bad_json"}, 400)
+                return True
+        if path == "/v1/home":
+            if method != "GET":
+                self._send_json({"error": "bad_method"}, 405)
+                return True
+            self._send_json(home_grid.tv_view(home_store()))
+            return True
+        if path == "/v1/home/shown":
+            if method != "POST":
+                self._send_json({"error": "bad_method"}, 405)
+                return True
+            idx = body.get("index")
+            _home_shown = idx if isinstance(idx, int) and not isinstance(idx, bool) and 0 <= idx <= home_grid.MAX_PAGE else 0
+            self._send_json({"ok": True})
+            return True
+        status, out = home_grid.route(home_store(), method, self.path, body, "pc", shown=_home_shown)
+        self._send_json(out, status)
+        return True
+
+    def do_PATCH(self):
+        if not self._home_route("PATCH"):
+            self._send_json({"error": "not found"}, 404)
+
+    def do_PUT(self):
+        if not self._home_route("PUT"):
+            self._send_json({"error": "not found"}, 404)
+
+    def do_DELETE(self):
+        if not self._home_route("DELETE"):
+            self._send_json({"error": "not found"}, 404)
+
     def _agent_get(self, path: str) -> bool:
         if path != "/v1/inbox" and not re.fullmatch(r"/v1/ask/[0-9a-f]{16}", path):
             return False
@@ -714,6 +790,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
+        if self._home_route("GET"):
+            return
         if self._agent_get(path):
             return
         if path in ("/v1/status", "/status.json", "/"):
