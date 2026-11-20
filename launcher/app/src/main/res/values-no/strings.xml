@@ -125,6 +125,10 @@
     <string name="set_pane_ai">Panel: AI-kreditter</string>
     <string name="ai_empty">koble til Omarchy Linux for å se AI-kreditter</string>
     <string name="native_unavailable">ikke tilgjengelig</string>
+    <string name="widget_resize">Endre størrelse</string>
+    <string name="widget_remove">Fjern</string>
+    <string name="widget_resize_hint">størrelse: ←↑↓→ OK=ferdig BACK=avbryt</string>
+    <string name="skill_qr_label">Hent agentens skill</string>
     <string name="ai_stale">utdatert %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen treff</string>

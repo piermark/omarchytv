@@ -196,7 +196,7 @@ public final class HomeWidgets {
     // ---------------------------------------------------------------- placement
 
     /** True if a w×h box at (x, y) on this page stays in the grid and overlaps no widget other than {@code except}. */
-    static boolean fits(JSONArray all, int page, int x, int y, int w, int h, String except) {
+    public static boolean fits(JSONArray all, int page, int x, int y, int w, int h, String except) {
         if (x < 0 || y < 0 || w < 1 || h < 1 || x + w > COLS || y + h > ROWS) return false;
         for (int i = 0; i < all.length(); i++) {
             JSONObject o = all.optJSONObject(i);
@@ -206,7 +206,7 @@ public final class HomeWidgets {
         return true;
     }
 
-    static boolean overlap(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh) {
+    public static boolean overlap(int ax, int ay, int aw, int ah, int bx, int by, int bw, int bh) {
         return ax < bx + bw && bx < ax + aw && ay < by + bh && by < ay + ah;
     }
 
@@ -238,7 +238,7 @@ public final class HomeWidgets {
         return n;
     }
 
-    static int indexOf(JSONArray all, String id) {
+    public static int indexOf(JSONArray all, String id) {
         for (int i = 0; i < all.length(); i++) {
             JSONObject o = all.optJSONObject(i);
             if (o != null && id.equals(o.optString("id"))) return i;
@@ -332,7 +332,7 @@ public final class HomeWidgets {
     }
 
     /** Content only (title, icon, ttl, data): what a notify token may change. */
-    static JSONObject update(JSONArray all, String id, JSONObject in, long now) throws Bad, JSONException {
+    public static JSONObject update(JSONArray all, String id, JSONObject in, long now) throws Bad, JSONException {
         int i = indexOf(all, id);
         if (i < 0) throw new Bad(404, "no_such_widget", id, null);
         JSONObject wd = all.getJSONObject(i);
@@ -344,7 +344,7 @@ public final class HomeWidgets {
     }
 
     /** Position and shape (page, x, y, w, h). */
-    static JSONObject move(JSONArray all, String id, JSONObject in, long now) throws Bad, JSONException {
+    public static JSONObject move(JSONArray all, String id, JSONObject in, long now) throws Bad, JSONException {
         int i = indexOf(all, id);
         if (i < 0) throw new Bad(404, "no_such_widget", id, null);
         JSONObject wd = all.getJSONObject(i);
@@ -370,7 +370,7 @@ public final class HomeWidgets {
         return wd.put("page", page).put("x", x).put("y", y).put("w", w).put("h", h).put("updatedAt", now);
     }
 
-    static boolean delete(JSONArray all, String id) {
+    public static boolean delete(JSONArray all, String id) {
         int i = indexOf(all, id);
         if (i < 0) return false;
         all.remove(i);
@@ -378,7 +378,7 @@ public final class HomeWidgets {
     }
 
     /** The widgets on one page (all pages when page is 0), in reading order (y, then x). */
-    static JSONArray list(JSONArray all, int page) throws JSONException {
+    public static JSONArray list(JSONArray all, int page) throws JSONException {
         List<JSONObject> out = new ArrayList<>();
         for (int i = 0; i < all.length(); i++) {
             JSONObject o = all.optJSONObject(i);
@@ -415,6 +415,17 @@ public final class HomeWidgets {
             out.put(wd);
         }
         return out;
+    }
+
+    /** The pages that hold widgets, ascending; page 1 is always there once any widget exists. */
+    public static java.util.List<Integer> pages(JSONArray all) {
+        java.util.TreeSet<Integer> p = new java.util.TreeSet<>();
+        for (int i = 0; all != null && i < all.length(); i++) {
+            JSONObject o = all.optJSONObject(i);
+            if (o != null) p.add(Math.max(1, o.optInt("page", 1)));
+        }
+        if (!p.isEmpty()) p.add(1);
+        return new ArrayList<>(p);
     }
 
     /** GET /v1/widgets/types: the types with the shape of their data (a short JSON schema each). */

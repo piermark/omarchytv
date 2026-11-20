@@ -125,6 +125,10 @@
     <string name="set_pane_ai">面板：AI 额度</string>
     <string name="ai_empty">连接 Omarchy Linux 以显示 AI 额度</string>
     <string name="native_unavailable">不可用</string>
+    <string name="widget_resize">调整大小</string>
+    <string name="widget_remove">移除</string>
+    <string name="widget_resize_hint">大小：←↑↓→ OK=完成 BACK=取消</string>
+    <string name="skill_qr_label">获取代理技能</string>
     <string name="ai_stale">已过时 %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">无匹配结果</string>

@@ -125,6 +125,10 @@
     <string name="set_pane_ai">لوحة: أرصدة AI</string>
     <string name="ai_empty">صِل Omarchy Linux لعرض أرصدة AI</string>
     <string name="native_unavailable">غير متاح</string>
+    <string name="widget_resize">تغيير الحجم</string>
+    <string name="widget_remove">إزالة</string>
+    <string name="widget_resize_hint">الحجم: ←↑↓→ OK=تم BACK=إلغاء</string>
+    <string name="skill_qr_label">احصل على مهارة الوكيل</string>
     <string name="ai_stale">قديم %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">لا توجد نتائج</string>

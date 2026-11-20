@@ -139,6 +139,14 @@ public class HomeWidgetsTest {
     }
 
     @Test
+    public void pagesAreTheOnesInUse() throws Exception {
+        assertTrue(HomeWidgets.pages(new JSONArray()).isEmpty());
+        JSONArray all = new JSONArray();
+        HomeWidgets.create(all, w("a", "stat").put("page", 3), "pc", 1);
+        assertEquals(java.util.Arrays.asList(1, 3), HomeWidgets.pages(all));   // page 1 always there
+    }
+
+    @Test
     public void listIsInReadingOrder() throws Exception {
         JSONArray all = new JSONArray();
         HomeWidgets.create(all, w("b", "stat").put("x", 5).put("y", 2), "pc", 1);

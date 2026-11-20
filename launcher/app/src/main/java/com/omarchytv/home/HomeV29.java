@@ -111,6 +111,9 @@ final class HomeV29 extends FrameLayout {
     // widgets
     private final LinearLayout widgets;
     private final ScrollView rightScroll;
+    /** v2.22 #157 the widget grid and the widget page on screen (0 = the classic Home panels). */
+    private final WidgetGrid wgrid;
+    private int widgetPage;
     private final BoxView wxBox, pcBox, macBox, depBox;
     private final LinearLayout statsColumn;
     private final ScrollView aiScroll;
@@ -321,6 +324,33 @@ final class HomeV29 extends FrameLayout {
         LayoutParams rightLp = new LayoutParams(-1, -2, Gravity.TOP);
         rightLp.topMargin = px(76);
         addView(rightScroll, rightLp);
+        // v2.22 #157: the widget grid (12 x 6 cells between the bar and the dock); shown instead of the classic Home
+        // panels while a widget page is on screen (widgetPage > 0), never built while there are no widgets.
+        wgrid = new WidgetGrid(a, s, tf, tfBold, new WidgetGrid.Host() {
+            @Override public void runShortcut(LauncherConfig.Shortcut x) {
+                if (act instanceof MainActivity) ((MainActivity) act).onShortcutClick(x);
+            }
+            @Override public void openPage(String url, String title) {
+                if (AgentPageActivity.allowed(url)) act.startActivity(AgentPageActivity.intent(act, url));
+            }
+            @Override public void openQr(String url, String label) {
+                act.startActivity(QrActivity.intent(act, label, url, url, true));
+            }
+            @Override public void changed() {
+                LauncherConfig fresh = LauncherConfig.get(act);
+                if (fresh != null) {
+                    cfg = fresh;
+                    wgrid.set(fresh.gridWidgets, t);
+                    if (widgetPage > 0 && !WidgetGrid.pages(fresh.gridWidgets).contains(widgetPage)) showWidgetPage(0);
+                }
+            }
+        });
+        wgrid.setVisibility(GONE);
+        LayoutParams wgl = new LayoutParams(-1, -1);
+        wgl.topMargin = px(76);
+        wgl.leftMargin = wgl.rightMargin = px(24);
+        wgl.bottomMargin = px(320);
+        addView(wgrid, wgl);
         LinearLayout r1 = hbox(), r2 = hbox();
         r1.setGravity(Gravity.TOP);
         // v2.10 "Disponi riquadri": panels are offset with translations, so their rows must not clip them.
@@ -456,7 +486,7 @@ final class HomeV29 extends FrameLayout {
         // ---- 3.4 app window: margins 32, padding 20×28 ----
         appWin = new BoxView(a, s, tf);
         appWin.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
-            if (top != ot) post(() -> { positionLeftWidgets(); positionRightWidgets(); });
+            if (top != ot) post(() -> { positionLeftWidgets(); positionRightWidgets(); fitGrid(); });
         });
         LayoutParams al = new LayoutParams(-1, -2, Gravity.BOTTOM);
         al.leftMargin = al.rightMargin = al.bottomMargin = px(32);
@@ -746,6 +776,8 @@ final class HomeV29 extends FrameLayout {
     void bind(LauncherConfig c, AppAdapter apps) {
         cfg = c;
         t = Theme.cur();
+        wgrid.set(c != null ? c.gridWidgets : null, t);
+        if (c != null && widgetPage > 0 && !WidgetGrid.pages(c.gridWidgets).contains(widgetPage)) widgetPage = 0;
         if (c == null || !FractalLayer.is(c.wallpaper)) liveAccent = false;
         this.apps = apps;
         float op = opacity(c), nb = noBlur();
@@ -1611,9 +1643,11 @@ final class HomeV29 extends FrameLayout {
         if (movingApp >= 0) host.finishMove(false);
         activeWs = n;
         boolean home = n == 1;
-        term.setVisibility(home && (cfg == null || cfg.wTerm) ? VISIBLE : GONE);
-        aiBoxRef.setVisibility(home && cfg != null && cfg.wAi ? VISIBLE : GONE);
-        rightScroll.setVisibility(home ? VISIBLE : GONE);
+        boolean classic = home && widgetPage == 0;   // v2.22: a widget page hides the classic panels
+        wgrid.setVisibility(home && widgetPage > 0 ? VISIBLE : GONE);
+        term.setVisibility(classic && (cfg == null || cfg.wTerm) ? VISIBLE : GONE);
+        aiBoxRef.setVisibility(classic && cfg != null && cfg.wAi ? VISIBLE : GONE);
+        rightScroll.setVisibility(classic ? VISIBLE : GONE);
         appWin.setVisibility(home ? VISIBLE : GONE);
         grokbotBox.setVisibility(home && cfg != null && cfg.wGrokbot && CompanionPlacement.homeTile(cfg.pluginGrokbot, cfg.companionOverlay) ? VISIBLE : GONE);
         tvWin.setVisibility(n == 2 ? VISIBLE : GONE);
@@ -2139,8 +2173,62 @@ final class HomeV29 extends FrameLayout {
     }
 
     /** Called before the default dispatch while the home is shown. True = consumed. */
+    // ---------------------------------------------------------------- v2.22 #157 / #158 widget pages
+
+    /** The widget pages, ascending; empty when there are no widgets (then the Home is the classic one only). */
+    java.util.List<Integer> widgetPages() {
+        return cfg != null ? WidgetGrid.pages(cfg.gridWidgets) : new java.util.ArrayList<>();
+    }
+
+    int widgetPage() {
+        return widgetPage;
+    }
+
+    /** Shows widget page p (0 = the classic Home panels). */
+    void showWidgetPage(int p) {
+        if (p != 0 && !widgetPages().contains(p)) return;
+        widgetPage = p;
+        if (activeWs == 1) setWorkspace(1);
+        if (p > 0) {
+            wgrid.showPage(p);
+            fitGrid();
+        }
+        if (pageListener != null) pageListener.run();
+    }
+
+    /**
+     * CH+ / CH- on the Home: through the classic Home and the widget pages, in order. False at either end (or with no
+     * widgets), so the key goes on to the workspaces as before.
+     */
+    boolean widgetStep(int dir) {
+        if (activeWs != 1) return false;
+        java.util.List<Integer> pages = widgetPages();
+        if (pages.isEmpty()) return false;
+        java.util.List<Integer> order = new java.util.ArrayList<>();
+        order.add(0);
+        order.addAll(pages);
+        int i = order.indexOf(widgetPage) + dir;
+        if (i < 0 || i >= order.size()) return false;
+        showWidgetPage(order.get(i));
+        return true;
+    }
+
+    Runnable pageListener;
+
+    /** The grid sits between the bar and the dock. */
+    private void fitGrid() {
+        if (appWin.getTop() <= 0) return;
+        LayoutParams wgl = (LayoutParams) wgrid.getLayoutParams();
+        int bottom = getHeight() - Math.round(appWin.getTop() + appWin.getTranslationY()) + px(16);
+        if (wgl.bottomMargin != bottom) {
+            wgl.bottomMargin = Math.max(px(32), bottom);
+            wgrid.setLayoutParams(wgl);
+        }
+    }
+
     boolean onKey(KeyEvent e) {
         int k = e.getKeyCode();
+        if (wgrid.editing()) return wgrid.onKey(e);   // v2.22: moving or resizing a widget
         if (movingApp >= 0) return moveKey(e);
         if (editPanel != null) return panelKey(e);
         if (e.getAction() != KeyEvent.ACTION_DOWN) return false;

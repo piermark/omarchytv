@@ -6,7 +6,12 @@
   page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,
   `tv_widget_list`, `tv_widget_create`, `tv_widget_update` (content only, a notify token is enough), `tv_widget_move`
   and `tv_widget_delete`, on the TV's MCP and both PC bridges. No overlap, `cell_taken` with free slots, or `push`.
-  The PC's panes appear as read-only widgets. The Home renderer comes next. Asked in #157.
+  The PC's panes appear as read-only widgets. Asked in #157.
+- **The widget grid on the Home** (#157, second part): widget pages are drawn natively on a 12 × 6 grid between the
+  bar and the dock (`lines`, `stat`, `text`, `chart` sparkline / bars, `image`, `page` (OK opens it), `shortcuts`,
+  `qr`); stale widgets dim after their ttl and hide after twice that. CH+ / CH- on the Home go from the classic Home
+  through the widget pages, then on to the workspaces as before. A long press on a widget: Move, Resize, Remove with
+  the arrows (only into free cells). Only the page on screen is built; images are decoded to the cell size.
 - **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
   extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
   terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from

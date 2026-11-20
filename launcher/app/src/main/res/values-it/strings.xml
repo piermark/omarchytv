@@ -124,6 +124,10 @@
     <string name="set_pane_ai">Pannello: crediti AI</string>
     <string name="ai_empty">collega Omarchy Linux per vedere i crediti AI</string>
     <string name="native_unavailable">non disponibile</string>
+    <string name="widget_resize">Ridimensiona</string>
+    <string name="widget_remove">Rimuovi</string>
+    <string name="widget_resize_hint">dimensione: ←↑↓→ OK=fatto BACK=annulla</string>
+    <string name="skill_qr_label">Scarica la skill per l\'agente</string>
     <string name="ai_stale">vecchio di %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">nessun risultato</string>

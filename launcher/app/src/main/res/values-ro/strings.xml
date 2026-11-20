@@ -125,6 +125,10 @@
     <string name="set_pane_ai">Panou: credite AI</string>
     <string name="ai_empty">conectează Omarchy Linux pentru a vedea creditele AI</string>
     <string name="native_unavailable">indisponibil</string>
+    <string name="widget_resize">Redimensionează</string>
+    <string name="widget_remove">Elimină</string>
+    <string name="widget_resize_hint">dimensiune: ←↑↓→ OK=gata BACK=anulează</string>
+    <string name="skill_qr_label">Ia skill-ul agentului</string>
     <string name="ai_stale">vechi %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">niciun rezultat</string>

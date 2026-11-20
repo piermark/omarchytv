@@ -125,6 +125,10 @@
     <string name="set_pane_ai">Panel: AI kredity</string>
     <string name="ai_empty">připojte Omarchy Linux pro zobrazení AI kreditů</string>
     <string name="native_unavailable">nedostupné</string>
+    <string name="widget_resize">Změnit velikost</string>
+    <string name="widget_remove">Odebrat</string>
+    <string name="widget_resize_hint">velikost: ←↑↓→ OK=hotovo BACK=zrušit</string>
+    <string name="skill_qr_label">Získat skill agenta</string>
     <string name="ai_stale">zastaralé %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">žádná shoda</string>

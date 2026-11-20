@@ -125,6 +125,10 @@
     <string name="set_pane_ai">パネル: AI クレジット</string>
     <string name="ai_empty">AI クレジットを表示するには Omarchy Linux を接続してください</string>
     <string name="native_unavailable">利用できません</string>
+    <string name="widget_resize">サイズ変更</string>
+    <string name="widget_remove">削除</string>
+    <string name="widget_resize_hint">サイズ: ←↑↓→ OK=完了 BACK=キャンセル</string>
+    <string name="skill_qr_label">エージェントのスキルを入手</string>
     <string name="ai_stale">古いデータ %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">一致なし</string>

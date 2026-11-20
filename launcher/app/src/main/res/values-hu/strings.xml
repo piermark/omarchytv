@@ -125,6 +125,10 @@
     <string name="set_pane_ai">Panel: AI-kreditek</string>
     <string name="ai_empty">csatlakoztassa az Omarchy Linuxot az AI-kreditek megjelenítéséhez</string>
     <string name="native_unavailable">nem elérhető</string>
+    <string name="widget_resize">Átméretezés</string>
+    <string name="widget_remove">Eltávolítás</string>
+    <string name="widget_resize_hint">méret: ←↑↓→ OK=kész BACK=mégse</string>
+    <string name="skill_qr_label">Az ügynök skill letöltése</string>
     <string name="ai_stale">elavult %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">nincs találat</string>

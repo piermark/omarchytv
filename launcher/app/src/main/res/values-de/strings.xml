@@ -124,6 +124,10 @@
     <string name="set_pane_ai">Bereich: AI-Guthaben</string>
     <string name="ai_empty">Omarchy Linux verbinden, um AI-Guthaben zu sehen</string>
     <string name="native_unavailable">nicht verfügbar</string>
+    <string name="widget_resize">Größe ändern</string>
+    <string name="widget_remove">Entfernen</string>
+    <string name="widget_resize_hint">Größe: ←↑↓→ OK=fertig BACK=abbrechen</string>
+    <string name="skill_qr_label">Agent-Skill holen</string>
     <string name="ai_stale">veraltet %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">kein Treffer</string>

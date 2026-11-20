@@ -4516,7 +4516,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
             if (kc == KeyEvent.KEYCODE_CHANNEL_UP || kc == KeyEvent.KEYCODE_CHANNEL_DOWN || kc == KeyEvent.KEYCODE_PAGE_UP || kc == KeyEvent.KEYCODE_PAGE_DOWN) {
                 boolean up = kc == KeyEvent.KEYCODE_CHANNEL_UP || kc == KeyEvent.KEYCODE_PAGE_DOWN;
-                if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) setWorkspace(LauncherConfig.get(this).nextWorkspace(workspace, up ? 1 : -1));
+                if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0
+                        && !home.widgetStep(up ? 1 : -1)) {   // v2.22: widget pages first, then the workspaces
+                    setWorkspace(LauncherConfig.get(this).nextWorkspace(workspace, up ? 1 : -1));
+                }
                 return true;
             }
             if (workspace != 1 && kc == KeyEvent.KEYCODE_BACK) {

@@ -276,6 +276,16 @@ final class LauncherConfig {
     }
 
     /** A shortcut pushed by the PC (link.shortcuts): type app | view | pc. */
+    /** A pushed shortcut {id, label, action: {type: app|view|pc, package?, uri?, command?}}, or null. */
+    static Shortcut shortcutOf(JSONObject o) {
+        JSONObject a = o != null ? o.optJSONObject("action") : null;
+        if (a == null) return null;
+        String type = a.optString("type");
+        if (!type.equals("app") && !type.equals("view") && !type.equals("pc")) return null;
+        return new Shortcut(o.optString("id"), o.optString("label", o.optString("id")), type,
+                a.optString("package", ""), a.optString("uri", ""), a.optString("command", ""));
+    }
+
     static final class Shortcut {
         final String id, label, type, pkg, uri, command;
 
@@ -570,6 +580,8 @@ final class LauncherConfig {
     }
 
     /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
+    /** v2.22 #157 omarchytv.json "widgets": positioned, typed Home widgets (see link/HomeWidgets). */
+    final JSONArray gridWidgets;
     final boolean agentAlert;
     /** v2.22 "agentAlertMin": the lowest notification level shown, "info" (all), "warn" or "alert"; set with the remote. */
     final String agentAlertMin;
@@ -689,17 +701,14 @@ final class LauncherConfig {
         JSONArray lsa = lkc != null ? lkc.optJSONArray("shortcuts") : null;
         if (lsa != null) {
             for (int i = 0; i < lsa.length() && sc.size() < 16; i++) {
-                JSONObject o = lsa.optJSONObject(i);
-                JSONObject a = o != null ? o.optJSONObject("action") : null;
-                if (a == null) continue;
-                String type = a.optString("type");
-                if (!type.equals("app") && !type.equals("view") && !type.equals("pc")) continue;
-                sc.add(new Shortcut(o.optString("id"), o.optString("label", o.optString("id")), type,
-                        a.optString("package", ""), a.optString("uri", ""), a.optString("command", "")));
+                Shortcut x = shortcutOf(lsa.optJSONObject(i));
+                if (x != null) sc.add(x);
             }
         }
         shortcuts = Collections.unmodifiableList(sc);
         widgetsAt = lkc != null ? lkc.optLong("widgetsAt", 0) : 0;
+        JSONArray gwa = j != null ? j.optJSONArray("widgets") : null;   // v2.22 #157, drawn by WidgetGrid
+        gridWidgets = gwa != null ? gwa : new JSONArray();
         JSONObject wg = j != null ? j.optJSONObject("pcWidgets") : null;
         pcPanesOn = wg == null || wg.optBoolean("panes", true);
         shortcutsOn = wg == null || wg.optBoolean("shortcuts", true);

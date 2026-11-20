@@ -125,6 +125,10 @@
     <string name="set_pane_ai">Panel: kredyty AI</string>
     <string name="ai_empty">połącz Omarchy Linux, aby zobaczyć kredyty AI</string>
     <string name="native_unavailable">niedostępne</string>
+    <string name="widget_resize">Zmień rozmiar</string>
+    <string name="widget_remove">Usuń</string>
+    <string name="widget_resize_hint">rozmiar: ←↑↓→ OK=gotowe BACK=anuluj</string>
+    <string name="skill_qr_label">Pobierz skill agenta</string>
     <string name="ai_stale">nieaktualne %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">brak wyników</string>

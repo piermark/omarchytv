@@ -125,6 +125,10 @@
     <string name="set_pane_ai">Panel: AI kredileri</string>
     <string name="ai_empty">AI kredilerini görmek için Omarchy Linux\'u bağlayın</string>
     <string name="native_unavailable">kullanılamıyor</string>
+    <string name="widget_resize">Yeniden boyutlandır</string>
+    <string name="widget_remove">Kaldır</string>
+    <string name="widget_resize_hint">boyut: ←↑↓→ OK=tamam BACK=iptal</string>
+    <string name="skill_qr_label">Ajan skill\'ini al</string>
     <string name="ai_stale">eski %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">eşleşme yok</string>
