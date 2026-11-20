@@ -303,6 +303,14 @@
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TvHome" />
+        <!-- v2.22 AI LIVE: the agents' work as a TV channel, and the night's replay -->
+        <activity
+            android:name=".LiveActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
         <!-- v2.22 the night shift's morning page (ShiftWake opens it, also over a sleeping screen) -->
         <activity
             android:name=".ShiftActivity"

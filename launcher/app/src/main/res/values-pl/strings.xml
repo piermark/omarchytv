@@ -144,6 +144,12 @@
     <string name="shift_end">Zakończ zmianę</string>
     <string name="shift_approve">Zatwierdź</string>
     <string name="shift_deny">Odrzuć</string>
+    <string name="live_replay">Powtórka nocy</string>
+    <string name="live_empty">Żaden agent nie nadaje: pojawiają się przez tv_live_update, powiadomienie lub pytanie.</string>
+    <string name="live_waits">czeka na ciebie</string>
+    <string name="live_on_air">na antenie od %1$d min</string>
+    <string name="live_answer">odpowiedz</string>
+    <string name="live_end">Koniec nagrania</string>
     <string name="web_settings_row">Ustawienia przez WWW</string>
     <string name="web_settings_open">Otwórz ustawienia przez WWW</string>
     <string name="web_settings_hint">Zeskanuj telefonem w tej samej sieci albo wpisz adres na komputerze. Potem zatwierdź tę przeglądarkę na telewizorze.</string>

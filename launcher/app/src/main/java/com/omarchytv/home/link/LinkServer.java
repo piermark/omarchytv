@@ -1489,6 +1489,13 @@ public final class LinkServer {
                         }
                         break;
                     }
+                    case "tv_live_update":
+                    case "tv_live": {   // v2.22 AI LIVE: the same code as /v1/live
+                        Response lr = app.liveRoute(who, "tv_live".equals(name) ? "GET" : "POST", args);
+                        out = new JSONObject(new String(lr.body, StandardCharsets.UTF_8));
+                        isError = lr.status != 200;
+                        break;
+                    }
                     case "tv_shift_start":
                     case "tv_shift_end":
                     case "tv_shift_status":
@@ -1605,7 +1612,7 @@ public final class LinkServer {
                     case "tv_skill_qr":
                     case "tv_open": {
                         String e = host.openTarget("tv_skill_qr".equals(name) ? "skill" : args.optString("target", ""));
-                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office, skill");
+                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay");
                         isError = e != null;
                         break;
                     }
@@ -1673,8 +1680,8 @@ public final class LinkServer {
                         .put("logo", prop("string", "https:// image (optional)")), "control"});
         t.add(new Object[]{"tv_radio_station_remove", "Remove a radio station (not Omarchy Radio).", new JSONObject().put("id", prop("string", "Station id")), "control"});
         t.add(new Object[]{"tv_radio_sleep", "Stop the radio after some minutes (0 turns the timer off).", new JSONObject().put("minutes", prop("integer", "0-240")), "control"});
-        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office or skill (the agent skill as a QR).",
-                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office | skill")), "control"});
+        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office, skill (the agent skill as a QR), live (the AI LIVE channel) or replay (the night shift played back).",
+                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office | skill | live | replay")), "control"});
         t.add(new Object[]{"tv_skill_qr", "Show the OmarchyTV agent skill as a QR on the TV, for the owner's phone or another agent. Only the public URL.",
                 new JSONObject(), "control"});
         t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
@@ -1743,6 +1750,11 @@ public final class LinkServer {
         t.add(new Object[]{"tv_ha_run", "Run a Home Assistant scene, script or automation, or toggle a light, switch, fan or input_boolean.",
                 new JSONObject().put("entity_id", prop("string", "e.g. scene.movie")), "control"});
         t.add(new Object[]{"tv_page_show", "Bring a Home widget page to the screen (e.g. where an alert widget just landed).", new JSONObject().put("page", pref), "control"});
+        // v2.22 AI LIVE
+        t.add(new Object[]{"tv_live_update", "Tell the TV's AI LIVE channel what you are doing now, like a live broadcast: a short line (≤120), a progress 0-100 and a preview of the work (an image URL, a diff, a text or a few numbers). The preview also shows on your next question, so the owner sees the work before approving it.",
+                new JSONObject().put("text", prop("string", "What you are doing now")).put("progress", prop("integer", "0-100, or -1"))
+                        .put("preview", new JSONObject().put("type", "object").put("description", "{kind: image, url} | {kind: diff | text, text} | {kind: chart, points, label?}, or null to clear")), "notify"});
+        t.add(new Object[]{"tv_live", "The AI LIVE channel: every agent on it (what it does, progress, a question it waits on) and the last events.", new JSONObject(), "read"});
         // v2.22 the night shift
         t.add(new Object[]{"tv_shift_start", "Start a night shift: the owner's tasks for the night, its end (\"07:00\" or epoch ms, within 16 h) and when the TV should show the morning page (wake). During the shift the TV stays silent; write a diary with tv_shift_log and leave anything risky for the morning with tv_shift_queue.",
                 new JSONObject().put("tasks", new JSONObject().put("type", "array").put("items", prop("string", "a task")).put("description", "1 to 20 tasks"))

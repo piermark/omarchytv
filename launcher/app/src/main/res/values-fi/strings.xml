@@ -144,6 +144,12 @@
     <string name="shift_end">Lopeta vuoro</string>
     <string name="shift_approve">Hyväksy</string>
     <string name="shift_deny">Hylkää</string>
+    <string name="live_replay">Yön uusinta</string>
+    <string name="live_empty">Ei vielä agentteja lähetyksessä: ne näkyvät tv_live_update-komennolla, ilmoituksella tai kysymyksellä.</string>
+    <string name="live_waits">odottaa sinua</string>
+    <string name="live_on_air">lähetyksessä %1$d min</string>
+    <string name="live_answer">vastaa</string>
+    <string name="live_end">Tallenne päättyi</string>
     <string name="web_settings_row">Verkkoasetukset</string>
     <string name="web_settings_open">Avaa verkkoasetukset</string>
     <string name="web_settings_hint">Skannaa se puhelimella samassa verkossa tai kirjoita osoite tietokoneella. Hyväksy sitten selain televisiossa.</string>

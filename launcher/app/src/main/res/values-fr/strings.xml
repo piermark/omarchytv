@@ -144,6 +144,12 @@
     <string name="shift_end">Terminer l’équipe</string>
     <string name="shift_approve">Approuver</string>
     <string name="shift_deny">Refuser</string>
+    <string name="live_replay">Rediffusion de la nuit</string>
+    <string name="live_empty">Aucun agent à l’antenne : ils apparaissent avec tv_live_update, une note ou une question.</string>
+    <string name="live_waits">vous attend</string>
+    <string name="live_on_air">à l’antenne depuis %1$d min</string>
+    <string name="live_answer">répondre</string>
+    <string name="live_end">Fin de l’enregistrement</string>
     <string name="web_settings_row">Réglages web</string>
     <string name="web_settings_open">Ouvrir les réglages web</string>
     <string name="web_settings_hint">Scannez-le avec un téléphone sur le même réseau ou tapez l\'adresse sur un ordinateur. Puis autorisez ce navigateur sur la TV.</string>

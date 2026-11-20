@@ -133,6 +133,7 @@ final class AppApi {
                 || "/v1/radio".equals(p) || p.startsWith("/v1/radio/") || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
                 || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")
                 || "/v1/shift".equals(p) || p.startsWith("/v1/shift/")   // v2.22 the night shift
+                || "/v1/live".equals(p)   // v2.22 AI LIVE
                 || p.startsWith("/v1/ha/")   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
                 || "/v1/settings".equals(p) || "/v1/settings/schema".equals(p);   // v2.22 #163
     }
@@ -213,6 +214,7 @@ final class AppApi {
         if (p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")) return pageRoute(who, m, p, req.target, body);   // #158
         if (p.startsWith("/v1/ha/")) return haRoute(who, m, p, req.target, body);   // #160
         if ("/v1/shift".equals(p) || p.startsWith("/v1/shift/")) return shiftRoute(who, m, p, body);   // v2.22
+        if ("/v1/live".equals(p)) return liveRoute(who, m, body);   // v2.22 AI LIVE
         if ("/v1/settings".equals(p) || "/v1/settings/schema".equals(p)) return settingsRoute(who, m, p, req.target, body);   // #163
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
@@ -254,7 +256,7 @@ final class AppApi {
             if (!who.can("control")) return forbidden("control");
             String e = host.openTarget(body.optString("target", ""));
             return e == null ? new LinkServer.Response(200, LinkServer.ok().put("target", body.optString("target")))
-                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office, skill"));
+                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay"));
         }
         if ("GET".equals(m) && "/v1/pages".equals(p)) return who.can("read") ? new LinkServer.Response(200, new JSONObject().put("pages", pages())) : forbidden("read");
         Matcher pm = PAGE_PATH.matcher(p);
@@ -826,6 +828,23 @@ final class AppApi {
         return new LinkServer.Response(404, LinkServer.err("not_found", null));
     }
 
+    // ---- v2.22 AI LIVE: what each agent does now, for the LIVE channel (LiveFeed, memory only) ----
+    LinkServer.Response liveRoute(Principal who, String m, JSONObject body) throws Exception {
+        if ("GET".equals(m)) {
+            if (!who.can("read")) return forbidden("read");
+            return new LinkServer.Response(200, LiveFeed.get().snapshot(System.currentTimeMillis(), 60));
+        }
+        if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+        if (!who.can("notify")) return forbidden("notify");
+        if (body.has("preview") && !JSONObject.NULL.equals(body.opt("preview")) && LiveFeed.preview(body.optJSONObject("preview")) == null) {
+            return new LinkServer.Response(400, LinkServer.err("bad_preview", "{kind: image, url} (https or LAN), {kind: diff | text, text}, {kind: chart, points}"));
+        }
+        String from = who.pc ? LinkServer.printable(body.optString("from", ""), 40) : who.name;
+        JSONObject n = LiveFeed.get().now(from.isEmpty() ? "PC" : from, body, System.currentTimeMillis());
+        s.broadcast("live", new JSONObject().put("agent", n.optString("agent")));
+        return new LinkServer.Response(200, LinkServer.ok().put("now", n));
+    }
+
     // ---- v2.22 the night shift: a diary on the TV and a queue for the morning (NightShift) ----
     static final java.util.regex.Pattern SHIFT_ITEM = java.util.regex.Pattern.compile("/v1/shift/queue/(q[0-9]{1,6})");
 
@@ -879,6 +898,8 @@ final class AppApi {
         }
         s.broadcast("shift_changed", new JSONObject().put("op", event));
         host.shiftChanged(event);
+        if ("log".equals(event)) LiveFeed.get().event(who.name, out[0].optString("level"), out[0].optString("text"), System.currentTimeMillis());
+        else if ("queued".equals(event)) LiveFeed.get().event(who.name, "queued", out[0].optString("title"), System.currentTimeMillis());
         boolean whole = "started".equals(event) || "ended".equals(event);
         return new LinkServer.Response(200, LinkServer.ok().put(whole ? "shift" : "item", out[0]));
     }
@@ -969,6 +990,11 @@ final class AppApi {
         String from = who.pc ? LinkServer.printable(b.optString("from", ""), 40) : who.name;
         if (from.isEmpty()) from = "PC";
         long now = System.currentTimeMillis();
+        if (b.has("preview")) {   // v2.22 #3: see the work before you approve it
+            JSONObject pv = LiveFeed.preview(b.optJSONObject("preview"));
+            if (pv == null) return new LinkServer.Response(400, LinkServer.err("bad_preview", "{kind: image, url}, {kind: diff | text, text}, {kind: chart, points}"));
+            LiveFeed.get().now(from, new JSONObject().put("preview", pv), now);
+        }
         Ask ask;
         synchronized (asks) {
             for (Iterator<Ask> it = asks.values().iterator(); it.hasNext(); ) {
@@ -983,8 +1009,10 @@ final class AppApi {
             ask.risk = risk;
             asks.put(ask.id, ask);
         }
+        LiveFeed.get().waiting(ask.from, ask.id, ask.question, now);   // v2.22 AI LIVE: the director cuts to it
         String e = host.askUser(ask.id, ask.from, ask.question, ask.choices, ask.deadline, ask.detail, ask.risk);
         if (e != null) {
+            LiveFeed.get().answered(ask.id, "—", now);
             synchronized (asks) {
                 asks.remove(ask.id);
             }
@@ -1045,6 +1073,7 @@ final class AppApi {
             a.answer = choice;
             a.notifyAll();
         }
+        LiveFeed.get().answered(id, choice, System.currentTimeMillis());   // v2.22 AI LIVE
         try {
             JSONObject ev = new JSONObject().put("id", id).put("answer", choice);
             s.broadcast("ask_answer", ev);   // PCs (WebSocket) and pages (SSE)

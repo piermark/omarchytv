@@ -34,6 +34,7 @@ public class AgentQuestionActivity extends Activity {
     private String id;
     /** v2.22: OK is ignored this long after a question appears, so a press meant for the film answers nothing. */
     static final long OK_GUARD_MS = 1500;
+    static final String EXTRA_PREVIEW = "preview";   // v2.22 #3: JSON of LiveFeed.preview
     private long shownAt;
 
     static Intent intent(Context c, String id, String from, String question, List<String> choices, long deadline) {
@@ -107,6 +108,31 @@ public class AgentQuestionActivity extends Activity {
         text.setPadding(0, (int) dp(12), 0, (int) dp(20));
         card.addView(text);
         String detail = i.getStringExtra(EXTRA_DETAIL);
+        // v2.22 #3 see the work before you approve it: the agent's preview (an image, or a diff / text as the detail)
+        org.json.JSONObject pv = null;
+        try {
+            String ps = i.getStringExtra(EXTRA_PREVIEW);
+            if (ps != null && !ps.isEmpty()) pv = new org.json.JSONObject(ps);
+        } catch (org.json.JSONException ignored) {
+        }
+        if (pv != null && ("diff".equals(pv.optString("kind")) || "text".equals(pv.optString("kind"))) && (detail == null || detail.isEmpty())) {
+            detail = pv.optString("text");
+        }
+        if (pv != null && "image".equals(pv.optString("kind"))) {
+            android.widget.ImageView iv = new android.widget.ImageView(this);
+            iv.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+            iv.setAdjustViewBounds(true);
+            int maxW = (int) (getResources().getDisplayMetrics().widthPixels * 0.5f), maxH = (int) (getResources().getDisplayMetrics().heightPixels * 0.34f);
+            iv.setMaxHeight(maxH);
+            LinearLayout.LayoutParams il = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            il.bottomMargin = (int) dp(16);
+            card.addView(iv, il);
+            String url = pv.optString("url");
+            new Thread(() -> {
+                android.graphics.Bitmap bm = WidgetGrid.fetch(url, maxW, maxH);
+                if (bm != null) iv.post(() -> iv.setImageBitmap(bm));
+            }, "ask-preview").start();
+        }
         if (detail != null && !detail.isEmpty()) {   // v2.22: ↑ from the buttons to focus it, ↑ / ↓ to scroll
             android.widget.ScrollView sv = new android.widget.ScrollView(this);
             sv.setFocusable(true);

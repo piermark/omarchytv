@@ -144,6 +144,12 @@
     <string name="shift_end">إنهاء المناوبة</string>
     <string name="shift_approve">موافقة</string>
     <string name="shift_deny">رفض</string>
+    <string name="live_replay">إعادة الليلة</string>
+    <string name="live_empty">لا وكيل على الهواء بعد: يظهرون عبر tv_live_update أو إشعار أو سؤال.</string>
+    <string name="live_waits">بانتظارك</string>
+    <string name="live_on_air">على الهواء منذ %1$d دقيقة</string>
+    <string name="live_answer">الرد</string>
+    <string name="live_end">نهاية التسجيل</string>
     <string name="web_settings_row">إعدادات الويب</string>
     <string name="web_settings_open">فتح إعدادات الويب</string>
     <string name="web_settings_hint">امسحه بهاتف على الشبكة نفسها أو اكتب العنوان على حاسوب. ثم وافق على ذلك المتصفح من التلفاز.</string>

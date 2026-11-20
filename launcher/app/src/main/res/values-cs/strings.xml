@@ -144,6 +144,12 @@
     <string name="shift_end">Ukončit směnu</string>
     <string name="shift_approve">Schválit</string>
     <string name="shift_deny">Zamítnout</string>
+    <string name="live_replay">Záznam noci</string>
+    <string name="live_empty">Zatím žádný agent ve vysílání: objeví se přes tv_live_update, oznámení nebo otázku.</string>
+    <string name="live_waits">čeká na vás</string>
+    <string name="live_on_air">ve vysílání %1$d min</string>
+    <string name="live_answer">odpovědět</string>
+    <string name="live_end">Konec záznamu</string>
     <string name="web_settings_row">Webové nastavení</string>
     <string name="web_settings_open">Otevřít webové nastavení</string>
     <string name="web_settings_hint">Naskenujte ho telefonem ve stejné síti nebo zadejte adresu na počítači. Pak ten prohlížeč schvalte na TV.</string>

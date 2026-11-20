@@ -144,6 +144,12 @@
     <string name="shift_end">Avsluta skiftet</string>
     <string name="shift_approve">Godkänn</string>
     <string name="shift_deny">Neka</string>
+    <string name="live_replay">Repris av natten</string>
+    <string name="live_empty">Ingen agent i sändning än: de syns med tv_live_update, en notis eller en fråga.</string>
+    <string name="live_waits">väntar på dig</string>
+    <string name="live_on_air">i sändning i %1$d min</string>
+    <string name="live_answer">svara</string>
+    <string name="live_end">Slut på inspelningen</string>
     <string name="web_settings_row">Webbinställningar</string>
     <string name="web_settings_open">Öppna webbinställningar</string>
     <string name="web_settings_hint">Skanna den med en mobil i samma nätverk eller skriv adressen på en dator. Godkänn sedan webbläsaren på tv:n.</string>

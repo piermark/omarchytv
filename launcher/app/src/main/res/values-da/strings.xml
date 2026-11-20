@@ -144,6 +144,12 @@
     <string name="shift_end">Afslut vagten</string>
     <string name="shift_approve">Godkend</string>
     <string name="shift_deny">Afvis</string>
+    <string name="live_replay">Genudsendelse af natten</string>
+    <string name="live_empty">Ingen agent i luften endnu: de vises med tv_live_update, en besked eller et spørgsmål.</string>
+    <string name="live_waits">venter på dig</string>
+    <string name="live_on_air">i luften i %1$d min</string>
+    <string name="live_answer">svar</string>
+    <string name="live_end">Slut på optagelsen</string>
     <string name="web_settings_row">Webindstillinger</string>
     <string name="web_settings_open">Åbn webindstillinger</string>
     <string name="web_settings_hint">Scan den med en telefon på samme netværk, eller skriv adressen på en computer. Godkend derefter browseren på tv\'et.</string>

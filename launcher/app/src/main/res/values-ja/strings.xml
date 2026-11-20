@@ -144,6 +144,12 @@
     <string name="shift_end">シフトを終了</string>
     <string name="shift_approve">承認</string>
     <string name="shift_deny">拒否</string>
+    <string name="live_replay">夜のリプレイ</string>
+    <string name="live_empty">まだ放送中のエージェントはいません。tv_live_update、通知、質問で登場します。</string>
+    <string name="live_waits">あなたを待っています</string>
+    <string name="live_on_air">放送中 %1$d 分</string>
+    <string name="live_answer">回答</string>
+    <string name="live_end">録画の終わり</string>
     <string name="web_settings_row">Web設定</string>
     <string name="web_settings_open">Web設定を開く</string>
     <string name="web_settings_hint">同じネットワークのスマホで読み取るか、パソコンでアドレスを入力してください。その後、テレビでそのブラウザを許可します。</string>

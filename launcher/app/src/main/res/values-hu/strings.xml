@@ -144,6 +144,12 @@
     <string name="shift_end">Műszak befejezése</string>
     <string name="shift_approve">Jóváhagyás</string>
     <string name="shift_deny">Elutasítás</string>
+    <string name="live_replay">Az éjszaka visszajátszása</string>
+    <string name="live_empty">Még nincs adásban ügynök: a tv_live_update, egy értesítés vagy egy kérdés hozza őket.</string>
+    <string name="live_waits">rád vár</string>
+    <string name="live_on_air">%1$d perce adásban</string>
+    <string name="live_answer">válasz</string>
+    <string name="live_end">A felvétel vége</string>
     <string name="web_settings_row">Webes beállítások</string>
     <string name="web_settings_open">Webes beállítások megnyitása</string>
     <string name="web_settings_hint">Olvasd be egy ugyanazon a hálózaton lévő telefonnal, vagy írd be a címet egy számítógépen. Utána engedélyezd a böngészőt a TV-n.</string>

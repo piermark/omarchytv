@@ -144,6 +144,12 @@
     <string name="shift_end">Завершити зміну</string>
     <string name="shift_approve">Схвалити</string>
     <string name="shift_deny">Відхилити</string>
+    <string name="live_replay">Повтор ночі</string>
+    <string name="live_empty">В ефірі поки немає агентів: вони з’являються через tv_live_update, сповіщення або питання.</string>
+    <string name="live_waits">чекає на вас</string>
+    <string name="live_on_air">в ефірі %1$d хв</string>
+    <string name="live_answer">відповісти</string>
+    <string name="live_end">Кінець запису</string>
     <string name="web_settings_row">Веб-налаштування</string>
     <string name="web_settings_open">Відкрити веб-налаштування</string>
     <string name="web_settings_hint">Скануйте телефоном у тій самій мережі або введіть адресу на компʼютері. Потім дозвольте цей браузер на телевізорі.</string>

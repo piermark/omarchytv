@@ -286,6 +286,21 @@ public final class OmarchyLink implements LinkServer.Host {
         return r != null && r.live() && r.server.answerAsk(id, choice);
     }
 
+    /** v2.22 AI LIVE: OK on the agent on camera opens its question (with its preview). */
+    static void showAsk(android.app.Activity a, String id) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || id == null) return;
+        for (String[] q : r.server.pendingAsks()) {
+            if (!id.equals(q[0])) continue;
+            java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(6, q.length));
+            JSONObject pv = com.omarchytv.home.link.LiveFeed.get().previewOf(q[1], System.currentTimeMillis());
+            a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3]))
+                    .putExtra(AgentQuestionActivity.EXTRA_DETAIL, q[4]).putExtra(AgentQuestionActivity.EXTRA_RISK, q[5])
+                    .putExtra(AgentQuestionActivity.EXTRA_PREVIEW, pv == null ? "" : pv.toString()));
+            return;
+        }
+    }
+
     /** Home came back: show the oldest question still waiting, if any. */
     static void showPendingAsk(android.app.Activity a) {
         OmarchyLink r = runtime;
@@ -1211,6 +1226,7 @@ public final class OmarchyLink implements LinkServer.Host {
         if (!cfg.agentAlert) return null;
         if (LauncherConfig.belowAgentMin(cfg.agentAlertMin, level)) return "filtered";   // v2.22, set with the remote
         String body = title.isEmpty() ? text : text.isEmpty() ? title : title + " · " + text;
+        com.omarchytv.home.link.LiveFeed.get().event(from, "alert".equals(level) ? "alert" : "note", body, System.currentTimeMillis());   // v2.22 AI LIVE
         if (ShiftWake.quiet(app)) {   // v2.22 night shift: no toast, no tone; the note waits in the diary for the morning
             try {
                 JSONObject line = new JSONObject().put("level", "alert".equals(level) ? "fail" : "info").put("text", body);
@@ -1328,9 +1344,11 @@ public final class OmarchyLink implements LinkServer.Host {
         String msg = app.getString(R.string.agent_note, from, question);
         main.post(() -> {
             try {
+                JSONObject pv = com.omarchytv.home.link.LiveFeed.get().previewOf(from, System.currentTimeMillis());   // v2.22 #3
                 app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs)
                         .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail == null ? "" : detail)
-                        .putExtra(AgentQuestionActivity.EXTRA_RISK, risk == null ? "" : risk));
+                        .putExtra(AgentQuestionActivity.EXTRA_RISK, risk == null ? "" : risk)
+                        .putExtra(AgentQuestionActivity.EXTRA_PREVIEW, pv == null ? "" : pv.toString()));
             } catch (RuntimeException e) {
                 Log.w(TAG, "ask: " + e);
             }
@@ -1490,6 +1508,19 @@ public final class OmarchyLink implements LinkServer.Host {
             case "cinemarchy": c = CinemarchyActivity.class; break;
             case "arcade": c = ArcadeActivity.class; break;
             case "office": c = OfficeActivity.class; break;
+            case "live":   // v2.22 AI LIVE, and the night's replay
+            case "replay": {
+                boolean rp = "replay".equals(target);
+                main.post(() -> {
+                    try {
+                        app.startActivity(LiveActivity.intent(app, rp));
+                    } catch (RuntimeException e) {
+                        Log.w(TAG, "open live: " + e);
+                    }
+                });
+                log("open " + target);
+                return null;
+            }
             case "skill":   // v2.22 #161: the public skill page as a QR (no address, no token)
                 main.post(() -> {
                     try {

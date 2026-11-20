@@ -143,6 +143,12 @@
     <string name="shift_end">Schicht beenden</string>
     <string name="shift_approve">Genehmigen</string>
     <string name="shift_deny">Ablehnen</string>
+    <string name="live_replay">Wiederholung der Nacht</string>
+    <string name="live_empty">Noch kein Agent auf Sendung: Agenten erscheinen mit tv_live_update, einer Meldung oder einer Frage.</string>
+    <string name="live_waits">wartet auf dich</string>
+    <string name="live_on_air">seit %1$d Min. auf Sendung</string>
+    <string name="live_answer">antworten</string>
+    <string name="live_end">Ende der Aufnahme</string>
     <string name="web_settings_row">Web-Einstellungen</string>
     <string name="web_settings_open">Web-Einstellungen öffnen</string>
     <string name="web_settings_hint">Mit einem Handy im selben Netz scannen oder die Adresse am Computer eingeben. Dann den Browser am Fernseher erlauben.</string>

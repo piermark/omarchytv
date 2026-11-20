@@ -1073,6 +1073,18 @@ public class LinkServerTest {
         assertEquals(2, app("GET", "/v1/shift", "", rd).json().getJSONObject("counts").getInt("ok") + app("GET", "/v1/shift", "", rd).json().getJSONObject("counts").getInt("fail"));
         assertEquals(200, app("POST", "/v1/shift/end", "{}", ctl).status);
         assertEquals(409, app("POST", "/v1/shift/log", "{\"text\":\"late\"}", ntf).status);
+        // v2.22 AI LIVE: the agent tells the channel what it does, with a preview; a read token watches
+        assertEquals(403, app("POST", "/v1/live", "{\"text\":\"x\"}", rd).status);
+        assertEquals(400, app("POST", "/v1/live", "{\"text\":\"x\",\"preview\":{\"kind\":\"image\",\"url\":\"http://8.8.8.8/a.png\"}}", ntf).status);
+        assertEquals(200, app("POST", "/v1/live", "{\"text\":\"building\",\"progress\":40,\"preview\":{\"kind\":\"text\",\"text\":\"ok\"}}", ntf).status);
+        JSONObject live = app("GET", "/v1/live", "", rd).json();
+        boolean seen = false;
+        for (int i = 0; i < live.getJSONArray("agents").length(); i++) {
+            JSONObject a = live.getJSONArray("agents").getJSONObject(i);
+            if ("hermes".equals(a.getString("agent"))) { seen = true; assertEquals("building", a.getString("text")); }
+        }
+        assertTrue(seen);
+        assertEquals(400, app("POST", "/v1/ask", "{\"question\":\"push?\",\"preview\":{\"kind\":\"html\"}}", ntf).status);
     }
 
     @Test

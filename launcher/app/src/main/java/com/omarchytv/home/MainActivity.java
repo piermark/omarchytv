@@ -4123,6 +4123,15 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> openCompanionChat(false));
             return false;
         });
+        // v2.22 AI LIVE: the agents' work as a TV channel; the night shift's page and its replay
+        p.add("AI LIVE", "● ›", r -> {
+            handler.post(() -> startActivity(LiveActivity.intent(this, false)));
+            return false;
+        });
+        p.add(str(R.string.shift_title), "🌙 ›", r -> {
+            handler.post(() -> startActivity(ShiftActivity.intent(this, false)));
+            return false;
+        });
         // v2.22 #161: the agent skill as a QR, for a phone or an agent; "this TV" adds the TV's address, never a token
         p.add(str(R.string.skill_qr_label), "QR ›", r -> {
             handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.skill_qr_label), SkillQr.url(this), str(R.string.skill_qr_hint), false)));

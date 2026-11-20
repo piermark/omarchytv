@@ -150,6 +150,9 @@ public class ShiftActivity extends Activity {
             return;
         }
         JSONObject c = full.optJSONObject("counts");
+        View rp = row("▶ " + getString(R.string.live_replay), t.accent, v -> startActivity(LiveActivity.intent(this, true)));   // the VCR
+        rp.setTag("replay");
+        list.addView(rp);
         String head = ("running".equals(state) ? getString(R.string.shift_running, time(full.optLong("until")))
                 : getString(R.string.shift_ended, time(full.has("endedAt") ? full.optLong("endedAt") : full.optLong("until"))))
                 + "   ✓ " + c.optInt("ok") + "   ✗ " + c.optInt("fail") + "   · " + c.optInt("info");

@@ -143,6 +143,12 @@
     <string name="shift_end">Termina il turno</string>
     <string name="shift_approve">Approva</string>
     <string name="shift_deny">Nega</string>
+    <string name="live_replay">Replay della notte</string>
+    <string name="live_empty">Nessun agente in onda: compaiono con tv_live_update, una notifica o una domanda.</string>
+    <string name="live_waits">aspetta te</string>
+    <string name="live_on_air">in onda da %1$d min</string>
+    <string name="live_answer">rispondi</string>
+    <string name="live_end">Fine della registrazione</string>
     <string name="web_settings_row">Impostazioni web</string>
     <string name="web_settings_open">Apri le impostazioni web</string>
     <string name="web_settings_hint">Inquadralo con un telefono sulla stessa rete, o scrivi l\'indirizzo su un computer. Poi approva quel browser sulla TV.</string>
