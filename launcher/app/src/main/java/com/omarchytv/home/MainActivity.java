@@ -4100,6 +4100,16 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> openCompanionChat(false));
             return false;
         });
+        // v2.22 #161: the agent skill as a QR, for a phone or an agent; "this TV" adds the TV's address, never a token
+        p.add(str(R.string.skill_qr_label), "QR ›", r -> {
+            handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.skill_qr_label), SkillQr.url(this), str(R.string.skill_qr_hint), false)));
+            return false;
+        });
+        p.add(str(R.string.skill_qr_label) + " · " + str(R.string.skill_qr_this_tv), "QR ›", r -> {
+            String u = SkillQr.thisTv(SkillQr.url(this), OmarchyLink.lanIp(), com.omarchytv.home.link.LinkServer.PORT);
+            handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.skill_qr_label), u, str(R.string.skill_qr_hint), false)));
+            return false;
+        });
         // v2.20: GrokBot Office, off by default. On adds its tile to the TV's app row, the Walker and the "office" key.
         p.add(str(R.string.office_setting), str(OfficeActivity.enabled(this) ? R.string.on : R.string.off), r -> {
             boolean n = !OfficeActivity.enabled(this);

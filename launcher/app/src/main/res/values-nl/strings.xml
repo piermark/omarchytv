@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: stel URL en token in via Instellingen › Ambilight &amp; lampen</string>
     <string name="ha_confirm">%1$s uitvoeren?</string>
     <string name="radio_stations">Zenders</string>
+    <string name="skill_qr_hint">Open hem op je telefoon of geef de link aan je agent: die installeert de plugin en koppelt met de code op dit scherm. Geen wachtwoord of token in de code.</string>
+    <string name="skill_qr_this_tv">deze tv</string>
     <string name="ai_stale">verouderd %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">geen resultaat</string>

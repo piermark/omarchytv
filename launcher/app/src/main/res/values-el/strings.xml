@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: ορίστε URL και token στις Ρυθμίσεις › Ambilight και φώτα</string>
     <string name="ha_confirm">Εκτέλεση %1$s;</string>
     <string name="radio_stations">Σταθμοί</string>
+    <string name="skill_qr_hint">Ανοίξτε το στο κινητό ή δώστε τον σύνδεσμο στον πράκτορά σας: εγκαθιστά το πρόσθετο και συνδέεται με τον κωδικό αυτής της οθόνης. Χωρίς κωδικό πρόσβασης ή token.</string>
+    <string name="skill_qr_this_tv">αυτή η TV</string>
     <string name="ai_stale">παλιό %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">κανένα αποτέλεσμα</string>

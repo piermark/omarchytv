@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: URL ve token\'ı Ayarlar › Ambilight ve ışıklar\'dan girin</string>
     <string name="ha_confirm">%1$s çalıştırılsın mı?</string>
     <string name="radio_stations">İstasyonlar</string>
+    <string name="skill_qr_hint">Telefonunda aç ya da bağlantıyı ajanına ver: eklentiyi kurar ve bu ekrandaki kodla eşleşir. Kodda parola ya da token yok.</string>
+    <string name="skill_qr_this_tv">bu TV</string>
     <string name="ai_stale">eski %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">eşleşme yok</string>

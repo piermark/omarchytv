@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: add meg az URL-t és a tokent a Beállítások › Ambilight és fények alatt</string>
     <string name="ha_confirm">Futtatod: %1$s?</string>
     <string name="radio_stations">Állomások</string>
+    <string name="skill_qr_hint">Nyisd meg a telefonon, vagy add a linket az ügynöködnek: telepíti a bővítményt, és a képernyőn lévő kóddal párosít. A kódban nincs jelszó vagy token.</string>
+    <string name="skill_qr_this_tv">ez a TV</string>
     <string name="ai_stale">elavult %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">nincs találat</string>

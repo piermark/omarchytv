@@ -1463,6 +1463,17 @@ public final class OmarchyLink implements LinkServer.Host {
             case "cinemarchy": c = CinemarchyActivity.class; break;
             case "arcade": c = ArcadeActivity.class; break;
             case "office": c = OfficeActivity.class; break;
+            case "skill":   // v2.22 #161: the public skill page as a QR (no address, no token)
+                main.post(() -> {
+                    try {
+                        app.startActivity(QrActivity.intent(app, app.getString(R.string.skill_qr_label), SkillQr.url(app),
+                                app.getString(R.string.skill_qr_hint), false));
+                    } catch (RuntimeException e) {
+                        Log.w(TAG, "open skill: " + e);
+                    }
+                });
+                log("open skill");
+                return null;
             default: return "no_such_target";
         }
         Class<?> fc = c;

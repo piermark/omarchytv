@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant：请在 设置 › Ambilight 和灯光 中填写 URL 和令牌</string>
     <string name="ha_confirm">运行 %1$s？</string>
     <string name="radio_stations">电台</string>
+    <string name="skill_qr_hint">在手机上打开，或把链接交给你的智能体：它会安装插件并用此屏幕上的代码配对。二维码中不含密码或令牌。</string>
+    <string name="skill_qr_this_tv">这台电视</string>
     <string name="ai_stale">已过时 %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">无匹配结果</string>

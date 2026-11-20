@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: angi URL og token i Innstillinger › Ambilight og lys</string>
     <string name="ha_confirm">Kjør %1$s?</string>
     <string name="radio_stations">Stasjoner</string>
+    <string name="skill_qr_hint">Åpne den på telefonen eller gi lenken til agenten din: den installerer programtillegget og parer med koden på denne skjermen. Ingen passord eller token i koden.</string>
+    <string name="skill_qr_this_tv">denne TV-en</string>
     <string name="ai_stale">utdatert %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen treff</string>

@@ -30,6 +30,10 @@
   the bar; https://, http:// only on the LAN unless Settings allows it. `/v1/radio` gains `station`, `volume`,
   `sleep`; `/v1/radio/stations`; MCP `tv_radio_stations`, `tv_radio_station_add`, `tv_radio_station_remove`,
   `tv_radio_sleep`. `PUT /v1/plugins` from an older PC no longer drops switches it does not know. Android TV.
+- **The agent skill from the TV** (#161): Settings › Grok Bot & AI › Get the agent skill shows the skills page as a
+  QR, pinned to the installed version; "this TV" adds the TV's LAN address in the fragment (`#tv=…`, not sent to
+  GitHub), never a token. `tv_skill_qr` and `tv_open` `skill`; `tools/skills-tarball.sh` packs the skills for a
+  release. The `skill` preset of the `qr` widget shows the same page.
 - **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
   extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
   terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from

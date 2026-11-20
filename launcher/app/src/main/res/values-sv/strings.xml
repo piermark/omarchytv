@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: ange URL och token i Inställningar › Ambilight och lampor</string>
     <string name="ha_confirm">Kör %1$s?</string>
     <string name="radio_stations">Kanaler</string>
+    <string name="skill_qr_hint">Öppna den i mobilen eller ge länken till din agent: den installerar pluginet och parkopplar med koden på den här skärmen. Inget lösenord eller token i koden.</string>
+    <string name="skill_qr_this_tv">den här tv:n</string>
     <string name="ai_stale">gammal %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen träff</string>

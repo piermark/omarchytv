@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: اضبط العنوان والرمز في الإعدادات › Ambilight والأضواء</string>
     <string name="ha_confirm">تشغيل %1$s؟</string>
     <string name="radio_stations">المحطات</string>
+    <string name="skill_qr_hint">افتحه على هاتفك أو أعطِ الرابط لوكيلك: يثبّت الإضافة ويقترن بالرمز الظاهر على هذه الشاشة. لا كلمة مرور ولا رمز وصول في الرمز.</string>
+    <string name="skill_qr_this_tv">هذا التلفاز</string>
     <string name="ai_stale">قديم %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">لا توجد نتائج</string>

@@ -34,6 +34,7 @@ TOOL_SCOPE = {
     # v2.22 #162 the radio's stations and sleep timer
     "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
     "tv_radio_sleep": "control",
+    "tv_skill_qr": "control",   # v2.22 #161
 }
 
 # v2.21 tools this PC answers itself (they push to the TV with the link it already has)

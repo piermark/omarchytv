@@ -19,7 +19,12 @@ mkdir -p ~/.hermes/skills
 cp -r skills/omarchytv-setup docs/examples/hermes-skill/omarchytv ~/.hermes/skills/
 ```
 
-Any other agent: point it at the `SKILL.md` file, or paste it into its instructions. Then ask it to
+Any other agent: point it at the `SKILL.md` file, or paste it into its instructions.
+
+**From the TV:** Settings › Grok Bot & AI › **Get the agent skill** shows this page as a QR (pinned to the installed
+version). The **this TV** variant adds the TV's LAN address after `#tv=`; the fragment is not sent to GitHub, and
+there is never a token or a code in it. An agent can also show it with the `tv_skill_qr` MCP tool.
+`tools/skills-tarball.sh` packs both skills into one archive for a release. Then ask it to
 "set up OmarchyTV".
 
 The setup skill never invents a pairing code, uses the smallest token scope unless you ask for more, never exposes

@@ -228,6 +228,8 @@ class TestMcpV221(unittest.TestCase):
         self.assertEqual(len(sent), n)
         call("tv_radio_sleep", {"minutes": 30})
         self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "sleep", "minutes": 30}))
+        call("tv_skill_qr", {})   # v2.22 #161
+        self.assertEqual(sent[-1], ("POST", "/v1/open", {"target": "skill"}))
 
     def test_max_level_caps_tv_notify(self):   # v2.22: the owner's rule, not the model's
         tv = FakeTvClient()

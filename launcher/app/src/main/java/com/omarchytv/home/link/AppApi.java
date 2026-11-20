@@ -250,7 +250,7 @@ final class AppApi {
             if (!who.can("control")) return forbidden("control");
             String e = host.openTarget(body.optString("target", ""));
             return e == null ? new LinkServer.Response(200, LinkServer.ok().put("target", body.optString("target")))
-                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office"));
+                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office, skill"));
         }
         if ("GET".equals(m) && "/v1/pages".equals(p)) return who.can("read") ? new LinkServer.Response(200, new JSONObject().put("pages", pages())) : forbidden("read");
         Matcher pm = PAGE_PATH.matcher(p);

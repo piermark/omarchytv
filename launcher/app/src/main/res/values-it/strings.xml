@@ -131,6 +131,8 @@
     <string name="ha_not_set">Home Assistant: imposta URL e token in Impostazioni › Ambilight e luci</string>
     <string name="ha_confirm">Eseguire %1$s?</string>
     <string name="radio_stations">Stazioni</string>
+    <string name="skill_qr_hint">Aprilo sul telefono o passa il link al tuo agente: installa il plugin e si abbina con il codice su questo schermo. Nessuna password o token nel codice.</string>
+    <string name="skill_qr_this_tv">questa TV</string>
     <string name="ai_stale">vecchio di %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">nessun risultato</string>

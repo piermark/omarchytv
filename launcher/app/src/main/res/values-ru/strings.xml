@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: укажите URL и токен в Настройки › Ambilight и свет</string>
     <string name="ha_confirm">Запустить %1$s?</string>
     <string name="radio_stations">Станции</string>
+    <string name="skill_qr_hint">Откройте на телефоне или передайте ссылку агенту: он установит плагин и выполнит сопряжение по коду на этом экране. В коде нет пароля или токена.</string>
+    <string name="skill_qr_this_tv">этот телевизор</string>
     <string name="ai_stale">устарело %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">нет совпадений</string>

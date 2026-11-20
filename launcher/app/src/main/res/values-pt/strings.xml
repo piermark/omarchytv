@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: defina o URL e o token em Definições › Ambilight e luzes</string>
     <string name="ha_confirm">Executar %1$s?</string>
     <string name="radio_stations">Estações</string>
+    <string name="skill_qr_hint">Abra no telemóvel ou dê o link ao seu agente: instala o plugin e emparelha com o código deste ecrã. Sem palavra-passe nem token no código.</string>
+    <string name="skill_qr_this_tv">esta TV</string>
     <string name="ai_stale">antigo %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">sem resultados</string>

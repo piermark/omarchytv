@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant : saisissez son URL et son jeton dans Réglages › Ambilight et lumières</string>
     <string name="ha_confirm">Lancer %1$s ?</string>
     <string name="radio_stations">Stations</string>
+    <string name="skill_qr_hint">Ouvrez-le sur votre téléphone ou donnez le lien à votre agent : il installe le plugin et s’appaire avec le code affiché ici. Aucun mot de passe ni jeton dans le code.</string>
+    <string name="skill_qr_this_tv">cette TV</string>
     <string name="ai_stale">ancien %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">aucun résultat</string>

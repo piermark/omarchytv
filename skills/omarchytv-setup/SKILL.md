@@ -67,7 +67,9 @@ omarchy-link status
 ```
 
 The code never crosses the network (SPAKE2). If `discover` finds nothing, ask for the address shown on the TV and
-pass it to `pair`.
+pass it to `pair`. If the owner gave you this skill from the QR on the TV (Settings › Grok Bot & AI › Get the agent
+skill · this TV), the link ends with `#tv=192.168.1.40:47800`: that is the TV's address. It is never a code or a
+token; still ask the owner for the 6-digit code.
 
 ## 4. Turn on agent messages (on the TV)
 

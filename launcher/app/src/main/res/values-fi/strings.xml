@@ -132,6 +132,8 @@
     <string name="ha_not_set">Home Assistant: aseta URL ja tunnus kohdassa Asetukset › Ambilight ja valot</string>
     <string name="ha_confirm">Suoritetaanko %1$s?</string>
     <string name="radio_stations">Asemat</string>
+    <string name="skill_qr_hint">Avaa se puhelimella tai anna linkki agentillesi: se asentaa laajennuksen ja muodostaa pariliitoksen tämän näytön koodilla. Koodissa ei ole salasanaa eikä tunnusta.</string>
+    <string name="skill_qr_this_tv">tämä TV</string>
     <string name="ai_stale">vanhentunut %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ei osumia</string>

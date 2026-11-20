@@ -187,10 +187,15 @@ ALLOWED_TOOLS = (
                      "required": ["minutes"]}},
     {
         "name": "tv_open",
-        "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
-        "inputSchema": {"type": "object", "properties": {"target": {"type": "string", "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office"]}},
+        "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office or skill "
+                       "(the agent skill as a QR).",
+        "inputSchema": {"type": "object", "properties": {"target": {"type": "string",
+                                                                    "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office", "skill"]}},
                         "required": ["target"]},
     },
+    {"name": "tv_skill_qr", "description": "Show the OmarchyTV agent skill as a QR on the TV, for the owner's phone or "
+                                          "another agent. Only the public URL.",
+     "inputSchema": {"type": "object", "properties": {}}},
     {
         "name": "tv_list_pages",
         "description": "The agent pages published as tiles on the TV's Home.",
@@ -300,7 +305,7 @@ TOOL_SCOPE = {
     "tv_status": "read", "tv_list_themes": "read", "tv_list_apps": "read", "tv_get_theme": "read", "tv_get_state": "read",
     "tv_radio_now": "read", "tv_radio": "control", "tv_open": "control",
     "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
-    "tv_radio_sleep": "control",
+    "tv_radio_sleep": "control", "tv_skill_qr": "control",
     "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
@@ -525,6 +530,8 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         return c.request("DELETE", f"/v1/radio/stations/{sid}")
     if name == "tv_radio_sleep":
         return c.request("POST", "/v1/radio", {"action": "sleep", "minutes": int(args.get("minutes", 0))})
+    if name == "tv_skill_qr":
+        return c.request("POST", "/v1/open", {"target": "skill"})
     if name == "tv_open":
         return c.request("POST", "/v1/open", {"target": str(args.get("target", ""))})
     if name == "tv_diagnostics":

@@ -131,6 +131,8 @@
     <string name="ha_not_set">Home Assistant: URL und Token unter Einstellungen › Ambilight &amp; Licht eintragen</string>
     <string name="ha_confirm">%1$s ausführen?</string>
     <string name="radio_stations">Sender</string>
+    <string name="skill_qr_hint">Öffne ihn auf dem Handy oder gib den Link deinem Agenten: er installiert das Plugin und koppelt mit dem Code auf diesem Bildschirm. Kein Passwort oder Token im Code.</string>
+    <string name="skill_qr_this_tv">dieser Fernseher</string>
     <string name="ai_stale">veraltet %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">kein Treffer</string>

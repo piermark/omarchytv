@@ -1528,9 +1528,10 @@ public final class LinkServer {
                         isError = rr.status != 200;
                         break;
                     }
+                    case "tv_skill_qr":
                     case "tv_open": {
-                        String e = host.openTarget(args.optString("target", ""));
-                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office");
+                        String e = host.openTarget("tv_skill_qr".equals(name) ? "skill" : args.optString("target", ""));
+                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office, skill");
                         isError = e != null;
                         break;
                     }
@@ -1598,8 +1599,10 @@ public final class LinkServer {
                         .put("logo", prop("string", "https:// image (optional)")), "control"});
         t.add(new Object[]{"tv_radio_station_remove", "Remove a radio station (not Omarchy Radio).", new JSONObject().put("id", prop("string", "Station id")), "control"});
         t.add(new Object[]{"tv_radio_sleep", "Stop the radio after some minutes (0 turns the timer off).", new JSONObject().put("minutes", prop("integer", "0-240")), "control"});
-        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
-                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office")), "control"});
+        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office or skill (the agent skill as a QR).",
+                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office | skill")), "control"});
+        t.add(new Object[]{"tv_skill_qr", "Show the OmarchyTV agent skill as a QR on the TV, for the owner's phone or another agent. Only the public URL.",
+                new JSONObject(), "control"});
         t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
                 new JSONObject().put("name", prop("string", "Theme slug (e.g. tokyo-night, jade-horse, hermarchy)")), "control"});
         t.add(new Object[]{"tv_send_key", "Send a remote key to the TV (home, back, up, down, left, right, select, play_pause, volume_up, volume_down, mute).",
