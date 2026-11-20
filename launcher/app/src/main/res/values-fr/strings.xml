@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Scène de Pulse</string>
     <string name="ss_restore_previous">Économiseur précédent</string>
     <string name="agent_alert_row">Alertes des agents IA pendant que tu regardes</string>
+    <string name="agent_alert_min_row">Messages des agents affichés</string>
+    <string name="agent_alert_min_all">tous</string>
+    <string name="agent_alert_min_warn">avertissements et alertes</string>
+    <string name="agent_alert_min_alert">alertes seulement</string>
+    <string name="agent_alert_sound_row">Sons et voix des messages des agents</string>
     <string name="agent_alert" formatted="true">● %1$s a besoin de toi : %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Titres</string>

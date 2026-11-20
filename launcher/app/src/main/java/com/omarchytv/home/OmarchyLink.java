@@ -1177,7 +1177,9 @@ public final class OmarchyLink implements LinkServer.Host {
     /** v2.21 POST /v1/notify, MCP tv_notify: only with agent alerts on; "info" waits while an app is on screen. */
     @Override
     public String notify(String from, String title, String text, String level) {
-        if (!LauncherConfig.get(app).agentAlert) return null;
+        LauncherConfig cfg = LauncherConfig.get(app);
+        if (!cfg.agentAlert) return null;
+        if (LauncherConfig.belowAgentMin(cfg.agentAlertMin, level)) return "filtered";   // v2.22, set with the remote
         String body = title.isEmpty() ? text : text.isEmpty() ? title : title + " · " + text;
         String msg = app.getString(R.string.agent_note, from, body);
         try {

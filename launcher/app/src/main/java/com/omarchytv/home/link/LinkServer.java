@@ -135,7 +135,8 @@ public final class LinkServer {
         /**
          * v2.21 POST /v1/notify and the MCP tv_notify tool: a short message from an agent or a script.
          * Level "info" waits while an app (a film, a match) is on screen and shows when Home comes back; "warn" and
-         * "alert" show at once. Returns "shown", "deferred", or null when the owner did not allow it ("agentAlert").
+         * "alert" show at once. Returns "shown", "deferred", "filtered" (v2.22: below the level picked on the TV), or null
+         * when the owner did not allow it ("agentAlert").
          */
         default String notify(String from, String title, String text, String level) {
             return null;
@@ -1915,6 +1916,10 @@ public final class LinkServer {
         if (from.isEmpty()) from = "PC";
         String r = host.notify(from, title, text, level);
         if (r == null) return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Grok Bot & AI > AI agent alerts while you watch)"));
+        if ("filtered".equals(r)) {   // v2.22: below the level picked on the TV; not an error for the sender
+            host.log("notify from " + from + " (" + level + ", filtered)");
+            return new Response(200, ok().put("shown", false).put("deferred", false).put("filtered", true));
+        }
         if (b.optBoolean("speak") && "shown".equals(r)) host.speak(title.isEmpty() ? text : title + ". " + text);
         host.log("notify from " + from + " (" + level + ", " + r + ")");
         app.event("notify", new JSONObject().put("from", from).put("title", title).put("text", text).put("level", level));

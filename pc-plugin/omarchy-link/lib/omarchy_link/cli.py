@@ -250,6 +250,9 @@ def cmd_notify(a, cfg):
                                    "from": (a.source or "PC")[:40]}, timeout=4)
         if r.get("deferred") and not a.quiet:
             print("held: shown when the TV is back on Home (use --level warn to show it now)", file=sys.stderr)
+        if r.get("filtered") and not a.quiet:   # v2.22: below the level picked on the TV with the remote
+            print("filtered: the TV shows only higher levels (Settings > Grok Bot & AI > Which agent messages show)",
+                  file=sys.stderr)
         return 0
     except (link.LinkError, OSError, ValueError) as e:
         off = _alerts_off(e)

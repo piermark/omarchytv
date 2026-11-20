@@ -5,6 +5,10 @@
 - **`omarchy-link watch --only-fail`** (alias `--quiet-ok`): green runs stay off the TV, only failures show (as an
   alert, spoken with `--speak`). The exit code is passed through as before. The GitHub Actions example has a
   commented `if:` line that does the same for CI. Asked on X.
+- **Filter agent messages with the remote** (Android TV): Settings › Grok Bot & AI › *Which agent messages show*:
+  all, warnings and alerts, or alerts only, plus *Tones and voice for agent messages* on/off (until now only in the
+  config file). A message below the level is dropped and the sender gets `200 {"filtered": true}`, not an error;
+  `omarchy-link notify` prints a one-line hint. Strings in all 23 languages. Asked on X.
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 

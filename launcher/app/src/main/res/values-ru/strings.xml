@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Сцена Pulse</string>
     <string name="ss_restore_previous">Прежняя заставка</string>
     <string name="agent_alert_row">Оповещения ИИ-агентов во время просмотра</string>
+    <string name="agent_alert_min_row">Какие сообщения агентов</string>
+    <string name="agent_alert_min_all">все</string>
+    <string name="agent_alert_min_warn">предупреждения и тревоги</string>
+    <string name="agent_alert_min_alert">только тревоги</string>
+    <string name="agent_alert_sound_row">Звуки и голос для сообщений агентов</string>
     <string name="agent_alert" formatted="true">● %1$s ждёт тебя: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Песни</string>

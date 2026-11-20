@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Pulse-scen</string>
     <string name="ss_restore_previous">Föregående skärmsläckare</string>
     <string name="agent_alert_row">AI-agentaviseringar medan du tittar</string>
+    <string name="agent_alert_min_row">Vilka agentmeddelanden</string>
+    <string name="agent_alert_min_all">alla</string>
+    <string name="agent_alert_min_warn">varningar och larm</string>
+    <string name="agent_alert_min_alert">bara larm</string>
+    <string name="agent_alert_sound_row">Toner och röst för agentmeddelanden</string>
     <string name="agent_alert" formatted="true">● %1$s behöver dig: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Låtar</string>

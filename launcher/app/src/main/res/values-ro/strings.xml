@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Scena Pulse</string>
     <string name="ss_restore_previous">Protectorul de ecran anterior</string>
     <string name="agent_alert_row">Alerte de la agenții AI cât te uiți</string>
+    <string name="agent_alert_min_row">Ce mesaje ale agenților</string>
+    <string name="agent_alert_min_all">toate</string>
+    <string name="agent_alert_min_warn">avertismente și alarme</string>
+    <string name="agent_alert_min_alert">doar alarme</string>
+    <string name="agent_alert_sound_row">Sunete și voce pentru mesajele agenților</string>
     <string name="agent_alert" formatted="true">● %1$s are nevoie de tine: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Melodii</string>

@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Σκηνή Pulse</string>
     <string name="ss_restore_previous">Προηγούμενη προφύλαξη</string>
     <string name="agent_alert_row">Ειδοποιήσεις πρακτόρων AI ενώ βλέπεις</string>
+    <string name="agent_alert_min_row">Ποια μηνύματα πρακτόρων</string>
+    <string name="agent_alert_min_all">όλα</string>
+    <string name="agent_alert_min_warn">προειδοποιήσεις και συναγερμοί</string>
+    <string name="agent_alert_min_alert">μόνο συναγερμοί</string>
+    <string name="agent_alert_sound_row">Ήχοι και φωνή για μηνύματα πρακτόρων</string>
     <string name="agent_alert" formatted="true">● Το %1$s σε χρειάζεται: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Τραγούδια</string>

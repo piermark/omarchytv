@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Pulse 场景</string>
     <string name="ss_restore_previous">之前的屏保</string>
     <string name="agent_alert_row">观看时的 AI 代理提醒</string>
+    <string name="agent_alert_min_row">显示哪些代理消息</string>
+    <string name="agent_alert_min_all">全部</string>
+    <string name="agent_alert_min_warn">警告和警报</string>
+    <string name="agent_alert_min_alert">仅警报</string>
+    <string name="agent_alert_sound_row">代理消息的提示音和语音</string>
     <string name="agent_alert" formatted="true">● %1$s 需要你：%2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">歌曲</string>

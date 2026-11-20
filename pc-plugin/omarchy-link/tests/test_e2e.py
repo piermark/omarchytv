@@ -165,6 +165,16 @@ class E2E(unittest.TestCase):
         self.tv.update_config(lambda j: j.update(agentAlert=True))
         cli("notify", "build   done", "--from", "Claude Code")
         self.assertEqual(self.tv.notes[-1], ("Claude Code", "build done"))
+        # v2.22: the remote picked "alerts only": info is dropped (exit 0, a hint), an alert still shows
+        self.tv.update_config(lambda j: j.update(agentAlertMin="alert"))
+        n = len(self.tv.notes)
+        r = cli("notify", "green", "--from", "CI")
+        self.assertEqual((r.returncode, len(self.tv.notes)), (0, n))
+        self.assertIn("filtered", r.stderr)
+        self.assertEqual(cli("notify", "-q", "green").stderr, "")
+        cli("notify", "red", "--level", "alert", "--from", "CI")
+        self.assertEqual(self.tv.notes[-1], ("CI", "red"))
+        self.tv.update_config(lambda j: j.pop("agentAlertMin", None))
 
     def test_app_tokens_ask_page_and_logs(self):   # v2.21
         self.pair()

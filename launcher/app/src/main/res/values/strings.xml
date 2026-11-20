@@ -597,6 +597,11 @@
     <string name="ss_pulse_scene">Pulse scene</string>
     <string name="ss_restore_previous">Previous screensaver</string>
     <string name="agent_alert_row">AI agent alerts while you watch</string>
+    <string name="agent_alert_min_row">Which agent messages show</string>
+    <string name="agent_alert_min_all">all</string>
+    <string name="agent_alert_min_warn">warnings and alerts</string>
+    <string name="agent_alert_min_alert">alerts only</string>
+    <string name="agent_alert_sound_row">Tones and voice for agent messages</string>
     <string name="agent_alert" formatted="true">● %1$s needs you: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_hub" translatable="false">Radiomarchy (Omarchy Radio)</string>

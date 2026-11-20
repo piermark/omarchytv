@@ -560,8 +560,19 @@ final class LauncherConfig {
     final java.util.Map<String, Boolean> pulsePanels;
     /** v2.15: Home says once that Pulse is the new screensaver; "Previous screensaver" can undo the switch. */
     final boolean pulseNotice, hasSsBefore;
+    /** v2.22: true when a notification of this level is below agentAlertMin and the TV drops it. */
+    static boolean belowAgentMin(String min, String level) {
+        return levelRank(level) < levelRank(min);
+    }
+
+    private static int levelRank(String level) {
+        return "alert".equals(level) ? 2 : "warn".equals(level) ? 1 : 0;
+    }
+
     /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
     final boolean agentAlert;
+    /** v2.22 "agentAlertMin": the lowest notification level shown, "info" (all), "warn" or "alert"; set with the remote. */
+    final String agentAlertMin;
     final boolean screensaverClock;
     /** v2.13: procedural ST3 synth audio for Aquarium screensaver (default true). */
     final boolean saverSound;
@@ -876,6 +887,8 @@ final class LauncherConfig {
         String ps = ss != null ? ss.optString("pulseScene", "sphere") : "sphere";
         pulseNotice = j != null && j.optBoolean("pulseNotice", false);
         agentAlert = j != null && j.optBoolean("agentAlert", false);
+        String aam = j != null ? j.optString("agentAlertMin", "info") : "info";
+        agentAlertMin = "warn".equals(aam) || "alert".equals(aam) ? aam : "info";
         hasSsBefore = j != null && j.optJSONObject("ssBefore215") != null;
         pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith").contains(ps) ? ps : "sphere";
         String pg = ss != null ? ss.optString("pulseGraphics", "auto") : "auto";

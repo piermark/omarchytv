@@ -157,7 +157,7 @@ paths:
       responses:
         "200":
           description: Shown, or held until Home (level info while an app is on screen)
-          content: { application/json: { schema: { type: object, properties: { shown: { type: boolean }, deferred: { type: boolean } } } } }
+          content: { application/json: { schema: { type: object, properties: { shown: { type: boolean }, deferred: { type: boolean }, filtered: { type: boolean, description: "v2.22: below the level picked on the TV; dropped, not an error" } } } } }
         "403": { $ref: "#/components/responses/Error" }
         "429": { $ref: "#/components/responses/Error" }
   /v1/ask:

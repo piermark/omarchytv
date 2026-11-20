@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Pulse-näkymä</string>
     <string name="ss_restore_previous">Edellinen näytönsäästäjä</string>
     <string name="agent_alert_row">Tekoälyagenttien ilmoitukset katsellessa</string>
+    <string name="agent_alert_min_row">Näytettävät agenttiviestit</string>
+    <string name="agent_alert_min_all">kaikki</string>
+    <string name="agent_alert_min_warn">varoitukset ja hälytykset</string>
+    <string name="agent_alert_min_alert">vain hälytykset</string>
+    <string name="agent_alert_sound_row">Äänet ja puhe agenttiviesteille</string>
     <string name="agent_alert" formatted="true">● %1$s tarvitsee sinua: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Kappaleet</string>

@@ -542,6 +542,11 @@
     <string name="ss_pulse_scene">Scéna Pulse</string>
     <string name="ss_restore_previous">Předchozí spořič</string>
     <string name="agent_alert_row">Upozornění AI agentů při sledování</string>
+    <string name="agent_alert_min_row">Které zprávy agentů</string>
+    <string name="agent_alert_min_all">všechny</string>
+    <string name="agent_alert_min_warn">varování a poplachy</string>
+    <string name="agent_alert_min_alert">jen poplachy</string>
+    <string name="agent_alert_sound_row">Tóny a hlas zpráv agentů</string>
     <string name="agent_alert" formatted="true">● %1$s tě potřebuje: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Skladby</string>

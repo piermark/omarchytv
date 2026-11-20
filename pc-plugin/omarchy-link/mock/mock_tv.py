@@ -592,6 +592,9 @@ class Handler(BaseHTTPRequestHandler):
             return 400, {"error": "bad_notify"}
         if not self.tv.config().get("agentAlert"):
             return 403, {"error": "notify_off", "message": "turn on agent alerts on the TV"}
+        rank = {"info": 0, "warn": 1, "alert": 2}   # v2.22 agentAlertMin, picked with the remote
+        if rank.get(a.get("level", "info"), 0) < rank.get(self.tv.config().get("agentAlertMin", "info"), 0):
+            return 200, {"ok": True, "shown": False, "deferred": False, "filtered": True}
         self.tv.notes = getattr(self.tv, "notes", []) + [(str(a.get("from") or "PC")[:40], text)]
         held = a.get("level", "info") == "info" and getattr(self.tv, "watching", False)
         return 200, {"ok": True, "shown": not held, "deferred": held}

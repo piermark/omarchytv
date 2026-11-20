@@ -321,7 +321,7 @@ allow 30 requests per 10 s per token. A paired PC can do everything an app can, 
 |---|---|---|
 | `GET /v1/state` | read | `{screen: "home"\|"app"\|"screensaver"\|"off"\|"unknown", app: {package, label}\|null, theme, nowPlaying: {title, artist, source}\|null, launcherVersion, time}` |
 | `GET /v1/stream` | read | `text/event-stream`: `state` (on change, checked every 2 s), `theme` (every 5 s), `notify`, `ask_answer` (the asker's only), `: ping` every 20 s. At most 4 streams; each ends after 1 h. |
-| `POST /v1/notify` | notify | `{text \| body, title?, level?: info\|warn\|alert, speak?: bool, from?}` → `{ok, shown, deferred}`. *info* waits while an app is on screen (shown when Home comes back); an app's message carries the app's name as `from` |
+| `POST /v1/notify` | notify | `{text \| body, title?, level?: info\|warn\|alert, speak?: bool, from?}` → `{ok, shown, deferred, filtered?}`. *info* waits while an app is on screen (shown when Home comes back); `filtered` (2.22): below the level picked on the TV, dropped; an app's message carries the app's name as `from` |
 | `POST /v1/ask` | notify | `{question, choices?[≤4, ≤24 chars], timeout?: 10-300 (120), from?}` → `{id, state: "pending", choices, expires}` / `403 ask_off` (agent alerts off) / `429 busy` (4 waiting) |
 | `GET /v1/ask/<id>?wait=0-25` | notify | `{id, state: "pending"\|"answered"\|"expired", answer}`; waits up to `wait` s for the answer. Only the asker (or a PC). |
 | `POST /v1/page` | control | `{url}` or `{urls: [≤4]}`: `http://` to literal LAN / tailnet addresses, tiled when several → `{ok, url, urls}` / `400 not_lan_url`. `DELETE` closes. |

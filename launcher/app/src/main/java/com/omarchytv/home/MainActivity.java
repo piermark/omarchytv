@@ -4077,6 +4077,27 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("grok-bot", lAgentAlert, j -> j.put("agentAlert", n));
             return true;
         });
+        if (gc.agentAlert) {   // v2.22: which levels reach the screen, and whether they make a sound
+            String lMin = str(R.string.agent_alert_min_row);
+            int minLabel = "alert".equals(gc.agentAlertMin) ? R.string.agent_alert_min_alert
+                    : "warn".equals(gc.agentAlertMin) ? R.string.agent_alert_min_warn : R.string.agent_alert_min_all;
+            p.add(lMin, str(minLabel), r -> {
+                String n = "info".equals(gc.agentAlertMin) ? "warn" : "warn".equals(gc.agentAlertMin) ? "alert" : "info";
+                applyLive("grok-bot", lMin, j -> j.put("agentAlertMin", n));
+                return true;
+            });
+            String lSound = str(R.string.agent_alert_sound_row);
+            p.add(lSound, str(gc.notifySound ? R.string.on : R.string.off), r -> {
+                boolean n = !gc.notifySound;
+                applyLive("grok-bot", lSound, j -> {
+                    org.json.JSONObject l = j.optJSONObject("link");
+                    if (l == null) j.put("link", l = new org.json.JSONObject());
+                    if (n) l.remove("notifySound");
+                    else l.put("notifySound", false);
+                });
+                return true;
+            });
+        }
         String lOv = "Floating companion on the home screen";
         p.add(lOv, str(gc.companionOverlay ? R.string.on : R.string.off), r -> {
             boolean n = !gc.companionOverlay;

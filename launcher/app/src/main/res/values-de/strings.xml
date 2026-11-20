@@ -546,6 +546,11 @@
     <string name="ss_pulse_scene">Pulse-Szene</string>
     <string name="ss_restore_previous">Vorheriger Bildschirmschoner</string>
     <string name="agent_alert_row">KI-Agenten-Hinweise beim Fernsehen</string>
+    <string name="agent_alert_min_row">Welche Agent-Nachrichten</string>
+    <string name="agent_alert_min_all">alle</string>
+    <string name="agent_alert_min_warn">Warnungen und Alarme</string>
+    <string name="agent_alert_min_alert">nur Alarme</string>
+    <string name="agent_alert_sound_row">Töne und Stimme für Agent-Nachrichten</string>
     <string name="agent_alert" formatted="true">● %1$s braucht dich: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_songs">Songs</string>
