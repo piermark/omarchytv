@@ -111,6 +111,7 @@ final class HomeV29 extends FrameLayout {
     private final TextView termInfo, termLogo, termPrompt;
     // widgets
     private final LinearLayout widgets;
+    private final ScrollView rightScroll;
     private final BoxView wxBox, pcBox, macBox, depBox;
     private final LinearLayout statsColumn;
     private final ScrollView aiScroll;
@@ -122,7 +123,6 @@ final class HomeV29 extends FrameLayout {
     private final LinearLayout pcBody, macBody, aiBody, depBody;
     /** Up to 3 panes the TV fetches itself (RemotePanes), in their own row under the widgets. */
     private final LinearLayout remoteRow;
-    private final ScrollView remoteScroll;
     private final BoxView[] remoteBox = new BoxView[3];
     private final LinearLayout[] remoteBody = new LinearLayout[3];
     /** "barWeather": icon + temperature in the bar, left of the status icons. */
@@ -304,8 +304,27 @@ final class HomeV29 extends FrameLayout {
         // widgetsWidth(), which must agree, or the AI panel ends up past the right edge of the screen.
         LayoutParams wl = new LayoutParams(px(widgetsWidth(false)), -2, Gravity.END | Gravity.TOP);
         wl.rightMargin = px(32);
-        wl.topMargin = px(76);
-        addView(widgets, wl);
+        FrameLayout rightContent = new FrameLayout(a);
+        rightContent.setClipChildren(false);
+        rightContent.addView(widgets, wl);
+        rightScroll = new ScrollView(a) {
+            @Override protected void dispatchDraw(android.graphics.Canvas canvas) {
+                int saved = canvas.save();
+                canvas.clipRect(getScrollX(), getScrollY(), getScrollX() + getWidth(), getScrollY() + getHeight());
+                super.dispatchDraw(canvas);
+                canvas.restoreToCount(saved);
+            }
+        };
+        rightScroll.setClipChildren(true);
+        rightScroll.setClipToPadding(true);
+        rightScroll.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
+        rightScroll.setFocusable(false);
+        rightScroll.setContentDescription("home widgets");
+        rightScroll.setBackground(new Underline());
+        rightScroll.addView(rightContent, new ScrollView.LayoutParams(-1, -2));
+        LayoutParams rightLp = new LayoutParams(-1, -2, Gravity.TOP);
+        rightLp.topMargin = px(76);
+        addView(rightScroll, rightLp);
         LinearLayout r1 = hbox(), r2 = hbox();
         r1.setGravity(Gravity.TOP);
         // v2.10 "Disponi riquadri": panels are offset with translations, so their rows must not clip them.
@@ -419,18 +438,12 @@ final class HomeV29 extends FrameLayout {
         remoteRow.setGravity(Gravity.TOP);
         remoteRow.setBaselineAligned(false);
         remoteRow.setClipChildren(false);
-        remoteScroll = new ScrollView(a);
-        remoteScroll.setFocusable(false);
-        remoteScroll.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
-        remoteScroll.setContentDescription("remote panes");
-        remoteScroll.setBackground(new Underline());
-        remoteScroll.addView(remoteRow, new ScrollView.LayoutParams(-1, -2));
         LinearLayout.LayoutParams r3l = new LinearLayout.LayoutParams(-1, -2);
         r3l.topMargin = px(16);
-        widgets.addView(remoteScroll, r3l);
-        remoteScroll.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
-            if (top != ot || bottom != ob) post(() -> {
-                positionRemoteWidgets();
+        widgets.addView(remoteRow, r3l);
+        widgets.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
+            if (bottom - top != ob - ot) post(() -> {
+                positionRightWidgets();
                 if (cfg != null && editPanel == null) applyPanelPos(cfg);
             });
         });
@@ -440,14 +453,14 @@ final class HomeV29 extends FrameLayout {
             remoteBody[i] = vbox();
             remoteBox[i].addView(remoteBody[i], new LinearLayout.LayoutParams(-1, -2));
         }
-        remoteScroll.setVisibility(GONE);
+        remoteRow.setVisibility(GONE);
         wxBox.setOnClickListener(host::weatherMenu);
         ai.setOnClickListener(host::aiMenu);
 
         // ---- 3.4 app window: margins 32, padding 20×28 ----
         appWin = new BoxView(a, s, tf);
         appWin.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
-            if (top != ot) post(() -> { positionLeftWidgets(); positionRemoteWidgets(); });
+            if (top != ot) post(() -> { positionLeftWidgets(); positionRightWidgets(); });
         });
         LayoutParams al = new LayoutParams(-1, -2, Gravity.BOTTOM);
         al.leftMargin = al.rightMargin = al.bottomMargin = px(32);
@@ -873,16 +886,23 @@ final class HomeV29 extends FrameLayout {
 
     private void positionLeftWidgets() {
         if (cfg == null) return;
+        int termTop = Math.round(term.getTop() + term.getTranslationY());
         int top = term.isShown() && term.getBottom() > 0
                 ? Math.round(term.getBottom() + term.getTranslationY()) + px(16) : px(76);
         int left = term.isShown() ? Math.round(term.getLeft() + term.getTranslationX()) : px(32);
         left = Math.max(0, Math.min(Math.max(0, getWidth() - px(640)), left));
+        int dockTop = Math.round(appWin.getTop() + appWin.getTranslationY());
+        int padding = aiBoxRef.getPaddingTop() + aiBoxRef.getPaddingBottom();
+        boolean above = term.isShown() && appWin.getTop() > 0
+                && dockTop - px(16) - top < padding + px(30);
+        if (above) top = Math.max(barHeight() + px(16), termTop - px(16) - padding - aiContentHeight());
         LayoutParams lp = (LayoutParams) aiBoxRef.getLayoutParams();
         if (lp.topMargin != top || lp.leftMargin != left) {
             lp.topMargin = top; lp.leftMargin = left; aiBoxRef.setLayoutParams(lp);
         }
         if (appWin.getTop() <= 0) return;
-        int available = Math.max(0, Math.round(appWin.getTop() + appWin.getTranslationY()) - px(16) - top
+        int bottom = above ? termTop : dockTop;
+        int available = Math.max(0, bottom - px(16) - top
                 - Math.round(aiBoxRef.getTranslationY())
                 - aiBoxRef.getPaddingTop() - aiBoxRef.getPaddingBottom());
         int height = aiContentHeight() > available ? available : -2;
@@ -897,18 +917,15 @@ final class HomeV29 extends FrameLayout {
         return aiBody.getMeasuredHeight();
     }
 
-    private void positionRemoteWidgets() {
-        if (cfg == null || !remoteScroll.isShown() || appWin.getTop() <= 0 || widgets.getWidth() <= 0) return;
-        int available = Math.max(0, Math.round(appWin.getTop() + appWin.getTranslationY()
-                - rectAt(remoteScroll, 0, 0).top) - px(16));
-        remoteRow.measure(MeasureSpec.makeMeasureSpec(widgets.getWidth(), MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-        boolean overflow = remoteRow.getMeasuredHeight() > available;
-        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) remoteScroll.getLayoutParams();
+    private void positionRightWidgets() {
+        if (cfg == null || !rightScroll.isShown() || appWin.getTop() <= 0 || widgets.getWidth() <= 0) return;
+        int available = Math.max(0, Math.round(appWin.getTop() + appWin.getTranslationY()) - rightScroll.getTop() - px(16));
+        boolean overflow = widgets.getHeight() > available;
+        LayoutParams lp = (LayoutParams) rightScroll.getLayoutParams();
         int height = overflow ? available : -2;
-        if (lp.height != height) { lp.height = height; remoteScroll.setLayoutParams(lp); }
-        if (!overflow && remoteScroll.hasFocus()) focusApp(lastApp);
-        remoteScroll.setFocusable(overflow && available > 0);
+        if (lp.height != height) { lp.height = height; rightScroll.setLayoutParams(lp); }
+        if (!overflow && rightScroll.isFocused()) focusApp(lastApp);
+        rightScroll.setFocusable(overflow && available > 0);
     }
 
     static boolean reservedPane(String id) {
@@ -1050,19 +1067,19 @@ final class HomeV29 extends FrameLayout {
                 remoteBody[i].addView(r, ll);
             }
         }
-        remoteScroll.setVisibility(shown > 0 ? VISIBLE : GONE);
+        remoteRow.setVisibility(shown > 0 ? VISIBLE : GONE);
         // With the widgets above switched off, the row moves up to the top (aligned with the fastfetch box).
         View row2 = (View) depBox.getParent();
         row2.setVisibility(depBox.getVisibility());
         boolean above = raceBox.getVisibility() == VISIBLE || wxBox.getVisibility() == VISIBLE || pcBox.getVisibility() == VISIBLE
                 || aiBoxRef.getVisibility() == VISIBLE || depBox.getVisibility() == VISIBLE;
-        LinearLayout.LayoutParams rl = (LinearLayout.LayoutParams) remoteScroll.getLayoutParams();
+        LinearLayout.LayoutParams rl = (LinearLayout.LayoutParams) remoteRow.getLayoutParams();
         int top = above ? px(16) : 0;
         if (rl.topMargin != top) {
             rl.topMargin = top;
-            remoteScroll.setLayoutParams(rl);
+            remoteRow.setLayoutParams(rl);
         }
-        post(this::positionRemoteWidgets);
+        post(this::positionRightWidgets);
     }
 
     /** v2.21 the PC's pushed panes as the same JSON shape as fetched ones (id, title, ttl, at, lines[label,value]). */
@@ -1601,7 +1618,7 @@ final class HomeV29 extends FrameLayout {
         boolean home = n == 1;
         term.setVisibility(home && (cfg == null || cfg.wTerm) ? VISIBLE : GONE);
         aiBoxRef.setVisibility(home && cfg != null && cfg.wAi ? VISIBLE : GONE);
-        widgets.setVisibility(home ? VISIBLE : GONE);
+        rightScroll.setVisibility(home ? VISIBLE : GONE);
         appWin.setVisibility(home ? VISIBLE : GONE);
         grokbotBox.setVisibility(home && cfg != null && cfg.wGrokbot && CompanionPlacement.homeTile(cfg.pluginGrokbot, cfg.companionOverlay) ? VISIBLE : GONE);
         tvWin.setVisibility(n == 2 ? VISIBLE : GONE);
@@ -1613,7 +1630,7 @@ final class HomeV29 extends FrameLayout {
         if (prev != n) {
             boolean right = cfg != null ? cfg.positionOf(n) > cfg.positionOf(prev) : n > prev;
             float dx = (right ? 1 : -1) * px(80);
-            for (View v : new View[]{term, widgets, appWin, tvWin, appsWin, pcWin, sysWin}) {
+            for (View v : new View[]{term, rightScroll, appWin, tvWin, appsWin, pcWin, sysWin}) {
                 if (v.getVisibility() != VISIBLE) continue;
                 v.setTranslationX(dx);
                 v.setAlpha(0.4f);
@@ -1925,13 +1942,14 @@ final class HomeV29 extends FrameLayout {
         if (savedAi != null && aiBoxRef.isShown() && getWidth() > 0 && !fits(aiBoxRef, savedAi[0], savedAi[1]))
             setPanelTranslation(aiBoxRef, 0, 0);
         int[] saved = c.panelPos.get("pc");
-        if (saved != null && macBox.isShown() && getWidth() > 0 && !fits(pcBox, saved[0], saved[1])) {
+        if (saved != null && pcBox.isShown() && getWidth() > 0 && !fits(pcBox, saved[0], saved[1])) {
             int bx = saved[0], by = saved[1], distance = Integer.MAX_VALUE;
             for (int y = -GRID_Y; y <= GRID_Y; y++) for (int x = -GRID_X; x <= GRID_X; x++) {
                 int d = Math.abs(x - saved[0]) + Math.abs(y - saved[1]);
                 if (d < distance && fits(pcBox, x, y)) { bx = x; by = y; distance = d; }
             }
-            if (distance != Integer.MAX_VALUE) setPanelTranslation(pcBox, bx * cellW(), by * cellH());
+            setPanelTranslation(pcBox, distance != Integer.MAX_VALUE ? bx * cellW() : 0,
+                    distance != Integer.MAX_VALUE ? by * cellH() : 0);
         }
         positionLeftWidgets();
     }
@@ -1947,8 +1965,8 @@ final class HomeV29 extends FrameLayout {
         float x = v.getLeft() + tx, y = v.getTop() + ty;
         for (android.view.ViewParent p = v.getParent(); p instanceof View && p != this; p = p.getParent()) {
             View pv = (View) p;
-            x += pv.getLeft() + pv.getTranslationX();
-            y += pv.getTop() + pv.getTranslationY();
+            x += pv.getLeft() + pv.getTranslationX() - pv.getScrollX();
+            y += pv.getTop() + pv.getTranslationY() - pv.getScrollY();
         }
         android.graphics.RectF rect = new android.graphics.RectF(x, y, x + v.getWidth(), y + v.getHeight());
         if (v == pcBox && macBox.isShown()) rect.union(rectAt(macBox, tx, ty));
@@ -1962,7 +1980,7 @@ final class HomeV29 extends FrameLayout {
                 + aiContentHeight() + aiBoxRef.getPaddingBottom());
         if (r.left < 0 || r.right > getWidth() || r.top < barHeight() || r.bottom > getHeight()) return false;
         if (appWin.getVisibility() == VISIBLE && android.graphics.RectF.intersects(r, rectAt(appWin, appWin.getTranslationX(), appWin.getTranslationY()))) return false;
-        if (remoteScroll.isShown() && android.graphics.RectF.intersects(r, rectAt(remoteScroll, 0, 0))) return false;
+        if (remoteRow.isShown() && android.graphics.RectF.intersects(r, rectAt(remoteRow, 0, 0))) return false;
         for (String id : PANEL_IDS) {
             View o = panelView(id);
             if (o == v || o.getVisibility() != VISIBLE) continue;
@@ -2116,7 +2134,7 @@ final class HomeV29 extends FrameLayout {
     private int zone(View f) {
         for (View v = f; v != null; v = v.getParent() instanceof View ? (View) v.getParent() : null) {
             if (v == bar) return 0;
-            if (v == widgets || v == aiBoxRef) return 1;
+            if (v == rightScroll || v == aiBoxRef) return 1;
             if (v == row) return 2;
             if (v == grid) return 3;
             if (v == tvWin || v == pcWin || v == sysWin) return 4;
@@ -2229,10 +2247,10 @@ final class HomeV29 extends FrameLayout {
                     aiScroll.scrollBy(0, -Math.max(px(30), aiScroll.getHeight() / 2));
                     return true;
                 }
-                if (f == remoteScroll) {
-                    if (remoteScroll.canScrollVertically(-1))
-                        remoteScroll.scrollBy(0, -Math.max(px(30), remoteScroll.getHeight() / 2));
-                    else if (!focusFirstVisible(widgets) || act.getCurrentFocus() == remoteScroll) activeWsButton().requestFocus();
+                if (f == rightScroll) {
+                    if (rightScroll.canScrollVertically(-1))
+                        rightScroll.scrollBy(0, -Math.max(px(30), rightScroll.getHeight() / 2));
+                    else if (!focusFirstVisible(widgets) || act.getCurrentFocus() == rightScroll) activeWsButton().requestFocus();
                     return true;
                 }
                 if (z == 2) {
@@ -2244,13 +2262,13 @@ final class HomeV29 extends FrameLayout {
                     aiScroll.scrollBy(0, Math.max(px(30), aiScroll.getHeight() / 2));
                     return true;
                 }
-                if (f == remoteScroll && remoteScroll.canScrollVertically(1)) {
-                    remoteScroll.scrollBy(0, Math.max(px(30), remoteScroll.getHeight() / 2));
+                if (f == rightScroll && rightScroll.canScrollVertically(1)) {
+                    rightScroll.scrollBy(0, Math.max(px(30), rightScroll.getHeight() / 2));
                     return true;
                 }
                 if (z == 1) {
-                    if (f != remoteScroll && remoteScroll.isShown() && remoteScroll.isFocusable()
-                            && remoteScroll.requestFocus()) return true;
+                    if (f != rightScroll && rightScroll.isShown() && rightScroll.isFocusable()
+                            && rightScroll.requestFocus()) return true;
                     if (f.getParent() == ((ViewGroup) widgets.getChildAt(0)) && depBox.getVisibility() == VISIBLE && f == aiBoxRef) depBox.requestFocus();
                     else focusApp(lastApp);
                     return true;
@@ -2275,7 +2293,7 @@ final class HomeV29 extends FrameLayout {
     }
 
     private boolean focusFirstVisible(ViewGroup g) {
-        for (View v : new View[]{raceBox, wxBox, aiBoxRef, pcBox, depBox, remoteScroll})
+        for (View v : new View[]{raceBox, wxBox, aiBoxRef, pcBox, depBox, rightScroll})
             if (v.isShown() && v.isFocusable() && v.requestFocus()) return true;
         return false;
     }
