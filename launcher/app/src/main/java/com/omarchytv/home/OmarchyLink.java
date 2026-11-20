@@ -286,6 +286,56 @@ public final class OmarchyLink implements LinkServer.Host {
         return r != null && r.live() && r.server.answerAsk(id, choice);
     }
 
+    // ---- v2.22 skills: the catalogue in assets/skills (checked once), the install question on the TV ----
+    private static java.util.Map<String, JSONObject> catalog;
+
+    static synchronized java.util.Map<String, JSONObject> catalog(Context c) {
+        if (catalog != null) return catalog;
+        java.util.Map<String, JSONObject> m = new java.util.TreeMap<>();
+        try {
+            String[] names = c.getAssets().list("skills");
+            for (String n : names == null ? new String[0] : names) {
+                if (!n.endsWith(".json")) continue;
+                try (java.io.InputStream in = c.getAssets().open("skills/" + n)) {
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    for (int k; (k = in.read(buf)) > 0; ) bo.write(buf, 0, k);
+                    JSONObject sk = com.omarchytv.home.link.Skills.check(new JSONObject(bo.toString("UTF-8")));
+                    m.put(sk.getString("id"), sk);
+                } catch (Exception e) {
+                    Log.w(TAG, "skill " + n + ": " + e.getMessage());
+                }
+            }
+        } catch (java.io.IOException ignored) {
+        }
+        return catalog = m;
+    }
+
+    /** v2.22 a skill installed or removed on the TV: the config, then widgets_changed for the Home and the PCs. */
+    static void skillEdit(Context c, ShiftOp op) throws Exception {
+        LauncherConfig.updateOrThrow(c, j -> op.apply(j));
+        OmarchyLink r = runtime;
+        if (r != null && r.server != null) r.server.broadcast("widgets_changed", new JSONObject().put("op", "skill"));
+        if (r != null) r.emit("config", new JSONObject());
+    }
+
+    @Override
+    public java.util.Map<String, JSONObject> skillCatalog() {
+        return catalog(app);
+    }
+
+    @Override
+    public boolean askSkillInstall(String id) {
+        main.post(() -> {
+            try {
+                app.startActivity(SkillsActivity.intent(app, id));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "skill ask: " + e);
+            }
+        });
+        return true;
+    }
+
     /** v2.22 AI LIVE: OK on the agent on camera opens its question (with its preview). */
     static void showAsk(android.app.Activity a, String id) {
         OmarchyLink r = runtime;

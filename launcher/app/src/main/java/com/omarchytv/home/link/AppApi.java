@@ -134,6 +134,7 @@ final class AppApi {
                 || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")
                 || "/v1/shift".equals(p) || p.startsWith("/v1/shift/")   // v2.22 the night shift
                 || "/v1/live".equals(p)   // v2.22 AI LIVE
+                || "/v1/skills".equals(p) || p.startsWith("/v1/skills/")   // v2.22 skills
                 || p.startsWith("/v1/ha/")   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
                 || "/v1/settings".equals(p) || "/v1/settings/schema".equals(p);   // v2.22 #163
     }
@@ -215,6 +216,7 @@ final class AppApi {
         if (p.startsWith("/v1/ha/")) return haRoute(who, m, p, req.target, body);   // #160
         if ("/v1/shift".equals(p) || p.startsWith("/v1/shift/")) return shiftRoute(who, m, p, body);   // v2.22
         if ("/v1/live".equals(p)) return liveRoute(who, m, body);   // v2.22 AI LIVE
+        if ("/v1/skills".equals(p) || p.startsWith("/v1/skills/")) return skillsRoute(who, m, p);   // v2.22 skills
         if ("/v1/settings".equals(p) || "/v1/settings/schema".equals(p)) return settingsRoute(who, m, p, req.target, body);   // #163
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
@@ -826,6 +828,43 @@ final class AppApi {
             return new LinkServer.Response(st, LinkServer.err("ha_" + err, "Home Assistant"));
         }
         return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    // ---- v2.22 skills from the community: list, ask the owner to install, remove ----
+    static final java.util.regex.Pattern SKILL_PATH = java.util.regex.Pattern.compile("/v1/skills/([a-z0-9][a-z0-9-]{1,39})(/install)?");
+
+    LinkServer.Response skillsRoute(Principal who, String m, String p) throws Exception {
+        if ("GET".equals(m) && "/v1/skills".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            JSONArray cat = new JSONArray();
+            for (JSONObject sk : host.skillCatalog().values()) {
+                cat.put(new JSONObject().put("id", sk.optString("id")).put("name", sk.optString("name")).put("author", sk.optString("author"))
+                        .put("version", sk.optString("version")).put("description", sk.optString("description"))
+                        .put("permissions", sk.optJSONArray("permissions")));
+            }
+            JSONObject inst = host.config().optJSONObject("skills");
+            return new LinkServer.Response(200, new JSONObject().put("catalog", cat).put("installed", inst == null ? new JSONObject() : inst));
+        }
+        java.util.regex.Matcher sm = SKILL_PATH.matcher(p);
+        if (!sm.matches()) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        if (!who.can("control")) return forbidden("control");
+        String id = sm.group(1);
+        if ("POST".equals(m) && sm.group(2) != null) {   // the owner decides on the TV, with the permissions spelled out
+            if (!host.skillCatalog().containsKey(id)) return new LinkServer.Response(404, LinkServer.err("no_such_skill", id));
+            if (!host.askSkillInstall(id)) return new LinkServer.Response(409, LinkServer.err("no_screen", "the TV cannot show the question now"));
+            return new LinkServer.Response(200, LinkServer.ok().put("asked", true).put("message", "the owner answers on the TV; check GET /v1/skills"));
+        }
+        if ("DELETE".equals(m) && sm.group(2) == null) {
+            JSONObject[] out = new JSONObject[1];
+            try {
+                host.editConfig(j -> out[0] = Skills.remove(j, id));
+            } catch (HomeWidgets.Bad e) {
+                return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+            }
+            s.broadcast("widgets_changed", new JSONObject().put("op", "skill").put("id", id));
+            return new LinkServer.Response(200, LinkServer.ok().put("removed", id));
+        }
+        return new LinkServer.Response(405, LinkServer.err("bad_method", null));
     }
 
     // ---- v2.22 AI LIVE: what each agent does now, for the LIVE channel (LiveFeed, memory only) ----

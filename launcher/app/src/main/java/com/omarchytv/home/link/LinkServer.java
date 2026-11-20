@@ -60,6 +60,16 @@ public final class LinkServer {
 
     /** What the server needs from the launcher. Called on server threads; implementations must be thread-safe. */
     public interface Host {
+        /** v2.22 the skills catalogue shipped in the app (checked), id → skill.json. */
+        default java.util.Map<String, JSONObject> skillCatalog() {
+            return new java.util.LinkedHashMap<>();
+        }
+
+        /** v2.22 show the install question for a skill on the TV (the owner answers there); false without a screen. */
+        default boolean askSkillInstall(String id) {
+            return false;
+        }
+
         /** v2.22 the night shift changed (started, ended, log, queued): the TV refreshes its page, plans the wake-up. */
         default void shiftChanged(String what) {
         }
@@ -1489,6 +1499,16 @@ public final class LinkServer {
                         }
                         break;
                     }
+                    case "tv_skill_list":
+                    case "tv_skill_install":
+                    case "tv_skill_remove": {   // v2.22: the same code as /v1/skills
+                        String sid = args.optString("id", "");
+                        String sp = "tv_skill_list".equals(name) ? "/v1/skills" : "/v1/skills/" + sid + ("tv_skill_install".equals(name) ? "/install" : "");
+                        Response kr = app.skillsRoute(who, "tv_skill_list".equals(name) ? "GET" : "tv_skill_install".equals(name) ? "POST" : "DELETE", sp);
+                        out = new JSONObject(new String(kr.body, StandardCharsets.UTF_8));
+                        isError = kr.status != 200;
+                        break;
+                    }
                     case "tv_live_update":
                     case "tv_live": {   // v2.22 AI LIVE: the same code as /v1/live
                         Response lr = app.liveRoute(who, "tv_live".equals(name) ? "GET" : "POST", args);
@@ -1750,6 +1770,11 @@ public final class LinkServer {
         t.add(new Object[]{"tv_ha_run", "Run a Home Assistant scene, script or automation, or toggle a light, switch, fan or input_boolean.",
                 new JSONObject().put("entity_id", prop("string", "e.g. scene.movie")), "control"});
         t.add(new Object[]{"tv_page_show", "Bring a Home widget page to the screen (e.g. where an alert widget just landed).", new JSONObject().put("page", pref), "control"});
+        // v2.22 skills
+        t.add(new Object[]{"tv_skill_list", "The skills the TV can install (catalogue: id, name, author, permissions) and the installed ones with their instructions for you (\"agent\").", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_skill_install", "Ask the owner to install a skill: the TV shows it with its permissions and the owner answers with the remote. Check tv_skill_list afterwards.",
+                new JSONObject().put("id", prop("string", "A skill id from tv_skill_list")), "control"});
+        t.add(new Object[]{"tv_skill_remove", "Remove an installed skill with its widgets and its page.", new JSONObject().put("id", prop("string", "The skill id")), "control"});
         // v2.22 AI LIVE
         t.add(new Object[]{"tv_live_update", "Tell the TV's AI LIVE channel what you are doing now, like a live broadcast: a short line (≤120), a progress 0-100 and a preview of the work (an image URL, a diff, a text or a few numbers). The preview also shows on your next question, so the owner sees the work before approving it.",
                 new JSONObject().put("text", prop("string", "What you are doing now")).put("progress", prop("integer", "0-100, or -1"))

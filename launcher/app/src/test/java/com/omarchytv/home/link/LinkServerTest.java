@@ -1090,6 +1090,12 @@ public class LinkServerTest {
         }
         assertTrue(seen);
         assertEquals(400, app("POST", "/v1/ask", "{\"question\":\"push?\",\"preview\":{\"kind\":\"html\"}}", ntf).status);
+        // v2.22 skills: the list for everyone, installing only through the owner on the TV
+        assertEquals(200, app("GET", "/v1/skills", "", rd).status);
+        assertEquals(403, app("POST", "/v1/skills/homelab/install", "", ntf).status);
+        assertEquals(404, app("POST", "/v1/skills/homelab/install", "", ctl).status);   // not in this harness's catalogue
+        assertEquals(404, app("DELETE", "/v1/skills/homelab", "", ctl).status);
+        assertEquals(404, app("POST", "/v1/skills/../x/install", "", ctl).status);
     }
 
     @Test

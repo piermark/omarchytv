@@ -4139,6 +4139,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.talk_phone), url, str(R.string.web_settings_hint), false)));
             return false;
         });
+        p.add("🧩 " + str(R.string.skills_title), "›", r -> {   // v2.22 skills from the community
+            handler.post(() -> startActivity(SkillsActivity.intent(this, "")));
+            return false;
+        });
         p.add(str(R.string.shift_title), "🌙 ›", r -> {
             handler.post(() -> startActivity(ShiftActivity.intent(this, false)));
             return false;
