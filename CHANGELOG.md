@@ -33,6 +33,8 @@
   widgets and its page away. Three to start: Night shift, Homelab dashboard, Movie night. New skills arrive by pull
   request in `launcher/app/src/main/assets/skills/` (`SkillsTest` checks them). Signatures come later.
   `/v1/skills`, `tv_skill_list`, `tv_skill_install` (asks you on the TV), `tv_skill_remove`.
+- **GrokBot Office is the control room**: in the Office, the red key goes on air (AI LIVE), the blue key plays the
+  night back, the yellow key opens the skills.
 - Not on LG / Samsung in 2.22: AI LIVE, the night shift, talking from the phone and skills (their agents' tools
   answer `not_on_lg_samsung`).
 
