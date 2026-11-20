@@ -133,6 +133,21 @@ class TestMcpV221(unittest.TestCase):
                                    "params": {"name": "tv_notify", "arguments": {"text": "  "}}}, tv)
         self.assertTrue(r["result"]["isError"])
 
+    def test_max_level_caps_tv_notify(self):   # v2.22: the owner's rule, not the model's
+        tv = FakeTvClient()
+        call = lambda lvl, mx: mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {
+            "name": "tv_notify", "arguments": {"text": "disk", "level": lvl, "speak": True}}}, tv, "notify", mx)
+        r = call("alert", "warn")
+        self.assertEqual(json.loads(r["result"]["content"][0]["text"])["capped"], "warn")
+        self.assertEqual((tv.notes[-1]["level"], tv.notes[-1]["speak"]), ("warn", False))
+        call("warn", "warn")
+        self.assertEqual((tv.notes[-1]["level"], tv.notes[-1]["speak"]), ("warn", True))
+        call("alert", "alert")
+        self.assertEqual(tv.notes[-1]["level"], "alert")
+        self.assertEqual(mcp_server.default_max_level(True, None), "warn")    # through the internet
+        self.assertEqual(mcp_server.default_max_level(False, None), "alert")
+        self.assertEqual(mcp_server.default_max_level(True, "alert"), "alert")
+
     def test_theme_tool_reads_the_tv_unsigned(self):
         from http.server import BaseHTTPRequestHandler, HTTPServer
 

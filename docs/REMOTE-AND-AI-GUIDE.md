@@ -84,7 +84,8 @@ omarchy-tv mcp --http --tailscale       # prints http://<pc tailnet ip>:8990/mcp
 ```
 
 The server listens only on the PC's tailnet address and refuses anything that is not a tailnet peer, before it even
-checks the token. Use this when the agent should not hold a TV token, or for an LG / Samsung TV (add `--bridge`).
+checks the token. From 2.22, `--max-level info|warn` lowers louder `tv_notify` calls (and drops their voice); through a
+tunnel it is `warn` unless you pass `--max-level alert`. Use this when the agent should not hold a TV token, or for an LG / Samsung TV (add `--bridge`).
 
 ### 2.4 LG and Samsung
 

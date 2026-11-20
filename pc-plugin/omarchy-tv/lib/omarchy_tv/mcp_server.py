@@ -241,7 +241,17 @@ def ensure_token(path: Path | None = None) -> str:
     return tok
 
 
-def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
+LEVELS = ("info", "warn", "alert")
+
+
+def default_max_level(public: bool, given: str | None) -> str:
+    """v2.22 the loudest tv_notify level this server passes on: alert locally, warn through the internet."""
+    if given in LEVELS:
+        return given
+    return "warn" if public else "alert"
+
+
+def handle_rpc(req: dict, tv_client, scope: str = "control", max_level: str = "alert") -> dict | None:
     """Process one MCP JSON-RPC 2.0 request dict and return response dict (or None for notifications)."""
     method = req.get("method", "")
     req_id = req.get("id")
@@ -274,7 +284,7 @@ def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
             return {"jsonrpc": "2.0", "id": req_id,
                     "error": {"code": -32601, "message": f"Not allowed on this server (scope {scope}): {name}"}}
         try:
-            out = _call_tool(name, args, tv_client)
+            out = _call_tool(name, args, tv_client, max_level)
             return {
                 "jsonrpc": "2.0",
                 "id": req_id,
@@ -289,7 +299,7 @@ def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
     return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": f"Method not found: {method}"}}
 
 
-def _call_tool(name: str, args: dict, c) -> dict:
+def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
     if name == "tv_status":
         return c.status()
     if name == "tv_list_themes":
@@ -316,9 +326,16 @@ def _call_tool(name: str, args: dict, c) -> dict:
         text = str(args.get("text", "")).strip()
         if not text:
             raise ValueError("text is required")
-        level = args.get("level") if args.get("level") in ("info", "warn", "alert") else "info"
-        return c.request("POST", "/v1/notify", {"text": text[:200], "title": str(args.get("title") or "")[:60], "level": level,
-                                                 "speak": args.get("speak") is True, "from": str(args.get("from") or "AI agent")[:40]})
+        level = args.get("level") if args.get("level") in LEVELS else "info"
+        speak = args.get("speak") is True
+        capped = LEVELS.index(level) > LEVELS.index(max_level)   # v2.22: the owner's rule, as the TV does for tokens
+        if capped:
+            level, speak = max_level, False
+        out = c.request("POST", "/v1/notify", {"text": text[:200], "title": str(args.get("title") or "")[:60], "level": level,
+                                                "speak": speak, "from": str(args.get("from") or "AI agent")[:40]})
+        if capped and isinstance(out, dict):
+            out = dict(out, capped=level)
+        return out
     if name == "tv_get_state":
         return c.request("GET", "/v1/state")
     if name == "tv_ask_user":
@@ -450,7 +467,7 @@ class LazyClient:
         return getattr(self._get(), name)
 
 
-def serve_stdio(tv_client_factory, scope: str = "control") -> int:
+def serve_stdio(tv_client_factory, scope: str = "control", max_level: str = "alert") -> int:
     lazy = LazyClient(tv_client_factory)
     for line in sys.stdin:
         line = line.strip()
@@ -460,7 +477,7 @@ def serve_stdio(tv_client_factory, scope: str = "control") -> int:
             req = json.loads(line)
         except ValueError:
             continue
-        resp = handle_rpc(req, lazy, scope)
+        resp = handle_rpc(req, lazy, scope, max_level)
         if resp is not None:
             sys.stdout.write(json.dumps(resp) + "\n")
             sys.stdout.flush()
@@ -469,7 +486,7 @@ def serve_stdio(tv_client_factory, scope: str = "control") -> int:
 
 def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", port: int = 8990,
                        tailnet_only: bool = False, scope: str = "control", require_access: bool = False,
-                       verifier=None) -> ThreadingHTTPServer:
+                       verifier=None, max_level: str = "alert") -> ThreadingHTTPServer:
     expected = f"Bearer {token}"
 
     class Handler(BaseHTTPRequestHandler):
@@ -507,7 +524,7 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
             except ValueError:
                 self._send(400, {"error": "invalid_json"})
                 return
-            resp = handle_rpc(req, LazyClient(tv_client_factory), scope)
+            resp = handle_rpc(req, LazyClient(tv_client_factory), scope, max_level)
             if resp is None:   # a notification: accepted, no body (MCP streamable HTTP)
                 self.send_response(202)
                 self.send_header("Content-Length", "0")
@@ -550,7 +567,7 @@ def default_scope(public: bool, scope: str | None) -> str:
 
 def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailscale: bool = False,
                cloudflare: str | None = None, scope: str | None = None, access: bool = False,
-               access_team: str | None = None, access_aud: str | None = None) -> int:
+               access_team: str | None = None, access_aud: str | None = None, max_level: str | None = None) -> int:
     token = ensure_token()
     bind = "127.0.0.1"
     if tailscale:
@@ -564,6 +581,7 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
         tunnel, cloudflare = False, None   # one or the other
     public = bool(tunnel or cloudflare)
     scope = default_scope(public, scope)
+    max_level = default_max_level(public, max_level)
     verifier = None
     if cloudflare and (access_team or access_aud):
         from .cf_access import AccessVerifier
@@ -578,10 +596,12 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
               "Put a Cloudflare Access policy in front and add --access-team/--access-aud (docs/CLOUDFLARE.md).",
               file=sys.stderr, flush=True)
     srv = create_http_server(tv_client_factory, token, bind, port, tailnet_only=tailscale, scope=scope,
-                             require_access=bool(cloudflare and (access or verifier)), verifier=verifier)
+                             require_access=bool(cloudflare and (access or verifier)), verifier=verifier,
+                             max_level=max_level)
     actual_port = srv.server_address[1]
     print(f"OmarchyTV MCP HTTP server listening on http://{bind}:{actual_port}/mcp"
-          + (" (tailnet peers only)" if tailscale else "") + f", tools: {scope}", flush=True)
+          + (" (tailnet peers only)" if tailscale else "") + f", tools: {scope}"
+          + (f", notifications at most {max_level}" if max_level != "alert" else ""), flush=True)
     print(f"Authorization: Bearer {token}", flush=True)
     proc = None
     if public:

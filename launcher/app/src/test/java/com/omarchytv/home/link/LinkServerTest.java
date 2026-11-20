@@ -794,6 +794,15 @@ public class LinkServerTest {
         assertEquals(400, signed("PUT", "/v1/tokens/" + id, "{\"maxLevel\":\"loud\"}").status);
         assertEquals(400, signed("POST", "/v1/tokens", "{\"name\":\"x\",\"scope\":\"notify\",\"maxLevel\":\"loud\"}").status);
         assertTrue(signed("GET", "/v1/tokens", "").json().getJSONArray("apps").getJSONObject(0).getString("maxLevel").equals("info"));
+        // the TV's own MCP endpoint takes the same path: tv_notify with this token is capped and named by the TV
+        JSONObject call = new JSONObject().put("jsonrpc", "2.0").put("id", 9).put("method", "tools/call")
+                .put("params", new JSONObject().put("name", "tv_notify").put("arguments",
+                        new JSONObject().put("text", "via mcp").put("level", "alert").put("from", "Somebody else")));
+        Resp m = app("POST", "/v1/mcp", call.toString(), tok);
+        assertEquals(200, m.status);
+        assertTrue(m.json().toString(), m.json().toString().contains("capped"));
+        assertEquals("info", host.levels.get(host.levels.size() - 1));
+        assertTrue(host.notes.get(host.notes.size() - 1).startsWith("hermes-nas: "));
         // the paired PC itself is never capped
         signed("POST", "/v1/notify", "{\"text\":\"red\",\"level\":\"alert\"}");
         assertEquals("alert", host.levels.get(host.levels.size() - 1));

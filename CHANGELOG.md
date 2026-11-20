@@ -26,6 +26,8 @@
   `omarchy-link token level ID LEVEL`. The TV lowers a notification above the token's level, drops its voice and
   answers `capped`, for `POST /v1/notify` and MCP `tv_notify` alike (which now also always uses the token's name as
   the sender). The paired PC is never capped. Asked on X ("letting Claude pick its own severity would cry wolf").
+  The PC's own MCP server does the same: `omarchy-tv mcp --max-level info|warn` (default `warn` through a tunnel,
+  `alert` on the LAN or tailnet), since its calls reach the TV as the paired PC.
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 
