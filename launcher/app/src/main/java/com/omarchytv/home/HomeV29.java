@@ -22,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -99,6 +100,7 @@ final class HomeV29 extends FrameLayout {
     // bar
     private final FrameLayout bar;
     private final TextView clock;
+    private final TextView buildStamp;
     private final TextView[] ws = new TextView[5];
     private final View menuBtn;
     private final List<View> barIcons = new ArrayList<>();
@@ -109,13 +111,15 @@ final class HomeV29 extends FrameLayout {
     private final TextView termInfo, termLogo, termPrompt;
     // widgets
     private final LinearLayout widgets;
-    private final BoxView wxBox, pcBox, depBox;
+    private final BoxView wxBox, pcBox, macBox, depBox;
+    private final LinearLayout statsColumn;
+    private final ScrollView aiScroll;
     /** "racing": the remaining 2026 F1 and MotoGP weekends (Racing), the top row's first column, left of weather. */
     private final BoxView raceBox;
     private final LinearLayout raceBody;
     /** Bar countdown to the next F1 / MotoGP session, ticking every second while Home is attached. */
     private final TextView barRace;
-    private final LinearLayout pcBody, aiBody, depBody;
+    private final LinearLayout pcBody, macBody, aiBody, depBody;
     /** Up to 3 panes the TV fetches itself (RemotePanes), in their own row under the widgets. */
     private final LinearLayout remoteRow;
     private final BoxView[] remoteBox = new BoxView[3];
@@ -189,6 +193,10 @@ final class HomeV29 extends FrameLayout {
             ws[i] = w;
             left.addView(w, new LinearLayout.LayoutParams(-2, -1));
         }
+        buildStamp = text(a.getString(R.string.build_stamp), 16, false);
+        buildStamp.setGravity(Gravity.CENTER_VERTICAL);
+        buildStamp.setPadding(px(12), 0, 0, 0);
+        left.addView(buildStamp, new LinearLayout.LayoutParams(-2, -1));
         barRace = text("", 20, false);
         barRace.setSingleLine(true);
         barRace.setGravity(Gravity.CENTER_VERTICAL);
@@ -315,14 +323,32 @@ final class HomeV29 extends FrameLayout {
         raceBody = vbox();
         raceBox.addView(raceBody, new LinearLayout.LayoutParams(-1, -2));
         wxBox = widget(r1, act.getString(R.string.v29_weather), 16);
-        pcBox = widget(r1, "omarchy · pc", 16);
-        BoxView ai = widget(r1, "ai credits · pc", 16);
+        statsColumn = vbox();
+        statsColumn.setClipChildren(false);
+        LinearLayout.LayoutParams statsLp = new LinearLayout.LayoutParams(px(sideColWidth(false)), -2);
+        statsLp.leftMargin = px(16);
+        r1.addView(statsColumn, statsLp);
+        pcBox = widget(statsColumn, "omarchy · pc", 0);
+        macBox = widget(statsColumn, "omarchy · mac", 0);
+        macBox.setFocusable(false);
+        ((LinearLayout.LayoutParams) macBox.getLayoutParams()).topMargin = px(16);
+        macBox.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
+            if (bottom - top != ob - ot && cfg != null && editPanel == null) post(() -> applyPanelPos(cfg));
+        });
+        BoxView ai = new BoxView(a, s, tf);
+        ai.setLegend("ai credits · pc", px(14), px(18));
+        ai.setFocusable(true);
+        ai.focusBorder = true;
+        LayoutParams aiLp = new LayoutParams(px(640), -2);
+        aiLp.leftMargin = px(32);
+        aiLp.topMargin = px(360);
+        addView(ai, aiLp);
         // Keep the PC and AI panels one column wide. Give Weather the 80 px used to fill the left gutter.
         float colWidth = sideColWidth(false);
         LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
         wxl.width = px(weatherColWidth(false));
         wxl.weight = 0f;
-        for (View col : new View[]{raceBox, pcBox, ai}) {   // #123 the racing panel: one column too
+        for (View col : new View[]{raceBox, pcBox, macBox}) {
             LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
             cl.width = px(colWidth);
             cl.weight = 0f;
@@ -371,8 +397,17 @@ final class HomeV29 extends FrameLayout {
         wxBox.addView(wxForecastRow, forecastRowLp);
         pcBody = vbox();
         pcBox.addView(pcBody, new LinearLayout.LayoutParams(-1, -2));
+        macBody = vbox();
+        macBox.addView(macBody, new LinearLayout.LayoutParams(-1, -2));
         aiBody = vbox();
-        ai.addView(aiBody, new LinearLayout.LayoutParams(-1, -2));
+        aiScroll = new ScrollView(a);
+        aiScroll.setFocusable(false);
+        aiScroll.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        aiScroll.addView(aiBody, new ScrollView.LayoutParams(-1, -2));
+        ai.addView(aiScroll, new LinearLayout.LayoutParams(-1, -2));
+        term.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
+            if (bottom != ob) post(this::positionLeftWidgets);
+        });
         depBody = vbox();
         depBox.addView(depBody, new LinearLayout.LayoutParams(-1, -2));
         remoteRow = hbox();
@@ -394,6 +429,9 @@ final class HomeV29 extends FrameLayout {
 
         // ---- 3.4 app window: margins 32, padding 20×28 ----
         appWin = new BoxView(a, s, tf);
+        appWin.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
+            if (top != ot) post(this::positionLeftWidgets);
+        });
         LayoutParams al = new LayoutParams(-1, -2, Gravity.BOTTOM);
         al.leftMargin = al.rightMargin = al.bottomMargin = px(32);
         addView(appWin, al);
@@ -665,7 +703,7 @@ final class HomeV29 extends FrameLayout {
                 ws[i].setTextColor(on ? acc : t.fg);
             }
         }
-        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) {
+        for (BoxView b : new BoxView[]{term, wxBox, pcBox, macBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) {
             if (b != null) b.setColors(winBg, t.muted, acc, t.cyan);
         }
         if (barSpacex != null) barSpacex.setTextColor(acc2);
@@ -688,6 +726,7 @@ final class HomeV29 extends FrameLayout {
         int winBg = Theme.withAlpha(t.bg, Math.min(0.98f, op + nb));
         bar.setBackgroundColor(Theme.withAlpha(t.bg, Math.min(0.95f, op + 0.10f) + nb > 0.98f ? 0.98f : Math.min(0.95f, op + 0.10f) + nb));
         clock.setTextColor(t.fgBright);
+        buildStamp.setTextColor(t.fgDim);
         for (int i = 0; i < 5; i++) {
             boolean on = c.workspaceAt(i + 1) == activeWs;
             ws[i].setTextColor(on ? accent() : t.fg);
@@ -700,7 +739,7 @@ final class HomeV29 extends FrameLayout {
         for (View b : barIcons) tint(b, t.fgBright);
         tip.setBackgroundColor(Theme.withAlpha(t.bg, 0.98f));
         tip.setTextColor(t.fgBright);
-        for (BoxView b : new BoxView[]{term, wxBox, pcBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, accent(), t.cyan);
+        for (BoxView b : new BoxView[]{term, wxBox, pcBox, macBox, aiBoxRef, depBox, raceBox, appWin, tvWin, appsWin, pcWin, sysWin, grokbotBox}) b.setColors(winBg, t.muted, accent(), t.cyan);
         barSpacex.setTextColor(accent2());
         barSpacex.setVisibility(c.pluginSpacexTv ? VISIBLE : GONE);
         grokbotEyes.setTextColor(accent());
@@ -713,12 +752,12 @@ final class HomeV29 extends FrameLayout {
         grokbotText.setText(mirrored ? "  " + c.grokbotBotName + (gbMsg != null ? ": " + gbMsg : " · ask")
                 : gbMsg != null ? " " + gbMsg : " companion · ask");
         // The floating face is the one companion: this "companion · ask" tile only stands in when it is off.
-        grokbotBox.setVisibility(activeWs == 1 && CompanionPlacement.homeTile(c.pluginGrokbot, c.companionOverlay) ? VISIBLE : GONE);
+        grokbotBox.setVisibility(activeWs == 1 && c.wGrokbot && CompanionPlacement.homeTile(c.pluginGrokbot, c.companionOverlay) ? VISIBLE : GONE);
         for (BoxView b : remoteBox) b.setColors(winBg, t.muted, accent(), t.cyan);
         // v2.10: every home widget can be switched off (Settings → Widgets); the clock lives only in the bar.
         wxBox.setVisibility(c.wWeather ? VISIBLE : GONE);
         pcBox.setVisibility(c.wPc ? VISIBLE : GONE);
-        aiBoxRef.setVisibility(c.wAi ? VISIBLE : GONE);
+        aiBoxRef.setVisibility(activeWs == 1 && c.wAi ? VISIBLE : GONE);
         raceBox.setVisibility(c.wRacing ? VISIBLE : GONE);
         // weather is the row's first panel when racing is off: no gap in front of it then
         LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
@@ -729,6 +768,7 @@ final class HomeV29 extends FrameLayout {
         widgets.setLayoutParams(wl);
         applyRaceColumns(c.wRacing);
         term.setVisibility(activeWs == 1 && c.wTerm ? VISIBLE : GONE);
+        post(this::positionLeftWidgets);
         if (editPanel == null) post(() -> applyPanelPos(c));
         gridName.setTextColor(accent());
         gridHints.setTextColor(t.fg);
@@ -801,10 +841,85 @@ final class HomeV29 extends FrameLayout {
         termInfo.setText(info);
         updateWeather();
         updatePc(pcBody, depBody, depBox, cfg.wDeploys);
+        nativeDetails(pcBody, nativePane("native-pc-details"), false);
+        JSONObject mac = nativePane("native-mac");
+        macBox.setVisibility(cfg.wPc && mac != null ? VISIBLE : GONE);
+        macBody.removeAllViews();
+        nativeMac(mac);
+        if (mac != null && macBody.getChildCount() == 0) macBody.addView(line("unavailable"));
         updateAi(aiBody);
+        post(this::positionLeftWidgets);
         updateRacing();
         updateRemote();
         if (activeWs == 4) buildWorkspace();
+    }
+
+    private void positionLeftWidgets() {
+        if (cfg == null) return;
+        int top = term.isShown() && term.getBottom() > 0 ? term.getBottom() + px(16) : px(76);
+        LayoutParams lp = (LayoutParams) aiBoxRef.getLayoutParams();
+        if (lp.topMargin != top) { lp.topMargin = top; aiBoxRef.setLayoutParams(lp); }
+        if (appWin.getTop() <= 0) return;
+        int available = Math.max(0, appWin.getTop() - px(16) - top
+                - aiBoxRef.getPaddingTop() - aiBoxRef.getPaddingBottom());
+        int width = Math.max(0, px(640) - aiBoxRef.getPaddingLeft() - aiBoxRef.getPaddingRight());
+        aiBody.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        int height = aiBody.getMeasuredHeight() > available ? available : -2;
+        LinearLayout.LayoutParams bodyLp = (LinearLayout.LayoutParams) aiScroll.getLayoutParams();
+        if (bodyLp.height != height) { bodyLp.height = height; aiScroll.setLayoutParams(bodyLp); }
+    }
+
+    static boolean reservedPane(String id) {
+        return "native-pc-details".equals(id) || "native-mac".equals(id) || "native-ai".equals(id);
+    }
+
+    private JSONObject nativePane(String id) {
+        JSONObject cache = RemotePanes.cached(act, cfg.remotePanesUrl);
+        JSONArray panes = cache != null ? cache.optJSONArray("panes") : null;
+        long now = System.currentTimeMillis() / 1000L;
+        for (int i = 0; panes != null && i < panes.length(); i++) {
+            JSONObject p = panes.optJSONObject(i);
+            if (p != null && id.equals(p.optString("id"))
+                    && now - RemotePanes.paneAt(cache, p) <= 2L * p.optInt("ttl", 180)) return p;
+        }
+        return null;
+    }
+
+    private float nativeAlpha(JSONObject pane) {
+        JSONObject cache = RemotePanes.cached(act, cfg.remotePanesUrl);
+        if (pane == null || cache == null) return 1f;
+        return System.currentTimeMillis() / 1000L - RemotePanes.paneAt(cache, pane) > pane.optInt("ttl", 180) ? 0.55f : 1f;
+    }
+
+    static double nativePercent(String value) {
+        String number = value.split("\\|", 2)[0].trim();
+        if (!number.matches("[0-9]+(?:\\.[0-9]+)?%?")) return -1;
+        if (number.endsWith("%")) number = number.substring(0, number.length() - 1);
+        try {
+            double n = Double.parseDouble(number);
+            return Double.isFinite(n) && n >= 0 && n <= 100 ? n : -1;
+        } catch (NumberFormatException e) { return -1; }
+    }
+
+    private void nativeMac(JSONObject pane) { nativeDetails(macBody, pane, true); }
+
+    private void nativeDetails(LinearLayout body, JSONObject pane, boolean mac) {
+        int first = body.getChildCount();
+        JSONArray lines = pane != null ? pane.optJSONArray("lines") : null;
+        for (int i = 0; lines != null && i < lines.length(); i++) {
+            JSONObject entry = lines.optJSONObject(i);
+            if (entry == null) continue;
+            String label = entry.optString("label"), value = entry.optString("value");
+            if (mac && ("cpu".equals(label) || "ram".equals(label))) {
+                double percent = nativePercent(value);
+                if (percent >= 0) body.addView(barRow(label, 4, percent / 100,
+                        "cpu".equals(label) ? t.green : t.yellow, 12, Math.round(percent) + "%"));
+                else body.addView(line(label + "  " + value));
+            } else body.addView(line(label + "  " + value));
+        }
+        float alpha = nativeAlpha(pane);
+        for (int i = first; i < body.getChildCount(); i++) body.getChildAt(i).setAlpha(alpha);
     }
 
     /** v2.15 (#115): a fetched pane's picture, decoded down to the pane's width; false when it can't be read. */
@@ -842,7 +957,7 @@ final class HomeV29 extends FrameLayout {
         List<Long> ages = new ArrayList<>();
         for (int i = 0; panes != null && i < panes.length(); i++) {
             JSONObject p = panes.optJSONObject(i);
-            if (p == null) continue;
+            if (p == null || reservedPane(p.optString("id"))) continue;
             list.add(p);
             ages.add(now - RemotePanes.paneAt(cache, p));
         }
@@ -913,7 +1028,7 @@ final class HomeV29 extends FrameLayout {
         List<JSONObject> out = new ArrayList<>();
         if (!cfg.pcPanesOn) return out;
         for (LauncherConfig.PcPane pp : cfg.pcPanes) {
-            if ("pc".equals(pp.id) || cfg.hiddenPcPanes.contains(pp.id)) continue;
+            if ("pc".equals(pp.id) || reservedPane(pp.id) || cfg.hiddenPcPanes.contains(pp.id)) continue;
             try {
                 JSONArray ls = new JSONArray();
                 for (String[] l : pp.lines) ls.put(new JSONObject().put("label", l[0]).put("value", l[1]));
@@ -1254,6 +1369,10 @@ final class HomeV29 extends FrameLayout {
 
     /** "label  [bar]  NN%": bar 12 px (CPU/RAM) or 10 px (AI), fill colour given, track = selection. */
     private View barRow(String label, int labelCols, double frac, int fill, int barH, String right) {
+        return barRow(label, labelCols, frac, fill, barH, right, false);
+    }
+
+    private View barRow(String label, int labelCols, double frac, int fill, int barH, String right, boolean wideRight) {
         LinearLayout r = hbox();
         LinearLayout.LayoutParams l = new LinearLayout.LayoutParams(-1, -2);
         l.topMargin = px(6);
@@ -1272,7 +1391,7 @@ final class HomeV29 extends FrameLayout {
         TextView pct = text(right, 19, false);
         pct.setTextColor(t.fg);
         pct.setGravity(Gravity.END);
-        r.addView(pct, new LinearLayout.LayoutParams(Math.round(cw * 4), -2));
+        r.addView(pct, new LinearLayout.LayoutParams(Math.round(wideRight ? Math.max(cw * 4, pct.getPaint().measureText(right)) : cw * 4), -2));
         return r;
     }
 
@@ -1334,8 +1453,29 @@ final class HomeV29 extends FrameLayout {
     private void updateAi(LinearLayout aiBody) {
         int width = aiBody.getWidth();   // before removeAllViews: the room the rows had last time (0 the first time)
         aiBody.removeAllViews();
-        BoxView box = aiBody.getParent() instanceof BoxView ? (BoxView) aiBody.getParent() : null;
+        BoxView box = aiBody == this.aiBody ? aiBoxRef : aiBody.getParent() instanceof BoxView ? (BoxView) aiBody.getParent() : null;
         if (box != null) box.setLegend(AI_LEGEND + "pc", px(14), px(18));
+        JSONObject pane = nativePane("native-ai");
+        aiBody.setAlpha(nativeAlpha(pane));
+        if (pane != null) {
+            JSONArray lines = pane.optJSONArray("lines");
+            for (int i = 0; lines != null && i < lines.length(); i++) {
+                JSONObject entry = lines.optJSONObject(i);
+                if (entry == null) continue;
+                String label = entry.optString("label"), value = entry.optString("value");
+                String[] parts = value.split("\\|", 2);
+                double percent = nativePercent(value);
+                if (percent >= 0) {
+                    double f = percent / 100;
+                    int col = f < 0.1 ? t.red : f <= 0.3 ? t.yellow : t.green;
+                    String reset = parts.length > 1 ? parts[1].trim() : "";
+                    aiBody.addView(barRow(label, 16, f, col, 10, Math.round(percent) + "%"
+                            + (reset.isEmpty() ? "" : " · " + reset), true));
+                } else aiBody.addView(line(label + "  " + value));
+            }
+            if (aiBody.getChildCount() == 0) aiBody.addView(line("unavailable"));
+            return;
+        }
         if (!OmarchyLink.connected() && cfg.aiAt > 0 || cfg.ai.isEmpty() && !OmarchyLink.connected()) {
             aiBody.addView(offline());
             return;
@@ -1344,9 +1484,9 @@ final class HomeV29 extends FrameLayout {
             aiBody.addView(line(act.getString(R.string.ai_empty)));
             return;
         }
-        // The rows shown (at most 5). Words they all start with ("Claude" in "Claude session" / "Claude week") go to
+        // Words they all start with ("Claude" in "Claude session" / "Claude week") go to
         // the legend, so each row keeps what tells it apart; the label column takes the room the widget has.
-        List<LauncherConfig.AiEntry> rows = cfg.ai.subList(0, Math.min(5, cfg.ai.size()));
+        List<LauncherConfig.AiEntry> rows = cfg.ai;
         List<String> names = new ArrayList<>();
         for (LauncherConfig.AiEntry a : rows) names.add(a.name);
         String prefix = AiLabels.commonPrefix(names);
@@ -1418,9 +1558,10 @@ final class HomeV29 extends FrameLayout {
         activeWs = n;
         boolean home = n == 1;
         term.setVisibility(home && (cfg == null || cfg.wTerm) ? VISIBLE : GONE);
+        aiBoxRef.setVisibility(home && cfg != null && cfg.wAi ? VISIBLE : GONE);
         widgets.setVisibility(home ? VISIBLE : GONE);
         appWin.setVisibility(home ? VISIBLE : GONE);
-        grokbotBox.setVisibility(home && (cfg == null ? false : CompanionPlacement.homeTile(cfg.pluginGrokbot, cfg.companionOverlay)) ? VISIBLE : GONE);
+        grokbotBox.setVisibility(home && cfg != null && cfg.wGrokbot && CompanionPlacement.homeTile(cfg.pluginGrokbot, cfg.companionOverlay) ? VISIBLE : GONE);
         tvWin.setVisibility(n == 2 ? VISIBLE : GONE);
         appsWin.setVisibility(n == 3 ? VISIBLE : GONE);
         pcWin.setVisibility(n == 4 ? VISIBLE : GONE);
@@ -1736,9 +1877,23 @@ final class HomeV29 extends FrameLayout {
         for (String id : PANEL_IDS) {
             View v = panelView(id);
             int[] p = c.panelPos.get(id);
-            v.setTranslationX(p != null ? p[0] * cellW() : 0);
-            v.setTranslationY(p != null ? p[1] * cellH() : 0);
+            setPanelTranslation(v, p != null ? p[0] * cellW() : 0, p != null ? p[1] * cellH() : 0);
         }
+        int[] saved = c.panelPos.get("pc");
+        if (saved != null && macBox.isShown() && getWidth() > 0 && !fits(pcBox, saved[0], saved[1])) {
+            int bx = saved[0], by = saved[1], distance = Integer.MAX_VALUE;
+            for (int y = -GRID_Y; y <= GRID_Y; y++) for (int x = -GRID_X; x <= GRID_X; x++) {
+                int d = Math.abs(x - saved[0]) + Math.abs(y - saved[1]);
+                if (d < distance && fits(pcBox, x, y)) { bx = x; by = y; distance = d; }
+            }
+            if (distance != Integer.MAX_VALUE) setPanelTranslation(pcBox, bx * cellW(), by * cellH());
+        }
+    }
+
+    private void setPanelTranslation(View v, float x, float y) {
+        v.setTranslationX(x);
+        v.setTranslationY(y);
+        if (v == pcBox) { macBox.setTranslationX(x); macBox.setTranslationY(y); }
     }
 
     /** View rect in this layout's coordinates, with an offset of (cx, cy) cells instead of its translation. */
@@ -1749,7 +1904,9 @@ final class HomeV29 extends FrameLayout {
             x += pv.getLeft() + pv.getTranslationX();
             y += pv.getTop() + pv.getTranslationY();
         }
-        return new android.graphics.RectF(x, y, x + v.getWidth(), y + v.getHeight());
+        android.graphics.RectF rect = new android.graphics.RectF(x, y, x + v.getWidth(), y + v.getHeight());
+        if (v == pcBox && macBox.isShown()) rect.union(rectAt(macBox, tx, ty));
+        return rect;
     }
 
     /** True if the panel at (cx, cy) stays on screen, below the bar, above the app row and off every other panel. */
@@ -1773,6 +1930,7 @@ final class HomeV29 extends FrameLayout {
         editCx = editOldCx = Math.round(v.getTranslationX() / cellW());
         editCy = editOldCy = Math.round(v.getTranslationY() / cellH());
         v.setAlpha(0.8f);
+        if (v == pcBox) macBox.setAlpha(0.8f);
         v.setFocusable(true);
         v.requestFocus();
         return true;
@@ -1806,6 +1964,7 @@ final class HomeV29 extends FrameLayout {
                 editCx = nx;
                 editCy = ny;
                 editPanel.animate().translationX(nx * cellW()).translationY(ny * cellH()).setDuration(80).start();
+                if (editPanel == pcBox) macBox.animate().translationX(nx * cellW()).translationY(ny * cellH()).setDuration(80).start();
                 break;
             }
         }
@@ -1817,11 +1976,13 @@ final class HomeV29 extends FrameLayout {
         View v = editPanel;
         editPanel = null;
         v.setAlpha(1f);
+        if (v == pcBox) macBox.setAlpha(1f);
         if (save) {
             host.savePanelPos(editId, editCx, editCy);
         } else {
-            v.setTranslationX(editOldCx * cellW());
-            v.setTranslationY(editOldCy * cellH());
+            v.animate().cancel();
+            if (v == pcBox) macBox.animate().cancel();
+            setPanelTranslation(v, editOldCx * cellW(), editOldCy * cellH());
         }
         focusApp(lastApp);
     }
@@ -1904,7 +2065,7 @@ final class HomeV29 extends FrameLayout {
     private int zone(View f) {
         for (View v = f; v != null; v = v.getParent() instanceof View ? (View) v.getParent() : null) {
             if (v == bar) return 0;
-            if (v == widgets) return 1;
+            if (v == widgets || v == aiBoxRef) return 1;
             if (v == row) return 2;
             if (v == grid) return 3;
             if (v == tvWin || v == pcWin || v == sysWin) return 4;
@@ -2013,11 +2174,19 @@ final class HomeV29 extends FrameLayout {
         }
         switch (k) {
             case KeyEvent.KEYCODE_DPAD_UP:
+                if (f == aiBoxRef && aiScroll.canScrollVertically(-1)) {
+                    aiScroll.scrollBy(0, -Math.max(px(30), aiScroll.getHeight() / 2));
+                    return true;
+                }
                 if (z == 2) {
                     if (!focusFirstVisible(widgets)) ws[0].requestFocus();
                 } else if (z == 1) activeWsButton().requestFocus();
                 return true;
             case KeyEvent.KEYCODE_DPAD_DOWN:
+                if (f == aiBoxRef && aiScroll.canScrollVertically(1)) {
+                    aiScroll.scrollBy(0, Math.max(px(30), aiScroll.getHeight() / 2));
+                    return true;
+                }
                 if (z == 1) {
                     if (f.getParent() == ((ViewGroup) widgets.getChildAt(0)) && depBox.getVisibility() == VISIBLE && f == aiBoxRef) depBox.requestFocus();
                     else focusApp(lastApp);
@@ -2033,11 +2202,8 @@ final class HomeV29 extends FrameLayout {
                     if (to >= 0 && to < rowAdapter.getItemCount()) focusApp(to);
                     return true;
                 }
-                if (f == depBox) return true;
-                ViewGroup g = (ViewGroup) f.getParent();
-                int i = g.indexOfChild(f), to = i + (r ? 1 : -1);
-                while (to >= 0 && to < g.getChildCount() && (g.getChildAt(to).getVisibility() != VISIBLE || !g.getChildAt(to).isFocusable())) to += r ? 1 : -1;
-                if (to >= 0 && to < g.getChildCount()) g.getChildAt(to).requestFocus();
+                View next = f.focusSearch(r ? FOCUS_RIGHT : FOCUS_LEFT);
+                if (next != null && zone(next) == 1) next.requestFocus();
                 return true;
             }
             default:
@@ -2046,12 +2212,8 @@ final class HomeV29 extends FrameLayout {
     }
 
     private boolean focusFirstVisible(ViewGroup g) {
-        ViewGroup r1 = (ViewGroup) g.getChildAt(0);
-        for (int i = 0; i < r1.getChildCount(); i++) {
-            View v = r1.getChildAt(i);
-            if (v.getVisibility() == VISIBLE && v.isFocusable()) return v.requestFocus();
-        }
-        if (depBox.getVisibility() == VISIBLE) return depBox.requestFocus();
+        for (View v : new View[]{raceBox, wxBox, aiBoxRef, pcBox, depBox})
+            if (v.isShown() && v.isFocusable() && v.requestFocus()) return true;
         return false;
     }
 
@@ -2255,7 +2417,10 @@ final class HomeV29 extends FrameLayout {
         wxl.width = px(weather);
         wxl.weight = 0f;
         wxBox.setLayoutParams(wxl);
-        for (View col : new View[]{pcBox, aiBoxRef}) {
+        LinearLayout.LayoutParams statsLp = (LinearLayout.LayoutParams) statsColumn.getLayoutParams();
+        statsLp.width = px(side);
+        statsColumn.setLayoutParams(statsLp);
+        for (View col : new View[]{pcBox, macBox}) {
             LinearLayout.LayoutParams cl = (LinearLayout.LayoutParams) col.getLayoutParams();
             cl.width = px(side);
             cl.weight = 0f;
