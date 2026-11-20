@@ -4,6 +4,9 @@ Home reuses the existing cached RemotePanes feed for additional details inside i
 native widgets. The weather and PC widgets keep their existing styling. The Mac
 widget uses the same CPU/RAM rows below PC. AI credits sit below the terminal and
 use its width; the remote can scroll the panel when all rows do not fit.
+Ordinary lower panes also scroll when they exceed the space above the app dock.
+Saved AI offsets that no longer fit the relocated panel fall back to its new
+terminal-aligned position without rewriting the saved configuration.
 
 The feed can include these reserved pane IDs:
 

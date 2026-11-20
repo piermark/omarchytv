@@ -122,6 +122,7 @@ final class HomeV29 extends FrameLayout {
     private final LinearLayout pcBody, macBody, aiBody, depBody;
     /** Up to 3 panes the TV fetches itself (RemotePanes), in their own row under the widgets. */
     private final LinearLayout remoteRow;
+    private final ScrollView remoteScroll;
     private final BoxView[] remoteBox = new BoxView[3];
     private final LinearLayout[] remoteBody = new LinearLayout[3];
     /** "barWeather": icon + temperature in the bar, left of the status icons. */
@@ -405,6 +406,10 @@ final class HomeV29 extends FrameLayout {
         aiScroll.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
         aiScroll.addView(aiBody, new ScrollView.LayoutParams(-1, -2));
         ai.addView(aiScroll, new LinearLayout.LayoutParams(-1, -2));
+        ai.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
+            if ((l != ol || top != ot || bottom != ob) && cfg != null && editPanel == null)
+                post(() -> applyPanelPos(cfg));
+        });
         term.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
             if (bottom != ob) post(this::positionLeftWidgets);
         });
@@ -414,23 +419,35 @@ final class HomeV29 extends FrameLayout {
         remoteRow.setGravity(Gravity.TOP);
         remoteRow.setBaselineAligned(false);
         remoteRow.setClipChildren(false);
+        remoteScroll = new ScrollView(a);
+        remoteScroll.setFocusable(false);
+        remoteScroll.setDescendantFocusability(ViewGroup.FOCUS_BLOCK_DESCENDANTS);
+        remoteScroll.setContentDescription("remote panes");
+        remoteScroll.setBackground(new Underline());
+        remoteScroll.addView(remoteRow, new ScrollView.LayoutParams(-1, -2));
         LinearLayout.LayoutParams r3l = new LinearLayout.LayoutParams(-1, -2);
         r3l.topMargin = px(16);
-        widgets.addView(remoteRow, r3l);
+        widgets.addView(remoteScroll, r3l);
+        remoteScroll.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
+            if (top != ot || bottom != ob) post(() -> {
+                positionRemoteWidgets();
+                if (cfg != null && editPanel == null) applyPanelPos(cfg);
+            });
+        });
         for (int i = 0; i < remoteBox.length; i++) {
             remoteBox[i] = widget(remoteRow, "", i == 0 ? 0 : 16);
             remoteBox[i].setFocusable(false);   // read-only data: keep the D-pad path as it was
             remoteBody[i] = vbox();
             remoteBox[i].addView(remoteBody[i], new LinearLayout.LayoutParams(-1, -2));
         }
-        remoteRow.setVisibility(GONE);
+        remoteScroll.setVisibility(GONE);
         wxBox.setOnClickListener(host::weatherMenu);
         ai.setOnClickListener(host::aiMenu);
 
         // ---- 3.4 app window: margins 32, padding 20×28 ----
         appWin = new BoxView(a, s, tf);
         appWin.addOnLayoutChangeListener((v, l, top, r, bottom, ol, ot, or, ob) -> {
-            if (top != ot) post(this::positionLeftWidgets);
+            if (top != ot) post(() -> { positionLeftWidgets(); positionRemoteWidgets(); });
         });
         LayoutParams al = new LayoutParams(-1, -2, Gravity.BOTTOM);
         al.leftMargin = al.rightMargin = al.bottomMargin = px(32);
@@ -856,18 +873,42 @@ final class HomeV29 extends FrameLayout {
 
     private void positionLeftWidgets() {
         if (cfg == null) return;
-        int top = term.isShown() && term.getBottom() > 0 ? term.getBottom() + px(16) : px(76);
+        int top = term.isShown() && term.getBottom() > 0
+                ? Math.round(term.getBottom() + term.getTranslationY()) + px(16) : px(76);
+        int left = term.isShown() ? Math.round(term.getLeft() + term.getTranslationX()) : px(32);
+        left = Math.max(0, Math.min(Math.max(0, getWidth() - px(640)), left));
         LayoutParams lp = (LayoutParams) aiBoxRef.getLayoutParams();
-        if (lp.topMargin != top) { lp.topMargin = top; aiBoxRef.setLayoutParams(lp); }
+        if (lp.topMargin != top || lp.leftMargin != left) {
+            lp.topMargin = top; lp.leftMargin = left; aiBoxRef.setLayoutParams(lp);
+        }
         if (appWin.getTop() <= 0) return;
-        int available = Math.max(0, appWin.getTop() - px(16) - top
+        int available = Math.max(0, Math.round(appWin.getTop() + appWin.getTranslationY()) - px(16) - top
+                - Math.round(aiBoxRef.getTranslationY())
                 - aiBoxRef.getPaddingTop() - aiBoxRef.getPaddingBottom());
+        int height = aiContentHeight() > available ? available : -2;
+        LinearLayout.LayoutParams bodyLp = (LinearLayout.LayoutParams) aiScroll.getLayoutParams();
+        if (bodyLp.height != height) { bodyLp.height = height; aiScroll.setLayoutParams(bodyLp); }
+    }
+
+    private int aiContentHeight() {
         int width = Math.max(0, px(640) - aiBoxRef.getPaddingLeft() - aiBoxRef.getPaddingRight());
         aiBody.measure(MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
                 MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
-        int height = aiBody.getMeasuredHeight() > available ? available : -2;
-        LinearLayout.LayoutParams bodyLp = (LinearLayout.LayoutParams) aiScroll.getLayoutParams();
-        if (bodyLp.height != height) { bodyLp.height = height; aiScroll.setLayoutParams(bodyLp); }
+        return aiBody.getMeasuredHeight();
+    }
+
+    private void positionRemoteWidgets() {
+        if (cfg == null || !remoteScroll.isShown() || appWin.getTop() <= 0 || widgets.getWidth() <= 0) return;
+        int available = Math.max(0, Math.round(appWin.getTop() + appWin.getTranslationY()
+                - rectAt(remoteScroll, 0, 0).top) - px(16));
+        remoteRow.measure(MeasureSpec.makeMeasureSpec(widgets.getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
+        boolean overflow = remoteRow.getMeasuredHeight() > available;
+        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) remoteScroll.getLayoutParams();
+        int height = overflow ? available : -2;
+        if (lp.height != height) { lp.height = height; remoteScroll.setLayoutParams(lp); }
+        if (!overflow && remoteScroll.hasFocus()) focusApp(lastApp);
+        remoteScroll.setFocusable(overflow && available > 0);
     }
 
     static boolean reservedPane(String id) {
@@ -1009,18 +1050,19 @@ final class HomeV29 extends FrameLayout {
                 remoteBody[i].addView(r, ll);
             }
         }
-        remoteRow.setVisibility(shown > 0 ? VISIBLE : GONE);
+        remoteScroll.setVisibility(shown > 0 ? VISIBLE : GONE);
         // With the widgets above switched off, the row moves up to the top (aligned with the fastfetch box).
         View row2 = (View) depBox.getParent();
         row2.setVisibility(depBox.getVisibility());
         boolean above = raceBox.getVisibility() == VISIBLE || wxBox.getVisibility() == VISIBLE || pcBox.getVisibility() == VISIBLE
                 || aiBoxRef.getVisibility() == VISIBLE || depBox.getVisibility() == VISIBLE;
-        LinearLayout.LayoutParams rl = (LinearLayout.LayoutParams) remoteRow.getLayoutParams();
+        LinearLayout.LayoutParams rl = (LinearLayout.LayoutParams) remoteScroll.getLayoutParams();
         int top = above ? px(16) : 0;
         if (rl.topMargin != top) {
             rl.topMargin = top;
-            remoteRow.setLayoutParams(rl);
+            remoteScroll.setLayoutParams(rl);
         }
+        post(this::positionRemoteWidgets);
     }
 
     /** v2.21 the PC's pushed panes as the same JSON shape as fetched ones (id, title, ttl, at, lines[label,value]). */
@@ -1879,6 +1921,9 @@ final class HomeV29 extends FrameLayout {
             int[] p = c.panelPos.get(id);
             setPanelTranslation(v, p != null ? p[0] * cellW() : 0, p != null ? p[1] * cellH() : 0);
         }
+        int[] savedAi = c.panelPos.get("ai");
+        if (savedAi != null && aiBoxRef.isShown() && getWidth() > 0 && !fits(aiBoxRef, savedAi[0], savedAi[1]))
+            setPanelTranslation(aiBoxRef, 0, 0);
         int[] saved = c.panelPos.get("pc");
         if (saved != null && macBox.isShown() && getWidth() > 0 && !fits(pcBox, saved[0], saved[1])) {
             int bx = saved[0], by = saved[1], distance = Integer.MAX_VALUE;
@@ -1888,6 +1933,7 @@ final class HomeV29 extends FrameLayout {
             }
             if (distance != Integer.MAX_VALUE) setPanelTranslation(pcBox, bx * cellW(), by * cellH());
         }
+        positionLeftWidgets();
     }
 
     private void setPanelTranslation(View v, float x, float y) {
@@ -1912,8 +1958,11 @@ final class HomeV29 extends FrameLayout {
     /** True if the panel at (cx, cy) stays on screen, below the bar, above the app row and off every other panel. */
     private boolean fits(View v, int cx, int cy) {
         android.graphics.RectF r = rectAt(v, cx * cellW(), cy * cellH());
+        if (v == aiBoxRef) r.bottom = Math.max(r.bottom, r.top + aiBoxRef.getPaddingTop()
+                + aiContentHeight() + aiBoxRef.getPaddingBottom());
         if (r.left < 0 || r.right > getWidth() || r.top < barHeight() || r.bottom > getHeight()) return false;
         if (appWin.getVisibility() == VISIBLE && android.graphics.RectF.intersects(r, rectAt(appWin, appWin.getTranslationX(), appWin.getTranslationY()))) return false;
+        if (remoteScroll.isShown() && android.graphics.RectF.intersects(r, rectAt(remoteScroll, 0, 0))) return false;
         for (String id : PANEL_IDS) {
             View o = panelView(id);
             if (o == v || o.getVisibility() != VISIBLE) continue;
@@ -1964,6 +2013,7 @@ final class HomeV29 extends FrameLayout {
                 editCx = nx;
                 editCy = ny;
                 editPanel.animate().translationX(nx * cellW()).translationY(ny * cellH()).setDuration(80).start();
+                if (editPanel == term) editPanel.animate().withEndAction(this::positionLeftWidgets);
                 if (editPanel == pcBox) macBox.animate().translationX(nx * cellW()).translationY(ny * cellH()).setDuration(80).start();
                 break;
             }
@@ -1985,6 +2035,7 @@ final class HomeV29 extends FrameLayout {
             setPanelTranslation(v, editOldCx * cellW(), editOldCy * cellH());
         }
         focusApp(lastApp);
+        positionLeftWidgets();
     }
 
     int barHeight() {
@@ -2178,6 +2229,12 @@ final class HomeV29 extends FrameLayout {
                     aiScroll.scrollBy(0, -Math.max(px(30), aiScroll.getHeight() / 2));
                     return true;
                 }
+                if (f == remoteScroll) {
+                    if (remoteScroll.canScrollVertically(-1))
+                        remoteScroll.scrollBy(0, -Math.max(px(30), remoteScroll.getHeight() / 2));
+                    else if (!focusFirstVisible(widgets) || act.getCurrentFocus() == remoteScroll) activeWsButton().requestFocus();
+                    return true;
+                }
                 if (z == 2) {
                     if (!focusFirstVisible(widgets)) ws[0].requestFocus();
                 } else if (z == 1) activeWsButton().requestFocus();
@@ -2187,7 +2244,13 @@ final class HomeV29 extends FrameLayout {
                     aiScroll.scrollBy(0, Math.max(px(30), aiScroll.getHeight() / 2));
                     return true;
                 }
+                if (f == remoteScroll && remoteScroll.canScrollVertically(1)) {
+                    remoteScroll.scrollBy(0, Math.max(px(30), remoteScroll.getHeight() / 2));
+                    return true;
+                }
                 if (z == 1) {
+                    if (f != remoteScroll && remoteScroll.isShown() && remoteScroll.isFocusable()
+                            && remoteScroll.requestFocus()) return true;
                     if (f.getParent() == ((ViewGroup) widgets.getChildAt(0)) && depBox.getVisibility() == VISIBLE && f == aiBoxRef) depBox.requestFocus();
                     else focusApp(lastApp);
                     return true;
@@ -2212,7 +2275,7 @@ final class HomeV29 extends FrameLayout {
     }
 
     private boolean focusFirstVisible(ViewGroup g) {
-        for (View v : new View[]{raceBox, wxBox, aiBoxRef, pcBox, depBox})
+        for (View v : new View[]{raceBox, wxBox, aiBoxRef, pcBox, depBox, remoteScroll})
             if (v.isShown() && v.isFocusable() && v.requestFocus()) return true;
         return false;
     }
