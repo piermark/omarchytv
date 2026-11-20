@@ -1014,6 +1014,22 @@ public class LinkServerTest {
         assertEquals(1, schema.getInt("version"));
     }
 
+    /** The app API's "*" is for Bearer tokens; the settings routes never answer another site's preflight. */
+    @Test
+    public void settingsNeverAnswerAnotherSitesPreflight() throws Exception {
+        for (boolean on : new boolean[]{false, true}) {
+            host.editConfig(j -> j.put("link", new JSONObject().put("webSettings", on)));
+            Map<String, String> h = new HashMap<>();
+            h.put("Host", "127.0.0.1:" + port);
+            h.put("Origin", "http://evil.example");
+            h.put("Access-Control-Request-Method", "PATCH");
+            h.put("Access-Control-Request-Headers", "content-type,x-omarchy-csrf");
+            Resp r = http("OPTIONS", "/v1/settings", new byte[0], h);
+            assertNull(String.valueOf(on), r.headers.get("access-control-allow-origin"));
+            assertTrue(r.status >= 400);
+        }
+    }
+
     @Test
     public void webApprovalsAreLimited() throws Exception {
         String origin = "http://127.0.0.1:" + port;
