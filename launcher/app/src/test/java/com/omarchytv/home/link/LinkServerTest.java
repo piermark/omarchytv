@@ -1043,6 +1043,39 @@ public class LinkServerTest {
     }
 
     @Test
+    public void nightShiftDiaryAndMorningQueue() throws Exception {   // v2.22
+        pair("123456");
+        server.limits = false;
+        String ctl = appToken("owner-agent", "control"), ntf = appToken("hermes", "notify"), rd = appToken("wall", "read");
+        assertEquals(409, app("POST", "/v1/shift/log", "{\"text\":\"x\"}", ntf).status);   // no shift yet
+        assertEquals(403, app("POST", "/v1/shift/start", "{\"tasks\":[\"x\"],\"until\":\"07:00\"}", ntf).status);
+        long until = System.currentTimeMillis() + 3600_000L;
+        Resp st = app("POST", "/v1/shift/start", "{\"tasks\":[\"fix tests\",\"draft post\"],\"until\":" + until + "}", ctl);
+        assertEquals(200, st.status);
+        assertEquals("running", st.json().getJSONObject("shift").getString("state"));
+        assertEquals(403, app("POST", "/v1/shift/log", "{\"text\":\"x\"}", rd).status);
+        assertEquals(200, app("POST", "/v1/shift/log", "{\"level\":\"ok\",\"text\":\"352 tests green\",\"task\":0}", ntf).status);
+        Resp q = app("POST", "/v1/shift/queue", "{\"title\":\"push tv-2.22\",\"risk\":\"push\"}", ntf);
+        assertEquals("q1", q.json().getJSONObject("item").getString("id"));
+        assertEquals("pending", app("GET", "/v1/shift/queue/q1", "", ntf).json().getString("state"));
+        // there is no way to answer from the network: only the TV page does
+        assertEquals(404, app("POST", "/v1/shift/queue/q1", "{\"answer\":\"approved\"}", ctl).status);
+        JSONObject counts = app("GET", "/v1/shift", "", rd).json().getJSONObject("counts");
+        assertEquals(1, counts.getInt("ok"));
+        assertEquals(1, counts.getInt("waiting"));
+        // the same through MCP
+        Resp r = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 1).put("method", "tools/call").put("params",
+                new JSONObject().put("name", "tv_shift_log").put("arguments", new JSONObject().put("level", "fail").put("text", "lint failed"))).toString(), ntf);
+        assertFalse(r.json().toString(), r.json().getJSONObject("result").optBoolean("isError"));
+        Resp denied = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 2).put("method", "tools/call").put("params",
+                new JSONObject().put("name", "tv_shift_log").put("arguments", new JSONObject().put("text", "x"))).toString(), rd);
+        assertFalse(denied.json().toString().contains("\"ok\":true"));
+        assertEquals(2, app("GET", "/v1/shift", "", rd).json().getJSONObject("counts").getInt("ok") + app("GET", "/v1/shift", "", rd).json().getJSONObject("counts").getInt("fail"));
+        assertEquals(200, app("POST", "/v1/shift/end", "{}", ctl).status);
+        assertEquals(409, app("POST", "/v1/shift/log", "{\"text\":\"late\"}", ntf).status);
+    }
+
+    @Test
     public void radioStationsAndPluginsKeepTheirSwitches() throws Exception {   // v2.22 #162
         pair("123456");
         server.limits = false;

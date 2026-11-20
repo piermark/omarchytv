@@ -132,6 +132,7 @@ final class AppApi {
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
                 || "/v1/radio".equals(p) || p.startsWith("/v1/radio/") || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
                 || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")
+                || "/v1/shift".equals(p) || p.startsWith("/v1/shift/")   // v2.22 the night shift
                 || p.startsWith("/v1/ha/")   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
                 || "/v1/settings".equals(p) || "/v1/settings/schema".equals(p);   // v2.22 #163
     }
@@ -211,6 +212,7 @@ final class AppApi {
         if (p.startsWith("/v1/widgets/")) return widgetRoute(who, m, p, req.target, req.peer, body);   // v2.22 #157
         if (p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")) return pageRoute(who, m, p, req.target, body);   // #158
         if (p.startsWith("/v1/ha/")) return haRoute(who, m, p, req.target, body);   // #160
+        if ("/v1/shift".equals(p) || p.startsWith("/v1/shift/")) return shiftRoute(who, m, p, body);   // v2.22
         if ("/v1/settings".equals(p) || "/v1/settings/schema".equals(p)) return settingsRoute(who, m, p, req.target, body);   // #163
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
@@ -822,6 +824,63 @@ final class AppApi {
             return new LinkServer.Response(st, LinkServer.err("ha_" + err, "Home Assistant"));
         }
         return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    // ---- v2.22 the night shift: a diary on the TV and a queue for the morning (NightShift) ----
+    static final java.util.regex.Pattern SHIFT_ITEM = java.util.regex.Pattern.compile("/v1/shift/queue/(q[0-9]{1,6})");
+
+    interface ShiftOp {
+        JSONObject apply(JSONObject cfg, long now) throws Exception;
+    }
+
+    LinkServer.Response shiftRoute(Principal who, String m, String p, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/shift".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            return new LinkServer.Response(200, NightShift.status(host.config(), System.currentTimeMillis()));
+        }
+        java.util.regex.Matcher im = SHIFT_ITEM.matcher(p);
+        if ("GET".equals(m) && im.matches()) {
+            if (!who.can("notify")) return forbidden("notify");
+            try {
+                return new LinkServer.Response(200, NightShift.decision(host.config(), im.group(1)));
+            } catch (NightShift.Bad e) {
+                return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+            }
+        }
+        if (!"POST".equals(m)) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        ShiftOp op;
+        String need, event;
+        switch (p) {
+            case "/v1/shift/start":
+                need = "control"; event = "started";
+                op = (cfg, now) -> NightShift.start(cfg, body, who.name, now, java.util.TimeZone.getDefault());
+                break;
+            case "/v1/shift/end":
+                need = "control"; event = "ended";
+                op = (cfg, now) -> NightShift.end(cfg, now);
+                break;
+            case "/v1/shift/log":
+                need = "notify"; event = "log";
+                op = (cfg, now) -> NightShift.log(cfg, who.name, body, now);
+                break;
+            case "/v1/shift/queue":
+                need = "notify"; event = "queued";
+                op = (cfg, now) -> NightShift.queue(cfg, who.name, body, now);
+                break;
+            default:
+                return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        }
+        if (!who.can(need)) return forbidden(need);
+        JSONObject[] out = new JSONObject[1];
+        try {
+            host.editConfig(j -> out[0] = op.apply(j, System.currentTimeMillis()));
+        } catch (NightShift.Bad e) {
+            return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+        }
+        s.broadcast("shift_changed", new JSONObject().put("op", event));
+        host.shiftChanged(event);
+        boolean whole = "started".equals(event) || "ended".equals(event);
+        return new LinkServer.Response(200, LinkServer.ok().put(whole ? "shift" : "item", out[0]));
     }
 
     interface WidgetOp {

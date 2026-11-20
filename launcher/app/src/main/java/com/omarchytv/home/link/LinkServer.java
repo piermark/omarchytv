@@ -60,6 +60,10 @@ public final class LinkServer {
 
     /** What the server needs from the launcher. Called on server threads; implementations must be thread-safe. */
     public interface Host {
+        /** v2.22 the night shift changed (started, ended, log, queued): the TV refreshes its page, plans the wake-up. */
+        default void shiftChanged(String what) {
+        }
+
         String tvName();
 
         /** The Connect Omarchy Linux page is visible (and opened at most 5 minutes ago). */
@@ -1485,6 +1489,20 @@ public final class LinkServer {
                         }
                         break;
                     }
+                    case "tv_shift_start":
+                    case "tv_shift_end":
+                    case "tv_shift_status":
+                    case "tv_shift_log":
+                    case "tv_shift_queue":
+                    case "tv_shift_decision": {   // v2.22: the same code as /v1/shift
+                        String sp = "tv_shift_status".equals(name) ? "/v1/shift" : "tv_shift_decision".equals(name)
+                                ? "/v1/shift/queue/" + args.optString("id", "") : "/v1/shift/" + name.substring("tv_shift_".length());
+                        String sm = "tv_shift_status".equals(name) || "tv_shift_decision".equals(name) ? "GET" : "POST";
+                        Response sr = app.shiftRoute(who, sm, sp, args);
+                        out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                        isError = sr.status != 200;
+                        break;
+                    }
                     case "tv_ha_status":
                     case "tv_ha_list":
                     case "tv_ha_run": {   // v2.22 #160: the same code as /v1/ha/*
@@ -1725,6 +1743,21 @@ public final class LinkServer {
         t.add(new Object[]{"tv_ha_run", "Run a Home Assistant scene, script or automation, or toggle a light, switch, fan or input_boolean.",
                 new JSONObject().put("entity_id", prop("string", "e.g. scene.movie")), "control"});
         t.add(new Object[]{"tv_page_show", "Bring a Home widget page to the screen (e.g. where an alert widget just landed).", new JSONObject().put("page", pref), "control"});
+        // v2.22 the night shift
+        t.add(new Object[]{"tv_shift_start", "Start a night shift: the owner's tasks for the night, its end (\"07:00\" or epoch ms, within 16 h) and when the TV should show the morning page (wake). During the shift the TV stays silent; write a diary with tv_shift_log and leave anything risky for the morning with tv_shift_queue.",
+                new JSONObject().put("tasks", new JSONObject().put("type", "array").put("items", prop("string", "a task")).put("description", "1 to 20 tasks"))
+                        .put("until", prop("string", "\"07:00\" or epoch ms")).put("wake", prop("string", "\"07:30\" or epoch ms (optional)"))
+                        .put("replace", prop("boolean", "replace a running shift")), "control"});
+        t.add(new Object[]{"tv_shift_end", "End the night shift now (the diary and the queue stay for the morning page).", new JSONObject(), "control"});
+        t.add(new Object[]{"tv_shift_status", "The night shift: running / ended / none, tasks, end, wake, and counts (ok, fail, info, waiting).", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_shift_log", "Write a line in the night shift's diary on the TV: level ok | fail | info, a short text (≤200), an optional detail (a log, a diff) and the task index it belongs to.",
+                new JSONObject().put("level", prop("string", "ok | fail | info")).put("text", prop("string", "What happened")).put("detail", prop("string", "Optional: log, diff, link"))
+                        .put("task", prop("integer", "Optional: index in tasks")), "notify"});
+        t.add(new Object[]{"tv_shift_queue", "Leave a decision for the morning instead of doing something risky at night (push, merge, post, payment, deleting data). Returns an id; check it with tv_shift_decision. Only the owner answers, on the TV.",
+                new JSONObject().put("title", prop("string", "What you want to do, ≤120")).put("detail", prop("string", "The command, the diff, why"))
+                        .put("risk", prop("string", "e.g. push, merge, post")), "notify"});
+        t.add(new Object[]{"tv_shift_decision", "The owner's answer to a queued decision: pending, approved or denied.",
+                new JSONObject().put("id", prop("string", "The id from tv_shift_queue, e.g. q3")), "notify"});
         return t;
     }
 
