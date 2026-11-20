@@ -1,0 +1,17 @@
+{
+  "id": "night-shift",
+  "name": "Night shift",
+  "author": "OmarchyTV",
+  "version": "1.0",
+  "license": "MIT",
+  "description": "Your agents work at night and the TV keeps the diary: a page with tonight's tasks and the score, and the morning replay.",
+  "permissions": ["widgets", "shift", "live"],
+  "page": "Night shift",
+  "widgets": [
+    {"id": "score", "type": "lines", "x": 0, "y": 0, "w": 4, "h": 2, "title": "Tonight", "icon": "🌙",
+     "data": {"lines": [{"label": "done", "value": "0"}, {"label": "failed", "value": "0"}, {"label": "waiting", "value": "0"}]}},
+    {"id": "now", "type": "text", "x": 4, "y": 0, "w": 8, "h": 2, "title": "Now",
+     "data": {"text": "No shift yet. Ask your agent: \"start a night shift with these tasks, until 7, wake me at 7:30\"."}}
+  ],
+  "agent": "When the owner asks for a night shift: tv_shift_start with the tasks, until and wake.\nWhile working: tv_shift_log for every step (ok / fail / info) and tv_live_update with what you are doing.\nNever push, merge, post, pay or delete at night: tv_shift_queue it and check tv_shift_decision in the morning.\nKeep the widget s.night-shift.score up to date with tv_widget_update (done, failed, waiting), and s.night-shift.now with the current task."
+}

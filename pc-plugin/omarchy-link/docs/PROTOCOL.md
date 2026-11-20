@@ -557,6 +557,14 @@ scope read or control, 30 days) as an `HttpOnly; SameSite=Strict` cookie. With t
 | POST | `/v1/skills/{id}/install` | control | shows the skill and its permissions on the TV; the owner answers there |
 | DELETE | `/v1/skills/{id}` | control | removes its widgets and its page |
 
+**LG / Samsung (the bridge).** `omarchy-tv webos-serve` answers the same `/v1/live`, `/v1/shift*` and `/v1/skills*`
+paths with the agents' key (`from` in the body names the agent), keeps the shift in
+`~/.config/omarchy-tv/night-shift.json` (0600) and the catalogue in `lib/omarchy_tv/skills` (a copy of the TV's, checked
+by a test). The TV app reads `GET /v1/tvlive` with its ask code → `{live, shift (with log and queue), skillAsk, skills,
+installed}` and answers with `POST /v1/shift/answer {id, yes}`, `POST /v1/skills/answer {id, yes}`, `POST
+/v1/tvskills/install | remove {id}` (the ask code only: agents get 401). During a shift `POST /v1/notify` answers
+`kept_for_morning`.
+
 A preview (on `/v1/live` and `/v1/ask`): `{kind: image, url}` (https, or http to a LAN / tailnet IP),
 `{kind: diff | text, text}`, `{kind: chart, points[], label?}`, optional `title`; anything else is 400 `bad_preview`.
 During a running shift `POST /v1/notify` answers `kept_for_morning` (the note goes to the diary), and speech is off.

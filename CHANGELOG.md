@@ -35,8 +35,11 @@
   `/v1/skills`, `tv_skill_list`, `tv_skill_install` (asks you on the TV), `tv_skill_remove`.
 - **GrokBot Office is the control room**: in the Office, the red key goes on air (AI LIVE), the blue key plays the
   night back, the yellow key opens the skills.
-- Not on LG / Samsung in 2.22: AI LIVE, the night shift, talking from the phone and skills (their agents' tools
-  answer `not_on_lg_samsung`).
+- **On LG and Samsung too**, through the PC bridge (`omarchy-tv webos-serve`, `ai_bridge.py`, the same rules and
+  answers): Omarchy menu › AI LIVE, Night shift (with its replay) and Skills. The morning page and an agent's skill
+  question open by themselves; only the TV answers the queue and installs. Not on LG / Samsung in 2.22: going on air
+  by itself from the PC's agent monitor (agents use `tv_live_update`, notes and questions), talking from the phone,
+  and the Office's colour keys.
 
 - **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
   page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,

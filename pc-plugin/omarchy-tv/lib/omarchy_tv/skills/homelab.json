@@ -1,0 +1,19 @@
+{
+  "id": "homelab",
+  "name": "Homelab dashboard",
+  "author": "OmarchyTV",
+  "version": "1.0",
+  "license": "MIT",
+  "description": "CPU, RAM, disk and services of your servers on a page of their own, kept up to date by your agent.",
+  "permissions": ["widgets", "notify"],
+  "page": "Homelab",
+  "widgets": [
+    {"id": "cpu", "type": "stat", "x": 0, "y": 0, "w": 2, "h": 1, "title": "CPU", "data": {"value": "–", "unit": "%"}},
+    {"id": "ram", "type": "stat", "x": 2, "y": 0, "w": 2, "h": 1, "title": "RAM", "data": {"value": "–", "unit": "%"}},
+    {"id": "disk", "type": "stat", "x": 4, "y": 0, "w": 2, "h": 1, "title": "Disk", "data": {"value": "–", "unit": "%"}},
+    {"id": "load", "type": "chart", "x": 6, "y": 0, "w": 6, "h": 2, "title": "Load", "data": {"points": [0], "kind": "spark", "label": "load"}},
+    {"id": "services", "type": "lines", "x": 0, "y": 1, "w": 6, "h": 3, "title": "Services", "icon": "🖥",
+     "data": {"lines": [{"label": "waiting", "value": "for the agent"}]}}
+  ],
+  "agent": "Every few minutes, read the servers the owner told you about (never their secrets) and update the widgets s.homelab.cpu, s.homelab.ram, s.homelab.disk (stat), s.homelab.load (chart, the last 60 values) and s.homelab.services (lines: name and up / down, tone up or down) with tv_widget_update. When a service goes down, tv_notify it with level alert."
+}

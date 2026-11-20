@@ -37,7 +37,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Animated logo", sys_text_tiles: "Text tiles (terminal style)", sys_all: "All OmarchyTV settings", sys_about: "About & licences",
       tile_move: "Move", tile_hide: "Hide", tile_cancel: "Cancel", move_hint: "◀▶▲▼ move · OK save · Back cancel",
       app_hidden: "Hidden. Show it again in All settings › Hidden apps", hidden_apps: "Hidden apps", hidden_none: "No hidden apps",
-      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", agent_asks: "asks", wg_open: "Open", wg_rotate: "Rotate widget pages", wg_ha: "Set up Home Assistant in Ambilight & Lights", agent_hint: "OK answers · ◀ ▶ choose · BACK later", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
+      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", agent_asks: "asks", wg_open: "Open", wg_rotate: "Rotate widget pages", wg_ha: "Set up Home Assistant in Ambilight & Lights", shift_title: "Night shift", skills_title: "Skills", agent_hint: "OK answers · ◀ ▶ choose · BACK later", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
       wx_title: "Weather", wx_auto: "Automatic (from IP)", wx_auto_fail: "Couldn't find your location, keeping the current city", wx_search: "Search city…", wx_unit: "Temperature unit",
       root_boot: "Open when the TV starts", root_home: "Home button opens OmarchyTV", root_needed: "rooted TV only",
       root_keep: "Keep loaded in the background", root_keep_na: "not on this TV",
@@ -173,7 +173,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Logo animato", sys_text_tiles: "Tile solo testo (stile terminale)", sys_all: "Tutte le impostazioni OmarchyTV", sys_about: "Info e licenze",
       tile_move: "Sposta", tile_hide: "Nascondi", tile_cancel: "Annulla", move_hint: "◀▶▲▼ sposta · OK salva · Indietro annulla",
       app_hidden: "Nascosta. Mostrala di nuovo in Tutte le impostazioni › App nascoste", hidden_apps: "App nascoste", hidden_none: "Nessuna app nascosta",
-      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", agent_asks: "chiede", wg_open: "Apri", wg_rotate: "Ruota le pagine dei widget", wg_ha: "Configura Home Assistant in Ambilight e luci", agent_hint: "OK risponde · ◀ ▶ scegli · BACK dopo", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV · Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
+      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", agent_asks: "chiede", wg_open: "Apri", wg_rotate: "Ruota le pagine dei widget", wg_ha: "Configura Home Assistant in Ambilight e luci", shift_title: "Turno di notte", skills_title: "Skill", agent_hint: "OK risponde · ◀ ▶ scegli · BACK dopo", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV · Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
       wx_title: "Meteo", wx_auto: "Automatica (da IP)", wx_auto_fail: "Posizione non trovata, resta la città attuale", wx_search: "Cerca città…", wx_unit: "Unità temperatura",
       root_boot: "Apri all'avvio della TV", root_home: "Il tasto Home apre OmarchyTV", root_needed: "solo TV con root",
       root_keep: "Tieni caricata in background", root_keep_na: "non su questa TV",
@@ -309,7 +309,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Animiertes Logo", sys_text_tiles: "Text-Kacheln (Terminal-Stil)", sys_all: "Alle OmarchyTV-Einstellungen", sys_about: "Info & Lizenzen",
       tile_move: "Verschieben", tile_hide: "Ausblenden", tile_cancel: "Abbrechen", move_hint: "◀▶▲▼ verschieben · OK speichern · Zurück abbrechen",
       app_hidden: "Ausgeblendet. Wieder einblenden unter Alle Einstellungen › Ausgeblendete Apps", hidden_apps: "Ausgeblendete Apps", hidden_none: "Keine ausgeblendeten Apps",
-      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", agent_asks: "fragt", wg_open: "Öffnen", wg_rotate: "Widget-Seiten wechseln", wg_ha: "Home Assistant unter Ambilight & Licht einrichten", agent_hint: "OK antwortet · ◀ ▶ wählen · BACK später", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
+      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", agent_asks: "fragt", wg_open: "Öffnen", wg_rotate: "Widget-Seiten wechseln", wg_ha: "Home Assistant unter Ambilight & Licht einrichten", shift_title: "Nachtschicht", skills_title: "Skills", agent_hint: "OK antwortet · ◀ ▶ wählen · BACK später", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
       wx_title: "Wetter", wx_auto: "Automatisch (über IP)", wx_auto_fail: "Standort nicht gefunden, die aktuelle Stadt bleibt", wx_search: "Stadt suchen…", wx_unit: "Temperatureinheit",
       root_boot: "Beim Einschalten öffnen", root_home: "Home-Taste öffnet OmarchyTV", root_needed: "nur gerootete TVs",
       root_keep: "Im Hintergrund geladen lassen", root_keep_na: "nicht auf diesem TV",
@@ -3128,7 +3128,12 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { icon: "󰕼", label: "Cinemarchy", right: "C ›", act: function () { openCinemarchyModal(0); } },
       { icon: "🎮", label: "OmarchyTV Arcade", right: "V-HOLD · RICE WARS · FORK BOMB ›", act: openArcade },
       { icon: "♫", label: "Radiomarchy", right: "Omarchy Radio · R ›", act: function () { openRadio(); } },
-    ].concat(cfg.officeEnabled && OFF ? [{ icon: "󰚩", label: "GrokBot Office", right: "O ›", act: openOffice }] : []).concat([
+    ].concat(cfg.officeEnabled && OFF ? [{ icon: "󰚩", label: "GrokBot Office", right: "O ›", act: openOffice }] : []).concat(aiLive ? [
+      // v2.22 the TV that runs your AI (through the PC bridge)
+      { icon: "●", label: "AI LIVE", right: "›", act: function () { closeModal(); aiLive.open("live"); } },
+      { icon: "🌙", label: tr("shift_title"), right: "›", act: function () { closeModal(); aiLive.open("shift"); } },
+      { icon: "🧩", label: tr("skills_title"), right: "›", act: function () { closeModal(); aiLive.open("skills"); } }
+    ] : []).concat([
       { icon: "", label: tr("menu_plugins"), right: "›", act: openPluginsModal },
       { icon: "󰀻", label: tr("menu_apps"), right: "›", act: openWalkerModal },
       { icon: "󰸌", label: tr("sys_themes"), right: "›", act: openThemesModal },
@@ -4461,6 +4466,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
     // v2.21 an agent's page or question is on screen: its keys first (BACK closes it, never the app)
     if (agentInbox && agentInbox.key(e.keyCode)) { e.preventDefault(); e.stopPropagation(); return; }
+    if (aiLive && aiLive.key(e.keyCode)) { e.preventDefault(); e.stopPropagation(); return; }   // v2.22 AI LIVE on screen
     // v2.22 a widget page on screen (or CH+ / CH- on the Home): its keys first; BACK returns to the Home
     if (homeGrid && homeGrid.key(e.keyCode)) { e.preventDefault(); e.stopPropagation(); return; }
     var code = e.keyCode;
@@ -4845,7 +4851,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }, 5000);
 
   // v2.21 agents on LG / Samsung: notifications, pages and questions kept by the PC bridge (inbox.js).
-  var agentInbox = null, homeGrid = null;
+  var agentInbox = null, homeGrid = null, aiLive = null;
   if (window.OmarchyInbox) {
     agentInbox = window.OmarchyInbox.create({
       base: pcBase, token: function () { return cfg.grokbotCode || ""; },
@@ -4872,6 +4878,17 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       version: function () { return APP_VERSION; }
     });
     setTimeout(function () { homeGrid.tick(); }, 1500);
+    // v2.22 AI LIVE, the night shift and skills, kept by the PC bridge (ailive.js)
+    if (window.OmarchyAiLive) {
+      aiLive = window.OmarchyAiLive.create({
+        base: pcBase, token: function () { return cfg.grokbotCode || ""; },
+        idle: function () { return !homeGrid.isOpen() && !state.modalOpen && !state.embedOpen && !radioUi && !cineUi && !officeUi; },
+        wakeShown: function () { return cfg.shiftWakeShown || 0; },
+        markWake: function (w) { cfg.shiftWakeShown = w; saveCfg(); }
+      });
+      setInterval(function () { if (!document.hidden && !aiLive.isOpen()) aiLive.tick(); }, 10000);
+      setInterval(function () { if (!document.hidden && aiLive.isOpen()) aiLive.tick(); }, 2000);
+    }
     setInterval(function () { if (!document.hidden) homeGrid.tick(); }, 10000);
   }
 })();

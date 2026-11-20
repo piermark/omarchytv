@@ -1,0 +1,17 @@
+{
+  "id": "movie-night",
+  "name": "Movie night",
+  "author": "OmarchyTV",
+  "version": "1.0",
+  "license": "MIT",
+  "description": "Your Home Assistant scenes on one page: lights down for a film with one OK, and an agent that can set the mood for you.",
+  "permissions": ["widgets", "ha.read", "ha.control"],
+  "page": "Movie night",
+  "widgets": [
+    {"id": "scenes", "type": "homeassistant.scenes", "x": 0, "y": 0, "w": 8, "h": 3, "title": "Scenes", "icon": "🎬",
+     "data": {"items": "all", "columns": 3}},
+    {"id": "tip", "type": "text", "x": 8, "y": 0, "w": 4, "h": 3, "title": "Tip",
+     "data": {"text": "Ask your agent: \"make it movie night for two\". It picks the scene, dims Ambilight and opens the app."}}
+  ],
+  "agent": "For \"movie night\" (or a similar mood): tv_ha_list scenes, pick the one that fits (or say none fits), run it with tv_ha_run, and open the app the owner names with tv_open or a shortcut. Ask before anything that unlocks, opens or heats."
+}

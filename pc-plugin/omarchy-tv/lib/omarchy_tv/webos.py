@@ -494,7 +494,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         global _last_ask
-        if self._home_route("POST"):
+        if self._home_route("POST") or self._ai_route("POST"):
             return
         path = self.path.split("?", 1)[0]
         if path not in ("/v1/grokbot/ask", "/v1/grokbot/sync", "/v1/ai/providers", "/v1/ai/ask", "/v1/theme/set",
@@ -680,19 +680,38 @@ class WebOSHandler(BaseHTTPRequestHandler):
     # ---- v2.21 agents on LG / Samsung (agent_inbox) ----
     def _agent_post(self, path: str, body: dict) -> None:
         from .agent_inbox import INBOX
+        from . import ai_bridge
         try:
             if path == "/v1/notify":
-                self._send_json(INBOX.notify(body.get("text") or body.get("body") or "", body.get("title", ""),
-                                             body.get("level", "info"), body.get("from") or "PC", body.get("speak") is True))
+                src, text, title = body.get("from") or "PC", body.get("text") or body.get("body") or "", body.get("title", "")
+                note = (title + " · " + text) if title and text else (title or text)
+                ai_bridge.LIVE.event(src, "alert" if body.get("level") == "alert" else "note", note)   # v2.22 AI LIVE
+                if ai_bridge.SHIFT.quiet():   # v2.22 the night shift: no note on the TV, a line in the diary
+                    try:
+                        ai_bridge.SHIFT.log(src, {"level": "fail" if body.get("level") == "alert" else "info", "text": note})
+                    except ai_bridge.Bad:
+                        pass
+                    self._send_json({"ok": True, "shown": False, "kept_for_morning": True})
+                    return
+                self._send_json(INBOX.notify(text, title, body.get("level", "info"), src, body.get("speak") is True))
             elif path == "/v1/page":
                 urls = body.get("urls") or []   # LG / Samsung show one page: the first
                 url = "" if body.get("close") else str(body.get("url") or (urls[0] if urls else ""))
                 self._send_json(INBOX.set_page(url or None, body.get("from") or "PC"))
             elif path == "/v1/ask":
-                self._send_json(INBOX.ask(body.get("question", ""), body.get("choices"), body.get("timeout", 120),
-                                          body.get("from") or "PC"))
+                if body.get("preview") is not None:   # v2.22 see the work before you approve it
+                    pv = ai_bridge.preview(body.get("preview"))
+                    if pv is None:
+                        self._send_json({"error": "bad_preview", "message": "{kind: image, url}, {kind: diff | text, text}, {kind: chart, points}"}, 400)
+                        return
+                    ai_bridge.LIVE.now(body.get("from") or "PC", {"preview": pv})
+                a = INBOX.ask(body.get("question", ""), body.get("choices"), body.get("timeout", 120), body.get("from") or "PC")
+                ai_bridge.LIVE.waiting(a["from"], a["id"], a["question"])
+                self._send_json(a)
             else:   # the TV's answer: POST /v1/ask/<id> {answer}
                 ok = INBOX.answer(path.rsplit("/", 1)[1], str(body.get("answer", "")))
+                if ok:
+                    ai_bridge.LIVE.answered(path.rsplit("/", 1)[1], str(body.get("answer", "")))
                 self._send_json({"ok": ok}, 200 if ok else 409)
         except OverflowError:
             self._send_json({"error": "busy"}, 429)
@@ -748,6 +767,40 @@ class WebOSHandler(BaseHTTPRequestHandler):
         self._send_json(out, status)
         return True
 
+    # ---- v2.22 AI LIVE, the night shift and skills on LG / Samsung (ai_bridge) ----
+    def _ai_route(self, method: str) -> bool:
+        from . import ai_bridge
+        path = self.path.split("?", 1)[0]
+        if not ai_bridge.handles(path):
+            return False
+        tv = ai_bridge.tv_only(path)
+        if not self._peer_ok():
+            self._send_json({"error": "not_lan"}, 403)
+            return True
+        if not (self._authorized() if tv else self._agent_authorized()):
+            self._send_json({"error": "unauthorized", "message": "wrong or missing key"}, 401)
+            return True
+        body = {}
+        if method in ("POST", "DELETE"):
+            try:
+                n = int(self.headers.get("Content-Length") or 0)
+            except ValueError:
+                n = -1
+            if n < 0 or n > 32 * 1024:
+                self._send_json({"error": "too_big", "message": "32 KB at most"}, 413 if n > 0 else 400)
+                return True
+            try:
+                body = json.loads(self.rfile.read(n).decode("utf-8") or "{}") if n else {}
+            except (ValueError, UnicodeDecodeError):
+                body = None
+            if not isinstance(body, dict):
+                self._send_json({"error": "bad_json"}, 400)
+                return True
+        who = "TV" if tv else (str(body.get("from", "")) or "agent")
+        status, out = ai_bridge.route(home_store(), method, path, body, who)
+        self._send_json(out, status)
+        return True
+
     def do_PATCH(self):
         if not self._home_route("PATCH"):
             self._send_json({"error": "not found"}, 404)
@@ -757,6 +810,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "not found"}, 404)
 
     def do_DELETE(self):
+        if self._ai_route("DELETE"):
+            return
         if not self._home_route("DELETE"):
             self._send_json({"error": "not found"}, 404)
 
@@ -790,7 +845,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0]
-        if self._home_route("GET"):
+        if self._home_route("GET") or self._ai_route("GET"):
             return
         if self._agent_get(path):
             return
