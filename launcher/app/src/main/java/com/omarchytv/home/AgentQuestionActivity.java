@@ -27,6 +27,8 @@ public class AgentQuestionActivity extends Activity {
     static final String EXTRA_ID = "id", EXTRA_FROM = "from", EXTRA_Q = "q", EXTRA_DEADLINE = "deadline", EXTRA_CHOICES = "choices";
     /** v2.22: the full text under the question (the whole command), in a box you scroll with the remote. */
     static final String EXTRA_DETAIL = "detail";
+    /** v2.22: why the request is risky: a red frame and a red "⚠ risky" line; the remote never offers a yes. */
+    static final String EXTRA_RISK = "risk";
 
     private final Handler h = new Handler(Looper.getMainLooper());
     private String id;
@@ -78,8 +80,19 @@ public class AgentQuestionActivity extends Activity {
         card.setPadding(pad, pad, pad, pad);
         GradientDrawable box = new GradientDrawable();
         box.setColor(t.bgDark);
-        box.setStroke((int) dp(2), t.accent);
+        String risk = i.getStringExtra(EXTRA_RISK);
+        boolean risky = risk != null && !risk.isEmpty();
+        box.setStroke((int) dp(risky ? 4 : 2), risky ? t.red : t.accent);
         card.setBackground(box);
+        if (risky) {
+            TextView warn = new TextView(this);
+            warn.setText("⚠ " + risk);
+            warn.setTextColor(t.red);
+            warn.setTypeface(CastUi.font(this), android.graphics.Typeface.BOLD);
+            warn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+            warn.setPadding(0, 0, 0, (int) dp(8));
+            card.addView(warn);
+        }
         TextView who = new TextView(this);
         who.setText("● " + (from == null || from.isEmpty() ? "PC" : from) + " " + getString(R.string.agentq_asks));
         who.setTextColor(t.accent);
@@ -125,7 +138,13 @@ public class AgentQuestionActivity extends Activity {
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         List<Button> buttons = new ArrayList<>();
-        for (String c : choices) {
+        List<String> shown = new ArrayList<>();
+        for (String c : choices) if (!(risky && com.omarchytv.home.link.AppTokens.sayYes(c))) shown.add(c);   // no yes if risky
+        if (shown.isEmpty()) {
+            finish();
+            return;
+        }
+        for (String c : shown) {
             Button bt = new Button(this);
             bt.setText(c);
             bt.setAllCaps(false);
@@ -161,7 +180,7 @@ public class AgentQuestionActivity extends Activity {
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         root.addView(card, cp);
         setContentView(root);
-        buttons.get(startFocus(Arrays.asList(choices))).requestFocus();
+        buttons.get(startFocus(shown)).requestFocus();
         shownAt = android.os.SystemClock.uptimeMillis();
         h.removeCallbacksAndMessages(null);
         h.postDelayed(this::finish, Math.max(0, deadline - System.currentTimeMillis()));

@@ -9,6 +9,7 @@ alerts off print nothing, so Claude Code shows its own prompt as usual. Nothing 
 from __future__ import annotations
 
 import json
+import re
 import shlex
 import shutil
 import time
@@ -19,6 +20,46 @@ from .ask import claude_settings
 
 MARK = "agents permission"
 CHOICES = ("Allow", "Deny", "On the PC")
+RISKY_CHOICES = ("Deny", "On the PC")   # v2.22: a risky request is never approved from the couch
+
+# v2.22: what makes a request risky. (pattern, reason); the first match wins. Shell commands:
+RISKY_COMMANDS = (
+    (r"(^|[;&|(\s])(rm|rmdir|shred|unlink)\s+\S|\bfind\b[^;&|]*\s-delete\b", "deletes files"),
+    (r"\bgit\s+push\b[^;&|]*(\s--force\b|\s-f\b|\s--force-with-lease\b|\s\+\S)", "force push"),
+    (r"\bgit\s+push\b", "pushes to a remote"),
+    (r"\bgit\s+(reset\s+--hard|clean\s+-\S*f|branch\s+-D)\b", "throws work away"),
+    (r"(^|[;&|(]\s*)sudo\b", "runs as root"),
+    (r"\b(curl|wget)\b[^|;]*\|\s*(sudo\s+)?(ba|z|da)?sh\b", "runs a downloaded script"),
+    (r"\bdd\b[^;&|]*\bof=|\bmkfs(\.\w+)?\b|>\s*/dev/(sd|nvme|mmcblk)", "writes a disk"),
+    (r"(?i)\b(drop\s+(table|database|schema)|truncate\s+table)\b", "drops data"),
+    (r"\bchmod\s+(-\S+\s+)*0?777\b|\bchown\s+-R\b", "changes permissions"),
+    (r"\b(shutdown|reboot|poweroff|halt)\b", "stops the machine"),
+    (r"\b(npm|pnpm|yarn|cargo|twine|gem)\s+publish\b|\bgh\s+release\s+create\b", "publishes"),
+    (r"\bkubectl\s+delete\b|\bterraform\s+(destroy|apply)\b|\bdocker\s+(system\s+prune|volume\s+rm)\b", "changes infrastructure"),
+)
+# ...and files a change or a write must not touch casually:
+RISKY_PATHS = (
+    (r"(^|/)\.env(\.[\w-]+)?$|(^|/)\.ssh/|(^|/)id_(rsa|ecdsa|ed25519)|\.(pem|key|p12|jks)$|credentials|secrets?\.",
+     "touches secrets"),
+    (r"^/(etc|boot|usr|var/lib)/", "touches system files"),
+    (r"(^|/)\.git/", "edits git internals"),
+)
+
+
+def risk(p: dict) -> str:
+    """v2.22: why this request is risky ("" when it is routine)."""
+    ti = p.get("tool_input") if isinstance(p.get("tool_input"), dict) else {}
+    cmd = str(ti.get("command") or "")
+    if cmd:
+        for pat, why in RISKY_COMMANDS:
+            if re.search(pat, cmd):
+                return why
+    path = str(ti.get("file_path") or ti.get("notebook_path") or "")
+    if path:
+        for pat, why in RISKY_PATHS:
+            if re.search(pat, path):
+                return why
+    return ""
 WAIT = 90   # seconds on the TV; the hook's own timeout is above it
 
 
@@ -40,7 +81,8 @@ def spoken(p: dict) -> str:
     what = ti.get("command") or ti.get("file_path") or ti.get("url") or ti.get("pattern") or ti.get("description") or ""
     what = " ".join(str(what).split())
     where = Path(str(p.get("cwd") or "")).name
-    head = f"Claude Code{', project ' + where if where else ''}"
+    why = risk(p)
+    head = (f"Risky: {why}. " if why else "") + f"Claude Code{', project ' + where if where else ''}"
     pairs = _edits(p)
     if pairs:   # a diff read aloud is noise: say which file and how big the change is, the screen shows it
         _, rm, add = _diff(pairs)
@@ -102,9 +144,15 @@ def decide(payload: dict, ask) -> dict | None:
     """ask(question, choices, timeout) -> answer or None. Returns the hook's stdout object, or None (no decision)."""
     if not isinstance(payload, dict) or payload.get("hook_event_name", "PermissionRequest") != "PermissionRequest":
         return None
+    why = risk(payload)
     try:
-        answer = ask(describe(payload), list(CHOICES), WAIT, spoken(payload), detail(payload))
+        if why:   # v2.22: no Allow on the remote; the TV frames it red
+            answer = ask(describe(payload), list(RISKY_CHOICES), WAIT, spoken(payload), detail(payload), why)
+        else:
+            answer = ask(describe(payload), list(CHOICES), WAIT, spoken(payload), detail(payload))
     except Exception:
+        return None
+    if why and answer == "Allow":   # whatever the TV sent back: risky requests are approved at the PC only
         return None
     if answer == "Allow":
         decision = {"behavior": "allow"}
@@ -155,8 +203,10 @@ def remove() -> bool:
 
 def tv_ask(client, source: str = "Claude Code", speak: bool = False):
     """An ask() over the paired link: POST /v1/ask, then wait for the answer. speak (v2.22): read aloud first."""
-    def ask(q, choices, timeout, say="", detail=""):
+    def ask(q, choices, timeout, say="", detail="", risk=""):
         body = {"question": q, "choices": choices, "timeout": timeout, "from": source}
+        if risk:
+            body["risk"] = risk   # v2.22: the TV frames it red and never offers a yes
         if detail:
             body["detail"] = detail   # v2.22: the whole command under the question
         if speak:

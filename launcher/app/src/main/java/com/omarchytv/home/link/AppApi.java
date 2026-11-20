@@ -75,6 +75,7 @@ final class AppApi {
         final List<String> choices;
         final long deadline;
         String detail = "";   // v2.22: the full text shown under the question (the whole command), scrollable
+        String risk = "";     // v2.22: why it is risky; framed red, no yes on the remote
         volatile String answer;
 
         Ask(String id, String owner, String from, String question, List<String> choices, long deadline) {
@@ -506,9 +507,11 @@ final class AppApi {
             String x = LinkServer.printable(c.optString(i, ""), 24);
             if (!x.isEmpty() && !choices.contains(x)) choices.add(x);
         }
+        String risk = LinkServer.printable(b.optString("risk", "").replace('\n', ' '), 60);
+        if (!risk.isEmpty()) choices.removeIf(AppTokens::sayYes);   // v2.22: a risky request is approved at the PC only
         if (choices.isEmpty()) {
-            choices.add("Yes");
-            choices.add("No");
+            choices.add(risk.isEmpty() ? "Yes" : "Deny");
+            choices.add(risk.isEmpty() ? "No" : "On the PC");
         }
         int timeout = Math.max(10, Math.min(300, b.optInt("timeout", 120)));
         String from = who.pc ? LinkServer.printable(b.optString("from", ""), 40) : who.name;
@@ -525,9 +528,10 @@ final class AppApi {
             if (pending >= MAX_ASKS) return new LinkServer.Response(429, LinkServer.err("busy", MAX_ASKS + " questions are already waiting on the TV"));
             ask = new Ask(newAskId(), who.key, from, q, choices, now + timeout * 1000L);
             ask.detail = detail(b.optString("detail", ""));
+            ask.risk = risk;
             asks.put(ask.id, ask);
         }
-        String e = host.askUser(ask.id, ask.from, ask.question, ask.choices, ask.deadline, ask.detail);
+        String e = host.askUser(ask.id, ask.from, ask.question, ask.choices, ask.deadline, ask.detail, ask.risk);
         if (e != null) {
             synchronized (asks) {
                 asks.remove(ask.id);

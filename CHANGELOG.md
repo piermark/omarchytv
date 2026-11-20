@@ -28,6 +28,12 @@
   the sender). The paired PC is never capped. Asked on X ("letting Claude pick its own severity would cry wolf").
   The PC's own MCP server does the same: `omarchy-tv mcp --max-level info|warn` (default `warn` through a tunnel,
   `alert` on the LAN or tailnet), since its calls reach the TV as the paired PC.
+- **Risky requests are never approved from the couch** (asked on X): the PC sorts each Claude Code request; deletes,
+  pushes (force push named apart), `git reset --hard`, `sudo`, `curl | sh`, disk writes, dropped data, `chmod 777`,
+  shutdowns, publishing, infrastructure changes, and edits to secrets, system files or `.git/` reach the TV with a red
+  frame, the reason ("⚠ deletes files") and only *Deny* / *On the PC*, and the voice starts with "Risky". The TV
+  enforces it too (`risk` in `POST /v1/ask` removes every answer that approves), and the hook ignores an Allow for a
+  risky request whatever comes back. Routine requests keep the one-press Allow.
 - **One chatty agent never drowns out a red build** (asked on X): the TV's notification rate limit counted per PC;
   now it counts per sender (3 info / warn per 10 s each) and alerts have their own allowance (10 per 10 s per
   sender). Each token can also have its own floor: `token add --min-level warn`, `token floor ID LEVEL`

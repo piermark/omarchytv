@@ -293,8 +293,9 @@ public final class OmarchyLink implements LinkServer.Host {
         java.util.List<String[]> p = r.server.pendingAsks();
         if (p.isEmpty()) return;
         String[] q = p.get(0);
-        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(5, q.length));
-        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3])).putExtra(AgentQuestionActivity.EXTRA_DETAIL, q[4]));
+        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(6, q.length));
+        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3]))
+                .putExtra(AgentQuestionActivity.EXTRA_DETAIL, q[4]).putExtra(AgentQuestionActivity.EXTRA_RISK, q[5]));
     }
 
     /** v2.21 Settings › System info: the same as /v1/diagnostics, with whole-server numbers when Link runs. */
@@ -1279,12 +1280,18 @@ public final class OmarchyLink implements LinkServer.Host {
 
     @Override
     public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs, String detail) {
+        return askUser(id, from, question, choices, deadlineMs, detail, "");
+    }
+
+    @Override
+    public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs, String detail, String risk) {
         if (!LauncherConfig.get(app).agentAlert) return "ask_off";
         String msg = app.getString(R.string.agent_note, from, question);
         main.post(() -> {
             try {
                 app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs)
-                        .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail == null ? "" : detail));
+                        .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail == null ? "" : detail)
+                        .putExtra(AgentQuestionActivity.EXTRA_RISK, risk == null ? "" : risk));
             } catch (RuntimeException e) {
                 Log.w(TAG, "ask: " + e);
             }

@@ -100,6 +100,13 @@ public final class AppTokens {
         return r;
     }
 
+    /** v2.22: an answer that approves (Allow, Yes, OK, Approve…), never offered for a risky request. */
+    public static boolean sayYes(String choice) {
+        String c = choice.trim().toLowerCase(java.util.Locale.ROOT);
+        return c.equals("allow") || c.equals("yes") || c.equals("ok") || c.startsWith("approve") || c.startsWith("allow ")
+                || c.equals("confirm") || c.equals("run") || c.equals("proceed") || c.equals("go");
+    }
+
     /** v2.22 notification levels, lowest first. */
     static final String[] LEVELS = {"info", "warn", "alert"};
 

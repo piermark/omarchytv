@@ -138,6 +138,10 @@ claude mcp add omarchytv -- omarchy-link mcp --scope notify    # only read + not
 omarchy-link agents approvals on                               # its permission prompts on the TV
 ```
 
+- **Risky requests** (2.22): deleting files, any `git push` (force push named apart), `git reset --hard`, `sudo`,
+  `curl … | sh`, writing a disk, dropping data, `chmod 777`, shutting down, publishing, `kubectl delete` /
+  `terraform apply`, and file changes to secrets (`.env`, `~/.ssh`, keys), system files or `.git/` come with a red
+  frame and the reason, and only Deny / On the PC: you approve those at the keyboard.
 - **Approvals**: the TV asks first (Allow / Deny / On the PC). No answer in 90 s, the TV off, or "On the PC" falls
   back to Claude Code's own prompt. Nothing is allowed without an answer.
 - **"Done" notifications**: the Claude Code hook in [examples/agent-hooks.md](examples/agent-hooks.md).

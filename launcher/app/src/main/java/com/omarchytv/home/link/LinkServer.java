@@ -164,6 +164,11 @@ public final class LinkServer {
             return askUser(id, from, question, choices, deadlineMs);
         }
 
+        /** v2.22: and "risk", why the request is risky ("" if routine): framed red, never with a yes on the remote. */
+        default String askUser(String id, String from, String question, List<String> choices, long deadlineMs, String detail, String risk) {
+            return askUser(id, from, question, choices, deadlineMs, detail);
+        }
+
         /** v2.21 POST /v1/page: open a LAN / tailnet page full screen. Null when opened, else an error code. */
         default String openPage(String url, String from) {
             return "no_page";
@@ -2821,7 +2826,7 @@ public final class LinkServer {
         return app.answer(id, choice);
     }
 
-    /** Questions still waiting: [id, from, question, deadlineMs, detail, choice...] (detail: v2.22, "" if none). */
+    /** Questions still waiting: [id, from, question, deadlineMs, detail, risk, choice...] (detail, risk: v2.22, "" if none). */
     public List<String[]> pendingAsks() {
         List<String[]> out = new ArrayList<>();
         for (AppApi.Ask a : app.pending()) {
@@ -2831,6 +2836,7 @@ public final class LinkServer {
             row.add(a.question);
             row.add(String.valueOf(a.deadline));
             row.add(a.detail);
+            row.add(a.risk);
             row.addAll(a.choices);
             out.add(row.toArray(new String[0]));
         }

@@ -847,6 +847,22 @@ public class LinkServerTest {
     }
 
     @Test
+    public void riskyAskNeverOffersAYes() throws Exception {   // v2.22: risky requests are approved at the PC only
+        pair("123456");
+        server.limits = false;
+        host.notifyOn = true;
+        String a = appToken("Claude Code", "notify");
+        Resp q = app("POST", "/v1/ask", "{\"question\":\"rm -rf build?\",\"risk\":\"deletes files\",\"choices\":[\"Allow\",\"Deny\",\"On the PC\"]}", a);
+        assertEquals(200, q.status);
+        assertEquals("[\"Deny\",\"On the PC\"]", q.json().getJSONArray("choices").toString());
+        assertEquals("deletes files", server.pendingAsks().get(0)[5]);
+        Resp only = app("POST", "/v1/ask", "{\"question\":\"x?\",\"risk\":\"force push\",\"choices\":[\"Yes\",\"OK\"]}", a);
+        assertEquals("[\"Deny\",\"On the PC\"]", only.json().getJSONArray("choices").toString());
+        assertTrue(AppTokens.sayYes("Approve deploy"));
+        assertFalse(AppTokens.sayYes("Wait"));
+    }
+
+    @Test
     public void askCarriesTheFullDetail() throws Exception {   // v2.22: the whole command under the question
         pair("123456");
         server.limits = false;
