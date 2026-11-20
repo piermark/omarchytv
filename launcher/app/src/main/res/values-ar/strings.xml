@@ -134,6 +134,16 @@
     <string name="radio_stations">المحطات</string>
     <string name="skill_qr_hint">افتحه على هاتفك أو أعطِ الرابط لوكيلك: يثبّت الإضافة ويقترن بالرمز الظاهر على هذه الشاشة. لا كلمة مرور ولا رمز وصول في الرمز.</string>
     <string name="skill_qr_this_tv">هذا التلفاز</string>
+    <string name="shift_title">المناوبة الليلية</string>
+    <string name="shift_none">لا مناوبة الليلة. يبدأها وكيل عبر tv_shift_start.</string>
+    <string name="shift_running">جارية حتى %1$s</string>
+    <string name="shift_ended">انتهت في %1$s</string>
+    <string name="shift_waiting">بانتظارك (%1$d)</string>
+    <string name="shift_tasks">المهام</string>
+    <string name="shift_diary">السجل</string>
+    <string name="shift_end">إنهاء المناوبة</string>
+    <string name="shift_approve">موافقة</string>
+    <string name="shift_deny">رفض</string>
     <string name="web_settings_row">إعدادات الويب</string>
     <string name="web_settings_open">فتح إعدادات الويب</string>
     <string name="web_settings_hint">امسحه بهاتف على الشبكة نفسها أو اكتب العنوان على حاسوب. ثم وافق على ذلك المتصفح من التلفاز.</string>

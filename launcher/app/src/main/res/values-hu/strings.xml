@@ -134,6 +134,16 @@
     <string name="radio_stations">Állomások</string>
     <string name="skill_qr_hint">Nyisd meg a telefonon, vagy add a linket az ügynöködnek: telepíti a bővítményt, és a képernyőn lévő kóddal párosít. A kódban nincs jelszó vagy token.</string>
     <string name="skill_qr_this_tv">ez a TV</string>
+    <string name="shift_title">Éjszakai műszak</string>
+    <string name="shift_none">Ma éjjel nincs műszak. Egy ügynök a tv_shift_start paranccsal indítja.</string>
+    <string name="shift_running">%1$s-ig tart</string>
+    <string name="shift_ended">Véget ért: %1$s</string>
+    <string name="shift_waiting">Rád várnak (%1$d)</string>
+    <string name="shift_tasks">Feladatok</string>
+    <string name="shift_diary">Napló</string>
+    <string name="shift_end">Műszak befejezése</string>
+    <string name="shift_approve">Jóváhagyás</string>
+    <string name="shift_deny">Elutasítás</string>
     <string name="web_settings_row">Webes beállítások</string>
     <string name="web_settings_open">Webes beállítások megnyitása</string>
     <string name="web_settings_hint">Olvasd be egy ugyanazon a hálózaton lévő telefonnal, vagy írd be a címet egy számítógépen. Utána engedélyezd a böngészőt a TV-n.</string>

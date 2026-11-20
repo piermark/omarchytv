@@ -134,6 +134,16 @@
     <string name="radio_stations">Emisoras</string>
     <string name="skill_qr_hint">Ábrelo en el móvil o pasa el enlace a tu agente: instala el plugin y se empareja con el código de esta pantalla. Sin contraseña ni token en el código.</string>
     <string name="skill_qr_this_tv">esta TV</string>
+    <string name="shift_title">Turno de noche</string>
+    <string name="shift_none">Sin turno esta noche. Un agente lo inicia con tv_shift_start.</string>
+    <string name="shift_running">En curso hasta las %1$s</string>
+    <string name="shift_ended">Terminó a las %1$s</string>
+    <string name="shift_waiting">Te esperan (%1$d)</string>
+    <string name="shift_tasks">Tareas</string>
+    <string name="shift_diary">Diario</string>
+    <string name="shift_end">Terminar el turno</string>
+    <string name="shift_approve">Aprobar</string>
+    <string name="shift_deny">Denegar</string>
     <string name="web_settings_row">Ajustes web</string>
     <string name="web_settings_open">Abrir los ajustes web</string>
     <string name="web_settings_hint">Escanéalo con un móvil en la misma red o escribe la dirección en un ordenador. Luego aprueba ese navegador en la TV.</string>

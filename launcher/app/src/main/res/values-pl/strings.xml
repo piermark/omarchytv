@@ -134,6 +134,16 @@
     <string name="radio_stations">Stacje</string>
     <string name="skill_qr_hint">Otwórz go w telefonie lub przekaż link agentowi: zainstaluje wtyczkę i sparuje się kodem z tego ekranu. W kodzie nie ma hasła ani tokenu.</string>
     <string name="skill_qr_this_tv">ten telewizor</string>
+    <string name="shift_title">Nocna zmiana</string>
+    <string name="shift_none">Dziś bez zmiany. Agent rozpoczyna ją przez tv_shift_start.</string>
+    <string name="shift_running">Trwa do %1$s</string>
+    <string name="shift_ended">Zakończona o %1$s</string>
+    <string name="shift_waiting">Czekają na ciebie (%1$d)</string>
+    <string name="shift_tasks">Zadania</string>
+    <string name="shift_diary">Dziennik</string>
+    <string name="shift_end">Zakończ zmianę</string>
+    <string name="shift_approve">Zatwierdź</string>
+    <string name="shift_deny">Odrzuć</string>
     <string name="web_settings_row">Ustawienia przez WWW</string>
     <string name="web_settings_open">Otwórz ustawienia przez WWW</string>
     <string name="web_settings_hint">Zeskanuj telefonem w tej samej sieci albo wpisz adres na komputerze. Potem zatwierdź tę przeglądarkę na telewizorze.</string>

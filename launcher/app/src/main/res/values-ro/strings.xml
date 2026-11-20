@@ -134,6 +134,16 @@
     <string name="radio_stations">Posturi</string>
     <string name="skill_qr_hint">Deschide-l pe telefon sau dă linkul agentului tău: instalează pluginul și se asociază cu codul de pe acest ecran. Fără parolă sau token în cod.</string>
     <string name="skill_qr_this_tv">acest televizor</string>
+    <string name="shift_title">Tura de noapte</string>
+    <string name="shift_none">Nicio tură în noaptea asta. Un agent o pornește cu tv_shift_start.</string>
+    <string name="shift_running">În desfășurare până la %1$s</string>
+    <string name="shift_ended">Încheiată la %1$s</string>
+    <string name="shift_waiting">Te așteaptă (%1$d)</string>
+    <string name="shift_tasks">Sarcini</string>
+    <string name="shift_diary">Jurnal</string>
+    <string name="shift_end">Încheie tura</string>
+    <string name="shift_approve">Aprobă</string>
+    <string name="shift_deny">Refuză</string>
     <string name="web_settings_row">Setări web</string>
     <string name="web_settings_open">Deschide setările web</string>
     <string name="web_settings_hint">Scanează-l cu un telefon din aceeași rețea sau scrie adresa pe un computer. Apoi aprobă browserul pe televizor.</string>

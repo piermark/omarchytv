@@ -134,6 +134,16 @@
     <string name="radio_stations">Stasjoner</string>
     <string name="skill_qr_hint">Åpne den på telefonen eller gi lenken til agenten din: den installerer programtillegget og parer med koden på denne skjermen. Ingen passord eller token i koden.</string>
     <string name="skill_qr_this_tv">denne TV-en</string>
+    <string name="shift_title">Nattskift</string>
+    <string name="shift_none">Ikke noe skift i natt. En agent starter et med tv_shift_start.</string>
+    <string name="shift_running">Pågår til %1$s</string>
+    <string name="shift_ended">Avsluttet %1$s</string>
+    <string name="shift_waiting">Venter på deg (%1$d)</string>
+    <string name="shift_tasks">Oppgaver</string>
+    <string name="shift_diary">Dagbok</string>
+    <string name="shift_end">Avslutt skiftet</string>
+    <string name="shift_approve">Godkjenn</string>
+    <string name="shift_deny">Avslå</string>
     <string name="web_settings_row">Nettinnstillinger</string>
     <string name="web_settings_open">Åpne nettinnstillinger</string>
     <string name="web_settings_hint">Skann den med en telefon på samme nett, eller skriv adressen på en datamaskin. Godkjenn så nettleseren på TV-en.</string>

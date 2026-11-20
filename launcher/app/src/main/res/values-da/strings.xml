@@ -134,6 +134,16 @@
     <string name="radio_stations">Stationer</string>
     <string name="skill_qr_hint">Åbn den på telefonen, eller giv linket til din agent: den installerer pluginnet og parrer med koden på denne skærm. Ingen adgangskode eller token i koden.</string>
     <string name="skill_qr_this_tv">dette tv</string>
+    <string name="shift_title">Nattevagt</string>
+    <string name="shift_none">Ingen vagt i nat. En agent starter en med tv_shift_start.</string>
+    <string name="shift_running">Kører til %1$s</string>
+    <string name="shift_ended">Sluttede %1$s</string>
+    <string name="shift_waiting">Venter på dig (%1$d)</string>
+    <string name="shift_tasks">Opgaver</string>
+    <string name="shift_diary">Dagbog</string>
+    <string name="shift_end">Afslut vagten</string>
+    <string name="shift_approve">Godkend</string>
+    <string name="shift_deny">Afvis</string>
     <string name="web_settings_row">Webindstillinger</string>
     <string name="web_settings_open">Åbn webindstillinger</string>
     <string name="web_settings_hint">Scan den med en telefon på samme netværk, eller skriv adressen på en computer. Godkend derefter browseren på tv\'et.</string>

@@ -163,6 +163,16 @@
     <string name="radio_stations">Stations</string>
     <string name="skill_qr_hint">Open it on your phone or give the link to your agent: it installs the plugin and pairs with the code on this screen. No password or token in the code.</string>
     <string name="skill_qr_this_tv">this TV</string>
+    <string name="shift_title">Night shift</string>
+    <string name="shift_none">No shift tonight. An agent starts one with tv_shift_start.</string>
+    <string name="shift_running">Running until %1$s</string>
+    <string name="shift_ended">Ended at %1$s</string>
+    <string name="shift_waiting">Waiting for you (%1$d)</string>
+    <string name="shift_tasks">Tasks</string>
+    <string name="shift_diary">Diary</string>
+    <string name="shift_end">End the shift</string>
+    <string name="shift_approve">Approve</string>
+    <string name="shift_deny">Deny</string>
     <string name="web_settings_row">Web settings</string>
     <string name="web_settings_open">Open web settings</string>
     <string name="web_settings_hint">Scan it on a phone on the same network, or type the address on a computer. Then approve that browser on the TV.</string>

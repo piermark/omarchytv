@@ -134,6 +134,16 @@
     <string name="radio_stations">Asemat</string>
     <string name="skill_qr_hint">Avaa se puhelimella tai anna linkki agentillesi: se asentaa laajennuksen ja muodostaa pariliitoksen tämän näytön koodilla. Koodissa ei ole salasanaa eikä tunnusta.</string>
     <string name="skill_qr_this_tv">tämä TV</string>
+    <string name="shift_title">Yövuoro</string>
+    <string name="shift_none">Ei vuoroa tänä yönä. Agentti aloittaa sen komennolla tv_shift_start.</string>
+    <string name="shift_running">Käynnissä klo %1$s asti</string>
+    <string name="shift_ended">Päättyi klo %1$s</string>
+    <string name="shift_waiting">Odottavat sinua (%1$d)</string>
+    <string name="shift_tasks">Tehtävät</string>
+    <string name="shift_diary">Päiväkirja</string>
+    <string name="shift_end">Lopeta vuoro</string>
+    <string name="shift_approve">Hyväksy</string>
+    <string name="shift_deny">Hylkää</string>
     <string name="web_settings_row">Verkkoasetukset</string>
     <string name="web_settings_open">Avaa verkkoasetukset</string>
     <string name="web_settings_hint">Skannaa se puhelimella samassa verkossa tai kirjoita osoite tietokoneella. Hyväksy sitten selain televisiossa.</string>

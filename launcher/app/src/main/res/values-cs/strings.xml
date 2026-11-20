@@ -134,6 +134,16 @@
     <string name="radio_stations">Stanice</string>
     <string name="skill_qr_hint">Otevřete ho v telefonu nebo předejte odkaz agentovi: nainstaluje plugin a spáruje se kódem z této obrazovky. V kódu není heslo ani token.</string>
     <string name="skill_qr_this_tv">tato TV</string>
+    <string name="shift_title">Noční směna</string>
+    <string name="shift_none">Dnes bez směny. Agent ji spustí přes tv_shift_start.</string>
+    <string name="shift_running">Běží do %1$s</string>
+    <string name="shift_ended">Skončila v %1$s</string>
+    <string name="shift_waiting">Čekají na vás (%1$d)</string>
+    <string name="shift_tasks">Úkoly</string>
+    <string name="shift_diary">Deník</string>
+    <string name="shift_end">Ukončit směnu</string>
+    <string name="shift_approve">Schválit</string>
+    <string name="shift_deny">Zamítnout</string>
     <string name="web_settings_row">Webové nastavení</string>
     <string name="web_settings_open">Otevřít webové nastavení</string>
     <string name="web_settings_hint">Naskenujte ho telefonem ve stejné síti nebo zadejte adresu na počítači. Pak ten prohlížeč schvalte na TV.</string>

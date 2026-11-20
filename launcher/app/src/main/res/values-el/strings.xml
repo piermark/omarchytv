@@ -134,6 +134,16 @@
     <string name="radio_stations">Σταθμοί</string>
     <string name="skill_qr_hint">Ανοίξτε το στο κινητό ή δώστε τον σύνδεσμο στον πράκτορά σας: εγκαθιστά το πρόσθετο και συνδέεται με τον κωδικό αυτής της οθόνης. Χωρίς κωδικό πρόσβασης ή token.</string>
     <string name="skill_qr_this_tv">αυτή η TV</string>
+    <string name="shift_title">Νυχτερινή βάρδια</string>
+    <string name="shift_none">Καμία βάρδια απόψε. Ένας πράκτορας την ξεκινά με tv_shift_start.</string>
+    <string name="shift_running">Σε εξέλιξη έως τις %1$s</string>
+    <string name="shift_ended">Έληξε στις %1$s</string>
+    <string name="shift_waiting">Σας περιμένουν (%1$d)</string>
+    <string name="shift_tasks">Εργασίες</string>
+    <string name="shift_diary">Ημερολόγιο</string>
+    <string name="shift_end">Λήξη βάρδιας</string>
+    <string name="shift_approve">Έγκριση</string>
+    <string name="shift_deny">Απόρριψη</string>
     <string name="web_settings_row">Ρυθμίσεις web</string>
     <string name="web_settings_open">Άνοιγμα ρυθμίσεων web</string>
     <string name="web_settings_hint">Σαρώστε το με κινητό στο ίδιο δίκτυο ή πληκτρολογήστε τη διεύθυνση σε υπολογιστή. Μετά εγκρίνετε τον browser στην TV.</string>

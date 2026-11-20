@@ -134,6 +134,16 @@
     <string name="radio_stations">Станції</string>
     <string name="skill_qr_hint">Відкрийте на телефоні або передайте посилання агенту: він встановить плагін і зʼєднається за кодом на цьому екрані. У коді немає пароля чи токена.</string>
     <string name="skill_qr_this_tv">цей телевізор</string>
+    <string name="shift_title">Нічна зміна</string>
+    <string name="shift_none">Сьогодні зміни немає. Агент запускає її через tv_shift_start.</string>
+    <string name="shift_running">Триває до %1$s</string>
+    <string name="shift_ended">Завершилася о %1$s</string>
+    <string name="shift_waiting">Чекають на вас (%1$d)</string>
+    <string name="shift_tasks">Завдання</string>
+    <string name="shift_diary">Журнал</string>
+    <string name="shift_end">Завершити зміну</string>
+    <string name="shift_approve">Схвалити</string>
+    <string name="shift_deny">Відхилити</string>
     <string name="web_settings_row">Веб-налаштування</string>
     <string name="web_settings_open">Відкрити веб-налаштування</string>
     <string name="web_settings_hint">Скануйте телефоном у тій самій мережі або введіть адресу на компʼютері. Потім дозвольте цей браузер на телевізорі.</string>

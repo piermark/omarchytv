@@ -134,6 +134,16 @@
     <string name="radio_stations">Zenders</string>
     <string name="skill_qr_hint">Open hem op je telefoon of geef de link aan je agent: die installeert de plugin en koppelt met de code op dit scherm. Geen wachtwoord of token in de code.</string>
     <string name="skill_qr_this_tv">deze tv</string>
+    <string name="shift_title">Nachtdienst</string>
+    <string name="shift_none">Vannacht geen dienst. Een agent start er een met tv_shift_start.</string>
+    <string name="shift_running">Loopt tot %1$s</string>
+    <string name="shift_ended">Gestopt om %1$s</string>
+    <string name="shift_waiting">Wachten op jou (%1$d)</string>
+    <string name="shift_tasks">Taken</string>
+    <string name="shift_diary">Logboek</string>
+    <string name="shift_end">Dienst beëindigen</string>
+    <string name="shift_approve">Goedkeuren</string>
+    <string name="shift_deny">Weigeren</string>
     <string name="web_settings_row">Webinstellingen</string>
     <string name="web_settings_open">Webinstellingen openen</string>
     <string name="web_settings_hint">Scan hem met een telefoon op hetzelfde netwerk of typ het adres op een computer. Keur die browser daarna goed op de tv.</string>

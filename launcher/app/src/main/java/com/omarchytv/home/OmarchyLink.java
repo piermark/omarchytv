@@ -1187,6 +1187,23 @@ public final class OmarchyLink implements LinkServer.Host {
     /** v2.21 notifications that waited for Home (level info while an app was on screen); at most 10, oldest dropped. */
     private static final java.util.ArrayDeque<String> HELD = new java.util.ArrayDeque<>();
 
+    /** v2.22 the night shift: an edit of the shift (from the TV page), then the event and the wake-up plan. */
+    static void shiftEdit(Context c, ShiftOp op, String event) throws Exception {
+        LauncherConfig.updateOrThrow(c, j -> op.apply(j));
+        OmarchyLink r = runtime;
+        if (r != null && r.server != null) r.server.broadcast("shift_changed", new JSONObject().put("op", event));
+        ShiftWake.plan(c);
+    }
+
+    interface ShiftOp {
+        Object apply(JSONObject cfg) throws Exception;
+    }
+
+    @Override
+    public void shiftChanged(String what) {
+        main.post(() -> ShiftWake.plan(app));
+    }
+
     /** v2.21 POST /v1/notify, MCP tv_notify: only with agent alerts on; "info" waits while an app is on screen. */
     @Override
     public String notify(String from, String title, String text, String level) {
@@ -1194,6 +1211,15 @@ public final class OmarchyLink implements LinkServer.Host {
         if (!cfg.agentAlert) return null;
         if (LauncherConfig.belowAgentMin(cfg.agentAlertMin, level)) return "filtered";   // v2.22, set with the remote
         String body = title.isEmpty() ? text : text.isEmpty() ? title : title + " · " + text;
+        if (ShiftWake.quiet(app)) {   // v2.22 night shift: no toast, no tone; the note waits in the diary for the morning
+            try {
+                JSONObject line = new JSONObject().put("level", "alert".equals(level) ? "fail" : "info").put("text", body);
+                LauncherConfig.updateOrThrow(app, j -> com.omarchytv.home.link.NightShift.log(j, from, line, System.currentTimeMillis()));
+                return "kept_for_morning";
+            } catch (Exception e) {
+                return "kept_for_morning";
+            }
+        }
         String msg = app.getString(R.string.agent_note, from, body);
         try {
             emit("agent", new JSONObject().put("name", from).put("text", body));
@@ -1239,6 +1265,7 @@ public final class OmarchyLink implements LinkServer.Host {
     @Override
     public void speak(String text) {
         if (text == null || text.isEmpty() || !LauncherConfig.get(app).notifySound) return;   // notifySound: false = silent
+        if (ShiftWake.quiet(app)) return;   // v2.22 the night shift: silent until the morning
         String say = text.length() > 300 ? text.substring(0, 300) : text;
         main.post(() -> {
             if (tts == null) {

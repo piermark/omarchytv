@@ -134,6 +134,16 @@
     <string name="radio_stations">ステーション</string>
     <string name="skill_qr_hint">スマホで開くか、リンクをエージェントに渡してください。プラグインをインストールし、この画面のコードでペアリングします。コードにパスワードやトークンは含まれません。</string>
     <string name="skill_qr_this_tv">このテレビ</string>
+    <string name="shift_title">夜勤</string>
+    <string name="shift_none">今夜のシフトはありません。エージェントが tv_shift_start で開始します。</string>
+    <string name="shift_running">%1$s まで実行中</string>
+    <string name="shift_ended">%1$s に終了</string>
+    <string name="shift_waiting">あなたの判断待ち (%1$d)</string>
+    <string name="shift_tasks">タスク</string>
+    <string name="shift_diary">日誌</string>
+    <string name="shift_end">シフトを終了</string>
+    <string name="shift_approve">承認</string>
+    <string name="shift_deny">拒否</string>
     <string name="web_settings_row">Web設定</string>
     <string name="web_settings_open">Web設定を開く</string>
     <string name="web_settings_hint">同じネットワークのスマホで読み取るか、パソコンでアドレスを入力してください。その後、テレビでそのブラウザを許可します。</string>

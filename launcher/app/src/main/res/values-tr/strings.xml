@@ -134,6 +134,16 @@
     <string name="radio_stations">İstasyonlar</string>
     <string name="skill_qr_hint">Telefonunda aç ya da bağlantıyı ajanına ver: eklentiyi kurar ve bu ekrandaki kodla eşleşir. Kodda parola ya da token yok.</string>
     <string name="skill_qr_this_tv">bu TV</string>
+    <string name="shift_title">Gece vardiyası</string>
+    <string name="shift_none">Bu gece vardiya yok. Bir ajan tv_shift_start ile başlatır.</string>
+    <string name="shift_running">%1$s saatine kadar sürüyor</string>
+    <string name="shift_ended">%1$s saatinde bitti</string>
+    <string name="shift_waiting">Seni bekliyor (%1$d)</string>
+    <string name="shift_tasks">Görevler</string>
+    <string name="shift_diary">Günlük</string>
+    <string name="shift_end">Vardiyayı bitir</string>
+    <string name="shift_approve">Onayla</string>
+    <string name="shift_deny">Reddet</string>
     <string name="web_settings_row">Web ayarları</string>
     <string name="web_settings_open">Web ayarlarını aç</string>
     <string name="web_settings_hint">Aynı ağdaki bir telefonla tara ya da adresi bir bilgisayara yaz. Sonra o tarayıcıyı TV\'de onayla.</string>
