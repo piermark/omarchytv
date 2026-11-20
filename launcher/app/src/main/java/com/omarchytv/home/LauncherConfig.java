@@ -613,7 +613,7 @@ final class LauncherConfig {
     /** v2.10: text tiles (terminal style) instead of banners (default off). */
     final boolean textTiles;
     /** v2.10: home widgets on/off: weather, pc, ai, deploys (default all on). */
-    final boolean wWeather, wPc, wAi, wDeploys, wTerm;
+    final boolean wWeather, wPc, wAi, wDeploys, wTerm, wGrokbot;
     /** "racing" home widget (remaining 2026 F1 + MotoGP weekends, homeWidgets.racing, default off) and its
      *  countdown in the bar (racing.bar; 2.15.1: off unless set, the panel has its own countdown). */
     final boolean wRacing, barRacing;
@@ -932,6 +932,7 @@ final class LauncherConfig {
         logoAnim = j == null || j.optBoolean("logoAnim", true);
         textTiles = j != null && j.optBoolean("textTiles", false);
         JSONObject hw = j != null ? j.optJSONObject("homeWidgets") : null;
+        wGrokbot = hw == null || hw.optBoolean("grokbot", true);
         wWeather = hw == null || hw.optBoolean("weather", true);
         wPc = hw == null || hw.optBoolean("pc", true);
         wAi = hw == null || hw.optBoolean("ai", true);
