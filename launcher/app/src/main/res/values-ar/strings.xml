@@ -131,6 +131,7 @@
     <string name="skill_qr_label">احصل على مهارة الوكيل</string>
     <string name="ha_not_set">Home Assistant: اضبط العنوان والرمز في الإعدادات › Ambilight والأضواء</string>
     <string name="ha_confirm">تشغيل %1$s؟</string>
+    <string name="radio_stations">المحطات</string>
     <string name="ai_stale">قديم %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">لا توجد نتائج</string>

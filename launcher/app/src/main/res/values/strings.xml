@@ -160,6 +160,7 @@
     <string name="skill_qr_label">Get the agent skill</string>
     <string name="ha_not_set">Home Assistant: set its URL and token in Settings › Ambilight &amp; Lights</string>
     <string name="ha_confirm">Run %1$s?</string>
+    <string name="radio_stations">Stations</string>
     <string name="ai_stale">stale %1$s</string>
     <string name="tv_prompt" translatable="false">&gt; TV</string>
     <string name="apps_prompt" translatable="false">&gt; Apps</string>

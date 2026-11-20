@@ -202,6 +202,33 @@ class TestMcpV221(unittest.TestCase):
         self.assertEqual(sent[-1], ("POST", "/v1/ha/run", {"entity_id": "scene.movie"}))
         self.assertIn("error", call("tv_ha_run", {"entity_id": "scene.movie"}, "notify"))
 
+    def test_radio_tools(self):   # v2.22 #162
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_radio", {"action": "play", "station": "soma"})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "play", "station": "soma"}))
+        call("tv_radio", {"action": "volume", "volume": 40})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "volume", "volume": 40}))
+        call("tv_radio_stations", {}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/radio/stations"))
+        call("tv_radio_station_add", {"name": "RP", "url": "https://stream.radioparadise.com/aac-320"})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio/stations", {"name": "RP", "url": "https://stream.radioparadise.com/aac-320"}))
+        call("tv_radio_station_remove", {"id": "rp"})
+        self.assertEqual(sent[-1], ("DELETE", "/v1/radio/stations/rp", None))
+        n = len(sent)
+        self.assertTrue(call("tv_radio_station_remove", {"id": "../x"})["result"]["isError"])
+        self.assertIn("error", call("tv_radio_sleep", {"minutes": 30}, "notify"))
+        self.assertEqual(len(sent), n)
+        call("tv_radio_sleep", {"minutes": 30})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "sleep", "minutes": 30}))
+
     def test_max_level_caps_tv_notify(self):   # v2.22: the owner's rule, not the model's
         tv = FakeTvClient()
         call = lambda lvl, mx: mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {

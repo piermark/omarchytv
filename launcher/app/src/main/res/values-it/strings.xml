@@ -130,6 +130,7 @@
     <string name="skill_qr_label">Scarica la skill per l\'agente</string>
     <string name="ha_not_set">Home Assistant: imposta URL e token in Impostazioni › Ambilight e luci</string>
     <string name="ha_confirm">Eseguire %1$s?</string>
+    <string name="radio_stations">Stazioni</string>
     <string name="ai_stale">vecchio di %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">nessun risultato</string>

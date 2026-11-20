@@ -495,6 +495,22 @@ first) and `homeassistant.entities` `{items: [...]}` (state and unit, live over 
 while on screen, a 30 s poll if the websocket fails; OK toggles switch-like entities). MCP: `tv_ha_status`,
 `tv_ha_list` (read), `tv_ha_run` (control).
 
+### Radio (`/v1/radio`, `/v1/radio/stations`, v2.22, #162)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/radio` | read | now playing: `{playing, title, artist, station, stationId, volume, sleepMinutes}` |
+| POST | `/v1/radio` | control | `{action}`: `play` (optional `station`: name or id), `pause`, `next`, `previous`, `stop`, `volume` (`volume` 0-100, the radio's own), `sleep` (`minutes` 0-240, 0 = off) |
+| GET | `/v1/radio/stations` | read | `{stations: [{id, name, url, logo?, fav?}]}`, Omarchy Radio (`omarchy`) first, then favourites |
+| POST | `/v1/radio/stations` | control | `{name, url, logo?}` → `{id}`; 400 `bad_url`, 409 `too_many` (200) |
+| DELETE | `/v1/radio/stations/{id}` | control | 400 for `omarchy`, 404 if unknown |
+
+A station URL is `https://`, or `http://` on the LAN; other `http://` streams only with `radio.allowHttp` (Settings ›
+Plugins › Radio). `.pls` / `.m3u` playlists are resolved to their first stream. Config: `plugins.radio` (the
+plugin: bar pill with the mini panel and the `radio` widget), `radio.key` (`off`, `red`, `green`, `yellow`, `blue`,
+`play_pause`), `radio.stations`. MCP: `tv_radio_now`, `tv_radio_stations` (read), `tv_radio`,
+`tv_radio_station_add`, `tv_radio_station_remove`, `tv_radio_sleep` (control).
+
 ### AI credits (`PUT /v1/ai`)
 
 ```json

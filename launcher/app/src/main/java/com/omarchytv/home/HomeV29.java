@@ -221,7 +221,10 @@ final class HomeV29 extends FrameLayout {
         barRadio.setPadding(px(12), 0, px(12), 0);
         barRadio.setBackground(new Underline());
         barRadio.setVisibility(GONE);
-        barRadio.setOnClickListener(v -> host.sys("radio"));
+        barRadio.setOnClickListener(v -> {   // v2.22 #162: with the Radio plugin the pill opens the mini panel
+            if (cfg != null && cfg.pluginRadio) RadioMini.show(act);
+            else host.sys("radio");
+        });
         LinearLayout.LayoutParams rdl = new LinearLayout.LayoutParams(-2, px(44));
         rdl.gravity = Gravity.CENTER_VERTICAL;
         rdl.rightMargin = px(8);
@@ -1306,6 +1309,15 @@ final class HomeV29 extends FrameLayout {
         RadioPlayer rp = RadioPlayer.peek();
         RadioCatalog.Track tr = rp != null ? rp.current() : null;
         if (tr == null) {
+            if (cfg != null && cfg.pluginRadio) {   // v2.22 #162: the plugin keeps the pill, ready to play
+                if (!"♪ Radio".equals(barRadio.getText().toString())) {
+                    SpannableStringBuilder idle = new SpannableStringBuilder();
+                    span(idle, "♪ Radio", t.magenta);
+                    barRadio.setText(idle);
+                }
+                layoutRadioBar();
+                return;
+            }
             if (barRadio.getVisibility() != GONE) barRadio.setVisibility(GONE);
             if (barRadio.getText().length() != 0) barRadio.setText("");
             return;
@@ -1313,7 +1325,8 @@ final class HomeV29 extends FrameLayout {
         SpannableStringBuilder b = new SpannableStringBuilder();
         span(b, rp.playing() ? "♫ " : "‖ ", t.magenta);
         span(b, tr.title, t.fgBright);
-        if (!tr.artist.isEmpty()) span(b, " — " + tr.artist, t.fg);
+        String second = rp.stationId() != null ? rp.icyTitle() : tr.artist;   // a station: its ICY title
+        if (!second.isEmpty()) span(b, " — " + second, t.fg);
         if (!b.toString().equals(barRadio.getText().toString())) barRadio.setText(b);
         layoutRadioBar();
     }

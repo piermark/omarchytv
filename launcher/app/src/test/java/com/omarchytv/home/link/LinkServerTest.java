@@ -918,6 +918,33 @@ public class LinkServerTest {
     }
 
     @Test
+    public void radioStationsAndPluginsKeepTheirSwitches() throws Exception {   // v2.22 #162
+        pair("123456");
+        server.limits = false;
+        String ctl = appToken("hermes", "control"), rd = appToken("wall", "read");
+        assertEquals(400, app("POST", "/v1/radio/stations", "{\"name\":\"X\",\"url\":\"http://example.com/x.mp3\"}", ctl).status);
+        Resp add = app("POST", "/v1/radio/stations", "{\"name\":\"Radio Paradise\",\"url\":\"https://stream.radioparadise.com/aac-320\"}", ctl);
+        assertEquals(200, add.status);
+        assertEquals("radio-paradise", add.json().getString("id"));
+        assertEquals(403, app("POST", "/v1/radio/stations", "{\"name\":\"Y\",\"url\":\"https://y.example/s\"}", rd).status);
+        JSONArray st = app("GET", "/v1/radio/stations", "", rd).json().getJSONArray("stations");
+        assertEquals("omarchy", st.getJSONObject(0).getString("id"));
+        assertEquals("radio-paradise", st.getJSONObject(1).getString("id"));
+        assertEquals(400, app("POST", "/v1/radio", "{\"action\":\"volume\",\"volume\":140}", ctl).status);
+        assertEquals(400, app("POST", "/v1/radio", "{\"action\":\"sleep\",\"minutes\":-1}", ctl).status);
+        assertEquals(400, app("DELETE", "/v1/radio/stations/omarchy", "", ctl).status);
+        assertEquals(200, app("DELETE", "/v1/radio/stations/radio-paradise", "", ctl).status);
+        assertEquals(404, app("DELETE", "/v1/radio/stations/radio-paradise", "", ctl).status);
+        // PUT /v1/plugins from an older PC keeps the radio switch
+        host.editConfig(j -> j.put("plugins", new JSONObject().put("radio", true).put("omastorm", true)));
+        signed("PUT", "/v1/plugins", "{\"spacexTv\":true,\"grokbot\":true,\"plugins\":[]}");
+        JSONObject pl = host.readConfig().getJSONObject("plugins");
+        assertTrue(pl.getBoolean("radio"));
+        assertTrue(pl.getBoolean("omastorm"));
+        assertTrue(pl.getBoolean("spacexTv"));
+    }
+
+    @Test
     public void appTokenFloorDropsItsOwnNoise() throws Exception {   // v2.22: per-agent floor, beside the global one
         pair("123456");
         server.limits = false;

@@ -131,6 +131,7 @@
     <string name="skill_qr_label">Ia skill-ul agentului</string>
     <string name="ha_not_set">Home Assistant: setează URL-ul și tokenul în Setări › Ambilight și lumini</string>
     <string name="ha_confirm">Rulezi %1$s?</string>
+    <string name="radio_stations">Posturi</string>
     <string name="ai_stale">vechi %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">niciun rezultat</string>

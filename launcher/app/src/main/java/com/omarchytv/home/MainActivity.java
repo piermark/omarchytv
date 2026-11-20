@@ -1975,6 +1975,45 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(this::showSpacexMenu);
             return false;
         });
+        // v2.22 #162 the Radio plugin: a mini player in the bar and a radio widget, without opening Radiomarchy
+        String lRadio = "Radio (com.omarchytv.radio) · mini player";
+        p.add(lRadio, cfg.pluginRadio ? on : off, r -> {
+            boolean n = !cfg.pluginRadio;
+            applyLive("plugins", lRadio, j -> {
+                org.json.JSONObject pl = j.optJSONObject("plugins");
+                if (pl == null) j.put("plugins", pl = new org.json.JSONObject());
+                pl.put("radio", n);
+            });
+            return true;
+        });
+        if (cfg.pluginRadio) {
+            String lKey = "Radio · play / pause key";
+            p.add(lKey, cfg.radioKey, r -> {
+                java.util.List<String> keys = java.util.Arrays.asList("off", "red", "green", "yellow", "blue", "play_pause");
+                String n = keys.get((keys.indexOf(cfg.radioKey) + 1) % keys.size());
+                applyLive("plugins", lKey, j -> {
+                    org.json.JSONObject ro = j.optJSONObject("radio");
+                    if (ro == null) j.put("radio", ro = new org.json.JSONObject());
+                    ro.put("key", n);
+                });
+                return true;
+            });
+            boolean http = LauncherConfig.readJson(this).optJSONObject("radio") != null
+                    && LauncherConfig.readJson(this).optJSONObject("radio").optBoolean("allowHttp");
+            String lHttp = "Radio · allow http:// streams from the internet";
+            p.add(lHttp, http ? on : off, r -> {
+                applyLive("plugins", lHttp, j -> {
+                    org.json.JSONObject ro = j.optJSONObject("radio");
+                    if (ro == null) j.put("radio", ro = new org.json.JSONObject());
+                    ro.put("allowHttp", !http);
+                });
+                return true;
+            });
+            p.add("Radio · stations", "☰ ›", r -> {
+                handler.post(() -> RadioMini.stations(this));
+                return false;
+            });
+        }
         String lGb = "Grok Bot Companion (TV) · experimental (@tcballard, MIT)";
         p.add(lGb, cfg.pluginGrokbot ? on : off, r -> {
             boolean n = !cfg.pluginGrokbot;
@@ -4465,6 +4504,27 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     /** Play / pause / next on Home, even when another app has stolen the MediaSession (audio focus). */
+    /** v2.22 #162: the Radio plugin's play / pause key (a colour key or PLAY_PAUSE) on the Home. */
+    private boolean radioPluginKey(KeyEvent e) {
+        LauncherConfig c = LauncherConfig.get(this);
+        if (!c.pluginRadio || "off".equals(c.radioKey) || walker != null || (menu != null && menu.isShowing())) return false;
+        int want;
+        switch (c.radioKey) {
+            case "red": want = KeyEvent.KEYCODE_PROG_RED; break;
+            case "green": want = KeyEvent.KEYCODE_PROG_GREEN; break;
+            case "yellow": want = KeyEvent.KEYCODE_PROG_YELLOW; break;
+            case "blue": want = KeyEvent.KEYCODE_PROG_BLUE; break;
+            default: want = KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE; break;
+        }
+        if (e.getKeyCode() != want) return false;
+        if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) {
+            RadioPlayer p = RadioPlayer.get(this);
+            if (p.current() == null) p.playOrStart();
+            else p.toggle();
+        }
+        return true;
+    }
+
     private boolean radioMediaKey(KeyEvent e) {
         RadioPlayer p = RadioPlayer.peek();
         if (p == null || p.current() == null || !RadioPlayer.isMediaKey(e.getKeyCode())) return false;
@@ -4476,6 +4536,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (BootScreenView.consumeKey(e)) return true;   // boot screen: any key skips, none reaches Home
         if (LiftoffView.consumeKey(e)) return true;      // liftoff countdown: any key hides it
+        if (radioPluginKey(e)) return true;
         if (radioMediaKey(e)) return true;
         if (swallowKeyUp == e.getKeyCode() && e.getAction() == KeyEvent.ACTION_UP) {
             swallowKeyUp = -1;

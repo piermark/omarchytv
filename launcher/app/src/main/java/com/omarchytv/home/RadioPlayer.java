@@ -101,7 +101,8 @@ final class RadioPlayer {
         RadioPlayer p = inst;
         if (p == null || !active()) return null;
         RadioCatalog.Track t = p.current();
-        return t == null ? null : new String[]{t.title, t.artist};
+        if (t == null) return null;
+        return new String[]{t.title, p.stationId != null ? p.icyTitle() : t.artist};   // a station: its ICY title
     }
 
     /** Is there one, and is it playing (or about to)? Never creates the player. */
@@ -194,6 +195,7 @@ final class RadioPlayer {
                 .setHandleAudioBecomingNoisy(true)
                 .setWakeMode(C.WAKE_MODE_NETWORK)
                 .build();
+        player.setVolume(volume);   // v2.22 #162
         player.addListener(new Player.Listener() {
             @Override
             public void onPlaybackStateChanged(int s) {
@@ -209,6 +211,16 @@ final class RadioPlayer {
             public void onIsPlayingChanged(boolean playing) {
                 if (!playing) saveEpisode(true);
                 changed();
+            }
+
+            @Override
+            public void onMediaMetadataChanged(androidx.media3.common.MediaMetadata md) {
+                // v2.22 #162: the ICY "StreamTitle" of an internet station (ExoPlayer asks with Icy-MetaData: 1)
+                CharSequence ti = md.title != null ? md.title : md.station;
+                if (stationId != null && ti != null && !ti.toString().trim().isEmpty()) {
+                    icyTitle = ti.toString().trim();
+                    changed();
+                }
             }
 
             @Override
@@ -229,6 +241,10 @@ final class RadioPlayer {
     /** Play {@code list} from {@code index} (the list is copied). */
     void play(List<RadioCatalog.Track> list, int index) {
         if (list == null || list.isEmpty()) return;
+        if (!"station".equals(list.get(0).kind)) {   // v2.22: songs again, not a stream
+            stationId = null;
+            icyTitle = null;
+        }
         queue.clear();
         queue.addAll(list);
         index = Math.max(0, Math.min(index, list.size() - 1));
@@ -606,6 +622,67 @@ final class RadioPlayer {
     }
 
     /** v2.21 MCP tv_radio "play": resume the current song, or start the playlist (cached, else fetched once). */
+    // ---- v2.22 #162 Radio plugin: internet stations, volume ----
+    /** The station playing (null for the Omarchy Radio songs) and its latest ICY title. */
+    private volatile String stationId, icyTitle;
+    private float volume = 1f;
+
+    String stationId() {
+        return stationId;
+    }
+
+    /** "Artist - Title" from the stream, or "" (only for an internet station). */
+    String icyTitle() {
+        return stationId != null && icyTitle != null ? icyTitle : "";
+    }
+
+    /** Plays a station: Omarchy Radio's songs, or an internet stream (a .pls / .m3u is resolved first, off the UI). */
+    void playStation(RadioStations.Station s, boolean allowHttp) {
+        if (s == null) return;
+        if (s.builtIn()) {
+            if (stationId != null) {   // from a stream back to the songs
+                stationId = null;
+                icyTitle = null;
+                queue.clear();
+                order.clear();
+                at = -1;
+            }
+            playOrStart();
+            return;
+        }
+        com.omarchytv.home.lights.Lights.run(() -> {
+            String url = s.url;
+            if (RadioStations.isPlaylist(url)) {
+                String txt = RadioCatalog.fetch(url);
+                url = RadioStations.firstStream(txt);
+                if (url != null && !RadioStations.urlAllowed(url, allowHttp)) url = null;   // same rule as the station
+            }
+            String stream = url;
+            h.post(() -> {
+                if (stream == null) {
+                    error = "playlist";
+                    changed();
+                    return;
+                }
+                stationId = s.id;
+                icyTitle = null;
+                RadioCatalog.Track t = new RadioCatalog.Track("station", s.name, "", stream, "", false, "", 0, "", s.logo, "", "");
+                play(java.util.Collections.singletonList(t), 0);
+            });
+        });
+    }
+
+    /** 0-100: the radio's own volume (not the TV's), kept for the session. */
+    void setVolume(int pct) {
+        volume = Math.max(0, Math.min(100, pct)) / 100f;
+        if (player != null) player.setVolume(volume);
+        changed();
+    }
+
+    int volume() {
+        return Math.round(volume * 100);
+    }
+
     void playOrStart() {
         if (current() != null) {
             if (!playing()) toggle();

@@ -167,10 +167,24 @@ ALLOWED_TOOLS = (
     },
     {
         "name": "tv_radio",
-        "description": "Control Radiomarchy: play (resume or start the playlist), pause, next, previous, stop.",
-        "inputSchema": {"type": "object", "properties": {"action": {"type": "string", "enum": ["play", "pause", "next", "previous", "stop"]}},
-                        "required": ["action"]},
+        "description": "Control the radio: play (resume, or a station by name or id from tv_radio_stations), pause, next, "
+                       "previous, stop, volume (0-100, the radio's own).",
+        "inputSchema": {"type": "object", "properties": {
+            "action": {"type": "string", "enum": ["play", "pause", "next", "previous", "stop", "volume"]},
+            "station": {"type": "string"}, "volume": {"type": "integer", "minimum": 0, "maximum": 100}},
+            "required": ["action"]},
     },
+    {"name": "tv_radio_stations", "description": "The radio stations: Omarchy Radio first, then the owner's (favourites first).",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_radio_station_add", "description": "Add an internet radio station (Icecast / Shoutcast, HLS .m3u8, or a .pls / .m3u "
+                                                    "playlist). https://, or http:// on the LAN.",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "url": {"type": "string"},
+                                                      "logo": {"type": "string"}}, "required": ["name", "url"]}},
+    {"name": "tv_radio_station_remove", "description": "Remove a radio station (not Omarchy Radio).",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_radio_sleep", "description": "Stop the radio after some minutes (0 turns the timer off).",
+     "inputSchema": {"type": "object", "properties": {"minutes": {"type": "integer", "minimum": 0, "maximum": 240}},
+                     "required": ["minutes"]}},
     {
         "name": "tv_open",
         "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
@@ -285,6 +299,8 @@ WIDGET_CREATE_KEYS = ("id", "type", "page", "x", "y", "w", "h", "title", "icon",
 TOOL_SCOPE = {
     "tv_status": "read", "tv_list_themes": "read", "tv_list_apps": "read", "tv_get_theme": "read", "tv_get_state": "read",
     "tv_radio_now": "read", "tv_radio": "control", "tv_open": "control",
+    "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
+    "tv_radio_sleep": "control",
     "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
@@ -492,7 +508,23 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
     if name == "tv_radio_now":
         return c.request("GET", "/v1/radio")
     if name == "tv_radio":
-        return c.request("POST", "/v1/radio", {"action": str(args.get("action", ""))})
+        body = {"action": str(args.get("action", ""))}
+        if args.get("station"):
+            body["station"] = str(args["station"])
+        if "volume" in args:
+            body["volume"] = int(args["volume"])
+        return c.request("POST", "/v1/radio", body)
+    if name == "tv_radio_stations":
+        return c.request("GET", "/v1/radio/stations")
+    if name == "tv_radio_station_add":
+        return c.request("POST", "/v1/radio/stations", {k: str(args[k]) for k in ("name", "url", "logo") if args.get(k)})
+    if name == "tv_radio_station_remove":
+        sid = str(args.get("id", ""))
+        if not sid or not all(ch.isalnum() or ch == "-" for ch in sid):
+            raise ValueError("bad station id")
+        return c.request("DELETE", f"/v1/radio/stations/{sid}")
+    if name == "tv_radio_sleep":
+        return c.request("POST", "/v1/radio", {"action": "sleep", "minutes": int(args.get("minutes", 0))})
     if name == "tv_open":
         return c.request("POST", "/v1/open", {"target": str(args.get("target", ""))})
     if name == "tv_diagnostics":

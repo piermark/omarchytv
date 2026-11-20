@@ -131,6 +131,7 @@
     <string name="skill_qr_label">Hent agentens skill</string>
     <string name="ha_not_set">Home Assistant: angi URL og token i Innstillinger › Ambilight og lys</string>
     <string name="ha_confirm">Kjør %1$s?</string>
+    <string name="radio_stations">Stasjoner</string>
     <string name="ai_stale">utdatert %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen treff</string>

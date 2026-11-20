@@ -130,7 +130,7 @@ final class AppApi {
         return "/v1/state".equals(p) || "/v1/stream".equals(p) || "/v1/notify".equals(p) || "/v1/ask".equals(p)
                 || ASK_PATH.matcher(p).matches() || "/v1/page".equals(p) || "/v1/diagnostics".equals(p)
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
-                || "/v1/radio".equals(p) || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
+                || "/v1/radio".equals(p) || p.startsWith("/v1/radio/") || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
                 || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")
                 || p.startsWith("/v1/ha/");   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
     }
@@ -236,8 +236,15 @@ final class AppApi {
                     : new LinkServer.Response("not_lan_url".equals(e) ? 400 : 409, LinkServer.err(e, "a http:// page on the LAN or tailnet, by IP address"));
         }
         if ("/v1/radio".equals(p) && ("GET".equals(m) || "POST".equals(m))) {   // v2.21 Radiomarchy
-            if ("GET".equals(m)) return who.can("read") ? radio("now") : forbidden("read");
-            return who.can("control") ? radio(body.optString("action", "")) : forbidden("control");
+            if ("GET".equals(m)) return who.can("read") ? radioCmd(new JSONObject().put("action", "now")) : forbidden("read");
+            return who.can("control") ? radioCmd(body) : forbidden("control");   // v2.22: station, volume, sleep
+        }
+        if ("/v1/radio/stations".equals(p)) {   // v2.22 #162
+            if ("GET".equals(m)) return who.can("read") ? radioStationsGet() : forbidden("read");
+            if ("POST".equals(m)) return who.can("control") ? radioStationAdd(body) : forbidden("control");
+        }
+        if (p.startsWith("/v1/radio/stations/") && "DELETE".equals(m)) {
+            return who.can("control") ? radioStationRemove(p.substring("/v1/radio/stations/".length())) : forbidden("control");
         }
         if ("POST".equals(m) && "/v1/open".equals(p)) {
             if (!who.can("control")) return forbidden("control");
@@ -328,6 +335,102 @@ final class AppApi {
     }
 
     static final java.util.Set<String> RADIO = new java.util.HashSet<>(java.util.Arrays.asList("now", "play", "pause", "next", "previous", "stop"));
+
+    /** v2.22 #162 POST /v1/radio {action, station?, volume?, minutes?}. */
+    LinkServer.Response radioCmd(JSONObject b) throws JSONException {
+        String action = b.optString("action", "");
+        if (!RADIO.contains(action) && !"volume".equals(action) && !"sleep".equals(action)) {
+            return new LinkServer.Response(400, LinkServer.err("bad_action", "now, play, pause, next, previous, stop, volume, sleep"));
+        }
+        if ("volume".equals(action) && (!b.has("volume") || b.optInt("volume", -1) < 0 || b.optInt("volume", -1) > 100)) {
+            return new LinkServer.Response(400, LinkServer.err("bad_volume", "0-100"));
+        }
+        if ("sleep".equals(action) && (b.optInt("minutes", -1) < 0 || b.optInt("minutes", -1) > 240)) {
+            return new LinkServer.Response(400, LinkServer.err("bad_minutes", "0-240"));
+        }
+        JSONObject cmd = new JSONObject().put("action", action);
+        if (b.has("station")) cmd.put("station", LinkServer.printable(b.optString("station", ""), 512));
+        if (b.has("volume")) cmd.put("volume", b.optInt("volume"));
+        if (b.has("minutes")) cmd.put("minutes", b.optInt("minutes"));
+        JSONObject r = host.radioCmd(cmd);
+        if (r != null && r.has("error")) return new LinkServer.Response(404, r);
+        return r == null ? new LinkServer.Response(409, LinkServer.err("no_radio", "Radiomarchy is not available"))
+                : new LinkServer.Response(200, r);
+    }
+
+    LinkServer.Response radioStationsGet() throws JSONException {
+        JSONObject cfg = host.config();
+        JSONObject radio = cfg != null ? cfg.optJSONObject("radio") : null;
+        JSONArray a = radio != null ? radio.optJSONArray("stations") : null;
+        JSONArray out = new JSONArray().put(new JSONObject().put("id", "omarchy").put("name", "Omarchy Radio").put("url", "https://radio.omarchy.org"));
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject o = a.optJSONObject(i);
+            if (o != null) out.put(new JSONObject().put("id", o.optString("id")).put("name", o.optString("name")).put("url", o.optString("url"))
+                    .put("fav", o.optBoolean("fav")));
+        }
+        return new LinkServer.Response(200, new JSONObject().put("stations", out));
+    }
+
+    /** {name, url, logo?}: https any host, http only on the LAN unless radio.allowHttp; at most 200. */
+    LinkServer.Response radioStationAdd(JSONObject b) throws Exception {
+        String name = LinkServer.printable(b.optString("name", ""), 40), url = b.optString("url", "").trim(), logo = b.optString("logo", "").trim();
+        if (name.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_name", "1 to 40 characters"));
+        String[] id = new String[1];
+        String[] bad = new String[1];
+        host.editConfig(j -> {
+            JSONObject radio = j.optJSONObject("radio");
+            if (radio == null) j.put("radio", radio = new JSONObject());
+            if (!stationUrlOk(url, radio.optBoolean("allowHttp"))) {
+                bad[0] = "bad_url";
+                return;
+            }
+            JSONArray a = radio.optJSONArray("stations");
+            if (a == null) radio.put("stations", a = new JSONArray());
+            if (a.length() >= 200) {
+                bad[0] = "too_many";
+                return;
+            }
+            java.util.Set<String> taken = new java.util.HashSet<>();
+            for (int i = 0; i < a.length(); i++) if (a.optJSONObject(i) != null) taken.add(a.optJSONObject(i).optString("id"));
+            String base = name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+            if (base.isEmpty()) base = "station";
+            if (base.length() > 32) base = base.substring(0, 32);
+            String nid = base;
+            for (int n = 2; taken.contains(nid) || "omarchy".equals(nid); n++) nid = base + "-" + n;
+            JSONObject st = new JSONObject().put("id", nid).put("name", name).put("url", url);
+            if (stationUrlOk(logo, false) && logo.startsWith("https://")) st.put("logo", logo);
+            a.put(st);
+            id[0] = nid;
+        });
+        if ("bad_url".equals(bad[0])) return new LinkServer.Response(400, LinkServer.err("bad_url", "https://, or http:// on the LAN (or allow http streams on the TV)"));
+        if ("too_many".equals(bad[0])) return new LinkServer.Response(409, LinkServer.err("too_many", "200 stations"));
+        return new LinkServer.Response(200, LinkServer.ok().put("id", id[0]).put("name", name));
+    }
+
+    static boolean stationUrlOk(String url, boolean allowHttp) {
+        if (url == null || url.length() > 512 || url.indexOf(' ') >= 0) return false;
+        if (url.startsWith("https://")) return url.length() > 9;
+        if (!url.startsWith("http://")) return false;
+        return allowHttp ? url.length() > 8 : lanUrl(url) || url.matches("http://(10|127|192\\.168|172\\.(1[6-9]|2\\d|3[01]))\\.[0-9.]+(:\\d+)?(/.*)?");
+    }
+
+    LinkServer.Response radioStationRemove(String id) throws Exception {
+        if ("omarchy".equals(id)) return new LinkServer.Response(400, LinkServer.err("built_in", "Omarchy Radio stays"));
+        boolean[] gone = new boolean[1];
+        host.editConfig(j -> {
+            JSONObject radio = j.optJSONObject("radio");
+            JSONArray a = radio != null ? radio.optJSONArray("stations") : null;
+            for (int i = a == null ? -1 : a.length() - 1; i >= 0; i--) {
+                JSONObject o = a.optJSONObject(i);
+                if (o != null && id.equals(o.optString("id"))) {
+                    a.remove(i);
+                    gone[0] = true;
+                }
+            }
+        });
+        return gone[0] ? new LinkServer.Response(200, LinkServer.ok().put("removed", id))
+                : new LinkServer.Response(404, LinkServer.err("no_such_station", id));
+    }
 
     LinkServer.Response radio(String action) throws JSONException {
         if (!RADIO.contains(action)) return new LinkServer.Response(400, LinkServer.err("bad_action", "now, play, pause, next, previous, stop"));

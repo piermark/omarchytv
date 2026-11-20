@@ -196,6 +196,11 @@ public final class LinkServer {
             return null;
         }
 
+        /** v2.22 #162 {action, station?, volume?, minutes?}: play a station, set the volume or the sleep timer. */
+        default JSONObject radioCmd(JSONObject cmd) {
+            return radio(cmd.optString("action", ""));
+        }
+
         /** v2.21 open a part of OmarchyTV: home, radiomarchy, cinemarchy, arcade, office. Null when opened. */
         default String openTarget(String target) {
             return "no_such_target";
@@ -1504,9 +1509,21 @@ public final class LinkServer {
                         out = app.diagnostics();
                         break;
                     case "tv_radio_now":
+                    case "tv_radio_stations":
+                    case "tv_radio_station_add":
+                    case "tv_radio_station_remove":
+                    case "tv_radio_sleep": {   // v2.22 #162: the same code as /v1/radio/*
+                        Response sr = "tv_radio_stations".equals(name) ? app.radioStationsGet()
+                                : "tv_radio_station_add".equals(name) ? app.radioStationAdd(args)
+                                : "tv_radio_station_remove".equals(name) ? app.radioStationRemove(args.optString("id", ""))
+                                : app.radioCmd(new JSONObject().put("action", "sleep").put("minutes", args.optInt("minutes", 0)));
+                        out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                        isError = sr.status != 200;
+                        break;
+                    }
                     case "tv_radio": {
                         String act = "tv_radio_now".equals(name) ? "now" : args.optString("action", "");
-                        Response rr = app.radio(act);
+                        Response rr = app.radioCmd("tv_radio".equals(name) ? args : new JSONObject().put("action", act));
                         out = new JSONObject(new String(rr.body, StandardCharsets.UTF_8));
                         isError = rr.status != 200;
                         break;
@@ -1570,8 +1587,17 @@ public final class LinkServer {
         t.add(new Object[]{"tv_ask_result", "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
                 new JSONObject().put("id", prop("string", "The id tv_ask_user returned")).put("wait", prop("integer", "Seconds to wait (0-25)")), "notify"});
         t.add(new Object[]{"tv_radio_now", "What Radiomarchy (Omarchy Radio on the TV) is playing.", new JSONObject(), "read"});
-        t.add(new Object[]{"tv_radio", "Control Radiomarchy: play (resume or start the playlist), pause, next, previous, stop.",
-                new JSONObject().put("action", prop("string", "play | pause | next | previous | stop")), "control"});
+        t.add(new Object[]{"tv_radio", "Control the radio: play (resume, or a station by name, id or URL of the station list), pause, next, previous, stop, volume (0-100, the radio's own).",
+                new JSONObject().put("action", prop("string", "play | pause | next | previous | stop | volume"))
+                        .put("station", prop("string", "Station name or id (see tv_radio_stations); optional, with play"))
+                        .put("volume", prop("integer", "0-100, with action volume")), "control"});
+        // v2.22 #162 the Radio plugin's stations and sleep timer
+        t.add(new Object[]{"tv_radio_stations", "The radio stations: Omarchy Radio first, then the owner's (favourites first): id, name, url.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_radio_station_add", "Add an internet radio station (Icecast / Shoutcast MP3 or AAC, HLS .m3u8, or a .pls / .m3u playlist). https://, or http:// on the LAN.",
+                new JSONObject().put("name", prop("string", "Up to 40 characters")).put("url", prop("string", "Stream or playlist URL"))
+                        .put("logo", prop("string", "https:// image (optional)")), "control"});
+        t.add(new Object[]{"tv_radio_station_remove", "Remove a radio station (not Omarchy Radio).", new JSONObject().put("id", prop("string", "Station id")), "control"});
+        t.add(new Object[]{"tv_radio_sleep", "Stop the radio after some minutes (0 turns the timer off).", new JSONObject().put("minutes", prop("integer", "0-240")), "control"});
         t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
                 new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office")), "control"});
         t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
@@ -2389,12 +2415,15 @@ public final class LinkServer {
         JSONObject r = out[0];
         if (!r.has("spacexTv")) r.put("spacexTv", false);   // 2.20: off by default
         if (!r.has("grokbot")) r.put("grokbot", true);
+        if (!r.has("radio")) r.put("radio", false);   // v2.22 #162
         if (!r.has("plugins")) {
             r.put("plugins", new JSONArray()
                     .put(new JSONObject().put("id", "com.sighmon.spacex-tv").put("name", "SpaceX TV")
                             .put("author", "sighmon").put("license", "MIT").put("enabled", r.optBoolean("spacexTv", false)))
                     .put(new JSONObject().put("id", "io.github.tcballard.grokbot-desktop").put("name", "Agent Desktop")
-                            .put("author", "tcballard").put("license", "MIT").put("enabled", r.optBoolean("grokbot", true))));
+                            .put("author", "tcballard").put("license", "MIT").put("enabled", r.optBoolean("grokbot", true)))
+                    .put(new JSONObject().put("id", "com.omarchytv.radio").put("name", "Radio")
+                            .put("author", "OmarchyTV").put("license", "MIT").put("enabled", r.optBoolean("radio", false))));
         }
         return r;
     }
@@ -2424,8 +2453,16 @@ public final class LinkServer {
                 .put("grokbot", gb)
                 .put("plugins", cleanArr)
                 .put("at", now());
+        if (body.has("radio")) clean.put("radio", body.optBoolean("radio"));   // v2.22 #162
         host.editConfig(j -> {
             JSONObject old = j.optJSONObject("plugins");
+            // v2.22: keep the switches this call does not carry (radio, retroCrt, omastorm, …)
+            if (old != null) {
+                for (java.util.Iterator<String> it = old.keys(); it.hasNext(); ) {
+                    String k = it.next();
+                    if (!clean.has(k)) clean.put(k, old.get(k));
+                }
+            }
             if (old != null && old.has("grokbotMessage")) clean.put("grokbotMessage", old.optString("grokbotMessage", ""));
             if (old != null && old.has("grokbotBot")) clean.put("grokbotBot", old.opt("grokbotBot"));
             j.put("plugins", clean);

@@ -1404,6 +1404,56 @@ public final class OmarchyLink implements LinkServer.Host {
         return out[0];
     }
 
+    /** v2.22 #162: radio with a station, the volume and the sleep timer; "now" gets station, volume, sleep too. */
+    @Override
+    public JSONObject radioCmd(JSONObject cmd) {
+        String action = cmd.optString("action", "");
+        final JSONObject[] out = {null};
+        java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
+        main.post(() -> {
+            try {
+                RadioPlayer p = RadioPlayer.get(app);
+                JSONObject radio = LauncherConfig.readJson(app).optJSONObject("radio");
+                switch (action) {
+                    case "play":
+                        if (cmd.has("station")) {
+                            RadioStations.Station st = RadioStations.find(RadioStations.list(radio), cmd.optString("station"));
+                            if (st == null) {
+                                out[0] = new JSONObject().put("error", "no_such_station").put("message", cmd.optString("station"));
+                                return;
+                            }
+                            p.playStation(st, radio != null && radio.optBoolean("allowHttp"));
+                        } else p.playOrStart();
+                        break;
+                    case "pause": p.pause(); break;
+                    case "next": p.advance(1, true); break;
+                    case "previous": p.advance(-1, true); break;
+                    case "stop": p.stop(); break;
+                    case "volume": p.setVolume(cmd.optInt("volume", 100)); break;
+                    case "sleep": p.setSleep(cmd.optInt("minutes", 0)); break;
+                    default: break;
+                }
+                RadioCatalog.Track t = p.current();
+                String sid = p.stationId();
+                out[0] = new JSONObject().put("playing", p.playing()).put("title", t == null ? JSONObject.NULL : t.title)
+                        .put("artist", t == null ? JSONObject.NULL : sid != null ? p.icyTitle() : t.artist)
+                        .put("station", sid != null && t != null ? t.title : "Omarchy Radio").put("stationId", sid != null ? sid : "omarchy")
+                        .put("volume", p.volume()).put("sleepMinutes", p.sleepLeft());
+            } catch (Exception e) {
+                Log.w(TAG, "radio " + action + ": " + e);
+            } finally {
+                done.countDown();
+            }
+        });
+        try {
+            done.await(3, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        log("radio " + action);
+        return out[0];
+    }
+
     @Override
     public String openTarget(String target) {
         Class<?> c;

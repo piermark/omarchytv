@@ -23,6 +23,13 @@
   widgets show states live over the HA websocket while on screen (a 30 s poll as fallback) and toggle lights,
   switches, fans. `/v1/ha/*` and `tv_ha_status`, `tv_ha_list`, `tv_ha_run`. One HA setup (URL and token in Settings ›
   Ambilight & Lights, now also without the lights hub); the token never leaves the TV. Android TV; LG / Samsung follow.
+- **Radio plugin** (#162, `plugins.radio`, off by default): the `♪ Radio` pill in the bar opens a mini panel (play /
+  pause, next, previous, the radio's own volume, sleep timer, stations, Radiomarchy) without leaving the Home; a
+  `radio` widget shows what plays with ⏮ ⏯ ⏭ ☰; an optional play / pause key (a colour key or PLAY_PAUSE). Internet
+  stations next to Omarchy Radio: Icecast / Shoutcast MP3 or AAC, HLS, `.pls` / `.m3u` playlists, the ICY title in
+  the bar; https://, http:// only on the LAN unless Settings allows it. `/v1/radio` gains `station`, `volume`,
+  `sleep`; `/v1/radio/stations`; MCP `tv_radio_stations`, `tv_radio_station_add`, `tv_radio_station_remove`,
+  `tv_radio_sleep`. `PUT /v1/plugins` from an older PC no longer drops switches it does not know. Android TV.
 - **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
   extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
   terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from

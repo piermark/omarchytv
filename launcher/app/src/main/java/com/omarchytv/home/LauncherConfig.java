@@ -497,6 +497,9 @@ final class LauncherConfig {
     final boolean randomWallpaper;
     /** v2.13 Plugins Engine: SpaceX TV (com.sighmon.spacex-tv) & Agent Desktop (io.github.tcballard.grokbot-desktop). */
     final boolean pluginSpacexTv;
+    /** v2.22 #162 the Radio plugin (plugins.radio, off unless turned on) and its play / pause key (radio.key). */
+    final boolean pluginRadio;
+    final String radioKey;
     final boolean pluginGrokbot;
     final String grokbotMessage;
     /** Experimental: the bot @tcballard's Agent Desktop companion shows on the PC, pushed by omarchy-link
@@ -855,6 +858,10 @@ final class LauncherConfig {
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
         pluginSpacexTv = plObj != null && plObj.has("spacexTv") && plObj.optBoolean("spacexTv");   // 2.20: off unless the user (or a saved setting) turned it on
         pluginGrokbot = plObj == null || plObj.optBoolean("grokbot", true);
+        pluginRadio = plObj != null && plObj.optBoolean("radio", false);
+        JSONObject radioObj = j != null ? j.optJSONObject("radio") : null;
+        String rk = radioObj != null ? radioObj.optString("key", "off") : "off";
+        radioKey = java.util.Arrays.asList("red", "green", "yellow", "blue", "play_pause").contains(rk) ? rk : "off";
         String crt = plObj != null ? plObj.optString("retroCrt", "off") : "off";
         pluginRetroCrt = "light".equals(crt) || "strong".equals(crt) ? crt : "off";
         pluginOmastorm = plObj != null && plObj.optBoolean("omastorm", false);
