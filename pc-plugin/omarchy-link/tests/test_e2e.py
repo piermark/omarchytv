@@ -179,12 +179,12 @@ class E2E(unittest.TestCase):
     def test_app_tokens_ask_page_and_logs(self):   # v2.21
         self.pair()
         out = cli("token", "add", "My", "dashboard", "--scope", "notify").stdout.splitlines()
-        self.assertIn("My dashboard (notify)", out[0])
+        self.assertIn("My dashboard (notify, expires after 90 days unused)", out[0])
         self.assertTrue(out[1].startswith("otva_"))
         self.assertIn("My dashboard", cli("token").stdout)
         # v2.22: a token can be held to a level ("hermes-nas" may warn, never alert)
         out = cli("token", "add", "hermes-nas", "--scope", "notify", "--max-level", "warn").stdout
-        self.assertIn("hermes-nas (notify, at most warn)", out)
+        self.assertIn("hermes-nas (notify, at most warn, expires after 90 days unused)", out)
         self.assertIn("(at most warn)", cli("token").stdout)
         self.assertIn("00000002: at most info", cli("token", "level", "00000002", "info").stdout)
         self.assertIn("(at most info)", cli("token").stdout)

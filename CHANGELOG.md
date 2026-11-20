@@ -28,6 +28,11 @@
   the sender). The paired PC is never capped. Asked on X ("letting Claude pick its own severity would cry wolf").
   The PC's own MCP server does the same: `omarchy-tv mcp --max-level info|warn` (default `warn` through a tunnel,
   `alert` on the LAN or tailnet), since its calls reach the TV as the paired PC.
+- **Nothing stays authed after the TV is gone** (found on X): `omarchy-link forget-tv [--dry-run] [--yes]` revokes
+  the TV's app tokens, unpairs, removes the omarchytv MCP server from Claude Code (`claude mcp remove`), Codex and
+  Hermes, every omarchy-link hook in Claude Code's settings, the Omarchy hook pack, the Tailscale switch and the PC
+  MCP server's bearer token, backing up each config it edits, and says what is left (the tailnet node). App tokens
+  now **expire** after 90 days without use (`token add --expire-days N`, 0 = never; tokens from 2.21 get 90).
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 

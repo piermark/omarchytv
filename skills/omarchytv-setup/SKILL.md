@@ -142,4 +142,5 @@ docs/RASPBERRY-PI.md and docs/TAILSCALE.md. Show the owner those guides instead 
 | Anything else | `omarchy-link tv diagnostics` and `omarchy-link tv logs` (no secrets inside); full guide: docs/REMOTE-AND-AI-GUIDE.md |
 
 When everything works, tell the owner in one or two lines what is connected, which scope the agent has, and how to
-undo it (`claude mcp remove omarchytv`, `omarchy-link token revoke ID`, `omarchy-link unpair`).
+undo it (`claude mcp remove omarchytv`, `omarchy-link token revoke ID`, `omarchy-link unpair`; from 2.22
+`omarchy-link forget-tv` undoes all of it at once).

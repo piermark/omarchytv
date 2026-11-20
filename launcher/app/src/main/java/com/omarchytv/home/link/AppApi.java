@@ -289,11 +289,15 @@ final class AppApi {
                 if (name.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_name", "name is required"));
                 if (!AppTokens.validScope(scope)) return new LinkServer.Response(400, LinkServer.err("bad_scope", "read, notify or control"));
                 if (AppTokens.levelRank(maxLevel) < 0) return new LinkServer.Response(400, LinkServer.err("bad_level", "info, warn or alert"));
-                String[] t = tokens.add(name, scope, maxLevel, System.currentTimeMillis() / 1000);
+                int expireDays = body.optInt("expireDays", AppTokens.DEFAULT_EXPIRE_DAYS);
+                if (expireDays < 0 || expireDays > AppTokens.MAX_EXPIRE_DAYS) {
+                    return new LinkServer.Response(400, LinkServer.err("bad_expiry", "expireDays 0 (never) to " + AppTokens.MAX_EXPIRE_DAYS));
+                }
+                String[] t = tokens.add(name, scope, maxLevel, expireDays, System.currentTimeMillis() / 1000);
                 if (t == null) return new LinkServer.Response(409, LinkServer.err("too_many_apps", AppTokens.MAX + " app tokens; revoke one"));
                 host.log("app token added: " + name + " (" + scope + ")");
                 return new LinkServer.Response(200, new JSONObject().put("id", t[0]).put("token", t[1]).put("name", name).put("scope", scope)
-                        .put("maxLevel", maxLevel));
+                        .put("maxLevel", maxLevel).put("expireDays", expireDays));
             }
         }
         Matcher tm = TOKEN_PATH.matcher(p);

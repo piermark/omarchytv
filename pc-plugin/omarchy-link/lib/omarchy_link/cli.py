@@ -139,6 +139,63 @@ def cmd_unpair(a, cfg):
     return 0
 
 
+def cmd_forget_tv(a, cfg):
+    """v2.22 the TV is leaving: revoke its app tokens, unpair, and undo this PC's agent setup (see decommission.py)."""
+    from . import decommission, hookpack
+    p = config.Pairing.load()
+    steps = []
+    if p.paired:
+        steps.append("on the TV: revoke every app token, then unpair this PC")
+    steps += decommission.plan()
+    hooks_on = hookpack.installed()
+    if hooks_on:
+        steps.append("the Omarchy hook pack (" + ", ".join(hooks_on) + ")")
+    if cfg.get("tailscale") is True:
+        steps.append("Omarchy Link over Tailscale: off")
+    if not steps:
+        print("Nothing to forget: no pairing, no agent setup, no hooks.")
+        return 0
+    print("omarchy-link forget-tv will:")
+    for s in steps:
+        print("  - " + s)
+    if a.dry_run:
+        return 0
+    if not a.yes:
+        if not sys.stdin.isatty():
+            print("Run it again with --yes to go ahead.", file=sys.stderr)
+            return 2
+        if input("Go ahead? [y/N] ").strip().lower() not in ("y", "yes"):
+            print("Nothing changed.")
+            return 1
+    done = []
+    if p.paired:
+        try:
+            c = link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets"))
+            apps = c.request("GET", "/v1/tokens").get("apps", [])
+            for x in apps:
+                c.request("DELETE", "/v1/tokens/" + x["id"])
+            done.append(f"TV: {len(apps)} app token(s) revoked")
+            c.unpair()
+            done.append("TV: this PC unpaired")
+        except (link.LinkError, ValueError, OSError) as e:
+            done.append(f"TV not reached ({e}): on the TV, Settings > Connect Omarchy Linux > forget this PC and "
+                        "revoke the app tokens, or reset OmarchyTV (tokens live only there)")
+        p.forget()
+        done.append("this PC: pairing forgotten")
+    done += decommission.clean_pc()
+    if hooks_on:
+        hookpack.remove(hookpack.EVENTS)
+        done.append("Omarchy hook pack removed")
+    if cfg.get("tailscale") is True:
+        config.save_config({"tailscale": False})
+        done.append("Omarchy Link over Tailscale: off")
+    for d in done:
+        print("✓ " + d)
+    print("Left for you: remove the TV from your tailnet in the Tailscale admin console (login.tailscale.com/admin/machines), "
+          "and delete any omarchytv skill folders you copied (~/.claude/skills, ~/.hermes/skills) if you no longer want them.")
+    return 0
+
+
 def waybar(state: dict) -> dict:
     if not state.get("paired"):
         return {"text": "󰔂", "tooltip": "OmarchyTV: not paired (omarchy-link pair)", "class": "unpaired", "alt": "unpaired"}
@@ -296,12 +353,16 @@ def cmd_token(a, cfg):
         body = {"name": " ".join(a.name), "scope": a.scope}
         if a.max_level:
             body["maxLevel"] = a.max_level   # v2.22: higher levels from this app are lowered on the TV
+        if a.expire_days is not None:
+            body["expireDays"] = a.expire_days   # v2.22: days without use before the TV drops it (0 = never)
         r = _call(cfg, "POST", "/v1/tokens", body)
         if a.json:
             print(json.dumps(r, indent=2))
         else:
             cap = f", at most {r['maxLevel']}" if r.get("maxLevel", "alert") != "alert" else ""
-            print(f"{r['name']} ({r['scope']}{cap}), id {r['id']}")
+            ed = r.get("expireDays")
+            exp = "" if ed is None else (", never expires" if ed == 0 else f", expires after {ed} days unused")
+            print(f"{r['name']} ({r['scope']}{cap}{exp}), id {r['id']}")
             print(r["token"])
             print("Shown once: keep it in your app's settings. Revoke: omarchy-link token revoke " + r["id"], file=sys.stderr)
             if a.remote:
@@ -1359,10 +1420,16 @@ def main(argv=None) -> int:
     s.add_argument("--speak", action="store_true", help="also read it aloud on the TV")
     s.add_argument("--quiet", "-q", action="store_true", help="never fail (for hooks)")
     s.set_defaults(fn=cmd_notify)
+    s = sub.add_parser("forget-tv", help="2.22: the TV is leaving: revoke its tokens, unpair, undo the agent setup on this PC")
+    s.add_argument("--yes", action="store_true", help="do not ask")
+    s.add_argument("--dry-run", action="store_true", help="only list what would change")
+    s.set_defaults(fn=cmd_forget_tv)
     s = sub.add_parser("token", help="app tokens for dashboards and agents: list | add NAME --scope | revoke ID")
     s.add_argument("action", nargs="?", choices=["list", "add", "revoke", "level"], default="list")
     s.add_argument("name", nargs="*")
     s.add_argument("--scope", choices=["read", "notify", "control"], default="read")
+    s.add_argument("--expire-days", type=int, metavar="N",
+                   help="2.22: the TV drops the token after N days without use (default 90; 0 = never)")
     s.add_argument("--max-level", choices=["info", "warn", "alert"],
                    help="2.22: the highest notification level this app may use; the TV lowers anything above it")
     s.add_argument("--remote", action="store_true", help="also print the setup for a machine on your tailnet")

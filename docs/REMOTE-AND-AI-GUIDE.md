@@ -203,6 +203,12 @@ The Grok Bot on the TV talks to Tom Ballard's Agent Desktop (v0.3.3) on the PC; 
   your own Cloudflare tunnel, which ends on the PC, never on the TV.
 - **LG/Samsung bridge**: agents have their own key and cannot answer their own questions.
 - **Approvals and questions**: no answer always means no.
+- **Tokens expire** (2.22): an app token nobody used for 90 days stops working and is removed by the TV
+  (`--expire-days N` when you make it, 0 = never).
+- **When the TV leaves** (sold, reset, replaced): `omarchy-link forget-tv` revokes its app tokens, unpairs, removes
+  the omarchytv MCP server from Claude Code, Codex and Hermes, the omarchy-link hooks, the Omarchy hook pack, the
+  Tailscale switch and the PC MCP server's bearer token, with a backup of every config it edits. `--dry-run` lists it
+  first. Then remove the TV from your tailnet in the Tailscale admin console.
 
 ## 6. When something does not work
 

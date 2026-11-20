@@ -605,7 +605,7 @@ class Handler(BaseHTTPRequestHandler):
     def _token_add(self, pc, a, body):
         apps = getattr(self.tv, "app_tokens", [])
         tok = {"id": f"{len(apps) + 1:08x}", "name": a.get("name", ""), "scope": a.get("scope", "read"),
-               "maxLevel": a.get("maxLevel", "alert")}
+               "maxLevel": a.get("maxLevel", "alert"), "expireDays": a.get("expireDays", 90)}
         if tok["maxLevel"] not in ("info", "warn", "alert"):
             return 400, {"error": "bad_level"}
         self.tv.app_tokens = apps + [tok]

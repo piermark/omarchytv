@@ -32,6 +32,8 @@ public final class AppTokens {
         public final String scope;
         /** v2.22: the highest notification level this app may use (info, warn, alert); higher is lowered to it. */
         public volatile String maxLevel = "alert";
+        /** v2.22: revoked by itself after this many days without use (0 = never); counted from the last use. */
+        public volatile int expireDays = DEFAULT_EXPIRE_DAYS;
         final String hash;
         public final long created;
         public volatile long lastUsed;
@@ -51,7 +53,8 @@ public final class AppTokens {
         }
 
         JSONObject json() throws org.json.JSONException {
-            return new JSONObject().put("id", id).put("name", name).put("scope", scope).put("maxLevel", maxLevel).put("created", created)
+            return new JSONObject().put("id", id).put("name", name).put("scope", scope).put("maxLevel", maxLevel)
+                    .put("expireDays", expireDays).put("created", created)
                     .put("lastUsed", lastUsed == 0 ? JSONObject.NULL : (Object) lastUsed);
         }
     }
@@ -71,6 +74,28 @@ public final class AppTokens {
 
     public static boolean validScope(String s) {
         return rank(s) >= 0;
+    }
+
+    /** v2.22: unused app tokens go away by themselves after 90 days (a TV that left the house stops trusting them). */
+    public static final int DEFAULT_EXPIRE_DAYS = 90, MAX_EXPIRE_DAYS = 3650;
+
+    static boolean expired(App a, long nowS) {
+        if (a.expireDays <= 0) return false;
+        long since = Math.max(a.created, a.lastUsed);
+        return nowS - since > a.expireDays * 86_400L;
+    }
+
+    /** For tests: an app by id, expired or not. */
+    synchronized App byId(String id) {
+        for (App a : apps) if (a.id.equals(id)) return a;
+        return null;
+    }
+
+    /** v2.22: drops the expired tokens; true when any went. */
+    synchronized boolean sweep(long nowS) {
+        boolean r = apps.removeIf(a -> expired(a, nowS));
+        if (r) save();
+        return r;
     }
 
     /** v2.22 notification levels, lowest first. */
@@ -105,11 +130,19 @@ public final class AppTokens {
 
     /** v2.22: with the highest notification level the app may use. */
     public synchronized String[] add(String name, String scope, String maxLevel, long nowS) {
+        return add(name, scope, maxLevel, DEFAULT_EXPIRE_DAYS, nowS);
+    }
+
+    /** v2.22: with its expiry (days without use, 0 = never). */
+    public synchronized String[] add(String name, String scope, String maxLevel, int expireDays, long nowS) {
+        sweep(nowS);
         if (apps.size() >= MAX || !validScope(scope) || levelRank(maxLevel) < 0) return null;
+        if (expireDays < 0 || expireDays > MAX_EXPIRE_DAYS) return null;
         String token = PREFIX + LinkCrypto.b64u(LinkCrypto.randomBytes(24));
         String id = LinkCrypto.hex(LinkCrypto.randomBytes(4));
         App app = new App(id, name, scope, hashOf(token), nowS, 0);
         app.maxLevel = maxLevel;
+        app.expireDays = expireDays;
         apps.add(app);
         save();
         return new String[]{id, token};
@@ -121,6 +154,11 @@ public final class AppTokens {
         byte[] h = hashOf(token).getBytes(StandardCharsets.US_ASCII);
         App hit = null;
         for (App a : apps) if (LinkCrypto.equal(h, a.hash.getBytes(StandardCharsets.US_ASCII))) hit = a;
+        if (hit != null && expired(hit, System.currentTimeMillis() / 1000)) {   // v2.22: unused too long
+            apps.remove(hit);
+            save();
+            return null;
+        }
         return hit;
     }
 
@@ -153,6 +191,7 @@ public final class AppTokens {
     }
 
     public synchronized JSONArray list() {
+        sweep(System.currentTimeMillis() / 1000);
         JSONArray a = new JSONArray();
         for (App x : apps) {
             try {
@@ -177,6 +216,8 @@ public final class AppTokens {
                 App app = new App(o.optString("id"), o.optString("name"), scope, hash, o.optLong("created"), o.optLong("lastUsed"));
                 String ml = o.optString("maxLevel", "alert");
                 app.maxLevel = levelRank(ml) >= 0 ? ml : "alert";
+                int ed = o.optInt("expireDays", DEFAULT_EXPIRE_DAYS);   // tokens from 2.21 get the default
+                app.expireDays = ed >= 0 && ed <= MAX_EXPIRE_DAYS ? ed : DEFAULT_EXPIRE_DAYS;
                 apps.add(app);
             }
         } catch (Exception ignored) {
