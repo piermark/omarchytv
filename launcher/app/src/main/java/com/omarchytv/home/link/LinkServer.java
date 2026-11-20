@@ -1409,6 +1409,35 @@ public final class LinkServer {
                     case "tv_close_page":
                         out = ok().put("closed", host.closePage());
                         break;
+                    case "tv_widget_types":
+                    case "tv_widget_list":
+                    case "tv_widget_create":
+                    case "tv_widget_update":
+                    case "tv_widget_move":
+                    case "tv_widget_delete": {   // v2.22 #157: the same code as /v1/widgets/*
+                        String wid = java.net.URLEncoder.encode(args.optString("id", ""), "UTF-8");
+                        String[] mp = "tv_widget_types".equals(name) ? new String[]{"GET", "/v1/widgets/types"}
+                                : "tv_widget_list".equals(name) ? new String[]{"GET", "/v1/widgets/list" + (args.has("page") ? "?page=" + args.optInt("page") : "")}
+                                : "tv_widget_create".equals(name) ? new String[]{"POST", "/v1/widgets/item"}
+                                : "tv_widget_delete".equals(name) ? new String[]{"DELETE", "/v1/widgets/item/" + wid}
+                                : new String[]{"PATCH", "/v1/widgets/item/" + wid};
+                        JSONObject wb = new JSONObject(args.toString());
+                        if ("tv_widget_update".equals(name)) {   // content only, whatever else the call carries
+                            for (String k : new String[]{"page", "x", "y", "w", "h", "push", "type"}) wb.remove(k);
+                        } else if ("tv_widget_move".equals(name)) {
+                            for (String k : new String[]{"title", "icon", "ttl", "data", "type"}) wb.remove(k);
+                            if (!wb.has("page") && !wb.has("x") && !wb.has("y") && !wb.has("w") && !wb.has("h")) {
+                                out = err("bad_args", "page, x, y, w or h");
+                                isError = true;
+                                break;
+                            }
+                        }
+                        String path = mp[1].contains("?") ? mp[1].substring(0, mp[1].indexOf('?')) : mp[1];
+                        Response wr = app.widgetRoute(who, mp[0], path, mp[1], "mcp:" + who.key, wb);
+                        out = new JSONObject(new String(wr.body, StandardCharsets.UTF_8));
+                        isError = wr.status != 200;
+                        break;
+                    }
                     case "tv_diagnostics":
                         out = app.diagnostics();
                         break;
@@ -1506,6 +1535,26 @@ public final class LinkServer {
                 new JSONObject().put("id", prop("string", "The page id")).put("badge", prop("integer", "0-999")), "notify"});
         t.add(new Object[]{"tv_remove_page", "Remove a published page from the TV's Home.", new JSONObject().put("id", prop("string", "The page id")), "control"});
         t.add(new Object[]{"tv_diagnostics", "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, recent log lines. No secrets.", new JSONObject(), "control"});
+        // v2.22 #157: positioned, typed widgets on the Home (a 12 x 6 grid per page)
+        JSONObject wid = prop("string", "Widget id: a-z, 0-9, . _ -, up to 48");
+        t.add(new Object[]{"tv_widget_types", "The Home widget types, the shape of each one's data, the grid (12 x 6 cells per page) and the limits.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_widget_list", "The widgets on the TV's Home (one page, or every page when page is left out) with their position and size, and the free cells.",
+                new JSONObject().put("page", prop("integer", "Page number, 1 = the Home (optional)")), "read"});
+        t.add(new Object[]{"tv_widget_create", "Create a widget on the Home. type: lines, stat, text, image, chart, page, shortcuts, homeassistant.scenes, homeassistant.entities, radio, qr (see tv_widget_types). Without x/y it takes the first free slot; an occupied area answers cell_taken with free slots, unless push is true.",
+                new JSONObject().put("id", wid).put("type", prop("string", "Widget type"))
+                        .put("page", prop("integer", "Page, default 1")).put("x", prop("integer", "Column 0-11")).put("y", prop("integer", "Row 0-5"))
+                        .put("w", prop("integer", "Width in cells, 1-12")).put("h", prop("integer", "Height in cells, 1-6"))
+                        .put("title", prop("string", "Title, at most 48 characters")).put("icon", prop("string", "One letter or emoji"))
+                        .put("ttl", prop("integer", "Seconds before it dims as stale (hidden after twice that); optional"))
+                        .put("data", prop("object", "The content, by type (see tv_widget_types)"))
+                        .put("push", prop("boolean", "Move the widgets in the way instead of failing")), "control"});
+        t.add(new Object[]{"tv_widget_update", "Change a widget's content: title, icon, ttl, data. Needs only the notify scope, so a low-scope agent can keep a widget fresh.",
+                new JSONObject().put("id", wid).put("title", prop("string", "Title")).put("icon", prop("string", "One letter or emoji"))
+                        .put("ttl", prop("integer", "Seconds")).put("data", prop("object", "The new content, by type")), "notify"});
+        t.add(new Object[]{"tv_widget_move", "Move or resize a widget: page, x, y, w, h. Fails with cell_taken (and free slots) if the area is not free, unless push is true.",
+                new JSONObject().put("id", wid).put("page", prop("integer", "Page")).put("x", prop("integer", "Column 0-11")).put("y", prop("integer", "Row 0-5"))
+                        .put("w", prop("integer", "Width 1-12")).put("h", prop("integer", "Height 1-6")).put("push", prop("boolean", "Move the widgets in the way")), "control"});
+        t.add(new Object[]{"tv_widget_delete", "Remove a widget from the Home.", new JSONObject().put("id", wid), "control"});
         return t;
     }
 

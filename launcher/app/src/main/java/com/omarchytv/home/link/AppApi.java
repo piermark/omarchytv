@@ -130,7 +130,8 @@ final class AppApi {
         return "/v1/state".equals(p) || "/v1/stream".equals(p) || "/v1/notify".equals(p) || "/v1/ask".equals(p)
                 || ASK_PATH.matcher(p).matches() || "/v1/page".equals(p) || "/v1/diagnostics".equals(p)
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
-                || "/v1/radio".equals(p) || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches();
+                || "/v1/radio".equals(p) || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
+                || p.startsWith("/v1/widgets/");   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
     }
 
     /** The app token a request presents: "Authorization: Bearer otva_…", or ?token= on GET /v1/state and /v1/stream. */
@@ -191,7 +192,7 @@ final class AppApi {
 
     static LinkServer.Response cors(LinkServer.Response r) {
         r.headers.put("Access-Control-Allow-Origin", "*");
-        r.headers.put("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        r.headers.put("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
         r.headers.put("Access-Control-Allow-Headers", "Authorization, Content-Type");
         r.headers.put("Access-Control-Allow-Private-Network", "true");
         r.headers.put("Access-Control-Max-Age", "600");
@@ -205,6 +206,7 @@ final class AppApi {
     /** Shared by app tokens and signed PCs. Null when the path is not an app route. */
     LinkServer.Response route(Principal who, LinkServer.Request req, JSONObject body) throws Exception {
         String m = req.method, p = path(req.target);
+        if (p.startsWith("/v1/widgets/")) return widgetRoute(who, m, p, req.target, req.peer, body);   // v2.22 #157
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
             if (!who.can("notify")) return forbidden("notify");
@@ -476,6 +478,110 @@ final class AppApi {
         if (!capped || r.status != 200) return r;
         return new LinkServer.Response(200, new JSONObject(new String(r.body, java.nio.charset.StandardCharsets.UTF_8))
                 .put("capped", b.optString("level")));
+    }
+
+    // ---------------------------------------------------------------- v2.22 #157 Home widgets
+
+    static final Pattern WIDGET_ITEM = Pattern.compile("^/v1/widgets/item/([^/?#]{1,60})$");
+
+    /** The widgets API, shared by the paired PC, app tokens and MCP (the tool calls build the same requests). */
+    LinkServer.Response widgetRoute(Principal who, String m, String p, String target, String peer, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/widgets/types".equals(p)) return who.can("read") ? new LinkServer.Response(200, HomeWidgets.types()) : forbidden("read");
+        if ("GET".equals(m) && "/v1/widgets/list".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            int page = 0;
+            String q = query(target, "page");
+            if (q != null && !q.isEmpty()) {
+                try {
+                    page = Integer.parseInt(q);
+                } catch (NumberFormatException e) {
+                    return new LinkServer.Response(400, LinkServer.err("bad_page", "page: a number"));
+                }
+            }
+            return new LinkServer.Response(200, widgetList(page));
+        }
+        if ("POST".equals(m) && "/v1/widgets/item".equals(p)) {
+            if (!who.can("control")) return forbidden("control");
+            return widgetEdit(all -> HomeWidgets.create(all, body, who.pc ? "pc" : "app:" + who.name, nowS()), "created");
+        }
+        Matcher im = WIDGET_ITEM.matcher(p);
+        if (!im.matches()) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        String id = im.group(1);
+        if (id.startsWith("pane:")) {
+            return new LinkServer.Response(409, LinkServer.err("pane_widget", "a pane pushed by the PC (PUT /v1/widgets): change it there"));
+        }
+        if ("DELETE".equals(m)) {
+            if (!who.can("control")) return forbidden("control");
+            return widgetEdit(all -> {
+                int i = HomeWidgets.indexOf(all, id);
+                if (i < 0) throw new HomeWidgets.Bad(404, "no_such_widget", id, null);
+                JSONObject gone = all.getJSONObject(i);
+                HomeWidgets.delete(all, id);
+                return gone;
+            }, "deleted");
+        }
+        if ("PATCH".equals(m) || "PUT".equals(m)) {
+            if (body.has("type")) return new LinkServer.Response(400, LinkServer.err("bad_type", "the type cannot change: delete and create"));
+            boolean shape = body.has("page") || body.has("x") || body.has("y") || body.has("w") || body.has("h");
+            if (!who.can(shape ? "control" : "notify")) return forbidden(shape ? "control" : "notify");
+            long retry = s.limited(peer + "|widget:" + id, 4, 1000);   // at most 4 changes a second per widget
+            if (retry > 0) return new LinkServer.Response(429, LinkServer.err("rate_limited", "4 changes a second per widget"));
+            boolean content = body.has("title") || body.has("icon") || body.has("ttl") || body.has("data");
+            return widgetEdit(all -> {
+                JSONObject wd = null;
+                if (shape) wd = HomeWidgets.move(all, id, body, nowS());
+                if (content || !shape) wd = HomeWidgets.update(all, id, body, nowS());
+                return wd;
+            }, shape ? "moved" : "updated");
+        }
+        return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+    }
+
+    interface WidgetOp {
+        JSONObject apply(JSONArray all) throws Exception;
+    }
+
+    /** Runs one change on omarchytv.json "widgets" atomically (nothing is written on an error) and tells /v1/events. */
+    private LinkServer.Response widgetEdit(WidgetOp op, String what) throws Exception {
+        JSONObject[] out = new JSONObject[1];
+        try {
+            host.editConfig(j -> {
+                JSONArray all = j.optJSONArray("widgets");
+                if (all == null) j.put("widgets", all = new JSONArray());
+                out[0] = op.apply(all);
+            });
+        } catch (HomeWidgets.Bad e) {
+            JSONObject err = LinkServer.err(e.code, e.getMessage());
+            if (e.free != null) err.put("free", e.free);
+            return new LinkServer.Response(e.status, err);
+        }
+        JSONObject wd = out[0];
+        if (wd != null) {
+            s.broadcast("widgets_changed", new JSONObject().put("op", what).put("id", wd.optString("id")).put("page", wd.optInt("page", 1)));
+        }
+        return new LinkServer.Response(200, LinkServer.ok().put(what, true).put("widget", wd == null ? JSONObject.NULL : wd));
+    }
+
+    /** The widgets, the PC's panes as read-only "lines" widgets on page 1, and the free 1x1 cells of the page asked. */
+    JSONObject widgetList(int page) throws JSONException {
+        JSONObject cfg = host.config();
+        JSONArray all = cfg != null && cfg.optJSONArray("widgets") != null ? cfg.optJSONArray("widgets") : new JSONArray();
+        JSONObject link = cfg != null ? cfg.optJSONObject("link") : null;
+        JSONArray panes = HomeWidgets.paneWidgets(all, link != null ? link.optJSONArray("panes") : null);
+        JSONArray shown = HomeWidgets.list(all, page);
+        if (page == 0 || page == 1) for (int i = 0; i < panes.length(); i++) shown.put(panes.get(i));
+        JSONObject o = new JSONObject().put("widgets", shown).put("grid", new JSONObject().put("cols", HomeWidgets.COLS).put("rows", HomeWidgets.ROWS));
+        if (page > 0) {
+            JSONArray occupied = new JSONArray();
+            for (int i = 0; i < all.length(); i++) occupied.put(all.get(i));
+            if (page == 1) for (int i = 0; i < panes.length(); i++) occupied.put(panes.get(i));
+            o.put("page", page).put("free", HomeWidgets.freeSlots(occupied, page, 1, 1, null));
+        }
+        return o;
+    }
+
+    private static long nowS() {
+        return System.currentTimeMillis() / 1000;
     }
 
     /** v2.22 "detail": at most 40 lines and 2000 characters, each line printable (tabs become spaces). */

@@ -422,6 +422,34 @@ Shortcut actions on the TV:
   default asks for confirmation with a desktop notification. The TV never sends
   a command line.
 
+### Home widgets v2 (`/v1/widgets/*`, v2.22, #157)
+
+Positioned, typed widgets on a grid of **12 × 6 cells per page** (pages 1–1000; page 1 is the Home). Stored in
+omarchytv.json `widgets`; each one is `{id, type, page, x, y, w, h, title, icon, ttl?, data, updatedAt, owner}`.
+Widgets never overlap and never leave the grid. The paired PC and app tokens use the same routes:
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/widgets/types` | read | the types, the shape of their `data`, the grid and the limits |
+| GET | `/v1/widgets/list?page=N` | read | the widgets (all pages without `page`) and up to 8 free 1×1 cells |
+| POST | `/v1/widgets/item` | control | create `{id, type, page?, x?, y?, w?, h?, title?, icon?, ttl?, data, push?}` |
+| PATCH | `/v1/widgets/item/<id>` | notify for `title` / `icon` / `ttl` / `data`; control for `page` / `x` / `y` / `w` / `h` | partial update (`PUT` works too); the type cannot change |
+| DELETE | `/v1/widgets/item/<id>` | control | |
+
+- Without `x`/`y` a create takes the first free slot (row-major). An occupied or out-of-grid area answers
+  `409 {"error": "cell_taken", "free": [{x, y}…]}`, unless `push: true`, which moves the widgets in the way to the
+  first free slot on the same page, then on the next pages.
+- Types: `lines` (≤ 8 label/value), `stat` (value, unit, label, delta, trend), `text` (≤ 1 KB, ≤ 30 lines),
+  `image` (https:// or LAN http://, PNG/JPEG ≤ 512 KB, `fit`), `chart` (1–120 numbers, `spark` or `bars`), `page`
+  (LAN / tailnet http://), `shortcuts` (≤ 16, same actions as `PUT /v1/widgets`), `homeassistant.scenes`,
+  `homeassistant.entities`, `radio`, `qr`. Everything is text; nothing is rendered as HTML.
+- Limits: 64 widgets per page, 2 000 in all, `data` ≤ 16 KB, 4 changes a second per widget (429 above).
+- The PC's panes (`PUT /v1/widgets`) are listed as read-only `lines` widgets on page 1, with ids `pane:<id>`, in the
+  cells the real widgets leave free; change them with `PUT /v1/widgets` as before (`409 pane_widget` here).
+- Every change emits `widgets_changed {op, id, page}` on `/v1/events`.
+- MCP (the TV's `/v1/mcp`, `omarchy-link mcp`, `omarchy-tv mcp`): `tv_widget_types`, `tv_widget_list` (read),
+  `tv_widget_update` (notify), `tv_widget_create`, `tv_widget_move`, `tv_widget_delete` (control).
+
 ### AI credits (`PUT /v1/ai`)
 
 ```json

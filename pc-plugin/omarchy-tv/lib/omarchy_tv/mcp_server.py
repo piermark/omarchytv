@@ -201,6 +201,48 @@ ALLOWED_TOOLS = (
         "description": "Remove a published page from the TV's Home.",
         "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
     },
+    # v2.22 #157: positioned, typed widgets on the Home (12 x 6 cells per page); same names and schemas as the TV's MCP
+    {
+        "name": "tv_widget_types",
+        "description": "The Home widget types, the shape of each one's data, the grid (12 x 6 cells per page) and the limits.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "tv_widget_list",
+        "description": "The widgets on the TV's Home (one page, or every page) with position and size, and the free cells.",
+        "inputSchema": {"type": "object", "properties": {"page": {"type": "integer", "description": "Page, 1 = the Home"}}},
+    },
+    {
+        "name": "tv_widget_create",
+        "description": "Create a widget on the Home. type: lines, stat, text, image, chart, page, shortcuts, "
+                       "homeassistant.scenes, homeassistant.entities, radio, qr (see tv_widget_types). Without x/y it takes the "
+                       "first free slot; an occupied area answers cell_taken with free slots, unless push is true.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string"}, "type": {"type": "string"}, "page": {"type": "integer"},
+            "x": {"type": "integer"}, "y": {"type": "integer"}, "w": {"type": "integer"}, "h": {"type": "integer"},
+            "title": {"type": "string"}, "icon": {"type": "string"}, "ttl": {"type": "integer"},
+            "data": {"type": "object"}, "push": {"type": "boolean"}}, "required": ["id", "type"]},
+    },
+    {
+        "name": "tv_widget_update",
+        "description": "Change a widget's content (title, icon, ttl, data). Needs only the notify scope.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string"}, "title": {"type": "string"}, "icon": {"type": "string"},
+            "ttl": {"type": "integer"}, "data": {"type": "object"}}, "required": ["id"]},
+    },
+    {
+        "name": "tv_widget_move",
+        "description": "Move or resize a widget (page, x, y, w, h). cell_taken with free slots if the area is not free, "
+                       "unless push is true.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string"}, "page": {"type": "integer"}, "x": {"type": "integer"}, "y": {"type": "integer"},
+            "w": {"type": "integer"}, "h": {"type": "integer"}, "push": {"type": "boolean"}}, "required": ["id"]},
+    },
+    {
+        "name": "tv_widget_delete",
+        "description": "Remove a widget from the Home.",
+        "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
+    },
     {
         "name": "tv_diagnostics",
         "description": "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, "
@@ -212,6 +254,7 @@ ALLOWED_TOOLS = (
 # v2.21 scopes, as on the TV: read < notify < control. A server reachable from the internet (--tunnel,
 # --cloudflare) defaults to notify: an agent in the cloud can read and talk to you, not drive the TV.
 SCOPES = ("read", "notify", "control")
+WIDGET_CREATE_KEYS = ("id", "type", "page", "x", "y", "w", "h", "title", "icon", "ttl", "data", "push")
 TOOL_SCOPE = {
     "tv_status": "read", "tv_list_themes": "read", "tv_list_apps": "read", "tv_get_theme": "read", "tv_get_state": "read",
     "tv_radio_now": "read", "tv_radio": "control", "tv_open": "control",
@@ -219,6 +262,8 @@ TOOL_SCOPE = {
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
     "tv_screensaver": "control", "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control",
+    "tv_widget_types": "read", "tv_widget_list": "read", "tv_widget_update": "notify",
+    "tv_widget_create": "control", "tv_widget_move": "control", "tv_widget_delete": "control",
 }
 
 
@@ -370,6 +415,23 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         return c.request("DELETE", f"/v1/pages/{pid}")
     if name == "tv_list_pages":
         return c.request("GET", "/v1/pages")
+    if name.startswith("tv_widget_"):   # v2.22 #157: the TV checks and places everything
+        from urllib.parse import quote
+        wid = quote(str(args.get("id", "")), safe="")
+        if name == "tv_widget_types":
+            return c.request("GET", "/v1/widgets/types")
+        if name == "tv_widget_list":
+            page = args.get("page")
+            return c.request("GET", "/v1/widgets/list" + (f"?page={int(page)}" if isinstance(page, int) else ""))
+        if name == "tv_widget_create":
+            return c.request("POST", "/v1/widgets/item", {k: v for k, v in args.items() if k in WIDGET_CREATE_KEYS})
+        if name == "tv_widget_delete":
+            return c.request("DELETE", f"/v1/widgets/item/{wid}")
+        keys = ("title", "icon", "ttl", "data") if name == "tv_widget_update" else ("page", "x", "y", "w", "h", "push")
+        body = {k: v for k, v in args.items() if k in keys}
+        if not body:
+            raise ValueError("nothing to change")
+        return c.request("PATCH", f"/v1/widgets/item/{wid}", body)
     if name == "tv_radio_now":
         return c.request("GET", "/v1/radio")
     if name == "tv_radio":

@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
@@ -823,6 +824,55 @@ public class LinkServerTest {
         assertEquals("hermes", k[0]);
         assertEquals("alert", k[1]);
         assertEquals("", LinkServer.notifyBucket("/v1/notify", "not json".getBytes(StandardCharsets.UTF_8))[0]);
+    }
+
+    @Test
+    public void widgetsApiAndMcpWithScopes() throws Exception {   // v2.22 #157
+        pair("123456");
+        server.limits = false;
+        String ctl = appToken("hermes", "control"), nfy = appToken("ci", "notify"), rd = appToken("wall", "read");
+        String body = "{\"id\":\"nas\",\"type\":\"lines\",\"w\":4,\"h\":2,\"title\":\"NAS\",\"data\":{\"lines\":[{\"label\":\"Disk\",\"value\":\"71%\"}]}}";
+        assertEquals(403, app("POST", "/v1/widgets/item", body, nfy).status);
+        Resp c = app("POST", "/v1/widgets/item", body, ctl);
+        assertEquals(200, c.status);
+        assertEquals("app:hermes", c.json().getJSONObject("widget").getString("owner"));
+        assertEquals(409, app("POST", "/v1/widgets/item", body.replace("\"w\":4", "\"x\":1,\"w\":4"), ctl).status);   // exists
+        // notify may change the content, not the place
+        assertEquals(200, app("PATCH", "/v1/widgets/item/nas", "{\"data\":{\"lines\":[{\"label\":\"Disk\",\"value\":\"72%\"}]}}", nfy).status);
+        assertEquals(403, app("PATCH", "/v1/widgets/item/nas", "{\"x\":6}", nfy).status);
+        assertEquals(403, app("DELETE", "/v1/widgets/item/nas", "", nfy).status);
+        assertEquals(200, app("PATCH", "/v1/widgets/item/nas", "{\"x\":6,\"y\":3}", ctl).status);
+        // read sees it, with the free cells
+        Resp l = app("GET", "/v1/widgets/list?page=1", "", rd);
+        JSONObject nas = l.json().getJSONArray("widgets").getJSONObject(0);
+        assertEquals(6, nas.getInt("x"));
+        assertEquals("72%", nas.getJSONObject("data").getJSONArray("lines").getJSONObject(0).getString("value"));
+        assertEquals(8, l.json().getJSONArray("free").length());   // the first 8 free cells
+        assertEquals(403, app("POST", "/v1/widgets/item", body, rd).status);
+        // the PC's panes show as read-only lines widgets on page 1
+        signed("PUT", "/v1/widgets", "{\"panes\":[{\"id\":\"cpu\",\"title\":\"CPU\",\"lines\":[]}]}");
+        JSONArray ws = app("GET", "/v1/widgets/list?page=1", "", rd).json().getJSONArray("widgets");
+        assertEquals("pane:cpu", ws.getJSONObject(1).getString("id"));
+        assertEquals(409, app("DELETE", "/v1/widgets/item/pane:cpu", "", ctl).status);
+        // the PC (signed) has every scope
+        assertEquals(200, signed("POST", "/v1/widgets/item", "{\"id\":\"temp\",\"type\":\"stat\",\"data\":{\"value\":\"21\"}}").status);
+        assertEquals(200, signed("GET", "/v1/widgets/types", "").status);
+        // MCP: same code, same scopes
+        Resp m = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 1).put("method", "tools/call").put("params",
+                new JSONObject().put("name", "tv_widget_update").put("arguments", new JSONObject().put("id", "temp").put("x", 9)
+                        .put("data", new JSONObject().put("value", "22")))).toString(), nfy);
+        assertEquals(200, m.status);
+        assertTrue(m.json().toString(), m.json().toString().contains("\\\"22\\\""));
+        JSONArray after = app("GET", "/v1/widgets/list?page=1", "", rd).json().getJSONArray("widgets");
+        for (int i = 0; i < after.length(); i++) {
+            if ("temp".equals(after.getJSONObject(i).getString("id"))) assertFalse(after.getJSONObject(i).getInt("x") == 9);   // update never moves
+        }
+        Resp mt = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 2).put("method", "tools/list").toString(), nfy);
+        String tl = mt.json().toString();
+        assertTrue(tl.contains("tv_widget_update"));
+        assertFalse(tl.contains("tv_widget_create"));   // not offered to a notify token
+        assertEquals(200, app("DELETE", "/v1/widgets/item/nas", "", ctl).status);
+        assertEquals(404, app("DELETE", "/v1/widgets/item/nas", "", ctl).status);
     }
 
     @Test

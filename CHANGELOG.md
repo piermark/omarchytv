@@ -2,6 +2,11 @@
 
 ## [Unreleased] — 2.22
 
+- **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
+  page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,
+  `tv_widget_list`, `tv_widget_create`, `tv_widget_update` (content only, a notify token is enough), `tv_widget_move`
+  and `tv_widget_delete`, on the TV's MCP and both PC bridges. No overlap, `cell_taken` with free slots, or `push`.
+  The PC's panes appear as read-only widgets. The Home renderer comes next. Asked in #157.
 - **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
   extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
   terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from

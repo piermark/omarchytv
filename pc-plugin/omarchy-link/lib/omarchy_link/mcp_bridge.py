@@ -23,6 +23,9 @@ TOOL_SCOPE = {
     "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control", "tv_radio": "control",
     "tv_open": "control", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_room_post": "notify", "tv_remind": "notify",
+    # v2.22 #157 Home widgets: content updates need notify, everything that changes the layout control
+    "tv_widget_types": "read", "tv_widget_list": "read", "tv_widget_update": "notify",
+    "tv_widget_create": "control", "tv_widget_move": "control", "tv_widget_delete": "control",
 }
 
 # v2.21 tools this PC answers itself (they push to the TV with the link it already has)

@@ -133,6 +133,35 @@ class TestMcpV221(unittest.TestCase):
                                    "params": {"name": "tv_notify", "arguments": {"text": "  "}}}, tv)
         self.assertTrue(r["result"]["isError"])
 
+    def test_widget_tools_map_to_the_tv_api(self):   # v2.22 #157
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_widget_create", {"id": "nas", "type": "lines", "x": 0, "evil": 1, "data": {"lines": []}})
+        self.assertEqual(sent[-1][:2], ("POST", "/v1/widgets/item"))
+        self.assertNotIn("evil", sent[-1][2])
+        call("tv_widget_update", {"id": "nas", "x": 5, "data": {"lines": []}}, "notify")
+        self.assertEqual(sent[-1], ("PATCH", "/v1/widgets/item/nas", {"data": {"lines": []}}))   # content only
+        call("tv_widget_move", {"id": "nas", "x": 5, "title": "no"})
+        self.assertEqual(sent[-1], ("PATCH", "/v1/widgets/item/nas", {"x": 5}))
+        call("tv_widget_list", {"page": 2}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/widgets/list?page=2"))
+        call("tv_widget_delete", {"id": "a/../b"})
+        self.assertEqual(sent[-1][1], "/v1/widgets/item/a%2F..%2Fb")
+        n = len(sent)
+        r = call("tv_widget_create", {"id": "x", "type": "text"}, "notify")
+        self.assertIn("error", r)
+        self.assertEqual(len(sent), n)   # a notify scope never reaches the TV for a create
+        names = {t["name"] for t in mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}, c, "notify")["result"]["tools"]}
+        self.assertIn("tv_widget_update", names)
+        self.assertNotIn("tv_widget_move", names)
+
     def test_max_level_caps_tv_notify(self):   # v2.22: the owner's rule, not the model's
         tv = FakeTvClient()
         call = lambda lvl, mx: mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {
