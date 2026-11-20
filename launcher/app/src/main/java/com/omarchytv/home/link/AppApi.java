@@ -466,6 +466,10 @@ final class AppApi {
             }
             return new LinkServer.Response(403, LinkServer.err(e, "turn on agent alerts on the TV (Settings > Grok Bot & AI > AI agent alerts while you watch)"));
         }
+        if (b.optBoolean("speak")) {   // v2.22: read it aloud first ("say": the full text, e.g. the whole command)
+            String say = LinkServer.printable(b.optString("say", "").replace('\n', ' ').trim(), 300);
+            host.speak(say.isEmpty() ? ask.from + ". " + ask.question : say);   // silent when tones and voice are off
+        }
         return new LinkServer.Response(200, ask.json(now));
     }
 

@@ -85,7 +85,7 @@ omarchy-link pages add ID NAME URL [--icon H] [--badge N] | badge ID N | show ID
 omarchy-link radio [now|play|pause|next|previous|stop]; omarchy-link open radiomarchy|cinemarchy|arcade|office|home
 omarchy-link token add NAME --scope read|notify|control [--remote] | list | revoke ID
 omarchy-link mcp [--scope notify]           # claude mcp add omarchytv -- omarchy-link mcp
-omarchy-link agents approvals on|off        # Claude Code's permission prompts on the TV
+omarchy-link agents approvals on|off [--speak]   # Claude Code's permission prompts on the TV (2.22: read aloud)
 omarchy-link hook add [all|theme-set post-boot post-update battery-low font-set] | remove | list
 omarchy-link remind 20m TEXT | list | cancel ID
 omarchy-link room post NAME TEXT [--from WHO] | clear NAME | list

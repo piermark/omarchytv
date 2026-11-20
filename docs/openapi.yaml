@@ -175,6 +175,8 @@ paths:
                 question: { type: string, maxLength: 200 }
                 choices: { type: array, maxItems: 4, items: { type: string, maxLength: 24 } }
                 timeout: { type: integer, minimum: 10, maximum: 300, default: 120 }
+                speak: { type: boolean, description: "v2.22: read it aloud when it appears (silent when tones and voice are off)" }
+                say: { type: string, maxLength: 300, description: "v2.22: what to read instead of the question, e.g. the whole command" }
       responses:
         "200": { description: Pending, content: { application/json: { schema: { $ref: "#/components/schemas/Ask" } } } }
         "403": { $ref: "#/components/responses/Error" }

@@ -1353,7 +1353,8 @@ public final class LinkServer {
                         JSONObject b = new JSONObject().put("question", args.optString("question", ""))
                                 .put("choices", args.optJSONArray("choices") != null ? args.optJSONArray("choices") : new JSONArray())
                                 .put("timeout", Math.max(10, Math.min(300, args.optInt("timeout", 120))))
-                                .put("from", args.optString("from", ""));
+                                .put("from", args.optString("from", ""))
+                                .put("speak", args.optBoolean("speak"));
                         Response ar = app.askPost(who, b);
                         out = new JSONObject(new String(ar.body, StandardCharsets.UTF_8));
                         isError = ar.status != 200;
@@ -1457,7 +1458,8 @@ public final class LinkServer {
                         .put("choices", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "Up to 4 short answers (default Yes / No)"))
                         .put("timeout", prop("integer", "Seconds the question stays on the TV (10-300, default 120)"))
                         .put("wait", prop("integer", "Seconds to wait here for the answer (0-110, default 60); then use tv_ask_result"))
-                        .put("from", prop("string", "Who asks, e.g. Claude Code")), "notify"});
+                        .put("from", prop("string", "Who asks, e.g. Claude Code"))
+                        .put("speak", prop("boolean", "Also read the question aloud (silent when the TV's tones and voice are off)")), "notify"});
         t.add(new Object[]{"tv_ask_result", "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
                 new JSONObject().put("id", prop("string", "The id tv_ask_user returned")).put("wait", prop("integer", "Seconds to wait (0-25)")), "notify"});
         t.add(new Object[]{"tv_radio_now", "What Radiomarchy (Omarchy Radio on the TV) is playing.", new JSONObject(), "read"});

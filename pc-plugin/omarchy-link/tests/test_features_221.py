@@ -118,10 +118,11 @@ class Approve(unittest.TestCase):
 
     def test_answers(self):
         asked = []
-        ask = lambda q, ch, t: asked.append((q, ch)) or "Allow"
+        ask = lambda q, ch, t, say="": asked.append((q, ch, say)) or "Allow"
         out = permission.decide(self.PAYLOAD, ask)
         self.assertEqual(out["hookSpecificOutput"], {"hookEventName": "PermissionRequest", "decision": {"behavior": "allow"}})
         self.assertIn("shop wants Bash: git push origin main", asked[0][0])
+        self.assertEqual(asked[0][2], "Claude Code, project shop wants to use Bash: git push origin main")   # v2.22
         self.assertEqual(permission.decide(self.PAYLOAD, lambda *a: "Deny")["hookSpecificOutput"]["decision"]["behavior"], "deny")
         self.assertIsNone(permission.decide(self.PAYLOAD, lambda *a: "On the PC"))   # Claude Code's own prompt
         self.assertIsNone(permission.decide(self.PAYLOAD, lambda *a: None))          # no answer in time
@@ -129,6 +130,28 @@ class Approve(unittest.TestCase):
             raise OSError("TV off")
         self.assertIsNone(permission.decide(self.PAYLOAD, away))                      # never allow by itself
         self.assertIsNone(permission.decide({"hook_event_name": "PreToolUse"}, lambda *a: "Allow"))
+
+    def test_spoken_request_has_the_whole_command(self):   # v2.22 approvals on --speak
+        long = "rsync -av " + " ".join(f"dir{i}/" for i in range(30)) + " backup:/srv"
+        p = dict(self.PAYLOAD, tool_input={"command": long})
+        self.assertLessEqual(len(permission.describe(p)), 200)
+        self.assertIn("…", permission.describe(p))
+        said = permission.spoken(p)
+        self.assertIn("dir20/", said)
+        self.assertLessEqual(len(said), 300)
+        sent = []
+
+        class C:
+            def request(self, m, path, body=None, timeout=0):
+                if m == "POST":
+                    sent.append(body)
+                    return {"id": "a1"}
+                return {"state": "answered", "answer": "Deny"}
+        self.assertEqual(permission.decide(p, permission.tv_ask(C(), speak=True))["hookSpecificOutput"]["decision"]["behavior"], "deny")
+        self.assertTrue(sent[0]["speak"])
+        self.assertEqual(sent[0]["say"], said)
+        permission.decide(p, permission.tv_ask(C()))
+        self.assertNotIn("speak", sent[1])
 
     def test_install_and_remove_keep_other_hooks(self):
         f = agent_ask.claude_settings()
@@ -142,6 +165,10 @@ class Approve(unittest.TestCase):
         self.assertIn("agents permission", json.dumps(d["hooks"]["PermissionRequest"][1]))
         self.assertGreater(d["hooks"]["PermissionRequest"][1]["hooks"][0]["timeout"], permission.WAIT)
         self.assertTrue(d["hooks"]["PermissionRequest"][1]["hooks"][0]["command"].startswith("'/x/my tools/omarchy-link'"))
+        permission.install("/x/my tools/omarchy-link", speak=True)   # v2.22: replaces the entry, read aloud
+        d = json.loads(f.read_text())
+        self.assertEqual(len(d["hooks"]["PermissionRequest"]), 2)
+        self.assertTrue(d["hooks"]["PermissionRequest"][1]["hooks"][0]["command"].endswith("agents permission --speak"))
         self.assertTrue(permission.remove())
         d = json.loads(f.read_text())
         self.assertEqual(d["hooks"]["PermissionRequest"][0]["hooks"][0]["command"], "mine")

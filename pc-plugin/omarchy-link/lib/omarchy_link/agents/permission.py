@@ -33,12 +33,22 @@ def describe(p: dict) -> str:
     return (f"Claude Code{' · ' + where if where else ''} wants {tool}" + (f": {what}" if what else "?"))[:200]
 
 
+def spoken(p: dict) -> str:
+    """v2.22 what the TV reads aloud: who, where, the tool and the whole command or path (the TV stops at 300)."""
+    tool = str(p.get("tool_name") or "a tool")
+    ti = p.get("tool_input") if isinstance(p.get("tool_input"), dict) else {}
+    what = ti.get("command") or ti.get("file_path") or ti.get("url") or ti.get("pattern") or ti.get("description") or ""
+    what = " ".join(str(what).split())
+    where = Path(str(p.get("cwd") or "")).name
+    return (f"Claude Code{', project ' + where if where else ''} wants to use {tool}" + (f": {what}" if what else "."))[:300]
+
+
 def decide(payload: dict, ask) -> dict | None:
     """ask(question, choices, timeout) -> answer or None. Returns the hook's stdout object, or None (no decision)."""
     if not isinstance(payload, dict) or payload.get("hook_event_name", "PermissionRequest") != "PermissionRequest":
         return None
     try:
-        answer = ask(describe(payload), list(CHOICES), WAIT)
+        answer = ask(describe(payload), list(CHOICES), WAIT, spoken(payload))
     except Exception:
         return None
     if answer == "Allow":
@@ -50,7 +60,7 @@ def decide(payload: dict, ask) -> dict | None:
     return {"hookSpecificOutput": {"hookEventName": "PermissionRequest", "decision": decision}}
 
 
-def install(exe: str) -> Path:
+def install(exe: str, speak: bool = False) -> Path:
     f = claude_settings()
     data = config.read_json(f, {}) if f.exists() else {}
     if not isinstance(data, dict):
@@ -61,7 +71,7 @@ def install(exe: str) -> Path:
     hooks = data.setdefault("hooks", {})
     lst = [h for h in hooks.get("PermissionRequest", []) if MARK not in json.dumps(h)]
     hooks["PermissionRequest"] = lst + [{"matcher": "*", "hooks": [
-        {"type": "command", "command": f"{shlex.quote(exe)} {MARK}", "timeout": WAIT + 30}]}]
+        {"type": "command", "command": f"{shlex.quote(exe)} {MARK}" + (" --speak" if speak else ""), "timeout": WAIT + 30}]}]
     f.parent.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps(data, indent=2) + "\n")
     return f
@@ -88,11 +98,13 @@ def remove() -> bool:
     return True
 
 
-def tv_ask(client, source: str = "Claude Code"):
-    """An ask() over the paired link: POST /v1/ask, then wait for the answer."""
-    def ask(q, choices, timeout):
-        r = client.request("POST", "/v1/ask", {"question": q, "choices": choices, "timeout": timeout,
-                                              "from": source}, timeout=8)
+def tv_ask(client, source: str = "Claude Code", speak: bool = False):
+    """An ask() over the paired link: POST /v1/ask, then wait for the answer. speak (v2.22): read aloud first."""
+    def ask(q, choices, timeout, say=""):
+        body = {"question": q, "choices": choices, "timeout": timeout, "from": source}
+        if speak:
+            body.update(speak=True, say=say or q)
+        r = client.request("POST", "/v1/ask", body, timeout=8)
         end = time.time() + timeout + 5
         while time.time() < end:
             s = client.request("GET", f"/v1/ask/{r['id']}?wait=25", None, timeout=35)

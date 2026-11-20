@@ -368,8 +368,10 @@ def cmd_ask(a, cfg):
         print("omarchy-link ask \"Deploy now?\" [--choice Yes --choice No] [--timeout 120]", file=sys.stderr)
         return 2
     try:
-        r = _call(cfg, "POST", "/v1/ask", {"question": q, "choices": a.choice or [], "timeout": a.timeout,
-                                           "from": (a.source or "PC")[:40]})
+        body = {"question": q, "choices": a.choice or [], "timeout": a.timeout, "from": (a.source or "PC")[:40]}
+        if getattr(a, "speak", False):
+            body["speak"] = True   # v2.22: the TV reads the question aloud first
+        r = _call(cfg, "POST", "/v1/ask", body)
     except link.LinkError as e:
         if getattr(e, "code", "") in NOT_REACHABLE:
             print(NOT_REACHABLE_HINT, file=sys.stderr)
@@ -1148,7 +1150,7 @@ def cmd_agents(a, cfg):
             p = config.Pairing.load()
             if p.paired:
                 c = link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets"))
-                out = permission.decide(payload, permission.tv_ask(c))
+                out = permission.decide(payload, permission.tv_ask(c, speak=bool(a.speak)))
                 if out:
                     print(json.dumps(out))
         except Exception:
@@ -1157,14 +1159,15 @@ def cmd_agents(a, cfg):
     if act == "approvals":   # v2.21 approve Claude Code's permission prompts on the TV
         from .agents import permission
         if (a.args or ["status"])[0] == "on":
-            f = permission.install(_exe())
+            f = permission.install(_exe(), speak=bool(a.speak))
             print(f"Claude Code asks the TV before its own prompt ({f}; backup next to it). "
-                  "Allow / Deny / On the PC; no answer = the usual prompt.")
+                  "Allow / Deny / On the PC; no answer = the usual prompt."
+                  + (" The TV reads each request aloud first." if a.speak else ""))
         elif a.args and a.args[0] == "off":
             print("Removed." if permission.remove() else "Was not on.")
         else:
-            on = permission.MARK in agent_ask.claude_settings().read_text() if agent_ask.claude_settings().exists() else False
-            print("on" if on else "off")
+            txt = agent_ask.claude_settings().read_text() if agent_ask.claude_settings().exists() else ""
+            print(("on, read aloud" if permission.MARK + " --speak" in txt else "on") if permission.MARK in txt else "off")
         return 0
     if act == "approve":
         ok = bool(a.args) and agent_ask.approve(a.args[0])
@@ -1361,6 +1364,7 @@ def main(argv=None) -> int:
     s.add_argument("--choice", action="append", help="an answer (up to 4; default Yes / No)")
     s.add_argument("--timeout", type=int, default=120)
     s.add_argument("--from", dest="source")
+    s.add_argument("--speak", action="store_true", help="the TV reads the question aloud (2.22)")
     s.set_defaults(fn=cmd_ask)
     s = sub.add_parser("page", help="open a LAN / tailnet page full screen on the TV, or up to 4 tiled (or --close)")
     s.add_argument("url", nargs="*")
@@ -1517,6 +1521,7 @@ def main(argv=None) -> int:
                    choices=["list", "preview", "enable", "disable", "hooks", "hook", "approve", "approvals", "permission"])
     s.add_argument("args", nargs="*")
     s.add_argument("--json", action="store_true")
+    s.add_argument("--speak", action="store_true", help="approvals on --speak: the TV reads each request aloud (2.22)")
     s.set_defaults(fn=cmd_agents)
     s = sub.add_parser("prompt", help="the TV home prompt user@host (sent with the theme)")
     s.add_argument("action", choices=["set", "show", "clear"])
