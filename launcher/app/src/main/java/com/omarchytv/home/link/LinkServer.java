@@ -159,6 +159,11 @@ public final class LinkServer {
             return "ask_off";
         }
 
+        /** v2.22: the same with "detail", the full text to read before answering (e.g. the whole command). */
+        default String askUser(String id, String from, String question, List<String> choices, long deadlineMs, String detail) {
+            return askUser(id, from, question, choices, deadlineMs);
+        }
+
         /** v2.21 POST /v1/page: open a LAN / tailnet page full screen. Null when opened, else an error code. */
         default String openPage(String url, String from) {
             return "no_page";
@@ -1354,7 +1359,8 @@ public final class LinkServer {
                                 .put("choices", args.optJSONArray("choices") != null ? args.optJSONArray("choices") : new JSONArray())
                                 .put("timeout", Math.max(10, Math.min(300, args.optInt("timeout", 120))))
                                 .put("from", args.optString("from", ""))
-                                .put("speak", args.optBoolean("speak"));
+                                .put("speak", args.optBoolean("speak"))
+                                .put("detail", args.optString("detail", ""));
                         Response ar = app.askPost(who, b);
                         out = new JSONObject(new String(ar.body, StandardCharsets.UTF_8));
                         isError = ar.status != 200;
@@ -1459,7 +1465,8 @@ public final class LinkServer {
                         .put("timeout", prop("integer", "Seconds the question stays on the TV (10-300, default 120)"))
                         .put("wait", prop("integer", "Seconds to wait here for the answer (0-110, default 60); then use tv_ask_result"))
                         .put("from", prop("string", "Who asks, e.g. Claude Code"))
-                        .put("speak", prop("boolean", "Also read the question aloud (silent when the TV's tones and voice are off)")), "notify"});
+                        .put("speak", prop("boolean", "Also read the question aloud (silent when the TV's tones and voice are off)"))
+                        .put("detail", prop("string", "The full text to read before answering, e.g. the whole command or a diff (at most 2000 characters, 40 lines), scrollable on the TV")), "notify"});
         t.add(new Object[]{"tv_ask_result", "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
                 new JSONObject().put("id", prop("string", "The id tv_ask_user returned")).put("wait", prop("integer", "Seconds to wait (0-25)")), "notify"});
         t.add(new Object[]{"tv_radio_now", "What Radiomarchy (Omarchy Radio on the TV) is playing.", new JSONObject(), "read"});
@@ -2791,7 +2798,7 @@ public final class LinkServer {
         return app.answer(id, choice);
     }
 
-    /** Questions still waiting: [id, from, question, deadlineMs, choice...]. */
+    /** Questions still waiting: [id, from, question, deadlineMs, detail, choice...] (detail: v2.22, "" if none). */
     public List<String[]> pendingAsks() {
         List<String[]> out = new ArrayList<>();
         for (AppApi.Ask a : app.pending()) {
@@ -2800,6 +2807,7 @@ public final class LinkServer {
             row.add(a.from);
             row.add(a.question);
             row.add(String.valueOf(a.deadline));
+            row.add(a.detail);
             row.addAll(a.choices);
             out.add(row.toArray(new String[0]));
         }

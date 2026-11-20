@@ -25,6 +25,8 @@ import java.util.List;
  */
 public class AgentQuestionActivity extends Activity {
     static final String EXTRA_ID = "id", EXTRA_FROM = "from", EXTRA_Q = "q", EXTRA_DEADLINE = "deadline", EXTRA_CHOICES = "choices";
+    /** v2.22: the full text under the question (the whole command), in a box you scroll with the remote. */
+    static final String EXTRA_DETAIL = "detail";
 
     private final Handler h = new Handler(Looper.getMainLooper());
     private String id;
@@ -88,6 +90,35 @@ public class AgentQuestionActivity extends Activity {
         text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         text.setPadding(0, (int) dp(12), 0, (int) dp(20));
         card.addView(text);
+        String detail = i.getStringExtra(EXTRA_DETAIL);
+        if (detail != null && !detail.isEmpty()) {   // v2.22: ↑ from the buttons to focus it, ↑ / ↓ to scroll
+            android.widget.ScrollView sv = new android.widget.ScrollView(this);
+            sv.setFocusable(true);
+            GradientDrawable sb = new GradientDrawable();
+            sb.setColor(t.bg);
+            sb.setStroke((int) dp(1), t.muted);
+            sv.setBackground(sb);
+            sv.setOnFocusChangeListener((v, f) -> sb.setStroke((int) dp(f ? 2 : 1), f ? t.accent : t.muted));
+            TextView dt = new TextView(this);
+            dt.setText(detail);
+            dt.setTextColor(t.fg);
+            dt.setTypeface(android.graphics.Typeface.MONOSPACE);
+            dt.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            int dp12 = (int) dp(12);
+            dt.setPadding(dp12, dp12, dp12, dp12);
+            sv.addView(dt);
+            LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            dl.bottomMargin = (int) dp(20);
+            card.addView(sv, dl);
+            int maxH = (int) (getResources().getDisplayMetrics().heightPixels * 0.42f);
+            sv.post(() -> {
+                if (sv.getHeight() > maxH) {
+                    sv.getLayoutParams().height = maxH;
+                    sv.requestLayout();
+                }
+            });
+        }
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         List<Button> buttons = new ArrayList<>();

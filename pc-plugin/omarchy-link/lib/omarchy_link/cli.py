@@ -371,6 +371,8 @@ def cmd_ask(a, cfg):
         body = {"question": q, "choices": a.choice or [], "timeout": a.timeout, "from": (a.source or "PC")[:40]}
         if getattr(a, "speak", False):
             body["speak"] = True   # v2.22: the TV reads the question aloud first
+        if getattr(a, "detail", None):
+            body["detail"] = a.detail[:2000]   # v2.22: full text under the question, scrollable
         r = _call(cfg, "POST", "/v1/ask", body)
     except link.LinkError as e:
         if getattr(e, "code", "") in NOT_REACHABLE:
@@ -1365,6 +1367,7 @@ def main(argv=None) -> int:
     s.add_argument("--timeout", type=int, default=120)
     s.add_argument("--from", dest="source")
     s.add_argument("--speak", action="store_true", help="the TV reads the question aloud (2.22)")
+    s.add_argument("--detail", help="full text shown under the question, e.g. the whole command (2.22, 2000 chars, 40 lines)")
     s.set_defaults(fn=cmd_ask)
     s = sub.add_parser("page", help="open a LAN / tailnet page full screen on the TV, or up to 4 tiled (or --close)")
     s.add_argument("url", nargs="*")

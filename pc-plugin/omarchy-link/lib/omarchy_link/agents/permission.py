@@ -43,12 +43,19 @@ def spoken(p: dict) -> str:
     return (f"Claude Code{', project ' + where if where else ''} wants to use {tool}" + (f": {what}" if what else "."))[:300]
 
 
+def detail(p: dict) -> str:
+    """v2.22 the whole command (or path, URL…) shown under the question on the TV, scrollable; the TV keeps 2000."""
+    ti = p.get("tool_input") if isinstance(p.get("tool_input"), dict) else {}
+    what = ti.get("command") or ti.get("file_path") or ti.get("url") or ti.get("pattern") or ti.get("description") or ""
+    return str(what)[:2000]
+
+
 def decide(payload: dict, ask) -> dict | None:
     """ask(question, choices, timeout) -> answer or None. Returns the hook's stdout object, or None (no decision)."""
     if not isinstance(payload, dict) or payload.get("hook_event_name", "PermissionRequest") != "PermissionRequest":
         return None
     try:
-        answer = ask(describe(payload), list(CHOICES), WAIT, spoken(payload))
+        answer = ask(describe(payload), list(CHOICES), WAIT, spoken(payload), detail(payload))
     except Exception:
         return None
     if answer == "Allow":
@@ -100,8 +107,10 @@ def remove() -> bool:
 
 def tv_ask(client, source: str = "Claude Code", speak: bool = False):
     """An ask() over the paired link: POST /v1/ask, then wait for the answer. speak (v2.22): read aloud first."""
-    def ask(q, choices, timeout, say=""):
+    def ask(q, choices, timeout, say="", detail=""):
         body = {"question": q, "choices": choices, "timeout": timeout, "from": source}
+        if detail:
+            body["detail"] = detail   # v2.22: the whole command under the question
         if speak:
             body.update(speak=True, say=say or q)
         r = client.request("POST", "/v1/ask", body, timeout=8)

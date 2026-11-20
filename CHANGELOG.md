@@ -13,6 +13,9 @@
   tool and the whole command (up to 300 characters; the screen still shows the first ~110) before you press anything.
   `omarchy-link ask --speak`, `POST /v1/ask` `speak`/`say` and the MCP `tv_ask_user` `speak` do the same for any
   question. Silent when *Tones and voice for agent messages* is off. Asked on X.
+- **The whole command on screen**: approvals now show the full command (or path, URL) in a box under the short
+  question, up to 2000 characters and 40 lines, indentation kept. ↑ from the buttons focuses it, ↑ / ↓ scroll. Any
+  question can carry it: `detail` in `POST /v1/ask` and MCP `tv_ask_user`, `omarchy-link ask --detail`. Asked on X.
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 

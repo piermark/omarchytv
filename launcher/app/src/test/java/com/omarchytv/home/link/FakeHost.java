@@ -38,6 +38,13 @@ class FakeHost implements LinkServer.Host {
 
     volatile boolean notifyOn;
     final List<String> asked = new java.util.concurrent.CopyOnWriteArrayList<>();
+    final List<String> details = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    @Override
+    public String askUser(String id, String from, String question, List<String> choices, long deadlineMs, String detail) {
+        details.add(detail);
+        return askUser(id, from, question, choices, deadlineMs);
+    }
     final List<String> pages = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     @Override

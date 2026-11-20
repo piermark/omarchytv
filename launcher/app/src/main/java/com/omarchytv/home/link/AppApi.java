@@ -74,6 +74,7 @@ final class AppApi {
         final String id, owner, from, question;
         final List<String> choices;
         final long deadline;
+        String detail = "";   // v2.22: the full text shown under the question (the whole command), scrollable
         volatile String answer;
 
         Ask(String id, String owner, String from, String question, List<String> choices, long deadline) {
@@ -430,6 +431,26 @@ final class AppApi {
         return LinkCrypto.hex(LinkCrypto.randomBytes(8));
     }
 
+    /** v2.22 "detail": at most 40 lines and 2000 characters, each line printable (tabs become spaces). */
+    static String detail(String s) {
+        if (s == null || s.trim().isEmpty()) return "";
+        StringBuilder out = new StringBuilder();
+        String[] lines = s.replace("\r\n", "\n").replace('\t', ' ').split("\n", -1);
+        for (int i = 0; i < lines.length && i < 40 && out.length() < 2000; i++) {
+            if (i > 0) out.append('\n');
+            String l = lines[i];   // like LinkServer.printable, but keeps the indentation (diffs, YAML)
+            for (int k = 0; k < l.length() && out.length() < 2000; ) {
+                int cp = l.codePointAt(k);
+                k += Character.charCount(cp);
+                if (Character.isISOControl(cp) || Character.getType(cp) == Character.FORMAT && cp != 0x200D) continue;
+                out.appendCodePoint(cp);
+            }
+        }
+        while (out.length() > 0 && Character.isWhitespace(out.charAt(out.length() - 1))) out.setLength(out.length() - 1);
+        while (out.length() > 0 && out.charAt(0) == '\n') out.deleteCharAt(0);
+        return out.toString();
+    }
+
     LinkServer.Response askPost(Principal who, JSONObject b) throws JSONException {
         String q = LinkServer.printable(b.optString("question", "").replace('\n', ' '), 200);
         if (q.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_ask", "question is required"));
@@ -457,9 +478,10 @@ final class AppApi {
             for (Ask x : asks.values()) if ("pending".equals(x.state(now))) pending++;
             if (pending >= MAX_ASKS) return new LinkServer.Response(429, LinkServer.err("busy", MAX_ASKS + " questions are already waiting on the TV"));
             ask = new Ask(newAskId(), who.key, from, q, choices, now + timeout * 1000L);
+            ask.detail = detail(b.optString("detail", ""));
             asks.put(ask.id, ask);
         }
-        String e = host.askUser(ask.id, ask.from, ask.question, ask.choices, ask.deadline);
+        String e = host.askUser(ask.id, ask.from, ask.question, ask.choices, ask.deadline, ask.detail);
         if (e != null) {
             synchronized (asks) {
                 asks.remove(ask.id);

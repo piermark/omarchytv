@@ -118,7 +118,7 @@ class Approve(unittest.TestCase):
 
     def test_answers(self):
         asked = []
-        ask = lambda q, ch, t, say="": asked.append((q, ch, say)) or "Allow"
+        ask = lambda q, ch, t, say="", detail="": asked.append((q, ch, say, detail)) or "Allow"
         out = permission.decide(self.PAYLOAD, ask)
         self.assertEqual(out["hookSpecificOutput"], {"hookEventName": "PermissionRequest", "decision": {"behavior": "allow"}})
         self.assertIn("shop wants Bash: git push origin main", asked[0][0])
@@ -150,8 +150,10 @@ class Approve(unittest.TestCase):
         self.assertEqual(permission.decide(p, permission.tv_ask(C(), speak=True))["hookSpecificOutput"]["decision"]["behavior"], "deny")
         self.assertTrue(sent[0]["speak"])
         self.assertEqual(sent[0]["say"], said)
+        self.assertEqual(sent[0]["detail"], long)   # v2.22: the whole command under the question
         permission.decide(p, permission.tv_ask(C()))
         self.assertNotIn("speak", sent[1])
+        self.assertEqual(sent[1]["detail"], long)   # shown even without --speak
 
     def test_install_and_remove_keep_other_hooks(self):
         f = agent_ask.claude_settings()

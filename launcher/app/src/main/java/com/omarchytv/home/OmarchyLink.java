@@ -293,8 +293,8 @@ public final class OmarchyLink implements LinkServer.Host {
         java.util.List<String[]> p = r.server.pendingAsks();
         if (p.isEmpty()) return;
         String[] q = p.get(0);
-        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(4, q.length));
-        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3])));
+        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(5, q.length));
+        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3])).putExtra(AgentQuestionActivity.EXTRA_DETAIL, q[4]));
     }
 
     /** v2.21 Settings › System info: the same as /v1/diagnostics, with whole-server numbers when Link runs. */
@@ -1274,11 +1274,17 @@ public final class OmarchyLink implements LinkServer.Host {
     /** v2.21 ask_user: only with agent alerts on; the dialog opens over the current app when Android allows it. */
     @Override
     public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs) {
+        return askUser(id, from, question, choices, deadlineMs, "");
+    }
+
+    @Override
+    public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs, String detail) {
         if (!LauncherConfig.get(app).agentAlert) return "ask_off";
         String msg = app.getString(R.string.agent_note, from, question);
         main.post(() -> {
             try {
-                app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs));
+                app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs)
+                        .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail == null ? "" : detail));
             } catch (RuntimeException e) {
                 Log.w(TAG, "ask: " + e);
             }

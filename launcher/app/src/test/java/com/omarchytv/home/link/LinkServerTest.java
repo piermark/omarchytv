@@ -753,6 +753,7 @@ public class LinkServerTest {
         assertEquals("pending", q.json().getString("state"));
         assertEquals(2, q.json().getJSONArray("choices").length());
         assertTrue(host.asked.get(0).contains("|Claude Code|Deploy now?|[Yes, Not now]"));
+        assertEquals("", host.details.get(0));
         assertEquals(404, app("GET", "/v1/ask/" + id, null, b).status);   // another app's question
         new Thread(() -> {
             try {
@@ -771,6 +772,27 @@ public class LinkServerTest {
         assertTrue(server.pendingAsks().isEmpty());
         // the PC sees it too, and MCP tv_ask_result
         assertEquals("answered", signed("GET", "/v1/ask/" + id, "").json().getString("state"));
+    }
+
+    @Test
+    public void askCarriesTheFullDetail() throws Exception {   // v2.22: the whole command under the question
+        pair("123456");
+        server.limits = false;
+        host.notifyOn = true;
+        String a = appToken("Claude Code", "notify");
+        StringBuilder cmd = new StringBuilder("rsync -av");
+        for (int i = 0; i < 60; i++) cmd.append(" dir").append(i).append('/');
+        JSONObject body = new JSONObject().put("question", "Run rsync?").put("detail", cmd + "\n\tsecond line\u0007");
+        assertEquals(200, app("POST", "/v1/ask", body.toString(), a).status);
+        String d = host.details.get(0);
+        assertTrue(d, d.contains("dir59/"));
+        assertTrue(d.endsWith("\n second line"));
+        assertEquals(d, server.pendingAsks().get(0)[4]);
+        StringBuilder many = new StringBuilder();
+        for (int i = 0; i < 100; i++) many.append("line ").append(i).append('\n');
+        assertEquals(40, AppApi.detail(many.toString()).split("\n").length);
+        assertTrue(AppApi.detail(new String(new char[5000]).replace('\0', 'x')).length() <= 2000);
+        assertEquals("", AppApi.detail("  \n "));
     }
 
     @Test

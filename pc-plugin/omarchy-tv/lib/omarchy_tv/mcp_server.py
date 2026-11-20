@@ -137,6 +137,7 @@ ALLOWED_TOOLS = (
                 "wait": {"type": "integer", "description": "Seconds to wait here for the answer (0-90, default 60)"},
                 "from": {"type": "string", "description": "Who asks, e.g. Claude Code"},
                 "speak": {"type": "boolean", "description": "Also read the question aloud (silent when the TV's tones and voice are off)"},
+                "detail": {"type": "string", "description": "The full text to read before answering, e.g. the whole command (2000 characters, 40 lines), scrollable on the TV"},
             },
             "required": ["question"],
         },
@@ -327,7 +328,8 @@ def _call_tool(name: str, args: dict, c) -> dict:
         r = c.request("POST", "/v1/ask", {"question": q[:200], "choices": [str(x)[:24] for x in (args.get("choices") or [])][:4],
                                          "timeout": max(10, min(300, int(args.get("timeout") or 120))),
                                          "from": str(args.get("from") or "AI agent")[:40],
-                                         **({"speak": True} if args.get("speak") is True else {})})
+                                         **({"speak": True} if args.get("speak") is True else {}),
+                                         **({"detail": str(args["detail"])[:2000]} if args.get("detail") else {})})
         return _await_ask(c, r, max(0, min(90, int(args.get("wait", 60) or 0))))
     if name == "tv_ask_result":
         aid = str(args.get("id", ""))
