@@ -29,6 +29,8 @@ TOOL_SCOPE = {
     # v2.22 #158 / #159 Home widget pages
     "tv_page_list": "read", "tv_page_current": "read", "tv_page_create": "control", "tv_page_rename": "control",
     "tv_page_reorder": "control", "tv_page_delete": "control", "tv_page_show": "control",
+    # v2.22 #160 Home Assistant through the TV (the token stays on the TV)
+    "tv_ha_status": "read", "tv_ha_list": "read", "tv_ha_run": "control",
 }
 
 # v2.21 tools this PC answers itself (they push to the TV with the link it already has)

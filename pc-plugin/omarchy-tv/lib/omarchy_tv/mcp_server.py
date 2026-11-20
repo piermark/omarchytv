@@ -262,6 +262,14 @@ ALLOWED_TOOLS = (
                                                        "moveWidgetsTo": {"type": ["integer", "string"]}}, "required": ["page"]}},
     {"name": "tv_page_show", "description": "Bring a Home widget page to the screen.",
      "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]}}, "required": ["page"]}},
+    # v2.22 #160 Home Assistant through the TV's own connection (the token never leaves the TV)
+    {"name": "tv_ha_status", "description": "Is Home Assistant set up on the TV and reachable (configured, reachable, version, host).",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_ha_list", "description": "Home Assistant entities the TV sees: [{entity_id, name, state, unit}], optionally of one "
+                                          "domain (scene, script, light, switch, sensor, …) and matching a query.",
+     "inputSchema": {"type": "object", "properties": {"domain": {"type": "string"}, "query": {"type": "string"}}}},
+    {"name": "tv_ha_run", "description": "Run a scene, script or automation, or toggle a light / switch / fan / input_boolean.",
+     "inputSchema": {"type": "object", "properties": {"entity_id": {"type": "string"}}, "required": ["entity_id"]}},
     {
         "name": "tv_diagnostics",
         "description": "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, "
@@ -285,6 +293,7 @@ TOOL_SCOPE = {
     "tv_widget_create": "control", "tv_widget_move": "control", "tv_widget_delete": "control",
     "tv_page_list": "read", "tv_page_current": "read", "tv_page_create": "control", "tv_page_rename": "control",
     "tv_page_reorder": "control", "tv_page_delete": "control", "tv_page_show": "control",
+    "tv_ha_status": "read", "tv_ha_list": "read", "tv_ha_run": "control",
 }
 
 
@@ -436,6 +445,14 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         return c.request("DELETE", f"/v1/pages/{pid}")
     if name == "tv_list_pages":
         return c.request("GET", "/v1/pages")
+    if name.startswith("tv_ha_"):   # v2.22 #160
+        from urllib.parse import urlencode
+        if name == "tv_ha_status":
+            return c.request("GET", "/v1/ha/status")
+        if name == "tv_ha_list":
+            return c.request("GET", "/v1/ha/states?" + urlencode({"domain": str(args.get("domain", ""))[:32],
+                                                                  "q": str(args.get("query", ""))[:64]}))
+        return c.request("POST", "/v1/ha/run", {"entity_id": str(args.get("entity_id", ""))[:100]})
     if name.startswith("tv_page_"):   # v2.22 #158: the TV checks everything
         from urllib.parse import quote
         ref = quote(str(args.get("page", "")), safe="")

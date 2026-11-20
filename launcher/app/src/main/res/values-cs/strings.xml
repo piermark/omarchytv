@@ -129,6 +129,8 @@
     <string name="widget_remove">Odebrat</string>
     <string name="widget_resize_hint">velikost: ←↑↓→ OK=hotovo BACK=zrušit</string>
     <string name="skill_qr_label">Získat skill agenta</string>
+    <string name="ha_not_set">Home Assistant: nastavte URL a token v Nastavení › Ambilight a světla</string>
+    <string name="ha_confirm">Spustit %1$s?</string>
     <string name="ai_stale">zastaralé %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">žádná shoda</string>

@@ -1313,6 +1313,28 @@ public final class OmarchyLink implements LinkServer.Host {
         return null;
     }
 
+    // v2.22 #160 Home Assistant, with the URL and token of Settings › Ambilight & Lights (never returned)
+    @Override
+    public JSONObject haStatus() {
+        return com.omarchytv.home.lights.HomeAssistantClient.fromStore(app).status();
+    }
+
+    @Override
+    public org.json.JSONArray haList(String domain, String query) throws Exception {
+        com.omarchytv.home.lights.HomeAssistantClient ha = com.omarchytv.home.lights.HomeAssistantClient.fromStore(app);
+        if (!ha.configured()) throw new Exception("not_configured");
+        try {
+            return ha.states(domain, query, 200);
+        } catch (Exception e) {
+            throw new Exception(com.omarchytv.home.lights.HomeAssistantClient.errorCode(e));
+        }
+    }
+
+    @Override
+    public String haRun(String entity) {
+        return com.omarchytv.home.lights.HomeAssistantClient.fromStore(app).run(entity);
+    }
+
     @Override
     public String openPage(String url, String from) {
         if (!AgentPageActivity.allowed(url)) return "not_lan_url";

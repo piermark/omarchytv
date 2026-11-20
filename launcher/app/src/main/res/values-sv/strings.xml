@@ -129,6 +129,8 @@
     <string name="widget_remove">Ta bort</string>
     <string name="widget_resize_hint">storlek: ←↑↓→ OK=klar BACK=avbryt</string>
     <string name="skill_qr_label">Hämta agentens skill</string>
+    <string name="ha_not_set">Home Assistant: ange URL och token i Inställningar › Ambilight och lampor</string>
+    <string name="ha_confirm">Kör %1$s?</string>
     <string name="ai_stale">gammal %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen träff</string>

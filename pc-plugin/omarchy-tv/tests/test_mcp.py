@@ -186,6 +186,22 @@ class TestMcpV221(unittest.TestCase):
         self.assertIn("error", call("tv_page_show", {"page": 2}, "read"))
         self.assertEqual(len(sent), n)
 
+    def test_ha_tools(self):   # v2.22 #160
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_ha_list", {"domain": "scene", "query": "mo vie"}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/ha/states?domain=scene&q=mo+vie"))
+        call("tv_ha_run", {"entity_id": "scene.movie"})
+        self.assertEqual(sent[-1], ("POST", "/v1/ha/run", {"entity_id": "scene.movie"}))
+        self.assertIn("error", call("tv_ha_run", {"entity_id": "scene.movie"}, "notify"))
+
     def test_max_level_caps_tv_notify(self):   # v2.22: the owner's rule, not the model's
         tv = FakeTvClient()
         call = lambda lvl, mx: mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {

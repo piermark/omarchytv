@@ -478,6 +478,23 @@ On the TV: the navigator `⌂ ‹ 1 2 3 4 5 › 8 / 42 · Casa` (OK opens a page
 five, LEFT on the first the previous five, a long press lists every page); CH+ / CH- (PAGE UP / DOWN) go through the
 classic Home and the visible pages, then on to the workspaces. The number keys keep switching workspaces as before.
 
+### Home Assistant (`/v1/ha/*`, v2.22, #160)
+
+The TV talks to Home Assistant itself, with the URL and long-lived token of Settings › Ambilight & Lights (also
+settable without turning the lights hub on). The token stays on the TV: no route, MCP answer, log line or
+diagnostics ever contains it.
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/ha/status` | read | `{configured, reachable, version, host}` |
+| GET | `/v1/ha/states?domain=scene&q=…` | read | `{entities: [{entity_id, name, state, unit?}]}` (≤ 200, by name) |
+| POST | `/v1/ha/run` | control | `{entity_id}`: scene / script `turn_on`, automation `trigger`, light / switch / fan / input_boolean `toggle` |
+
+Widgets: `homeassistant.scenes` `{items: [...] | "all", columns}` (buttons; ✓ / ✗ feedback; `confirm: true` asks
+first) and `homeassistant.entities` `{items: [...]}` (state and unit, live over the HA websocket `subscribe_entities`
+while on screen, a 30 s poll if the websocket fails; OK toggles switch-like entities). MCP: `tv_ha_status`,
+`tv_ha_list` (read), `tv_ha_run` (control).
+
 ### AI credits (`PUT /v1/ai`)
 
 ```json

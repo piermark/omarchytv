@@ -2748,7 +2748,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return true;
         });
         if ("hue".equals(hub)) addHueRows(p);
-        else if ("homeassistant".equals(hub)) addHaRows(p);
+        else if ("homeassistant".equals(hub)) addHaRows(p, true);
+        if (!"homeassistant".equals(hub)) addHaRows(p, false);   // v2.22 #160: HA for the Home widgets, without the lights
         else p.hint(str(R.string.lights_hint_none));
         if (!"none".equals(hub)) {
             p.add(str(R.string.lights_push), "›", r -> {
@@ -2880,7 +2881,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         }
     }
 
-    private void addHaRows(AsciiMenu.Page p) {
+    private void addHaRows(AsciiMenu.Page p, boolean lights) {
         android.content.Context c = this;
         String url = com.omarchytv.home.lights.LightsStore.get(c, "ha_url");
         String ents = com.omarchytv.home.lights.LightsStore.get(c, "ha_entities");
@@ -2901,11 +2902,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> textDialog(lTok, "", "long-lived access token", true, v -> {
                 if (v.isEmpty()) return;
                 com.omarchytv.home.lights.LightsStore.put(c, "ha_token", v);
-                reopenAt("lights", lEnt);
+                reopenAt("lights", lights ? lEnt : lTok);
             }));
             return false;
         });
-        p.add(lEnt, ents.isEmpty() ? "—" : ents, r -> {
+        if (lights) p.add(lEnt, ents.isEmpty() ? "—" : ents, r -> {
             handler.post(() -> textDialog(lEnt, ents, "light.living_room, light.tv_strip", false, v -> {
                 com.omarchytv.home.lights.LightsStore.put(c, "ha_entities", v);
                 reopenAt("lights", lEnt);

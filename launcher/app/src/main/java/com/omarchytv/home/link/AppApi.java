@@ -131,7 +131,8 @@ final class AppApi {
                 || ASK_PATH.matcher(p).matches() || "/v1/page".equals(p) || "/v1/diagnostics".equals(p)
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
                 || "/v1/radio".equals(p) || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
-                || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/");   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
+                || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")
+                || p.startsWith("/v1/ha/");   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
     }
 
     /** The app token a request presents: "Authorization: Bearer otva_…", or ?token= on GET /v1/state and /v1/stream. */
@@ -208,6 +209,7 @@ final class AppApi {
         String m = req.method, p = path(req.target);
         if (p.startsWith("/v1/widgets/")) return widgetRoute(who, m, p, req.target, req.peer, body);   // v2.22 #157
         if (p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")) return pageRoute(who, m, p, req.target, body);   // #158
+        if (p.startsWith("/v1/ha/")) return haRoute(who, m, p, req.target, body);   // #160
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
             if (!who.can("notify")) return forbidden("notify");
@@ -633,6 +635,35 @@ final class AppApi {
         JSONObject cfg = host.config();
         return new LinkServer.Response(200, LinkServer.ok().put(what, true).put("index", index)
                 .put("name", cfg != null ? HomePages.name(cfg, index) : "Page " + index));
+    }
+
+    // ---------------------------------------------------------------- v2.22 #160 Home Assistant
+
+    LinkServer.Response haRoute(Principal who, String m, String p, String target, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/ha/status".equals(p)) return who.can("read") ? new LinkServer.Response(200, host.haStatus()) : forbidden("read");
+        if ("GET".equals(m) && "/v1/ha/states".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            String d = query(target, "domain"), q = query(target, "q");
+            if (d != null && !d.isEmpty() && !d.matches("[a-z_]{1,32}")) return new LinkServer.Response(400, LinkServer.err("bad_domain", "e.g. scene"));
+            try {
+                return new LinkServer.Response(200, new JSONObject().put("entities", host.haList(d == null ? "" : d, q == null ? "" : LinkServer.printable(q, 64))));
+            } catch (Exception e) {
+                String code = e.getMessage() == null ? "unreachable" : e.getMessage();
+                return new LinkServer.Response("not_configured".equals(code) ? 409 : 502, LinkServer.err("ha_" + code, "Home Assistant"));
+            }
+        }
+        if ("POST".equals(m) && "/v1/ha/run".equals(p)) {
+            if (!who.can("control")) return forbidden("control");
+            String e = body.optString("entity_id", "");
+            String err = host.haRun(e);
+            if (err == null) {
+                host.log("Home Assistant: " + e + " run by " + who.name);
+                return new LinkServer.Response(200, LinkServer.ok().put("entity_id", e));
+            }
+            int st = "read_only".equals(err) ? 400 : "not_configured".equals(err) ? 409 : 502;
+            return new LinkServer.Response(st, LinkServer.err("ha_" + err, "Home Assistant"));
+        }
+        return new LinkServer.Response(404, LinkServer.err("not_found", null));
     }
 
     interface WidgetOp {

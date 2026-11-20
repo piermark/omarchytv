@@ -201,6 +201,21 @@ public final class LinkServer {
             return "no_such_target";
         }
 
+        /** v2.22 #160 Home Assistant: {configured, reachable, version, host}; never the token. */
+        default JSONObject haStatus() throws JSONException {
+            return new JSONObject().put("configured", false).put("reachable", false);
+        }
+
+        /** v2.22 #160 [{entity_id, name, state, unit?}] of one domain (or all), filtered by a query. */
+        default JSONArray haList(String domain, String query) throws Exception {
+            throw new Exception("not_configured");
+        }
+
+        /** v2.22 #160 runs a scene / script / automation or toggles a switch; null when it worked, else an error code. */
+        default String haRun(String entity) {
+            return "not_configured";
+        }
+
         /** v2.21 the launcher's omarchytv.json as it is now (read only), or null. */
         default JSONObject config() {
             return null;
@@ -1409,6 +1424,18 @@ public final class LinkServer {
                     case "tv_close_page":
                         out = ok().put("closed", host.closePage());
                         break;
+                    case "tv_ha_status":
+                    case "tv_ha_list":
+                    case "tv_ha_run": {   // v2.22 #160: the same code as /v1/ha/*
+                        String q = "tv_ha_list".equals(name) ? "?domain=" + java.net.URLEncoder.encode(args.optString("domain", ""), "UTF-8")
+                                + "&q=" + java.net.URLEncoder.encode(args.optString("query", ""), "UTF-8") : "";
+                        String hp = "tv_ha_status".equals(name) ? "/v1/ha/status" : "tv_ha_list".equals(name) ? "/v1/ha/states" : "/v1/ha/run";
+                        Response hr = app.haRoute(who, "tv_ha_run".equals(name) ? "POST" : "GET", hp, hp + q,
+                                new JSONObject().put("entity_id", args.optString("entity_id", "")));
+                        out = new JSONObject(new String(hr.body, StandardCharsets.UTF_8));
+                        isError = hr.status != 200;
+                        break;
+                    }
                     case "tv_page_list":
                     case "tv_page_current":
                     case "tv_page_create":
@@ -1601,6 +1628,12 @@ public final class LinkServer {
                 new JSONObject().put("page", pref).put("to", prop("integer", "The new position")), "control"});
         t.add(new Object[]{"tv_page_delete", "Remove a Home widget page (not page 1). Its widgets move to moveWidgetsTo, or are removed with it.",
                 new JSONObject().put("page", pref).put("moveWidgetsTo", pref), "control"});
+        // v2.22 #160 Home Assistant (the TV's own HA connection; the token never leaves the TV)
+        t.add(new Object[]{"tv_ha_status", "Is Home Assistant set up on the TV and reachable: configured, reachable, version, host. Never the token.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_ha_list", "Home Assistant entities the TV can see, to build a widget: [{entity_id, name, state, unit}], optionally of one domain (scene, script, light, switch, sensor, …) and matching a query. At most 200.",
+                new JSONObject().put("domain", prop("string", "scene, script, light, switch, sensor, …")).put("query", prop("string", "Part of the id or the name")), "read"});
+        t.add(new Object[]{"tv_ha_run", "Run a Home Assistant scene, script or automation, or toggle a light, switch, fan or input_boolean.",
+                new JSONObject().put("entity_id", prop("string", "e.g. scene.movie")), "control"});
         t.add(new Object[]{"tv_page_show", "Bring a Home widget page to the screen (e.g. where an alert widget just landed).", new JSONObject().put("page", pref), "control"});
         return t;
     }

@@ -18,6 +18,11 @@
   navigator `⌂ ‹ 1 2 3 4 5 › 8 / 42 · name` (RIGHT past the last number shows the next five, a long press lists every
   page), CH± through the pages, `widget_page_changed` on `/v1/events`. Published LAN pages (`tv_publish_page`) are no
   longer stopped at 16 (200). The number keys keep switching workspaces.
+- **Home Assistant on the Home** (#160): `homeassistant.scenes` widgets run scenes, scripts and automations with the
+  remote (✓ / ✗ on the button, optional confirmation, `"items": "all"` for every scene), `homeassistant.entities`
+  widgets show states live over the HA websocket while on screen (a 30 s poll as fallback) and toggle lights,
+  switches, fans. `/v1/ha/*` and `tv_ha_status`, `tv_ha_list`, `tv_ha_run`. One HA setup (URL and token in Settings ›
+  Ambilight & Lights, now also without the lights hub); the token never leaves the TV. Android TV; LG / Samsung follow.
 - **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
   extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
   terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from

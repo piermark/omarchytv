@@ -129,6 +129,8 @@
     <string name="widget_remove">Прибрати</string>
     <string name="widget_resize_hint">розмір: ←↑↓→ OK=готово BACK=скасувати</string>
     <string name="skill_qr_label">Отримати skill агента</string>
+    <string name="ha_not_set">Home Assistant: вкажіть URL і токен у Налаштування › Ambilight і світло</string>
+    <string name="ha_confirm">Запустити %1$s?</string>
     <string name="ai_stale">застаріло %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">немає збігів</string>

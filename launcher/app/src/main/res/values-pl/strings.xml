@@ -129,6 +129,8 @@
     <string name="widget_remove">Usuń</string>
     <string name="widget_resize_hint">rozmiar: ←↑↓→ OK=gotowe BACK=anuluj</string>
     <string name="skill_qr_label">Pobierz skill agenta</string>
+    <string name="ha_not_set">Home Assistant: ustaw URL i token w Ustawienia › Ambilight i światła</string>
+    <string name="ha_confirm">Uruchomić %1$s?</string>
     <string name="ai_stale">nieaktualne %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">brak wyników</string>

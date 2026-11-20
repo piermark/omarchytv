@@ -900,6 +900,24 @@ public class LinkServerTest {
     }
 
     @Test
+    public void homeAssistantRoutesWithScopes() throws Exception {   // v2.22 #160 (FakeHost: HA not set up)
+        pair("123456");
+        server.limits = false;
+        String nfy = appToken("ci", "notify"), ctl = appToken("hermes", "control");
+        Resp st = app("GET", "/v1/ha/status", "", nfy);
+        assertEquals(200, st.status);
+        assertFalse(st.json().getBoolean("configured"));
+        assertEquals(403, app("POST", "/v1/ha/run", "{\"entity_id\":\"scene.movie\"}", nfy).status);
+        assertEquals(409, app("POST", "/v1/ha/run", "{\"entity_id\":\"scene.movie\"}", ctl).status);
+        assertEquals(409, app("GET", "/v1/ha/states?domain=scene", "", nfy).status);
+        assertEquals(400, app("GET", "/v1/ha/states?domain=Scene;rm", "", nfy).status);
+        Resp m = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 1).put("method", "tools/call").put("params",
+                new JSONObject().put("name", "tv_ha_status").put("arguments", new JSONObject())).toString(), nfy);
+        assertEquals(200, m.status);
+        assertTrue(m.json().toString().contains("configured"));
+    }
+
+    @Test
     public void appTokenFloorDropsItsOwnNoise() throws Exception {   // v2.22: per-agent floor, beside the global one
         pair("123456");
         server.limits = false;
