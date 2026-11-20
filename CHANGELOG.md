@@ -16,6 +16,9 @@
 - **The whole command on screen**: approvals now show the full command (or path, URL) in a box under the short
   question, up to 2000 characters and 40 lines, indentation kept. ↑ from the buttons focuses it, ↑ / ↓ scroll. Any
   question can carry it: `detail` in `POST /v1/ask` and MCP `tv_ask_user`, `omarchy-link ask --detail`. Asked on X.
+- **A reflex OK never approves** (safety fix, found on X): the focus used to start on *Allow*, so an OK meant for the
+  film approved. Now it starts on *On the PC* for Claude Code's approvals and never on Allow / Yes / OK / Approve for
+  other questions, and OK is ignored for 1.5 s after a question appears.
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 

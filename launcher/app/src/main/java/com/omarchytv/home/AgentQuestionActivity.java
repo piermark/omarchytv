@@ -30,6 +30,9 @@ public class AgentQuestionActivity extends Activity {
 
     private final Handler h = new Handler(Looper.getMainLooper());
     private String id;
+    /** v2.22: OK is ignored this long after a question appears, so a press meant for the film answers nothing. */
+    static final long OK_GUARD_MS = 1500;
+    private long shownAt;
 
     static Intent intent(Context c, String id, String from, String question, List<String> choices, long deadline) {
         return new Intent(c, AgentQuestionActivity.class)
@@ -137,7 +140,9 @@ public class AgentQuestionActivity extends Activity {
                 bg.setStroke((int) dp(2), f ? t.accent : t.muted);
                 bt.setTextColor(f ? t.fgBright : t.fg);
             });
-            bt.setOnClickListener(v -> answer(c));
+            bt.setOnClickListener(v -> {
+                if (android.os.SystemClock.uptimeMillis() - shownAt >= OK_GUARD_MS) answer(c);
+            });
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, (int) dp(52));
             lp.setMarginEnd((int) dp(14));
             bt.setPadding((int) dp(22), 0, (int) dp(22), 0);
@@ -156,7 +161,8 @@ public class AgentQuestionActivity extends Activity {
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         root.addView(card, cp);
         setContentView(root);
-        buttons.get(0).requestFocus();
+        buttons.get(startFocus(Arrays.asList(choices))).requestFocus();
+        shownAt = android.os.SystemClock.uptimeMillis();
         h.removeCallbacksAndMessages(null);
         h.postDelayed(this::finish, Math.max(0, deadline - System.currentTimeMillis()));
     }
@@ -179,6 +185,20 @@ public class AgentQuestionActivity extends Activity {
     protected void onDestroy() {
         h.removeCallbacksAndMessages(null);
         super.onDestroy();
+    }
+
+    /**
+     * v2.22: where the focus starts. Never on an answer that says yes: "On the PC" when there is one (Claude Code's
+     * approvals), else the first answer that is not Allow / Yes / OK, else the first one.
+     */
+    static int startFocus(List<String> choices) {
+        int pc = choices.indexOf("On the PC");
+        if (pc >= 0) return pc;
+        for (int i = 0; i < choices.size(); i++) {
+            String c = choices.get(i).trim().toLowerCase(java.util.Locale.ROOT);
+            if (!c.equals("allow") && !c.equals("yes") && !c.equals("ok") && !c.startsWith("approve")) return i;
+        }
+        return 0;
     }
 
     /** For tests: the choices as given. */
