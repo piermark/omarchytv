@@ -450,6 +450,34 @@ Widgets never overlap and never leave the grid. The paired PC and app tokens use
 - MCP (the TV's `/v1/mcp`, `omarchy-link mcp`, `omarchy-tv mcp`): `tv_widget_types`, `tv_widget_list` (read),
   `tv_widget_update` (notify), `tv_widget_create`, `tv_widget_move`, `tv_widget_delete` (control).
 
+### Home widget pages (`/v1/widget-pages`, v2.22, #158 / #159)
+
+Any number of widget pages (up to 1 000). The classic Home panels come first (index 0 in `current`); page 1 is the
+first widget page. Optional names in omarchytv.json `widgetPages` [{index, id, name, rotate?, hidden?}].
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/widget-pages` | read | `{pages: [{index, id, name, widgets, hidden, rotate}], total, current}` |
+| GET | `/v1/widget-pages/current` | read | `{index, id, name, total, classicHome}` |
+| POST | `/v1/widget-pages` | control | `{name?, id?, after?}` → a new empty page |
+| PATCH | `/v1/widget-pages/<page>` | control | `{name?, to?, rotate?, hidden?}` (`to` reorders; page 1 stays first) |
+| DELETE | `/v1/widget-pages/<page>` | control | `{moveWidgetsTo?}` (or `?moveTo=`): the widgets move there, or go with the page; not page 1 |
+| POST | `/v1/widget-pages/<page>/show` | control | brings the page to the screen |
+
+- `<page>` is an index or an id everywhere, also in `page` of `/v1/widgets/item`: a number past the end makes the
+  next page (contiguous), an unknown id makes a page with that id; `strict: true` answers `404 no_such_page` instead.
+- Empty pages other than page 1 go away by themselves after a day.
+- `widgetPageRotateSec` (seconds, 0 = off): pages with `rotate: true` take turns while the Home is shown.
+- `widgetNavPosition`: `bottom` (default, above the dock) or `top` (under the bar).
+- `/v1/events`: `widget_page_changed {index, id, by: remote | agent | rotate}`.
+- MCP: `tv_page_list`, `tv_page_current` (read), `tv_page_create`, `tv_page_rename`, `tv_page_reorder`,
+  `tv_page_delete`, `tv_page_show` (control). Not to be confused with `tv_list_pages` / `tv_show_page` /
+  `tv_remove_page`, which are about LAN agent pages (`tv_publish_page`, now up to 200).
+
+On the TV: the navigator `⌂ ‹ 1 2 3 4 5 › 8 / 42 · Casa` (OK opens a page, RIGHT on the last number shows the next
+five, LEFT on the first the previous five, a long press lists every page); CH+ / CH- (PAGE UP / DOWN) go through the
+classic Home and the visible pages, then on to the workspaces. The number keys keep switching workspaces as before.
+
 ### AI credits (`PUT /v1/ai`)
 
 ```json

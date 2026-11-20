@@ -876,6 +876,30 @@ public class LinkServerTest {
     }
 
     @Test
+    public void widgetPagesApiAndMcp() throws Exception {   // v2.22 #158 / #159
+        pair("123456");
+        server.limits = false;
+        String ctl = appToken("hermes", "control"), rd = appToken("wall", "read");
+        assertEquals(200, app("POST", "/v1/widgets/item", "{\"id\":\"a\",\"type\":\"stat\",\"page\":\"casa\",\"data\":{\"value\":\"1\"}}", ctl).status);
+        JSONObject l = app("GET", "/v1/widget-pages", "", rd).json();
+        assertEquals(2, l.getInt("total"));   // page 1 + "casa" made on demand
+        assertEquals("casa", l.getJSONArray("pages").getJSONObject(1).getString("id"));
+        assertEquals(403, app("POST", "/v1/widget-pages", "{\"name\":\"x\"}", rd).status);
+        assertEquals(200, app("POST", "/v1/widget-pages", "{\"name\":\"Server\",\"id\":\"server\"}", ctl).status);
+        assertEquals(200, app("PATCH", "/v1/widget-pages/server", "{\"name\":\"Servers\",\"rotate\":true}", ctl).status);
+        assertEquals(200, app("POST", "/v1/widget-pages/casa/show", "", ctl).status);
+        assertEquals(2, host.readConfig().getInt("widgetPageCurrent"));
+        assertEquals(404, app("POST", "/v1/widget-pages/nope/show", "", ctl).status);
+        assertEquals(400, app("DELETE", "/v1/widget-pages/1", "", ctl).status);
+        Resp m = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 1).put("method", "tools/call").put("params",
+                new JSONObject().put("name", "tv_page_delete").put("arguments", new JSONObject().put("page", "casa").put("moveWidgetsTo", 1))).toString(), ctl);
+        assertEquals(200, m.status);
+        assertTrue(m.json().toString(), m.json().toString().contains("movedWidgets"));
+        assertEquals(2, app("GET", "/v1/widget-pages", "", rd).json().getInt("total"));
+        assertEquals(200, app("GET", "/v1/widget-pages/current", "", rd).status);
+    }
+
+    @Test
     public void appTokenFloorDropsItsOwnNoise() throws Exception {   // v2.22: per-agent floor, beside the global one
         pair("123456");
         server.limits = false;

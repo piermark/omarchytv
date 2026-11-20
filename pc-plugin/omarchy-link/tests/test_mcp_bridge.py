@@ -48,7 +48,8 @@ class BridgeTest(unittest.TestCase):
         from omarchy_link import mcp_bridge
         self.assertTrue(mcp_bridge.allowed("tv_widget_update", "notify"))
         self.assertTrue(mcp_bridge.allowed("tv_widget_list", "read"))
-        for t in ("tv_widget_create", "tv_widget_move", "tv_widget_delete"):
+        self.assertTrue(mcp_bridge.allowed("tv_page_current", "read"))
+        for t in ("tv_widget_create", "tv_widget_move", "tv_widget_delete", "tv_page_show", "tv_page_delete"):
             self.assertFalse(mcp_bridge.allowed(t, "notify"), t)
             self.assertTrue(mcp_bridge.allowed(t, "control"), t)
 

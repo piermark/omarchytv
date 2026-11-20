@@ -185,7 +185,7 @@ ALLOWED_TOOLS = (
     {
         "name": "tv_publish_page",
         "description": "Publish (or update) a LAN / tailnet page as a tile on the TV's Home: id, name, url, optional "
-                       "one-letter icon and badge count. At most 16.",
+                       "one-letter icon and badge count. At most 200 (16 before 2.22).",
         "inputSchema": {"type": "object", "properties": {
             "id": {"type": "string", "description": "a-z, 0-9, dashes"}, "name": {"type": "string"},
             "url": {"type": "string", "description": "http://<LAN or 100.x address>[:port]/path"},
@@ -243,6 +243,25 @@ ALLOWED_TOOLS = (
         "description": "Remove a widget from the Home.",
         "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
     },
+    # v2.22 #158 / #159 Home widget pages (tv_list_pages / tv_show_page are the LAN agent pages)
+    {"name": "tv_page_list", "description": "The Home widget pages (index, id, name, widgets, hidden, rotate) and the one on screen.",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_page_current", "description": "The Home widget page on screen now (index 0 = the classic Home).",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_page_create", "description": "Create an empty Home widget page (name, id, after).",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "id": {"type": "string"},
+                                                       "after": {"type": ["integer", "string"]}}}},
+    {"name": "tv_page_rename", "description": "Rename a Home widget page.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]}, "name": {"type": "string"}},
+                     "required": ["page", "name"]}},
+    {"name": "tv_page_reorder", "description": "Move a Home widget page to position 'to' (page 1 stays first).",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]}, "to": {"type": "integer"}},
+                     "required": ["page", "to"]}},
+    {"name": "tv_page_delete", "description": "Remove a Home widget page (not page 1); its widgets go to moveWidgetsTo or away.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]},
+                                                       "moveWidgetsTo": {"type": ["integer", "string"]}}, "required": ["page"]}},
+    {"name": "tv_page_show", "description": "Bring a Home widget page to the screen.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]}}, "required": ["page"]}},
     {
         "name": "tv_diagnostics",
         "description": "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, "
@@ -264,6 +283,8 @@ TOOL_SCOPE = {
     "tv_screensaver": "control", "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control",
     "tv_widget_types": "read", "tv_widget_list": "read", "tv_widget_update": "notify",
     "tv_widget_create": "control", "tv_widget_move": "control", "tv_widget_delete": "control",
+    "tv_page_list": "read", "tv_page_current": "read", "tv_page_create": "control", "tv_page_rename": "control",
+    "tv_page_reorder": "control", "tv_page_delete": "control", "tv_page_show": "control",
 }
 
 
@@ -415,6 +436,25 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         return c.request("DELETE", f"/v1/pages/{pid}")
     if name == "tv_list_pages":
         return c.request("GET", "/v1/pages")
+    if name.startswith("tv_page_"):   # v2.22 #158: the TV checks everything
+        from urllib.parse import quote
+        ref = quote(str(args.get("page", "")), safe="")
+        if name == "tv_page_list":
+            return c.request("GET", "/v1/widget-pages")
+        if name == "tv_page_current":
+            return c.request("GET", "/v1/widget-pages/current")
+        if name == "tv_page_create":
+            return c.request("POST", "/v1/widget-pages", {k: args[k] for k in ("name", "id", "after") if k in args})
+        if not ref:
+            raise ValueError("page is required")
+        if name == "tv_page_rename":
+            return c.request("PATCH", f"/v1/widget-pages/{ref}", {"name": str(args.get("name", ""))[:32]})
+        if name == "tv_page_reorder":
+            return c.request("PATCH", f"/v1/widget-pages/{ref}", {"to": int(args.get("to") or 0)})
+        if name == "tv_page_delete":
+            return c.request("DELETE", f"/v1/widget-pages/{ref}",
+                             {"moveWidgetsTo": args["moveWidgetsTo"]} if "moveWidgetsTo" in args else None)
+        return c.request("POST", f"/v1/widget-pages/{ref}/show", {})
     if name.startswith("tv_widget_"):   # v2.22 #157: the TV checks and places everything
         from urllib.parse import quote
         wid = quote(str(args.get("id", "")), safe="")

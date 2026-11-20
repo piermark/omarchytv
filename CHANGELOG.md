@@ -12,6 +12,12 @@
   `qr`); stale widgets dim after their ttl and hide after twice that. CH+ / CH- on the Home go from the classic Home
   through the widget pages, then on to the workspaces as before. A long press on a widget: Move, Resize, Remove with
   the arrows (only into free cells). Only the page on screen is built; images are decoded to the cell size.
+- **Unlimited widget pages and a page navigator** (#158, #159): up to 1 000 pages, created on demand by number or id,
+  named, reordered, hidden, rotated, removed (their widgets moved or not); empty pages leave by themselves after a
+  day. `/v1/widget-pages` and `tv_page_list / current / create / rename / reorder / delete / show`. On the Home the
+  navigator `⌂ ‹ 1 2 3 4 5 › 8 / 42 · name` (RIGHT past the last number shows the next five, a long press lists every
+  page), CH± through the pages, `widget_page_changed` on `/v1/events`. Published LAN pages (`tv_publish_page`) are no
+  longer stopped at 16 (200). The number keys keep switching workspaces.
 - **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
   extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
   terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from

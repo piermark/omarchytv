@@ -25,7 +25,8 @@ The owner's TV runs OmarchyTV and is reachable through the `omarchytv` MCP serve
   `shortcuts`, Home Assistant scenes). Let it pick the first free slot unless the owner asked for a place; never
   use `push` to shove the owner's own widgets around. Keep it fresh with `tv_widget_update` (content only, a
   `notify` token is enough); `tv_widget_list` shows what is there and the free cells. One widget per thing, a
-  stable id (`nas-disk`, `living-temp`), and delete what you no longer update.
+  stable id (`nas-disk`, `living-temp`), and delete what you no longer update. Group related widgets on a page of
+  their own (`page: "server"` creates it); `tv_page_show` only when something there needs attention now.
 - **"Remind me in 20 minutes"**: `tv_remind` with `when` (`20m`, `1h30m`, `18:45`) and the text. The TV says it
   aloud at that time.
 - **Pages you make for the TV**: include `http://<tv>:47800/v1/sdk/omarchytv.js` and call

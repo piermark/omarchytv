@@ -416,6 +416,18 @@ public final class OmarchyLink implements LinkServer.Host {
         mediaSend("media_play", path, position);
     }
 
+    /** v2.22 #159 the Home showed another widget page: widget_page_changed {index, id, by} on /v1/events. */
+    static void widgetPageChanged(int index, String id, String by) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || r.server.connectedClients() == 0) return;
+        bg.execute(() -> {
+            try {
+                r.server.broadcast("widget_page_changed", new JSONObject().put("index", index).put("id", id == null ? "" : id).put("by", by));
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
     private static void mediaSend(String type, String path, double position) {
         OmarchyLink r = runtime;
         if (r == null || !r.live() || r.server.connectedClients() == 0) return;

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -145,7 +146,7 @@ final class LauncherConfig {
         List<AgentPage> out = new ArrayList<>();
         JSONArray a = j != null ? j.optJSONArray("agentPages") : null;
         java.util.Set<String> ids = new java.util.HashSet<>();
-        for (int i = 0; a != null && i < a.length() && out.size() < 16; i++) {
+        for (int i = 0; a != null && i < a.length() && out.size() < com.omarchytv.home.link.HomePages.MAX_AGENT_PAGES; i++) {
             JSONObject o = a.optJSONObject(i);
             if (o == null) continue;
             String id = o.optString("id"), name = o.optString("name").trim(), url = o.optString("url").trim();
@@ -582,6 +583,12 @@ final class LauncherConfig {
     /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
     /** v2.22 #157 omarchytv.json "widgets": positioned, typed Home widgets (see link/HomeWidgets). */
     final JSONArray gridWidgets;
+    /** v2.22 #158 {"widgets", "widgetPages"} for HomePages; the page an agent asked to show (and when); rotation;
+     *  where the navigator sits ("bottom" or "top"). */
+    final JSONObject pagesRoot;
+    final int widgetPageCurrent, widgetPageRotateSec;
+    final long widgetPageShowAt;
+    final String widgetNavPosition;
     final boolean agentAlert;
     /** v2.22 "agentAlertMin": the lowest notification level shown, "info" (all), "warn" or "alert"; set with the remote. */
     final String agentAlertMin;
@@ -709,6 +716,18 @@ final class LauncherConfig {
         widgetsAt = lkc != null ? lkc.optLong("widgetsAt", 0) : 0;
         JSONArray gwa = j != null ? j.optJSONArray("widgets") : null;   // v2.22 #157, drawn by WidgetGrid
         gridWidgets = gwa != null ? gwa : new JSONArray();
+        JSONObject pgRoot = new JSONObject();
+        try {
+            pgRoot.put("widgets", gridWidgets);
+            JSONArray wpg = j != null ? j.optJSONArray("widgetPages") : null;
+            if (wpg != null) pgRoot.put("widgetPages", wpg);
+        } catch (JSONException ignored) {
+        }
+        pagesRoot = pgRoot;
+        widgetPageCurrent = j != null ? j.optInt("widgetPageCurrent", 0) : 0;
+        widgetPageShowAt = j != null ? j.optLong("widgetPageShowAt", 0) : 0;
+        widgetPageRotateSec = j != null ? Math.max(0, Math.min(3600, j.optInt("widgetPageRotateSec", 0))) : 0;
+        widgetNavPosition = j != null && "top".equals(j.optString("widgetNavPosition")) ? "top" : "bottom";
         JSONObject wg = j != null ? j.optJSONObject("pcWidgets") : null;
         pcPanesOn = wg == null || wg.optBoolean("panes", true);
         shortcutsOn = wg == null || wg.optBoolean("shortcuts", true);

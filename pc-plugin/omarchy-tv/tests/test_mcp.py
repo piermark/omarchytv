@@ -162,6 +162,30 @@ class TestMcpV221(unittest.TestCase):
         self.assertIn("tv_widget_update", names)
         self.assertNotIn("tv_widget_move", names)
 
+    def test_page_tools_map_to_the_tv_api(self):   # v2.22 #158 / #159
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_page_create", {"name": "Casa", "id": "casa", "evil": 1})
+        self.assertEqual(sent[-1], ("POST", "/v1/widget-pages", {"name": "Casa", "id": "casa"}))
+        call("tv_page_show", {"page": "casa"})
+        self.assertEqual(sent[-1][:2], ("POST", "/v1/widget-pages/casa/show"))
+        call("tv_page_reorder", {"page": 3, "to": 2})
+        self.assertEqual(sent[-1], ("PATCH", "/v1/widget-pages/3", {"to": 2}))
+        call("tv_page_delete", {"page": "casa", "moveWidgetsTo": 1})
+        self.assertEqual(sent[-1], ("DELETE", "/v1/widget-pages/casa", {"moveWidgetsTo": 1}))
+        call("tv_page_current", {}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/widget-pages/current"))
+        n = len(sent)
+        self.assertIn("error", call("tv_page_show", {"page": 2}, "read"))
+        self.assertEqual(len(sent), n)
+
     def test_max_level_caps_tv_notify(self):   # v2.22: the owner's rule, not the model's
         tv = FakeTvClient()
         call = lambda lvl, mx: mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {

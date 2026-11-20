@@ -1409,6 +1409,41 @@ public final class LinkServer {
                     case "tv_close_page":
                         out = ok().put("closed", host.closePage());
                         break;
+                    case "tv_page_list":
+                    case "tv_page_current":
+                    case "tv_page_create":
+                    case "tv_page_rename":
+                    case "tv_page_reorder":
+                    case "tv_page_delete":
+                    case "tv_page_show": {   // v2.22 #158: the same code as /v1/widget-pages
+                        String ref = java.net.URLEncoder.encode(String.valueOf(args.opt("page") == null ? "" : args.opt("page")), "UTF-8");
+                        String mm, pp;
+                        JSONObject pb = new JSONObject();
+                        switch (name) {
+                            case "tv_page_list": mm = "GET"; pp = "/v1/widget-pages"; break;
+                            case "tv_page_current": mm = "GET"; pp = "/v1/widget-pages/current"; break;
+                            case "tv_page_create":
+                                mm = "POST"; pp = "/v1/widget-pages";
+                                for (String k : new String[]{"name", "id", "after"}) if (args.has(k)) pb.put(k, args.get(k));
+                                break;
+                            case "tv_page_rename": mm = "PATCH"; pp = "/v1/widget-pages/" + ref; pb.put("name", args.optString("name")); break;
+                            case "tv_page_reorder": mm = "PATCH"; pp = "/v1/widget-pages/" + ref; pb.put("to", args.optInt("to")); break;
+                            case "tv_page_delete":
+                                mm = "DELETE"; pp = "/v1/widget-pages/" + ref;
+                                if (args.has("moveWidgetsTo")) pb.put("moveWidgetsTo", args.get("moveWidgetsTo"));
+                                break;
+                            default: mm = "POST"; pp = "/v1/widget-pages/" + ref + "/show"; break;
+                        }
+                        if (pp.endsWith("/") || pp.contains("//show")) {
+                            out = err("bad_args", "page");
+                            isError = true;
+                            break;
+                        }
+                        Response pr = app.pageRoute(who, mm, pp, pp, pb);
+                        out = new JSONObject(new String(pr.body, StandardCharsets.UTF_8));
+                        isError = pr.status != 200;
+                        break;
+                    }
                     case "tv_widget_types":
                     case "tv_widget_list":
                     case "tv_widget_create":
@@ -1525,7 +1560,7 @@ public final class LinkServer {
                         .put("urls", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "2-4 pages to tile")), "control"});
         t.add(new Object[]{"tv_close_page", "Close the page opened with tv_show_page.", new JSONObject(), "control"});
         t.add(new Object[]{"tv_list_pages", "The agent pages published as tiles on the TV's Home.", new JSONObject(), "read"});
-        t.add(new Object[]{"tv_publish_page", "Publish (or update) a LAN / tailnet page as a tile on the TV's Home, with a name, a one-letter icon and an optional badge count. At most 16.",
+        t.add(new Object[]{"tv_publish_page", "Publish (or update) a LAN / tailnet page as a tile on the TV's Home, with a name, a one-letter icon and an optional badge count. At most 200.",
                 new JSONObject().put("id", prop("string", "Short id: a-z, 0-9, dashes (e.g. dubai-flats)"))
                         .put("name", prop("string", "Tile name, at most 32 characters"))
                         .put("url", prop("string", "http://<LAN or 100.x address>[:port]/path"))
@@ -1555,6 +1590,18 @@ public final class LinkServer {
                 new JSONObject().put("id", wid).put("page", prop("integer", "Page")).put("x", prop("integer", "Column 0-11")).put("y", prop("integer", "Row 0-5"))
                         .put("w", prop("integer", "Width 1-12")).put("h", prop("integer", "Height 1-6")).put("push", prop("boolean", "Move the widgets in the way")), "control"});
         t.add(new Object[]{"tv_widget_delete", "Remove a widget from the Home.", new JSONObject().put("id", wid), "control"});
+        // v2.22 #158 / #159: Home widget pages (not the LAN agent pages of tv_list_pages / tv_show_page)
+        JSONObject pref = prop("string", "A page number or a page id");
+        t.add(new Object[]{"tv_page_list", "The Home widget pages: index, id, name, how many widgets, hidden, rotate; and the one on screen. (tv_list_pages is about LAN agent pages.)", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_page_current", "The Home widget page on screen now: index (0 = the classic Home), id, name, total.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_page_create", "Create an empty Home widget page, with an optional name and id, after a given page (default at the end). Pages are also created on demand by tv_widget_create with page set to a new number or id.",
+                new JSONObject().put("name", prop("string", "Up to 32 characters")).put("id", prop("string", "a-z, 0-9, dashes")).put("after", pref), "control"});
+        t.add(new Object[]{"tv_page_rename", "Rename a Home widget page.", new JSONObject().put("page", pref).put("name", prop("string", "Up to 32 characters")), "control"});
+        t.add(new Object[]{"tv_page_reorder", "Move a Home widget page to another position (2 to total; page 1 stays first).",
+                new JSONObject().put("page", pref).put("to", prop("integer", "The new position")), "control"});
+        t.add(new Object[]{"tv_page_delete", "Remove a Home widget page (not page 1). Its widgets move to moveWidgetsTo, or are removed with it.",
+                new JSONObject().put("page", pref).put("moveWidgetsTo", pref), "control"});
+        t.add(new Object[]{"tv_page_show", "Bring a Home widget page to the screen (e.g. where an alert widget just landed).", new JSONObject().put("page", pref), "control"});
         return t;
     }
 

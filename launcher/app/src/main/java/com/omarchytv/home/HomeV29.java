@@ -114,6 +114,9 @@ final class HomeV29 extends FrameLayout {
     /** v2.22 #157 the widget grid and the widget page on screen (0 = the classic Home panels). */
     private final WidgetGrid wgrid;
     private int widgetPage;
+    /** v2.22 #159 the page navigator, and the last "show this page" from an agent already handled. */
+    private final PageNavigator wnav;
+    private long agentShowSeen = -1;
     private final BoxView wxBox, pcBox, macBox, depBox;
     private final LinearLayout statsColumn;
     private final ScrollView aiScroll;
@@ -351,6 +354,16 @@ final class HomeV29 extends FrameLayout {
         wgl.leftMargin = wgl.rightMargin = px(24);
         wgl.bottomMargin = px(320);
         addView(wgrid, wgl);
+        wnav = new PageNavigator(a, s, tf, tfBold, new PageNavigator.Host() {
+            @Override public void show(int page) {
+                showWidgetPage(page, "remote");
+            }
+            @Override public String name(int page) {
+                return cfg != null && page > 0 ? com.omarchytv.home.link.HomePages.name(cfg.pagesRoot, page) : "";
+            }
+        });
+        wnav.setVisibility(GONE);
+        addView(wnav, new LayoutParams(-2, -2, Gravity.BOTTOM | Gravity.CENTER_HORIZONTAL));
         LinearLayout r1 = hbox(), r2 = hbox();
         r1.setGravity(Gravity.TOP);
         // v2.10 "Disponi riquadri": panels are offset with translations, so their rows must not clip them.
@@ -777,7 +790,18 @@ final class HomeV29 extends FrameLayout {
         cfg = c;
         t = Theme.cur();
         wgrid.set(c != null ? c.gridWidgets : null, t);
-        if (c != null && widgetPage > 0 && !WidgetGrid.pages(c.gridWidgets).contains(widgetPage)) widgetPage = 0;
+        if (c != null && widgetPage > 0 && widgetPage > com.omarchytv.home.link.HomePages.total(c.pagesRoot)) widgetPage = 0;
+        if (c != null) {   // #158 tv_page_show: an agent asked for a page (once per request; not the old one at start)
+            if (agentShowSeen < 0) agentShowSeen = c.widgetPageShowAt;
+            else if (c.widgetPageShowAt > agentShowSeen) {
+                agentShowSeen = c.widgetPageShowAt;
+                int p = c.widgetPageCurrent;
+                post(() -> {
+                    if (activeWs != 1) host.showWorkspace(1);
+                    showWidgetPage(p, "agent");
+                });
+            }
+        }
         if (c == null || !FractalLayer.is(c.wallpaper)) liveAccent = false;
         this.apps = apps;
         float op = opacity(c), nb = noBlur();
@@ -1645,6 +1669,11 @@ final class HomeV29 extends FrameLayout {
         boolean home = n == 1;
         boolean classic = home && widgetPage == 0;   // v2.22: a widget page hides the classic panels
         wgrid.setVisibility(home && widgetPage > 0 ? VISIBLE : GONE);
+        wnav.setVisibility(home && hasWidgetPages() ? VISIBLE : GONE);
+        if (home && hasWidgetPages()) {
+            wnav.set(widgetPages(), widgetPage, t);
+            post(this::fitGrid);
+        }
         term.setVisibility(classic && (cfg == null || cfg.wTerm) ? VISIBLE : GONE);
         aiBoxRef.setVisibility(classic && cfg != null && cfg.wAi ? VISIBLE : GONE);
         rightScroll.setVisibility(classic ? VISIBLE : GONE);
@@ -2175,25 +2204,75 @@ final class HomeV29 extends FrameLayout {
     /** Called before the default dispatch while the home is shown. True = consumed. */
     // ---------------------------------------------------------------- v2.22 #157 / #158 widget pages
 
-    /** The widget pages, ascending; empty when there are no widgets (then the Home is the classic one only). */
+    /** True once there is any widget or named page: then the navigator shows and CH+/CH- page through them. */
+    boolean hasWidgetPages() {
+        return cfg != null && (cfg.gridWidgets.length() > 0 || cfg.pagesRoot.optJSONArray("widgetPages") != null
+                && cfg.pagesRoot.optJSONArray("widgetPages").length() > 0);
+    }
+
+    /** The visible widget pages, ascending (hidden ones only by an agent); empty without widgets. */
     java.util.List<Integer> widgetPages() {
-        return cfg != null ? WidgetGrid.pages(cfg.gridWidgets) : new java.util.ArrayList<>();
+        return hasWidgetPages() ? com.omarchytv.home.link.HomePages.visible(cfg.pagesRoot) : new java.util.ArrayList<>();
     }
 
     int widgetPage() {
         return widgetPage;
     }
 
-    /** Shows widget page p (0 = the classic Home panels). */
+    /** Shows widget page p (0 = the classic Home panels); by: "remote", "agent" or "rotate" (for the event). */
     void showWidgetPage(int p) {
-        if (p != 0 && !widgetPages().contains(p)) return;
+        showWidgetPage(p, "remote");
+    }
+
+    void showWidgetPage(int p, String by) {
+        if (cfg == null || p < 0 || p > 0 && (!hasWidgetPages() || p > com.omarchytv.home.link.HomePages.total(cfg.pagesRoot))) return;
+        boolean changed = widgetPage != p;
         widgetPage = p;
         if (activeWs == 1) setWorkspace(1);
         if (p > 0) {
             wgrid.showPage(p);
             fitGrid();
         }
-        if (pageListener != null) pageListener.run();
+        wnav.set(widgetPages(), p, t);
+        com.omarchytv.home.link.HomePages.shown = p;
+        if (changed) OmarchyLink.widgetPageChanged(p, p == 0 ? "home" : pageId(p), by);
+        scheduleRotate();
+    }
+
+    private String pageId(int p) {
+        org.json.JSONArray m = cfg.pagesRoot.optJSONArray("widgetPages");
+        for (int i = 0; m != null && i < m.length(); i++) {
+            org.json.JSONObject o = m.optJSONObject(i);
+            if (o != null && o.optInt("index") == p) return o.optString("id", "");
+        }
+        return "";
+    }
+
+    /** #158 "rotate": pages marked rotate take turns every widgetPageRotateSec while the Home is shown. */
+    private final Runnable rotate = this::rotateTick;
+
+    private void rotateTick() {
+        if (cfg == null || activeWs != 1 || !isShown() || wgrid.editing()) {
+            scheduleRotate();
+            return;
+        }
+        java.util.List<Integer> turn = new java.util.ArrayList<>();
+        for (int pg : widgetPages()) {
+            org.json.JSONArray m = cfg.pagesRoot.optJSONArray("widgetPages");
+            for (int i = 0; m != null && i < m.length(); i++) {
+                org.json.JSONObject o = m.optJSONObject(i);
+                if (o != null && o.optInt("index") == pg && o.optBoolean("rotate")) turn.add(pg);
+            }
+        }
+        if (turn.size() >= 1) {
+            int i = turn.indexOf(widgetPage);
+            showWidgetPage(turn.get((i + 1) % turn.size()), "rotate");
+        } else scheduleRotate();
+    }
+
+    private void scheduleRotate() {
+        removeCallbacks(rotate);
+        if (cfg != null && cfg.widgetPageRotateSec > 0 && hasWidgetPages()) postDelayed(rotate, cfg.widgetPageRotateSec * 1000L);
     }
 
     /**
@@ -2215,15 +2294,21 @@ final class HomeV29 extends FrameLayout {
 
     Runnable pageListener;
 
-    /** The grid sits between the bar and the dock. */
+    /** The grid sits between the bar and the dock, the navigator above the dock (or under the bar with "top"). */
     private void fitGrid() {
         if (appWin.getTop() <= 0) return;
+        boolean top = cfg != null && "top".equals(cfg.widgetNavPosition);
+        int navH = wnav.getVisibility() == VISIBLE ? px(48) : 0;
+        int dock = getHeight() - Math.round(appWin.getTop() + appWin.getTranslationY());
+        LayoutParams nl = (LayoutParams) wnav.getLayoutParams();
+        nl.gravity = (top ? Gravity.TOP : Gravity.BOTTOM) | Gravity.CENTER_HORIZONTAL;
+        nl.topMargin = top ? px(76) : 0;
+        nl.bottomMargin = top ? 0 : dock + px(8);
+        wnav.setLayoutParams(nl);
         LayoutParams wgl = (LayoutParams) wgrid.getLayoutParams();
-        int bottom = getHeight() - Math.round(appWin.getTop() + appWin.getTranslationY()) + px(16);
-        if (wgl.bottomMargin != bottom) {
-            wgl.bottomMargin = Math.max(px(32), bottom);
-            wgrid.setLayoutParams(wgl);
-        }
+        wgl.topMargin = px(76) + (top ? navH : 0);
+        wgl.bottomMargin = Math.max(px(32), dock + px(16) + (top ? 0 : navH));
+        wgrid.setLayoutParams(wgl);
     }
 
     boolean onKey(KeyEvent e) {

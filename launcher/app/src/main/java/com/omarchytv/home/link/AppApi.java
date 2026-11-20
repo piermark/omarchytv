@@ -131,7 +131,7 @@ final class AppApi {
                 || ASK_PATH.matcher(p).matches() || "/v1/page".equals(p) || "/v1/diagnostics".equals(p)
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
                 || "/v1/radio".equals(p) || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
-                || p.startsWith("/v1/widgets/");   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
+                || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/");   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
     }
 
     /** The app token a request presents: "Authorization: Bearer otva_…", or ?token= on GET /v1/state and /v1/stream. */
@@ -207,6 +207,7 @@ final class AppApi {
     LinkServer.Response route(Principal who, LinkServer.Request req, JSONObject body) throws Exception {
         String m = req.method, p = path(req.target);
         if (p.startsWith("/v1/widgets/")) return widgetRoute(who, m, p, req.target, req.peer, body);   // v2.22 #157
+        if (p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")) return pageRoute(who, m, p, req.target, body);   // #158
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
             if (!who.can("notify")) return forbidden("notify");
@@ -381,7 +382,7 @@ final class AppApi {
             JSONObject o = null;
             for (int i = 0; i < a.length(); i++) if (id.equals(a.optJSONObject(i) != null ? a.optJSONObject(i).optString("id") : "")) o = a.optJSONObject(i);
             if (o == null) {
-                if (a.length() >= 16) {
+                if (a.length() >= HomePages.MAX_AGENT_PAGES) {   // v2.22 #158: was 16
                     full[0] = true;
                     return;
                 }
@@ -390,7 +391,7 @@ final class AppApi {
             o.put("name", name).put("url", url).put("icon", icon).put("badge", badge).put("by", who.name)
                     .put("updated", System.currentTimeMillis() / 1000);
         });
-        if (full[0]) return new LinkServer.Response(409, LinkServer.err("too_many_pages", "16 pages; remove one"));
+        if (full[0]) return new LinkServer.Response(409, LinkServer.err("too_many_pages", HomePages.MAX_AGENT_PAGES + " pages; remove one"));
         host.log("page published by " + who.name + ": " + id);
         return new LinkServer.Response(200, LinkServer.ok().put("id", id));
     }
@@ -502,7 +503,13 @@ final class AppApi {
         }
         if ("POST".equals(m) && "/v1/widgets/item".equals(p)) {
             if (!who.can("control")) return forbidden("control");
-            return widgetEdit(all -> HomeWidgets.create(all, body, who.pc ? "pc" : "app:" + who.name, nowS()), "created");
+            return widgetEdit((cfg, all) -> {
+                JSONObject in = new JSONObject(body.toString());
+                if (in.has("page")) in.put("page", HomePages.onDemand(cfg, in.opt("page"), in.optBoolean("strict"), nowS()));   // #158
+                JSONObject wd = HomeWidgets.create(all, in, who.pc ? "pc" : "app:" + who.name, nowS());
+                HomePages.touch(cfg, wd.optInt("page", 1), nowS());
+                return wd;
+            }, "created");
         }
         Matcher im = WIDGET_ITEM.matcher(p);
         if (!im.matches()) return new LinkServer.Response(404, LinkServer.err("not_found", null));
@@ -512,7 +519,7 @@ final class AppApi {
         }
         if ("DELETE".equals(m)) {
             if (!who.can("control")) return forbidden("control");
-            return widgetEdit(all -> {
+            return widgetEdit((cfg, all) -> {
                 int i = HomeWidgets.indexOf(all, id);
                 if (i < 0) throw new HomeWidgets.Bad(404, "no_such_widget", id, null);
                 JSONObject gone = all.getJSONObject(i);
@@ -527,18 +534,109 @@ final class AppApi {
             long retry = s.limited(peer + "|widget:" + id, 4, 1000);   // at most 4 changes a second per widget
             if (retry > 0) return new LinkServer.Response(429, LinkServer.err("rate_limited", "4 changes a second per widget"));
             boolean content = body.has("title") || body.has("icon") || body.has("ttl") || body.has("data");
-            return widgetEdit(all -> {
+            return widgetEdit((cfg, all) -> {
                 JSONObject wd = null;
-                if (shape) wd = HomeWidgets.move(all, id, body, nowS());
-                if (content || !shape) wd = HomeWidgets.update(all, id, body, nowS());
+                JSONObject in = new JSONObject(body.toString());
+                if (in.has("page")) in.put("page", HomePages.onDemand(cfg, in.opt("page"), in.optBoolean("strict"), nowS()));   // #158
+                if (shape) wd = HomeWidgets.move(all, id, in, nowS());
+                if (content || !shape) wd = HomeWidgets.update(all, id, in, nowS());
+                if (wd != null) HomePages.touch(cfg, wd.optInt("page", 1), nowS());
                 return wd;
             }, shape ? "moved" : "updated");
         }
         return new LinkServer.Response(405, LinkServer.err("bad_method", null));
     }
 
+    // ---------------------------------------------------------------- v2.22 #158 / #159 widget pages
+
+    static final Pattern WPAGE = Pattern.compile("^/v1/widget-pages/([^/?#]{1,40})(/show)?$");
+
+    LinkServer.Response pageRoute(Principal who, String m, String p, String target, JSONObject body) throws Exception {
+        if ("GET".equals(m) && ("/v1/widget-pages".equals(p) || "/v1/widget-pages/current".equals(p))) {
+            if (!who.can("read")) return forbidden("read");
+            JSONObject cfg = host.config();
+            if (cfg == null) cfg = new JSONObject();
+            JSONObject cur = currentPage(cfg);
+            if ("/v1/widget-pages/current".equals(p)) return new LinkServer.Response(200, cur);
+            return new LinkServer.Response(200, new JSONObject().put("pages", HomePages.list(new JSONObject(cfg.toString()), nowS()))
+                    .put("total", HomePages.total(cfg)).put("current", cur));
+        }
+        if (!who.can("control")) return forbidden("control");
+        if ("POST".equals(m) && "/v1/widget-pages".equals(p)) {
+            int[] at = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> at[0] = HomePages.create(cfg, body, nowS()));
+            return r != null ? r : pageOk("created", at[0]);
+        }
+        Matcher pm = WPAGE.matcher(p);
+        if (!pm.matches()) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        String ref = java.net.URLDecoder.decode(pm.group(1), "UTF-8");
+        Object r0 = ref.matches("\\d{1,4}") ? (Object) Integer.parseInt(ref) : ref;
+        if (pm.group(2) != null) {   // POST /v1/widget-pages/<page>/show
+            if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+            int[] at = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> {
+                int idx = HomePages.resolve(cfg, r0);
+                if (idx < 1 || idx > HomePages.total(cfg)) throw new HomeWidgets.Bad(404, "no_such_page", ref, null);
+                cfg.put("widgetPageCurrent", idx).put("widgetPageShowAt", System.currentTimeMillis());
+                at[0] = idx;
+            });
+            return r != null ? r : pageOk("shown", at[0]);
+        }
+        if ("PATCH".equals(m) || "PUT".equals(m)) {
+            int[] at = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> {
+                int idx = HomePages.resolve(cfg, r0);
+                if (body.has("name")) HomePages.rename(cfg, idx > 0 ? idx : r0, body.optString("name"), nowS());
+                if (body.has("to")) idx = HomePages.reorder(cfg, idx > 0 ? idx : r0, body.optInt("to"), nowS());
+                if (body.has("rotate") || body.has("hidden")) {
+                    if (idx < 1 || idx > HomePages.total(cfg)) throw new HomeWidgets.Bad(404, "no_such_page", ref, null);
+                    HomePages.rename(cfg, idx, HomePages.name(cfg, idx), nowS());   // makes sure the entry exists
+                    JSONObject meta = HomePages.meta(cfg, idx);
+                    if (body.has("rotate")) meta.put("rotate", body.optBoolean("rotate"));
+                    if (body.has("hidden")) meta.put("hidden", idx != 1 && body.optBoolean("hidden"));
+                }
+                at[0] = idx;
+            });
+            return r != null ? r : pageOk("updated", at[0]);
+        }
+        if ("DELETE".equals(m)) {
+            Object moveTo = body.has("moveWidgetsTo") ? body.opt("moveWidgetsTo") : query(target, "moveTo");
+            int[] moved = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> moved[0] = HomePages.delete(cfg, r0, moveTo, nowS()));
+            return r != null ? r : new LinkServer.Response(200, LinkServer.ok().put("deleted", true).put("movedWidgets", moved[0]));
+        }
+        return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+    }
+
+    private JSONObject currentPage(JSONObject cfg) throws JSONException {
+        int idx = HomePages.shown;
+        return new JSONObject().put("index", idx).put("name", idx == 0 ? "Home" : HomePages.name(cfg, idx))
+                .put("id", idx == 0 ? "home" : HomePages.meta(cfg, idx) != null ? HomePages.meta(cfg, idx).optString("id", "") : "")
+                .put("total", HomePages.total(cfg)).put("classicHome", idx == 0);
+    }
+
+    interface PageOp {
+        void apply(JSONObject cfg) throws Exception;
+    }
+
+    private LinkServer.Response pageEdit(PageOp op) throws Exception {
+        try {
+            host.editConfig(op::apply);
+        } catch (HomeWidgets.Bad e) {
+            return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+        }
+        s.broadcast("widgets_changed", new JSONObject().put("op", "pages"));
+        return null;
+    }
+
+    private LinkServer.Response pageOk(String what, int index) throws JSONException {
+        JSONObject cfg = host.config();
+        return new LinkServer.Response(200, LinkServer.ok().put(what, true).put("index", index)
+                .put("name", cfg != null ? HomePages.name(cfg, index) : "Page " + index));
+    }
+
     interface WidgetOp {
-        JSONObject apply(JSONArray all) throws Exception;
+        JSONObject apply(JSONObject cfg, JSONArray all) throws Exception;
     }
 
     /** Runs one change on omarchytv.json "widgets" atomically (nothing is written on an error) and tells /v1/events. */
@@ -548,7 +646,7 @@ final class AppApi {
             host.editConfig(j -> {
                 JSONArray all = j.optJSONArray("widgets");
                 if (all == null) j.put("widgets", all = new JSONArray());
-                out[0] = op.apply(all);
+                out[0] = op.apply(j, all);
             });
         } catch (HomeWidgets.Bad e) {
             JSONObject err = LinkServer.err(e.code, e.getMessage());
