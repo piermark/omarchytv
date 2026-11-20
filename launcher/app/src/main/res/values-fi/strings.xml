@@ -134,6 +134,15 @@
     <string name="radio_stations">Asemat</string>
     <string name="skill_qr_hint">Avaa se puhelimella tai anna linkki agentillesi: se asentaa laajennuksen ja muodostaa pariliitoksen tämän näytön koodilla. Koodissa ei ole salasanaa eikä tunnusta.</string>
     <string name="skill_qr_this_tv">tämä TV</string>
+    <string name="web_settings_row">Verkkoasetukset</string>
+    <string name="web_settings_open">Avaa verkkoasetukset</string>
+    <string name="web_settings_hint">Skannaa se puhelimella samassa verkossa tai kirjoita osoite tietokoneella. Hyväksy sitten selain televisiossa.</string>
+    <string name="web_approve_q">Saako ”%1$s” (%2$s) muuttaa television asetuksia?</string>
+    <string name="web_approve_qr">Se skannasi tämän television näyttämän koodin.</string>
+    <string name="web_approve_typed">Osoite kirjoitettiin käsin: salli vain, jos laite on sinun.</string>
+    <string name="web_deny">Estä</string>
+    <string name="web_allow_read">Salli vain luku</string>
+    <string name="web_allow">Salli</string>
     <string name="ai_stale">vanhentunut %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ei osumia</string>

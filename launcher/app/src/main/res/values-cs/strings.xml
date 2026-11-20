@@ -134,6 +134,15 @@
     <string name="radio_stations">Stanice</string>
     <string name="skill_qr_hint">Otevřete ho v telefonu nebo předejte odkaz agentovi: nainstaluje plugin a spáruje se kódem z této obrazovky. V kódu není heslo ani token.</string>
     <string name="skill_qr_this_tv">tato TV</string>
+    <string name="web_settings_row">Webové nastavení</string>
+    <string name="web_settings_open">Otevřít webové nastavení</string>
+    <string name="web_settings_hint">Naskenujte ho telefonem ve stejné síti nebo zadejte adresu na počítači. Pak ten prohlížeč schvalte na TV.</string>
+    <string name="web_approve_q">Povolit „%1$s“ (%2$s) měnit nastavení TV?</string>
+    <string name="web_approve_qr">Naskenoval kód zobrazený na této TV.</string>
+    <string name="web_approve_typed">Adresa byla zadána ručně: povolte jen, pokud je to vaše zařízení.</string>
+    <string name="web_deny">Zamítnout</string>
+    <string name="web_allow_read">Povolit jen čtení</string>
+    <string name="web_allow">Povolit</string>
     <string name="ai_stale">zastaralé %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">žádná shoda</string>

@@ -132,7 +132,8 @@ final class AppApi {
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
                 || "/v1/radio".equals(p) || p.startsWith("/v1/radio/") || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
                 || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")
-                || p.startsWith("/v1/ha/");   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
+                || p.startsWith("/v1/ha/")   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
+                || "/v1/settings".equals(p) || "/v1/settings/schema".equals(p);   // v2.22 #163
     }
 
     /** The app token a request presents: "Authorization: Bearer otva_…", or ?token= on GET /v1/state and /v1/stream. */
@@ -210,6 +211,7 @@ final class AppApi {
         if (p.startsWith("/v1/widgets/")) return widgetRoute(who, m, p, req.target, req.peer, body);   // v2.22 #157
         if (p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")) return pageRoute(who, m, p, req.target, body);   // #158
         if (p.startsWith("/v1/ha/")) return haRoute(who, m, p, req.target, body);   // #160
+        if ("/v1/settings".equals(p) || "/v1/settings/schema".equals(p)) return settingsRoute(who, m, p, req.target, body);   // #163
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
             if (!who.can("notify")) return forbidden("notify");
@@ -335,6 +337,59 @@ final class AppApi {
     }
 
     static final java.util.Set<String> RADIO = new java.util.HashSet<>(java.util.Arrays.asList("now", "play", "pause", "next", "previous", "stop"));
+
+    // ---- v2.22 #163 settings: one backend for the web page, app tokens and MCP ----------------------------------
+
+    LinkServer.Response settingsRoute(Principal who, String m, String p, String target, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/settings/schema".equals(p)) {
+            return who.can("read") ? new LinkServer.Response(200, WebSettings.schema(host.settingsChoices())) : forbidden("read");
+        }
+        if ("GET".equals(m)) {
+            if (!who.can("read")) return forbidden("read");
+            String section = query(target, "section");
+            return new LinkServer.Response(200, settingsGet(section == null ? null : java.net.URLDecoder.decode(section, "UTF-8")));
+        }
+        if ("PATCH".equals(m)) return who.can("control") ? settingsSet(body) : forbidden("control");
+        return new LinkServer.Response(405, LinkServer.err("method", "GET or PATCH"));
+    }
+
+    JSONObject settingsGet(String section) throws JSONException {
+        JSONObject ha = host.haConfig();
+        JSONObject ext = new JSONObject().put(WebSettings.HA_URL, ha.optString("url", ""))
+                .put(WebSettings.HA_TOKEN, ha.optBoolean("tokenSet", false));
+        JSONObject v = WebSettings.values(host.config(), ext, section);
+        String rev = LinkCrypto.hex(LinkCrypto.sha256(LinkCrypto.utf8(v.toString()))).substring(0, 16);
+        return v.put("rev", rev);
+    }
+
+    /** {key: value, …}: all checked first, then written at once; "ha.url" / "ha.token" go to the TV's lights store. */
+    LinkServer.Response settingsSet(JSONObject changes) throws Exception {
+        java.util.LinkedHashMap<WebSettings.Field, Object> ch;
+        try {
+            ch = WebSettings.check(changes, host.settingsChoices());
+        } catch (IllegalArgumentException e) {
+            return new LinkServer.Response(400, LinkServer.err("bad_value", e.getMessage()));
+        }
+        String haUrl = null, haToken = null;
+        boolean cfg = false;
+        JSONArray keys = new JSONArray();
+        for (Map.Entry<WebSettings.Field, Object> e : ch.entrySet()) {
+            keys.put(e.getKey().key);
+            if (WebSettings.HA_URL.equals(e.getKey().key)) haUrl = (String) e.getValue();
+            else if (WebSettings.HA_TOKEN.equals(e.getKey().key)) haToken = (String) e.getValue();
+            else cfg = true;
+        }
+        if (cfg) {
+            host.editConfig(j -> {
+                for (Map.Entry<WebSettings.Field, Object> e : ch.entrySet()) {
+                    if (!WebSettings.external(e.getKey())) WebSettings.write(j, e.getKey(), e.getValue());
+                }
+            });
+        }
+        if (haUrl != null || haToken != null) host.haConfigure(haUrl, haToken);   // a new URL without a token forgets the old one
+        s.broadcast("settings_changed", new JSONObject().put("keys", keys));
+        return new LinkServer.Response(200, LinkServer.ok().put("changed", keys));
+    }
 
     /** v2.22 #162 POST /v1/radio {action, station?, volume?, minutes?}. */
     LinkServer.Response radioCmd(JSONObject b) throws JSONException {

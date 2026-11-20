@@ -133,6 +133,15 @@
     <string name="radio_stations">Stazioni</string>
     <string name="skill_qr_hint">Aprilo sul telefono o passa il link al tuo agente: installa il plugin e si abbina con il codice su questo schermo. Nessuna password o token nel codice.</string>
     <string name="skill_qr_this_tv">questa TV</string>
+    <string name="web_settings_row">Impostazioni web</string>
+    <string name="web_settings_open">Apri le impostazioni web</string>
+    <string name="web_settings_hint">Inquadralo con un telefono sulla stessa rete, o scrivi l\'indirizzo su un computer. Poi approva quel browser sulla TV.</string>
+    <string name="web_approve_q">Consentire a “%1$s” (%2$s) di cambiare le impostazioni della TV?</string>
+    <string name="web_approve_qr">Ha inquadrato il codice mostrato su questa TV.</string>
+    <string name="web_approve_typed">L\'indirizzo è stato scritto a mano: consenti solo se è un tuo dispositivo.</string>
+    <string name="web_deny">Nega</string>
+    <string name="web_allow_read">Consenti solo lettura</string>
+    <string name="web_allow">Consenti</string>
     <string name="ai_stale">vecchio di %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">nessun risultato</string>

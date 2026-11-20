@@ -134,6 +134,15 @@
     <string name="radio_stations">Станции</string>
     <string name="skill_qr_hint">Откройте на телефоне или передайте ссылку агенту: он установит плагин и выполнит сопряжение по коду на этом экране. В коде нет пароля или токена.</string>
     <string name="skill_qr_this_tv">этот телевизор</string>
+    <string name="web_settings_row">Веб-настройки</string>
+    <string name="web_settings_open">Открыть веб-настройки</string>
+    <string name="web_settings_hint">Отсканируйте телефоном в той же сети или введите адрес на компьютере. Затем разрешите этот браузер на телевизоре.</string>
+    <string name="web_approve_q">Разрешить «%1$s» (%2$s) менять настройки телевизора?</string>
+    <string name="web_approve_qr">Он отсканировал код с этого телевизора.</string>
+    <string name="web_approve_typed">Адрес введён вручную: разрешайте, только если это ваше устройство.</string>
+    <string name="web_deny">Запретить</string>
+    <string name="web_allow_read">Только чтение</string>
+    <string name="web_allow">Разрешить</string>
     <string name="ai_stale">устарело %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">нет совпадений</string>

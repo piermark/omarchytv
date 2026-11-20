@@ -134,6 +134,15 @@
     <string name="radio_stations">Stasjoner</string>
     <string name="skill_qr_hint">Åpne den på telefonen eller gi lenken til agenten din: den installerer programtillegget og parer med koden på denne skjermen. Ingen passord eller token i koden.</string>
     <string name="skill_qr_this_tv">denne TV-en</string>
+    <string name="web_settings_row">Nettinnstillinger</string>
+    <string name="web_settings_open">Åpne nettinnstillinger</string>
+    <string name="web_settings_hint">Skann den med en telefon på samme nett, eller skriv adressen på en datamaskin. Godkjenn så nettleseren på TV-en.</string>
+    <string name="web_approve_q">La «%1$s» (%2$s) endre TV-ens innstillinger?</string>
+    <string name="web_approve_qr">Den skannet koden som vises på denne TV-en.</string>
+    <string name="web_approve_typed">Adressen ble skrevet for hånd: tillat bare hvis det er din enhet.</string>
+    <string name="web_deny">Avslå</string>
+    <string name="web_allow_read">Tillat bare lesing</string>
+    <string name="web_allow">Tillat</string>
     <string name="ai_stale">utdatert %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen treff</string>

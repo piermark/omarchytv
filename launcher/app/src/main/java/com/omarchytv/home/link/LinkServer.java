@@ -221,6 +221,46 @@ public final class LinkServer {
             return "not_configured";
         }
 
+        /** v2.22 #163 values the TV gives for some settings: "theme" (installed themes), "language" (its languages). */
+        default java.util.Map<String, List<String>> settingsChoices() {
+            return java.util.Collections.emptyMap();
+        }
+
+        /** v2.22 #163 {url, tokenSet}: the Home Assistant set up on the TV; never the token. */
+        default JSONObject haConfig() throws JSONException {
+            return new JSONObject().put("url", "").put("tokenSet", false);
+        }
+
+        /**
+         * v2.22 #163 a new Home Assistant URL and / or token (null: unchanged). A new URL without a new token forgets
+         * the old token, so a changed address never receives it.
+         */
+        default void haConfigure(String url, String token) {
+        }
+
+        /** v2.22 #163 the three answers of the approval dialog, in this order: deny, allow read-only, allow. */
+        default List<String> webChoices() {
+            return java.util.Arrays.asList("Deny", "Allow read-only", "Allow");
+        }
+
+        /**
+         * v2.22 #163 shows "Allow <device> (<ip>) to change settings?" on the TV with {@link #webChoices}; the remote's
+         * answer comes back through LinkServer.answerAsk. Null when shown, else an error code.
+         */
+        default String approveWeb(String id, String device, String peer, boolean fromQr, List<String> choices, long deadlineMs) {
+            return "no_ui";
+        }
+
+        /** v2.22 #163 the theme for the web settings page (the same payload as GET /v1/theme, even with sharing off). */
+        default JSONObject webTheme() {
+            return sharedTheme();
+        }
+
+        /** v2.22 #163 a file of the web settings page (assets/settings/), or null. */
+        default byte[] settingsAsset(String name) {
+            return null;
+        }
+
         /** v2.21 the launcher's omarchytv.json as it is now (read only), or null. */
         default JSONObject config() {
             return null;
@@ -253,6 +293,7 @@ public final class LinkServer {
     private final LinkStore store;
     /** v2.21 app tokens, /v1/state, /v1/stream, /v1/ask, /v1/page, /v1/diagnostics. */
     final AppApi app;
+    final WebAccess web;   // v2.22 #163
     private volatile ServerSocket server;
     private volatile boolean running;
     private final ThreadPoolExecutor pool;
@@ -297,6 +338,7 @@ public final class LinkServer {
         this.host = host;
         this.store = store;
         this.app = new AppApi(this, host, new AppTokens(new File(store.dir(), "link-apps.json")));
+        this.web = new WebAccess(this, host, app);
         pool = new ThreadPoolExecutor(0, MAX_CONN, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), r -> {
             Thread t = new Thread(r, "otv-link");
             t.setDaemon(true);
@@ -567,11 +609,13 @@ public final class LinkServer {
             case 200: return "OK";
             case 202: return "Accepted";
             case 204: return "No Content";
+            case 301: return "Moved Permanently";
             case 304: return "Not Modified";
             case 400: return "Bad Request";
             case 401: return "Unauthorized";
             case 403: return "Forbidden";
             case 404: return "Not Found";
+            case 405: return "Method Not Allowed";
             case 409: return "Conflict";
             case 411: return "Length Required";
             case 413: return "Payload Too Large";
@@ -805,6 +849,7 @@ public final class LinkServer {
         if (sharePath(path) && ("GET".equals(req.method) || "HEAD".equals(req.method) || "OPTIONS".equals(req.method))) {
             return sharedTheme(req, path);
         }
+        if (web.wants(req)) return web.handle(req);   // v2.22 #163 the web settings page (cookie session)
         if (app.wants(req)) return app.handle(req, out, sock);   // v2.21 app tokens (and the SDK, preflights)
         if ("POST".equals(req.method) && ("/v1/pair/start".equals(path) || "/v1/pair/confirm".equals(path))) {
             long retry = limited(req.peer + "|" + path, 1, 2000);
@@ -1429,6 +1474,17 @@ public final class LinkServer {
                     case "tv_close_page":
                         out = ok().put("closed", host.closePage());
                         break;
+                    case "tv_settings_get":
+                    case "tv_settings_set": {   // v2.22 #163: the same code as GET / PATCH /v1/settings
+                        if ("tv_settings_get".equals(name)) {
+                            out = app.settingsGet(args.optString("section", ""));
+                        } else {
+                            Response sr = app.settingsSet(new JSONObject().put(args.optString("key", ""), args.opt("value") == null ? JSONObject.NULL : args.opt("value")));
+                            out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                            isError = sr.status != 200;
+                        }
+                        break;
+                    }
                     case "tv_ha_status":
                     case "tv_ha_list":
                     case "tv_ha_run": {   // v2.22 #160: the same code as /v1/ha/*
@@ -1658,6 +1714,11 @@ public final class LinkServer {
         t.add(new Object[]{"tv_page_delete", "Remove a Home widget page (not page 1). Its widgets move to moveWidgetsTo, or are removed with it.",
                 new JSONObject().put("page", pref).put("moveWidgetsTo", pref), "control"});
         // v2.22 #160 Home Assistant (the TV's own HA connection; the token never leaves the TV)
+        t.add(new Object[]{"tv_settings_get", "The TV's settings (theme, Home, plugins, Home Assistant URL, agents…) as {values, secrets}; "
+                + "secrets only say whether they are set. GET /v1/settings/schema lists keys, types and allowed values.",
+                new JSONObject().put("section", prop("string", "appearance | home | screensaver | plugins | homeassistant | agents (optional)")), "read"});
+        t.add(new Object[]{"tv_settings_set", "Change one TV setting, with the same checks as the web settings page (e.g. key \"uiSize\", value \"large\").",
+                new JSONObject().put("key", prop("string", "A key from tv_settings_get")).put("value", new JSONObject().put("description", "The new value (bool, number or text)")), "control"});
         t.add(new Object[]{"tv_ha_status", "Is Home Assistant set up on the TV and reachable: configured, reachable, version, host. Never the token.", new JSONObject(), "read"});
         t.add(new Object[]{"tv_ha_list", "Home Assistant entities the TV can see, to build a widget: [{entity_id, name, state, unit}], optionally of one domain (scene, script, light, switch, sensor, …) and matching a query. At most 200.",
                 new JSONObject().put("domain", prop("string", "scene, script, light, switch, sensor, …")).put("query", prop("string", "Part of the id or the name")), "read"});
@@ -2992,7 +3053,12 @@ public final class LinkServer {
 
     /** The answer picked on the remote. False when the question is gone or expired. */
     public boolean answerAsk(String id, String choice) {
-        return app.answer(id, choice);
+        return app.answer(id, choice) || web.answer(id, choice);
+    }
+
+    /** v2.22 #163 a one-time code for the web settings QR (5 minutes). */
+    public String newWebCode() {
+        return web.newCode();
     }
 
     /** Questions still waiting: [id, from, question, deadlineMs, detail, risk, choice...] (detail, risk: v2.22, "" if none). */

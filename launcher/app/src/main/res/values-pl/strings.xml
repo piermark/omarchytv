@@ -134,6 +134,15 @@
     <string name="radio_stations">Stacje</string>
     <string name="skill_qr_hint">Otwórz go w telefonie lub przekaż link agentowi: zainstaluje wtyczkę i sparuje się kodem z tego ekranu. W kodzie nie ma hasła ani tokenu.</string>
     <string name="skill_qr_this_tv">ten telewizor</string>
+    <string name="web_settings_row">Ustawienia przez WWW</string>
+    <string name="web_settings_open">Otwórz ustawienia przez WWW</string>
+    <string name="web_settings_hint">Zeskanuj telefonem w tej samej sieci albo wpisz adres na komputerze. Potem zatwierdź tę przeglądarkę na telewizorze.</string>
+    <string name="web_approve_q">Pozwolić „%1$s” (%2$s) zmieniać ustawienia telewizora?</string>
+    <string name="web_approve_qr">Zeskanowano kod z tego telewizora.</string>
+    <string name="web_approve_typed">Adres wpisano ręcznie: zezwól tylko, jeśli to Twoje urządzenie.</string>
+    <string name="web_deny">Odmów</string>
+    <string name="web_allow_read">Zezwól tylko na odczyt</string>
+    <string name="web_allow">Zezwól</string>
     <string name="ai_stale">nieaktualne %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">brak wyników</string>

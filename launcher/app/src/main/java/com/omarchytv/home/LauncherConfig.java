@@ -497,6 +497,8 @@ final class LauncherConfig {
     final boolean randomWallpaper;
     /** v2.13 Plugins Engine: SpaceX TV (com.sighmon.spacex-tv) & Agent Desktop (io.github.tcballard.grokbot-desktop). */
     final boolean pluginSpacexTv;
+    /** v2.22 #163 the web settings page on :47800/settings/ (link.webSettings). */
+    final boolean webSettings;
     /** v2.22 #162 the Radio plugin (plugins.radio, off unless turned on) and its play / pause key (radio.key). */
     final boolean pluginRadio;
     final String radioKey;
@@ -740,6 +742,7 @@ final class LauncherConfig {
         shareTheme = lkc == null || lkc.optBoolean("shareTheme", true);
         tailscale = lkc != null && lkc.optBoolean("tailscale", false);
         notifySound = lkc == null || lkc.optBoolean("notifySound", true);
+        webSettings = lkc != null && lkc.optBoolean("webSettings", false);   // v2.22 #163, off by default
         Object ka = lkc == null ? null : lkc.opt("keepAlive");
         keepAlive = Boolean.TRUE.equals(ka) || "on".equals(ka) ? "on"
                 : Boolean.FALSE.equals(ka) || "off".equals(ka) ? "off" : "auto";

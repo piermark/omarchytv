@@ -193,6 +193,13 @@ ALLOWED_TOOLS = (
                                                                     "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office", "skill"]}},
                         "required": ["target"]},
     },
+    {"name": "tv_settings_get", "description": "The TV's settings (theme, Home, plugins, Home Assistant URL, agents…) as "
+                                              "{values, secrets}; secrets only say whether they are set.",
+     "inputSchema": {"type": "object", "properties": {"section": {"type": "string", "enum": [
+         "appearance", "home", "screensaver", "plugins", "homeassistant", "agents"]}}}},
+    {"name": "tv_settings_set", "description": "Change one TV setting, with the same checks as the web settings page "
+                                              "(e.g. key \"uiSize\", value \"large\").",
+     "inputSchema": {"type": "object", "properties": {"key": {"type": "string"}, "value": {}}, "required": ["key", "value"]}},
     {"name": "tv_skill_qr", "description": "Show the OmarchyTV agent skill as a QR on the TV, for the owner's phone or "
                                           "another agent. Only the public URL.",
      "inputSchema": {"type": "object", "properties": {}}},
@@ -306,6 +313,7 @@ TOOL_SCOPE = {
     "tv_radio_now": "read", "tv_radio": "control", "tv_open": "control",
     "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
     "tv_radio_sleep": "control", "tv_skill_qr": "control",
+    "tv_settings_get": "read", "tv_settings_set": "control",
     "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
@@ -530,6 +538,16 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         return c.request("DELETE", f"/v1/radio/stations/{sid}")
     if name == "tv_radio_sleep":
         return c.request("POST", "/v1/radio", {"action": "sleep", "minutes": int(args.get("minutes", 0))})
+    if name == "tv_settings_get":
+        sec = str(args.get("section", "") or "")
+        if sec and not sec.isalpha():
+            raise ValueError("bad section")
+        return c.request("GET", "/v1/settings" + (f"?section={sec}" if sec else ""))
+    if name == "tv_settings_set":
+        key = str(args.get("key", ""))
+        if not key or len(key) > 40 or "value" not in args:
+            raise ValueError("key and value")
+        return c.request("PATCH", "/v1/settings", {key: args["value"]})
     if name == "tv_skill_qr":
         return c.request("POST", "/v1/open", {"target": "skill"})
     if name == "tv_open":

@@ -30,6 +30,15 @@
   the bar; https://, http:// only on the LAN unless Settings allows it. `/v1/radio` gains `station`, `volume`,
   `sleep`; `/v1/radio/stations`; MCP `tv_radio_stations`, `tv_radio_station_add`, `tv_radio_station_remove`,
   `tv_radio_sleep`. `PUT /v1/plugins` from an older PC no longer drops switches it does not know. Android TV.
+- **Web settings** (#163, off by default): Connect Omarchy Linux › Web settings (logo menu) turns on
+  `http://<tv-ip>:47800/settings/` for a phone or a computer on the same network. Each browser is approved on the TV
+  (Deny / Allow read-only / Allow, Deny has the focus; the QR on the TV carries a one-time code so the dialog says
+  the request comes from it). The session is an app token in an `HttpOnly; SameSite=Strict` cookie, 30 days,
+  revocable like any app token; changes need the session's CSRF value and the page's own Origin; the page must be
+  opened by IP address (or a `*.ts.net` name), against DNS rebinding; strict CSP, no CORS. Theme, Home, screensaver,
+  plugins, Home Assistant (the token is written, never read back), agents, and app tokens. One list of settings for
+  the page, app tokens (`GET/PATCH /v1/settings`, `/v1/settings/schema`) and MCP (`tv_settings_get`,
+  `tv_settings_set`): a request with one bad value changes nothing.
 - **The agent skill from the TV** (#161): Settings › Grok Bot & AI › Get the agent skill shows the skills page as a
   QR, pinned to the installed version; "this TV" adds the TV's LAN address in the fragment (`#tv=…`, not sent to
   GitHub), never a token. `tv_skill_qr` and `tv_open` `skill`; `tools/skills-tarball.sh` packs the skills for a

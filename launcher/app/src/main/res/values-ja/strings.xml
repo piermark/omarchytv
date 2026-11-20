@@ -134,6 +134,15 @@
     <string name="radio_stations">ステーション</string>
     <string name="skill_qr_hint">スマホで開くか、リンクをエージェントに渡してください。プラグインをインストールし、この画面のコードでペアリングします。コードにパスワードやトークンは含まれません。</string>
     <string name="skill_qr_this_tv">このテレビ</string>
+    <string name="web_settings_row">Web設定</string>
+    <string name="web_settings_open">Web設定を開く</string>
+    <string name="web_settings_hint">同じネットワークのスマホで読み取るか、パソコンでアドレスを入力してください。その後、テレビでそのブラウザを許可します。</string>
+    <string name="web_approve_q">「%1$s」(%2$s)にテレビの設定変更を許可しますか？</string>
+    <string name="web_approve_qr">このテレビに表示されたコードを読み取りました。</string>
+    <string name="web_approve_typed">アドレスは手入力されました。自分の端末の場合のみ許可してください。</string>
+    <string name="web_deny">拒否</string>
+    <string name="web_allow_read">読み取りのみ許可</string>
+    <string name="web_allow">許可</string>
     <string name="ai_stale">古いデータ %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">一致なし</string>

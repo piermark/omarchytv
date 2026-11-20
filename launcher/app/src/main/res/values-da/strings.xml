@@ -134,6 +134,15 @@
     <string name="radio_stations">Stationer</string>
     <string name="skill_qr_hint">Åbn den på telefonen, eller giv linket til din agent: den installerer pluginnet og parrer med koden på denne skærm. Ingen adgangskode eller token i koden.</string>
     <string name="skill_qr_this_tv">dette tv</string>
+    <string name="web_settings_row">Webindstillinger</string>
+    <string name="web_settings_open">Åbn webindstillinger</string>
+    <string name="web_settings_hint">Scan den med en telefon på samme netværk, eller skriv adressen på en computer. Godkend derefter browseren på tv\'et.</string>
+    <string name="web_approve_q">Tillad “%1$s” (%2$s) at ændre tv\'ets indstillinger?</string>
+    <string name="web_approve_qr">Den scannede koden, der vises på dette tv.</string>
+    <string name="web_approve_typed">Adressen blev skrevet i hånden: tillad kun, hvis det er din enhed.</string>
+    <string name="web_deny">Afvis</string>
+    <string name="web_allow_read">Tillad kun læsning</string>
+    <string name="web_allow">Tillad</string>
     <string name="ai_stale">forældet %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">intet resultat</string>

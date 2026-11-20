@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>OmarchyTV · Settings</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1><span class="mark">▌</span> OmarchyTV <span class="dim">settings</span></h1>
+  <span id="who" class="dim"></span>
+</header>
+<main id="main">
+  <section id="connect" class="card" hidden>
+    <h2>Connect this browser</h2>
+    <p>The TV asks once if this browser may change its settings. Answer with the remote.</p>
+    <label>Name shown on the TV <input id="device" maxlength="32" autocomplete="off"></label>
+    <button id="ask" type="button">Ask the TV</button>
+    <p id="connect-msg" class="msg" role="status"></p>
+  </section>
+  <nav id="tabs" hidden></nav>
+  <div id="panes"></div>
+</main>
+<footer class="dim">Plain HTTP on your network, like the rest of OmarchyTV's link. From outside the home, use Tailscale.</footer>
+<script type="module" src="app.js"></script>
+</body>
+</html>

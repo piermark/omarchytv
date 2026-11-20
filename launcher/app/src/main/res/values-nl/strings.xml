@@ -134,6 +134,15 @@
     <string name="radio_stations">Zenders</string>
     <string name="skill_qr_hint">Open hem op je telefoon of geef de link aan je agent: die installeert de plugin en koppelt met de code op dit scherm. Geen wachtwoord of token in de code.</string>
     <string name="skill_qr_this_tv">deze tv</string>
+    <string name="web_settings_row">Webinstellingen</string>
+    <string name="web_settings_open">Webinstellingen openen</string>
+    <string name="web_settings_hint">Scan hem met een telefoon op hetzelfde netwerk of typ het adres op een computer. Keur die browser daarna goed op de tv.</string>
+    <string name="web_approve_q">„%1$s” (%2$s) de instellingen van de tv laten wijzigen?</string>
+    <string name="web_approve_qr">Hij heeft de code van deze tv gescand.</string>
+    <string name="web_approve_typed">Het adres is met de hand getypt: sta het alleen toe als het jouw apparaat is.</string>
+    <string name="web_deny">Weigeren</string>
+    <string name="web_allow_read">Alleen lezen toestaan</string>
+    <string name="web_allow">Toestaan</string>
     <string name="ai_stale">verouderd %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">geen resultaat</string>

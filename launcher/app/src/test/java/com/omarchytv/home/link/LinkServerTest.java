@@ -63,7 +63,8 @@ public class LinkServerTest {
     Resp http(String method, String target, byte[] body, Map<String, String> headers) throws Exception {
         try (Socket s = new Socket(InetAddress.getLoopbackAddress(), port)) {
             s.setSoTimeout(5000);
-            StringBuilder h = new StringBuilder(method + " " + target + " HTTP/1.1\r\nHost: tv\r\nConnection: close\r\n");
+            boolean ownHost = headers != null && headers.containsKey("Host");
+            StringBuilder h = new StringBuilder(method + " " + target + " HTTP/1.1\r\n" + (ownHost ? "" : "Host: tv\r\n") + "Connection: close\r\n");
             if (headers != null) for (Map.Entry<String, String> e : headers.entrySet()) h.append(e.getKey()).append(": ").append(e.getValue()).append("\r\n");
             h.append("Content-Length: ").append(body.length).append("\r\n\r\n");
             OutputStream out = s.getOutputStream();
@@ -915,6 +916,114 @@ public class LinkServerTest {
                 new JSONObject().put("name", "tv_ha_status").put("arguments", new JSONObject())).toString(), nfy);
         assertEquals(200, m.status);
         assertTrue(m.json().toString().contains("configured"));
+    }
+
+    Resp web(String method, String target, String body, String cookie, String csrf, String origin) throws Exception {
+        Map<String, String> h = new java.util.LinkedHashMap<>();
+        h.put("Host", "127.0.0.1:" + port);
+        if (body != null) h.put("Content-Type", "application/json");
+        if (cookie != null) h.put("Cookie", "theme=x; otv_web=" + cookie);
+        if (csrf != null) h.put("X-Omarchy-CSRF", csrf);
+        if (origin != null) h.put("Origin", origin);
+        return http(method, target, body == null ? new byte[0] : body.getBytes(StandardCharsets.UTF_8), h);
+    }
+
+    /** Asks for a session as a browser, answers {@code choice} on the "TV"; returns the poll's response. */
+    Resp webApprove(String choice) throws Exception {
+        String origin = "http://127.0.0.1:" + port;
+        Resp ask = web("POST", "/v1/settings/session", "{\"device\":\"Firefox on Linux\"}", null, null, origin);
+        assertEquals(200, ask.status);
+        String id = ask.json().getString("id");
+        assertEquals(id, host.webAsk);
+        assertTrue(server.answerAsk(id, choice));
+        return web("GET", "/v1/settings/session/" + id, null, null, null, null);
+    }
+
+    static String cookieOf(Resp r) {
+        String c = r.headers.get("set-cookie");
+        assertTrue(c, c.contains("HttpOnly") && c.contains("SameSite=Strict"));
+        return c.substring("otv_web=".length(), c.indexOf(';'));
+    }
+
+    @Test
+    public void webSettingsAreOffUntilTurnedOnAndNeedTheTv() throws Exception {   // v2.22 #163
+        String origin = "http://127.0.0.1:" + port;
+        assertEquals(404, web("GET", "/settings/", null, null, null, null).status);
+        assertEquals(404, web("POST", "/v1/settings/session", "{}", null, null, origin).status);
+        host.editConfig(j -> j.put("link", new JSONObject().put("webSettings", true)));
+        Resp page = web("GET", "/settings/", null, null, null, null);
+        assertEquals(200, page.status);
+        assertTrue(page.headers.get("content-security-policy").contains("default-src 'none'"));
+        assertEquals("DENY", page.headers.get("x-frame-options"));
+        assertEquals(404, web("GET", "/settings/../link.json", null, null, null, null).status);
+        // a name instead of the IP (DNS rebinding), another site's Origin
+        Map<String, String> h = new HashMap<>();
+        h.put("Host", "evil.example:" + port);
+        assertEquals(403, http("GET", "/settings/", new byte[0], h).status);
+        assertEquals(403, web("POST", "/v1/settings/session", "{}", null, null, "http://evil.example").status);
+        assertEquals(401, web("GET", "/v1/settings", null, null, null, null).status);
+        // denied, then read-only
+        assertEquals("denied", webApprove("Deny").json().getString("state"));
+        server.limits = false;   // the next approvals come at once (one every 30 s per address otherwise)
+        Resp ro = webApprove("Allow read-only");
+        assertEquals("read", ro.json().getString("scope"));
+        String rc = cookieOf(ro);
+        assertEquals(200, web("GET", "/v1/settings", null, rc, null, null).status);
+        String rcsrf = web("GET", "/v1/settings/me", null, rc, null, null).json().getString("csrf");
+        assertEquals(403, web("PATCH", "/v1/settings", "{\"uiSize\":\"large\"}", rc, rcsrf, origin).status);
+        // allowed
+        Resp ok = webApprove("Allow");
+        String c = cookieOf(ok), csrf = ok.json().getString("csrf");
+        assertFalse(ok.json().toString().contains(c));   // the token only travels in the cookie
+        assertEquals(403, web("PATCH", "/v1/settings", "{\"uiSize\":\"large\"}", c, null, origin).status);
+        assertEquals(403, web("PATCH", "/v1/settings", "{\"uiSize\":\"large\"}", c, "0".repeat(32), origin).status);
+        assertEquals(403, web("PATCH", "/v1/settings", "{\"uiSize\":\"large\"}", c, csrf, null).status);
+        assertEquals(200, web("PATCH", "/v1/settings", "{\"uiSize\":\"large\",\"plugins.radio\":true}", c, csrf, origin).status);
+        assertEquals("large", host.readConfig().getString("uiSize"));
+        assertTrue(host.readConfig().getJSONObject("plugins").getBoolean("radio"));
+        // one bad value: nothing is written
+        Resp bad = web("PATCH", "/v1/settings", "{\"uiSize\":\"small\",\"theme\":\"nope\"}", c, csrf, origin);
+        assertEquals(400, bad.status);
+        assertEquals("large", host.readConfig().getString("uiSize"));
+        assertEquals(400, web("PATCH", "/v1/settings", "{\"link.pcs\":1}", c, csrf, origin).status);
+        // Home Assistant: the token is set, never read back
+        assertEquals(200, web("PATCH", "/v1/settings", "{\"ha.url\":\"http://192.168.1.5:8123/\",\"ha.token\":\"abc.def\"}", c, csrf, origin).status);
+        assertEquals("abc.def", host.haToken);
+        JSONObject got = web("GET", "/v1/settings", null, c, null, null).json();
+        assertEquals("http://192.168.1.5:8123", got.getJSONObject("values").getString("ha.url"));
+        assertTrue(got.getJSONObject("secrets").getJSONObject("ha.token").getBoolean("set"));
+        assertFalse(got.toString().contains("abc.def"));
+        web("PATCH", "/v1/settings", "{\"ha.url\":\"http://192.168.1.6:8123\"}", c, csrf, origin);
+        assertEquals("", host.haToken);   // a new address forgets the old token
+        // tokens from the page; revoking the browser's own token ends the session
+        Resp nt = web("POST", "/v1/settings/tokens", "{\"name\":\"hermes\",\"scope\":\"notify\"}", c, csrf, origin);
+        assertEquals(200, nt.status);
+        assertEquals(400, web("POST", "/v1/settings/tokens", "{\"name\":\"web · x\",\"scope\":\"notify\"}", c, csrf, origin).status);
+        assertEquals(403, web("GET", "/v1/settings/tokens", null, rc, null, null).status);
+        assertNull(web("GET", "/v1/settings", null, c, null, null).headers.get("access-control-allow-origin"));
+        Resp out = web("DELETE", "/v1/settings/session", null, c, csrf, origin);
+        assertEquals(200, out.status);
+        assertTrue(out.headers.get("set-cookie").contains("Max-Age=0"));
+        assertEquals(401, web("GET", "/v1/settings", null, c, null, null).status);
+        // the same settings for app tokens and MCP
+        pair("123456");
+        String ctl = appToken("hermes2", "control");
+        assertEquals(200, app("PATCH", "/v1/settings", "{\"tempUnit\":\"F\"}", ctl).status);
+        assertEquals("F", host.readConfig().getString("tempUnit"));
+        JSONObject schema = app("GET", "/v1/settings/schema", "", ctl).json();
+        assertEquals(1, schema.getInt("version"));
+    }
+
+    @Test
+    public void webApprovalsAreLimited() throws Exception {
+        String origin = "http://127.0.0.1:" + port;
+        host.editConfig(j -> j.put("link", new JSONObject().put("webSettings", true)));
+        assertEquals(200, web("POST", "/v1/settings/session", "{}", null, null, origin).status);
+        assertEquals(429, web("POST", "/v1/settings/session", "{}", null, null, origin).status);   // one every 30 s
+        String id = server.web.pendingIds().get(0);
+        assertFalse(server.answerAsk(id, "Something else"));
+        Resp other = web("GET", "/v1/settings/session/0123456789abcdef", null, null, null, null);
+        assertEquals(404, other.status);
     }
 
     @Test

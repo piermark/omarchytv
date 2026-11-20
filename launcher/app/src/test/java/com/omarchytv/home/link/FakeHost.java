@@ -112,6 +112,38 @@ class FakeHost implements LinkServer.Host {
     String[][] apps = {{"com.netflix.ninja", "Netflix"}, {"com.amazon.amazonvideo.livingroom", "Prime Video"},
             {"com.google.android.youtube.tv", "YouTube"}, {"com.disney.disneyplus", "Disney+"}};
 
+    // v2.22 #163 web settings
+    volatile String webAsk;   // the id of the last approval shown on the "TV"
+    volatile String haUrl = "", haToken = "";
+
+    @Override public String approveWeb(String id, String device, String peer, boolean fromQr, List<String> choices, long deadlineMs) {
+        webAsk = id;
+        return null;
+    }
+
+    @Override public java.util.Map<String, List<String>> settingsChoices() {
+        java.util.Map<String, List<String>> m = new java.util.HashMap<>();
+        m.put("theme", java.util.Arrays.asList("last-horizon", "tokyo-night"));
+        m.put("language", java.util.Arrays.asList("en", "it"));
+        return m;
+    }
+
+    @Override public JSONObject haConfig() throws org.json.JSONException {
+        return new JSONObject().put("url", haUrl).put("tokenSet", !haToken.isEmpty());
+    }
+
+    @Override public void haConfigure(String url, String token) {
+        if (url != null) {
+            if (token == null && !url.equals(haUrl)) haToken = "";
+            haUrl = url;
+        }
+        if (token != null) haToken = token;
+    }
+
+    @Override public byte[] settingsAsset(String name) {
+        return "index.html".equals(name) ? "<!doctype html><p>settings".getBytes(StandardCharsets.UTF_8) : null;
+    }
+
     @Override public String tvName() { return "Harness BRAVIA"; }
     @Override public boolean pairingOpen() { return pairingOpen; }
     @Override public String pairingCode() { return code; }

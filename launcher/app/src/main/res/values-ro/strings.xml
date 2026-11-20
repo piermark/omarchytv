@@ -134,6 +134,15 @@
     <string name="radio_stations">Posturi</string>
     <string name="skill_qr_hint">Deschide-l pe telefon sau dă linkul agentului tău: instalează pluginul și se asociază cu codul de pe acest ecran. Fără parolă sau token în cod.</string>
     <string name="skill_qr_this_tv">acest televizor</string>
+    <string name="web_settings_row">Setări web</string>
+    <string name="web_settings_open">Deschide setările web</string>
+    <string name="web_settings_hint">Scanează-l cu un telefon din aceeași rețea sau scrie adresa pe un computer. Apoi aprobă browserul pe televizor.</string>
+    <string name="web_approve_q">Permiți ca „%1$s” (%2$s) să schimbe setările televizorului?</string>
+    <string name="web_approve_qr">A scanat codul afișat pe acest televizor.</string>
+    <string name="web_approve_typed">Adresa a fost scrisă de mână: permite doar dacă e dispozitivul tău.</string>
+    <string name="web_deny">Refuză</string>
+    <string name="web_allow_read">Permite doar citire</string>
+    <string name="web_allow">Permite</string>
     <string name="ai_stale">vechi %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">niciun rezultat</string>

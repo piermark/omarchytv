@@ -133,6 +133,15 @@
     <string name="radio_stations">Sender</string>
     <string name="skill_qr_hint">Öffne ihn auf dem Handy oder gib den Link deinem Agenten: er installiert das Plugin und koppelt mit dem Code auf diesem Bildschirm. Kein Passwort oder Token im Code.</string>
     <string name="skill_qr_this_tv">dieser Fernseher</string>
+    <string name="web_settings_row">Web-Einstellungen</string>
+    <string name="web_settings_open">Web-Einstellungen öffnen</string>
+    <string name="web_settings_hint">Mit einem Handy im selben Netz scannen oder die Adresse am Computer eingeben. Dann den Browser am Fernseher erlauben.</string>
+    <string name="web_approve_q">„%1$s“ (%2$s) erlauben, die Einstellungen des Fernsehers zu ändern?</string>
+    <string name="web_approve_qr">Es hat den Code von diesem Fernseher gescannt.</string>
+    <string name="web_approve_typed">Die Adresse wurde von Hand eingegeben: nur erlauben, wenn es dein Gerät ist.</string>
+    <string name="web_deny">Ablehnen</string>
+    <string name="web_allow_read">Nur lesen erlauben</string>
+    <string name="web_allow">Erlauben</string>
     <string name="ai_stale">veraltet %1$s</string>
     <string name="search_entry">> search</string>
     <string name="search_none">kein Treffer</string>

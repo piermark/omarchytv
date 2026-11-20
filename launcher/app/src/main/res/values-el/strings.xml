@@ -134,6 +134,15 @@
     <string name="radio_stations">Σταθμοί</string>
     <string name="skill_qr_hint">Ανοίξτε το στο κινητό ή δώστε τον σύνδεσμο στον πράκτορά σας: εγκαθιστά το πρόσθετο και συνδέεται με τον κωδικό αυτής της οθόνης. Χωρίς κωδικό πρόσβασης ή token.</string>
     <string name="skill_qr_this_tv">αυτή η TV</string>
+    <string name="web_settings_row">Ρυθμίσεις web</string>
+    <string name="web_settings_open">Άνοιγμα ρυθμίσεων web</string>
+    <string name="web_settings_hint">Σαρώστε το με κινητό στο ίδιο δίκτυο ή πληκτρολογήστε τη διεύθυνση σε υπολογιστή. Μετά εγκρίνετε τον browser στην TV.</string>
+    <string name="web_approve_q">Να επιτραπεί στο «%1$s» (%2$s) να αλλάζει τις ρυθμίσεις της TV;</string>
+    <string name="web_approve_qr">Σάρωσε τον κωδικό που δείχνει αυτή η TV.</string>
+    <string name="web_approve_typed">Η διεύθυνση γράφτηκε με το χέρι: επιτρέψτε μόνο αν είναι δική σας συσκευή.</string>
+    <string name="web_deny">Άρνηση</string>
+    <string name="web_allow_read">Μόνο ανάγνωση</string>
+    <string name="web_allow">Να επιτραπεί</string>
     <string name="ai_stale">παλιό %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">κανένα αποτέλεσμα</string>

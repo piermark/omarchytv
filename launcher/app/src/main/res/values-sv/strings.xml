@@ -134,6 +134,15 @@
     <string name="radio_stations">Kanaler</string>
     <string name="skill_qr_hint">Öppna den i mobilen eller ge länken till din agent: den installerar pluginet och parkopplar med koden på den här skärmen. Inget lösenord eller token i koden.</string>
     <string name="skill_qr_this_tv">den här tv:n</string>
+    <string name="web_settings_row">Webbinställningar</string>
+    <string name="web_settings_open">Öppna webbinställningar</string>
+    <string name="web_settings_hint">Skanna den med en mobil i samma nätverk eller skriv adressen på en dator. Godkänn sedan webbläsaren på tv:n.</string>
+    <string name="web_approve_q">Tillåta ”%1$s” (%2$s) att ändra tv:ns inställningar?</string>
+    <string name="web_approve_qr">Den skannade koden som visas på den här tv:n.</string>
+    <string name="web_approve_typed">Adressen skrevs för hand: tillåt bara om det är din enhet.</string>
+    <string name="web_deny">Neka</string>
+    <string name="web_allow_read">Tillåt bara läsning</string>
+    <string name="web_allow">Tillåt</string>
     <string name="ai_stale">gammal %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">ingen träff</string>

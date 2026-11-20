@@ -1494,6 +1494,81 @@ public final class OmarchyLink implements LinkServer.Host {
     }
 
     @Override
+    public byte[] settingsAsset(String name) {   // v2.22 #163 assets/settings/ (WebAccess checked the name)
+        try (java.io.InputStream in = app.getAssets().open("settings/" + name)) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] b = new byte[8192];
+            int n;
+            while ((n = in.read(b)) > 0) out.write(b, 0, n);
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public java.util.Map<String, java.util.List<String>> settingsChoices() {
+        java.util.Map<String, java.util.List<String>> m = new java.util.HashMap<>();
+        m.put("theme", java.util.Arrays.asList(Theme.names(app)));
+        m.put("language", java.util.Arrays.asList(LauncherConfig.LANGUAGES));
+        return m;
+    }
+
+    @Override
+    public JSONObject haConfig() throws org.json.JSONException {
+        return new JSONObject().put("url", com.omarchytv.home.lights.LightsStore.get(app, "ha_url"))
+                .put("tokenSet", com.omarchytv.home.lights.LightsStore.hasSecret(app, "ha_token"));
+    }
+
+    @Override
+    public void haConfigure(String url, String token) {
+        String old = com.omarchytv.home.lights.LightsStore.get(app, "ha_url");
+        if (url != null) {
+            com.omarchytv.home.lights.LightsStore.put(app, "ha_url", url);
+            if (token == null && !url.equals(old)) com.omarchytv.home.lights.LightsStore.put(app, "ha_token", "");   // not to a new address
+        }
+        if (token != null) com.omarchytv.home.lights.LightsStore.put(app, "ha_token", token);
+        log("web settings: Home Assistant " + (url != null ? "URL" : "") + (url != null && token != null ? " and " : "") + (token != null ? "token" : "") + " changed");
+        emit("config", new JSONObject());
+    }
+
+    @Override
+    public java.util.List<String> webChoices() {
+        return java.util.Arrays.asList(app.getString(R.string.web_deny), app.getString(R.string.web_allow_read), app.getString(R.string.web_allow));
+    }
+
+    @Override
+    public String approveWeb(String id, String device, String peer, boolean fromQr, java.util.List<String> choices, long deadlineMs) {
+        if (!LauncherConfig.get(app).webSettings) return "off";
+        String q = app.getString(R.string.web_approve_q, device, peer);
+        String detail = app.getString(fromQr ? R.string.web_approve_qr : R.string.web_approve_typed);
+        main.post(() -> {
+            try {
+                app.startActivity(AgentQuestionActivity.intent(app, id, app.getString(R.string.web_settings_row), q, choices, deadlineMs)
+                        .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "web approval: " + e);
+            }
+        });
+        return null;
+    }
+
+    @Override
+    public JSONObject webTheme() {
+        try {
+            return ThemeShare.payload(Theme.cur(), null, ThemeShare.source(themeCfg()));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** v2.22 #163 a one-time code for the web settings QR; null when the link is not running. */
+    static String webCode() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.newWebCode() : null;
+    }
+
+    @Override
     public byte[] sdk() {
         try (java.io.InputStream in = app.getAssets().open("sdk/omarchytv.js")) {
             java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();

@@ -35,6 +35,7 @@ TOOL_SCOPE = {
     "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
     "tv_radio_sleep": "control",
     "tv_skill_qr": "control",   # v2.22 #161
+    "tv_settings_get": "read", "tv_settings_set": "control",   # v2.22 #163
 }
 
 # v2.21 tools this PC answers itself (they push to the TV with the link it already has)

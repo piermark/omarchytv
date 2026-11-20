@@ -134,6 +134,15 @@
     <string name="radio_stations">Estações</string>
     <string name="skill_qr_hint">Abra no telemóvel ou dê o link ao seu agente: instala o plugin e emparelha com o código deste ecrã. Sem palavra-passe nem token no código.</string>
     <string name="skill_qr_this_tv">esta TV</string>
+    <string name="web_settings_row">Definições web</string>
+    <string name="web_settings_open">Abrir as definições web</string>
+    <string name="web_settings_hint">Leia-o com um telemóvel na mesma rede ou escreva o endereço num computador. Depois aprove esse navegador na TV.</string>
+    <string name="web_approve_q">Permitir que «%1$s» (%2$s) altere as definições da TV?</string>
+    <string name="web_approve_qr">Leu o código mostrado nesta TV.</string>
+    <string name="web_approve_typed">O endereço foi escrito à mão: permita só se for o seu dispositivo.</string>
+    <string name="web_deny">Recusar</string>
+    <string name="web_allow_read">Permitir só leitura</string>
+    <string name="web_allow">Permitir</string>
     <string name="ai_stale">antigo %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">sem resultados</string>

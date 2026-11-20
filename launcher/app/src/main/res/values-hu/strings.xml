@@ -134,6 +134,15 @@
     <string name="radio_stations">Állomások</string>
     <string name="skill_qr_hint">Nyisd meg a telefonon, vagy add a linket az ügynöködnek: telepíti a bővítményt, és a képernyőn lévő kóddal párosít. A kódban nincs jelszó vagy token.</string>
     <string name="skill_qr_this_tv">ez a TV</string>
+    <string name="web_settings_row">Webes beállítások</string>
+    <string name="web_settings_open">Webes beállítások megnyitása</string>
+    <string name="web_settings_hint">Olvasd be egy ugyanazon a hálózaton lévő telefonnal, vagy írd be a címet egy számítógépen. Utána engedélyezd a böngészőt a TV-n.</string>
+    <string name="web_approve_q">Megengeded, hogy „%1$s” (%2$s) módosítsa a TV beállításait?</string>
+    <string name="web_approve_qr">A TV-n látható kódot olvasta be.</string>
+    <string name="web_approve_typed">A címet kézzel írták be: csak akkor engedd, ha a te eszközöd.</string>
+    <string name="web_deny">Elutasítás</string>
+    <string name="web_allow_read">Csak olvasás</string>
+    <string name="web_allow">Engedélyezés</string>
     <string name="ai_stale">elavult %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">nincs találat</string>

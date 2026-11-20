@@ -3783,6 +3783,28 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
             return true;
         });
+        // v2.22 #163: the web settings page, off by default; each browser is approved here, once
+        boolean webOn = LauncherConfig.get(this).webSettings;
+        p.add(str(R.string.web_settings_row), str(webOn ? R.string.on : R.string.off), r -> {
+            boolean n = !LauncherConfig.get(this).webSettings;
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject l = j.optJSONObject("link");
+                if (l == null) j.put("link", l = new org.json.JSONObject());
+                l.put("webSettings", n);
+            });
+            r.setValue(str(n ? R.string.on : R.string.off));
+            refreshMenu("link");
+            return true;
+        });
+        if (webOn) {
+            p.add(str(R.string.web_settings_open), "QR ›", r -> {
+                String wIp = OmarchyLink.lanIp(), wCode = OmarchyLink.webCode();
+                if (wIp == null || wCode == null) return true;
+                String url = "http://" + wIp + ":" + com.omarchytv.home.link.LinkServer.PORT + "/settings/?code=" + wCode;
+                handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.web_settings_row), url, str(R.string.web_settings_hint), true)));
+                return false;
+            });
+        }
         // v2.21: GET /v1/theme, the theme for dashboards and agent pages on the network (on by default).
         p.add(str(R.string.link_share_theme), str(LauncherConfig.get(this).shareTheme ? R.string.on : R.string.off), r -> {
             boolean n = !LauncherConfig.get(this).shareTheme;

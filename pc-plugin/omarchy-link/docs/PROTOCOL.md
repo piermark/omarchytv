@@ -511,6 +511,28 @@ plugin: bar pill with the mini panel and the `radio` widget), `radio.key` (`off`
 `play_pause`), `radio.stations`. MCP: `tv_radio_now`, `tv_radio_stations` (read), `tv_radio`,
 `tv_radio_station_add`, `tv_radio_station_remove`, `tv_radio_sleep` (control).
 
+### Settings (`/v1/settings`, v2.22, #163)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/settings/schema` | read | `{version, sections: [{id, label, fields: [{key, type, label, values?, min?, max?, maxLength?, default?}]}]}` |
+| GET | `/v1/settings?section=…` | read | `{values: {key: value}, secrets: {key: {set}}, rev}`; a secret's value is never returned |
+| PATCH | `/v1/settings` | control | `{key: value, …}`: every value is checked first, one bad value → 400 `bad_value` and nothing changes |
+
+Types: `bool`, `int`, `number` (`null` clears), `enum`, `string`, `url` (`http(s)://host[:port]`), `secret`. Keys are
+paths in omarchytv.json (`plugins.radio`, `link.notifySound`), except `ha.url` / `ha.token`, kept in the TV's private
+store; a new `ha.url` without a new token forgets the old token. Event: `settings_changed {keys}`. MCP:
+`tv_settings_get {section?}` (read), `tv_settings_set {key, value}` (control).
+
+**The web page** (`link.webSettings`, off by default): `GET /settings/` (CSP `default-src 'none'`, no frames, no
+referrer). `POST /v1/settings/session {device, code?}` (one per address every 30 s, three waiting) shows Deny / Allow
+read-only / Allow on the TV; `GET /v1/settings/session/{id}` (long poll, only from the asking address) answers
+`pending | denied | expired | approved` and, when approved, sets `otv_web` (an app token named `web · <device>`,
+scope read or control, 30 days) as an `HttpOnly; SameSite=Strict` cookie. With the cookie: `GET /v1/settings/me`
+(`{device, scope, csrf}`), `GET /v1/settings/theme`, `DELETE /v1/settings/session` (sign out), `GET/POST
+/v1/settings/tokens`, `DELETE /v1/settings/tokens/{id}` (control), and the app routes above. Every write needs
+`X-Omarchy-CSRF` and `Origin: http://<Host>`; the Host must be an IP address or a `*.ts.net` name. No CORS headers.
+
 ### AI credits (`PUT /v1/ai`)
 
 ```json

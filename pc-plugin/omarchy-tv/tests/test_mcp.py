@@ -228,6 +228,13 @@ class TestMcpV221(unittest.TestCase):
         self.assertEqual(len(sent), n)
         call("tv_radio_sleep", {"minutes": 30})
         self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "sleep", "minutes": 30}))
+        call("tv_settings_get", {"section": "plugins"}, "read")   # v2.22 #163
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/settings?section=plugins"))
+        call("tv_settings_set", {"key": "uiSize", "value": "large"})
+        self.assertEqual(sent[-1], ("PATCH", "/v1/settings", {"uiSize": "large"}))
+        n = len(sent)
+        self.assertIn("error", call("tv_settings_set", {"key": "uiSize", "value": "large"}, "read"))
+        self.assertEqual(len(sent), n)
         call("tv_skill_qr", {})   # v2.22 #161
         self.assertEqual(sent[-1], ("POST", "/v1/open", {"target": "skill"}))
 

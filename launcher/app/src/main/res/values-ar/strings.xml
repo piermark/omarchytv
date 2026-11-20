@@ -134,6 +134,15 @@
     <string name="radio_stations">المحطات</string>
     <string name="skill_qr_hint">افتحه على هاتفك أو أعطِ الرابط لوكيلك: يثبّت الإضافة ويقترن بالرمز الظاهر على هذه الشاشة. لا كلمة مرور ولا رمز وصول في الرمز.</string>
     <string name="skill_qr_this_tv">هذا التلفاز</string>
+    <string name="web_settings_row">إعدادات الويب</string>
+    <string name="web_settings_open">فتح إعدادات الويب</string>
+    <string name="web_settings_hint">امسحه بهاتف على الشبكة نفسها أو اكتب العنوان على حاسوب. ثم وافق على ذلك المتصفح من التلفاز.</string>
+    <string name="web_approve_q">هل تسمح لـ «%1$s» (%2$s) بتغيير إعدادات التلفاز؟</string>
+    <string name="web_approve_qr">لقد مسح الرمز الظاهر على هذا التلفاز.</string>
+    <string name="web_approve_typed">كُتب العنوان يدويًا: اسمح فقط إن كان جهازك.</string>
+    <string name="web_deny">رفض</string>
+    <string name="web_allow_read">السماح بالقراءة فقط</string>
+    <string name="web_allow">السماح</string>
     <string name="ai_stale">قديم %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">لا توجد نتائج</string>

@@ -134,6 +134,15 @@
     <string name="radio_stations">Stations</string>
     <string name="skill_qr_hint">Ouvrez-le sur votre téléphone ou donnez le lien à votre agent : il installe le plugin et s’appaire avec le code affiché ici. Aucun mot de passe ni jeton dans le code.</string>
     <string name="skill_qr_this_tv">cette TV</string>
+    <string name="web_settings_row">Réglages web</string>
+    <string name="web_settings_open">Ouvrir les réglages web</string>
+    <string name="web_settings_hint">Scannez-le avec un téléphone sur le même réseau ou tapez l\'adresse sur un ordinateur. Puis autorisez ce navigateur sur la TV.</string>
+    <string name="web_approve_q">Autoriser « %1$s » (%2$s) à modifier les réglages de la TV ?</string>
+    <string name="web_approve_qr">Il a scanné le code affiché sur cette TV.</string>
+    <string name="web_approve_typed">L\'adresse a été tapée à la main : n\'autorisez que si c\'est votre appareil.</string>
+    <string name="web_deny">Refuser</string>
+    <string name="web_allow_read">Autoriser en lecture seule</string>
+    <string name="web_allow">Autoriser</string>
     <string name="ai_stale">ancien %1$s</string>
     <string name="search_entry">&gt; search</string>
     <string name="search_none">aucun résultat</string>
