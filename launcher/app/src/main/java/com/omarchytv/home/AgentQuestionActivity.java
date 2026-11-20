@@ -103,7 +103,7 @@ public class AgentQuestionActivity extends Activity {
             sv.setBackground(sb);
             sv.setOnFocusChangeListener((v, f) -> sb.setStroke((int) dp(f ? 2 : 1), f ? t.accent : t.muted));
             TextView dt = new TextView(this);
-            dt.setText(detail);
+            dt.setText(coloured(detail, t.green, t.red));   // a diff: "+ " lines green, "- " lines red
             dt.setTextColor(t.fg);
             dt.setTypeface(android.graphics.Typeface.MONOSPACE);
             dt.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
@@ -199,6 +199,21 @@ public class AgentQuestionActivity extends Activity {
             if (!c.equals("allow") && !c.equals("yes") && !c.equals("ok") && !c.startsWith("approve")) return i;
         }
         return 0;
+    }
+
+    /** v2.22: the detail with "+ " lines in the theme's green and "- " lines in its red (diffs); other text as is. */
+    static CharSequence coloured(String detail, int plus, int minus) {
+        android.text.SpannableStringBuilder sb = new android.text.SpannableStringBuilder(detail);
+        int start = 0;
+        for (String line : detail.split("\n", -1)) {
+            int end = start + line.length();
+            if (line.startsWith("+ ") || line.startsWith("- ")) {
+                sb.setSpan(new android.text.style.ForegroundColorSpan(line.charAt(0) == '+' ? plus : minus), start, end,
+                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            start = end + 1;
+        }
+        return sb;
     }
 
     /** For tests: the choices as given. */

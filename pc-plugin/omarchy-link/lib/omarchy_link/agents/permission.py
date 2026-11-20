@@ -40,12 +40,60 @@ def spoken(p: dict) -> str:
     what = ti.get("command") or ti.get("file_path") or ti.get("url") or ti.get("pattern") or ti.get("description") or ""
     what = " ".join(str(what).split())
     where = Path(str(p.get("cwd") or "")).name
-    return (f"Claude Code{', project ' + where if where else ''} wants to use {tool}" + (f": {what}" if what else "."))[:300]
+    head = f"Claude Code{', project ' + where if where else ''}"
+    pairs = _edits(p)
+    if pairs:   # a diff read aloud is noise: say which file and how big the change is, the screen shows it
+        _, rm, add = _diff(pairs)
+        name = Path(str(ti.get("file_path") or ti.get("notebook_path") or "a file")).name
+        return f"{head} wants to change {name}: {add} lines added, {rm} removed. The diff is on screen."[:300]
+    return (f"{head} wants to use {tool}" + (f": {what}" if what else "."))[:300]
+
+
+def _edits(p: dict) -> list:
+    """(old, new) pairs of a file change: Edit, MultiEdit, Write (old is empty), NotebookEdit."""
+    ti = p.get("tool_input") if isinstance(p.get("tool_input"), dict) else {}
+    tool = str(p.get("tool_name") or "")
+    if tool == "MultiEdit" and isinstance(ti.get("edits"), list):
+        return [(str(e.get("old_string", "")), str(e.get("new_string", ""))) for e in ti["edits"] if isinstance(e, dict)]
+    if "old_string" in ti or "new_string" in ti:
+        return [(str(ti.get("old_string", "")), str(ti.get("new_string", "")))]
+    if tool == "Write" and "content" in ti:
+        return [("", str(ti.get("content", "")))]
+    if "new_source" in ti:
+        return [("", str(ti.get("new_source", "")))]
+    return []
+
+
+def _diff(pairs: list) -> tuple:
+    """The changed lines as "- old" / "+ new" (with a little context), and how many were removed and added."""
+    import difflib
+    out, rm, add = [], 0, 0
+    for old, new in pairs:
+        if out:
+            out.append("···")
+        for line in difflib.unified_diff(old.splitlines(), new.splitlines(), lineterm="", n=1):
+            if line.startswith(("---", "+++", "@@")):
+                continue
+            if line.startswith("-"):
+                rm += 1
+                out.append("- " + line[1:])
+            elif line.startswith("+"):
+                add += 1
+                out.append("+ " + line[1:])
+            else:
+                out.append("  " + line[1:])
+    return out, rm, add
 
 
 def detail(p: dict) -> str:
-    """v2.22 the whole command (or path, URL…) shown under the question on the TV, scrollable; the TV keeps 2000."""
+    """v2.22 shown under the question on the TV, scrollable (the TV keeps 40 lines, 2000 characters): the whole
+    command, or for a file change the path and the diff."""
     ti = p.get("tool_input") if isinstance(p.get("tool_input"), dict) else {}
+    pairs = _edits(p)
+    if pairs:
+        lines, _, _ = _diff(pairs)
+        path = str(ti.get("file_path") or ti.get("notebook_path") or "")
+        return "\n".join(([path] if path else []) + lines)[:2000]
     what = ti.get("command") or ti.get("file_path") or ti.get("url") or ti.get("pattern") or ti.get("description") or ""
     return str(what)[:2000]
 

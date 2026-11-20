@@ -19,6 +19,9 @@
 - **A reflex OK never approves** (safety fix, found on X): the focus used to start on *Allow*, so an OK meant for the
   film approved. Now it starts on *On the PC* for Claude Code's approvals and never on Allow / Yes / OK / Approve for
   other questions, and OK is ignored for 1.5 s after a question appears.
+- **The diff for file changes**: when Claude Code wants to edit or write a file (Edit, MultiEdit, Write), the box
+  shows the path and the diff, `+` lines in the theme's green and `-` lines in its red. Read aloud it says only the
+  file and the size ("app.py: 2 lines added, 1 removed. The diff is on screen."). Asked on X.
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 

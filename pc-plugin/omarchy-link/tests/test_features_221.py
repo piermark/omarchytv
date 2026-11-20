@@ -155,6 +155,25 @@ class Approve(unittest.TestCase):
         self.assertNotIn("speak", sent[1])
         self.assertEqual(sent[1]["detail"], long)   # shown even without --speak
 
+    def test_file_changes_show_the_diff(self):   # v2.22: Edit / MultiEdit / Write show the diff on the TV
+        p = {"hook_event_name": "PermissionRequest", "tool_name": "Edit", "cwd": "/home/me/shop",
+             "tool_input": {"file_path": "/home/me/shop/app.py", "old_string": "a = 1\nb = 2\nc = 3",
+                            "new_string": "a = 1\nb = 20\nc = 3\nd = 4"}}
+        d = permission.detail(p)
+        self.assertEqual(d.splitlines()[0], "/home/me/shop/app.py")
+        self.assertIn("- b = 2", d)
+        self.assertIn("+ b = 20", d)
+        self.assertIn("+ d = 4", d)
+        self.assertEqual(permission.spoken(p),
+                         "Claude Code, project shop wants to change app.py: 2 lines added, 1 removed. The diff is on screen.")
+        m = dict(p, tool_name="MultiEdit", tool_input={"file_path": "/x/y.md", "edits": [
+            {"old_string": "one", "new_string": "uno"}, {"old_string": "two", "new_string": "due"}]})
+        self.assertIn("···", permission.detail(m))
+        self.assertIn("2 lines added, 2 removed", permission.spoken(m))
+        w = dict(p, tool_name="Write", tool_input={"file_path": "/x/new.txt", "content": "hello\nworld"})
+        self.assertEqual(permission.detail(w), "/x/new.txt\n+ hello\n+ world")
+        self.assertEqual(permission.detail(self.PAYLOAD), "git push origin main")   # commands unchanged
+
     def test_install_and_remove_keep_other_hooks(self):
         f = agent_ask.claude_settings()
         f.parent.mkdir(parents=True, exist_ok=True)
