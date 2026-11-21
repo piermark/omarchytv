@@ -10,7 +10,10 @@
  *           Deny has the focus, Approve waits 1.5 s);
  *   skills  the catalogue; installing shows the permissions in plain words (Cancel first, Install after 1.5 s);
  *   briefing the morning's news an agent prepared, section after section (◀ ▶), with the ticker;
- *   debate  one question, the agents' answers side by side; the owner picks the winner (OK after 1.5 s).
+ *   debate  one question, the agents' answers side by side; the owner picks the winner (OK after 1.5 s);
+ *   teletext Televideo AI: the agents' pages 101-899 in 40 columns, three digits to jump, ▲ ▼ next / previous,
+ *           fastext red / green / yellow (index) / blue (the Guide);
+ *   guide   the agents' Guide: their programmes, the night shift and the briefing as a TV schedule.
  * It opens by itself on the morning's wake time, for the briefing, for a new debate and when an agent asks to install
  * a skill. Everything is text
  * (textContent); ES5 for Chrome 38.
@@ -21,6 +24,8 @@
   var BACK = { 461: 1, 10009: 1, 27: 1, 8: 1 }, OK = 13, LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
   var PLAY = { 415: 1, 19: 1, 10252: 1, 179: 1 }, FF = { 417: 1, 228: 1 }, REW = { 412: 1, 227: 1 };
   var RED = "#d7263d", CUT_MS = 12000, HAND_MS = 30000, GUARD_MS = 1500;
+  var K_RED = 403, K_GREEN = 404, K_YELLOW = 405, K_BLUE = 406, CH_UP = { 33: 1, 427: 1 }, CH_DOWN = { 34: 1, 428: 1 };   // LG / Samsung
+  var TT_COLOR = { white: "#fff", red: "#ff3b3b", green: "#3bff3b", yellow: "#ffff3b", blue: "#4f6bff", magenta: "#ff3bff", cyan: "#3bffff" };
   var PERM = { widgets: "show widgets on a page of its own", notify: "send notes to the TV", "ha.read": "read your Home Assistant entities",
     "ha.control": "run your Home Assistant scenes and switches", shift: "use the night shift", live: "go on AI LIVE" };
 
@@ -68,6 +73,7 @@
     var onCamera = "", cutAt = 0, handUntil = 0, tape = [], cursor = 0, paused = false, stopped = false, speed = 1;
     var sel = 0, dialog = null, lastAsk = "", timer = 0, tickerX = 0, tickerTimer = 0;
     var section = 0, sectionAt = 0, lastBriefing = 0, lastDebate = "", pick = 0, pickAt = 0, debateId = "";
+    var ttPage = 100, ttTyped = "", ttMissingAt = 0;
 
     function el(tag, style, text) {
       var e = doc.createElement(tag);
@@ -459,6 +465,80 @@
       return true;
     }
 
+    // ---- TELETEXT and GUIDE --------------------------------------------------------------------------------------
+    function pad(s, n) { s = String(s); while (s.length < n) s += " "; return s.slice(0, n); }
+    function ttFrame() {
+      close(true);
+      layer = el("div", "position:fixed;left:0;top:0;right:0;bottom:0;z-index:99965;background:#000;color:#fff;font-family:monospace;font-weight:bold;" +
+        "font-size:" + vh(36) + ";line-height:1.12;padding:" + vh(40) + " 0 0 " + vh(200) + ";white-space:pre;overflow:hidden");
+      layer.id = "otv-ailive";
+      els.ttHead = el("div", "", ""); els.ttTitle = el("div", "color:#ffff3b;background:#1530a8", "");
+      layer.appendChild(els.ttHead); layer.appendChild(els.ttTitle);
+      els.ttRows = [];
+      for (var i = 0; i < 22; i++) { var r = el("div", "", " "); els.ttRows.push(r); layer.appendChild(r); }
+      var f = el("div", "padding-top:" + vh(8), "");
+      var lab = [["◀", "#ff3b3b"], ["▶", "#3bff3b"], ["100", "#ffff3b"], [(opts.tr && opts.tr("guide_title")) || "Guide", "#3bffff"]];
+      for (var k = 0; k < 4; k++) f.appendChild(el("span", "color:" + lab[k][1], pad("  " + lab[k][0], 10)));
+      layer.appendChild(f);
+      doc.body.appendChild(layer);
+    }
+    function renderTeletext() {
+      var pages = (data && data.teletext) || {}, now = Date.now();
+      var d = new Date(now), clock = pad2(d.getDate()) + " " + MON[d.getMonth()] + "  " + hhmm(now) + ":" + pad2(d.getSeconds());
+      var num = ttTyped ? "P" + (ttTyped + "---").slice(0, 3) : "P" + ttPage;
+      els.ttHead.textContent = pad(num + "  OmarchyTV", 40 - clock.length) + clock;
+      var p = ttPage === 100 ? ttIndex(pages) : pages[ttPage], i;
+      if (!p) {
+        els.ttTitle.textContent = pad(" P" + ttPage + "  page not found", 40);
+        for (i = 0; i < 22; i++) els.ttRows[i].textContent = " ";
+        if (!ttMissingAt) ttMissingAt = now;
+        else if (now - ttMissingAt > 2500) { ttMissingAt = 0; ttPage = 100; renderTeletext(); }
+        return;
+      }
+      ttMissingAt = 0;
+      var by = ttPage === 100 ? "Televideo AI" : String(p.by || "");
+      els.ttTitle.textContent = pad(" " + String(p.title).toUpperCase(), 39 - by.length) + by + " ";
+      for (i = 0; i < 22; i++) {
+        var l = p.lines && p.lines[i];
+        els.ttRows[i].textContent = l ? pad(l.text, 40) : " ";
+        els.ttRows[i].style.color = l ? TT_COLOR[l.color] || "#fff" : "#fff";
+      }
+    }
+    function ttGo(n) { ttPage = n; ttTyped = ""; ttMissingAt = 0; renderTeletext(); }
+    function teletextKey(code) {
+      var pages = (data && data.teletext) || {};
+      if (code >= 48 && code <= 57) {
+        var dg = code - 48;
+        if (!ttTyped && (dg === 0 || dg === 9)) return true;
+        ttTyped += dg;
+        if (ttTyped.length === 3) ttGo(parseInt(ttTyped, 10)); else renderTeletext();
+      } else if (code === UP || code === RIGHT || CH_UP[code] || code === K_GREEN) ttGo(ttStep(pages, ttPage, 1));
+      else if (code === DOWN || code === LEFT || CH_DOWN[code] || code === K_RED) ttGo(ttStep(pages, ttPage, -1));
+      else if (code === OK || code === K_YELLOW) ttGo(100);
+      else if (code === K_BLUE) open("guide");
+      return true;
+    }
+
+    function renderGuide() {
+      var g = (data && data.guide) || [], now = Date.now(), rows = [];
+      for (var i = 0; i < g.length; i++) (function (p) {
+        var mark = p.now === "on_air" ? "● ON AIR" : p.now === "next" ? "NEXT" : p.state === "failed" ? "✗" : p.state === "cancelled" ? "–" : "✓";
+        var icon = p.kind === "shift" ? "🌙 " : p.kind === "briefing" ? "◆ " : "";
+        rows.push({ text: hhmm(p.start) + "–" + hhmm(p.end) + "   " + p.agent + "   " + icon + p.title + "      " + mark,
+          color: p.now === "on_air" ? "var(--fgBright,#c0caf5)" : p.now === "past" ? "var(--muted,#565f89)" : "",
+          act: function () {
+            if (p.kind === "shift") open(p.now === "on_air" ? "live" : "shift");
+            else if (p.kind === "briefing") open("briefing");
+            else if (p.now !== "past") open("live");
+          } });
+      })(g[i]);
+      var keep = sel;
+      listScreen("📺 " + ((opts.tr && opts.tr("guide_title")) || "Agents' Guide"), rows,
+        g.length ? hhmm(now) + "   OK ›   🔴 AI LIVE   🔵 Televideo" : "Nothing on the Guide yet: agents add programmes with tv_guide_add.");
+      els.bug.textContent = "📺";
+      sel = keep; paintSel();
+    }
+
     // ---- open / close / keys / polling --------------------------------------------------------------------------
     function open(m, arg) {
       mode = m; sel = 0; onCamera = ""; dialog = null;
@@ -490,7 +570,9 @@
         debateId = arg || (data && data.debate && data.debate.id) || ""; pick = 0; pickAt = Date.now();
         if (debateId) lastDebate = debateId;
         renderDebate();
-      } else if (m === "shift") renderShift();
+      } else if (m === "teletext") { ttFrame(); ttPage = arg || 100; ttTyped = ""; renderTeletext(); }
+      else if (m === "guide") renderGuide();
+      else if (m === "shift") renderShift();
       else if (m === "skills") renderSkills(arg);
       clearInterval(timer);
       timer = setInterval(function () {
@@ -499,10 +581,11 @@
         else if (mode === "live") renderLive();
         else if (mode === "briefing") renderBriefing();
         else if (mode === "debate") renderDebate();   // the answers as they come (the app polls every 2 s while open)
+        else if (mode === "teletext") renderTeletext();
       }, mode === "replay" ? 2500 : 1000);
       clearInterval(tickerTimer);
       tickerTimer = setInterval(scrollTicker, 33);
-      if (m === "live" || m === "shift" || m === "skills") refreshNow();
+      if (m === "live" || m === "shift" || m === "skills" || m === "teletext" || m === "guide") refreshNow();
     }
 
     function close(keepMode) {
@@ -518,6 +601,8 @@
         if (mode === "shift") renderShift();
         else if (mode === "skills") renderSkills();
         else if (mode === "debate") renderDebate();
+        else if (mode === "teletext") renderTeletext();
+        else if (mode === "guide") renderGuide();
       });
     }
 
@@ -529,6 +614,11 @@
       }
       if (BACK[code]) { close(); return true; }
       if (mode === "debate") return debateKey(code);
+      if (mode === "teletext") return teletextKey(code);
+      if (mode === "guide") {
+        if (code === K_RED) { open("live"); return true; }
+        if (code === K_BLUE) { open("teletext"); return true; }
+      }
       if (mode === "briefing") {
         var secs = (data && data.briefing && data.briefing.sections) || [];
         if ((code === LEFT || code === RIGHT) && secs.length) { section = (section + (code === RIGHT ? 1 : -1) + secs.length) % secs.length; sectionAt = Date.now(); renderBriefing(); }
@@ -574,7 +664,9 @@
         .then(function (v) {
           busy = false;
           if (!v) return null;
+          var guideWas = data && JSON.stringify(data.guide || []);
           data = v;
+          if (mode === "guide" && layer && guideWas !== JSON.stringify(v.guide || [])) renderGuide();   // the schedule as it changes
           var idle = !layer && (!opts.idle || opts.idle());
           if (v.skillAsk && v.skillAsk.id && lastAsk !== v.skillAsk.id && (idle || mode === "skills")) { lastAsk = v.skillAsk.id; open("skills", v.skillAsk.id); }
           if (v.briefing && v.briefing.at && lastBriefing !== v.briefing.at && idle) { open("briefing"); idle = false; }
@@ -592,7 +684,34 @@
       _state: function () { return { onCamera: onCamera, cursor: cursor, paused: paused, stopped: stopped, speed: speed, dialog: !!dialog, sel: sel }; } };
   }
 
-  var api = { create: create, director: director, tapeOf: tapeOf, initials: initials, vcrDate: vcrDate };
+  /** Televideo: the pages that exist (the index 100 first), and the next / previous one from any number. */
+  function ttNumbers(pages) {
+    var ns = [100];
+    for (var k in pages) if (Object.prototype.hasOwnProperty.call(pages, k)) ns.push(parseInt(k, 10));
+    ns.sort(function (a, b) { return a - b; });
+    return ns;
+  }
+  function ttStep(pages, from, dir) {
+    var ns = ttNumbers(pages), i = ns.indexOf(from);
+    if (i >= 0) return ns[(i + dir + ns.length) % ns.length];
+    for (i = 0; i < ns.length && ns[i] < from; i++) { /* the first page after */ }
+    if (dir < 0) i--;
+    else if (i >= ns.length) i = 0;
+    return ns[(i + ns.length) % ns.length];
+  }
+  function ttIndex(pages) {
+    var ns = ttNumbers(pages), lines = [];
+    if (ns.length === 1) return { page: 100, title: "INDEX", by: "OmarchyTV", lines: [{ text: "No pages yet.", color: "white" }, { text: "", color: "white" },
+      { text: "Agents publish them with", color: "white" }, { text: "tv_teletext_publish {page: 101-899}", color: "cyan" }] };
+    for (var i = 1; i < ns.length && lines.length < 22; i++) {
+      var t = pages[ns[i]].title;
+      while (t.length < 36) t += ".";
+      lines.push({ text: t.slice(0, 36) + ns[i], color: Math.floor(ns[i] / 100) % 2 ? "yellow" : "cyan" });
+    }
+    return { page: 100, title: "INDEX", by: "OmarchyTV", lines: lines };
+  }
+
+  var api = { create: create, director: director, ttStep: ttStep, ttIndex: ttIndex, tapeOf: tapeOf, initials: initials, vcrDate: vcrDate };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.OmarchyAiLive = api;
 })(typeof window !== "undefined" ? window : this);

@@ -133,3 +133,26 @@ test("the studio: the briefing goes on air once and is read aloud; only a held O
   assert.deepStrictEqual(b.posts.filter((p) => p[0] === "/v1/tvstudio/debate")[0], ["/v1/tvstudio/debate", { id: "d1", index: 1 }]);
   b.g.close();
 });
+
+test("Televideo: three digits jump, a missing page falls back to the index, the Guide lists the schedule", async () => {
+  const view = Object.assign({}, VIEW, { shift: { state: "none" }, briefing: null, debate: null,
+    teletext: { "101": { page: 101, title: "Build", by: "Hermes", lines: [{ text: "368 green", color: "green" }] },
+      "300": { page: 300, title: "Home", by: "HA", lines: [{ text: "21°", color: "white" }] } },
+    guide: [{ id: "p1", kind: "agent", agent: "Claude", title: "Refactor", start: NOW - 60000, end: NOW + 3600000, state: "scheduled", now: "on_air" }] });
+  assert.strictEqual(AL.ttStep(view.teletext, 101, 1), 300);
+  assert.strictEqual(AL.ttStep(view.teletext, 300, 1), 100);
+  assert.strictEqual(AL.ttStep(view.teletext, 200, -1), 101);
+  assert.ok(/Build\.+101/.test(AL.ttIndex(view.teletext).lines[0].text));
+  const b = make(view);
+  await b.g.tick();
+  b.g.open("teletext");
+  assert.ok(/INDEX/.test(b.doc.body.textContent));
+  b.g.key(51); b.g.key(48); b.g.key(48);   // 3 0 0
+  assert.ok(/HOME/.test(b.doc.body.textContent) && /21°/.test(b.doc.body.textContent));
+  b.g.key(52); b.g.key(52); b.g.key(52);   // 444: not there
+  assert.ok(/P444  page not found/.test(b.doc.body.textContent));
+  b.g.key(406);   // blue: the Guide
+  assert.strictEqual(b.g.mode(), "guide");
+  assert.ok(/Refactor/.test(b.doc.body.textContent) && /ON AIR/.test(b.doc.body.textContent));
+  b.g.close();
+});
