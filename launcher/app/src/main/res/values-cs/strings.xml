@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Uložit tuto scénu? Pak se spustí jedním OK bez dalšího ptaní.</string>
     <string name="scene_run">Spustit</string>
     <string name="scene_save">Uložit</string>
+    <string name="teletext_title">Teletext AI</string>
+    <string name="teletext_missing">stránka nenalezena</string>
+    <string name="guide_title">TV program agentů</string>
+    <string name="guide_empty">V programu zatím nic: agenti přidávají pořady přes tv_guide_add.</string>
+    <string name="guide_on_air">ŽIVĚ</string>
+    <string name="guide_next">POTÉ</string>
+    <string name="corner_row">AI LIVE v rohu při sledování</string>
+    <string name="corner_questions">otázky</string>
+    <string name="corner_live">vždy</string>
+    <string name="corner_permission">Povolte pro OmarchyTV „Zobrazit přes jiné aplikace“ (pokud televize tuto obrazovku nemá: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">čeká na vás: %1$s</string>
     <string name="web_settings_row">Webové nastavení</string>
     <string name="web_settings_open">Otevřít webové nastavení</string>
     <string name="web_settings_hint">Naskenujte ho telefonem ve stejné síti nebo zadejte adresu na počítači. Pak ten prohlížeč schvalte na TV.</string>

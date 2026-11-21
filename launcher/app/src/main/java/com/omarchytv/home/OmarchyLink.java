@@ -122,6 +122,7 @@ public final class OmarchyLink implements LinkServer.Host {
         OmarchyLink r = new OmarchyLink();
         r.app = app;
         runtime = r;
+        LiveCorner.init(app);   // v2.22 AI LIVE in the corner while you watch
         bg.execute(r::boot);
     }
 
@@ -178,11 +179,22 @@ public final class OmarchyLink implements LinkServer.Host {
     static void setHomeVisible(boolean v) {
         homeVisible = v;
         statusChanged();
+        if (v) LiveCorner.homeBack();   // v2.22 AI LIVE in the corner: off on the Home; a question left there opens now
+        else LiveCorner.refresh();
     }
 
     static void setScreensaver(boolean v) {
         screensaver = v;
         statusChanged();
+        LiveCorner.refresh();
+    }
+
+    static boolean homeShown() {
+        return homeVisible;
+    }
+
+    static boolean screensaverShown() {
+        return screensaver;
     }
 
     static void launched(String pkg) {
@@ -1442,10 +1454,12 @@ public final class OmarchyLink implements LinkServer.Host {
         main.post(() -> {
             try {
                 JSONObject pv = com.omarchytv.home.link.LiveFeed.get().previewOf(from, System.currentTimeMillis());   // v2.22 #3
-                app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs)
+                Intent q = AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs)
                         .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail == null ? "" : detail)
                         .putExtra(AgentQuestionActivity.EXTRA_RISK, risk == null ? "" : risk)
-                        .putExtra(AgentQuestionActivity.EXTRA_PREVIEW, pv == null ? "" : pv.toString()));
+                        .putExtra(AgentQuestionActivity.EXTRA_PREVIEW, pv == null ? "" : pv.toString());
+                if (LiveCorner.ask(q, deadlineMs)) return;   // v2.22 a film is on: the corner asks, the film keeps playing
+                app.startActivity(q);
             } catch (RuntimeException e) {
                 Log.w(TAG, "ask: " + e);
             }
@@ -1613,6 +1627,19 @@ public final class OmarchyLink implements LinkServer.Host {
                         app.startActivity(LiveActivity.intent(app, rp));
                     } catch (RuntimeException e) {
                         Log.w(TAG, "open live: " + e);
+                    }
+                });
+                log("open " + target);
+                return null;
+            }
+            case "teletext":   // v2.22 Televideo AI and the agents' Guide
+            case "guide": {
+                boolean tt = "teletext".equals(target);
+                main.post(() -> {
+                    try {
+                        app.startActivity(tt ? TeletextActivity.intent(app, 100) : GuideActivity.intent(app));
+                    } catch (RuntimeException e) {
+                        Log.w(TAG, "open " + target + ": " + e);
                     }
                 });
                 log("open " + target);

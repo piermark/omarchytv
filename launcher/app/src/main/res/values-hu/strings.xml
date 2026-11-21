@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Mented ezt a jelenetet? Utána egy OK-ra elindul, újabb kérdés nélkül.</string>
     <string name="scene_run">Futtatás</string>
     <string name="scene_save">Mentés</string>
+    <string name="teletext_title">Teletext AI</string>
+    <string name="teletext_missing">az oldal nem található</string>
+    <string name="guide_title">Az ügynökök műsorújságja</string>
+    <string name="guide_empty">Még nincs semmi a műsorban: az ügynökök a tv_guide_add paranccsal adnak hozzá műsort.</string>
+    <string name="guide_on_air">ADÁSBAN</string>
+    <string name="guide_next">KÖVETKEZIK</string>
+    <string name="corner_row">AI LIVE a sarokban nézés közben</string>
+    <string name="corner_questions">kérdések</string>
+    <string name="corner_live">mindig</string>
+    <string name="corner_permission">Engedélyezd az OmarchyTV-nek a „Megjelenítés más alkalmazások felett” jogot (ha a tévén nincs ilyen képernyő: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">rád vár: %1$s</string>
     <string name="web_settings_row">Webes beállítások</string>
     <string name="web_settings_open">Webes beállítások megnyitása</string>
     <string name="web_settings_hint">Olvasd be egy ugyanazon a hálózaton lévő telefonnal, vagy írd be a címet egy számítógépen. Utána engedélyezd a böngészőt a TV-n.</string>

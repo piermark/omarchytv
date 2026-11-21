@@ -1147,6 +1147,38 @@ public class LinkServerTest {
     }
 
     @Test
+    public void televideoAndTheGuide() throws Exception {   // v2.22
+        pair("123456");
+        server.limits = false;
+        String ctl = appToken("owner-agent", "control"), ntf = appToken("hermes", "notify"), rd = appToken("wall", "read");
+        assertEquals(403, app("PUT", "/v1/teletext/101", "{\"title\":\"x\",\"lines\":[\"y\"]}", rd).status);
+        assertEquals(400, app("PUT", "/v1/teletext/950", "{\"title\":\"x\",\"lines\":[\"y\"]}", ntf).status);
+        assertEquals(400, app("PUT", "/v1/teletext/100", "{\"title\":\"x\",\"lines\":[\"y\"]}", ntf).status);   // the TV's index
+        assertEquals(200, app("PUT", "/v1/teletext/101", "{\"title\":\"Build\",\"lines\":[\"368 green\",{\"text\":\"lint ok\",\"color\":\"green\"}]}", ntf).status);
+        assertEquals("hermes", app("GET", "/v1/teletext/101", "", rd).json().getString("by"));
+        assertEquals(1, app("GET", "/v1/teletext/100", "", rd).json().getJSONArray("lines").length());
+        assertEquals(1, app("GET", "/v1/teletext", "", rd).json().getJSONArray("pages").length());
+        assertEquals(403, app("DELETE", "/v1/teletext/101", "", ntf).status);
+        Resp mcp = app("POST", "/v1/mcp", new JSONObject().put("jsonrpc", "2.0").put("id", 1).put("method", "tools/call").put("params",
+                new JSONObject().put("name", "tv_teletext_publish").put("arguments", new JSONObject().put("page", 300).put("title", "Home")
+                        .put("lines", new org.json.JSONArray().put("21°")))).toString(), ntf);
+        assertFalse(mcp.json().toString(), mcp.json().getJSONObject("result").optBoolean("isError"));
+        assertEquals(200, app("DELETE", "/v1/teletext/300", "", ctl).status);
+        assertEquals(404, app("GET", "/v1/teletext/300", "", rd).status);
+        // the Guide
+        assertEquals(403, app("POST", "/v1/guide", "{\"title\":\"x\"}", rd).status);
+        Resp g = app("POST", "/v1/guide", "{\"title\":\"Refactor\"}", ntf);
+        String id = g.json().getJSONObject("programme").getString("id");
+        assertEquals("on_air", app("GET", "/v1/guide", "", rd).json().getJSONArray("programmes").getJSONObject(0).getString("now"));
+        assertEquals(200, app("POST", "/v1/guide/" + id, "{\"state\":\"done\"}", ntf).status);
+        assertEquals(400, app("POST", "/v1/guide/" + id, "{\"state\":\"weird\"}", ntf).status);
+        assertEquals("past", app("GET", "/v1/guide", "", rd).json().getJSONArray("programmes").getJSONObject(0).getString("now"));
+        assertEquals(403, app("DELETE", "/v1/guide/" + id, "", ntf).status);
+        assertEquals(200, app("DELETE", "/v1/guide/" + id, "", ctl).status);
+        assertEquals(404, app("POST", "/v1/guide/" + id, "{\"state\":\"done\"}", ntf).status);
+    }
+
+    @Test
     public void radioStationsAndPluginsKeepTheirSwitches() throws Exception {   // v2.22 #162
         pair("123456");
         server.limits = false;

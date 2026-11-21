@@ -173,6 +173,17 @@
     <string name="scene_ask_save">حفظ هذا المشهد؟ بعدها يبدأ بضغطة OK واحدة دون سؤال مجدداً.</string>
     <string name="scene_run">تشغيل</string>
     <string name="scene_save">حفظ</string>
+    <string name="teletext_title">تلتكست AI</string>
+    <string name="teletext_missing">الصفحة غير موجودة</string>
+    <string name="guide_title">دليل برامج الوكلاء</string>
+    <string name="guide_empty">لا شيء في الدليل بعد: يضيف الوكلاء البرامج عبر tv_guide_add.</string>
+    <string name="guide_on_air">على الهواء</string>
+    <string name="guide_next">التالي</string>
+    <string name="corner_row">AI LIVE في الزاوية أثناء المشاهدة</string>
+    <string name="corner_questions">الأسئلة</string>
+    <string name="corner_live">دائماً</string>
+    <string name="corner_permission">اسمح لـ OmarchyTV بـ «العرض فوق التطبيقات الأخرى» (إن لم تكن هذه الشاشة في التلفاز: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">ينتظرك: %1$s</string>
     <string name="web_settings_row">إعدادات الويب</string>
     <string name="web_settings_open">فتح إعدادات الويب</string>
     <string name="web_settings_hint">امسحه بهاتف على الشبكة نفسها أو اكتب العنوان على حاسوب. ثم وافق على ذلك المتصفح من التلفاز.</string>

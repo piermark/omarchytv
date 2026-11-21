@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Zapisać tę scenę? Potem uruchomi się jednym OK, bez ponownego pytania.</string>
     <string name="scene_run">Wykonaj</string>
     <string name="scene_save">Zapisz</string>
+    <string name="teletext_title">Telegazeta AI</string>
+    <string name="teletext_missing">nie znaleziono strony</string>
+    <string name="guide_title">Program TV agentów</string>
+    <string name="guide_empty">W programie jeszcze nic: agenci dodają audycje przez tv_guide_add.</string>
+    <string name="guide_on_air">NA ANTENIE</string>
+    <string name="guide_next">NASTĘPNIE</string>
+    <string name="corner_row">AI LIVE w rogu podczas oglądania</string>
+    <string name="corner_questions">pytania</string>
+    <string name="corner_live">zawsze</string>
+    <string name="corner_permission">Zezwól OmarchyTV na „Wyświetlanie nad innymi aplikacjami” (jeśli telewizor nie ma tego ekranu: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">czeka na ciebie: %1$s</string>
     <string name="web_settings_row">Ustawienia przez WWW</string>
     <string name="web_settings_open">Otwórz ustawienia przez WWW</string>
     <string name="web_settings_hint">Zeskanuj telefonem w tej samej sieci albo wpisz adres na komputerze. Potem zatwierdź tę przeglądarkę na telewizorze.</string>

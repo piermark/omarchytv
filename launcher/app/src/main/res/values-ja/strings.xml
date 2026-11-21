@@ -173,6 +173,17 @@
     <string name="scene_ask_save">このシーンを保存しますか？以後は確認なしで OK ひとつで始まります。</string>
     <string name="scene_run">実行</string>
     <string name="scene_save">保存</string>
+    <string name="teletext_title">文字放送 AI</string>
+    <string name="teletext_missing">ページが見つかりません</string>
+    <string name="guide_title">エージェントの番組表</string>
+    <string name="guide_empty">番組表はまだ空です。エージェントは tv_guide_add で番組を追加します。</string>
+    <string name="guide_on_air">放送中</string>
+    <string name="guide_next">次</string>
+    <string name="corner_row">視聴中に隅に AI LIVE</string>
+    <string name="corner_questions">質問のみ</string>
+    <string name="corner_live">常に</string>
+    <string name="corner_permission">OmarchyTV に「他のアプリの上に表示」を許可してください（テレビにその画面がない場合: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow）</string>
+    <string name="corner_waits">あなたを待っています: %1$s</string>
     <string name="web_settings_row">Web設定</string>
     <string name="web_settings_open">Web設定を開く</string>
     <string name="web_settings_hint">同じネットワークのスマホで読み取るか、パソコンでアドレスを入力してください。その後、テレビでそのブラウザを許可します。</string>

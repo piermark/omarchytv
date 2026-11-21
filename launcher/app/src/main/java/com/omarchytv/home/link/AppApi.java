@@ -136,6 +136,7 @@ final class AppApi {
                 || "/v1/live".equals(p)   // v2.22 AI LIVE
                 || "/v1/skills".equals(p) || p.startsWith("/v1/skills/")   // v2.22 skills
                 || p.startsWith("/v1/briefing") || p.startsWith("/v1/debate") || p.startsWith("/v1/scene")   // v2.22 studio
+                || p.startsWith("/v1/teletext") || p.startsWith("/v1/guide")   // v2.22 Televideo AI and the Guide
                 || p.startsWith("/v1/ha/")   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
                 || "/v1/settings".equals(p) || "/v1/settings/schema".equals(p);   // v2.22 #163
     }
@@ -219,6 +220,7 @@ final class AppApi {
         if ("/v1/live".equals(p)) return liveRoute(who, m, body);   // v2.22 AI LIVE
         if ("/v1/skills".equals(p) || p.startsWith("/v1/skills/")) return skillsRoute(who, m, p);   // v2.22 skills
         if (p.startsWith("/v1/briefing") || p.startsWith("/v1/debate") || p.startsWith("/v1/scene")) return studioRoute(who, m, p, body);
+        if (p.startsWith("/v1/teletext") || p.startsWith("/v1/guide")) return channelRoute(who, m, p, body);
         if ("/v1/settings".equals(p) || "/v1/settings/schema".equals(p)) return settingsRoute(who, m, p, req.target, body);   // #163
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
@@ -260,7 +262,7 @@ final class AppApi {
             if (!who.can("control")) return forbidden("control");
             String e = host.openTarget(body.optString("target", ""));
             return e == null ? new LinkServer.Response(200, LinkServer.ok().put("target", body.optString("target")))
-                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay"));
+                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay, teletext, guide"));
         }
         if ("GET".equals(m) && "/v1/pages".equals(p)) return who.can("read") ? new LinkServer.Response(200, new JSONObject().put("pages", pages())) : forbidden("read");
         Matcher pm = PAGE_PATH.matcher(p);
@@ -921,6 +923,88 @@ final class AppApi {
             }
         } catch (Studio.Bad e) {
             return bad(e);
+        }
+        return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    // ---- v2.22 Televideo AI and the Guide ----
+    static final java.util.regex.Pattern TELETEXT_PATH = java.util.regex.Pattern.compile("/v1/teletext/([0-9]{3})");
+    static final java.util.regex.Pattern GUIDE_PATH = java.util.regex.Pattern.compile("/v1/guide/(p[0-9]{1,6})");
+
+    LinkServer.Response channelRoute(Principal who, String m, String p, JSONObject body) throws Exception {
+        long now = System.currentTimeMillis();
+        String from = who.pc ? LinkServer.printable(body.optString("from", ""), 40) : who.name;
+        if (from.isEmpty()) from = "PC";
+        String by = from;
+        try {
+            if ("/v1/teletext".equals(p) && "GET".equals(m)) {
+                if (!who.can("read")) return forbidden("read");
+                return new LinkServer.Response(200, new JSONObject().put("pages", Teletext.list(host.config())).put("max", Teletext.MAX_PAGES));
+            }
+            java.util.regex.Matcher tm = TELETEXT_PATH.matcher(p);
+            if (tm.matches()) {
+                int n = Integer.parseInt(tm.group(1));
+                if ("GET".equals(m)) {
+                    if (!who.can("read")) return forbidden("read");
+                    return new LinkServer.Response(200, Teletext.page(host.config(), n));
+                }
+                if ("PUT".equals(m) || "POST".equals(m)) {
+                    if (!who.can("notify")) return forbidden("notify");
+                    int pn = Teletext.number(n);
+                    JSONObject[] out = new JSONObject[1];
+                    host.editConfig(j -> out[0] = Teletext.publish(j, pn, body, by, now));
+                    LiveFeed.get().event(from, "info", "teletext P" + pn + ": " + out[0].optString("title"), now);
+                    s.broadcast("teletext", new JSONObject().put("page", pn));
+                    return new LinkServer.Response(200, LinkServer.ok().put("page", out[0]));
+                }
+                if ("DELETE".equals(m)) {
+                    if (!who.can("control")) return forbidden("control");
+                    int pn = Teletext.number(n);
+                    host.editConfig(j -> Teletext.remove(j, pn));
+                    s.broadcast("teletext", new JSONObject().put("page", pn).put("removed", true));
+                    return new LinkServer.Response(200, LinkServer.ok());
+                }
+            }
+            if ("/v1/guide".equals(p)) {
+                if ("GET".equals(m)) {
+                    if (!who.can("read")) return forbidden("read");
+                    return new LinkServer.Response(200, new JSONObject().put("programmes", Guide.view(host.config(), now)).put("now", now));
+                }
+                if ("POST".equals(m)) {
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject[] out = new JSONObject[1];
+                    host.editConfig(j -> out[0] = Guide.add(j, body, by, now, java.util.TimeZone.getDefault()));
+                    s.broadcast("guide", new JSONObject().put("id", out[0].optString("id")));
+                    return new LinkServer.Response(200, LinkServer.ok().put("programme", out[0]));
+                }
+            }
+            java.util.regex.Matcher gm = GUIDE_PATH.matcher(p);
+            if (gm.matches()) {
+                String id = gm.group(1);
+                if ("POST".equals(m)) {
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject[] out = new JSONObject[1];
+                    host.editConfig(j -> out[0] = Guide.update(j, id, body, now));
+                    String st = out[0].optString("state");
+                    if (!"scheduled".equals(st)) LiveFeed.get().event(from, "failed".equals(st) ? "fail" : "done".equals(st) ? "ok" : "info",
+                            out[0].optString("title") + " · " + st.replace('_', ' '), now);
+                    s.broadcast("guide", new JSONObject().put("id", id));
+                    return new LinkServer.Response(200, LinkServer.ok().put("programme", out[0]));
+                }
+                if ("DELETE".equals(m)) {
+                    if (!who.can("control")) return forbidden("control");
+                    host.editConfig(j -> Guide.remove(j, id));
+                    s.broadcast("guide", new JSONObject().put("id", id).put("removed", true));
+                    return new LinkServer.Response(200, LinkServer.ok());
+                }
+            }
+        } catch (Studio.Bad e) {
+            return bad(e);
+        } catch (Exception e) {
+            Throwable c = e.getCause() != null ? e.getCause() : e;
+            if (c instanceof Studio.Bad) return bad((Studio.Bad) c);
+            if (e instanceof Studio.Bad) return bad((Studio.Bad) e);
+            throw e;
         }
         return new LinkServer.Response(404, LinkServer.err("not_found", null));
     }

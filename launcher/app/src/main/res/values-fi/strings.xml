@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Tallennetaanko tämä tilanne? Sen jälkeen se käynnistyy yhdellä OK:lla kysymättä uudelleen.</string>
     <string name="scene_run">Suorita</string>
     <string name="scene_save">Tallenna</string>
+    <string name="teletext_title">Teksti-TV AI</string>
+    <string name="teletext_missing">sivua ei löytynyt</string>
+    <string name="guide_title">Agenttien TV-opas</string>
+    <string name="guide_empty">Oppaassa ei vielä mitään: agentit lisäävät ohjelmia komennolla tv_guide_add.</string>
+    <string name="guide_on_air">SUORANA</string>
+    <string name="guide_next">SEURAAVAKSI</string>
+    <string name="corner_row">AI LIVE nurkassa katselun aikana</string>
+    <string name="corner_questions">kysymykset</string>
+    <string name="corner_live">aina</string>
+    <string name="corner_permission">Salli ”Näytä muiden sovellusten päällä” OmarchyTV:lle (jos televisiossa ei ole tätä näkymää: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">odottaa sinua: %1$s</string>
     <string name="web_settings_row">Verkkoasetukset</string>
     <string name="web_settings_open">Avaa verkkoasetukset</string>
     <string name="web_settings_hint">Skannaa se puhelimella samassa verkossa tai kirjoita osoite tietokoneella. Hyväksy sitten selain televisiossa.</string>

@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Deze scène opslaan? Daarna start hij met één OK, zonder opnieuw te vragen.</string>
     <string name="scene_run">Uitvoeren</string>
     <string name="scene_save">Opslaan</string>
+    <string name="teletext_title">Teletekst AI</string>
+    <string name="teletext_missing">pagina niet gevonden</string>
+    <string name="guide_title">Tv-gids van de agents</string>
+    <string name="guide_empty">Nog niets in de gids: agents voegen programma’s toe met tv_guide_add.</string>
+    <string name="guide_on_air">LIVE</string>
+    <string name="guide_next">HIERNA</string>
+    <string name="corner_row">AI LIVE in de hoek tijdens het kijken</string>
+    <string name="corner_questions">vragen</string>
+    <string name="corner_live">altijd</string>
+    <string name="corner_permission">Sta “Weergeven over andere apps” toe voor OmarchyTV (als de tv dat scherm niet heeft: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">wacht op je: %1$s</string>
     <string name="web_settings_row">Webinstellingen</string>
     <string name="web_settings_open">Webinstellingen openen</string>
     <string name="web_settings_hint">Scan hem met een telefoon op hetzelfde netwerk of typ het adres op een computer. Keur die browser daarna goed op de tv.</string>

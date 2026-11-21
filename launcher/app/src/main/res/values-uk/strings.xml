@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Зберегти цю сцену? Потім вона запускається одним OK, без повторного питання.</string>
     <string name="scene_run">Виконати</string>
     <string name="scene_save">Зберегти</string>
+    <string name="teletext_title">Телетекст AI</string>
+    <string name="teletext_missing">сторінку не знайдено</string>
+    <string name="guide_title">Телепрограма агентів</string>
+    <string name="guide_empty">У програмі поки порожньо: агенти додають передачі через tv_guide_add.</string>
+    <string name="guide_on_air">В ЕФІРІ</string>
+    <string name="guide_next">ДАЛІ</string>
+    <string name="corner_row">AI LIVE у куті під час перегляду</string>
+    <string name="corner_questions">запитання</string>
+    <string name="corner_live">завжди</string>
+    <string name="corner_permission">Дозвольте OmarchyTV «Показ поверх інших додатків» (якщо на телевізорі немає такого екрана: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">чекає на вас: %1$s</string>
     <string name="web_settings_row">Веб-налаштування</string>
     <string name="web_settings_open">Відкрити веб-налаштування</string>
     <string name="web_settings_hint">Скануйте телефоном у тій самій мережі або введіть адресу на компʼютері. Потім дозвольте цей браузер на телевізорі.</string>

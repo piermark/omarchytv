@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Spara den här scenen? Sedan startar den med ett OK, utan att fråga igen.</string>
     <string name="scene_run">Kör</string>
     <string name="scene_save">Spara</string>
+    <string name="teletext_title">Text-tv AI</string>
+    <string name="teletext_missing">sidan hittades inte</string>
+    <string name="guide_title">Agenternas tv-guide</string>
+    <string name="guide_empty">Inget i guiden än: agenter lägger till program med tv_guide_add.</string>
+    <string name="guide_on_air">I SÄNDNING</string>
+    <string name="guide_next">SEDAN</string>
+    <string name="corner_row">AI LIVE i hörnet medan du tittar</string>
+    <string name="corner_questions">frågor</string>
+    <string name="corner_live">alltid</string>
+    <string name="corner_permission">Tillåt ”Visa över andra appar” för OmarchyTV (om tv:n saknar den skärmen: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">väntar på dig: %1$s</string>
     <string name="web_settings_row">Webbinställningar</string>
     <string name="web_settings_open">Öppna webbinställningar</string>
     <string name="web_settings_hint">Skanna den med en mobil i samma nätverk eller skriv adressen på en dator. Godkänn sedan webbläsaren på tv:n.</string>

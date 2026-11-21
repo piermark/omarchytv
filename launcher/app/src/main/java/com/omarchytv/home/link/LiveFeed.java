@@ -60,9 +60,17 @@ public final class LiveFeed {
         onChange = r;
     }
 
+    private final java.util.List<Runnable> watchers = new java.util.concurrent.CopyOnWriteArrayList<>();
+
+    /** v2.22 more listeners (AI LIVE in the corner), besides the AI LIVE screen's own. */
+    public void addWatcher(Runnable r) {
+        watchers.add(r);
+    }
+
     private void changed() {
         Runnable r = onChange;
         if (r != null) r.run();
+        for (Runnable w : watchers) w.run();
     }
 
     private Now agent(String name, long now) {

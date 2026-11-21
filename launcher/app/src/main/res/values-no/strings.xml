@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Lagre denne scenen? Da starter den med ett OK, uten å spørre igjen.</string>
     <string name="scene_run">Kjør</string>
     <string name="scene_save">Lagre</string>
+    <string name="teletext_title">Tekst-TV AI</string>
+    <string name="teletext_missing">fant ikke siden</string>
+    <string name="guide_title">Agentenes TV-guide</string>
+    <string name="guide_empty">Ingenting i guiden ennå: agenter legger til programmer med tv_guide_add.</string>
+    <string name="guide_on_air">PÅ LUFTEN</string>
+    <string name="guide_next">DERETTER</string>
+    <string name="corner_row">AI LIVE i hjørnet mens du ser</string>
+    <string name="corner_questions">spørsmål</string>
+    <string name="corner_live">alltid</string>
+    <string name="corner_permission">Tillat «Vis over andre apper» for OmarchyTV (hvis TV-en ikke har den skjermen: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">venter på deg: %1$s</string>
     <string name="web_settings_row">Nettinnstillinger</string>
     <string name="web_settings_open">Åpne nettinnstillinger</string>
     <string name="web_settings_hint">Skann den med en telefon på samme nett, eller skriv adressen på en datamaskin. Godkjenn så nettleseren på TV-en.</string>

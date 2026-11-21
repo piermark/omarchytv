@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Salvezi această scenă? Apoi pornește cu un OK, fără să mai întrebe.</string>
     <string name="scene_run">Rulează</string>
     <string name="scene_save">Salvează</string>
+    <string name="teletext_title">Teletext AI</string>
+    <string name="teletext_missing">pagina nu a fost găsită</string>
+    <string name="guide_title">Ghidul TV al agenților</string>
+    <string name="guide_empty">Încă nimic în ghid: agenții adaugă emisiuni cu tv_guide_add.</string>
+    <string name="guide_on_air">ÎN DIRECT</string>
+    <string name="guide_next">URMEAZĂ</string>
+    <string name="corner_row">AI LIVE în colț cât te uiți</string>
+    <string name="corner_questions">întrebări</string>
+    <string name="corner_live">mereu</string>
+    <string name="corner_permission">Permite „Afișare peste alte aplicații” pentru OmarchyTV (dacă televizorul nu are acest ecran: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">te așteaptă: %1$s</string>
     <string name="web_settings_row">Setări web</string>
     <string name="web_settings_open">Deschide setările web</string>
     <string name="web_settings_hint">Scanează-l cu un telefon din aceeași rețea sau scrie adresa pe un computer. Apoi aprobă browserul pe televizor.</string>

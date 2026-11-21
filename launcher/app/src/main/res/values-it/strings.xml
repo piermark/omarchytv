@@ -172,6 +172,17 @@
     <string name="scene_ask_save">Salvare questa scena? Poi parte con un OK, senza chiedere di nuovo.</string>
     <string name="scene_run">Esegui</string>
     <string name="scene_save">Salva</string>
+    <string name="teletext_title">Televideo AI</string>
+    <string name="teletext_missing">pagina non trovata</string>
+    <string name="guide_title">Guida TV degli agenti</string>
+    <string name="guide_empty">Ancora niente in Guida: gli agenti aggiungono programmi con tv_guide_add.</string>
+    <string name="guide_on_air">IN ONDA</string>
+    <string name="guide_next">DOPO</string>
+    <string name="corner_row">AI LIVE nell\'angolo mentre guardi</string>
+    <string name="corner_questions">domande</string>
+    <string name="corner_live">sempre</string>
+    <string name="corner_permission">Consenti “Mostra sopra altre app” a OmarchyTV (se la TV non ha questa schermata: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">ti aspetta: %1$s</string>
     <string name="web_settings_row">Impostazioni web</string>
     <string name="web_settings_open">Apri le impostazioni web</string>
     <string name="web_settings_hint">Inquadralo con un telefono sulla stessa rete, o scrivi l\'indirizzo su un computer. Poi approva quel browser sulla TV.</string>

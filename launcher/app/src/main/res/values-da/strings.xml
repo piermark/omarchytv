@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Gem denne scene? Så starter den med ét OK uden at spørge igen.</string>
     <string name="scene_run">Kør</string>
     <string name="scene_save">Gem</string>
+    <string name="teletext_title">Tekst-tv AI</string>
+    <string name="teletext_missing">siden blev ikke fundet</string>
+    <string name="guide_title">Agenternes tv-guide</string>
+    <string name="guide_empty">Intet i guiden endnu: agenter tilføjer programmer med tv_guide_add.</string>
+    <string name="guide_on_air">LIVE</string>
+    <string name="guide_next">DEREFTER</string>
+    <string name="corner_row">AI LIVE i hjørnet, mens du ser</string>
+    <string name="corner_questions">spørgsmål</string>
+    <string name="corner_live">altid</string>
+    <string name="corner_permission">Tillad “Vis oven på andre apps” for OmarchyTV (hvis tv’et ikke har den skærm: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">venter på dig: %1$s</string>
     <string name="web_settings_row">Webindstillinger</string>
     <string name="web_settings_open">Åbn webindstillinger</string>
     <string name="web_settings_hint">Scan den med en telefon på samme netværk, eller skriv adressen på en computer. Godkend derefter browseren på tv\'et.</string>

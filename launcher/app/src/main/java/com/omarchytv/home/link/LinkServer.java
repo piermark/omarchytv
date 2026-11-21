@@ -1536,6 +1536,27 @@ public final class LinkServer {
                         isError = sr.status != 200;
                         break;
                     }
+                    case "tv_teletext_publish":
+                    case "tv_teletext_list":
+                    case "tv_teletext_remove":
+                    case "tv_guide":
+                    case "tv_guide_add":
+                    case "tv_guide_update": {   // v2.22 Televideo AI and the Guide: the same code as their /v1 routes
+                        String pg = String.valueOf(args.optInt("page", 0)), gid = args.optString("id", "").replaceAll("[^a-z0-9]", "");
+                        String cp, cm = "GET";
+                        switch (name) {
+                            case "tv_teletext_publish": cp = "/v1/teletext/" + pg; cm = "PUT"; break;
+                            case "tv_teletext_list": cp = "/v1/teletext"; break;
+                            case "tv_teletext_remove": cp = "/v1/teletext/" + pg; cm = "DELETE"; break;
+                            case "tv_guide": cp = "/v1/guide"; break;
+                            case "tv_guide_add": cp = "/v1/guide"; cm = "POST"; break;
+                            default: cp = "/v1/guide/" + gid; cm = "POST"; break;
+                        }
+                        Response cr = app.channelRoute(who, cm, cp, args);
+                        out = new JSONObject(new String(cr.body, StandardCharsets.UTF_8));
+                        isError = cr.status != 200;
+                        break;
+                    }
                     case "tv_skill_list":
                     case "tv_skill_install":
                     case "tv_skill_remove": {   // v2.22: the same code as /v1/skills
@@ -1669,7 +1690,7 @@ public final class LinkServer {
                     case "tv_skill_qr":
                     case "tv_open": {
                         String e = host.openTarget("tv_skill_qr".equals(name) ? "skill" : args.optString("target", ""));
-                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay");
+                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay, teletext, guide");
                         isError = e != null;
                         break;
                     }
@@ -1737,8 +1758,8 @@ public final class LinkServer {
                         .put("logo", prop("string", "https:// image (optional)")), "control"});
         t.add(new Object[]{"tv_radio_station_remove", "Remove a radio station (not Omarchy Radio).", new JSONObject().put("id", prop("string", "Station id")), "control"});
         t.add(new Object[]{"tv_radio_sleep", "Stop the radio after some minutes (0 turns the timer off).", new JSONObject().put("minutes", prop("integer", "0-240")), "control"});
-        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office, skill (the agent skill as a QR), live (the AI LIVE channel) or replay (the night shift played back).",
-                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office | skill | live | replay")), "control"});
+        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office, skill (the agent skill as a QR), live (the AI LIVE channel), replay (the night shift played back), teletext (Televideo AI) or guide (the agents' Guide).",
+                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office | skill | live | replay | teletext | guide")), "control"});
         t.add(new Object[]{"tv_skill_qr", "Show the OmarchyTV agent skill as a QR on the TV, for the owner's phone or another agent. Only the public URL.",
                 new JSONObject(), "control"});
         t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
@@ -1824,6 +1845,16 @@ public final class LinkServer {
                 new JSONObject().put("name", prop("string", "e.g. Movie night for two")).put("steps", new JSONObject().put("type", "array").put("description", "1-12 {tool, args}")), "control"});
         t.add(new Object[]{"tv_scene_list", "The saved scenes and their steps.", new JSONObject(), "read"});
         t.add(new Object[]{"tv_scene_result", "The owner's answer to a scene question: pending, ran (with each step's result), saved or denied.", new JSONObject().put("id", prop("string", "The id from tv_scene_run / tv_scene_save")), "control"});
+        // v2.22 Televideo AI and the Guide
+        t.add(new Object[]{"tv_teletext_publish", "Publish a Televideo page on the TV (like the teletext of old): page 101-899, a title ≤32 and up to 22 lines of 40 characters, each a string or {text, color} (white, red, green, yellow, blue, magenta, cyan). Page 100 is the index. The owner types the number with the remote.",
+                new JSONObject().put("page", prop("integer", "101-899")).put("title", prop("string", "≤32")).put("lines", new JSONObject().put("type", "array").put("description", "1-22 lines")), "notify"});
+        t.add(new Object[]{"tv_teletext_list", "The Televideo pages (page, title, by, at).", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_teletext_remove", "Remove a Televideo page.", new JSONObject().put("page", prop("integer", "101-899")), "control"});
+        t.add(new Object[]{"tv_guide", "The Guide: the agents' programmes, the night shift and the morning briefing as a TV schedule, each past, on_air or next.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_guide_add", "Put a programme on the Guide: what you will do and when (start \"23:30\" or epoch ms within 48 h, end ≤16 h later, default 1 h).",
+                new JSONObject().put("title", prop("string", "≤60")).put("start", prop("string", "\"23:30\" or epoch ms")).put("end", prop("string", "optional")).put("detail", prop("string", "≤300")), "notify"});
+        t.add(new Object[]{"tv_guide_update", "Say how a programme goes: state on_air, done, failed or cancelled, and an optional detail.",
+                new JSONObject().put("id", prop("string", "e.g. p3")).put("state", prop("string", "on_air | done | failed | cancelled")).put("detail", prop("string", "optional")), "notify"});
         // v2.22 skills
         t.add(new Object[]{"tv_skill_list", "The skills the TV can install (catalogue: id, name, author, permissions) and the installed ones with their instructions for you (\"agent\").", new JSONObject(), "read"});
         t.add(new Object[]{"tv_skill_install", "Ask the owner to install a skill: the TV shows it with its permissions and the owner answers with the remote. Check tv_skill_list afterwards.",

@@ -173,6 +173,17 @@
     <string name="scene_ask_save">Αποθήκευση αυτής της σκηνής; Μετά ξεκινά με ένα OK, χωρίς νέα ερώτηση.</string>
     <string name="scene_run">Εκτέλεση</string>
     <string name="scene_save">Αποθήκευση</string>
+    <string name="teletext_title">Teletext AI</string>
+    <string name="teletext_missing">η σελίδα δεν βρέθηκε</string>
+    <string name="guide_title">Πρόγραμμα TV των πρακτόρων</string>
+    <string name="guide_empty">Τίποτα ακόμη στο πρόγραμμα: οι πράκτορες προσθέτουν εκπομπές με tv_guide_add.</string>
+    <string name="guide_on_air">ΣΤΟΝ ΑΕΡΑ</string>
+    <string name="guide_next">ΣΤΗ ΣΥΝΕΧΕΙΑ</string>
+    <string name="corner_row">AI LIVE στη γωνία ενώ βλέπετε</string>
+    <string name="corner_questions">ερωτήσεις</string>
+    <string name="corner_live">πάντα</string>
+    <string name="corner_permission">Επιτρέψτε στο OmarchyTV «Εμφάνιση πάνω από άλλες εφαρμογές» (αν η τηλεόραση δεν έχει αυτή την οθόνη: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">σας περιμένει: %1$s</string>
     <string name="web_settings_row">Ρυθμίσεις web</string>
     <string name="web_settings_open">Άνοιγμα ρυθμίσεων web</string>
     <string name="web_settings_hint">Σαρώστε το με κινητό στο ίδιο δίκτυο ή πληκτρολογήστε τη διεύθυνση σε υπολογιστή. Μετά εγκρίνετε τον browser στην TV.</string>

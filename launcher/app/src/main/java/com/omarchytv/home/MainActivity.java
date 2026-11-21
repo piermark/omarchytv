@@ -4129,6 +4129,19 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> startActivity(LiveActivity.intent(this, false)));
             return false;
         });
+        String lLiveCorner = str(R.string.corner_row);   // v2.22 AI LIVE in the corner while you watch
+        p.add(lLiveCorner, str("live".equals(gc.liveCorner) ? R.string.corner_live : "questions".equals(gc.liveCorner) ? R.string.corner_questions : R.string.off), r -> {
+            String n = "off".equals(gc.liveCorner) ? "questions" : "questions".equals(gc.liveCorner) ? "live" : "off";
+            if (!"off".equals(n) && !LiveCorner.overlayAllowed(this)) {
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:" + getPackageName())));
+                } catch (RuntimeException e) {
+                    android.widget.Toast.makeText(this, getString(R.string.corner_permission, getPackageName()), android.widget.Toast.LENGTH_LONG).show();
+                }
+            }
+            applyLive("grok-bot", lLiveCorner, j -> j.put("liveCorner", n));
+            return true;
+        });
         p.add("🎙 " + str(R.string.talk_phone), "QR ›", r -> {   // v2.22 the phone is the microphone (the web settings page)
             String wIp = OmarchyLink.lanIp(), wCode = OmarchyLink.webCode();
             org.json.JSONObject lk = LauncherConfig.readJson(this).optJSONObject("link");
@@ -4138,6 +4151,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
             String url = "http://" + wIp + ":" + com.omarchytv.home.link.LinkServer.PORT + "/settings/?tab=talk&code=" + wCode;
             handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.talk_phone), url, str(R.string.web_settings_hint), false)));
+            return false;
+        });
+        p.add("📺 " + str(R.string.guide_title), "›", r -> {   // v2.22 the agents' Guide and Televideo AI
+            handler.post(() -> startActivity(GuideActivity.intent(this)));
+            return false;
+        });
+        p.add("📟 " + str(R.string.teletext_title), "100 ›", r -> {
+            handler.post(() -> startActivity(TeletextActivity.intent(this, 100)));
             return false;
         });
         p.add("🧩 " + str(R.string.skills_title), "›", r -> {   // v2.22 skills from the community
@@ -5605,6 +5626,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 : "yellow".equals(cfg.askKey) ? KeyEvent.KEYCODE_PROG_YELLOW : "blue".equals(cfg.askKey) ? KeyEvent.KEYCODE_PROG_BLUE : -1;
         if (keyCode == ask) {
             open(new Intent(this, AskActivity.class));
+            return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_TV_TELETEXT && movingPos < 0) {   // v2.22 the remote's TEXT key: Televideo AI
+            startActivity(TeletextActivity.intent(this, 100));
+            return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_GUIDE && movingPos < 0) {   // v2.22 the remote's GUIDE key: the agents' Guide
+            startActivity(GuideActivity.intent(this));
             return true;
         }
         return super.onKeyDown(keyCode, event);

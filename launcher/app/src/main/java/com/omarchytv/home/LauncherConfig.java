@@ -597,6 +597,8 @@ final class LauncherConfig {
     final boolean agentAlert;
     /** v2.22 "agentAlertMin": the lowest notification level shown, "info" (all), "warn" or "alert"; set with the remote. */
     final String agentAlertMin;
+    /** v2.22 AI LIVE in the corner while you watch: "off" (default), "questions" or "live". */
+    final String liveCorner;
     final boolean screensaverClock;
     /** v2.13: procedural ST3 synth audio for Aquarium screensaver (default true). */
     final boolean saverSound;
@@ -927,6 +929,8 @@ final class LauncherConfig {
         agentAlert = j != null && j.optBoolean("agentAlert", false);
         String aam = j != null ? j.optString("agentAlertMin", "info") : "info";
         agentAlertMin = "warn".equals(aam) || "alert".equals(aam) ? aam : "info";
+        String lc = j != null ? j.optString("liveCorner", "off") : "off";
+        liveCorner = "questions".equals(lc) || "live".equals(lc) ? lc : "off";
         hasSsBefore = j != null && j.optJSONObject("ssBefore215") != null;
         pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith").contains(ps) ? ps : "sphere";
         String pg = ss != null ? ss.optString("pulseGraphics", "auto") : "auto";
