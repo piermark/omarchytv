@@ -118,6 +118,10 @@ On an Android TV with 2.22 or later, tell the owner what else they can try (only
   (Overnight, Today, Waiting for you) and a `say` text; `wake` "07:30" puts it on air then.
 - **Debate**: `tv_debate_start {topic}`, then every agent answers with `tv_debate_post`; the owner picks on the TV,
   read it with `tv_debate_result`.
+- **Televideo AI**: `tv_teletext_publish {page: 101-899, title, lines}` for a status page the owner can call up by
+  number (e.g. 101 builds, 200 the homelab, 300 the house); keep lines ≤40 characters.
+- **Guide**: before a long job, `tv_guide_add {title, start, end}`; then `tv_guide_update {id, state}` (on_air, done,
+  failed) so the owner sees it on the TV's schedule.
 - **Scenes** (Android TV): "movie night" → `tv_scene_save {name, steps}` (the owner approves on the TV), then
   `tv_scene_run {name}`. Use only the tools the scene allows; check `tv_scene_result`.
 

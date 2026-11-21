@@ -48,6 +48,24 @@
   TV shows the steps in plain words, Cancel has the focus, and Run / Save waits 1.5 s. A saved scene then runs at
   once with `tv_scene_run {name}`, and the agent sees each step's result and, for a failed step, why it failed.
   `tv_scene_run`, `tv_scene_save`, `tv_scene_list`, `tv_scene_result`, `/v1/scene/*`, `/v1/scenes`.
+- **Televideo AI**: agents publish text pages on the TV, like the teletext of old: page 101-899, a title and up to
+  22 lines of 40 characters in the seven teletext colours (`tv_teletext_publish`). Page 100 is the index, made by
+  the TV. Type three digits to jump to a page; ▲ ▼ or CH+ / CH- move between pages, and the four colour keys work as
+  fastext (red previous, green next, yellow index, blue the Guide). A page that is not there says so and goes back
+  to the index. It opens from Settings › Grok Bot & AI, `tv_open teletext`, or the remote's TEXT key on the Home.
+  `/v1/teletext`, `/v1/teletext/{101-899}`.
+- **The agents' Guide**: the agents' work as a TV schedule. Each agent's programmes (`tv_guide_add`: what and when;
+  `tv_guide_update`: on air, done, failed), the night shift and the morning briefing appear with the agent as the
+  channel, ● ON AIR, NEXT, ✓ or ✗. OK on a programme on air opens AI LIVE; on the night shift, its page or replay;
+  on the briefing, the briefing. Settings › Grok Bot & AI, `tv_open guide`, or the remote's GUIDE key on the Home.
+  `/v1/guide`, `/v1/guide/{id}`.
+- **AI LIVE in the corner while you watch** (Android TV 8+): Settings › Grok Bot & AI › AI LIVE in the corner, off
+  by default; "questions", or "always" to also show the agent at work. A small card in the corner of the film
+  (another app or the cast player) turns red when an agent waits for your yes. The film keeps playing and keeps
+  the remote. When a question arrives, the card takes the remote for 15 s: OK opens the question, BACK leaves it for
+  when you are back on the Home, and any other key gives the remote back to the film (that press is lost). It needs
+  "Display over other apps": the TV asks for it, or `adb shell appops set com.omarchytv.home SYSTEM_ALERT_WINDOW
+  allow`. Off on the Home, on the screensaver and during a night shift.
 - **GrokBot Office is the control room**: in the Office, the red key goes on air (AI LIVE), the blue key plays the
   night back, the yellow key opens the skills.
 - **On LG and Samsung too**, through the PC bridge (`omarchy-tv webos-serve`, `ai_bridge.py`, the same rules and
@@ -56,7 +74,8 @@
   while `webos-serve` runs and `omarchy-link agents on` is set, the PC's agent monitor (redacted) feeds the channel
   every 5 s. In the Office: red → AI LIVE, green → the night's replay, yellow → skills (blue stays the Companion's).
   The morning briefing (read aloud where the TV's browser can) and the debate (the owner's pick only from the TV,
-  `/v1/tvstudio/*`) too. Not on LG / Samsung in 2.22: talking from the phone and scenes (they need the TV's own
+  `/v1/tvstudio/*`) too, and Televideo AI and the Guide (Omarchy menu). The corner over a film is Android TV only:
+  an LG or Samsung app cannot draw over other apps. Not on LG / Samsung in 2.22: talking from the phone and scenes (they need the TV's own
   tools).
 
 - **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
