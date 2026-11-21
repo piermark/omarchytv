@@ -194,6 +194,14 @@
     <string name="skill_perm_ha_control">run your Home Assistant scenes and switches</string>
     <string name="skill_perm_shift">use the night shift</string>
     <string name="skill_perm_live">go on AI LIVE</string>
+    <string name="debate_pick">picks</string>
+    <string name="debate_waiting">waiting for the agents\' answers</string>
+    <string name="debate_you_decide">you decide</string>
+    <string name="scene_new">a new scene</string>
+    <string name="scene_ask_run">Run these steps now?</string>
+    <string name="scene_ask_save">Save this scene? Then it runs with one OK, without asking again.</string>
+    <string name="scene_run">Run</string>
+    <string name="scene_save">Save</string>
     <string name="web_settings_row">Web settings</string>
     <string name="web_settings_open">Open web settings</string>
     <string name="web_settings_hint">Scan it on a phone on the same network, or type the address on a computer. Then approve that browser on the TV.</string>

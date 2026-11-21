@@ -59,7 +59,10 @@ public class ShiftActivity extends Activity {
             }
         }
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-        if (getIntent().getBooleanExtra(EXTRA_WAKE, false)) ShiftWake.dueOnHome(this);   // marks it shown: not again on Home
+        if (getIntent().getBooleanExtra(EXTRA_WAKE, false)) {
+            ShiftWake.dueOnHome(this);   // marks it shown: not again on Home
+            if (ShiftWake.briefingDue(this)) startActivity(LiveActivity.intent(this, LiveActivity.BRIEFING));   // the briefing first
+        }
         t = Theme.cur();
         ScrollView sv = new ScrollView(this);
         sv.setBackgroundColor(t.bg);

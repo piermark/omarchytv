@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">je Home Assistant-scènes en -schakelaars bedienen</string>
     <string name="skill_perm_shift">de nachtdienst gebruiken</string>
     <string name="skill_perm_live">op AI LIVE komen</string>
+    <string name="debate_pick">kiest</string>
+    <string name="debate_waiting">wacht op de antwoorden van de agents</string>
+    <string name="debate_you_decide">jij beslist</string>
+    <string name="scene_new">een nieuwe scène</string>
+    <string name="scene_ask_run">Deze stappen nu uitvoeren?</string>
+    <string name="scene_ask_save">Deze scène opslaan? Daarna start hij met één OK, zonder opnieuw te vragen.</string>
+    <string name="scene_run">Uitvoeren</string>
+    <string name="scene_save">Opslaan</string>
     <string name="web_settings_row">Webinstellingen</string>
     <string name="web_settings_open">Webinstellingen openen</string>
     <string name="web_settings_hint">Scan hem met een telefoon op hetzelfde netwerk of typ het adres op een computer. Keur die browser daarna goed op de tv.</string>

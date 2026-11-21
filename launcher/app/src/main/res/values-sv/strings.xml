@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">köra dina Home Assistant-scener och brytare</string>
     <string name="skill_perm_shift">använda nattskiftet</string>
     <string name="skill_perm_live">synas i AI LIVE</string>
+    <string name="debate_pick">väljer</string>
+    <string name="debate_waiting">väntar på agenternas svar</string>
+    <string name="debate_you_decide">du bestämmer</string>
+    <string name="scene_new">en ny scen</string>
+    <string name="scene_ask_run">Köra de här stegen nu?</string>
+    <string name="scene_ask_save">Spara den här scenen? Sedan startar den med ett OK, utan att fråga igen.</string>
+    <string name="scene_run">Kör</string>
+    <string name="scene_save">Spara</string>
     <string name="web_settings_row">Webbinställningar</string>
     <string name="web_settings_open">Öppna webbinställningar</string>
     <string name="web_settings_hint">Skanna den med en mobil i samma nätverk eller skriv adressen på en dator. Godkänn sedan webbläsaren på tv:n.</string>

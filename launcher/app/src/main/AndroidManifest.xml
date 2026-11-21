@@ -303,6 +303,12 @@
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TvHome" />
+        <!-- v2.22 a scene an agent composed: the owner's OK -->
+        <activity
+            android:name=".SceneActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
         <!-- v2.22 skills from the community -->
         <activity
             android:name=".SkillsActivity"

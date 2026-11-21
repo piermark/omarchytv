@@ -1099,6 +1099,54 @@ public class LinkServerTest {
     }
 
     @Test
+    public void studioBriefingDebateAndScenes() throws Exception {   // v2.22
+        pair("123456");
+        server.limits = false;
+        Studio.resetDebates();
+        String ctl = appToken("owner-agent", "control"), ntf = appToken("hermes", "notify"), rd = appToken("wall", "read");
+        // the morning briefing: written by an agent, shown on the TV by the owner's agent
+        assertEquals("none", app("GET", "/v1/briefing", "", rd).json().getString("state"));
+        assertEquals(403, app("POST", "/v1/briefing", "{}", rd).status);
+        assertEquals(400, app("POST", "/v1/briefing", "{\"sections\":[]}", ntf).status);
+        assertEquals(409, app("POST", "/v1/briefing/show", "", ctl).status);
+        assertEquals(200, app("POST", "/v1/briefing", "{\"title\":\"Good morning\",\"sections\":[{\"title\":\"Overnight\",\"lines\":[\"352 tests green\"]}],\"wake\":\"07:30\"}", ntf).status);
+        assertEquals("hermes", app("GET", "/v1/briefing", "", rd).json().getString("by"));
+        assertEquals(403, app("POST", "/v1/briefing/show", "", ntf).status);
+        assertEquals(200, app("POST", "/v1/briefing/show", "", ctl).status);
+        assertTrue(host.studio.contains("briefing:"));
+        // the debate: agents answer, nobody on the network picks the winner
+        Resp d = app("POST", "/v1/debate", "{\"topic\":\"Cache the widgets how?\"}", ntf);
+        String id = d.json().getJSONObject("debate").getString("id");
+        assertTrue(host.studio.contains("debate:" + id));
+        assertEquals(200, app("POST", "/v1/debate/" + id, "{\"text\":\"LRU of 32\"}", ctl).status);
+        assertEquals(200, app("POST", "/v1/debate/" + id, "{\"text\":\"disk\"}", ntf).status);
+        assertEquals(2, app("GET", "/v1/debate/" + id, "", ntf).json().getJSONArray("entries").length());
+        assertEquals(403, app("GET", "/v1/debate/" + id, "", rd).status);
+        assertEquals(404, app("POST", "/v1/debate/" + id + "/winner", "{\"index\":0}", ctl).status);
+        // scenes: a new one asks the owner on the TV; then a saved one runs with no question
+        assertEquals(403, app("POST", "/v1/scene/run", "{\"steps\":[]}", ntf).status);
+        assertEquals(400, app("POST", "/v1/scene/run", "{\"steps\":[{\"tool\":\"tv_settings_set\",\"args\":{}}]}", ctl).status);
+        String steps = "[{\"tool\":\"tv_notify\",\"args\":{\"title\":\"Movie night\",\"message\":\"lights down\"}}]";
+        Resp ask = app("POST", "/v1/scene/save", "{\"name\":\"movie night\",\"steps\":" + steps + "}", ctl);
+        String sid = ask.json().getString("id");
+        assertEquals(sid, host.sceneAsked);
+        assertEquals("pending", app("GET", "/v1/scene/" + sid, "", ctl).json().getString("state"));
+        assertEquals(404, app("POST", "/v1/scene/run", "{\"name\":\"movie night\"}", ctl).status);   // not saved yet
+        assertEquals("saved", server.sceneAnswered(sid, true).getString("state"));
+        assertNull(server.sceneAnswered(sid, true));   // answered once
+        assertTrue(app("GET", "/v1/scenes", "", rd).json().getJSONObject("scenes").has("movie night"));
+        Resp off = app("POST", "/v1/scene/run", "{\"name\":\"movie night\"}", ctl);   // a failed step says why
+        assertTrue(off.json().getJSONArray("results").getJSONObject(0).getString("error").contains("notify_off"));
+        host.notifyOn = true;
+        Resp ran = app("POST", "/v1/scene/run", "{\"name\":\"movie night\"}", ctl);
+        assertEquals(200, ran.status);
+        assertTrue(ran.json().toString(), ran.json().getJSONArray("results").getJSONObject(0).getBoolean("ok"));
+        // a run asked and denied does nothing
+        String sid2 = app("POST", "/v1/scene/run", "{\"steps\":" + steps + "}", ctl).json().getString("id");
+        assertEquals("denied", server.sceneAnswered(sid2, false).getString("state"));
+    }
+
+    @Test
     public void radioStationsAndPluginsKeepTheirSwitches() throws Exception {   // v2.22 #162
         pair("123456");
         server.limits = false;

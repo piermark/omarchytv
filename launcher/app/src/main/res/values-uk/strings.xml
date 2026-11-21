@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">запускати ваші сцени та вимикачі Home Assistant</string>
     <string name="skill_perm_shift">використовувати нічну зміну</string>
     <string name="skill_perm_live">виходити в ефір AI LIVE</string>
+    <string name="debate_pick">обирає</string>
+    <string name="debate_waiting">чекаємо відповідей агентів</string>
+    <string name="debate_you_decide">вирішуєте ви</string>
+    <string name="scene_new">нова сцена</string>
+    <string name="scene_ask_run">Виконати ці кроки зараз?</string>
+    <string name="scene_ask_save">Зберегти цю сцену? Потім вона запускається одним OK, без повторного питання.</string>
+    <string name="scene_run">Виконати</string>
+    <string name="scene_save">Зберегти</string>
     <string name="web_settings_row">Веб-налаштування</string>
     <string name="web_settings_open">Відкрити веб-налаштування</string>
     <string name="web_settings_hint">Скануйте телефоном у тій самій мережі або введіть адресу на компʼютері. Потім дозвольте цей браузер на телевізорі.</string>

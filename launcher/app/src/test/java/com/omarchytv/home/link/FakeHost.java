@@ -359,4 +359,10 @@ class FakeHost implements LinkServer.Host {
         }
         return null;
     }
+
+    // v2.22 the studio
+    final List<String> studio = new ArrayList<>();
+    String sceneAsked;
+    @Override public synchronized boolean showStudio(String what, String arg) { studio.add(what + ":" + arg); return true; }
+    @Override public synchronized boolean askScene(String id, String from, String name, org.json.JSONArray steps, boolean save) { sceneAsked = id; return true; }
 }

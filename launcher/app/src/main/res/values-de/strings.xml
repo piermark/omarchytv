@@ -164,6 +164,14 @@
     <string name="skill_perm_ha_control">deine Home-Assistant-Szenen und -Schalter auslösen</string>
     <string name="skill_perm_shift">die Nachtschicht nutzen</string>
     <string name="skill_perm_live">auf AI LIVE senden</string>
+    <string name="debate_pick">wählt</string>
+    <string name="debate_waiting">warte auf die Antworten der Agenten</string>
+    <string name="debate_you_decide">du entscheidest</string>
+    <string name="scene_new">eine neue Szene</string>
+    <string name="scene_ask_run">Diese Schritte jetzt ausführen?</string>
+    <string name="scene_ask_save">Diese Szene speichern? Dann startet sie mit einem OK, ohne erneut zu fragen.</string>
+    <string name="scene_run">Ausführen</string>
+    <string name="scene_save">Speichern</string>
     <string name="web_settings_row">Web-Einstellungen</string>
     <string name="web_settings_open">Web-Einstellungen öffnen</string>
     <string name="web_settings_hint">Mit einem Handy im selben Netz scannen oder die Adresse am Computer eingeben. Dann den Browser am Fernseher erlauben.</string>

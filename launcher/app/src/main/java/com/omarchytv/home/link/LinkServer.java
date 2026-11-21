@@ -60,6 +60,16 @@ public final class LinkServer {
 
     /** What the server needs from the launcher. Called on server threads; implementations must be thread-safe. */
     public interface Host {
+        /** v2.22 the studio: put the briefing or a debate on AI LIVE now ("briefing" | "debate", the debate's id). */
+        default boolean showStudio(String what, String arg) {
+            return false;
+        }
+
+        /** v2.22 the owner's question for a scene to run or to save (SceneActivity); false without a screen. */
+        default boolean askScene(String id, String from, String name, org.json.JSONArray steps, boolean save) {
+            return false;
+        }
+
         /** v2.22 the skills catalogue shipped in the app (checked), id → skill.json. */
         default java.util.Map<String, JSONObject> skillCatalog() {
             return new java.util.LinkedHashMap<>();
@@ -1499,6 +1509,33 @@ public final class LinkServer {
                         }
                         break;
                     }
+                    case "tv_briefing_set":
+                    case "tv_briefing_show":
+                    case "tv_debate_start":
+                    case "tv_debate_post":
+                    case "tv_debate_result":
+                    case "tv_scene_run":
+                    case "tv_scene_save":
+                    case "tv_scene_list":
+                    case "tv_scene_result": {   // v2.22 the studio: the same code as its /v1 routes
+                        String sid2 = args.optString("id", "").replaceAll("[^a-z0-9]", "");
+                        String sp, sm2 = "POST";
+                        switch (name) {
+                            case "tv_briefing_set": sp = "/v1/briefing"; break;
+                            case "tv_briefing_show": sp = "/v1/briefing/show"; break;
+                            case "tv_debate_start": sp = "/v1/debate"; break;
+                            case "tv_debate_post": sp = "/v1/debate/" + sid2; break;
+                            case "tv_debate_result": sp = "/v1/debate/" + sid2; sm2 = "GET"; break;
+                            case "tv_scene_run": sp = "/v1/scene/run"; break;
+                            case "tv_scene_save": sp = "/v1/scene/save"; break;
+                            case "tv_scene_list": sp = "/v1/scenes"; sm2 = "GET"; break;
+                            default: sp = "/v1/scene/" + sid2; sm2 = "GET"; break;
+                        }
+                        Response sr = app.studioRoute(who, sm2, sp, args);
+                        out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                        isError = sr.status != 200;
+                        break;
+                    }
                     case "tv_skill_list":
                     case "tv_skill_install":
                     case "tv_skill_remove": {   // v2.22: the same code as /v1/skills
@@ -1770,6 +1807,23 @@ public final class LinkServer {
         t.add(new Object[]{"tv_ha_run", "Run a Home Assistant scene, script or automation, or toggle a light, switch, fan or input_boolean.",
                 new JSONObject().put("entity_id", prop("string", "e.g. scene.movie")), "control"});
         t.add(new Object[]{"tv_page_show", "Bring a Home widget page to the screen (e.g. where an alert widget just landed).", new JSONObject().put("page", pref), "control"});
+        // v2.22 the studio
+        t.add(new Object[]{"tv_briefing_set", "Prepare the owner's morning briefing: sections of short lines (overnight, today, the weather, what waits) and what to read aloud; it goes on AI LIVE at the wake time (\"07:30\") or with tv_briefing_show.",
+                new JSONObject().put("title", prop("string", "e.g. Good morning")).put("sections", new JSONObject().put("type", "array").put("description", "1-8 {title ≤40, lines: [≤8 strings ≤120]}"))
+                        .put("say", prop("string", "Read aloud, ≤1500")).put("wake", prop("string", "\"07:30\" or epoch ms (optional)")), "notify"});
+        t.add(new Object[]{"tv_briefing_show", "Put the morning briefing on AI LIVE now.", new JSONObject(), "control"});
+        t.add(new Object[]{"tv_debate_start", "Start a debate on AI LIVE: a question several agents answer side by side; the owner picks the winner on the TV. Returns its id.",
+                new JSONObject().put("topic", prop("string", "The question, ≤160")), "notify"});
+        t.add(new Object[]{"tv_debate_post", "Post your answer to a debate (≤1200, with an optional preview); a second post replaces the first.",
+                new JSONObject().put("id", prop("string", "The debate id, e.g. d1")).put("text", prop("string", "Your answer"))
+                        .put("preview", new JSONObject().put("type", "object").put("description", "Optional: {kind: image, url} | {kind: diff | text, text} | {kind: chart, points}")), "notify"});
+        t.add(new Object[]{"tv_debate_result", "A debate: its answers, and the winner once the owner picked one.", new JSONObject().put("id", prop("string", "The debate id")), "notify"});
+        t.add(new Object[]{"tv_scene_run", "Run a scene: {name} for a saved one (at once), or {steps: [{tool, args}]} for a new one (the owner approves it on the TV first). Steps use the TV's own tools: tv_ha_run, tv_launch_app, tv_set_theme, tv_radio, tv_send_key, tv_open, tv_notify, tv_screensaver, tv_page_show.",
+                new JSONObject().put("name", prop("string", "A saved scene, or a name for a new one")).put("steps", new JSONObject().put("type", "array").put("description", "1-12 {tool, args}")), "control"});
+        t.add(new Object[]{"tv_scene_save", "Save a scene under a name, after the owner's OK on the TV; then tv_scene_run {name} runs it at once.",
+                new JSONObject().put("name", prop("string", "e.g. Movie night for two")).put("steps", new JSONObject().put("type", "array").put("description", "1-12 {tool, args}")), "control"});
+        t.add(new Object[]{"tv_scene_list", "The saved scenes and their steps.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_scene_result", "The owner's answer to a scene question: pending, ran (with each step's result), saved or denied.", new JSONObject().put("id", prop("string", "The id from tv_scene_run / tv_scene_save")), "control"});
         // v2.22 skills
         t.add(new Object[]{"tv_skill_list", "The skills the TV can install (catalogue: id, name, author, permissions) and the installed ones with their instructions for you (\"agent\").", new JSONObject(), "read"});
         t.add(new Object[]{"tv_skill_install", "Ask the owner to install a skill: the TV shows it with its permissions and the owner answers with the remote. Check tv_skill_list afterwards.",
@@ -2387,6 +2441,11 @@ public final class LinkServer {
     public JSONObject agents() throws JSONException {
         JSONObject a = agentsNow;
         return a != null ? a : new JSONObject().put("agents", new JSONArray()).put("at", JSONObject.NULL);
+    }
+
+    /** v2.22 the owner's answer to a scene question (SceneActivity). */
+    public JSONObject sceneAnswered(String id, boolean yes) throws Exception {
+        return app.sceneAnswered(id, yes);
     }
 
     /** v2.22 the agent's name for the channel, from the last agent list. */

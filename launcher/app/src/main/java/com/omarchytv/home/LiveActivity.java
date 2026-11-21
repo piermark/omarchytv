@@ -57,7 +57,9 @@ import java.util.Locale;
  * Plain views, one bitmap at a time, two small animations: light on 2 GB TVs; nothing runs while it is not shown.
  */
 public class LiveActivity extends Activity {
-    static final String EXTRA_REPLAY = "replay";
+    static final String EXTRA_REPLAY = "replay", EXTRA_MODE = "mode", EXTRA_ARG = "arg";
+    /** v2.22 the studio's shows: the morning briefing and the agents' debate. */
+    static final String BRIEFING = "briefing", DEBATE = "debate";
     static final long CUT_MS = 12_000, HAND_MS = 30_000;
     static final int RED = 0xFFD7263D;
 
@@ -80,9 +82,21 @@ public class LiveActivity extends Activity {
         return new Intent(c, LiveActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK).putExtra(EXTRA_REPLAY, replay);
     }
 
+    static Intent intent(Context c, String show) {
+        return new Intent(c, LiveActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra(EXTRA_MODE, show);
+    }
+
+    private String show = "";   // BRIEFING, DEBATE or "" (LIVE / REPLAY)
+    private int section, pick;
+    private long pickAt, sectionAt;
+    private String debateId = "";
+    private LinearLayout panels;
+
     private final Runnable frame = new Runnable() {
         @Override public void run() {
-            if (replay) step();
+            if (BRIEFING.equals(show)) briefingFrame();
+            else if (DEBATE.equals(show)) debateFrame();
+            else if (replay) step();
             else refresh();
             h.postDelayed(this, replay ? Math.max(400, 2500 / speed) : 1000);
         }
@@ -105,9 +119,13 @@ public class LiveActivity extends Activity {
         super.onCreate(b);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         replay = getIntent().getBooleanExtra(EXTRA_REPLAY, false);
+        show = getIntent().getStringExtra(EXTRA_MODE) == null ? "" : getIntent().getStringExtra(EXTRA_MODE);
+        debateId = getIntent().getStringExtra(EXTRA_ARG) == null ? "" : getIntent().getStringExtra(EXTRA_ARG);
         t = Theme.cur();
         build();
         if (replay) loadTape();
+        if (BRIEFING.equals(show)) startBriefing();
+        if (DEBATE.equals(show)) startDebate();
     }
 
     @Override
@@ -116,7 +134,7 @@ public class LiveActivity extends Activity {
         h.post(frame);
         h.post(blink);
         avatar.setRunning(true);
-        LiveFeed.get().onChange(() -> h.post(() -> { if (!replay) refresh(); }));
+        LiveFeed.get().onChange(() -> h.post(() -> { if (!replay && show.isEmpty()) refresh(); }));
     }
 
     @Override
@@ -505,6 +523,156 @@ public class LiveActivity extends Activity {
         tickerAnim.start();
     }
 
+    // ---- v2.22 MORNING BRIEFING: the agent's news, section after section, read aloud -----------------------------
+
+    private void startBriefing() {
+        bug.setText("◆ MORNING");
+        bug.setBackground(box(t.yellow, dp(3)));
+        hint.setText("◀ ▶ news   OK →   BACK");
+        section = 0;
+        sectionAt = System.currentTimeMillis();
+        JSONObject b = LauncherConfig.readJson(this).optJSONObject("briefing");
+        if (b != null && !b.optString("say").isEmpty()) {
+            OmarchyLink.speakNow(b.optString("say"));
+        }
+        cutTo(b == null ? "AI" : b.optString("by", "AI"));
+        briefingFrame();
+    }
+
+    private void briefingFrame() {
+        long now = System.currentTimeMillis();
+        clock.setText(DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date(now)));
+        JSONObject b = LauncherConfig.readJson(this).optJSONObject("briefing");
+        JSONArray secs = b == null ? null : b.optJSONArray("sections");
+        if (secs == null || secs.length() == 0) {
+            name.setText("AI LIVE");
+            line.setText(getString(R.string.shift_none));
+            return;
+        }
+        if (now - sectionAt > 9000) { section = (section + 1) % secs.length(); sectionAt = now; lowerThird.setTranslationX(-dp(900)); lowerThird.animate().translationX(0).setDuration(450).start(); }
+        section = Math.max(0, Math.min(section, secs.length() - 1));
+        JSONObject s = secs.optJSONObject(section);
+        JSONArray ls = s.optJSONArray("lines");
+        name.setText(b.optString("title"));
+        line.setText(b.optString("by"));
+        ltName.setText(s.optString("title").toUpperCase(Locale.ROOT));
+        ltText.setText(ls != null && ls.length() > 0 ? ls.optString(0) : "");
+        StringBuilder m = new StringBuilder();
+        for (int i = 0; ls != null && i < ls.length(); i++) m.append("▪ ").append(ls.optString(i)).append("\n\n");
+        try {
+            showPreview(new JSONObject().put("kind", "text").put("title", s.optString("title")).put("text", m.toString().trim()));
+        } catch (Exception ignored) {
+        }
+        StringBuilder st = new StringBuilder();
+        for (int i = 0; i < secs.length(); i++) st.append(i == section ? "▶ " : "").append(secs.optJSONObject(i).optString("title")).append("      ");
+        studios.setText(st.toString().trim());
+        showProgress((section + 1) * 100 / secs.length());
+        since.setText((section + 1) + " / " + secs.length());
+        breaking.setVisibility(View.GONE);
+        StringBuilder k = new StringBuilder();
+        for (int i = 0; i < secs.length(); i++) {
+            JSONArray l2 = secs.optJSONObject(i).optJSONArray("lines");
+            for (int j = 0; l2 != null && j < l2.length(); j++) k.append(secs.optJSONObject(i).optString("title").toUpperCase(Locale.ROOT)).append(" · ").append(l2.optString(j)).append("        ▪        ");
+        }
+        setTicker(k.toString());
+        avatar.setState(true, false);
+    }
+
+    // ---- v2.22 DEBATE: the agents' answers side by side, the owner picks the winner -------------------------------
+
+    private void startDebate() {
+        bug.setText("◆ DEBATE");
+        bug.setBackground(box(t.accent2, dp(3)));
+        hint.setText("◀ ▶ answer   OK " + getString(R.string.debate_pick) + "   BACK");
+        stage.setVisibility(View.GONE);
+        panels = new LinearLayout(this);
+        ((FrameLayout) stage.getParent()).addView(panels, at(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT,
+                Gravity.TOP, dp(36), dp(110), dp(36), dp(176)));
+        debateFrame();
+    }
+
+    private JSONObject currentDebate() {
+        try {
+            if (!debateId.isEmpty()) return com.omarchytv.home.link.Studio.debate(debateId);
+        } catch (Exception ignored) {
+        }
+        JSONObject d = com.omarchytv.home.link.Studio.debateOnAir();
+        if (d != null) debateId = d.optString("id");
+        return d;
+    }
+
+    private void debateFrame() {
+        clock.setText(DateFormat.getTimeInstance(DateFormat.SHORT).format(new Date()));
+        JSONObject d = currentDebate();
+        if (d == null) {
+            ltName.setText("DEBATE");
+            ltText.setText("—");
+            return;
+        }
+        JSONArray en = d.optJSONArray("entries");
+        int n = en == null ? 0 : en.length();
+        pick = Math.max(0, Math.min(pick, Math.max(0, n - 1)));
+        ltName.setText("THE QUESTION");
+        ltText.setText(d.optString("topic"));
+        String winner = d.optString("winner", "");
+        breaking.setVisibility(View.VISIBLE);
+        breaking.setBackground(box(winner.isEmpty() ? RED : t.green, 0));
+        breaking.setText(winner.isEmpty() ? (n == 0 ? "◆ " + getString(R.string.debate_waiting) : "◆ " + getString(R.string.debate_you_decide) + " · OK → " + en.optJSONObject(pick).optString("agent"))
+                : "🏆 " + winner);
+        panels.removeAllViews();
+        for (int i = 0; i < n; i++) {
+            JSONObject e = en.optJSONObject(i);
+            boolean on = i == pick, won = winner.equals(e.optString("agent"));
+            LinearLayout col = new LinearLayout(this);
+            col.setOrientation(LinearLayout.VERTICAL);
+            GradientDrawable g = box(t.bgDarker, dp(6));
+            g.setStroke(dp(on || won ? 4 : 2), won ? t.green : on ? t.accent : t.muted);
+            col.setBackground(g);
+            col.setPadding(dp(16), dp(12), dp(16), dp(12));
+            TextView who = tv(22, t.fgBright, true);
+            who.setText((won ? "🏆 " : "") + e.optString("agent"));
+            col.addView(who);
+            TextView tx = tv(16, t.fg, false);
+            tx.setText(e.optString("text"));
+            tx.setPadding(0, dp(8), 0, 0);
+            col.addView(tx);
+            JSONObject pv = e.optJSONObject("preview");
+            if (pv != null && ("text".equals(pv.optString("kind")) || "diff".equals(pv.optString("kind")))) {
+                TextView pt = tv(13, t.fg, false);
+                pt.setTypeface(android.graphics.Typeface.MONOSPACE);
+                pt.setText("diff".equals(pv.optString("kind")) ? AgentQuestionActivity.coloured(pv.optString("text"), t.green, t.red) : pv.optString("text"));
+                pt.setPadding(0, dp(10), 0, 0);
+                col.addView(pt);
+            }
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1);
+            lp.setMargins(i == 0 ? 0 : dp(8), 0, i == n - 1 ? 0 : dp(8), 0);
+            panels.addView(col, lp);
+        }
+        StringBuilder st = new StringBuilder();
+        for (int i = 0; i < n; i++) st.append(i == pick ? "▶ " : "").append(en.optJSONObject(i).optString("agent")).append("      ");
+        studios.setText(st.toString().trim());
+        setTicker("");
+    }
+
+    private void debateKey(int code) {
+        JSONObject d = currentDebate();
+        JSONArray en = d == null ? null : d.optJSONArray("entries");
+        int n = en == null ? 0 : en.length();
+        if (n == 0) return;
+        if (code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT) {
+            pick = (pick + (code == KeyEvent.KEYCODE_DPAD_RIGHT ? 1 : -1) + n) % n;
+            pickAt = System.currentTimeMillis();
+            debateFrame();
+        } else if ((code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) && d.optString("winner", "").isEmpty()
+                && System.currentTimeMillis() - pickAt > AgentQuestionActivity.OK_GUARD_MS) {   // a reflex OK never picks
+            try {
+                OmarchyLink.debateChosen(debateId, pick);
+            } catch (Exception ignored) {
+            }
+            debateFrame();
+        }
+    }
+
     // ---- REPLAY ------------------------------------------------------------------------------------------------
 
     private void loadTape() {
@@ -612,6 +780,22 @@ public class LiveActivity extends Activity {
 
     @Override
     public boolean onKeyDown(int code, KeyEvent e) {
+        if (DEBATE.equals(show) && code != KeyEvent.KEYCODE_BACK) {
+            debateKey(code);
+            return true;
+        }
+        if (BRIEFING.equals(show) && code != KeyEvent.KEYCODE_BACK) {
+            JSONObject b = LauncherConfig.readJson(this).optJSONObject("briefing");
+            int n = b == null || b.optJSONArray("sections") == null ? 1 : Math.max(1, b.optJSONArray("sections").length());
+            if (code == KeyEvent.KEYCODE_DPAD_LEFT || code == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                section = (section + (code == KeyEvent.KEYCODE_DPAD_RIGHT ? 1 : -1) + n) % n;
+                sectionAt = System.currentTimeMillis();
+                briefingFrame();
+            } else if (code == KeyEvent.KEYCODE_DPAD_CENTER || code == KeyEvent.KEYCODE_ENTER) {
+                finish();   // the night shift's page, if the morning opened it, is underneath
+            }
+            return true;
+        }
         if (replay) {
             switch (code) {
                 case KeyEvent.KEYCODE_DPAD_CENTER:

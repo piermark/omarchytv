@@ -319,6 +319,53 @@ public final class OmarchyLink implements LinkServer.Host {
         if (r != null) r.emit("config", new JSONObject());
     }
 
+    // ---- v2.22 the studio ----
+    /** Reads a text aloud on the TV (the same rules as /v1/notify speak: off with notifySound off or a night shift). */
+    static void speakNow(String text) {
+        OmarchyLink r = runtime;
+        if (r != null) r.speak(text);
+    }
+
+    @Override
+    public boolean showStudio(String what, String arg) {
+        main.post(() -> {
+            try {
+                app.startActivity(LiveActivity.intent(app, "debate".equals(what) ? LiveActivity.DEBATE : LiveActivity.BRIEFING)
+                        .putExtra(LiveActivity.EXTRA_ARG, arg == null ? "" : arg));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "studio: " + e);
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean askScene(String id, String from, String name, org.json.JSONArray steps, boolean save) {
+        main.post(() -> {
+            try {
+                app.startActivity(SceneActivity.intent(app, id, from, name, steps.toString(), save));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "scene: " + e);
+            }
+        });
+        return true;
+    }
+
+    /** v2.22 the owner's answer to a scene question, from SceneActivity (off the main thread: it may run steps). */
+    static JSONObject sceneAnswer(String id, boolean yes) throws Exception {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live()) return null;
+        return r.server.sceneAnswered(id, yes);
+    }
+
+    /** v2.22 the owner's pick in a debate, from AI LIVE. */
+    static void debateChosen(String id, int index) throws Exception {
+        JSONObject d = com.omarchytv.home.link.Studio.debateChoose(id, index, System.currentTimeMillis());
+        com.omarchytv.home.link.LiveFeed.get().event("you", "answer", "picked " + d.optString("winner"), System.currentTimeMillis());
+        OmarchyLink r = runtime;
+        if (r != null && r.server != null) r.server.broadcast("debate", new JSONObject().put("id", id).put("op", "chosen").put("winner", d.optString("winner")));
+    }
+
     @Override
     public java.util.Map<String, JSONObject> skillCatalog() {
         return catalog(app);

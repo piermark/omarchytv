@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">ativar as suas cenas e interruptores do Home Assistant</string>
     <string name="skill_perm_shift">usar o turno da noite</string>
     <string name="skill_perm_live">entrar no AI LIVE</string>
+    <string name="debate_pick">escolhe</string>
+    <string name="debate_waiting">à espera das respostas dos agentes</string>
+    <string name="debate_you_decide">decide você</string>
+    <string name="scene_new">uma cena nova</string>
+    <string name="scene_ask_run">Executar estes passos agora?</string>
+    <string name="scene_ask_save">Guardar esta cena? Depois arranca com um OK, sem voltar a perguntar.</string>
+    <string name="scene_run">Executar</string>
+    <string name="scene_save">Guardar</string>
     <string name="web_settings_row">Definições web</string>
     <string name="web_settings_open">Abrir as definições web</string>
     <string name="web_settings_hint">Leia-o com um telemóvel na mesma rede ou escreva o endereço num computador. Depois aprove esse navegador na TV.</string>

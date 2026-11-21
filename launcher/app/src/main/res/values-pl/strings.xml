@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">uruchamianie scen i przełączników Home Assistant</string>
     <string name="skill_perm_shift">korzystanie z nocnej zmiany</string>
     <string name="skill_perm_live">występowanie w AI LIVE</string>
+    <string name="debate_pick">wybiera</string>
+    <string name="debate_waiting">czekam na odpowiedzi agentów</string>
+    <string name="debate_you_decide">ty decydujesz</string>
+    <string name="scene_new">nowa scena</string>
+    <string name="scene_ask_run">Wykonać te kroki teraz?</string>
+    <string name="scene_ask_save">Zapisać tę scenę? Potem uruchomi się jednym OK, bez ponownego pytania.</string>
+    <string name="scene_run">Wykonaj</string>
+    <string name="scene_save">Zapisz</string>
     <string name="web_settings_row">Ustawienia przez WWW</string>
     <string name="web_settings_open">Otwórz ustawienia przez WWW</string>
     <string name="web_settings_hint">Zeskanuj telefonem w tej samej sieci albo wpisz adres na komputerze. Potem zatwierdź tę przeglądarkę na telewizorze.</string>

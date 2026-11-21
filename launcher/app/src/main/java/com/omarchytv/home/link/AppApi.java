@@ -135,6 +135,7 @@ final class AppApi {
                 || "/v1/shift".equals(p) || p.startsWith("/v1/shift/")   // v2.22 the night shift
                 || "/v1/live".equals(p)   // v2.22 AI LIVE
                 || "/v1/skills".equals(p) || p.startsWith("/v1/skills/")   // v2.22 skills
+                || p.startsWith("/v1/briefing") || p.startsWith("/v1/debate") || p.startsWith("/v1/scene")   // v2.22 studio
                 || p.startsWith("/v1/ha/")   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
                 || "/v1/settings".equals(p) || "/v1/settings/schema".equals(p);   // v2.22 #163
     }
@@ -217,6 +218,7 @@ final class AppApi {
         if ("/v1/shift".equals(p) || p.startsWith("/v1/shift/")) return shiftRoute(who, m, p, body);   // v2.22
         if ("/v1/live".equals(p)) return liveRoute(who, m, body);   // v2.22 AI LIVE
         if ("/v1/skills".equals(p) || p.startsWith("/v1/skills/")) return skillsRoute(who, m, p);   // v2.22 skills
+        if (p.startsWith("/v1/briefing") || p.startsWith("/v1/debate") || p.startsWith("/v1/scene")) return studioRoute(who, m, p, body);
         if ("/v1/settings".equals(p) || "/v1/settings/schema".equals(p)) return settingsRoute(who, m, p, req.target, body);   // #163
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
@@ -828,6 +830,135 @@ final class AppApi {
             return new LinkServer.Response(st, LinkServer.err("ha_" + err, "Home Assistant"));
         }
         return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    // ---- v2.22 the studio: morning briefing, the agents' debate, the AI's scenes (Studio) ----
+    static final java.util.regex.Pattern DEBATE_PATH = java.util.regex.Pattern.compile("/v1/debate/(d[0-9]{1,6})");
+    static final java.util.regex.Pattern SCENE_ASK = java.util.regex.Pattern.compile("/v1/scene/(s[0-9a-f]{8})");
+    /** Scenes waiting for the owner's OK on the TV: id → {name, steps, save, state: pending|ran|saved|denied, results?}. */
+    final java.util.Map<String, JSONObject> sceneAsks = java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>());
+
+    private static LinkServer.Response bad(Studio.Bad e) {
+        return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+    }
+
+    LinkServer.Response studioRoute(Principal who, String m, String p, JSONObject body) throws Exception {
+        long now = System.currentTimeMillis();
+        String from = who.pc ? LinkServer.printable(body.optString("from", ""), 40) : who.name;
+        if (from.isEmpty()) from = "PC";
+        try {
+            switch (p) {
+                case "/v1/briefing":
+                    if ("GET".equals(m)) {
+                        if (!who.can("read")) return forbidden("read");
+                        JSONObject b = host.config().optJSONObject("briefing");
+                        return new LinkServer.Response(200, b == null ? new JSONObject().put("state", "none") : b);
+                    }
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject[] out = new JSONObject[1];
+                    String f = from;
+                    host.editConfig(j -> out[0] = Studio.briefingSet(j, body, f, now, java.util.TimeZone.getDefault()));
+                    LiveFeed.get().event(from, "info", "prepared the morning briefing", now);
+                    host.shiftChanged("briefing");
+                    return new LinkServer.Response(200, LinkServer.ok().put("briefing", out[0]));
+                case "/v1/briefing/show":
+                    if (!who.can("control")) return forbidden("control");
+                    if (host.config().optJSONObject("briefing") == null) return new LinkServer.Response(409, LinkServer.err("no_briefing", "set one first"));
+                    return host.showStudio("briefing", "") ? new LinkServer.Response(200, LinkServer.ok())
+                            : new LinkServer.Response(409, LinkServer.err("no_screen", "the TV cannot show it now"));
+                case "/v1/debate":
+                    if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject d = Studio.debateStart(body, from, now);
+                    LiveFeed.get().event(from, "info", "debate: " + d.optString("topic"), now);
+                    host.showStudio("debate", d.optString("id"));
+                    s.broadcast("debate", new JSONObject().put("id", d.optString("id")).put("op", "start"));
+                    return new LinkServer.Response(200, LinkServer.ok().put("debate", d));
+                case "/v1/scenes":
+                    if (!who.can("read")) return forbidden("read");
+                    JSONObject sc = host.config().optJSONObject("scenes");
+                    return new LinkServer.Response(200, new JSONObject().put("scenes", sc == null ? new JSONObject() : sc));
+                case "/v1/scene/run":
+                case "/v1/scene/save": {
+                    if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+                    if (!who.can("control")) return forbidden("control");
+                    boolean save = p.endsWith("/save");
+                    String name = body.has("name") || save ? Studio.sceneName(body.optString("name")) : "";
+                    if (!save && !body.has("steps")) {   // a saved scene: the owner approved it when it was saved
+                        JSONArray steps = Studio.scene(host.config(), name).getJSONArray("steps");
+                        LiveFeed.get().event(from, "status", "scene: " + name, now);
+                        return new LinkServer.Response(200, LinkServer.ok().put("ran", name).put("results", runScene(steps)));
+                    }
+                    JSONArray steps = Studio.sceneSteps(body.optJSONArray("steps"));
+                    String id = "s" + LinkCrypto.hex(LinkCrypto.randomBytes(4));
+                    while (sceneAsks.size() >= 8) sceneAsks.remove(sceneAsks.keySet().iterator().next());
+                    sceneAsks.put(id, new JSONObject().put("id", id).put("name", name).put("steps", steps).put("save", save)
+                            .put("by", from).put("state", "pending").put("at", now));
+                    if (!host.askScene(id, from, name, steps, save)) {
+                        sceneAsks.remove(id);
+                        return new LinkServer.Response(409, LinkServer.err("no_screen", "the TV cannot show the question now"));
+                    }
+                    return new LinkServer.Response(200, LinkServer.ok().put("asked", true).put("id", id)
+                            .put("message", "the owner answers on the TV; check GET /v1/scene/" + id));
+                }
+                default:
+                    break;
+            }
+            java.util.regex.Matcher dm = DEBATE_PATH.matcher(p);
+            if (dm.matches()) {
+                if (!who.can("notify")) return forbidden("notify");
+                if ("GET".equals(m)) return new LinkServer.Response(200, Studio.debate(dm.group(1)));
+                JSONObject d = Studio.debatePost(dm.group(1), from, body, now);
+                LiveFeed.get().event(from, "info", "answered the debate", now);
+                s.broadcast("debate", new JSONObject().put("id", d.optString("id")).put("op", "post"));
+                return new LinkServer.Response(200, LinkServer.ok().put("debate", d));
+            }
+            java.util.regex.Matcher sm = SCENE_ASK.matcher(p);
+            if (sm.matches() && "GET".equals(m)) {
+                if (!who.can("control")) return forbidden("control");
+                JSONObject a = sceneAsks.get(sm.group(1));
+                return a == null ? new LinkServer.Response(404, LinkServer.err("no_such_scene_question", sm.group(1))) : new LinkServer.Response(200, a);
+            }
+        } catch (Studio.Bad e) {
+            return bad(e);
+        }
+        return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    /** Runs a scene's steps as the TV's own MCP calls, one after the other; a failed step does not stop the rest. */
+    JSONArray runScene(JSONArray steps) throws Exception {
+        JSONArray out = new JSONArray();
+        Principal owner = Principal.pc("scene");
+        for (int i = 0; i < steps.length(); i++) {
+            JSONObject st = steps.getJSONObject(i);
+            JSONObject req = new JSONObject().put("jsonrpc", "2.0").put("id", i + 1).put("method", "tools/call")
+                    .put("params", new JSONObject().put("name", st.getString("tool")).put("arguments", st.optJSONObject("args")));
+            LinkServer.Response r = s.mcp(req, owner);
+            JSONObject res = new JSONObject(new String(r.body, java.nio.charset.StandardCharsets.UTF_8)).optJSONObject("result");
+            boolean ok = res != null && !res.optBoolean("isError");
+            JSONObject one = new JSONObject().put("step", Studio.describe(st)).put("ok", ok);
+            if (!ok) {   // the agent sees why a step failed, in a few words
+                JSONArray c = res == null ? null : res.optJSONArray("content");
+                String why = c != null && c.length() > 0 ? c.optJSONObject(0).optString("text") : new String(r.body, java.nio.charset.StandardCharsets.UTF_8);
+                one.put("error", LinkServer.printable(why, 200));
+            }
+            out.put(one);
+        }
+        return out;
+    }
+
+    /** The owner's answer on the TV (SceneActivity): run it, save it, or nothing. */
+    public JSONObject sceneAnswered(String id, boolean yes) throws Exception {
+        JSONObject a = sceneAsks.get(id);
+        if (a == null || !"pending".equals(a.optString("state"))) return null;
+        if (!yes) return a.put("state", "denied");
+        JSONArray steps = a.getJSONArray("steps");
+        if (a.optBoolean("save")) {
+            host.editConfig(j -> Studio.sceneSave(j, a.optString("name"), steps, a.optString("by"), System.currentTimeMillis()));
+            return a.put("state", "saved");
+        }
+        LiveFeed.get().event(a.optString("by"), "status", "scene: " + (a.optString("name").isEmpty() ? "(new)" : a.optString("name")), System.currentTimeMillis());
+        return a.put("state", "ran").put("results", runScene(steps));
     }
 
     // ---- v2.22 skills from the community: list, ask the owner to install, remove ----

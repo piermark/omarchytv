@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">käynnistää Home Assistant -tilanteita ja -kytkimiä</string>
     <string name="skill_perm_shift">käyttää yövuoroa</string>
     <string name="skill_perm_live">näkyä AI LIVE -lähetyksessä</string>
+    <string name="debate_pick">valitsee</string>
+    <string name="debate_waiting">odotetaan agenttien vastauksia</string>
+    <string name="debate_you_decide">sinä päätät</string>
+    <string name="scene_new">uusi tilanne</string>
+    <string name="scene_ask_run">Suoritetaanko nämä vaiheet nyt?</string>
+    <string name="scene_ask_save">Tallennetaanko tämä tilanne? Sen jälkeen se käynnistyy yhdellä OK:lla kysymättä uudelleen.</string>
+    <string name="scene_run">Suorita</string>
+    <string name="scene_save">Tallenna</string>
     <string name="web_settings_row">Verkkoasetukset</string>
     <string name="web_settings_open">Avaa verkkoasetukset</string>
     <string name="web_settings_hint">Skannaa se puhelimella samassa verkossa tai kirjoita osoite tietokoneella. Hyväksy sitten selain televisiossa.</string>

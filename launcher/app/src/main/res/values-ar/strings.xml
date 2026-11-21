@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">تشغيل مشاهد ومفاتيح Home Assistant</string>
     <string name="skill_perm_shift">استخدام المناوبة الليلية</string>
     <string name="skill_perm_live">الظهور على AI LIVE</string>
+    <string name="debate_pick">يختار</string>
+    <string name="debate_waiting">بانتظار إجابات الوكلاء</string>
+    <string name="debate_you_decide">القرار لك</string>
+    <string name="scene_new">مشهد جديد</string>
+    <string name="scene_ask_run">تشغيل هذه الخطوات الآن؟</string>
+    <string name="scene_ask_save">حفظ هذا المشهد؟ بعدها يبدأ بضغطة OK واحدة دون سؤال مجدداً.</string>
+    <string name="scene_run">تشغيل</string>
+    <string name="scene_save">حفظ</string>
     <string name="web_settings_row">إعدادات الويب</string>
     <string name="web_settings_open">فتح إعدادات الويب</string>
     <string name="web_settings_hint">امسحه بهاتف على الشبكة نفسها أو اكتب العنوان على حاسوب. ثم وافق على ذلك المتصفح من التلفاز.</string>

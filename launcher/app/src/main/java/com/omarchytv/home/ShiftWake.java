@@ -27,8 +27,10 @@ final class ShiftWake {
     static void plan(Context c) {
         AlarmManager am = (AlarmManager) c.getSystemService(Context.ALARM_SERVICE);
         if (am == null) return;
-        JSONObject s = LauncherConfig.readJson(c).optJSONObject("shift");
+        JSONObject cfg = LauncherConfig.readJson(c), s = cfg.optJSONObject("shift"), br = cfg.optJSONObject("briefing");
         long wake = s != null && s.optBoolean("active") ? s.optLong("wake") : 0;
+        long bw = br != null && !br.optBoolean("shown") ? br.optLong("wake") : 0;   // v2.22 the morning briefing
+        if (bw > System.currentTimeMillis() && (wake <= System.currentTimeMillis() || bw < wake)) wake = bw;
         am.cancel(pi(c));
         if (wake <= System.currentTimeMillis()) return;
         try {
@@ -50,6 +52,20 @@ final class ShiftWake {
             LauncherConfig.updateOrThrow(c, j -> {
                 JSONObject x = j.optJSONObject("shift");
                 if (x != null) x.put("wakeShown", true);
+            });
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
+    }
+
+    /** v2.22 the morning briefing is due (its wake time passed, not on air yet): marks it shown and says so. */
+    static boolean briefingDue(Context c) {
+        if (!com.omarchytv.home.link.Studio.briefingDue(LauncherConfig.readJson(c), System.currentTimeMillis())) return false;
+        try {
+            LauncherConfig.updateOrThrow(c, j -> {
+                JSONObject b = j.optJSONObject("briefing");
+                if (b != null) b.put("shown", true);
             });
         } catch (Exception e) {
             return false;

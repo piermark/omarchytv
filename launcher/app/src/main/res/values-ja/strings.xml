@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">Home Assistant のシーンとスイッチを実行</string>
     <string name="skill_perm_shift">夜勤を使用</string>
     <string name="skill_perm_live">AI LIVE に出演</string>
+    <string name="debate_pick">を選ぶ</string>
+    <string name="debate_waiting">エージェントの回答を待っています</string>
+    <string name="debate_you_decide">あなたが決めます</string>
+    <string name="scene_new">新しいシーン</string>
+    <string name="scene_ask_run">これらの手順を今すぐ実行しますか？</string>
+    <string name="scene_ask_save">このシーンを保存しますか？以後は確認なしで OK ひとつで始まります。</string>
+    <string name="scene_run">実行</string>
+    <string name="scene_save">保存</string>
     <string name="web_settings_row">Web設定</string>
     <string name="web_settings_open">Web設定を開く</string>
     <string name="web_settings_hint">同じネットワークのスマホで読み取るか、パソコンでアドレスを入力してください。その後、テレビでそのブラウザを許可します。</string>

@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">a Home Assistant jelenetek és kapcsolók indítása</string>
     <string name="skill_perm_shift">az éjszakai műszak használata</string>
     <string name="skill_perm_live">szereplés az AI LIVE adásban</string>
+    <string name="debate_pick">választ</string>
+    <string name="debate_waiting">várakozás az ügynökök válaszaira</string>
+    <string name="debate_you_decide">te döntesz</string>
+    <string name="scene_new">új jelenet</string>
+    <string name="scene_ask_run">Végrehajtod most ezeket a lépéseket?</string>
+    <string name="scene_ask_save">Mented ezt a jelenetet? Utána egy OK-ra elindul, újabb kérdés nélkül.</string>
+    <string name="scene_run">Futtatás</string>
+    <string name="scene_save">Mentés</string>
     <string name="web_settings_row">Webes beállítások</string>
     <string name="web_settings_open">Webes beállítások megnyitása</string>
     <string name="web_settings_hint">Olvasd be egy ugyanazon a hálózaton lévő telefonnal, vagy írd be a címet egy számítógépen. Utána engedélyezd a böngészőt a TV-n.</string>

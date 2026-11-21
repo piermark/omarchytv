@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">Home Assistant sahnelerini ve anahtarlarını çalıştırmak</string>
     <string name="skill_perm_shift">gece vardiyasını kullanmak</string>
     <string name="skill_perm_live">AI LIVE’da yayına çıkmak</string>
+    <string name="debate_pick">seçer</string>
+    <string name="debate_waiting">ajanların yanıtları bekleniyor</string>
+    <string name="debate_you_decide">sen karar ver</string>
+    <string name="scene_new">yeni bir sahne</string>
+    <string name="scene_ask_run">Bu adımlar şimdi çalıştırılsın mı?</string>
+    <string name="scene_ask_save">Bu sahne kaydedilsin mi? Sonra tek bir OK ile, yeniden sormadan başlar.</string>
+    <string name="scene_run">Çalıştır</string>
+    <string name="scene_save">Kaydet</string>
     <string name="web_settings_row">Web ayarları</string>
     <string name="web_settings_open">Web ayarlarını aç</string>
     <string name="web_settings_hint">Aynı ağdaki bir telefonla tara ya da adresi bir bilgisayara yaz. Sonra o tarayıcıyı TV\'de onayla.</string>

@@ -1040,6 +1040,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         super.onResume();
         BootScreenView.onResume(this, findViewById(R.id.root));
         if (ShiftWake.dueOnHome(this)) startActivity(ShiftActivity.intent(this, false));   // v2.22 the night shift's morning
+        if (ShiftWake.briefingDue(this)) startActivity(LiveActivity.intent(this, LiveActivity.BRIEFING));   // on top: the briefing first
         // migrations first, then the wallpaper layers: a first launch must not attach OmaFire/fractals to the old default
         LauncherConfig.update(this, j -> {
             LauncherConfig.pulseDefault(j);

@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">pornească scenele și comutatoarele Home Assistant</string>
     <string name="skill_perm_shift">folosească tura de noapte</string>
     <string name="skill_perm_live">apară în AI LIVE</string>
+    <string name="debate_pick">alege</string>
+    <string name="debate_waiting">se așteaptă răspunsurile agenților</string>
+    <string name="debate_you_decide">tu decizi</string>
+    <string name="scene_new">o scenă nouă</string>
+    <string name="scene_ask_run">Rulezi acești pași acum?</string>
+    <string name="scene_ask_save">Salvezi această scenă? Apoi pornește cu un OK, fără să mai întrebe.</string>
+    <string name="scene_run">Rulează</string>
+    <string name="scene_save">Salvează</string>
     <string name="web_settings_row">Setări web</string>
     <string name="web_settings_open">Deschide setările web</string>
     <string name="web_settings_hint">Scanează-l cu un telefon din aceeași rețea sau scrie adresa pe un computer. Apoi aprobă browserul pe televizor.</string>

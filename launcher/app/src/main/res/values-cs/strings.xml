@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">spouštět scény a spínače Home Assistant</string>
     <string name="skill_perm_shift">používat noční směnu</string>
     <string name="skill_perm_live">vysílat v AI LIVE</string>
+    <string name="debate_pick">vybírá</string>
+    <string name="debate_waiting">čekám na odpovědi agentů</string>
+    <string name="debate_you_decide">rozhodujete vy</string>
+    <string name="scene_new">nová scéna</string>
+    <string name="scene_ask_run">Provést tyto kroky teď?</string>
+    <string name="scene_ask_save">Uložit tuto scénu? Pak se spustí jedním OK bez dalšího ptaní.</string>
+    <string name="scene_run">Spustit</string>
+    <string name="scene_save">Uložit</string>
     <string name="web_settings_row">Webové nastavení</string>
     <string name="web_settings_open">Otevřít webové nastavení</string>
     <string name="web_settings_hint">Naskenujte ho telefonem ve stejné síti nebo zadejte adresu na počítači. Pak ten prohlížeč schvalte na TV.</string>

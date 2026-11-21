@@ -165,6 +165,14 @@
     <string name="skill_perm_ha_control">εκτελεί σκηνές και διακόπτες του Home Assistant</string>
     <string name="skill_perm_shift">χρησιμοποιεί τη νυχτερινή βάρδια</string>
     <string name="skill_perm_live">βγαίνει στο AI LIVE</string>
+    <string name="debate_pick">επιλέγει</string>
+    <string name="debate_waiting">αναμονή για τις απαντήσεις των πρακτόρων</string>
+    <string name="debate_you_decide">αποφασίζετε εσείς</string>
+    <string name="scene_new">νέα σκηνή</string>
+    <string name="scene_ask_run">Εκτέλεση αυτών των βημάτων τώρα;</string>
+    <string name="scene_ask_save">Αποθήκευση αυτής της σκηνής; Μετά ξεκινά με ένα OK, χωρίς νέα ερώτηση.</string>
+    <string name="scene_run">Εκτέλεση</string>
+    <string name="scene_save">Αποθήκευση</string>
     <string name="web_settings_row">Ρυθμίσεις web</string>
     <string name="web_settings_open">Άνοιγμα ρυθμίσεων web</string>
     <string name="web_settings_hint">Σαρώστε το με κινητό στο ίδιο δίκτυο ή πληκτρολογήστε τη διεύθυνση σε υπολογιστή. Μετά εγκρίνετε τον browser στην TV.</string>
