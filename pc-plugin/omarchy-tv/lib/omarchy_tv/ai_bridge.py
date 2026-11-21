@@ -9,6 +9,8 @@ keeps itself, with the same rules and answers (ports of LiveFeed, NightShift and
   the TV (ask code)    GET /v1/tvlive (the channel, the shift, a skill to approve, the briefing, a debate),
                        POST /v1/shift/answer {id, yes}, POST /v1/skills/answer {id, yes},
                        POST /v1/tvstudio/briefing-shown, POST /v1/tvstudio/debate {id, index}
+  Televideo AI, Guide  GET /v1/teletext, GET/PUT/DELETE /v1/teletext/<101-899>, GET/POST /v1/guide,
+                       POST/DELETE /v1/guide/<id> (agents); the TV reads both in GET /v1/tvlive
 
 The studio (v2.22): the morning briefing is kept with the Home's settings ("briefing"); debates are memory only and
 only the TV picks the winner. Scenes need the TV's own tools, so they are for Android TV.
@@ -570,6 +572,128 @@ class Debates:
         return last
 
 
+# ---------------------------------------------------------------- Televideo AI and the Guide (ports of Teletext, Guide)
+
+TT_COLS, TT_ROWS, TT_MAX = 40, 22, 60
+TT_COLORS = ("white", "red", "green", "yellow", "blue", "magenta", "cyan")
+GUIDE_MAX, GUIDE_STATES = 50, ("scheduled", "on_air", "done", "failed", "cancelled")
+
+
+def tt_number(v) -> int:
+    try:
+        n = int(str(v).strip())
+    except ValueError:
+        n = -1
+    if not 101 <= n <= 899:
+        raise Bad("bad_page", "page: 101 to 899 (100 is the index)")
+    return n
+
+
+def tt_publish(cfg: dict, n: int, b: dict, by: str, now: float) -> dict:
+    title = hg.printable(b.get("title", ""), 32)
+    if not title:
+        raise Bad("bad_title", "title: 1 to 32 characters")
+    raw = b.get("lines")
+    if not isinstance(raw, list) or not raw:
+        raise Bad("bad_lines", f"lines: 1 to {TT_ROWS} (text, or {{text, color}})")
+    if len(raw) > TT_ROWS:
+        raise Bad("too_many", f"{TT_ROWS} lines")
+    lines = []
+    for x in raw:
+        text = x.get("text", "") if isinstance(x, dict) else "" if x is None else str(x)
+        color = x.get("color", "white") if isinstance(x, dict) else "white"
+        if color not in TT_COLORS:
+            raise Bad("bad_color", f"color: one of {list(TT_COLORS)}")
+        lines.append({"text": hg.printable(text, TT_COLS), "color": color})
+    pages = cfg.setdefault("teletext", {})
+    if str(n) not in pages and len(pages) >= TT_MAX:
+        raise Bad("full", f"{TT_MAX} pages; remove one first", 409)
+    p = {"page": n, "title": title, "lines": lines, "by": hg.printable(by, 40), "at": int(now * 1000)}
+    pages[str(n)] = p
+    return p
+
+
+def tt_remove(cfg: dict, n: int):
+    if cfg.get("teletext", {}).pop(str(n), None) is None:
+        raise Bad("no_such_page", str(n), 404)
+
+
+def tt_list(cfg: dict) -> list:
+    pages = cfg.get("teletext", {})
+    return [{k: pages[n][k] for k in ("page", "title", "by", "at")} for n in sorted(pages, key=int)]
+
+
+def guide_add(cfg: dict, b: dict, agent: str, now: float) -> dict:
+    title = hg.printable(b.get("title", ""), 60)
+    if not title:
+        raise Bad("bad_title", "title: 1 to 60 characters")
+    start = at(b["start"], now) if "start" in b else now
+    if start < 0 or start < now - 12 * 3600 or start > now + 48 * 3600:
+        raise Bad("bad_start", "start: \"23:30\" or epoch ms, within 48 hours")
+    end = at(b["end"], start) if "end" in b else start + 3600
+    if end <= start or end - start > 16 * 3600:
+        raise Bad("bad_end", "end: after start, 16 hours at most")
+    g = cfg.setdefault("guide", {"seq": 0, "programmes": []})
+    g["programmes"] = [p for p in g.get("programmes", []) if now * 1000 - p["end"] < 24 * 3600_000]
+    if len(g["programmes"]) >= GUIDE_MAX:
+        raise Bad("full", f"{GUIDE_MAX} programmes", 409)
+    g["seq"] = g.get("seq", 0) + 1
+    p = {"id": f"p{g['seq']}", "agent": hg.printable(agent, 40), "title": title, "detail": multiline(b.get("detail", ""), 300, 6),
+         "start": int(start * 1000), "end": int(end * 1000), "state": "scheduled", "at": int(now * 1000)}
+    g["programmes"].append(p)
+    return p
+
+
+def guide_update(cfg: dict, pid: str, b: dict, now: float) -> dict:
+    for p in cfg.get("guide", {}).get("programmes", []):
+        if p["id"] != pid:
+            continue
+        st = b.get("state", p["state"])
+        if st not in GUIDE_STATES:
+            raise Bad("bad_state", f"state: one of {list(GUIDE_STATES)}")
+        p["state"] = st
+        if "detail" in b:
+            p["detail"] = multiline(b.get("detail", ""), 300, 6)
+        ms = int(now * 1000)
+        if st in ("done", "failed", "cancelled"):
+            p["end"] = min(p["end"], max(ms, p["start"] + 60_000))
+        if st == "on_air" and p["start"] > ms:
+            p["start"] = ms
+        return p
+    raise Bad("no_such_programme", pid, 404)
+
+
+def guide_remove(cfg: dict, pid: str):
+    ps = cfg.get("guide", {}).get("programmes", [])
+    keep = [p for p in ps if p["id"] != pid]
+    if len(keep) == len(ps):
+        raise Bad("no_such_programme", pid, 404)
+    cfg["guide"]["programmes"] = keep
+
+
+def guide_view(cfg: dict, shift: dict, now: float) -> list:
+    ms = int(now * 1000)
+    items = [dict(p, kind="agent") for p in cfg.get("guide", {}).get("programmes", [])]
+    if shift.get("state", "none") != "none":
+        end = min(shift["until"], shift["endedAt"]) if "endedAt" in shift else shift["until"]
+        items.append({"id": "shift", "kind": "shift", "agent": shift.get("by", ""), "title": "Night shift",
+                      "detail": f"{len(shift.get('tasks', []))} tasks", "start": shift["startedAt"], "end": max(end, shift["startedAt"] + 60_000),
+                      "state": "on_air" if shift["state"] == "running" else "done"})
+    br = cfg.get("briefing") or {}
+    if br.get("wake"):
+        items.append({"id": "briefing", "kind": "briefing", "agent": br.get("by", ""), "title": br.get("title", ""), "detail": "",
+                      "start": br["wake"], "end": br["wake"] + 15 * 60_000, "state": "done" if br.get("shown") else "scheduled"})
+    items.sort(key=lambda p: p["start"])
+    out = []
+    for p in items:
+        if ms - p["end"] > 6 * 3600_000:
+            continue
+        closed = p["state"] in ("done", "failed", "cancelled")
+        p["now"] = "past" if closed or p["end"] <= ms else "on_air" if p["state"] == "on_air" or p["start"] <= ms else "next"
+        out.append(p)
+    return out
+
+
 # ---------------------------------------------------------------- the bridge's state and routes
 
 LIVE = LiveFeed()
@@ -580,8 +704,9 @@ STUDIO: dict = {}   # "show": when an agent asked to put the briefing on air now
 
 
 def handles(path: str) -> bool:
-    return path in ("/v1/live", "/v1/shift", "/v1/tvlive", "/v1/skills", "/v1/briefing", "/v1/debate") or \
-        path.startswith(("/v1/shift/", "/v1/skills/", "/v1/tvskills/", "/v1/briefing/", "/v1/debate/", "/v1/tvstudio/"))
+    return path in ("/v1/live", "/v1/shift", "/v1/tvlive", "/v1/skills", "/v1/briefing", "/v1/debate", "/v1/teletext", "/v1/guide") or \
+        path.startswith(("/v1/shift/", "/v1/skills/", "/v1/tvskills/", "/v1/briefing/", "/v1/debate/", "/v1/tvstudio/",
+                         "/v1/teletext/", "/v1/guide/"))
 
 
 def tv_only(path: str) -> bool:
@@ -694,6 +819,39 @@ def _route(store, m, p, body, who, now):
         d = DEBATES.choose(str(body.get("id", "")), body.get("index"), now)
         LIVE.event(d["winner"], "ok", "won the debate: " + d["topic"], now)
         return 200, {"ok": True, "debate": d}
+    if p == "/v1/teletext" and m == "GET":   # v2.22 Televideo AI
+        return 200, {"pages": tt_list(store.load()), "max": TT_MAX}
+    tm = re.fullmatch(r"/v1/teletext/(\d{3})", p)
+    if tm:
+        n = int(tm.group(1))
+        if m == "GET":
+            pg = store.load().get("teletext", {}).get(str(n))
+            if pg is None:
+                raise Bad("no_such_page", str(n), 404)
+            return 200, pg
+        n = tt_number(n)
+        if m in ("PUT", "POST"):
+            pg = store.edit(lambda cfg: tt_publish(cfg, n, body, who, now))
+            LIVE.event(who, "info", f"teletext P{n}: {pg['title']}", now)
+            return 200, {"ok": True, "page": pg}
+        if m == "DELETE":
+            store.edit(lambda cfg: tt_remove(cfg, n))
+            return 200, {"ok": True}
+    if p == "/v1/guide":   # v2.22 the agents' Guide
+        if m == "GET":
+            return 200, {"programmes": guide_view(store.load(), SHIFT.status(now=now), now), "now": int(now * 1000)}
+        if m == "POST":
+            return 200, {"ok": True, "programme": store.edit(lambda cfg: guide_add(cfg, body, who, now))}
+    gm = re.fullmatch(r"/v1/guide/(p\d{1,6})", p)
+    if gm:
+        if m == "POST":
+            pr = store.edit(lambda cfg: guide_update(cfg, gm.group(1), body, now))
+            if pr["state"] != "scheduled":
+                LIVE.event(who, {"failed": "fail", "done": "ok"}.get(pr["state"], "info"), f"{pr['title']} · {pr['state'].replace('_', ' ')}", now)
+            return 200, {"ok": True, "programme": pr}
+        if m == "DELETE":
+            store.edit(lambda cfg: guide_remove(cfg, gm.group(1)))
+            return 200, {"ok": True}
     if p == "/v1/tvlive" and m == "GET":
         cfg = store.load()
         br = cfg.get("briefing")
@@ -704,5 +862,6 @@ def _route(store, m, p, body, who, now):
                      "skillAsk": {k: sk[k] for k in ("id", "name", "author", "version", "description", "permissions")} if sk else None,
                      "skills": [{k: s[k] for k in ("id", "name", "author", "version", "description", "permissions")} for s in catalog().values()],
                      "installed": list(cfg.get("skills", {}).keys()),
-                     "briefing": br if on_air else None, "debate": DEBATES.on_air(now)}
+                     "briefing": br if on_air else None, "debate": DEBATES.on_air(now),
+                     "teletext": cfg.get("teletext", {}), "guide": guide_view(cfg, SHIFT.status(now=now), now)}
     return 404, {"error": "not_found"}

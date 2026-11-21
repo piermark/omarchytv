@@ -589,10 +589,22 @@ decision`, `tv_skill_list | install | remove`.
 | POST | `/v1/scene/save` | control | `{name ≤40, steps}`: asks the owner on the TV → `{id}`; 24 scenes at most |
 | GET | `/v1/scene/{id}` | control | `pending | ran (results) | saved | denied` |
 
+| GET | `/v1/teletext` | read | `{pages: [{page, title, by, at}], max: 60}` |
+| GET | `/v1/teletext/{n}` | read | `{page, title, lines: [{text ≤40, color}], by, at}`; 100 is the index, made by the TV |
+| PUT | `/v1/teletext/{101-899}` | notify | `{title ≤32, lines: [1-22, "text" or {text, color: white | red | green | yellow | blue | magenta | cyan}]}`; 60 pages at most |
+| DELETE | `/v1/teletext/{101-899}` | control | |
+| GET | `/v1/guide` | read | `{programmes: [{id, kind: agent | shift | briefing, agent, title, detail, start, end, state, now: past | on_air | next}], now}` |
+| POST | `/v1/guide` | notify | `{title ≤60, start?: "23:30" or ms (≤48 h ahead, default now), end? (≤16 h, default 1 h), detail?}` → `{programme: {id: "p1"}}`; 50 at most |
+| POST | `/v1/guide/{id}` | notify | `{state: on_air | done | failed | cancelled, detail?}` |
+| DELETE | `/v1/guide/{id}` | control | |
+
 A scene step is `{tool, args}`, with `tool` one of `tv_ha_run`, `tv_launch_app`, `tv_set_theme`, `tv_radio`,
 `tv_send_key`, `tv_open`, `tv_notify`, `tv_screensaver`, `tv_page_show` (12 steps at most). Steps run as the TV's
 own MCP calls, and a failed step does not stop the others. Event: `debate {id, op: start | post | chosen}`. MCP:
-`tv_briefing_set | show`, `tv_debate_start | post | result`, `tv_scene_run | save | list | result`. On LG / Samsung
+`tv_briefing_set | show`, `tv_debate_start | post | result`, `tv_scene_run | save | list | result`,
+`tv_teletext_publish | list | remove`, `tv_guide | tv_guide_add | tv_guide_update`. Events: `teletext {page}`,
+`guide {id}`. `tv_open` also takes `teletext` and `guide`. On LG / Samsung the bridge keeps the pages and the Guide
+too (`GET /v1/tvlive` has `teletext` and `guide`). On LG / Samsung
 the PC bridge has the briefing and the debate (not scenes): the TV reads them in `GET /v1/tvlive` (`briefing`,
 `debate`) and answers with `POST /v1/tvstudio/briefing-shown` and `POST /v1/tvstudio/debate {id, index}`.
 

@@ -781,7 +781,7 @@ class WebOSHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "unauthorized", "message": "wrong or missing key"}, 401)
             return True
         body = {}
-        if method in ("POST", "DELETE"):
+        if method in ("POST", "PUT", "DELETE"):
             try:
                 n = int(self.headers.get("Content-Length") or 0)
             except ValueError:
@@ -806,6 +806,8 @@ class WebOSHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "not found"}, 404)
 
     def do_PUT(self):
+        if self._ai_route("PUT"):   # v2.22 Televideo AI pages
+            return
         if not self._home_route("PUT"):
             self._send_json({"error": "not found"}, 404)
 

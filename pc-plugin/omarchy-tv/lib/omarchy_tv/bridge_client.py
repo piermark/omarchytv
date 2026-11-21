@@ -48,8 +48,8 @@ class BridgeClient:
             return {"screen": "unknown", "app": None, "theme": st.get("theme"), "nowPlaying": None, "tv": "webos-or-tizen"}
         base = path.split("?", 1)[0]
         home = base.startswith("/v1/widgets/") or base == "/v1/widget-pages" or base.startswith("/v1/widget-pages/")   # v2.22
-        home = home or base in ("/v1/live", "/v1/shift", "/v1/skills", "/v1/briefing", "/v1/debate") or \
-            base.startswith(("/v1/shift/", "/v1/skills/", "/v1/briefing/", "/v1/debate/"))   # v2.22 (scenes: Android TV)
+        home = home or base in ("/v1/live", "/v1/shift", "/v1/skills", "/v1/briefing", "/v1/debate", "/v1/teletext", "/v1/guide") or \
+            base.startswith(("/v1/shift/", "/v1/skills/", "/v1/briefing/", "/v1/debate/", "/v1/teletext/", "/v1/guide/"))   # v2.22 (scenes: Android TV)
         if not (base in self.SUPPORTED or base.startswith("/v1/ask/") or home):
             raise BridgeError(404, {"error": "not_on_lg_samsung", "message": f"not_on_lg_samsung: {base} is for Android TV (Omarchy Link)"})
         c = http.client.HTTPConnection(self.host, self.port, timeout=timeout)

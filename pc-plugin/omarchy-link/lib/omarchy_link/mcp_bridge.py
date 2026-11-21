@@ -40,6 +40,8 @@ TOOL_SCOPE = {
     "tv_skill_list": "read", "tv_skill_install": "control", "tv_skill_remove": "control",   # v2.22 skills
     # v2.22 the studio: the morning briefing, the agents' debate, the AI's scenes
     "tv_briefing_set": "notify", "tv_briefing_show": "control",
+    "tv_teletext_publish": "notify", "tv_teletext_list": "read", "tv_teletext_remove": "control",   # v2.22 Televideo AI
+    "tv_guide": "read", "tv_guide_add": "notify", "tv_guide_update": "notify",   # v2.22 the agents' Guide
     "tv_debate_start": "notify", "tv_debate_post": "notify", "tv_debate_result": "notify",
     "tv_scene_run": "control", "tv_scene_save": "control", "tv_scene_list": "read", "tv_scene_result": "control",
     # v2.22 the night shift

@@ -199,3 +199,19 @@ class BridgeTest(unittest.TestCase):
         self.assertEqual(self.req("POST", "/v1/tvstudio/debate", {"id": did, "index": 0}, agent=A)[0], 401)
         self.assertEqual(self.req("POST", "/v1/tvstudio/debate", {"id": did, "index": 0}, token=T)[1]["debate"]["winner"], "Claude")
         self.assertEqual(self.req("GET", f"/v1/debate/{did}", agent=A)[1]["winner"], "Claude")
+
+    def test_televideo_and_the_guide_on_lg(self):   # v2.22
+        A, T = self.A, "ABCD1234"
+        self.assertEqual(self.req("PUT", "/v1/teletext/101", {"title": "Build", "lines": ["ok"]}, token=T)[0], 401)
+        self.assertEqual(self.req("PUT", "/v1/teletext/100", {"title": "Build", "lines": ["ok"]}, agent=A)[0], 400)
+        self.assertEqual(self.req("PUT", "/v1/teletext/101", {"title": "Build", "lines": ["ok", {"text": "lint", "color": "green"}], "from": "Hermes"}, agent=A)[0], 200)
+        self.assertEqual(self.req("PUT", "/v1/teletext/102", {"title": "x", "lines": [{"text": "y", "color": "pink"}]}, agent=A)[0], 400)
+        v = self.req("GET", "/v1/tvlive", token=T)[1]
+        self.assertEqual(v["teletext"]["101"]["by"], "Hermes")
+        st, g = self.req("POST", "/v1/guide", {"title": "Refactor", "from": "Claude"}, agent=A)
+        pid = g["programme"]["id"]
+        self.assertEqual(self.req("GET", "/v1/tvlive", token=T)[1]["guide"][0]["now"], "on_air")
+        self.assertEqual(self.req("POST", f"/v1/guide/{pid}", {"state": "failed"}, agent=A)[0], 200)
+        self.assertEqual(self.req("GET", "/v1/guide", agent=A)[1]["programmes"][0]["now"], "past")
+        self.assertEqual(self.req("DELETE", "/v1/teletext/101", agent=A)[0], 200)
+        self.assertEqual(self.req("GET", "/v1/teletext/101", agent=A)[0], 404)

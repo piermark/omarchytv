@@ -236,6 +236,12 @@ class TestMcpV221(unittest.TestCase):
         call("tv_debate_post", {"id": "d1", "text": "LRU"}, "notify")
         self.assertEqual(sent[-1], ("POST", "/v1/debate/d1", {"text": "LRU"}))
         self.assertTrue(call("tv_debate_result", {"id": "../d1"}, "notify")["result"]["isError"])
+        call("tv_teletext_publish", {"page": 101, "title": "Build", "lines": ["ok"], "x": 1}, "notify")   # v2.22 Televideo AI
+        self.assertEqual(sent[-1], ("PUT", "/v1/teletext/101", {"title": "Build", "lines": ["ok"]}))
+        self.assertTrue(call("tv_teletext_publish", {"page": 100, "title": "x", "lines": ["y"]}, "notify")["result"]["isError"])
+        call("tv_guide_update", {"id": "p3", "state": "done"}, "notify")
+        self.assertEqual(sent[-1], ("POST", "/v1/guide/p3", {"state": "done"}))
+        self.assertIn("error", call("tv_teletext_remove", {"page": 101}, "notify"))
         call("tv_scene_run", {"name": "movie night"})
         self.assertEqual(sent[-1], ("POST", "/v1/scene/run", {"name": "movie night"}))
         self.assertIn("error", call("tv_scene_run", {"name": "x"}, "notify"))   # a notify token runs no scene

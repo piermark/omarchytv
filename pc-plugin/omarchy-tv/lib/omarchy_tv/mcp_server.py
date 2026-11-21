@@ -187,10 +187,12 @@ ALLOWED_TOOLS = (
                      "required": ["minutes"]}},
     {
         "name": "tv_open",
-        "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office or skill "
-                       "(the agent skill as a QR).",
+        "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office, skill "
+                       "(the agent skill as a QR), live (AI LIVE), replay (the night shift played back), teletext "
+                       "(Televideo AI) or guide (the agents' Guide). Android TV.",
         "inputSchema": {"type": "object", "properties": {"target": {"type": "string",
-                                                                    "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office", "skill"]}},
+                                                                    "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office", "skill",
+                                                                             "live", "replay", "teletext", "guide"]}},
                         "required": ["target"]},
     },
     {"name": "tv_skill_list", "description": "The skills the TV can install (id, name, author, permissions) and the installed ones "
@@ -255,6 +257,27 @@ ALLOWED_TOOLS = (
     {"name": "tv_scene_list", "description": "Android TV: the saved scenes and their steps.", "inputSchema": {"type": "object", "properties": {}}},
     {"name": "tv_scene_result", "description": "Android TV: the owner's answer to a scene question (pending, ran, saved, denied).",
      "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    # v2.22 Televideo AI and the agents' Guide
+    {"name": "tv_teletext_publish", "description": "Publish a Televideo page on the TV (the teletext of old): page 101-899, a title "
+                                                 "≤32 and up to 22 lines of 40 characters, each a string or {text, color} (white, "
+                                                 "red, green, yellow, blue, magenta, cyan). Page 100 is the index; the owner types the number.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": "integer", "minimum": 101, "maximum": 899},
+                                                      "title": {"type": "string"}, "lines": {"type": "array"}},
+                     "required": ["page", "title", "lines"]}},
+    {"name": "tv_teletext_list", "description": "The Televideo pages (page, title, by, at).", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_teletext_remove", "description": "Remove a Televideo page.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": "integer"}}, "required": ["page"]}},
+    {"name": "tv_guide", "description": "The agents' Guide: your programmes, the night shift and the morning briefing as a TV "
+                                      "schedule, each past, on_air or next.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_guide_add", "description": "Put a programme on the Guide: what you will do and when (start \"23:30\" or epoch "
+                                          "ms within 48 h, end ≤16 h later, default 1 h).",
+     "inputSchema": {"type": "object", "properties": {"title": {"type": "string"}, "start": {"type": ["string", "integer"]},
+                                                      "end": {"type": ["string", "integer"]}, "detail": {"type": "string"}},
+                     "required": ["title"]}},
+    {"name": "tv_guide_update", "description": "Say how a programme goes: state on_air, done, failed or cancelled, and a detail.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "state": {"type": "string",
+                                                      "enum": ["on_air", "done", "failed", "cancelled"]}, "detail": {"type": "string"}},
+                     "required": ["id", "state"]}},
     {"name": "tv_shift_decision", "description": "The owner's answer to a queued step: pending, approved or denied.",
      "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
     {"name": "tv_settings_get", "description": "The TV's settings (theme, Home, plugins, Home Assistant URL, agents…) as "
@@ -382,6 +405,8 @@ TOOL_SCOPE = {
     "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
     "tv_live_update": "notify", "tv_live": "read",
     "tv_skill_list": "read", "tv_skill_install": "control", "tv_skill_remove": "control",
+    "tv_teletext_publish": "notify", "tv_teletext_list": "read", "tv_teletext_remove": "control",
+    "tv_guide": "read", "tv_guide_add": "notify", "tv_guide_update": "notify",
     "tv_briefing_set": "notify", "tv_briefing_show": "control",
     "tv_debate_start": "notify", "tv_debate_post": "notify", "tv_debate_result": "notify",
     "tv_scene_run": "control", "tv_scene_save": "control", "tv_scene_list": "read", "tv_scene_result": "control",
@@ -618,6 +643,27 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         if name == "tv_skill_install":
             return c.request("POST", f"/v1/skills/{sid}/install", {})
         return c.request("DELETE", f"/v1/skills/{sid}")
+    if name in ("tv_teletext_publish", "tv_teletext_remove"):   # v2.22 Televideo AI
+        try:
+            n = int(args.get("page", 0))
+        except (TypeError, ValueError):
+            n = 0
+        if not 101 <= n <= 899:
+            raise ValueError("page: 101 to 899")
+        if name == "tv_teletext_remove":
+            return c.request("DELETE", f"/v1/teletext/{n}")
+        return c.request("PUT", f"/v1/teletext/{n}", {k: args[k] for k in ("title", "lines") if k in args})
+    if name == "tv_teletext_list":
+        return c.request("GET", "/v1/teletext")
+    if name == "tv_guide":   # v2.22 the agents' Guide
+        return c.request("GET", "/v1/guide")
+    if name == "tv_guide_add":
+        return c.request("POST", "/v1/guide", {k: args[k] for k in ("title", "start", "end", "detail") if k in args})
+    if name == "tv_guide_update":
+        gid = str(args.get("id", ""))
+        if not re.fullmatch(r"p\d{1,6}", gid):
+            raise ValueError("bad id")
+        return c.request("POST", f"/v1/guide/{gid}", {k: args[k] for k in ("state", "detail") if k in args})
     if name == "tv_briefing_set":   # v2.22 the studio
         b = {k: args[k] for k in ("title", "say", "wake", "sections") if k in args}
         return c.request("POST", "/v1/briefing", b)
