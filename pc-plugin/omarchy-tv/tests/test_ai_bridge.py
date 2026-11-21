@@ -78,6 +78,38 @@ class ModelTest(unittest.TestCase):
             ab.check_skill(bad)
 
 
+class StudioModelTest(unittest.TestCase):   # v2.22 the studio, as Studio in the launcher
+    def test_briefing_rules(self):
+        cfg, now = {}, 1_800_000_000.0
+        with self.assertRaises(ab.Bad):
+            ab.briefing_set(cfg, {"sections": []}, "a", now)
+        with self.assertRaises(ab.Bad):
+            ab.briefing_set(cfg, {"sections": [{"title": "x", "lines": [""]}]}, "a", now)
+        b = ab.briefing_set(cfg, {"sections": [{"title": "Overnight", "lines": ["green‮", ""]}], "wake": (now + 600) * 1000}, "hermes", now)
+        self.assertEqual(b["sections"][0]["lines"], ["green"])
+        self.assertFalse(ab.briefing_due(cfg, now))
+        self.assertTrue(ab.briefing_due(cfg, now + 601))
+        cfg["briefing"]["shown"] = True
+        self.assertFalse(ab.briefing_due(cfg, now + 601))
+
+    def test_only_the_tv_picks(self):
+        d = ab.Debates()
+        did = d.start({"topic": "Cache?"}, "owner", 1)["id"]
+        d.post(did, "Claude", {"text": "LRU"}, 2)
+        d.post(did, "Grok", {"text": "disk"}, 3)
+        d.post(did, "Grok", {"text": "disk, 50 MB"}, 4)
+        self.assertEqual(len(d.get(did)["entries"]), 2)
+        with self.assertRaises(ab.Bad):
+            d.post(did, "Hermes", {"text": "x", "preview": {"kind": "html"}}, 5)
+        with self.assertRaises(ab.Bad):
+            d.choose(did, True, 6)   # a bool is not an index
+        self.assertEqual(d.choose(did, 1, 6)["winner"], "Grok")
+        with self.assertRaises(ab.Bad):
+            d.post(did, "Hermes", {"text": "late"}, 7)
+        self.assertEqual(d.on_air(7)["id"], did)   # the winner stays on air for a while
+        self.assertIsNone(d.on_air(10_000))
+
+
 class BridgeTest(unittest.TestCase):
     A = "agent-key-0123456789abcdef"
 
@@ -87,10 +119,12 @@ class BridgeTest(unittest.TestCase):
                         mock.patch.object(webos, "bridge_agent_token", return_value=self.A),
                         mock.patch.object(webos, "_home_store", hg.Store(os.path.join(self.tmp.name, "w.json"))),
                         mock.patch.object(ab, "SHIFT", ab.Shift(os.path.join(self.tmp.name, "s.json"))),
-                        mock.patch.object(ab, "LIVE", ab.LiveFeed())]
+                        mock.patch.object(ab, "LIVE", ab.LiveFeed()),
+                        mock.patch.object(ab, "DEBATES", ab.Debates())]
         for p in self.patches:
             p.start()
         ab.SKILL_ASK.clear()
+        ab.STUDIO.clear()
         self.srv = HTTPServer(("127.0.0.1", 0), webos.WebOSHandler)
         threading.Thread(target=self.srv.serve_forever, daemon=True).start()
 
@@ -146,3 +180,22 @@ class BridgeTest(unittest.TestCase):
         self.assertEqual(len(self.req("GET", "/v1/home", token=T)[1]["widgets"]), 5)
         self.assertEqual(self.req("DELETE", "/v1/skills/homelab", agent=A)[0], 200)
         self.assertEqual(self.req("POST", "/v1/tvskills/install", {"id": "movie-night"}, token=T)[0], 200)
+
+    def test_the_studio_on_lg(self):   # v2.22
+        A, T = self.A, "ABCD1234"
+        self.assertEqual(self.req("POST", "/v1/briefing/show", {}, agent=A)[0], 409)
+        self.assertEqual(self.req("POST", "/v1/briefing", {"sections": [{"title": "Today", "lines": ["standup 9:30"]}], "from": "Hermes"}, token=T)[0], 401)
+        self.assertEqual(self.req("POST", "/v1/briefing", {"sections": [{"title": "Today", "lines": ["standup 9:30"]}], "from": "Hermes"}, agent=A)[0], 200)
+        self.assertIsNone(self.req("GET", "/v1/tvlive", token=T)[1]["briefing"])   # no wake time: not on air yet
+        self.assertEqual(self.req("POST", "/v1/briefing/show", {}, agent=A)[0], 200)
+        self.assertEqual(self.req("GET", "/v1/tvlive", token=T)[1]["briefing"]["by"], "Hermes")
+        self.assertEqual(self.req("POST", "/v1/tvstudio/briefing-shown", {}, agent=A)[0], 401)
+        self.assertEqual(self.req("POST", "/v1/tvstudio/briefing-shown", {}, token=T)[0], 200)
+        self.assertIsNone(self.req("GET", "/v1/tvlive", token=T)[1]["briefing"])
+        did = self.req("POST", "/v1/debate", {"topic": "Cache?", "from": "owner"}, agent=A)[1]["debate"]["id"]
+        self.req("POST", f"/v1/debate/{did}", {"text": "LRU", "from": "Claude"}, agent=A)
+        self.req("POST", f"/v1/debate/{did}", {"text": "disk", "from": "Grok"}, agent=A)
+        self.assertEqual(len(self.req("GET", "/v1/tvlive", token=T)[1]["debate"]["entries"]), 2)
+        self.assertEqual(self.req("POST", "/v1/tvstudio/debate", {"id": did, "index": 0}, agent=A)[0], 401)
+        self.assertEqual(self.req("POST", "/v1/tvstudio/debate", {"id": did, "index": 0}, token=T)[1]["debate"]["winner"], "Claude")
+        self.assertEqual(self.req("GET", f"/v1/debate/{did}", agent=A)[1]["winner"], "Claude")

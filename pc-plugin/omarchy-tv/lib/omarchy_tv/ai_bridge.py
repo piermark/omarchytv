@@ -5,8 +5,13 @@ keeps itself, with the same rules and answers (ports of LiveFeed, NightShift and
 
   agents (their key)   POST/GET /v1/live, GET /v1/shift, POST /v1/shift/start|end|log|queue,
                        GET /v1/shift/queue/<id>, GET /v1/skills, POST /v1/skills/<id>/install, DELETE /v1/skills/<id>
-  the TV (ask code)    GET /v1/tvlive (the channel, the shift, a skill to approve), POST /v1/shift/answer {id, yes},
-                       POST /v1/skills/answer {id, yes}
+                       GET/POST /v1/briefing, POST /v1/briefing/show, POST /v1/debate, GET/POST /v1/debate/<id>
+  the TV (ask code)    GET /v1/tvlive (the channel, the shift, a skill to approve, the briefing, a debate),
+                       POST /v1/shift/answer {id, yes}, POST /v1/skills/answer {id, yes},
+                       POST /v1/tvstudio/briefing-shown, POST /v1/tvstudio/debate {id, index}
+
+The studio (v2.22): the morning briefing is kept with the Home's settings ("briefing"); debates are memory only and
+only the TV picks the winner. Scenes need the TV's own tools, so they are for Android TV.
 
 Only the TV answers the morning queue and the skill questions. Everything is text. The live channel is memory
 only; the shift is kept in ~/.config/omarchy-tv/night-shift.json (0600).
@@ -458,19 +463,129 @@ def monitor_loop(stop: threading.Event, period: float = 5.0):
             continue
 
 
+# ---------------------------------------------------------------- the studio (a port of Studio in the launcher)
+
+MAX_SECTIONS, MAX_LINES, MAX_DEBATERS = 8, 8, 4
+
+
+def briefing_set(cfg: dict, b: dict, by: str, now: float) -> dict:
+    title = hg.printable(b.get("title") or "Morning briefing", 60)
+    raw = b.get("sections")
+    if not isinstance(raw, list) or not raw:
+        raise Bad("bad_sections", f"sections: 1 to {MAX_SECTIONS} {{title, lines[]}}")
+    if len(raw) > MAX_SECTIONS:
+        raise Bad("too_many", f"{MAX_SECTIONS} sections")
+    secs = []
+    for s in raw:
+        if not isinstance(s, dict):
+            raise Bad("bad_sections", "sections: objects")
+        lines = s.get("lines") if isinstance(s.get("lines"), list) else []
+        out = [x for x in (hg.printable(ln, 120) for ln in lines[:MAX_LINES]) if x]
+        st = hg.printable(s.get("title", ""), 40)
+        if not st or not out:
+            raise Bad("bad_sections", "every section needs a title and lines")
+        secs.append({"title": st, "lines": out})
+    wake = 0
+    if b.get("wake") is not None:
+        w = at(b.get("wake"), now)
+        if w <= now or w - now > WAKE_WITHIN_S:
+            raise Bad("bad_wake", "wake: \"07:30\" or epoch ms, within 24 hours")
+        wake = int(w * 1000)
+    br = {"title": title, "sections": secs, "say": multiline(b.get("say", ""), 1500, 20), "by": hg.printable(by, 40),
+          "at": int(now * 1000), "wake": wake, "shown": False}
+    cfg["briefing"] = br
+    return br
+
+
+def briefing_due(cfg: dict, now: float) -> bool:
+    b = cfg.get("briefing") or {}
+    w = b.get("wake") or 0
+    return bool(w) and now * 1000 >= w and now * 1000 - w < 18 * 3600_000 and not b.get("shown")
+
+
+class Debates:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.all: dict = {}
+        self.seq = 0
+
+    def start(self, b: dict, by: str, now: float) -> dict:
+        topic = hg.printable(b.get("topic", ""), 160)
+        if not topic:
+            raise Bad("bad_topic", "topic: 1 to 160 characters")
+        with self.lock:
+            while len(self.all) >= 8:
+                self.all.pop(next(iter(self.all)))
+            self.seq += 1
+            d = {"id": f"d{self.seq}", "topic": topic, "by": hg.printable(by, 40), "at": int(now * 1000), "state": "open", "entries": []}
+            self.all[d["id"]] = d
+            return d
+
+    def get(self, did: str) -> dict:
+        d = self.all.get(did)
+        if d is None:
+            raise Bad("no_such_debate", did, 404)
+        return d
+
+    def post(self, did: str, agent: str, b: dict, now: float) -> dict:
+        with self.lock:
+            d = self.get(did)
+            if d["state"] != "open":
+                raise Bad("closed", "the owner has already chosen", 409)
+            text = multiline(b.get("text", ""), 1200, 24)
+            if not text:
+                raise Bad("bad_text", "text: your answer, ≤1200")
+            who = hg.printable(agent, 40)
+            e = {"agent": who, "text": text, "at": int(now * 1000)}
+            if b.get("preview") is not None:
+                pv = preview(b.get("preview"))
+                if pv is None:
+                    raise Bad("bad_preview", "{kind: image, url}, {kind: diff | text, text}, {kind: chart, points}")
+                e["preview"] = pv
+            for i, x in enumerate(d["entries"]):
+                if x["agent"] == who:   # a second post replaces the first
+                    d["entries"][i] = e
+                    return d
+            if len(d["entries"]) >= MAX_DEBATERS:
+                raise Bad("full", f"{MAX_DEBATERS} agents already answered", 409)
+            d["entries"].append(e)
+            return d
+
+    def choose(self, did: str, index, now: float) -> dict:   # the TV only
+        with self.lock:
+            d = self.get(did)
+            if not isinstance(index, int) or isinstance(index, bool) or not 0 <= index < len(d["entries"]):
+                raise Bad("bad_choice", "no such answer")
+            if d["state"] != "open":
+                raise Bad("closed", "already chosen", 409)
+            d.update({"state": "chosen", "winner": d["entries"][index]["agent"], "chosenAt": int(now * 1000)})
+            return d
+
+    def on_air(self, now: float):
+        """The newest open debate, or the last one chosen in the past 10 minutes (the TV shows the winner)."""
+        last = None
+        for d in self.all.values():
+            if d["state"] == "open" or now * 1000 - d.get("chosenAt", 0) < 600_000:
+                last = d
+        return last
+
+
 # ---------------------------------------------------------------- the bridge's state and routes
 
 LIVE = LiveFeed()
 SHIFT = Shift()
 SKILL_ASK: dict = {}   # the skill an agent asked the owner to install: {id, at}
+DEBATES = Debates()
+STUDIO: dict = {}   # "show": when an agent asked to put the briefing on air now (epoch ms)
 
 
 def handles(path: str) -> bool:
-    return path in ("/v1/live", "/v1/shift", "/v1/tvlive", "/v1/skills") or path.startswith(("/v1/shift/", "/v1/skills/", "/v1/tvskills/"))
+    return path in ("/v1/live", "/v1/shift", "/v1/tvlive", "/v1/skills", "/v1/briefing", "/v1/debate") or \
+        path.startswith(("/v1/shift/", "/v1/skills/", "/v1/tvskills/", "/v1/briefing/", "/v1/debate/", "/v1/tvstudio/"))
 
 
 def tv_only(path: str) -> bool:
-    return path in ("/v1/tvlive", "/v1/shift/answer", "/v1/skills/answer") or path.startswith("/v1/tvskills/")
+    return path in ("/v1/tvlive", "/v1/shift/answer", "/v1/skills/answer") or path.startswith(("/v1/tvskills/", "/v1/tvstudio/"))
 
 
 def route(store, method: str, path: str, body: dict, who: str = "agent", now=None) -> tuple[int, dict]:
@@ -543,11 +658,51 @@ def _route(store, m, p, body, who, now):
             raise Bad("no_such_skill", sid, 404)
         SKILL_ASK.pop("ask", None)
         return 200, {"ok": True, "installed": True, "skill": store.edit(lambda cfg: skill_install(cfg, sk, int(now)))}
+    if p == "/v1/briefing":   # v2.22 the studio
+        if m == "GET":
+            return 200, store.load().get("briefing") or {"state": "none"}
+        if m == "POST":
+            br = store.edit(lambda cfg: briefing_set(cfg, body, who, now))
+            LIVE.event(who, "info", "prepared the morning briefing", now)
+            return 200, {"ok": True, "briefing": br}
+    if m == "POST" and p == "/v1/briefing/show":
+        if not store.load().get("briefing"):
+            raise Bad("no_briefing", "set one first", 409)
+        STUDIO["show"] = int(now * 1000)
+        return 200, {"ok": True}
+    if m == "POST" and p == "/v1/debate":
+        d = DEBATES.start(body, who, now)
+        LIVE.event(who, "info", "debate: " + d["topic"], now)
+        return 200, {"ok": True, "debate": d}
+    dm = re.fullmatch(r"/v1/debate/(d\d{1,6})", p)
+    if dm:
+        if m == "GET":
+            return 200, DEBATES.get(dm.group(1))
+        if m == "POST":
+            d = DEBATES.post(dm.group(1), who, body, now)
+            LIVE.event(who, "info", "answered the debate", now)
+            return 200, {"ok": True, "debate": d}
+    if m == "POST" and p == "/v1/tvstudio/briefing-shown":   # the TV only
+        STUDIO.pop("show", None)
+
+        def shown(cfg):
+            if cfg.get("briefing"):
+                cfg["briefing"]["shown"] = True
+        store.edit(shown)
+        return 200, {"ok": True}
+    if m == "POST" and p == "/v1/tvstudio/debate":   # the TV only: the owner's pick
+        d = DEBATES.choose(str(body.get("id", "")), body.get("index"), now)
+        LIVE.event(d["winner"], "ok", "won the debate: " + d["topic"], now)
+        return 200, {"ok": True, "debate": d}
     if p == "/v1/tvlive" and m == "GET":
+        cfg = store.load()
+        br = cfg.get("briefing")
+        on_air = bool(br) and (briefing_due(cfg, now) or now * 1000 - STUDIO.get("show", 0) < 600_000)
         ask = SKILL_ASK.get("ask")
         sk = catalog().get(ask["id"]) if ask and now * 1000 - ask["at"] < 600_000 else None
         return 200, {"live": LIVE.snapshot(now, 40), "shift": SHIFT.full(now),
                      "skillAsk": {k: sk[k] for k in ("id", "name", "author", "version", "description", "permissions")} if sk else None,
                      "skills": [{k: s[k] for k in ("id", "name", "author", "version", "description", "permissions")} for s in catalog().values()],
-                     "installed": list(store.load().get("skills", {}).keys())}
+                     "installed": list(cfg.get("skills", {}).keys()),
+                     "briefing": br if on_air else None, "debate": DEBATES.on_air(now)}
     return 404, {"error": "not_found"}

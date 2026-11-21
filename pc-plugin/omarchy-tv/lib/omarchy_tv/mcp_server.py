@@ -224,6 +224,37 @@ ALLOWED_TOOLS = (
                                              "Returns an id for tv_shift_decision. Only the owner answers, on the TV.",
      "inputSchema": {"type": "object", "properties": {"title": {"type": "string"}, "detail": {"type": "string"},
                                                       "risk": {"type": "string"}}, "required": ["title"]}},
+    # v2.22 the studio
+    {"name": "tv_briefing_set", "description": "Prepare the owner's morning briefing: 1-8 sections of short lines (overnight, today, "
+                                             "the weather, what waits) and a text to read aloud. It goes on AI LIVE at the wake time "
+                                             "(\"07:30\") or with tv_briefing_show.",
+     "inputSchema": {"type": "object", "properties": {
+         "title": {"type": "string"}, "say": {"type": "string", "description": "read aloud, ≤1500"},
+         "wake": {"type": "string", "description": "\"07:30\" (optional)"},
+         "sections": {"type": "array", "description": "[{title, lines: [≤8 short strings]}]", "items": {"type": "object"}}},
+         "required": ["sections"]}},
+    {"name": "tv_briefing_show", "description": "Put the morning briefing on AI LIVE now.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_debate_start", "description": "Start a debate on AI LIVE: one question several agents answer side by side; the owner "
+                                             "picks the winner with the remote. Returns its id.",
+     "inputSchema": {"type": "object", "properties": {"topic": {"type": "string"}}, "required": ["topic"]}},
+    {"name": "tv_debate_post", "description": "Post your answer to a debate (≤1200 characters, optional preview); a second post replaces "
+                                            "the first.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "text": {"type": "string"},
+                                                      "preview": {"type": "object"}}, "required": ["id", "text"]}},
+    {"name": "tv_debate_result", "description": "A debate's answers, and the winner once the owner picked one.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_scene_run", "description": "Android TV: run a scene. {name} runs a saved one at once; {steps: [{tool, args}]} asks the "
+                                          "owner on the TV first. Steps use tv_ha_run, tv_launch_app, tv_set_theme, tv_radio, "
+                                          "tv_send_key, tv_open, tv_notify, tv_screensaver, tv_page_show.",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"},
+                                                      "steps": {"type": "array", "items": {"type": "object"}}}}},
+    {"name": "tv_scene_save", "description": "Android TV: save a scene under a name after the owner's OK on the TV.",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"},
+                                                      "steps": {"type": "array", "items": {"type": "object"}}},
+                     "required": ["name", "steps"]}},
+    {"name": "tv_scene_list", "description": "Android TV: the saved scenes and their steps.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_scene_result", "description": "Android TV: the owner's answer to a scene question (pending, ran, saved, denied).",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
     {"name": "tv_shift_decision", "description": "The owner's answer to a queued step: pending, approved or denied.",
      "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
     {"name": "tv_settings_get", "description": "The TV's settings (theme, Home, plugins, Home Assistant URL, agents…) as "
@@ -351,6 +382,9 @@ TOOL_SCOPE = {
     "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
     "tv_live_update": "notify", "tv_live": "read",
     "tv_skill_list": "read", "tv_skill_install": "control", "tv_skill_remove": "control",
+    "tv_briefing_set": "notify", "tv_briefing_show": "control",
+    "tv_debate_start": "notify", "tv_debate_post": "notify", "tv_debate_result": "notify",
+    "tv_scene_run": "control", "tv_scene_save": "control", "tv_scene_list": "read", "tv_scene_result": "control",
     "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
@@ -584,6 +618,25 @@ def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
         if name == "tv_skill_install":
             return c.request("POST", f"/v1/skills/{sid}/install", {})
         return c.request("DELETE", f"/v1/skills/{sid}")
+    if name == "tv_briefing_set":   # v2.22 the studio
+        b = {k: args[k] for k in ("title", "say", "wake", "sections") if k in args}
+        return c.request("POST", "/v1/briefing", b)
+    if name == "tv_briefing_show":
+        return c.request("POST", "/v1/briefing/show", {})
+    if name == "tv_debate_start":
+        return c.request("POST", "/v1/debate", {"topic": str(args.get("topic", ""))})
+    if name in ("tv_debate_post", "tv_debate_result", "tv_scene_result"):
+        sid = str(args.get("id", ""))
+        if not re.fullmatch(r"[a-z0-9]{1,16}", sid):
+            raise ValueError("bad id")
+        if name == "tv_debate_post":
+            return c.request("POST", f"/v1/debate/{sid}", {k: args[k] for k in ("text", "preview") if k in args})
+        return c.request("GET", f"/v1/debate/{sid}" if name == "tv_debate_result" else f"/v1/scene/{sid}")
+    if name == "tv_scene_list":
+        return c.request("GET", "/v1/scenes")
+    if name in ("tv_scene_run", "tv_scene_save"):
+        return c.request("POST", "/v1/scene/run" if name == "tv_scene_run" else "/v1/scene/save",
+                         {k: args[k] for k in ("name", "steps") if k in args})
     if name == "tv_live":   # v2.22 AI LIVE
         return c.request("GET", "/v1/live")
     if name == "tv_live_update":

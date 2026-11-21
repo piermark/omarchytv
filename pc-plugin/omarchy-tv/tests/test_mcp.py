@@ -231,6 +231,14 @@ class TestMcpV221(unittest.TestCase):
         call("tv_skill_install", {"id": "homelab"})   # v2.22 skills
         self.assertEqual(sent[-1][:2], ("POST", "/v1/skills/homelab/install"))
         self.assertTrue(call("tv_skill_remove", {"id": "../x"})["result"]["isError"])
+        call("tv_briefing_set", {"sections": [{"title": "Overnight", "lines": ["ok"]}], "wake": "07:30", "x": 1}, "notify")   # v2.22 studio
+        self.assertEqual(sent[-1], ("POST", "/v1/briefing", {"sections": [{"title": "Overnight", "lines": ["ok"]}], "wake": "07:30"}))
+        call("tv_debate_post", {"id": "d1", "text": "LRU"}, "notify")
+        self.assertEqual(sent[-1], ("POST", "/v1/debate/d1", {"text": "LRU"}))
+        self.assertTrue(call("tv_debate_result", {"id": "../d1"}, "notify")["result"]["isError"])
+        call("tv_scene_run", {"name": "movie night"})
+        self.assertEqual(sent[-1], ("POST", "/v1/scene/run", {"name": "movie night"}))
+        self.assertIn("error", call("tv_scene_run", {"name": "x"}, "notify"))   # a notify token runs no scene
         call("tv_live_update", {"text": "running tests", "progress": 40, "x": 1}, "notify")   # v2.22 AI LIVE
         self.assertEqual(sent[-1], ("POST", "/v1/live", {"text": "running tests", "progress": 40}))
         call("tv_shift_log", {"level": "ok", "text": "tests green", "junk": 1}, "notify")   # v2.22 night shift

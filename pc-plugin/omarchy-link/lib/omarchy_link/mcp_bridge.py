@@ -38,6 +38,10 @@ TOOL_SCOPE = {
     "tv_settings_get": "read", "tv_settings_set": "control",   # v2.22 #163
     "tv_live_update": "notify", "tv_live": "read",   # v2.22 AI LIVE
     "tv_skill_list": "read", "tv_skill_install": "control", "tv_skill_remove": "control",   # v2.22 skills
+    # v2.22 the studio: the morning briefing, the agents' debate, the AI's scenes
+    "tv_briefing_set": "notify", "tv_briefing_show": "control",
+    "tv_debate_start": "notify", "tv_debate_post": "notify", "tv_debate_result": "notify",
+    "tv_scene_run": "control", "tv_scene_save": "control", "tv_scene_list": "read", "tv_scene_result": "control",
     # v2.22 the night shift
     "tv_shift_start": "control", "tv_shift_end": "control", "tv_shift_status": "read",
     "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
