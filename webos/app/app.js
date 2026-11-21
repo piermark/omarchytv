@@ -4893,7 +4893,11 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
         base: pcBase, token: function () { return cfg.grokbotCode || ""; },
         idle: function () { return !homeGrid.isOpen() && !state.modalOpen && !state.embedOpen && !radioUi && !cineUi && !officeUi; },
         wakeShown: function () { return cfg.shiftWakeShown || 0; },
-        markWake: function (w) { cfg.shiftWakeShown = w; saveCfg(); }
+        markWake: function (w) { cfg.shiftWakeShown = w; saveCfg(); },
+        speak: function (text) {   // the morning briefing read aloud, like Android (off with the notes' sound off)
+          if (cfg.notifySound === false || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
+          try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(String(text).slice(0, 1500))); } catch (e) {}
+        }
       });
       setInterval(function () { if (!document.hidden && !aiLive.isOpen()) aiLive.tick(); }, 10000);
       setInterval(function () { if (!document.hidden && aiLive.isOpen()) aiLive.tick(); }, 2000);

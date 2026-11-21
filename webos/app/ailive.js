@@ -8,8 +8,11 @@
  *   replay  the night shift played back like a VHS: PLAY / PAUSE / ×2 / STOP, the timeline, ◀ ▶ between highlights;
  *   shift   the night's page: tasks, score, the decisions that wait (only here, with the remote, are they answered:
  *           Deny has the focus, Approve waits 1.5 s);
- *   skills  the catalogue; installing shows the permissions in plain words (Cancel first, Install after 1.5 s).
- * It opens by itself on the morning's wake time and when an agent asks to install a skill. Everything is text
+ *   skills  the catalogue; installing shows the permissions in plain words (Cancel first, Install after 1.5 s);
+ *   briefing the morning's news an agent prepared, section after section (◀ ▶), with the ticker;
+ *   debate  one question, the agents' answers side by side; the owner picks the winner (OK after 1.5 s).
+ * It opens by itself on the morning's wake time, for the briefing, for a new debate and when an agent asks to install
+ * a skill. Everything is text
  * (textContent); ES5 for Chrome 38.
  */
 (function (root) {
@@ -64,6 +67,7 @@
     var data = null, mode = null, layer = null, els = {}, busy = false;
     var onCamera = "", cutAt = 0, handUntil = 0, tape = [], cursor = 0, paused = false, stopped = false, speed = 1;
     var sel = 0, dialog = null, lastAsk = "", timer = 0, tickerX = 0, tickerTimer = 0;
+    var section = 0, sectionAt = 0, lastBriefing = 0, lastDebate = "", pick = 0, pickAt = 0, debateId = "";
 
     function el(tag, style, text) {
       var e = doc.createElement(tag);
@@ -392,6 +396,69 @@
       if (focusId) for (var j = 0; j < sk.length; j++) if (sk[j].id === focusId) { sel = j; paintSel(); skillQuestion(sk[j]); }
     }
 
+    // ---- BRIEFING and DEBATE: the studio's shows ---------------------------------------------------------------
+    function renderBriefing() {
+      var b = data && data.briefing, now = Date.now();
+      els.clock.textContent = hhmm(now);
+      if (!b || !b.sections || !b.sections.length) { els.name.textContent = "AI LIVE"; els.line.textContent = "No briefing."; return; }
+      var secs = b.sections;
+      if (now - sectionAt > 9000) { section = (section + 1) % secs.length; sectionAt = now; cutTo(b.by || "AI"); }
+      section = Math.max(0, Math.min(section, secs.length - 1));
+      var s = secs[section], txt = "", st = "", k = "", i, j;
+      els.name.textContent = b.title; els.line.textContent = b.by || "";
+      els.ltn.textContent = String(s.title).toUpperCase(); els.ltt.textContent = s.lines[0] || "";
+      for (i = 0; i < s.lines.length; i++) txt += "▪ " + s.lines[i] + "\n\n";
+      preview({ kind: "text", title: s.title, text: txt.replace(/\s+$/, "") });
+      for (i = 0; i < secs.length; i++) {
+        st += (i === section ? "▶ " : "") + secs[i].title + "      ";
+        for (j = 0; j < secs[i].lines.length; j++) k += String(secs[i].title).toUpperCase() + " · " + secs[i].lines[j] + "        ▪        ";
+      }
+      els.studios.textContent = st;
+      els.bar.style.width = Math.round((section + 1) * 100 / secs.length) + "%";
+      els.since.textContent = (section + 1) + " / " + secs.length;
+      els.breaking.style.display = "none";
+      avatarState(true, false);
+      setTicker(k);
+    }
+
+    function debateNow() {
+      var d = data && data.debate;
+      return d && (!debateId || d.id === debateId) ? d : null;
+    }
+    function renderDebate() {
+      var d = debateNow();
+      els.clock.textContent = hhmm(Date.now());
+      while (els.panels.firstChild) els.panels.removeChild(els.panels.firstChild);
+      if (!d) { els.ltn.textContent = "DEBATE"; els.ltt.textContent = "—"; return; }
+      var en = d.entries || [], n = en.length, winner = d.winner || "";
+      pick = Math.max(0, Math.min(pick, Math.max(0, n - 1)));
+      els.ltn.textContent = "THE QUESTION"; els.ltt.textContent = d.topic;
+      els.breaking.style.display = "block";
+      els.breaking.style.background = winner ? "var(--green,#9ece6a)" : RED;
+      els.breaking.textContent = winner ? "🏆 " + winner : n ? "◆ YOU DECIDE · OK → " + en[pick].agent : "◆ waiting for the agents' answers";
+      for (var i = 0; i < n; i++) {
+        var on = i === pick, won = winner === en[i].agent;
+        var col = el("div", "display:table-cell;vertical-align:top;width:" + Math.floor(100 / n) + "%;padding:" + vh(20) + ";background:var(--bgDarker,#0f0f14);" +
+          "border:" + vh(on || won ? 6 : 3) + " solid " + (won ? "var(--green,#9ece6a)" : on ? "var(--accent,#7aa2f7)" : "var(--muted,#565f89)"));
+        col.appendChild(el("div", "color:var(--fgBright,#c0caf5);font-weight:bold;font-size:" + vh(40), (won ? "🏆 " : "") + en[i].agent));
+        col.appendChild(el("div", "font-size:" + vh(30) + ";white-space:pre-wrap;padding-top:" + vh(12) + ";max-height:" + vh(330) + ";overflow:hidden", en[i].text));
+        var pv = en[i].preview;
+        if (pv && (pv.kind === "text" || pv.kind === "diff")) {
+          col.appendChild(el("div", "font-family:monospace;font-size:" + vh(24) + ";white-space:pre;padding-top:" + vh(12) + ";max-height:" + vh(200) + ";overflow:hidden", pv.text));
+        }
+        els.panels.appendChild(col);
+      }
+    }
+    function debateKey(code) {
+      var d = debateNow(), en = (d && d.entries) || [], n = en.length;
+      if (!n) return true;
+      if (code === LEFT || code === RIGHT) { pick = (pick + (code === RIGHT ? 1 : -1) + n) % n; pickAt = Date.now(); renderDebate(); }
+      else if (code === OK && !d.winner && Date.now() - pickAt > GUARD_MS) {   // a reflex OK never picks
+        post("/v1/tvstudio/debate", { id: d.id, index: pick }).then(function () { return refreshNow(); }, function () { return null; });
+      }
+      return true;
+    }
+
     // ---- open / close / keys / polling --------------------------------------------------------------------------
     function open(m, arg) {
       mode = m; sel = 0; onCamera = ""; dialog = null;
@@ -405,6 +472,24 @@
         els.hint.textContent = "OK ⏯   ▲ ×2   ◀ ▶ highlights   BACK";
         tape = tapeOf(data && data.shift); cursor = 0; paused = false; stopped = false; speed = 1;
         renderTape();
+      } else if (m === "briefing") {
+        frame("◆ MORNING", "var(--yellow,#e0af68)", "NEWS"); stage();
+        els.hint.textContent = "◀ ▶ news   OK / BACK";
+        section = 0; sectionAt = Date.now();
+        var b = data && data.briefing;
+        cutTo((b && b.by) || "AI");
+        if (b) { lastBriefing = b.at; post("/v1/tvstudio/briefing-shown", {}).then(null, function () { return null; }); }
+        if (b && b.say && opts.speak) opts.speak(b.say);
+        renderBriefing();
+      } else if (m === "debate") {
+        frame("◆ DEBATE", "var(--accent2,#bb9af7)", null); stage();
+        els.stage.style.display = "none";
+        els.panels = el("div", "position:absolute;left:" + vh(72) + ";right:" + vh(72) + ";top:" + vh(200) + ";bottom:" + vh(340) + ";display:table;table-layout:fixed;border-spacing:" + vh(16) + " 0");
+        layer.appendChild(els.panels);
+        els.hint.textContent = "◀ ▶ answer   OK pick   BACK";
+        debateId = arg || (data && data.debate && data.debate.id) || ""; pick = 0; pickAt = Date.now();
+        if (debateId) lastDebate = debateId;
+        renderDebate();
       } else if (m === "shift") renderShift();
       else if (m === "skills") renderSkills(arg);
       clearInterval(timer);
@@ -412,6 +497,8 @@
         if (!layer) return;
         if (mode === "replay") step();
         else if (mode === "live") renderLive();
+        else if (mode === "briefing") renderBriefing();
+        else if (mode === "debate") renderDebate();   // the answers as they come (the app polls every 2 s while open)
       }, mode === "replay" ? 2500 : 1000);
       clearInterval(tickerTimer);
       tickerTimer = setInterval(scrollTicker, 33);
@@ -430,6 +517,7 @@
         if (!layer) return;
         if (mode === "shift") renderShift();
         else if (mode === "skills") renderSkills();
+        else if (mode === "debate") renderDebate();
       });
     }
 
@@ -440,6 +528,13 @@
         return dialogKey(code);
       }
       if (BACK[code]) { close(); return true; }
+      if (mode === "debate") return debateKey(code);
+      if (mode === "briefing") {
+        var secs = (data && data.briefing && data.briefing.sections) || [];
+        if ((code === LEFT || code === RIGHT) && secs.length) { section = (section + (code === RIGHT ? 1 : -1) + secs.length) % secs.length; sectionAt = Date.now(); renderBriefing(); }
+        else if (code === OK) close();
+        return true;
+      }
       if (mode === "live") {
         var a = (data && data.live && data.live.agents) || [];
         if ((code === LEFT || code === RIGHT) && a.length) {
@@ -482,6 +577,8 @@
           data = v;
           var idle = !layer && (!opts.idle || opts.idle());
           if (v.skillAsk && v.skillAsk.id && lastAsk !== v.skillAsk.id && (idle || mode === "skills")) { lastAsk = v.skillAsk.id; open("skills", v.skillAsk.id); }
+          if (v.briefing && v.briefing.at && lastBriefing !== v.briefing.at && idle) { open("briefing"); idle = false; }
+          if (v.debate && v.debate.state === "open" && lastDebate !== v.debate.id && (idle || mode === "live")) { open("debate", v.debate.id); idle = false; }
           var s = v.shift || {};
           if (s.wake && Date.now() >= s.wake && Date.now() - s.wake < 18 * 3600000 && opts.wakeShown && opts.wakeShown() !== s.wake && idle) {
             opts.markWake(s.wake);

@@ -103,3 +103,33 @@ test("an agent's skill question opens the install question; Cancel has the focus
   assert.strictEqual(b.posts.length, 0);
   b.g.close();
 });
+
+test("the studio: the briefing goes on air once and is read aloud; only a held OK picks the debate's winner", async () => {
+  const said = [];
+  const view = Object.assign({}, VIEW, { shift: { state: "none" },
+    briefing: { title: "Good morning", by: "Hermes", at: NOW, say: "Good morning Marco.", sections: [
+      { title: "Overnight", lines: ["352 tests green", "1 decision waits"] }, { title: "Today", lines: ["standup 9:30"] }] },
+    debate: null });
+  const b = make(view, { speak: (t) => said.push(t) });
+  await b.g.tick();
+  assert.strictEqual(b.g.mode(), "briefing");
+  assert.deepStrictEqual(said, ["Good morning Marco."]);
+  assert.deepStrictEqual(b.posts[0], ["/v1/tvstudio/briefing-shown", {}]);
+  assert.ok(/OVERNIGHT/.test(b.doc.body.textContent));
+  b.g.key(39);
+  assert.ok(/▶ Today/.test(b.doc.body.textContent));
+  b.g.key(461);
+  await b.g.tick();
+  assert.strictEqual(b.g.isOpen(), false);   // once
+  view.debate = { id: "d1", topic: "Cache the widgets how?", state: "open", entries: [{ agent: "Claude", text: "LRU of 32" }, { agent: "Grok", text: "disk" }] };
+  await b.g.tick();
+  assert.strictEqual(b.g.mode(), "debate");
+  assert.ok(/YOU DECIDE/.test(b.doc.body.textContent));
+  b.g.key(39);
+  b.g.key(13);   // a reflex OK
+  assert.strictEqual(b.posts.filter((p) => p[0] === "/v1/tvstudio/debate").length, 0);
+  await new Promise((r) => setTimeout(r, 1600));
+  b.g.key(13);
+  assert.deepStrictEqual(b.posts.filter((p) => p[0] === "/v1/tvstudio/debate")[0], ["/v1/tvstudio/debate", { id: "d1", index: 1 }]);
+  b.g.close();
+});
