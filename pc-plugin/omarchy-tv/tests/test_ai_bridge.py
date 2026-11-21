@@ -59,6 +59,13 @@ class ModelTest(unittest.TestCase):
         self.assertIsNone(ab.preview({"kind": "image", "url": "http://8.8.8.8/x.png"}))
         self.assertIsNone(ab.preview({"kind": "html", "text": "<b>"}))
 
+    def test_the_agent_monitor_goes_on_air_by_itself(self):
+        f = ab.LiveFeed()
+        f.from_monitor({"agents": [{"agentName": "Claude Code", "project": "omarchytv", "status": "running", "step": "Bash · npm test"},
+                                   {"agentName": "Codex", "status": "idle", "step": "x"}, "junk"]}, 10)
+        a = f.snapshot(10)["agents"]
+        self.assertEqual([(x["agent"], x["text"]) for x in a], [("Claude Code · omarchytv", "Bash · npm test")])
+
     def test_skill_install_and_remove(self):
         cfg = {"widgets": []}
         rec = ab.skill_install(cfg, ab.catalog()["homelab"], 10)

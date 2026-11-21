@@ -37,9 +37,10 @@
   night back, the yellow key opens the skills.
 - **On LG and Samsung too**, through the PC bridge (`omarchy-tv webos-serve`, `ai_bridge.py`, the same rules and
   answers): Omarchy menu › AI LIVE, Night shift (with its replay) and Skills. The morning page and an agent's skill
-  question open by themselves; only the TV answers the queue and installs. Not on LG / Samsung in 2.22: going on air
-  by itself from the PC's agent monitor (agents use `tv_live_update`, notes and questions), talking from the phone,
-  and the Office's colour keys.
+  question open by themselves; only the TV answers the queue and installs. AI LIVE goes on air by itself here too:
+  while `webos-serve` runs and `omarchy-link agents on` is set, the PC's agent monitor (redacted) feeds the channel
+  every 5 s. In the Office: red → AI LIVE, green → the night's replay, yellow → skills (blue stays the Companion's).
+  Not on LG / Samsung in 2.22: talking from the phone.
 
 - **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
   page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,

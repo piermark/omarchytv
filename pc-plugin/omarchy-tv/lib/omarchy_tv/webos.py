@@ -1016,6 +1016,10 @@ class WebOSHandler(BaseHTTPRequestHandler):
 
 def serve(bind: str = "0.0.0.0", port: int = 8765, once: bool = False) -> int:
     srv = ThreadingHTTPServer((bind, port), WebOSHandler)   # an ask can take minutes; status keeps answering
+    import threading   # noqa: PLC0415
+    from . import ai_bridge   # noqa: PLC0415
+    stop = threading.Event()   # v2.22 AI LIVE goes on air by itself from the agent monitor, as on Android TV
+    threading.Thread(target=ai_bridge.monitor_loop, args=(stop,), daemon=True, name="ai-live-monitor").start()
     ui.say(f"Grok Bot ask code for the TV (Settings > Grok Bot companion > PC ask code): {bridge_token()}")
     ui.say(f"OmarchyTV webOS bridge attivo su http://{bind}:{port}/v1/status (CTRL+C per fermare)")
     try:
@@ -1026,5 +1030,6 @@ def serve(bind: str = "0.0.0.0", port: int = 8765, once: bool = False) -> int:
     except KeyboardInterrupt:
         pass
     finally:
+        stop.set()
         srv.server_close()
     return 0

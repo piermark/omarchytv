@@ -119,6 +119,19 @@ class LiveFeed:
             n["at"] = now
             return self._json(n)
 
+    def from_monitor(self, snap: dict, now=None):
+        """omarchy-link's agent monitor (already redacted on this PC): every working agent goes on air by itself."""
+        now = time.time() if now is None else now
+        for g in (snap or {}).get("agents") or []:
+            if not isinstance(g, dict):
+                continue
+            name, project, status = g.get("agentName") or g.get("agent") or "", g.get("project") or "", g.get("status") or ""
+            if not name or status in ("idle", "done"):
+                continue
+            step = g.get("step") or ""
+            text = (step or status) + (" · ⌛" if status == "waiting" else "")
+            self.now(f"{name} · {project}" if project else name, {"text": text}, now)
+
     def waiting(self, agent, aid, question, now=None):
         now = time.time() if now is None else now
         with self.lock:
@@ -427,6 +440,22 @@ def skill_remove(cfg: dict, sid: str) -> dict:
         hg.page_delete(cfg, page, None, 0)
     del inst[sid]
     return rec
+
+
+def monitor_loop(stop: threading.Event, period: float = 5.0):
+    """While the bridge runs: omarchy-link's agent monitor (only when the owner turned it on with
+    `omarchy-link agents on`) feeds AI LIVE, as the Android TV does with the PC's agent list."""
+    try:
+        from omarchy_link import agents, config   # noqa: PLC0415  optional: omarchy-link may not be installed
+    except ImportError:
+        return
+    while not stop.wait(period):
+        try:
+            cfg = config.load_config()
+            if agents.settings(cfg).get("enabled"):
+                LIVE.from_monitor(agents.public(agents.snapshot(cfg)))
+        except Exception:  # noqa: BLE001 - a broken agent file never stops the bridge
+            continue
 
 
 # ---------------------------------------------------------------- the bridge's state and routes

@@ -563,7 +563,8 @@ paths with the agents' key (`from` in the body names the agent), keeps the shift
 by a test). The TV app reads `GET /v1/tvlive` with its ask code → `{live, shift (with log and queue), skillAsk, skills,
 installed}` and answers with `POST /v1/shift/answer {id, yes}`, `POST /v1/skills/answer {id, yes}`, `POST
 /v1/tvskills/install | remove {id}` (the ask code only: agents get 401). During a shift `POST /v1/notify` answers
-`kept_for_morning`.
+`kept_for_morning`. While the bridge runs, omarchy-link's agent monitor (when turned on, already redacted) feeds the
+channel every 5 s.
 
 A preview (on `/v1/live` and `/v1/ask`): `{kind: image, url}` (https, or http to a LAN / tailnet IP),
 `{kind: diff | text, text}`, `{kind: chart, points[], label?}`, optional `title`; anything else is 400 `bad_preview`.

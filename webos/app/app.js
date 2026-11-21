@@ -3115,10 +3115,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   window.OMARCHY_OPEN_OFFICE = openOffice;
   window.addEventListener("keydown", function (e) {
-    if (!officeUi) return;
+    if (!officeUi || (aiLive && aiLive.isOpen())) return;   // v2.22 AI LIVE over the Office takes the keys
     var n = window.OmarchyCinemarchy ? window.OmarchyCinemarchy.keyName(e) : "";
     var tgt = e.target, typing = tgt && /INPUT/.test(tgt.tagName);
     if (typing && (n === "red" || n === "green" || n === "yellow" || n === "blue" || /^[1-8]$/.test(n))) n = "";   // letters are text here
+    // v2.22 the Office is the control room: red → AI LIVE, green → the night's replay, yellow → skills
+    // (blue stays the Companion's key on LG / Samsung)
+    var kc = e.keyCode;
+    if (aiLive && !aiLive.isOpen() && (kc === 403 || kc === 404 || kc === 405 || e.key === "ColorF0Red" || e.key === "ColorF1Green" || e.key === "ColorF2Yellow")) {
+      var m = kc === 403 || e.key === "ColorF0Red" ? "live" : kc === 404 || e.key === "ColorF1Green" ? "replay" : "skills";
+      e.preventDefault();
+      aiLive.tick(true).then(function () { aiLive.open(m); });
+      return;
+    }
     if (officeUi.key(n, e)) e.preventDefault();
     e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
   }, true);
