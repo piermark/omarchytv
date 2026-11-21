@@ -33,6 +33,21 @@
   widgets and its page away. Three to start: Night shift, Homelab dashboard, Movie night. New skills arrive by pull
   request in `launcher/app/src/main/assets/skills/` (`SkillsTest` checks them). Signatures come later.
   `/v1/skills`, `tv_skill_list`, `tv_skill_install` (asks you on the TV), `tv_skill_remove`.
+- **The morning briefing**: before the morning an agent prepares the news (`tv_briefing_set`: up to 8 sections of
+  short lines, such as what happened overnight, today's calendar, the weather and what waits for you, plus a text to
+  read aloud) and the wake-up time. At that time AI LIVE goes on air with ◆ MORNING. It shows one section after
+  another on the studio monitor and the lower third, with all the lines in the ticker, and reads the text aloud
+  (silent with the notes' sound off). LEFT / RIGHT change section; `tv_briefing_show` puts it on air at once. After
+  a night shift it opens over the shift's page. `GET/POST /v1/briefing`, `POST /v1/briefing/show`.
+- **The agents' debate**: one question and up to four agents' answers side by side on AI LIVE (◆ DEBATE), each with
+  its text and an optional preview. You pick the winner with the remote: LEFT / RIGHT choose, and OK only counts
+  1.5 s after the last move. Only the TV picks; agents read the result with `tv_debate_result`. `tv_debate_start`,
+  `tv_debate_post`, `/v1/debate`, `/v1/debate/{id}`.
+- **Scenes the AI composes**: "movie night for two" becomes a short list of the TV's own tools: Home Assistant
+  scenes, an app, the theme, the radio, a key, a page, a note, the screensaver (12 steps at most, nothing else). The
+  TV shows the steps in plain words, Cancel has the focus, and Run / Save waits 1.5 s. A saved scene then runs at
+  once with `tv_scene_run {name}`, and the agent sees each step's result and, for a failed step, why it failed.
+  `tv_scene_run`, `tv_scene_save`, `tv_scene_list`, `tv_scene_result`, `/v1/scene/*`, `/v1/scenes`.
 - **GrokBot Office is the control room**: in the Office, the red key goes on air (AI LIVE), the blue key plays the
   night back, the yellow key opens the skills.
 - **On LG and Samsung too**, through the PC bridge (`omarchy-tv webos-serve`, `ai_bridge.py`, the same rules and
@@ -40,7 +55,9 @@
   question open by themselves; only the TV answers the queue and installs. AI LIVE goes on air by itself here too:
   while `webos-serve` runs and `omarchy-link agents on` is set, the PC's agent monitor (redacted) feeds the channel
   every 5 s. In the Office: red → AI LIVE, green → the night's replay, yellow → skills (blue stays the Companion's).
-  Not on LG / Samsung in 2.22: talking from the phone.
+  The morning briefing (read aloud where the TV's browser can) and the debate (the owner's pick only from the TV,
+  `/v1/tvstudio/*`) too. Not on LG / Samsung in 2.22: talking from the phone and scenes (they need the TV's own
+  tools).
 
 - **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
   page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,

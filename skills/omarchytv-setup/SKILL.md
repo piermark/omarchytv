@@ -114,6 +114,12 @@ On an Android TV with 2.22 or later, tell the owner what else they can try (only
 - **Night shift**: "start a night shift with these tasks until 7, wake me at 7:30" → `tv_shift_start`; then
   `tv_shift_log` for each step and `tv_shift_queue` for anything risky (never push, merge, post or pay at night).
 - **Skills**: `tv_skill_list`, and `tv_skill_install` to ask the owner on the TV (Night shift, Homelab, Movie night).
+- **Morning briefing**: at the end of a night shift (or when asked), `tv_briefing_set` with short sections
+  (Overnight, Today, Waiting for you) and a `say` text; `wake` "07:30" puts it on air then.
+- **Debate**: `tv_debate_start {topic}`, then every agent answers with `tv_debate_post`; the owner picks on the TV,
+  read it with `tv_debate_result`.
+- **Scenes** (Android TV): "movie night" → `tv_scene_save {name, steps}` (the owner approves on the TV), then
+  `tv_scene_run {name}`. Use only the tools the scene allows; check `tv_scene_result`.
 
 ## 6. An agent on another machine (LAN or tailnet)
 

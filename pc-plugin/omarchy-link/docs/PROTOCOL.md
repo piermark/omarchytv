@@ -574,6 +574,28 @@ Events: `live`, `shift_changed {op}`. Talk (web settings session, control): `GET
 `tv_open` targets `live` and `replay`. MCP: `tv_live_update`, `tv_live`, `tv_shift_start | end | status | log | queue |
 decision`, `tv_skill_list | install | remove`.
 
+### The studio: the morning briefing, the debate, scenes (v2.22)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/briefing` | read | the briefing, or `{state: "none"}` |
+| POST | `/v1/briefing` | notify | `{title?, sections: [1-8 {title ≤40, lines: [1-8, ≤120]}], say? ≤1500, wake?: "07:30" or ms (≤24 h)}` |
+| POST | `/v1/briefing/show` | control | on AI LIVE now; 409 `no_briefing` |
+| POST | `/v1/debate` | notify | `{topic ≤160}` → `{debate: {id: "d1", state: "open", entries: []}}`; on AI LIVE at once |
+| POST | `/v1/debate/{id}` | notify | `{text ≤1200, preview?}`: your answer (by the token's name; a second post replaces it); 4 agents at most; 409 `closed` |
+| GET | `/v1/debate/{id}` | notify | `{topic, state: open | chosen, entries[], winner?}`; only the TV picks |
+| GET | `/v1/scenes` | read | `{scenes: {name: {steps, by, at}}}` |
+| POST | `/v1/scene/run` | control | `{name}`: a saved scene, at once → `{results: [{step, ok, error?}]}`; `{name?, steps}`: asks the owner on the TV → `{id}` |
+| POST | `/v1/scene/save` | control | `{name ≤40, steps}`: asks the owner on the TV → `{id}`; 24 scenes at most |
+| GET | `/v1/scene/{id}` | control | `pending | ran (results) | saved | denied` |
+
+A scene step is `{tool, args}`, with `tool` one of `tv_ha_run`, `tv_launch_app`, `tv_set_theme`, `tv_radio`,
+`tv_send_key`, `tv_open`, `tv_notify`, `tv_screensaver`, `tv_page_show` (12 steps at most). Steps run as the TV's
+own MCP calls, and a failed step does not stop the others. Event: `debate {id, op: start | post | chosen}`. MCP:
+`tv_briefing_set | show`, `tv_debate_start | post | result`, `tv_scene_run | save | list | result`. On LG / Samsung
+the PC bridge has the briefing and the debate (not scenes): the TV reads them in `GET /v1/tvlive` (`briefing`,
+`debate`) and answers with `POST /v1/tvstudio/briefing-shown` and `POST /v1/tvstudio/debate {id, index}`.
+
 ### AI credits (`PUT /v1/ai`)
 
 ```json
