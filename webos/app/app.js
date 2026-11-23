@@ -3514,6 +3514,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       permissions: ["CONTROL_POWER", "CONTROL_TV_SCREEN", "READ_POWER_STATE", "READ_INSTALLED_APPS", "LAUNCH"] } };
     try { var key = localStorage.getItem(SSAP_KEY); if (key) payload["client-key"] = key; } catch (e) {}
     ws.onerror = function () { finish(false, "unavailable"); };
+    // The TV can close the socket without an answer: webOS 3.x does it at once with "invalid origin" for apps
+    // on the TV itself. Without this the request only failed after the 90 s prompt timeout.
+    ws.onclose = function (e) { finish(false, (e && e.reason) || (opened ? "closed" : "unavailable")); };
     ws.onopen = function () { opened = true; ws.send(JSON.stringify({ type: "register", id: "reg", payload: payload })); };
     ws.onmessage = function (m) {
       var msg;
@@ -3556,19 +3559,54 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       var lps = ok && data && data.launchPoints;
       if (lps) brokenIcons = {};   // a fresh SSAP session: its icon URLs load again
       if (lps && useTvApps(lps)) {
-        try {
-          localStorage.removeItem(TVAPPS_DENIED);
-          localStorage.setItem(TVAPPS_CACHE, JSON.stringify(lps.map(function (l) {
-            return { id: l.id, title: l.title, launchPointId: l.launchPointId, lptype: l.lptype, icon: l.icon, largeIcon: l.largeIcon,
-              extraLargeIcon: l.extraLargeIcon, mediumLargeIcon: l.mediumLargeIcon, iconColor: l.iconColor, params: l.params, visible: l.visible };
-          })));
-        } catch (e) {}
+        saveTvApps(lps);
         if (manual) showToast("TV apps updated");
-      } else {
-        if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
-        if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
+        return;
       }
+      if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
+      // Rooted TVs: ask the TV as root instead (webOS 3.x refuses the app's own SSAP socket)
+      rootTvApps(function (rootOk) {
+        if (rootOk) { if (manual) showToast("TV apps updated"); return; }
+        if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
+      });
     }, null, 0, function (data, release) { cacheLaunchPointIcons(data && data.launchPoints, release); });
+  }
+  function saveTvApps(lps) {
+    try {
+      localStorage.removeItem(TVAPPS_DENIED);
+      localStorage.setItem(TVAPPS_CACHE, JSON.stringify(lps.map(function (l) {
+        return { id: l.id, title: l.title, launchPointId: l.launchPointId, lptype: l.lptype, icon: l.icon, largeIcon: l.largeIcon,
+          extraLargeIcon: l.extraLargeIcon, mediumLargeIcon: l.mediumLargeIcon, iconColor: l.iconColor, params: l.params, visible: l.visible };
+      })));
+    } catch (e) {}
+  }
+  // Rooted TVs (Homebrew Channel): the launch points from luna-send as root, and the icons the page can't load
+  // itself (another app's files) read as base64 and kept in the icon cache. done(false) when there is no root.
+  function rootTvApps(done) {
+    rootExec(TVA.ROOT_LIST_CMD, function (ok, out) {
+      var lps = ok ? TVA.parseRootList(out) : null;
+      if (!lps || !useTvApps(lps)) { done(false); return; }
+      saveTvApps(lps);
+      rootLaunchPointIcons(lps);
+      done(true);
+    });
+  }
+  function rootLaunchPointIcons(lps) {
+    var left = 0, added = 0;
+    function end() { if (--left) return; if (added) { saveIconCache(); renderAll(); } }
+    lps.forEach(function (lp) {
+      var path = TVA.rootIconPath(lp), cmd = path && TVA.rootIconCmd(path);
+      if (!lp.id || !cmd || iconData[lp.id] || typeof Image === "undefined") return;   // only the missing ones
+      left++;
+      rootExec(cmd, function (ok, out) {
+        var b64 = ok ? String(out).replace(/\s+/g, "") : "";
+        if (!b64) { end(); return; }
+        var im = new Image();
+        im.onload = function () { if (storeIconData(lp.id, im)) added++; end(); };
+        im.onerror = end;
+        im.src = "data:" + (/\.jpe?g$/i.test(path) ? "image/jpeg" : "image/png") + ";base64," + b64;
+      });
+    });
   }
   function setTvApps(on) {
     cfg.tvApps = on; saveCfg();
