@@ -1,0 +1,7 @@
+{
+  "name": "com.omarchytv.home.service",
+  "version": "1.0.0",
+  "description": "OmarchyTV: lists the TV's apps through the TV's remote control API where the page's origin is refused (#173)",
+  "main": "service.js",
+  "license": "MIT"
+}

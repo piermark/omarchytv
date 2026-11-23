@@ -1,5 +1,6 @@
 // LG webOS: turn the TV's own launch points (SSAP ssap://com.webos.applicationManager/listLaunchPoints) into
-// launcher tiles. Pure functions only, no DOM or network, so node tests can load this file (webos/tests/tvapps.test.js).
+// launcher tiles. No DOM, and network only through what the caller passes in, so node tests can load this file
+// (webos/tests/tvapps.test.js, webos/tests/webos26-service.test.js).
 (function (root) {
   "use strict";
   var SELF = "com.omarchytv.home";
@@ -72,7 +73,75 @@
     return out;
   }
 
-  var api = { merge: merge, iconUrl: iconUrl };
+  // webOS 26 (and recent webOS 22 firmware) closes the page's own SSAP WebSocket with 1008 "invalid origin" (#173).
+  // The ipk then carries a JS service (webos/service) that talks to the same API with Origin: file://.
+  var SERVICE_URI = "luna://com.omarchytv.home.service/listApps";
+  var pendingBridges = [];   // a PalmServiceBridge must stay referenced until it answers
+  // One Luna call. done(ok, info, data): info is the service's own reason ("not approved", "invalid origin", ...),
+  // or "no service" when the service is missing, refused or silent.
+  function callService(env, uri, params, timeoutMs, done) {
+    var finished = false, timer, bridge = null;
+    function finish(ok, info, data) {
+      if (finished) return;
+      finished = true; clearTimeout(timer);
+      if (bridge) { var i = pendingBridges.indexOf(bridge); if (i >= 0) pendingBridges.splice(i, 1); }
+      done(ok, info, data);
+    }
+    function answer(res) {
+      if (res && res.returnValue !== false && Array.isArray(res.launchPoints)) return finish(true, "response", res);
+      finish(false, res && typeof res.info === "string" && res.info ? res.info : "no service", res || null);
+    }
+    timer = setTimeout(function () {
+      if (bridge) { try { bridge.cancel(); } catch (e) {} }
+      finish(false, "no service");
+    }, timeoutMs);
+    try {
+      var svc = env && env.webOS && env.webOS.service;
+      if (svc && typeof svc.request === "function") {
+        var cut = uri.lastIndexOf("/");
+        svc.request(uri.slice(0, cut), { method: uri.slice(cut + 1), parameters: params || {},
+          onSuccess: answer, onFailure: answer });
+        return;
+      }
+      if (env && env.PalmServiceBridge) {
+        bridge = new env.PalmServiceBridge();
+        pendingBridges.push(bridge);
+        bridge.onservicecallback = function (text) {
+          var res = null;
+          try { res = typeof text === "string" ? JSON.parse(text) : text; } catch (e) {}
+          answer(res);
+        };
+        bridge.call(uri, JSON.stringify(params || {}));
+        return;
+      }
+    } catch (e) {}
+    finish(false, "no service");
+  }
+
+  // Which way to read the launch points, and when to try the other one. The page's own SSAP session stays first,
+  // so TVs where it works see no change (same prompt, same key); the service is tried only when that session could
+  // not open or was refused ("invalid origin", "unavailable", "closed"), never after a "no" on the TV prompt or a
+  // prompt left unanswered. Once the service has worked (preferService) it goes first, and the page's session
+  // stays as its fallback. ssap(cb) and service(cb) both call cb(ok, info, data). done(ok, info, data, via).
+  var SSAP_RETRY = { "invalid origin": 1, "unavailable": 1, "closed": 1 };
+  var SERVICE_FINAL = { "not approved": 1, "no answer": 1 };
+  function discover(opts, done) {
+    var order = opts.preferService ? ["service", "ssap"] : ["ssap", "service"], firstInfo = null;
+    function step(i) {
+      var via = order[i];
+      opts[via](function (ok, info, data) {
+        if (ok) return done(true, info, data, via);
+        if (firstInfo === null) firstInfo = info;
+        var retry = i + 1 < order.length && (via === "ssap" ? !!SSAP_RETRY[info] : !SERVICE_FINAL[info]);
+        if (retry) return step(i + 1);
+        // a missing service says nothing useful: report the page session's own reason instead
+        done(false, via === "service" && info === "no service" ? firstInfo : info, data, via);
+      });
+    }
+    step(0);
+  }
+
+  var api = { merge: merge, iconUrl: iconUrl, callService: callService, discover: discover, SERVICE_URI: SERVICE_URI };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.OmarchyTvApps = api;
 })(typeof window !== "undefined" ? window : this);

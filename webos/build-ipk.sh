@@ -2,7 +2,7 @@
 # Build OmarchyTV for LG webOS (omarchytv-webos-<appinfo version>-testing.ipk)
 # Synchronizes shared fonts, themes, MIT wordmark wallpapers, and tte.js screensaver
 # assets from ../launcher/app/src/main/ and generates the binary PNG icons before
-# running ares-package.
+# running ares-package. The package also carries the app's JS service from webos/service/ (#173).
 set -euo pipefail
 # The version comes from app/appinfo.json, so the package name never goes stale.
 VERSION="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["version"])' "$(dirname "$0")/app/appinfo.json")"
@@ -58,7 +58,8 @@ else
 fi
 OUT_DIR="${1:-$SCRIPT_DIR}"
 mkdir -p "$OUT_DIR"
-ares-package "$APP" -o "$OUT_DIR"
+# The JS service (webos/service, #173) lists the TV's apps where webOS 26 refuses the page's own SSAP origin.
+ares-package "$APP" "$SCRIPT_DIR/service" -o "$OUT_DIR"
 SUFFIX=testing
 [ "${OMARCHY_IPHONE_REMOTE:-0}" = 1 ] && SUFFIX=iphone-remote-testing
 mv -f "$OUT_DIR/com.omarchytv.home_${VERSION}_all.ipk" "$OUT_DIR/omarchytv-webos-${VERSION}-${SUFFIX}.ipk"

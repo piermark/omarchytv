@@ -3534,10 +3534,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       permissions: ["CONTROL_POWER", "CONTROL_TV_SCREEN", "READ_POWER_STATE", "READ_INSTALLED_APPS", "LAUNCH"] } };
     try { var key = localStorage.getItem(SSAP_KEY); if (key) payload["client-key"] = key; } catch (e) {}
     ws.onerror = function () { finish(false, "unavailable"); };
+    // webOS 26 (and recent webOS 22 firmware) accepts the socket, then closes it with 1008 "invalid origin" (#173):
+    // say so at once instead of waiting for the 90 s timeout, so refreshTvApps can ask the app's JS service.
+    ws.onclose = function (ev) { finish(false, ev && ev.code === 1008 ? "invalid origin" : opened ? "closed" : "unavailable"); };
     ws.onopen = function () { opened = true; ws.send(JSON.stringify({ type: "register", id: "reg", payload: payload })); };
     ws.onmessage = function (m) {
       var msg;
       try { msg = JSON.parse(m.data); } catch (e) { return; }
+      // A "response" to "reg" (pairingType PROMPT, returnValue true) only means the prompt is on screen: keep waiting.
       if (msg.id === "reg" && msg.type === "registered") {
         try { localStorage.setItem(SSAP_KEY, msg.payload["client-key"]); } catch (e) {}
         ws.send(JSON.stringify({ type: "request", id: "req", uri: uri, payload: reqPayload || {} }));
@@ -3568,34 +3572,58 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (apps) applyAppList(apps);
     return !!apps;
   }
+  // Where the page's own SSAP session is refused (webOS 26: 1008 "invalid origin", #173) the list comes from the
+  // app's JS service (webos/service), which pairs with the TV on its own; see OmarchyTvApps.discover in tvapps.js.
+  var TVAPPS_VIA = "omarchytv_tv_apps_via";
   function refreshTvApps(manual) {
     if (!isWebos() || !cfg.tvApps) return;
     try { if (!manual && localStorage.getItem(TVAPPS_DENIED)) return; } catch (e) {}
     if (manual) showToast("Accept OmarchyTV on the TV prompt if it appears");
-    ssapRequest("ssap://com.webos.applicationManager/listLaunchPoints", function (ok, info, data) {
-      var lps = ok && data && data.launchPoints;
-      if (lps) brokenIcons = {};   // a fresh SSAP session: its icon URLs load again
-      if (lps && useTvApps(lps)) {
-        try {
-          localStorage.removeItem(TVAPPS_DENIED);
-          localStorage.setItem(TVAPPS_CACHE, JSON.stringify(lps.map(function (l) {
-            return { id: l.id, title: l.title, launchPointId: l.launchPointId, lptype: l.lptype, icon: l.icon, largeIcon: l.largeIcon,
-              extraLargeIcon: l.extraLargeIcon, mediumLargeIcon: l.mediumLargeIcon, iconColor: l.iconColor, params: l.params, visible: l.visible };
-          })));
-        } catch (e) {}
-        if (manual) showToast("TV apps updated");
-      } else {
-        if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
-        if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
+    var preferService = false;
+    try { preferService = localStorage.getItem(TVAPPS_VIA) === "service"; } catch (e) {}
+    TVA.discover({
+      preferService: preferService,
+      ssap: function (cb) {
+        ssapRequest("ssap://com.webos.applicationManager/listLaunchPoints", cb, null, 0,
+          function (data, release) { cacheLaunchPointIcons(data && data.launchPoints, release); });
+      },
+      service: function (cb) {
+        // 100 s: the service itself waits up to 90 s for the TV prompt. It keeps its session open for 10 s after
+        // answering, so the icons can be copied the same way as on the page's own session.
+        TVA.callService(window, TVA.SERVICE_URI, { holdMs: 10000 }, 100000, function (ok, info, data) {
+          if (!ok) return cb(ok, info, data);
+          cacheLaunchPointIcons(data.launchPoints, function () { cb(ok, info, data); });
+        });
       }
-    }, null, 0, function (data, release) { cacheLaunchPointIcons(data && data.launchPoints, release); });
+    }, function (ok, info, data, via) {
+      if (ok) { try { if (via === "service") localStorage.setItem(TVAPPS_VIA, "service"); else localStorage.removeItem(TVAPPS_VIA); } catch (e) {} }
+      tvAppsAnswer(manual, ok, info, data);
+    });
+  }
+  function tvAppsAnswer(manual, ok, info, data) {
+    var lps = ok && data && data.launchPoints;
+    if (lps) brokenIcons = {};   // a fresh SSAP session: its icon URLs load again
+    if (lps && useTvApps(lps)) {
+      try {
+        localStorage.removeItem(TVAPPS_DENIED);
+        localStorage.setItem(TVAPPS_CACHE, JSON.stringify(lps.map(function (l) {
+          return { id: l.id, title: l.title, launchPointId: l.launchPointId, lptype: l.lptype, icon: l.icon, largeIcon: l.largeIcon,
+            extraLargeIcon: l.extraLargeIcon, mediumLargeIcon: l.mediumLargeIcon, iconColor: l.iconColor, params: l.params, visible: l.visible };
+        })));
+      } catch (e) {}
+      if (manual) showToast("TV apps updated");
+    } else {
+      if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
+      if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
+    }
   }
   function setTvApps(on) {
     cfg.tvApps = on; saveCfg();
     if (on) refreshTvApps(true); else applyAppList(BUILTIN_APPS);
   }
   function repairTv() {
-    try { localStorage.removeItem(SSAP_KEY); localStorage.removeItem(TVAPPS_DENIED); } catch (e) {}
+    try { localStorage.removeItem(SSAP_KEY); localStorage.removeItem(TVAPPS_DENIED); localStorage.removeItem(TVAPPS_VIA); } catch (e) {}
+    if (isWebos()) TVA.callService(window, "luna://com.omarchytv.home.service/forget", {}, 5000, function () {});
     if (!cfg.tvApps) { cfg.tvApps = true; saveCfg(); }
     refreshTvApps(true);
   }

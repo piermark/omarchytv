@@ -234,6 +234,7 @@ OmarchyTV reads the apps installed on your LG TV (for example NOW, MUBI, DAZN an
 - **Settings > All settings > Read installed TV apps** turns this on or off (on by default).
 - **Settings > All settings > Re-pair with TV** forgets the key and shows the prompt again, for example after a TV reset or if new apps don't appear.
 - **Missed the prompt on the first start?** The app row then shows only the built-in tiles. Use **Re-pair with TV** above and accept the prompt: your TV's own apps appear, with their icons ([#127](https://github.com/piermark/omarchytv/issues/127)).
+- **webOS 26 (and recent webOS 22 firmware):** these TVs refuse the app page's own connection to the TV ("1008 invalid origin"), so the app list used to stay on the built-in tiles. From `2.22` the package carries a small background service (`com.omarchytv.home.service`, no root needed) that asks the TV instead. You may see the permission prompt once more, this time for that service: press **OK / Allow**. TVs where the page's own connection works keep using it, with no new prompt. **Re-pair with TV** clears the service's key too ([#173](https://github.com/piermark/omarchytv/issues/173)). Thanks to @Stargazer-ops for the diagnosis and fix idea, and to [simbasjungles/free-my-tv PR 285](https://github.com/simbasjungles/free-my-tv/pull/285) for the same approach.
 
 ## Grok Bot · Omarchy TUI (new in `2.13.9`)
 
