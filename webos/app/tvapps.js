@@ -72,7 +72,33 @@
     return out;
   }
 
-  var api = { merge: merge, iconUrl: iconUrl };
+  // Rooted TVs (Homebrew Channel). Some firmware closes the app's own SSAP socket at once ("invalid origin" for
+  // file://<app id> on webOS 3.x), and the page can neither call listLaunchPoints over luna nor load another app's
+  // icon files. As root, luna-send lists the launch points and base64 reads the icons; the app runs both through
+  // Homebrew Channel's exec service. Paths go into a shell command, so only plain characters are allowed.
+  var ROOT_LIST_CMD = "luna-send -n 1 luna://com.webos.applicationManager/listLaunchPoints '{}'";
+  var SAFE_PATH = /^\/[A-Za-z0-9._\/ +-]+$/;
+  function parseRootList(out) {
+    try {
+      var j = JSON.parse(String(out || "").trim());
+      return j && Array.isArray(j.launchPoints) ? j.launchPoints : null;
+    } catch (e) { return null; }
+  }
+  function safePath(p) {
+    return typeof p === "string" && p.length <= 1024 && SAFE_PATH.test(p) && !/\/\.\.(\/|$)/.test(p) ? p : undefined;
+  }
+  function rootIconPath(lp) {
+    var c = [lp.largeIcon, lp.icon, lp.extraLargeIcon, lp.mediumLargeIcon];
+    for (var i = 0; i < c.length; i++) {
+      var p = typeof c[i] === "string" ? safePath(c[i].replace(/^file:\/\//, "")) : undefined;
+      if (p) return p;
+    }
+    return undefined;
+  }
+  function rootIconCmd(p) { return safePath(p) ? "base64 '" + p + "'" : undefined; }
+
+  var api = { merge: merge, iconUrl: iconUrl, ROOT_LIST_CMD: ROOT_LIST_CMD, parseRootList: parseRootList,
+    rootIconPath: rootIconPath, rootIconCmd: rootIconCmd };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   root.OmarchyTvApps = api;
 })(typeof window !== "undefined" ? window : this);

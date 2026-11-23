@@ -1,7 +1,7 @@
 // node --test webos/tests/tvapps.test.js — LG webOS installed-apps merge (app/tvapps.js).
 const test = require("node:test");
 const assert = require("assert");
-const { merge, iconUrl } = require("../app/tvapps.js");
+const { merge, iconUrl, ROOT_LIST_CMD, parseRootList, rootIconPath, rootIconCmd } = require("../app/tvapps.js");
 
 const DEF = [
   { id: "tv", name: "TV", appId: "com.webos.app.livetv", brand: "tv" },
@@ -59,4 +59,39 @@ test("icon urls are restricted", () => {
   assert.strictEqual(iconUrl('https://127.0.0.1:3001/resources/a".png'), undefined);
   assert.strictEqual(iconUrl("/a/../b.png"), undefined);
   assert.strictEqual(iconUrl("http://192.168.1.50:3000/resources/a.png"), "http://192.168.1.50:3000/resources/a.png");
+});
+
+// Rooted TVs (Homebrew Channel): webOS 3.x refuses the app's own SSAP socket ("invalid origin"), so the list
+// comes from luna-send run as root through Homebrew Channel's exec service, and the icons are read as base64.
+test("the root list command asks applicationManager for the launch points", () => {
+  assert.strictEqual(ROOT_LIST_CMD, "luna-send -n 1 luna://com.webos.applicationManager/listLaunchPoints '{}'");
+});
+
+test("root list output parses to launch points, anything else is null", () => {
+  const out = JSON.stringify({ subscribed: false, launchPoints: [{ id: "netflix", title: "Netflix" }], returnValue: true });
+  assert.deepStrictEqual(parseRootList(out), [{ id: "netflix", title: "Netflix" }]);
+  assert.deepStrictEqual(parseRootList(out + "\n"), [{ id: "netflix", title: "Netflix" }]);
+  assert.strictEqual(parseRootList(""), null);
+  assert.strictEqual(parseRootList("luna-send: not found"), null);
+  assert.strictEqual(parseRootList(JSON.stringify({ returnValue: false, errorText: "x" })), null);
+  assert.strictEqual(parseRootList(JSON.stringify({ launchPoints: "x" })), null);
+});
+
+test("root icon path: the first local icon, in the same order the tiles use", () => {
+  const A = "/media/cryptofs/apps/usr/palm/applications/netflix/";
+  assert.strictEqual(rootIconPath({ largeIcon: A + "L.png", icon: A + "S.png" }), A + "L.png");
+  assert.strictEqual(rootIconPath({ largeIcon: "https://127.0.0.1:3001/resources/a.png", icon: A + "S.png" }), A + "S.png");
+  assert.strictEqual(rootIconPath({ icon: "file://" + A + "S.png" }), A + "S.png");
+  assert.strictEqual(rootIconPath({ icon: "https://127.0.0.1:3001/resources/a.png" }), undefined);
+  assert.strictEqual(rootIconPath({ icon: A + "a'b.png" }), undefined);
+  assert.strictEqual(rootIconPath({ icon: A + "$(reboot).png" }), undefined);
+  assert.strictEqual(rootIconPath({ icon: A + "a`b`.png" }), undefined);
+  assert.strictEqual(rootIconPath({}), undefined);
+});
+
+test("root icon command reads the file as base64, single-quoted", () => {
+  assert.strictEqual(rootIconCmd("/usr/palm/applications/x/icon.png"), "base64 '/usr/palm/applications/x/icon.png'");
+  assert.strictEqual(rootIconCmd("/a/b c.png"), "base64 '/a/b c.png'");
+  assert.strictEqual(rootIconCmd("/a/'x.png"), undefined);
+  assert.strictEqual(rootIconCmd("relative.png"), undefined);
 });
