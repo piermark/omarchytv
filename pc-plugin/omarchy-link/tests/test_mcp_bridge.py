@@ -44,6 +44,15 @@ class BridgeTest(unittest.TestCase):
         self.assertIn("Not allowed", out[1]["error"]["message"])
         self.assertEqual(len(c.sent), 1)   # the refused call never left the PC
 
+    def test_widget_tools_scopes(self):   # v2.22 #157: content with notify, layout with control
+        from omarchy_link import mcp_bridge
+        self.assertTrue(mcp_bridge.allowed("tv_widget_update", "notify"))
+        self.assertTrue(mcp_bridge.allowed("tv_widget_list", "read"))
+        self.assertTrue(mcp_bridge.allowed("tv_page_current", "read"))
+        for t in ("tv_widget_create", "tv_widget_move", "tv_widget_delete", "tv_page_show", "tv_page_delete"):
+            self.assertFalse(mcp_bridge.allowed(t, "notify"), t)
+            self.assertTrue(mcp_bridge.allowed(t, "control"), t)
+
     def test_tv_away_is_an_mcp_error(self):
         _, out = self.run_lines([{"jsonrpc": "2.0", "id": 7, "method": "tools/list"}], client=FakeClient(fail=True))
         self.assertEqual(out[0]["error"]["code"], -32000)

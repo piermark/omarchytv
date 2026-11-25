@@ -1,0 +1,10 @@
+{
+  "id": "com.omarchytv.home.service",
+  "description": "OmarchyTV: the TV's installed apps for the launcher (#173)",
+  "services": [
+    {
+      "name": "com.omarchytv.home.service",
+      "description": "OmarchyTV: the TV's installed apps for the launcher (#173)"
+    }
+  ]
+}

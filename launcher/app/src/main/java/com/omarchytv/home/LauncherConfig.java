@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Color;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -145,7 +146,7 @@ final class LauncherConfig {
         List<AgentPage> out = new ArrayList<>();
         JSONArray a = j != null ? j.optJSONArray("agentPages") : null;
         java.util.Set<String> ids = new java.util.HashSet<>();
-        for (int i = 0; a != null && i < a.length() && out.size() < 16; i++) {
+        for (int i = 0; a != null && i < a.length() && out.size() < com.omarchytv.home.link.HomePages.MAX_AGENT_PAGES; i++) {
             JSONObject o = a.optJSONObject(i);
             if (o == null) continue;
             String id = o.optString("id"), name = o.optString("name").trim(), url = o.optString("url").trim();
@@ -276,6 +277,16 @@ final class LauncherConfig {
     }
 
     /** A shortcut pushed by the PC (link.shortcuts): type app | view | pc. */
+    /** A pushed shortcut {id, label, action: {type: app|view|pc, package?, uri?, command?}}, or null. */
+    static Shortcut shortcutOf(JSONObject o) {
+        JSONObject a = o != null ? o.optJSONObject("action") : null;
+        if (a == null) return null;
+        String type = a.optString("type");
+        if (!type.equals("app") && !type.equals("view") && !type.equals("pc")) return null;
+        return new Shortcut(o.optString("id"), o.optString("label", o.optString("id")), type,
+                a.optString("package", ""), a.optString("uri", ""), a.optString("command", ""));
+    }
+
     static final class Shortcut {
         final String id, label, type, pkg, uri, command;
 
@@ -486,6 +497,11 @@ final class LauncherConfig {
     final boolean randomWallpaper;
     /** v2.13 Plugins Engine: SpaceX TV (com.sighmon.spacex-tv) & Agent Desktop (io.github.tcballard.grokbot-desktop). */
     final boolean pluginSpacexTv;
+    /** v2.22 #163 the web settings page on :47800/settings/ (link.webSettings). */
+    final boolean webSettings;
+    /** v2.22 #162 the Radio plugin (plugins.radio, off unless turned on) and its play / pause key (radio.key). */
+    final boolean pluginRadio;
+    final String radioKey;
     final boolean pluginGrokbot;
     final String grokbotMessage;
     /** Experimental: the bot @tcballard's Agent Desktop companion shows on the PC, pushed by omarchy-link
@@ -560,8 +576,29 @@ final class LauncherConfig {
     final java.util.Map<String, Boolean> pulsePanels;
     /** v2.15: Home says once that Pulse is the new screensaver; "Previous screensaver" can undo the switch. */
     final boolean pulseNotice, hasSsBefore;
+    /** v2.22: true when a notification of this level is below agentAlertMin and the TV drops it. */
+    static boolean belowAgentMin(String min, String level) {
+        return levelRank(level) < levelRank(min);
+    }
+
+    private static int levelRank(String level) {
+        return "alert".equals(level) ? 2 : "warn".equals(level) ? 1 : 0;
+    }
+
     /** v2.15 "agentAlert": a PC agent waiting for you shows up on the TV, over whatever is playing (off by default). */
+    /** v2.22 #157 omarchytv.json "widgets": positioned, typed Home widgets (see link/HomeWidgets). */
+    final JSONArray gridWidgets;
+    /** v2.22 #158 {"widgets", "widgetPages"} for HomePages; the page an agent asked to show (and when); rotation;
+     *  where the navigator sits ("bottom" or "top"). */
+    final JSONObject pagesRoot;
+    final int widgetPageCurrent, widgetPageRotateSec;
+    final long widgetPageShowAt;
+    final String widgetNavPosition;
     final boolean agentAlert;
+    /** v2.22 "agentAlertMin": the lowest notification level shown, "info" (all), "warn" or "alert"; set with the remote. */
+    final String agentAlertMin;
+    /** v2.22 AI LIVE in the corner while you watch: "off" (default), "questions" or "live". */
+    final String liveCorner;
     final boolean screensaverClock;
     /** v2.13: procedural ST3 synth audio for Aquarium screensaver (default true). */
     final boolean saverSound;
@@ -602,7 +639,7 @@ final class LauncherConfig {
     /** v2.10: text tiles (terminal style) instead of banners (default off). */
     final boolean textTiles;
     /** v2.10: home widgets on/off: weather, pc, ai, deploys (default all on). */
-    final boolean wWeather, wPc, wAi, wDeploys, wTerm;
+    final boolean wWeather, wPc, wAi, wDeploys, wTerm, wGrokbot;
     /** "racing" home widget (remaining 2026 F1 + MotoGP weekends, homeWidgets.racing, default off) and its
      *  countdown in the bar (racing.bar; 2.15.1: off unless set, the panel has its own countdown). */
     final boolean wRacing, barRacing;
@@ -678,17 +715,26 @@ final class LauncherConfig {
         JSONArray lsa = lkc != null ? lkc.optJSONArray("shortcuts") : null;
         if (lsa != null) {
             for (int i = 0; i < lsa.length() && sc.size() < 16; i++) {
-                JSONObject o = lsa.optJSONObject(i);
-                JSONObject a = o != null ? o.optJSONObject("action") : null;
-                if (a == null) continue;
-                String type = a.optString("type");
-                if (!type.equals("app") && !type.equals("view") && !type.equals("pc")) continue;
-                sc.add(new Shortcut(o.optString("id"), o.optString("label", o.optString("id")), type,
-                        a.optString("package", ""), a.optString("uri", ""), a.optString("command", "")));
+                Shortcut x = shortcutOf(lsa.optJSONObject(i));
+                if (x != null) sc.add(x);
             }
         }
         shortcuts = Collections.unmodifiableList(sc);
         widgetsAt = lkc != null ? lkc.optLong("widgetsAt", 0) : 0;
+        JSONArray gwa = j != null ? j.optJSONArray("widgets") : null;   // v2.22 #157, drawn by WidgetGrid
+        gridWidgets = gwa != null ? gwa : new JSONArray();
+        JSONObject pgRoot = new JSONObject();
+        try {
+            pgRoot.put("widgets", gridWidgets);
+            JSONArray wpg = j != null ? j.optJSONArray("widgetPages") : null;
+            if (wpg != null) pgRoot.put("widgetPages", wpg);
+        } catch (JSONException ignored) {
+        }
+        pagesRoot = pgRoot;
+        widgetPageCurrent = j != null ? j.optInt("widgetPageCurrent", 0) : 0;
+        widgetPageShowAt = j != null ? j.optLong("widgetPageShowAt", 0) : 0;
+        widgetPageRotateSec = j != null ? Math.max(0, Math.min(3600, j.optInt("widgetPageRotateSec", 0))) : 0;
+        widgetNavPosition = j != null && "top".equals(j.optString("widgetNavPosition")) ? "top" : "bottom";
         JSONObject wg = j != null ? j.optJSONObject("pcWidgets") : null;
         pcPanesOn = wg == null || wg.optBoolean("panes", true);
         shortcutsOn = wg == null || wg.optBoolean("shortcuts", true);
@@ -698,6 +744,7 @@ final class LauncherConfig {
         shareTheme = lkc == null || lkc.optBoolean("shareTheme", true);
         tailscale = lkc != null && lkc.optBoolean("tailscale", false);
         notifySound = lkc == null || lkc.optBoolean("notifySound", true);
+        webSettings = lkc != null && lkc.optBoolean("webSettings", false);   // v2.22 #163, off by default
         Object ka = lkc == null ? null : lkc.opt("keepAlive");
         keepAlive = Boolean.TRUE.equals(ka) || "on".equals(ka) ? "on"
                 : Boolean.FALSE.equals(ka) || "off".equals(ka) ? "off" : "auto";
@@ -816,6 +863,10 @@ final class LauncherConfig {
         JSONObject plObj = j != null ? j.optJSONObject("plugins") : null;
         pluginSpacexTv = plObj != null && plObj.has("spacexTv") && plObj.optBoolean("spacexTv");   // 2.20: off unless the user (or a saved setting) turned it on
         pluginGrokbot = plObj == null || plObj.optBoolean("grokbot", true);
+        pluginRadio = plObj != null && plObj.optBoolean("radio", false);
+        JSONObject radioObj = j != null ? j.optJSONObject("radio") : null;
+        String rk = radioObj != null ? radioObj.optString("key", "off") : "off";
+        radioKey = java.util.Arrays.asList("red", "green", "yellow", "blue", "play_pause").contains(rk) ? rk : "off";
         String crt = plObj != null ? plObj.optString("retroCrt", "off") : "off";
         pluginRetroCrt = "light".equals(crt) || "strong".equals(crt) ? crt : "off";
         pluginOmastorm = plObj != null && plObj.optBoolean("omastorm", false);
@@ -876,6 +927,10 @@ final class LauncherConfig {
         String ps = ss != null ? ss.optString("pulseScene", "sphere") : "sphere";
         pulseNotice = j != null && j.optBoolean("pulseNotice", false);
         agentAlert = j != null && j.optBoolean("agentAlert", false);
+        String aam = j != null ? j.optString("agentAlertMin", "info") : "info";
+        agentAlertMin = "warn".equals(aam) || "alert".equals(aam) ? aam : "info";
+        String lc = j != null ? j.optString("liveCorner", "off") : "off";
+        liveCorner = "questions".equals(lc) || "live".equals(lc) ? lc : "off";
         hasSsBefore = j != null && j.optJSONObject("ssBefore215") != null;
         pulseScene = Arrays.asList("sphere", "skyline", "orbit", "calm", "hacker", "noir", "mars", "monolith").contains(ps) ? ps : "sphere";
         String pg = ss != null ? ss.optString("pulseGraphics", "auto") : "auto";
@@ -919,6 +974,7 @@ final class LauncherConfig {
         logoAnim = j == null || j.optBoolean("logoAnim", true);
         textTiles = j != null && j.optBoolean("textTiles", false);
         JSONObject hw = j != null ? j.optJSONObject("homeWidgets") : null;
+        wGrokbot = hw == null || hw.optBoolean("grokbot", true);
         wWeather = hw == null || hw.optBoolean("weather", true);
         wPc = hw == null || hw.optBoolean("pc", true);
         wAi = hw == null || hw.optBoolean("ai", true);

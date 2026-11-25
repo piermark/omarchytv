@@ -489,6 +489,10 @@ def main(argv):
         if scope is not None and scope not in mcp_server.SCOPES:
             ui.say("--scope read|notify|control")
             return 2
+        mx = rest[rest.index("--max-level") + 1] if "--max-level" in rest and rest.index("--max-level") + 1 < len(rest) else None
+        if "--max-level" in rest and mx not in mcp_server.LEVELS:   # v2.22: the loudest tv_notify level passed on
+            ui.say("--max-level info|warn|alert")
+            return 2
         cfname = rest[rest.index("--cloudflare") + 1] if "--cloudflare" in rest else None
         team = rest[rest.index("--access-team") + 1] if "--access-team" in rest else None
         aud = rest[rest.index("--access-aud") + 1] if "--access-aud" in rest else None
@@ -499,8 +503,8 @@ def main(argv):
         if any(f in rest for f in ("--http", "--tunnel", "--tailscale", "--cloudflare")):
             return mcp_server.serve_http(tv_client, port=port, tunnel="--tunnel" in rest, tailscale="--tailscale" in rest,
                                          cloudflare=cfname, scope=scope, access="--access" in rest,
-                                         access_team=team, access_aud=aud)
-        return mcp_server.serve_stdio(tv_client, scope or "control")
+                                         access_team=team, access_aud=aud, max_level=mx)
+        return mcp_server.serve_stdio(tv_client, scope or "control", mx or "alert")
     if cmd == "cloudflare":   # v2.21: setup NAME HOSTNAME | service [mcp flags…]
         return cmd_cloudflare(rest)
     if cmd == "stats":

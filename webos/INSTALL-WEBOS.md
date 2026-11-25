@@ -1,17 +1,17 @@
-# OmarchyTV for LG webOS — Installation Guide (`2.21.0`)
+# OmarchyTV for LG webOS — Installation Guide (`2.22.0`)
 
 > **Status: Experimental (`testing`, NOT beta)**
-> This is an experimental **`testing`** build of **OmarchyTV** for **LG webOS TVs** (webOS 3.x / 4.0 / 5.0 / 6.0 / 22 / 23 / 24 / 25; on webOS 3.x the bundled `compat.js` fills in the missing browser features), based on the latest Android TV release (**2.21.0**). Tested on a real LG 32LQ63006LA (webOS 22); the community reported an LG 55QNED80T6A on webOS 25 working with 2.13.9 ([#95](https://github.com/piermark/omarchytv/issues/95)).
+> This is an experimental **`testing`** build of **OmarchyTV** for **LG webOS TVs** (webOS 3.x / 4.0 / 5.0 / 6.0 / 22 / 23 / 24 / 25 / 26; on webOS 3.x the bundled `compat.js` fills in the missing browser features), based on the latest Android TV release (**2.22.0**). Tested on a real LG 32LQ63006LA (webOS 22); the community reported an LG 55QNED80T6A on webOS 25 working with 2.13.9 ([#95](https://github.com/piermark/omarchytv/issues/95)).
 > Community feedback and compatibility reports from LG webOS TV users are warmly welcome!
 
 ---
 
-## Downloads (`v2.21.0`)
+## Downloads (`v2.22.0`)
 
-- **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.21.0-testing.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.21.0/omarchytv-webos-2.21.0-testing.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0))
-  - SHA-256: `452d642fca4095728d0732a15525c2e4a15ebbf8cc2c2c423e4e7fbaaf6e7142`
-- **PC Plugin (Android TV + LG webOS):** [`omarchy-tv-pc-plugin-2.21.0.tar.gz`](https://github.com/piermark/omarchytv/releases/download/v2.21.0/omarchy-tv-pc-plugin-2.21.0.tar.gz) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0))
-  - SHA-256: `04604a05d9c8630bfc5e293bb74791153b8a01d11bf8f20d2fa1afa81c5d7239`
+- **LG webOS Package (`.ipk`):** [`omarchytv-webos-2.22.0-testing.ipk`](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchytv-webos-2.22.0-testing.ipk) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0))
+  - SHA-256: `191c18fd9209aec71fa2d2f694e247078607ce058c8c1ea38bdf9750d504b538`
+- **PC Plugin (Android TV + LG webOS):** [`omarchy-tv-pc-plugin-2.22.0.tar.gz`](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchy-tv-pc-plugin-2.22.0.tar.gz) ([GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0))
+  - SHA-256: `b5b9c06d3fde4b19aeb1249dc36f8844af0d356567c6d62a05921d951e2f2dba`
 
 ---
 
@@ -48,7 +48,7 @@ Both run on the TV through Homebrew Channel's start-up scripts ([`app/rooted/oma
 3. **On your computer:**
    - Install and open **[webOS Dev Manager](https://github.com/webosbrew/dev-manager-desktop)** (available on Linux, macOS, and Windows; on Arch / Omarchy: `yay -S webos-dev-manager-bin` or AppImage).
    - Add your TV using its IP address and the 6-character Passphrase from the Developer Mode app.
-   - Click **Apps → Install** (top right) and select **`omarchytv-webos-2.21.0-testing.ipk`**.
+   - Click **Apps → Install** (top right) and select **`omarchytv-webos-2.22.0-testing.ipk`**.
 4. **Launch OmarchyTV** from your LG TV's Home bar!
 
 ---
@@ -78,14 +78,14 @@ ares-novacom --device lgtv --getkey
 With `ares-install` directly:
 
 ```bash
-ares-install --device lgtv omarchytv-webos-2.21.0-testing.ipk
+ares-install --device lgtv omarchytv-webos-2.22.0-testing.ipk
 ares-launch  --device lgtv com.omarchytv.home
 ```
 
-Or using the **OmarchyTV PC Plugin (`2.21.0`)**:
+Or using the **OmarchyTV PC Plugin (`2.22.0`)**:
 
 ```bash
-omarchy-tv update omarchytv-webos-2.21.0-testing.ipk --tv lgtv
+omarchy-tv update omarchytv-webos-2.22.0-testing.ipk --tv lgtv
 ```
 
 ---
@@ -117,7 +117,7 @@ ssh-copy-id root@192.168.1.50
 ### 2. Install & Launch the `.ipk`
 
 ```bash
-scp omarchytv-webos-2.21.0-testing.ipk root@192.168.1.50:/tmp/omarchytv.ipk
+scp omarchytv-webos-2.22.0-testing.ipk root@192.168.1.50:/tmp/omarchytv.ipk
 ssh -t root@192.168.1.50 'luna-send-pub -i luna://com.webos.appInstallService/dev/install "{\"id\":\"com.ares.defaultName\",\"ipkUrl\":\"/tmp/omarchytv.ipk\",\"subscribe\":true}"'
 ```
 
@@ -199,13 +199,13 @@ ssh root@192.168.1.50 'rm /var/luna/preferences/configd/layers/overlay/com.webos
 
 ## Connecting Your Omarchy Linux PC (Live Stats, Themes & Wallpaper)
 
-The `2.21.0` PC plugin includes a lightweight HTTP + CORS bridge (`omarchy-tv webos-serve`) so your LG webOS TV can display live PC telemetry (CPU, RAM, uptime, GPU, active theme, and AI credit usage) without requiring native sockets on the TV.
+The `2.22.0` PC plugin includes a lightweight HTTP + CORS bridge (`omarchy-tv webos-serve`) so your LG webOS TV can display live PC telemetry (CPU, RAM, uptime, GPU, active theme, and AI credit usage) without requiring native sockets on the TV.
 
 ### 1. Start the bridge on your Omarchy PC
 
 ```bash
-# Extract and install the 2.21.0 PC plugin
-tar -xzf omarchy-tv-pc-plugin-2.21.0.tar.gz
+# Extract and install the 2.22.0 PC plugin
+tar -xzf omarchy-tv-pc-plugin-2.22.0.tar.gz
 cd pc-plugin
 mkdir -p ~/.local/share ~/.local/bin
 cp -r omarchy-link ~/.local/share/omarchy-link
@@ -234,6 +234,7 @@ OmarchyTV reads the apps installed on your LG TV (for example NOW, MUBI, DAZN an
 - **Settings > All settings > Read installed TV apps** turns this on or off (on by default).
 - **Settings > All settings > Re-pair with TV** forgets the key and shows the prompt again, for example after a TV reset or if new apps don't appear.
 - **Missed the prompt on the first start?** The app row then shows only the built-in tiles. Use **Re-pair with TV** above and accept the prompt: your TV's own apps appear, with their icons ([#127](https://github.com/piermark/omarchytv/issues/127)).
+- **webOS 26 (and recent webOS 22 firmware):** these TVs refuse the app page's own connection to the TV ("1008 invalid origin"), so the app list used to stay on the built-in tiles. From `2.22` the package carries a small background service (`com.omarchytv.home.service`, no root needed) that asks the TV instead. You may see the permission prompt once more, this time for that service: press **OK / Allow**. TVs where the page's own connection works keep using it, with no new prompt. **Re-pair with TV** clears the service's key too ([#173](https://github.com/piermark/omarchytv/issues/173)). Thanks to @Stargazer-ops for the diagnosis and fix idea, and to [simbasjungles/free-my-tv PR 285](https://github.com/simbasjungles/free-my-tv/pull/285) for the same approach.
 
 ## Grok Bot · Omarchy TUI (new in `2.13.9`)
 

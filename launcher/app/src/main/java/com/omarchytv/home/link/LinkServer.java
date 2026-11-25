@@ -60,6 +60,30 @@ public final class LinkServer {
 
     /** What the server needs from the launcher. Called on server threads; implementations must be thread-safe. */
     public interface Host {
+        /** v2.22 the studio: put the briefing or a debate on AI LIVE now ("briefing" | "debate", the debate's id). */
+        default boolean showStudio(String what, String arg) {
+            return false;
+        }
+
+        /** v2.22 the owner's question for a scene to run or to save (SceneActivity); false without a screen. */
+        default boolean askScene(String id, String from, String name, org.json.JSONArray steps, boolean save) {
+            return false;
+        }
+
+        /** v2.22 the skills catalogue shipped in the app (checked), id → skill.json. */
+        default java.util.Map<String, JSONObject> skillCatalog() {
+            return new java.util.LinkedHashMap<>();
+        }
+
+        /** v2.22 show the install question for a skill on the TV (the owner answers there); false without a screen. */
+        default boolean askSkillInstall(String id) {
+            return false;
+        }
+
+        /** v2.22 the night shift changed (started, ended, log, queued): the TV refreshes its page, plans the wake-up. */
+        default void shiftChanged(String what) {
+        }
+
         String tvName();
 
         /** The Connect Omarchy Linux page is visible (and opened at most 5 minutes ago). */
@@ -135,7 +159,8 @@ public final class LinkServer {
         /**
          * v2.21 POST /v1/notify and the MCP tv_notify tool: a short message from an agent or a script.
          * Level "info" waits while an app (a film, a match) is on screen and shows when Home comes back; "warn" and
-         * "alert" show at once. Returns "shown", "deferred", or null when the owner did not allow it ("agentAlert").
+         * "alert" show at once. Returns "shown", "deferred", "filtered" (v2.22: below the level picked on the TV), or null
+         * when the owner did not allow it ("agentAlert").
          */
         default String notify(String from, String title, String text, String level) {
             return null;
@@ -156,6 +181,16 @@ public final class LinkServer {
          */
         default String askUser(String id, String from, String question, List<String> choices, long deadlineMs) {
             return "ask_off";
+        }
+
+        /** v2.22: the same with "detail", the full text to read before answering (e.g. the whole command). */
+        default String askUser(String id, String from, String question, List<String> choices, long deadlineMs, String detail) {
+            return askUser(id, from, question, choices, deadlineMs);
+        }
+
+        /** v2.22: and "risk", why the request is risky ("" if routine): framed red, never with a yes on the remote. */
+        default String askUser(String id, String from, String question, List<String> choices, long deadlineMs, String detail, String risk) {
+            return askUser(id, from, question, choices, deadlineMs, detail);
         }
 
         /** v2.21 POST /v1/page: open a LAN / tailnet page full screen. Null when opened, else an error code. */
@@ -185,9 +220,69 @@ public final class LinkServer {
             return null;
         }
 
+        /** v2.22 #162 {action, station?, volume?, minutes?}: play a station, set the volume or the sleep timer. */
+        default JSONObject radioCmd(JSONObject cmd) {
+            return radio(cmd.optString("action", ""));
+        }
+
         /** v2.21 open a part of OmarchyTV: home, radiomarchy, cinemarchy, arcade, office. Null when opened. */
         default String openTarget(String target) {
             return "no_such_target";
+        }
+
+        /** v2.22 #160 Home Assistant: {configured, reachable, version, host}; never the token. */
+        default JSONObject haStatus() throws JSONException {
+            return new JSONObject().put("configured", false).put("reachable", false);
+        }
+
+        /** v2.22 #160 [{entity_id, name, state, unit?}] of one domain (or all), filtered by a query. */
+        default JSONArray haList(String domain, String query) throws Exception {
+            throw new Exception("not_configured");
+        }
+
+        /** v2.22 #160 runs a scene / script / automation or toggles a switch; null when it worked, else an error code. */
+        default String haRun(String entity) {
+            return "not_configured";
+        }
+
+        /** v2.22 #163 values the TV gives for some settings: "theme" (installed themes), "language" (its languages). */
+        default java.util.Map<String, List<String>> settingsChoices() {
+            return java.util.Collections.emptyMap();
+        }
+
+        /** v2.22 #163 {url, tokenSet}: the Home Assistant set up on the TV; never the token. */
+        default JSONObject haConfig() throws JSONException {
+            return new JSONObject().put("url", "").put("tokenSet", false);
+        }
+
+        /**
+         * v2.22 #163 a new Home Assistant URL and / or token (null: unchanged). A new URL without a new token forgets
+         * the old token, so a changed address never receives it.
+         */
+        default void haConfigure(String url, String token) {
+        }
+
+        /** v2.22 #163 the three answers of the approval dialog, in this order: deny, allow read-only, allow. */
+        default List<String> webChoices() {
+            return java.util.Arrays.asList("Deny", "Allow read-only", "Allow");
+        }
+
+        /**
+         * v2.22 #163 shows "Allow <device> (<ip>) to change settings?" on the TV with {@link #webChoices}; the remote's
+         * answer comes back through LinkServer.answerAsk. Null when shown, else an error code.
+         */
+        default String approveWeb(String id, String device, String peer, boolean fromQr, List<String> choices, long deadlineMs) {
+            return "no_ui";
+        }
+
+        /** v2.22 #163 the theme for the web settings page (the same payload as GET /v1/theme, even with sharing off). */
+        default JSONObject webTheme() {
+            return sharedTheme();
+        }
+
+        /** v2.22 #163 a file of the web settings page (assets/settings/), or null. */
+        default byte[] settingsAsset(String name) {
+            return null;
         }
 
         /** v2.21 the launcher's omarchytv.json as it is now (read only), or null. */
@@ -222,6 +317,7 @@ public final class LinkServer {
     private final LinkStore store;
     /** v2.21 app tokens, /v1/state, /v1/stream, /v1/ask, /v1/page, /v1/diagnostics. */
     final AppApi app;
+    final WebAccess web;   // v2.22 #163
     private volatile ServerSocket server;
     private volatile boolean running;
     private final ThreadPoolExecutor pool;
@@ -266,6 +362,7 @@ public final class LinkServer {
         this.host = host;
         this.store = store;
         this.app = new AppApi(this, host, new AppTokens(new File(store.dir(), "link-apps.json")));
+        this.web = new WebAccess(this, host, app);
         pool = new ThreadPoolExecutor(0, MAX_CONN, 30, TimeUnit.SECONDS, new SynchronousQueue<>(), r -> {
             Thread t = new Thread(r, "otv-link");
             t.setDaemon(true);
@@ -536,11 +633,13 @@ public final class LinkServer {
             case 200: return "OK";
             case 202: return "Accepted";
             case 204: return "No Content";
+            case 301: return "Moved Permanently";
             case 304: return "Not Modified";
             case 400: return "Bad Request";
             case 401: return "Unauthorized";
             case 403: return "Forbidden";
             case 404: return "Not Found";
+            case 405: return "Method Not Allowed";
             case 409: return "Conflict";
             case 411: return "Length Required";
             case 413: return "Payload Too Large";
@@ -774,6 +873,7 @@ public final class LinkServer {
         if (sharePath(path) && ("GET".equals(req.method) || "HEAD".equals(req.method) || "OPTIONS".equals(req.method))) {
             return sharedTheme(req, path);
         }
+        if (web.wants(req)) return web.handle(req);   // v2.22 #163 the web settings page (cookie session)
         if (app.wants(req)) return app.handle(req, out, sock);   // v2.21 app tokens (and the SDK, preflights)
         if ("POST".equals(req.method) && ("/v1/pair/start".equals(path) || "/v1/pair/confirm".equals(path))) {
             long retry = limited(req.peer + "|" + path, 1, 2000);
@@ -808,7 +908,11 @@ public final class LinkServer {
             else if ("PUT".equals(req.method) && "/v1/office".equals(path)) retry = limited(req.peer + "|office", 2, 5_000);
             else if ("PUT".equals(req.method) && "/v1/stats".equals(path)) retry = limited(req.peer + "|stats", 1, 1_500);
             else if ("PUT".equals(req.method) && "/v1/screensaver".equals(path)) retry = limited(req.peer + "|saver", 1, 5_000);
-            else if (notifyCall(req.method, path, req.body)) retry = limited(req.peer + "|notify", 3, 10_000);
+            else if (notifyCall(req.method, path, req.body)) {   // v2.22: per sender; alerts have their own, wider bucket
+                String[] k = notifyBucket(path, req.body);
+                retry = "alert".equals(k[1]) ? limited(req.peer + "|notify-alert|" + k[0], ALERTS_PER_10S, 10_000)
+                        : limited(req.peer + "|notify|" + k[0], 3, 10_000);
+            }
         }
         if (retry > 0) return sign(a, retryAfter(new Response(429, err("rate_limited", "slow down")), retry));
 
@@ -1352,7 +1456,9 @@ public final class LinkServer {
                         JSONObject b = new JSONObject().put("question", args.optString("question", ""))
                                 .put("choices", args.optJSONArray("choices") != null ? args.optJSONArray("choices") : new JSONArray())
                                 .put("timeout", Math.max(10, Math.min(300, args.optInt("timeout", 120))))
-                                .put("from", args.optString("from", ""));
+                                .put("from", args.optString("from", ""))
+                                .put("speak", args.optBoolean("speak"))
+                                .put("detail", args.optString("detail", ""));
                         Response ar = app.askPost(who, b);
                         out = new JSONObject(new String(ar.body, StandardCharsets.UTF_8));
                         isError = ar.status != 200;
@@ -1392,20 +1498,199 @@ public final class LinkServer {
                     case "tv_close_page":
                         out = ok().put("closed", host.closePage());
                         break;
+                    case "tv_settings_get":
+                    case "tv_settings_set": {   // v2.22 #163: the same code as GET / PATCH /v1/settings
+                        if ("tv_settings_get".equals(name)) {
+                            out = app.settingsGet(args.optString("section", ""));
+                        } else {
+                            Response sr = app.settingsSet(new JSONObject().put(args.optString("key", ""), args.opt("value") == null ? JSONObject.NULL : args.opt("value")));
+                            out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                            isError = sr.status != 200;
+                        }
+                        break;
+                    }
+                    case "tv_briefing_set":
+                    case "tv_briefing_show":
+                    case "tv_debate_start":
+                    case "tv_debate_post":
+                    case "tv_debate_result":
+                    case "tv_scene_run":
+                    case "tv_scene_save":
+                    case "tv_scene_list":
+                    case "tv_scene_result": {   // v2.22 the studio: the same code as its /v1 routes
+                        String sid2 = args.optString("id", "").replaceAll("[^a-z0-9]", "");
+                        String sp, sm2 = "POST";
+                        switch (name) {
+                            case "tv_briefing_set": sp = "/v1/briefing"; break;
+                            case "tv_briefing_show": sp = "/v1/briefing/show"; break;
+                            case "tv_debate_start": sp = "/v1/debate"; break;
+                            case "tv_debate_post": sp = "/v1/debate/" + sid2; break;
+                            case "tv_debate_result": sp = "/v1/debate/" + sid2; sm2 = "GET"; break;
+                            case "tv_scene_run": sp = "/v1/scene/run"; break;
+                            case "tv_scene_save": sp = "/v1/scene/save"; break;
+                            case "tv_scene_list": sp = "/v1/scenes"; sm2 = "GET"; break;
+                            default: sp = "/v1/scene/" + sid2; sm2 = "GET"; break;
+                        }
+                        Response sr = app.studioRoute(who, sm2, sp, args);
+                        out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                        isError = sr.status != 200;
+                        break;
+                    }
+                    case "tv_teletext_publish":
+                    case "tv_teletext_list":
+                    case "tv_teletext_remove":
+                    case "tv_guide":
+                    case "tv_guide_add":
+                    case "tv_guide_update": {   // v2.22 Televideo AI and the Guide: the same code as their /v1 routes
+                        String pg = String.valueOf(args.optInt("page", 0)), gid = args.optString("id", "").replaceAll("[^a-z0-9]", "");
+                        String cp, cm = "GET";
+                        switch (name) {
+                            case "tv_teletext_publish": cp = "/v1/teletext/" + pg; cm = "PUT"; break;
+                            case "tv_teletext_list": cp = "/v1/teletext"; break;
+                            case "tv_teletext_remove": cp = "/v1/teletext/" + pg; cm = "DELETE"; break;
+                            case "tv_guide": cp = "/v1/guide"; break;
+                            case "tv_guide_add": cp = "/v1/guide"; cm = "POST"; break;
+                            default: cp = "/v1/guide/" + gid; cm = "POST"; break;
+                        }
+                        Response cr = app.channelRoute(who, cm, cp, args);
+                        out = new JSONObject(new String(cr.body, StandardCharsets.UTF_8));
+                        isError = cr.status != 200;
+                        break;
+                    }
+                    case "tv_skill_list":
+                    case "tv_skill_install":
+                    case "tv_skill_remove": {   // v2.22: the same code as /v1/skills
+                        String sid = args.optString("id", "");
+                        String sp = "tv_skill_list".equals(name) ? "/v1/skills" : "/v1/skills/" + sid + ("tv_skill_install".equals(name) ? "/install" : "");
+                        Response kr = app.skillsRoute(who, "tv_skill_list".equals(name) ? "GET" : "tv_skill_install".equals(name) ? "POST" : "DELETE", sp);
+                        out = new JSONObject(new String(kr.body, StandardCharsets.UTF_8));
+                        isError = kr.status != 200;
+                        break;
+                    }
+                    case "tv_live_update":
+                    case "tv_live": {   // v2.22 AI LIVE: the same code as /v1/live
+                        Response lr = app.liveRoute(who, "tv_live".equals(name) ? "GET" : "POST", args);
+                        out = new JSONObject(new String(lr.body, StandardCharsets.UTF_8));
+                        isError = lr.status != 200;
+                        break;
+                    }
+                    case "tv_shift_start":
+                    case "tv_shift_end":
+                    case "tv_shift_status":
+                    case "tv_shift_log":
+                    case "tv_shift_queue":
+                    case "tv_shift_decision": {   // v2.22: the same code as /v1/shift
+                        String sp = "tv_shift_status".equals(name) ? "/v1/shift" : "tv_shift_decision".equals(name)
+                                ? "/v1/shift/queue/" + args.optString("id", "") : "/v1/shift/" + name.substring("tv_shift_".length());
+                        String sm = "tv_shift_status".equals(name) || "tv_shift_decision".equals(name) ? "GET" : "POST";
+                        Response sr = app.shiftRoute(who, sm, sp, args);
+                        out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                        isError = sr.status != 200;
+                        break;
+                    }
+                    case "tv_ha_status":
+                    case "tv_ha_list":
+                    case "tv_ha_run": {   // v2.22 #160: the same code as /v1/ha/*
+                        String q = "tv_ha_list".equals(name) ? "?domain=" + java.net.URLEncoder.encode(args.optString("domain", ""), "UTF-8")
+                                + "&q=" + java.net.URLEncoder.encode(args.optString("query", ""), "UTF-8") : "";
+                        String hp = "tv_ha_status".equals(name) ? "/v1/ha/status" : "tv_ha_list".equals(name) ? "/v1/ha/states" : "/v1/ha/run";
+                        Response hr = app.haRoute(who, "tv_ha_run".equals(name) ? "POST" : "GET", hp, hp + q,
+                                new JSONObject().put("entity_id", args.optString("entity_id", "")));
+                        out = new JSONObject(new String(hr.body, StandardCharsets.UTF_8));
+                        isError = hr.status != 200;
+                        break;
+                    }
+                    case "tv_page_list":
+                    case "tv_page_current":
+                    case "tv_page_create":
+                    case "tv_page_rename":
+                    case "tv_page_reorder":
+                    case "tv_page_delete":
+                    case "tv_page_show": {   // v2.22 #158: the same code as /v1/widget-pages
+                        String ref = java.net.URLEncoder.encode(String.valueOf(args.opt("page") == null ? "" : args.opt("page")), "UTF-8");
+                        String mm, pp;
+                        JSONObject pb = new JSONObject();
+                        switch (name) {
+                            case "tv_page_list": mm = "GET"; pp = "/v1/widget-pages"; break;
+                            case "tv_page_current": mm = "GET"; pp = "/v1/widget-pages/current"; break;
+                            case "tv_page_create":
+                                mm = "POST"; pp = "/v1/widget-pages";
+                                for (String k : new String[]{"name", "id", "after"}) if (args.has(k)) pb.put(k, args.get(k));
+                                break;
+                            case "tv_page_rename": mm = "PATCH"; pp = "/v1/widget-pages/" + ref; pb.put("name", args.optString("name")); break;
+                            case "tv_page_reorder": mm = "PATCH"; pp = "/v1/widget-pages/" + ref; pb.put("to", args.optInt("to")); break;
+                            case "tv_page_delete":
+                                mm = "DELETE"; pp = "/v1/widget-pages/" + ref;
+                                if (args.has("moveWidgetsTo")) pb.put("moveWidgetsTo", args.get("moveWidgetsTo"));
+                                break;
+                            default: mm = "POST"; pp = "/v1/widget-pages/" + ref + "/show"; break;
+                        }
+                        if (pp.endsWith("/") || pp.contains("//show")) {
+                            out = err("bad_args", "page");
+                            isError = true;
+                            break;
+                        }
+                        Response pr = app.pageRoute(who, mm, pp, pp, pb);
+                        out = new JSONObject(new String(pr.body, StandardCharsets.UTF_8));
+                        isError = pr.status != 200;
+                        break;
+                    }
+                    case "tv_widget_types":
+                    case "tv_widget_list":
+                    case "tv_widget_create":
+                    case "tv_widget_update":
+                    case "tv_widget_move":
+                    case "tv_widget_delete": {   // v2.22 #157: the same code as /v1/widgets/*
+                        String wid = java.net.URLEncoder.encode(args.optString("id", ""), "UTF-8");
+                        String[] mp = "tv_widget_types".equals(name) ? new String[]{"GET", "/v1/widgets/types"}
+                                : "tv_widget_list".equals(name) ? new String[]{"GET", "/v1/widgets/list" + (args.has("page") ? "?page=" + args.optInt("page") : "")}
+                                : "tv_widget_create".equals(name) ? new String[]{"POST", "/v1/widgets/item"}
+                                : "tv_widget_delete".equals(name) ? new String[]{"DELETE", "/v1/widgets/item/" + wid}
+                                : new String[]{"PATCH", "/v1/widgets/item/" + wid};
+                        JSONObject wb = new JSONObject(args.toString());
+                        if ("tv_widget_update".equals(name)) {   // content only, whatever else the call carries
+                            for (String k : new String[]{"page", "x", "y", "w", "h", "push", "type"}) wb.remove(k);
+                        } else if ("tv_widget_move".equals(name)) {
+                            for (String k : new String[]{"title", "icon", "ttl", "data", "type"}) wb.remove(k);
+                            if (!wb.has("page") && !wb.has("x") && !wb.has("y") && !wb.has("w") && !wb.has("h")) {
+                                out = err("bad_args", "page, x, y, w or h");
+                                isError = true;
+                                break;
+                            }
+                        }
+                        String path = mp[1].contains("?") ? mp[1].substring(0, mp[1].indexOf('?')) : mp[1];
+                        Response wr = app.widgetRoute(who, mp[0], path, mp[1], "mcp:" + who.key, wb);
+                        out = new JSONObject(new String(wr.body, StandardCharsets.UTF_8));
+                        isError = wr.status != 200;
+                        break;
+                    }
                     case "tv_diagnostics":
                         out = app.diagnostics();
                         break;
                     case "tv_radio_now":
+                    case "tv_radio_stations":
+                    case "tv_radio_station_add":
+                    case "tv_radio_station_remove":
+                    case "tv_radio_sleep": {   // v2.22 #162: the same code as /v1/radio/*
+                        Response sr = "tv_radio_stations".equals(name) ? app.radioStationsGet()
+                                : "tv_radio_station_add".equals(name) ? app.radioStationAdd(args)
+                                : "tv_radio_station_remove".equals(name) ? app.radioStationRemove(args.optString("id", ""))
+                                : app.radioCmd(new JSONObject().put("action", "sleep").put("minutes", args.optInt("minutes", 0)));
+                        out = new JSONObject(new String(sr.body, StandardCharsets.UTF_8));
+                        isError = sr.status != 200;
+                        break;
+                    }
                     case "tv_radio": {
                         String act = "tv_radio_now".equals(name) ? "now" : args.optString("action", "");
-                        Response rr = app.radio(act);
+                        Response rr = app.radioCmd("tv_radio".equals(name) ? args : new JSONObject().put("action", act));
                         out = new JSONObject(new String(rr.body, StandardCharsets.UTF_8));
                         isError = rr.status != 200;
                         break;
                     }
+                    case "tv_skill_qr":
                     case "tv_open": {
-                        String e = host.openTarget(args.optString("target", ""));
-                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office");
+                        String e = host.openTarget("tv_skill_qr".equals(name) ? "skill" : args.optString("target", ""));
+                        out = e == null ? ok().put("target", args.optString("target")) : err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay, teletext, guide");
                         isError = e != null;
                         break;
                     }
@@ -1414,8 +1699,8 @@ public final class LinkServer {
                         out = t != null ? t : new JSONObject().put("name", status().optString("theme", "")).put("shared", false);
                         break;
                     }
-                    case "tv_notify": {
-                        Response nr = notifyPost(args);
+                    case "tv_notify": {   // v2.22: as the caller, so an app token's name and level cap apply
+                        Response nr = app.notifyAs(who, args);
                         out = new JSONObject(new String(nr.body, StandardCharsets.UTF_8));
                         isError = nr.status != 200;
                         break;
@@ -1456,14 +1741,27 @@ public final class LinkServer {
                         .put("choices", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "Up to 4 short answers (default Yes / No)"))
                         .put("timeout", prop("integer", "Seconds the question stays on the TV (10-300, default 120)"))
                         .put("wait", prop("integer", "Seconds to wait here for the answer (0-110, default 60); then use tv_ask_result"))
-                        .put("from", prop("string", "Who asks, e.g. Claude Code")), "notify"});
+                        .put("from", prop("string", "Who asks, e.g. Claude Code"))
+                        .put("speak", prop("boolean", "Also read the question aloud (silent when the TV's tones and voice are off)"))
+                        .put("detail", prop("string", "The full text to read before answering, e.g. the whole command or a diff (at most 2000 characters, 40 lines), scrollable on the TV")), "notify"});
         t.add(new Object[]{"tv_ask_result", "The state of a question from tv_ask_user: pending, answered (with the answer) or expired.",
                 new JSONObject().put("id", prop("string", "The id tv_ask_user returned")).put("wait", prop("integer", "Seconds to wait (0-25)")), "notify"});
         t.add(new Object[]{"tv_radio_now", "What Radiomarchy (Omarchy Radio on the TV) is playing.", new JSONObject(), "read"});
-        t.add(new Object[]{"tv_radio", "Control Radiomarchy: play (resume or start the playlist), pause, next, previous, stop.",
-                new JSONObject().put("action", prop("string", "play | pause | next | previous | stop")), "control"});
-        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
-                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office")), "control"});
+        t.add(new Object[]{"tv_radio", "Control the radio: play (resume, or a station by name, id or URL of the station list), pause, next, previous, stop, volume (0-100, the radio's own).",
+                new JSONObject().put("action", prop("string", "play | pause | next | previous | stop | volume"))
+                        .put("station", prop("string", "Station name or id (see tv_radio_stations); optional, with play"))
+                        .put("volume", prop("integer", "0-100, with action volume")), "control"});
+        // v2.22 #162 the Radio plugin's stations and sleep timer
+        t.add(new Object[]{"tv_radio_stations", "The radio stations: Omarchy Radio first, then the owner's (favourites first): id, name, url.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_radio_station_add", "Add an internet radio station (Icecast / Shoutcast MP3 or AAC, HLS .m3u8, or a .pls / .m3u playlist). https://, or http:// on the LAN.",
+                new JSONObject().put("name", prop("string", "Up to 40 characters")).put("url", prop("string", "Stream or playlist URL"))
+                        .put("logo", prop("string", "https:// image (optional)")), "control"});
+        t.add(new Object[]{"tv_radio_station_remove", "Remove a radio station (not Omarchy Radio).", new JSONObject().put("id", prop("string", "Station id")), "control"});
+        t.add(new Object[]{"tv_radio_sleep", "Stop the radio after some minutes (0 turns the timer off).", new JSONObject().put("minutes", prop("integer", "0-240")), "control"});
+        t.add(new Object[]{"tv_open", "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office, skill (the agent skill as a QR), live (the AI LIVE channel), replay (the night shift played back), teletext (Televideo AI) or guide (the agents' Guide).",
+                new JSONObject().put("target", prop("string", "home | radiomarchy | cinemarchy | arcade | office | skill | live | replay | teletext | guide")), "control"});
+        t.add(new Object[]{"tv_skill_qr", "Show the OmarchyTV agent skill as a QR on the TV, for the owner's phone or another agent. Only the public URL.",
+                new JSONObject(), "control"});
         t.add(new Object[]{"tv_set_theme", "Switch the active Omarchy theme on the TV.",
                 new JSONObject().put("name", prop("string", "Theme slug (e.g. tokyo-night, jade-horse, hermarchy)")), "control"});
         t.add(new Object[]{"tv_send_key", "Send a remote key to the TV (home, back, up, down, left, right, select, play_pause, volume_up, volume_down, mute).",
@@ -1477,7 +1775,7 @@ public final class LinkServer {
                         .put("urls", new JSONObject().put("type", "array").put("items", new JSONObject().put("type", "string")).put("description", "2-4 pages to tile")), "control"});
         t.add(new Object[]{"tv_close_page", "Close the page opened with tv_show_page.", new JSONObject(), "control"});
         t.add(new Object[]{"tv_list_pages", "The agent pages published as tiles on the TV's Home.", new JSONObject(), "read"});
-        t.add(new Object[]{"tv_publish_page", "Publish (or update) a LAN / tailnet page as a tile on the TV's Home, with a name, a one-letter icon and an optional badge count. At most 16.",
+        t.add(new Object[]{"tv_publish_page", "Publish (or update) a LAN / tailnet page as a tile on the TV's Home, with a name, a one-letter icon and an optional badge count. At most 200.",
                 new JSONObject().put("id", prop("string", "Short id: a-z, 0-9, dashes (e.g. dubai-flats)"))
                         .put("name", prop("string", "Tile name, at most 32 characters"))
                         .put("url", prop("string", "http://<LAN or 100.x address>[:port]/path"))
@@ -1487,6 +1785,101 @@ public final class LinkServer {
                 new JSONObject().put("id", prop("string", "The page id")).put("badge", prop("integer", "0-999")), "notify"});
         t.add(new Object[]{"tv_remove_page", "Remove a published page from the TV's Home.", new JSONObject().put("id", prop("string", "The page id")), "control"});
         t.add(new Object[]{"tv_diagnostics", "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, recent log lines. No secrets.", new JSONObject(), "control"});
+        // v2.22 #157: positioned, typed widgets on the Home (a 12 x 6 grid per page)
+        JSONObject wid = prop("string", "Widget id: a-z, 0-9, . _ -, up to 48");
+        t.add(new Object[]{"tv_widget_types", "The Home widget types, the shape of each one's data, the grid (12 x 6 cells per page) and the limits.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_widget_list", "The widgets on the TV's Home (one page, or every page when page is left out) with their position and size, and the free cells.",
+                new JSONObject().put("page", prop("integer", "Page number, 1 = the Home (optional)")), "read"});
+        t.add(new Object[]{"tv_widget_create", "Create a widget on the Home. type: lines, stat, text, image, chart, page, shortcuts, homeassistant.scenes, homeassistant.entities, radio, qr (see tv_widget_types). Without x/y it takes the first free slot; an occupied area answers cell_taken with free slots, unless push is true.",
+                new JSONObject().put("id", wid).put("type", prop("string", "Widget type"))
+                        .put("page", prop("integer", "Page, default 1")).put("x", prop("integer", "Column 0-11")).put("y", prop("integer", "Row 0-5"))
+                        .put("w", prop("integer", "Width in cells, 1-12")).put("h", prop("integer", "Height in cells, 1-6"))
+                        .put("title", prop("string", "Title, at most 48 characters")).put("icon", prop("string", "One letter or emoji"))
+                        .put("ttl", prop("integer", "Seconds before it dims as stale (hidden after twice that); optional"))
+                        .put("data", prop("object", "The content, by type (see tv_widget_types)"))
+                        .put("push", prop("boolean", "Move the widgets in the way instead of failing")), "control"});
+        t.add(new Object[]{"tv_widget_update", "Change a widget's content: title, icon, ttl, data. Needs only the notify scope, so a low-scope agent can keep a widget fresh.",
+                new JSONObject().put("id", wid).put("title", prop("string", "Title")).put("icon", prop("string", "One letter or emoji"))
+                        .put("ttl", prop("integer", "Seconds")).put("data", prop("object", "The new content, by type")), "notify"});
+        t.add(new Object[]{"tv_widget_move", "Move or resize a widget: page, x, y, w, h. Fails with cell_taken (and free slots) if the area is not free, unless push is true.",
+                new JSONObject().put("id", wid).put("page", prop("integer", "Page")).put("x", prop("integer", "Column 0-11")).put("y", prop("integer", "Row 0-5"))
+                        .put("w", prop("integer", "Width 1-12")).put("h", prop("integer", "Height 1-6")).put("push", prop("boolean", "Move the widgets in the way")), "control"});
+        t.add(new Object[]{"tv_widget_delete", "Remove a widget from the Home.", new JSONObject().put("id", wid), "control"});
+        // v2.22 #158 / #159: Home widget pages (not the LAN agent pages of tv_list_pages / tv_show_page)
+        JSONObject pref = prop("string", "A page number or a page id");
+        t.add(new Object[]{"tv_page_list", "The Home widget pages: index, id, name, how many widgets, hidden, rotate; and the one on screen. (tv_list_pages is about LAN agent pages.)", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_page_current", "The Home widget page on screen now: index (0 = the classic Home), id, name, total.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_page_create", "Create an empty Home widget page, with an optional name and id, after a given page (default at the end). Pages are also created on demand by tv_widget_create with page set to a new number or id.",
+                new JSONObject().put("name", prop("string", "Up to 32 characters")).put("id", prop("string", "a-z, 0-9, dashes")).put("after", pref), "control"});
+        t.add(new Object[]{"tv_page_rename", "Rename a Home widget page.", new JSONObject().put("page", pref).put("name", prop("string", "Up to 32 characters")), "control"});
+        t.add(new Object[]{"tv_page_reorder", "Move a Home widget page to another position (2 to total; page 1 stays first).",
+                new JSONObject().put("page", pref).put("to", prop("integer", "The new position")), "control"});
+        t.add(new Object[]{"tv_page_delete", "Remove a Home widget page (not page 1). Its widgets move to moveWidgetsTo, or are removed with it.",
+                new JSONObject().put("page", pref).put("moveWidgetsTo", pref), "control"});
+        // v2.22 #160 Home Assistant (the TV's own HA connection; the token never leaves the TV)
+        t.add(new Object[]{"tv_settings_get", "The TV's settings (theme, Home, plugins, Home Assistant URL, agents…) as {values, secrets}; "
+                + "secrets only say whether they are set. GET /v1/settings/schema lists keys, types and allowed values.",
+                new JSONObject().put("section", prop("string", "appearance | home | screensaver | plugins | homeassistant | agents (optional)")), "read"});
+        t.add(new Object[]{"tv_settings_set", "Change one TV setting, with the same checks as the web settings page (e.g. key \"uiSize\", value \"large\").",
+                new JSONObject().put("key", prop("string", "A key from tv_settings_get")).put("value", new JSONObject().put("description", "The new value (bool, number or text)")), "control"});
+        t.add(new Object[]{"tv_ha_status", "Is Home Assistant set up on the TV and reachable: configured, reachable, version, host. Never the token.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_ha_list", "Home Assistant entities the TV can see, to build a widget: [{entity_id, name, state, unit}], optionally of one domain (scene, script, light, switch, sensor, …) and matching a query. At most 200.",
+                new JSONObject().put("domain", prop("string", "scene, script, light, switch, sensor, …")).put("query", prop("string", "Part of the id or the name")), "read"});
+        t.add(new Object[]{"tv_ha_run", "Run a Home Assistant scene, script or automation, or toggle a light, switch, fan or input_boolean.",
+                new JSONObject().put("entity_id", prop("string", "e.g. scene.movie")), "control"});
+        t.add(new Object[]{"tv_page_show", "Bring a Home widget page to the screen (e.g. where an alert widget just landed).", new JSONObject().put("page", pref), "control"});
+        // v2.22 the studio
+        t.add(new Object[]{"tv_briefing_set", "Prepare the owner's morning briefing: sections of short lines (overnight, today, the weather, what waits) and what to read aloud; it goes on AI LIVE at the wake time (\"07:30\") or with tv_briefing_show.",
+                new JSONObject().put("title", prop("string", "e.g. Good morning")).put("sections", new JSONObject().put("type", "array").put("description", "1-8 {title ≤40, lines: [≤8 strings ≤120]}"))
+                        .put("say", prop("string", "Read aloud, ≤1500")).put("wake", prop("string", "\"07:30\" or epoch ms (optional)")), "notify"});
+        t.add(new Object[]{"tv_briefing_show", "Put the morning briefing on AI LIVE now.", new JSONObject(), "control"});
+        t.add(new Object[]{"tv_debate_start", "Start a debate on AI LIVE: a question several agents answer side by side; the owner picks the winner on the TV. Returns its id.",
+                new JSONObject().put("topic", prop("string", "The question, ≤160")), "notify"});
+        t.add(new Object[]{"tv_debate_post", "Post your answer to a debate (≤1200, with an optional preview); a second post replaces the first.",
+                new JSONObject().put("id", prop("string", "The debate id, e.g. d1")).put("text", prop("string", "Your answer"))
+                        .put("preview", new JSONObject().put("type", "object").put("description", "Optional: {kind: image, url} | {kind: diff | text, text} | {kind: chart, points}")), "notify"});
+        t.add(new Object[]{"tv_debate_result", "A debate: its answers, and the winner once the owner picked one.", new JSONObject().put("id", prop("string", "The debate id")), "notify"});
+        t.add(new Object[]{"tv_scene_run", "Run a scene: {name} for a saved one (at once), or {steps: [{tool, args}]} for a new one (the owner approves it on the TV first). Steps use the TV's own tools: tv_ha_run, tv_launch_app, tv_set_theme, tv_radio, tv_send_key, tv_open, tv_notify, tv_screensaver, tv_page_show.",
+                new JSONObject().put("name", prop("string", "A saved scene, or a name for a new one")).put("steps", new JSONObject().put("type", "array").put("description", "1-12 {tool, args}")), "control"});
+        t.add(new Object[]{"tv_scene_save", "Save a scene under a name, after the owner's OK on the TV; then tv_scene_run {name} runs it at once.",
+                new JSONObject().put("name", prop("string", "e.g. Movie night for two")).put("steps", new JSONObject().put("type", "array").put("description", "1-12 {tool, args}")), "control"});
+        t.add(new Object[]{"tv_scene_list", "The saved scenes and their steps.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_scene_result", "The owner's answer to a scene question: pending, ran (with each step's result), saved or denied.", new JSONObject().put("id", prop("string", "The id from tv_scene_run / tv_scene_save")), "control"});
+        // v2.22 Televideo AI and the Guide
+        t.add(new Object[]{"tv_teletext_publish", "Publish a Televideo page on the TV (like the teletext of old): page 101-899, a title ≤32 and up to 22 lines of 40 characters, each a string or {text, color} (white, red, green, yellow, blue, magenta, cyan). Page 100 is the index. The owner types the number with the remote.",
+                new JSONObject().put("page", prop("integer", "101-899")).put("title", prop("string", "≤32")).put("lines", new JSONObject().put("type", "array").put("description", "1-22 lines")), "notify"});
+        t.add(new Object[]{"tv_teletext_list", "The Televideo pages (page, title, by, at).", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_teletext_remove", "Remove a Televideo page.", new JSONObject().put("page", prop("integer", "101-899")), "control"});
+        t.add(new Object[]{"tv_guide", "The Guide: the agents' programmes, the night shift and the morning briefing as a TV schedule, each past, on_air or next.", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_guide_add", "Put a programme on the Guide: what you will do and when (start \"23:30\" or epoch ms within 48 h, end ≤16 h later, default 1 h).",
+                new JSONObject().put("title", prop("string", "≤60")).put("start", prop("string", "\"23:30\" or epoch ms")).put("end", prop("string", "optional")).put("detail", prop("string", "≤300")), "notify"});
+        t.add(new Object[]{"tv_guide_update", "Say how a programme goes: state on_air, done, failed or cancelled, and an optional detail.",
+                new JSONObject().put("id", prop("string", "e.g. p3")).put("state", prop("string", "on_air | done | failed | cancelled")).put("detail", prop("string", "optional")), "notify"});
+        // v2.22 skills
+        t.add(new Object[]{"tv_skill_list", "The skills the TV can install (catalogue: id, name, author, permissions) and the installed ones with their instructions for you (\"agent\").", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_skill_install", "Ask the owner to install a skill: the TV shows it with its permissions and the owner answers with the remote. Check tv_skill_list afterwards.",
+                new JSONObject().put("id", prop("string", "A skill id from tv_skill_list")), "control"});
+        t.add(new Object[]{"tv_skill_remove", "Remove an installed skill with its widgets and its page.", new JSONObject().put("id", prop("string", "The skill id")), "control"});
+        // v2.22 AI LIVE
+        t.add(new Object[]{"tv_live_update", "Tell the TV's AI LIVE channel what you are doing now, like a live broadcast: a short line (≤120), a progress 0-100 and a preview of the work (an image URL, a diff, a text or a few numbers). The preview also shows on your next question, so the owner sees the work before approving it.",
+                new JSONObject().put("text", prop("string", "What you are doing now")).put("progress", prop("integer", "0-100, or -1"))
+                        .put("preview", new JSONObject().put("type", "object").put("description", "{kind: image, url} | {kind: diff | text, text} | {kind: chart, points, label?}, or null to clear")), "notify"});
+        t.add(new Object[]{"tv_live", "The AI LIVE channel: every agent on it (what it does, progress, a question it waits on) and the last events.", new JSONObject(), "read"});
+        // v2.22 the night shift
+        t.add(new Object[]{"tv_shift_start", "Start a night shift: the owner's tasks for the night, its end (\"07:00\" or epoch ms, within 16 h) and when the TV should show the morning page (wake). During the shift the TV stays silent; write a diary with tv_shift_log and leave anything risky for the morning with tv_shift_queue.",
+                new JSONObject().put("tasks", new JSONObject().put("type", "array").put("items", prop("string", "a task")).put("description", "1 to 20 tasks"))
+                        .put("until", prop("string", "\"07:00\" or epoch ms")).put("wake", prop("string", "\"07:30\" or epoch ms (optional)"))
+                        .put("replace", prop("boolean", "replace a running shift")), "control"});
+        t.add(new Object[]{"tv_shift_end", "End the night shift now (the diary and the queue stay for the morning page).", new JSONObject(), "control"});
+        t.add(new Object[]{"tv_shift_status", "The night shift: running / ended / none, tasks, end, wake, and counts (ok, fail, info, waiting).", new JSONObject(), "read"});
+        t.add(new Object[]{"tv_shift_log", "Write a line in the night shift's diary on the TV: level ok | fail | info, a short text (≤200), an optional detail (a log, a diff) and the task index it belongs to.",
+                new JSONObject().put("level", prop("string", "ok | fail | info")).put("text", prop("string", "What happened")).put("detail", prop("string", "Optional: log, diff, link"))
+                        .put("task", prop("integer", "Optional: index in tasks")), "notify"});
+        t.add(new Object[]{"tv_shift_queue", "Leave a decision for the morning instead of doing something risky at night (push, merge, post, payment, deleting data). Returns an id; check it with tv_shift_decision. Only the owner answers, on the TV.",
+                new JSONObject().put("title", prop("string", "What you want to do, ≤120")).put("detail", prop("string", "The command, the diff, why"))
+                        .put("risk", prop("string", "e.g. push, merge, post")), "notify"});
+        t.add(new Object[]{"tv_shift_decision", "The owner's answer to a queued decision: pending, approved or denied.",
+                new JSONObject().put("id", prop("string", "The id from tv_shift_queue, e.g. q3")), "notify"});
         return t;
     }
 
@@ -1890,6 +2283,25 @@ public final class LinkServer {
 
     /** v2.9: {text: screensaver.txt} (at most 16 KiB, 60 lines x 240 cols); "" restores the OMARCHY TV logo. */
     /** v2.21: the REST route, or an MCP tools/call of tv_notify (both share the notify rate limit). */
+    /** v2.22: alerts allowed per sender in 10 s, apart from the 3 info / warn ones, so a red build is never crowded out. */
+    static final int ALERTS_PER_10S = 10;
+
+    /** v2.22 {sender, level} of a notify call (POST /v1/notify, or tv_notify over MCP), for its rate bucket. */
+    static String[] notifyBucket(String path, byte[] body) {
+        try {
+            JSONObject j = new JSONObject(new String(body, StandardCharsets.UTF_8));
+            if (!"/v1/notify".equals(path)) {
+                JSONObject p = j.optJSONObject("params");
+                j = p != null && p.optJSONObject("arguments") != null ? p.optJSONObject("arguments") : new JSONObject();
+            }
+            String from = printable(j.optString("from", j.optString("source", "")), 40).toLowerCase(java.util.Locale.ROOT);
+            String level = j.optString("level", "info");
+            return new String[]{from, LEVELS.contains(level) ? level : "info"};
+        } catch (JSONException e) {
+            return new String[]{"", "info"};
+        }
+    }
+
     static boolean notifyCall(String method, String path, byte[] body) {
         if (!"POST".equals(method)) return false;
         if ("/v1/notify".equals(path)) return true;
@@ -1915,6 +2327,10 @@ public final class LinkServer {
         if (from.isEmpty()) from = "PC";
         String r = host.notify(from, title, text, level);
         if (r == null) return new Response(403, err("notify_off", "turn on agent alerts on the TV (Settings > Grok Bot & AI > AI agent alerts while you watch)"));
+        if ("filtered".equals(r)) {   // v2.22: below the level picked on the TV; not an error for the sender
+            host.log("notify from " + from + " (" + level + ", filtered)");
+            return new Response(200, ok().put("shown", false).put("deferred", false).put("filtered", true));
+        }
         if (b.optBoolean("speak") && "shown".equals(r)) host.speak(title.isEmpty() ? text : title + ". " + text);
         host.log("notify from " + from + " (" + level + ", " + r + ")");
         app.event("notify", new JSONObject().put("from", from).put("title", title).put("text", text).put("level", level));
@@ -2058,6 +2474,35 @@ public final class LinkServer {
         return a != null ? a : new JSONObject().put("agents", new JSONArray()).put("at", JSONObject.NULL);
     }
 
+    /** v2.22 the owner's answer to a scene question (SceneActivity). */
+    public JSONObject sceneAnswered(String id, boolean yes) throws Exception {
+        return app.sceneAnswered(id, yes);
+    }
+
+    /** v2.22 the agent's name for the channel, from the last agent list. */
+    String agentName(String agentId) {
+        JSONObject j = agentsNow;
+        JSONArray a = j == null ? null : j.optJSONArray("agents");
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject g = a.optJSONObject(i);
+            if (g != null && agentId.equals(g.optString("id"))) return g.optString("agentName", g.optString("agent", "agent"));
+        }
+        return "agent";
+    }
+
+    /** v2.22 the agents a phone can talk to: id, name, project, whether it takes questions. */
+    JSONObject talkAgents() throws JSONException {
+        JSONObject j = agentsNow;
+        JSONArray a = j == null ? null : j.optJSONArray("agents"), out = new JSONArray();
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject g = a.optJSONObject(i);
+            if (g == null) continue;
+            out.put(new JSONObject().put("id", g.optString("id")).put("name", g.optString("agentName", g.optString("agent")))
+                    .put("project", g.optString("project", "")).put("status", g.optString("status", "")).put("canAsk", g.optBoolean("canAsk")));
+        }
+        return new JSONObject().put("agents", out);
+    }
+
     private JSONObject setAgents(Agents a) {
         JSONObject j = a.toJson();
         try {
@@ -2065,6 +2510,7 @@ public final class LinkServer {
         } catch (JSONException ignored) {
         }
         agentsNow = j;
+        LiveFeed.get().fromMonitor(j, System.currentTimeMillis());   // v2.22 AI LIVE goes on air by itself
         return j;
     }
 
@@ -2218,12 +2664,15 @@ public final class LinkServer {
         JSONObject r = out[0];
         if (!r.has("spacexTv")) r.put("spacexTv", false);   // 2.20: off by default
         if (!r.has("grokbot")) r.put("grokbot", true);
+        if (!r.has("radio")) r.put("radio", false);   // v2.22 #162
         if (!r.has("plugins")) {
             r.put("plugins", new JSONArray()
                     .put(new JSONObject().put("id", "com.sighmon.spacex-tv").put("name", "SpaceX TV")
                             .put("author", "sighmon").put("license", "MIT").put("enabled", r.optBoolean("spacexTv", false)))
                     .put(new JSONObject().put("id", "io.github.tcballard.grokbot-desktop").put("name", "Agent Desktop")
-                            .put("author", "tcballard").put("license", "MIT").put("enabled", r.optBoolean("grokbot", true))));
+                            .put("author", "tcballard").put("license", "MIT").put("enabled", r.optBoolean("grokbot", true)))
+                    .put(new JSONObject().put("id", "com.omarchytv.radio").put("name", "Radio")
+                            .put("author", "OmarchyTV").put("license", "MIT").put("enabled", r.optBoolean("radio", false))));
         }
         return r;
     }
@@ -2253,8 +2702,16 @@ public final class LinkServer {
                 .put("grokbot", gb)
                 .put("plugins", cleanArr)
                 .put("at", now());
+        if (body.has("radio")) clean.put("radio", body.optBoolean("radio"));   // v2.22 #162
         host.editConfig(j -> {
             JSONObject old = j.optJSONObject("plugins");
+            // v2.22: keep the switches this call does not carry (radio, retroCrt, omastorm, …)
+            if (old != null) {
+                for (java.util.Iterator<String> it = old.keys(); it.hasNext(); ) {
+                    String k = it.next();
+                    if (!clean.has(k)) clean.put(k, old.get(k));
+                }
+            }
             if (old != null && old.has("grokbotMessage")) clean.put("grokbotMessage", old.optString("grokbotMessage", ""));
             if (old != null && old.has("grokbotBot")) clean.put("grokbotBot", old.opt("grokbotBot"));
             j.put("plugins", clean);
@@ -2668,9 +3125,16 @@ public final class LinkServer {
                 break;
             case "agent_ask_state":
             case "agent_answer":
-            case "agent_ask_error":
-                host.onEvent(c.pcId, type, agentReply(type, data));
+            case "agent_ask_error": {
+                JSONObject rep = agentReply(type, data);
+                if ("agent_answer".equals(type)) {   // v2.22 AI LIVE; an answer to the phone is read aloud on the TV
+                    String who = agentName(rep.optString("agentId"));
+                    LiveFeed.get().event(who, "answer", rep.optString("text"), now());
+                    if (rep.optString("id").startsWith("talk-")) host.speak(who + ". " + rep.optString("text"));
+                }
+                host.onEvent(c.pcId, type, rep);
                 break;
+            }
             case "grokbot_answer":
             case "grokbot_error":
                 host.onEvent(c.pcId, type, grokbotReply(type, data));
@@ -2781,10 +3245,15 @@ public final class LinkServer {
 
     /** The answer picked on the remote. False when the question is gone or expired. */
     public boolean answerAsk(String id, String choice) {
-        return app.answer(id, choice);
+        return app.answer(id, choice) || web.answer(id, choice);
     }
 
-    /** Questions still waiting: [id, from, question, deadlineMs, choice...]. */
+    /** v2.22 #163 a one-time code for the web settings QR (5 minutes). */
+    public String newWebCode() {
+        return web.newCode();
+    }
+
+    /** Questions still waiting: [id, from, question, deadlineMs, detail, risk, choice...] (detail, risk: v2.22, "" if none). */
     public List<String[]> pendingAsks() {
         List<String[]> out = new ArrayList<>();
         for (AppApi.Ask a : app.pending()) {
@@ -2793,6 +3262,8 @@ public final class LinkServer {
             row.add(a.from);
             row.add(a.question);
             row.add(String.valueOf(a.deadline));
+            row.add(a.detail);
+            row.add(a.risk);
             row.addAll(a.choices);
             out.add(row.toArray(new String[0]));
         }

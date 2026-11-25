@@ -133,6 +133,153 @@ class TestMcpV221(unittest.TestCase):
                                    "params": {"name": "tv_notify", "arguments": {"text": "  "}}}, tv)
         self.assertTrue(r["result"]["isError"])
 
+    def test_widget_tools_map_to_the_tv_api(self):   # v2.22 #157
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_widget_create", {"id": "nas", "type": "lines", "x": 0, "evil": 1, "data": {"lines": []}})
+        self.assertEqual(sent[-1][:2], ("POST", "/v1/widgets/item"))
+        self.assertNotIn("evil", sent[-1][2])
+        call("tv_widget_update", {"id": "nas", "x": 5, "data": {"lines": []}}, "notify")
+        self.assertEqual(sent[-1], ("PATCH", "/v1/widgets/item/nas", {"data": {"lines": []}}))   # content only
+        call("tv_widget_move", {"id": "nas", "x": 5, "title": "no"})
+        self.assertEqual(sent[-1], ("PATCH", "/v1/widgets/item/nas", {"x": 5}))
+        call("tv_widget_list", {"page": 2}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/widgets/list?page=2"))
+        call("tv_widget_delete", {"id": "a/../b"})
+        self.assertEqual(sent[-1][1], "/v1/widgets/item/a%2F..%2Fb")
+        n = len(sent)
+        r = call("tv_widget_create", {"id": "x", "type": "text"}, "notify")
+        self.assertIn("error", r)
+        self.assertEqual(len(sent), n)   # a notify scope never reaches the TV for a create
+        names = {t["name"] for t in mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}, c, "notify")["result"]["tools"]}
+        self.assertIn("tv_widget_update", names)
+        self.assertNotIn("tv_widget_move", names)
+
+    def test_page_tools_map_to_the_tv_api(self):   # v2.22 #158 / #159
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_page_create", {"name": "Casa", "id": "casa", "evil": 1})
+        self.assertEqual(sent[-1], ("POST", "/v1/widget-pages", {"name": "Casa", "id": "casa"}))
+        call("tv_page_show", {"page": "casa"})
+        self.assertEqual(sent[-1][:2], ("POST", "/v1/widget-pages/casa/show"))
+        call("tv_page_reorder", {"page": 3, "to": 2})
+        self.assertEqual(sent[-1], ("PATCH", "/v1/widget-pages/3", {"to": 2}))
+        call("tv_page_delete", {"page": "casa", "moveWidgetsTo": 1})
+        self.assertEqual(sent[-1], ("DELETE", "/v1/widget-pages/casa", {"moveWidgetsTo": 1}))
+        call("tv_page_current", {}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/widget-pages/current"))
+        n = len(sent)
+        self.assertIn("error", call("tv_page_show", {"page": 2}, "read"))
+        self.assertEqual(len(sent), n)
+
+    def test_ha_tools(self):   # v2.22 #160
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_ha_list", {"domain": "scene", "query": "mo vie"}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/ha/states?domain=scene&q=mo+vie"))
+        call("tv_ha_run", {"entity_id": "scene.movie"})
+        self.assertEqual(sent[-1], ("POST", "/v1/ha/run", {"entity_id": "scene.movie"}))
+        self.assertIn("error", call("tv_ha_run", {"entity_id": "scene.movie"}, "notify"))
+
+    def test_radio_tools(self):   # v2.22 #162
+        sent = []
+
+        class C(FakeTvClient):
+            def request(self, method, path, body=None, timeout=8.0):
+                sent.append((method, path, body))
+                return {"ok": True}
+        c = C()
+        call = lambda name, args, scope="control": mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 1, "method": "tools/call",
+                                                                         "params": {"name": name, "arguments": args}}, c, scope)
+        call("tv_radio", {"action": "play", "station": "soma"})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "play", "station": "soma"}))
+        call("tv_radio", {"action": "volume", "volume": 40})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "volume", "volume": 40}))
+        call("tv_radio_stations", {}, "read")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/radio/stations"))
+        call("tv_radio_station_add", {"name": "RP", "url": "https://stream.radioparadise.com/aac-320"})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio/stations", {"name": "RP", "url": "https://stream.radioparadise.com/aac-320"}))
+        call("tv_radio_station_remove", {"id": "rp"})
+        self.assertEqual(sent[-1], ("DELETE", "/v1/radio/stations/rp", None))
+        n = len(sent)
+        self.assertTrue(call("tv_radio_station_remove", {"id": "../x"})["result"]["isError"])
+        self.assertIn("error", call("tv_radio_sleep", {"minutes": 30}, "notify"))
+        self.assertEqual(len(sent), n)
+        call("tv_radio_sleep", {"minutes": 30})
+        self.assertEqual(sent[-1], ("POST", "/v1/radio", {"action": "sleep", "minutes": 30}))
+        call("tv_skill_install", {"id": "homelab"})   # v2.22 skills
+        self.assertEqual(sent[-1][:2], ("POST", "/v1/skills/homelab/install"))
+        self.assertTrue(call("tv_skill_remove", {"id": "../x"})["result"]["isError"])
+        call("tv_briefing_set", {"sections": [{"title": "Overnight", "lines": ["ok"]}], "wake": "07:30", "x": 1}, "notify")   # v2.22 studio
+        self.assertEqual(sent[-1], ("POST", "/v1/briefing", {"sections": [{"title": "Overnight", "lines": ["ok"]}], "wake": "07:30"}))
+        call("tv_debate_post", {"id": "d1", "text": "LRU"}, "notify")
+        self.assertEqual(sent[-1], ("POST", "/v1/debate/d1", {"text": "LRU"}))
+        self.assertTrue(call("tv_debate_result", {"id": "../d1"}, "notify")["result"]["isError"])
+        call("tv_teletext_publish", {"page": 101, "title": "Build", "lines": ["ok"], "x": 1}, "notify")   # v2.22 Televideo AI
+        self.assertEqual(sent[-1], ("PUT", "/v1/teletext/101", {"title": "Build", "lines": ["ok"]}))
+        self.assertTrue(call("tv_teletext_publish", {"page": 100, "title": "x", "lines": ["y"]}, "notify")["result"]["isError"])
+        call("tv_guide_update", {"id": "p3", "state": "done"}, "notify")
+        self.assertEqual(sent[-1], ("POST", "/v1/guide/p3", {"state": "done"}))
+        self.assertIn("error", call("tv_teletext_remove", {"page": 101}, "notify"))
+        call("tv_scene_run", {"name": "movie night"})
+        self.assertEqual(sent[-1], ("POST", "/v1/scene/run", {"name": "movie night"}))
+        self.assertIn("error", call("tv_scene_run", {"name": "x"}, "notify"))   # a notify token runs no scene
+        call("tv_live_update", {"text": "running tests", "progress": 40, "x": 1}, "notify")   # v2.22 AI LIVE
+        self.assertEqual(sent[-1], ("POST", "/v1/live", {"text": "running tests", "progress": 40}))
+        call("tv_shift_log", {"level": "ok", "text": "tests green", "junk": 1}, "notify")   # v2.22 night shift
+        self.assertEqual(sent[-1], ("POST", "/v1/shift/log", {"level": "ok", "text": "tests green"}))
+        call("tv_shift_decision", {"id": "q3"}, "notify")
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/shift/queue/q3"))
+        n = len(sent)
+        self.assertTrue(call("tv_shift_decision", {"id": "../x"}, "notify")["result"]["isError"])
+        self.assertIn("error", call("tv_shift_start", {"tasks": ["x"], "until": "07:00"}, "notify"))
+        self.assertEqual(len(sent), n)
+        call("tv_settings_get", {"section": "plugins"}, "read")   # v2.22 #163
+        self.assertEqual(sent[-1][:2], ("GET", "/v1/settings?section=plugins"))
+        call("tv_settings_set", {"key": "uiSize", "value": "large"})
+        self.assertEqual(sent[-1], ("PATCH", "/v1/settings", {"uiSize": "large"}))
+        n = len(sent)
+        self.assertIn("error", call("tv_settings_set", {"key": "uiSize", "value": "large"}, "read"))
+        self.assertEqual(len(sent), n)
+        call("tv_skill_qr", {})   # v2.22 #161
+        self.assertEqual(sent[-1], ("POST", "/v1/open", {"target": "skill"}))
+
+    def test_max_level_caps_tv_notify(self):   # v2.22: the owner's rule, not the model's
+        tv = FakeTvClient()
+        call = lambda lvl, mx: mcp_server.handle_rpc({"jsonrpc": "2.0", "id": 5, "method": "tools/call", "params": {
+            "name": "tv_notify", "arguments": {"text": "disk", "level": lvl, "speak": True}}}, tv, "notify", mx)
+        r = call("alert", "warn")
+        self.assertEqual(json.loads(r["result"]["content"][0]["text"])["capped"], "warn")
+        self.assertEqual((tv.notes[-1]["level"], tv.notes[-1]["speak"]), ("warn", False))
+        call("warn", "warn")
+        self.assertEqual((tv.notes[-1]["level"], tv.notes[-1]["speak"]), ("warn", True))
+        call("alert", "alert")
+        self.assertEqual(tv.notes[-1]["level"], "alert")
+        self.assertEqual(mcp_server.default_max_level(True, None), "warn")    # through the internet
+        self.assertEqual(mcp_server.default_max_level(False, None), "alert")
+        self.assertEqual(mcp_server.default_max_level(True, "alert"), "alert")
+
     def test_theme_tool_reads_the_tv_unsigned(self):
         from http.server import BaseHTTPRequestHandler, HTTPServer
 

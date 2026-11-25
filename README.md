@@ -6,7 +6,7 @@ Created by **[Marco Porro](https://www.marcoporro.it)** ([x.com/MarcoPorro](http
 
 Official Synchronized Repositories: **[GitHub (`github.com/piermark/omarchytv`)](https://github.com/piermark/omarchytv)** · **[GitLab (`gitlab.com/piermark/omarchytv`)](https://gitlab.com/piermark/omarchytv)**
 
-Published: **19 November 2026 (latest release: 2.21.0 — Android TV, LG webOS & Samsung Tizen)** (`versionCode 30`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
+Published: **25 November 2026 (latest release: 2.22.0 — Android TV, LG webOS & Samsung Tizen)** (`versionCode 31`) · Mobile Companion **2.13.0-beta** · Cinemarchy **0.1.0-alpha** · License **MIT**
 
 [![OmarchyTV 2.21: your TV, wired into your AI agents. Click to watch the 68-second video](docs/media/omarchytv-2.21.png)](docs/media/omarchytv-2.21.mp4)
 
@@ -39,19 +39,19 @@ OmarchyTV; see [Trademarks](#trademarks).*
 
 ---
 
-## Release Downloads & Checksums (`v2.21.0`)
+## Release Downloads & Checksums (`v2.22.0`)
 
-I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d`), so `adb install -r` upgrades over `2.20.0` and earlier and keeps your settings. All checksums are also in `SHA256SUMS` on the release.
+I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d`), so `adb install -r` upgrades over `2.21.0` and earlier and keeps your settings. All checksums are also in `SHA256SUMS` on the release.
 
 | Artifact | Download | Platform | Version | Size | SHA-256 |
 |---|---|---|---|---|---|
-| **`omarchytv-release-2.21.0.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.21.0/omarchytv-release-2.21.0.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.21.0` (`versionCode 30`) | `15.0 MB` | `0e0593b1b448718159374b9bc525b7631fb68a95c8204077f3d56737a17ab8f5` |
-| **`omarchytv-webos-2.21.0-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.21.0/omarchytv-webos-2.21.0-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.21.0` | `12.5 MB` | `452d642fca4095728d0732a15525c2e4a15ebbf8cc2c2c423e4e7fbaaf6e7142` |
-| **`OmarchyTV-tizen-2.21.0-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.21.0/OmarchyTV-tizen-2.21.0-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.21.0` | `12.6 MB` | `746d34f08a841b8ed896df4f0d8de3de73c45274b029ae99a0cc5b3a34303563` |
+| **`omarchytv-release-2.22.0.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchytv-release-2.22.0.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | Android TV / Google TV / Fire OS (`com.omarchytv.home`, `minSdk 24`, `targetSdk 34`) | `2.22.0` (`versionCode 31`) | `15.2 MB` | `d1bfa8f0806c3e0ba0f6e5c25042361b266ba4074a2c5a0ab3c20e0785ddc657` |
+| **`omarchytv-webos-2.22.0-testing.ipk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchytv-webos-2.22.0-testing.ipk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | LG webOS TV (`com.omarchytv.home`, experimental) | `2.22.0` | `12.5 MB` | `191c18fd9209aec71fa2d2f694e247078607ce058c8c1ea38bdf9750d504b538` |
+| **`OmarchyTV-tizen-2.22.0-unsigned.wgt`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/OmarchyTV-tizen-2.22.0-unsigned.wgt)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | Samsung Tizen TV (unsigned testing build, sign it with your own Samsung certificate in Tizen Studio; see [INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)) | `2.22.0` | `12.7 MB` | `2d3ea669eafff2b0ef66af99e8beb26d55c59b8ec388c3b93bb4b19b3afe2d63` |
 | **`omarchytv-mobile-2.13.0-beta.apk`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.13.0-beta/omarchytv-mobile-2.13.0-beta.apk)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.13.0-beta)** | Android phone installer & companion (`com.omarchytv.mobile`, `minSdk 26`) | `2.13.0-beta` (`versionCode 21300`) | `177 KB` | `e45a5c0f7ccd662279d34e80ffbf4e9581061603012e8814e5941e8909b67f79` |
-| **`omarchy-tv-pc-plugin-2.21.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.21.0/omarchy-tv-pc-plugin-2.21.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.21.0` | `354 KB` | `04604a05d9c8630bfc5e293bb74791153b8a01d11bf8f20d2fa1afa81c5d7239` |
-| **`omarchy-tv-2.21.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.21.0/omarchy-tv-2.21.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0)** | PC plugin `omarchy-tv` only | `2.21.0` | `93 KB` | `0852f56ebf0817698a2c090951e9544d57e91f484f404fdf77ce36cf9d827ef6` |
-| **`omarchy-link-2.21.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.21.0/omarchy-link-2.21.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.21.0)** | PC plugin `omarchy-link` only | `2.21.0` | `249 KB` | `eae81e7046892c037756f5d2487de1d69e049df19ca9a9c0e91b119601252a96` |
+| **`omarchy-tv-pc-plugin-2.22.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchy-tv-pc-plugin-2.22.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | Omarchy Linux / macOS (`omarchy-tv` + `omarchy-link`) | `2.22.0` | `404 KB` | `b5b9c06d3fde4b19aeb1249dc36f8844af0d356567c6d62a05921d951e2f2dba` |
+| **`omarchy-tv-2.22.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchy-tv-2.22.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | PC plugin `omarchy-tv` only | `2.22.0` | `127 KB` | `ddc58b1c30370ababae43d032f9e8355815aa053defb1dacfce4e72a5177a4a0` |
+| **`omarchy-link-2.22.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchy-link-2.22.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | PC plugin `omarchy-link` only | `2.22.0` | `264 KB` | `7fceb84561f76e605267aa3c33f2820466663f9151cfec35016c09001bcb8bab` |
 
 All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.20.0](https://github.com/piermark/omarchytv/releases/tag/v2.20.0).
 
@@ -80,6 +80,27 @@ All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/re
 *Android screenshots come from the Android TV emulator (API 28, 1920×1080). webOS and Tizen screenshots come from the web app in headless Chrome with a Tizen shim, not from a real TV. The Arcade, OmaFire and Live shots are rendered at 1920×1080 from the shipped app assets, which is the same code that runs on Android TV, LG and Samsung.*
 
 ---
+
+## What's New in `2.22.0` (`versionCode 31`)
+
+**The TV that runs your AI.** Once there was the VCR; now the TV shows your agents' work live, keeps the diary of their night and asks you only what matters. Everything is in the [CHANGELOG](CHANGELOG.md#2220--2026-11-25-versioncode-31-webos-2220-tizen-2220-pc-plugins-2220).
+
+| AI LIVE · your agents on air | The morning briefing | The agents' debate |
+|---|---|---|
+| ![AI LIVE](docs/media/omarchytv-2.22-ai-live.jpg) | ![Morning briefing](docs/media/omarchytv-2.22-briefing.jpg) | ![Debate](docs/media/omarchytv-2.22-debate.jpg) |
+| **Televideo AI** | **The agents' Guide** | **A scene the AI composed** |
+| ![Televideo AI](docs/media/omarchytv-2.22-televideo.jpg) | ![Agents' Guide](docs/media/omarchytv-2.22-guide.jpg) | ![Scene](docs/media/omarchytv-2.22-scene.jpg) |
+
+- **AI LIVE**: your agents as a TV broadcast, with the LIVE bug, the studio monitor, the lower third, BREAKING when an agent waits for you and the NEWS ticker. The director cuts between agents.
+- **The night shift and the VCR**: an agent works at night, the TV keeps the diary and the decisions for the morning, and the night plays back like a tape (PLAY, ×2, PAUSE, STOP).
+- **See the work before you approve it**: a question can carry a preview (an image, a diff, a text, a chart).
+- **The morning briefing** read aloud at your wake-up time, **the agents' debate** where you pick the winner with the remote, and **scenes** the AI composes from the TV's own tools, which run only after your OK.
+- **Televideo AI** (pages 101-899, like the teletext of old) and **the agents' Guide**, their work as a TV schedule.
+- **AI LIVE in the corner while you watch** (Android TV 8+, off by default): a small card over the film, red when an agent waits for your yes. ![AI LIVE in the corner](docs/media/omarchytv-2.22-corner.jpg)
+- **Talk to your agents from the phone**, **skills from the community** (data, never code), and the **GrokBot Office as the control room** (red AI LIVE, blue replay, yellow skills).
+- **Home widgets and pages** an agent can manage (#157–#160), Home Assistant on the Home, the radio plugin (#162), web settings from the phone (#163), the agent skill from the TV (#161).
+- **LG and Samsung**: AI LIVE, the night shift, skills, the briefing, the debate, Televideo and the Guide through the PC bridge; **webOS 26** support (#173).
+- **Safety**: an OK pressed by reflex never approves, never picks and never runs anything (Deny / Cancel has the focus; the yes waits 1.5 s).
 
 ## What's New in `2.21.0` (`versionCode 30`)
 
@@ -334,18 +355,18 @@ Every theme bundled in OmarchyTV `2.13.0-beta` is **100% MIT-licensed** and ship
 
 > **Want a hand?** I made [OmarchyTV Installer](https://x.ai/bot/kkVjmjPKhIb2atxHQPsfp), a Grok Bot that walks you through the install step by step on Android TV / Google TV, LG webOS or Samsung Tizen. It uses only the official releases from this repo, checks the SHA-256 with you, and follows the guides below. It never asks for passwords and has no access to my accounts or keys.
 
-### 1. Install on Android TV / Google TV / Sony BRAVIA / Sharp AQUOS (`2.21.0`)
+### 1. Install on Android TV / Google TV / Sony BRAVIA / Sharp AQUOS (`2.22.0`)
 
 #### Option A — Install via ADB from a PC / Mac
 1. On your TV, enable Developer Options: **Settings → Device Preferences → About → press Build 7 times**, then enable **USB debugging / Network debugging** in **Developer options** and note the TV's IP address.
 2. Connect and install the signed release APK:
    ```bash
    adb connect <tv-ip>:5555
-   sha256sum omarchytv-release-2.21.0.apk
+   sha256sum omarchytv-release-2.22.0.apk
    # Expected SHA-256: 0e0593b1b448718159374b9bc525b7631fb68a95c8204077f3d56737a17ab8f5
-   apksigner verify --print-certs omarchytv-release-2.21.0.apk
+   apksigner verify --print-certs omarchytv-release-2.22.0.apk
    # Expected Signer #1 SHA-256: 90aa68d9f45e623eadfd349ab1eb66042356f95ff6347a4568c3f3a78f8ea33d
-   adb install -r omarchytv-release-2.21.0.apk
+   adb install -r omarchytv-release-2.22.0.apk
    ```
 3. **Set OmarchyTV as the default Home screen (optional):**
    ```bash
@@ -400,10 +421,10 @@ You can interact using the **1-click D-pad quick-action chips** at the top of th
 
 ---
 
-### 4. PC / macOS Plugin & MCP Server (`omarchy-tv-pc-plugin-2.21.0.tar.gz`)
+### 4. PC / macOS Plugin & MCP Server (`omarchy-tv-pc-plugin-2.22.0.tar.gz`)
 
 ```bash
-tar -xzf omarchy-tv-pc-plugin-2.21.0.tar.gz
+tar -xzf omarchy-tv-pc-plugin-2.22.0.tar.gz
 cd pc-plugin
 mkdir -p ~/.local/share ~/.local/bin
 cp -r omarchy-link ~/.local/share/omarchy-link
@@ -424,9 +445,9 @@ Full PC plugin documentation: **[pc-plugin/README.md](pc-plugin/README.md)** and
 
 ---
 
-### 5. LG webOS and Samsung Tizen TVs — Experimental (`2.21.0`)
-- **LG webOS:** `omarchytv-webos-2.21.0-testing.ipk`. Install guide: **[webos/INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md)**.
-- **Samsung Tizen:** `OmarchyTV-tizen-2.21.0-unsigned.wgt` is unsigned: sign it with your own Samsung certificate in Tizen Studio before installing. Guide: **[tizen/INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)**.
+### 5. LG webOS and Samsung Tizen TVs — Experimental (`2.22.0`)
+- **LG webOS:** `omarchytv-webos-2.22.0-testing.ipk`. Install guide: **[webos/INSTALL-WEBOS.md](webos/INSTALL-WEBOS.md)**.
+- **Samsung Tizen:** `OmarchyTV-tizen-2.22.0-unsigned.wgt` is unsigned: sign it with your own Samsung certificate in Tizen Studio before installing. Guide: **[tizen/INSTALL-TIZEN.md](tizen/INSTALL-TIZEN.md)**.
 - Both share the same web app (`webos/app`): Omarchy Pulse as the screensaver, the Arcade (nine games), Cinemarchy, the **Settings > System > Text size** option (90/100/115/130%), Cinemarchy 0.1.0-alpha, the Grok Bot companion (Blue key), the plugin marketplace and both Aquariums.
 
 ---

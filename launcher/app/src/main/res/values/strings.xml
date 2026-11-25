@@ -153,6 +153,75 @@
     <string name="pane_ai">ai credits</string>
     <string name="set_pane_ai">Pane: AI credits</string>
     <string name="ai_empty">connect Omarchy Linux to show AI credits</string>
+    <string name="native_unavailable">unavailable</string>
+    <string name="widget_resize">Resize</string>
+    <string name="widget_remove">Remove</string>
+    <string name="widget_resize_hint">resize: ←↑↓→ OK=done BACK=cancel</string>
+    <string name="skill_qr_label">Get the agent skill</string>
+    <string name="ha_not_set">Home Assistant: set its URL and token in Settings › Ambilight &amp; Lights</string>
+    <string name="ha_confirm">Run %1$s?</string>
+    <string name="radio_stations">Stations</string>
+    <string name="skill_qr_hint">Open it on your phone or give the link to your agent: it installs the plugin and pairs with the code on this screen. No password or token in the code.</string>
+    <string name="skill_qr_this_tv">this TV</string>
+    <string name="shift_title">Night shift</string>
+    <string name="shift_none">No shift tonight. An agent starts one with tv_shift_start.</string>
+    <string name="shift_running">Running until %1$s</string>
+    <string name="shift_ended">Ended at %1$s</string>
+    <string name="shift_waiting">Waiting for you (%1$d)</string>
+    <string name="shift_tasks">Tasks</string>
+    <string name="shift_diary">Diary</string>
+    <string name="shift_end">End the shift</string>
+    <string name="shift_approve">Approve</string>
+    <string name="shift_deny">Deny</string>
+    <string name="live_replay">Replay of the night</string>
+    <string name="live_empty">No agent on air yet: agents appear with tv_live_update, a note or a question.</string>
+    <string name="live_waits">waits for you</string>
+    <string name="live_on_air">on air for %1$d min</string>
+    <string name="live_answer">answer</string>
+    <string name="live_end">End of the recording</string>
+    <string name="talk_phone">Talk from the phone</string>
+    <string name="talk_needs_web">Turn on Connect Omarchy Linux › Web settings first</string>
+    <string name="skills_title">Skills</string>
+    <string name="skills_hint">Capabilities from the community: widgets, pages and instructions for your agents. Data only, never code.</string>
+    <string name="skill_asks">It asks to:</string>
+    <string name="skill_data_only">A skill is data: it cannot run code on the TV.</string>
+    <string name="skill_install">Install</string>
+    <string name="skill_remove">Remove</string>
+    <string name="skill_remove_q">Remove this skill with its widgets and its page?</string>
+    <string name="skill_perm_widgets">show widgets on a page of its own</string>
+    <string name="skill_perm_notify">send notes to the TV</string>
+    <string name="skill_perm_ha_read">read your Home Assistant entities</string>
+    <string name="skill_perm_ha_control">run your Home Assistant scenes and switches</string>
+    <string name="skill_perm_shift">use the night shift</string>
+    <string name="skill_perm_live">go on AI LIVE</string>
+    <string name="debate_pick">picks</string>
+    <string name="debate_waiting">waiting for the agents\' answers</string>
+    <string name="debate_you_decide">you decide</string>
+    <string name="scene_new">a new scene</string>
+    <string name="scene_ask_run">Run these steps now?</string>
+    <string name="scene_ask_save">Save this scene? Then it runs with one OK, without asking again.</string>
+    <string name="scene_run">Run</string>
+    <string name="scene_save">Save</string>
+    <string name="teletext_title">Televideo AI</string>
+    <string name="teletext_missing">page not found</string>
+    <string name="guide_title">Agents\' Guide</string>
+    <string name="guide_empty">Nothing on the Guide yet: agents add programmes with tv_guide_add.</string>
+    <string name="guide_on_air">ON AIR</string>
+    <string name="guide_next">NEXT</string>
+    <string name="corner_row">AI LIVE in the corner while you watch</string>
+    <string name="corner_questions">questions</string>
+    <string name="corner_live">always</string>
+    <string name="corner_permission">Allow “Display over other apps” for OmarchyTV (if the TV has no such screen: adb shell appops set %1$s SYSTEM_ALERT_WINDOW allow)</string>
+    <string name="corner_waits">waits for you: %1$s</string>
+    <string name="web_settings_row">Web settings</string>
+    <string name="web_settings_open">Open web settings</string>
+    <string name="web_settings_hint">Scan it on a phone on the same network, or type the address on a computer. Then approve that browser on the TV.</string>
+    <string name="web_approve_q">Allow “%1$s” (%2$s) to change the TV\'s settings?</string>
+    <string name="web_approve_qr">It scanned the code shown on this TV.</string>
+    <string name="web_approve_typed">The address was typed by hand: allow it only if it is your device.</string>
+    <string name="web_deny">Deny</string>
+    <string name="web_allow_read">Allow read-only</string>
+    <string name="web_allow">Allow</string>
     <string name="ai_stale">stale %1$s</string>
     <string name="tv_prompt" translatable="false">&gt; TV</string>
     <string name="apps_prompt" translatable="false">&gt; Apps</string>
@@ -597,6 +666,11 @@
     <string name="ss_pulse_scene">Pulse scene</string>
     <string name="ss_restore_previous">Previous screensaver</string>
     <string name="agent_alert_row">AI agent alerts while you watch</string>
+    <string name="agent_alert_min_row">Which agent messages show</string>
+    <string name="agent_alert_min_all">all</string>
+    <string name="agent_alert_min_warn">warnings and alerts</string>
+    <string name="agent_alert_min_alert">alerts only</string>
+    <string name="agent_alert_sound_row">Tones and voice for agent messages</string>
     <string name="agent_alert" formatted="true">● %1$s needs you: %2$s</string>
     <!-- v2.20 Radiomarchy (Omarchy Radio + fractals) -->
     <string name="radio_hub" translatable="false">Radiomarchy (Omarchy Radio)</string>

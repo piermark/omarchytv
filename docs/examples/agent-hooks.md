@@ -29,6 +29,7 @@ Codex passes its event as JSON: OmarchyTV shows its last message.
 ```sh
 omarchy-link watch -- make release            # ✓ / ✗, how long it took, the last line
 omarchy-link watch --speak -- ./deploy.sh     # and the TV says it aloud
+omarchy-link watch --only-fail --speak -- make test   # only red runs reach the TV (2.22)
 ```
 
 ## A cron job or a script on another box

@@ -89,6 +89,10 @@
     <!-- Android 13+: needed to update the now-playing notification after the service started (notify()). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- v2.22 the night shift's wake-up: an alarm clock that opens the morning page (without it, the first Home does) -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <!-- v2.22 AI LIVE in the corner while you watch (off by default; the owner allows it) -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
     <!-- Omarchy Link keep-alive, only while a PC is paired: a connectedDevice foreground service. Android 14 needs the
          type permission plus one of CHANGE_NETWORK_STATE / CHANGE_WIFI_STATE / CHANGE_WIFI_MULTICAST_STATE (all normal;
          CHANGE_NETWORK_STATE, unlike the Wi-Fi ones, implies no Wi-Fi hardware, so Ethernet-only TVs are unaffected). -->
@@ -298,6 +302,49 @@
             android:exported="false"
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
+        <!-- v2.22 Televideo AI and the agents' Guide -->
+        <activity
+            android:name=".TeletextActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.TvHome" />
+        <activity
+            android:name=".GuideActivity"
+            android:exported="false"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.TvHome" />
+        <!-- v2.22 a scene an agent composed: the owner's OK -->
+        <activity
+            android:name=".SceneActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+        <!-- v2.22 skills from the community -->
+        <activity
+            android:name=".SkillsActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
+        <!-- v2.22 AI LIVE: the agents' work as a TV channel, and the night's replay -->
+        <activity
+            android:name=".LiveActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.TvHome" />
+        <!-- v2.22 the night shift's morning page (ShiftWake opens it, also over a sleeping screen) -->
+        <activity
+            android:name=".ShiftActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
             android:configChanges="orientation|screenSize|keyboard|keyboardHidden|navigation|uiMode"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.TvHome" />

@@ -1,5 +1,185 @@
 # Changelog
 
+## [2.22.0] — 2026-11-25 (`versionCode 31`; webOS 2.22.0, Tizen 2.22.0, PC plugins 2.22.0)
+
+### The TV that runs your AI (Android TV)
+
+- **AI LIVE, your agents as a TV broadcast**: Settings › Grok Bot & AI › AI LIVE (or `tv_open live`). The ● LIVE
+  bug, the channel logo and the clock, the studios strip, one agent on camera (its avatar, what it does, the progress,
+  the preview of its work on the studio monitor), a news lower third at every cut, the red BREAKING banner when an
+  agent waits for your yes (OK opens its question), the NEWS ticker. The director cuts every 12 s to the next agent
+  that is working; LEFT / RIGHT change camera. It goes on air by itself: every agent the PC's agent monitor reports
+  (Claude Code, Codex, Grok, Hermes, Gemini, T3 Code, already redacted on the PC) is on it with its current step,
+  and agents can say more with `tv_live_update` (a line, a progress, a preview). `POST/GET /v1/live`, `tv_live`.
+- **See the work before you approve it**: a question can carry a preview (`/v1/ask` `preview`, or the agent's last
+  `tv_live_update`): an image (https or LAN), a diff, a text or a few numbers, shown in the question dialog.
+- **The night shift, the TV as a night worker**: an agent starts a shift (`tv_shift_start`: the tasks, the end, the
+  wake-up time). All night the TV stays silent: notes go to the diary, nothing rings or speaks. Agents write the
+  diary (`tv_shift_log`: ok / fail / info) and leave anything risky (push, merge, post, payment) for the morning
+  (`tv_shift_queue`, then `tv_shift_decision`): only you answer it, on the TV (Deny has the focus, Approve waits
+  1.5 s); there is no way to answer from the network. In the morning the TV opens the Night shift page (an alarm
+  clock where exact alarms are allowed, otherwise the first Home after the wake-up time).
+- **The VCR is back**: the night plays back like a tape (Night shift › Replay of the night, or `tv_open replay`),
+  with the VCR's on-screen display (PLAY, ×2, ×4, PAUSE, STOP and the recording's date and time), the timeline with
+  its highlights (failures in red, steps left for the morning in yellow), LEFT / RIGHT from one highlight to the
+  next, and at the end the decisions that wait.
+- **Talk to your agents**: the remote's microphone in "> agents" as before, and now the phone: Settings › Grok Bot
+  & AI › Talk from the phone shows a QR to the Talk tab of the web settings (on, and the browser allowed on the
+  TV): say it with the phone keyboard's microphone, or hold to talk where the browser has dictation, only while held.
+  The answer is read aloud on the TV (silent during a night shift) and goes on AI LIVE.
+- **Skills from the community**: Settings › Grok Bot & AI › Skills. A skill is data, never code: widgets on a page
+  of its own (the same checks as `tv_widget_create`), the permissions it asks for, and instructions for your agent.
+  Installing shows the permissions in plain words (Cancel has the focus, Install waits 1.5 s); removing takes its
+  widgets and its page away. Three to start: Night shift, Homelab dashboard, Movie night. New skills arrive by pull
+  request in `launcher/app/src/main/assets/skills/` (`SkillsTest` checks them). Signatures come later.
+  `/v1/skills`, `tv_skill_list`, `tv_skill_install` (asks you on the TV), `tv_skill_remove`.
+- **The morning briefing**: before the morning an agent prepares the news (`tv_briefing_set`: up to 8 sections of
+  short lines, such as what happened overnight, today's calendar, the weather and what waits for you, plus a text to
+  read aloud) and the wake-up time. At that time AI LIVE goes on air with ◆ MORNING. It shows one section after
+  another on the studio monitor and the lower third, with all the lines in the ticker, and reads the text aloud
+  (silent with the notes' sound off). LEFT / RIGHT change section; `tv_briefing_show` puts it on air at once. After
+  a night shift it opens over the shift's page. `GET/POST /v1/briefing`, `POST /v1/briefing/show`.
+- **The agents' debate**: one question and up to four agents' answers side by side on AI LIVE (◆ DEBATE), each with
+  its text and an optional preview. You pick the winner with the remote: LEFT / RIGHT choose, and OK only counts
+  1.5 s after the last move. Only the TV picks; agents read the result with `tv_debate_result`. `tv_debate_start`,
+  `tv_debate_post`, `/v1/debate`, `/v1/debate/{id}`.
+- **Scenes the AI composes**: "movie night for two" becomes a short list of the TV's own tools: Home Assistant
+  scenes, an app, the theme, the radio, a key, a page, a note, the screensaver (12 steps at most, nothing else). The
+  TV shows the steps in plain words, Cancel has the focus, and Run / Save waits 1.5 s. A saved scene then runs at
+  once with `tv_scene_run {name}`, and the agent sees each step's result and, for a failed step, why it failed.
+  `tv_scene_run`, `tv_scene_save`, `tv_scene_list`, `tv_scene_result`, `/v1/scene/*`, `/v1/scenes`.
+- **Televideo AI**: agents publish text pages on the TV, like the teletext of old: page 101-899, a title and up to
+  22 lines of 40 characters in the seven teletext colours (`tv_teletext_publish`). Page 100 is the index, made by
+  the TV. Type three digits to jump to a page; ▲ ▼ or CH+ / CH- move between pages, and the four colour keys work as
+  fastext (red previous, green next, yellow index, blue the Guide). A page that is not there says so and goes back
+  to the index. It opens from Settings › Grok Bot & AI, `tv_open teletext`, or the remote's TEXT key on the Home.
+  `/v1/teletext`, `/v1/teletext/{101-899}`.
+- **The agents' Guide**: the agents' work as a TV schedule. Each agent's programmes (`tv_guide_add`: what and when;
+  `tv_guide_update`: on air, done, failed), the night shift and the morning briefing appear with the agent as the
+  channel, ● ON AIR, NEXT, ✓ or ✗. OK on a programme on air opens AI LIVE; on the night shift, its page or replay;
+  on the briefing, the briefing. Settings › Grok Bot & AI, `tv_open guide`, or the remote's GUIDE key on the Home.
+  `/v1/guide`, `/v1/guide/{id}`.
+- **AI LIVE in the corner while you watch** (Android TV 8+): Settings › Grok Bot & AI › AI LIVE in the corner, off
+  by default; "questions", or "always" to also show the agent at work. A small card in the corner of the film
+  (another app or the cast player) turns red when an agent waits for your yes. The film keeps playing and keeps
+  the remote. When a question arrives, the card takes the remote for 15 s: OK opens the question, BACK leaves it for
+  when you are back on the Home, and any other key gives the remote back to the film (that press is lost). It needs
+  "Display over other apps": the TV asks for it, or `adb shell appops set com.omarchytv.home SYSTEM_ALERT_WINDOW
+  allow`. Off on the Home, on the screensaver and during a night shift.
+- **GrokBot Office is the control room**: in the Office, the red key goes on air (AI LIVE), the blue key plays the
+  night back, the yellow key opens the skills.
+- **On LG and Samsung too**, through the PC bridge (`omarchy-tv webos-serve`, `ai_bridge.py`, the same rules and
+  answers): Omarchy menu › AI LIVE, Night shift (with its replay) and Skills. The morning page and an agent's skill
+  question open by themselves; only the TV answers the queue and installs. AI LIVE goes on air by itself here too:
+  while `webos-serve` runs and `omarchy-link agents on` is set, the PC's agent monitor (redacted) feeds the channel
+  every 5 s. In the Office: red → AI LIVE, green → the night's replay, yellow → skills (blue stays the Companion's).
+  The morning briefing (read aloud where the TV's browser can) and the debate (the owner's pick only from the TV,
+  `/v1/tvstudio/*`) too, and Televideo AI and the Guide (Omarchy menu). The corner over a film is Android TV only:
+  an LG or Samsung app cannot draw over other apps. Not on LG / Samsung in 2.22: talking from the phone and scenes (they need the TV's own
+  tools).
+
+- **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
+  page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,
+  `tv_widget_list`, `tv_widget_create`, `tv_widget_update` (content only, a notify token is enough), `tv_widget_move`
+  and `tv_widget_delete`, on the TV's MCP and both PC bridges. No overlap, `cell_taken` with free slots, or `push`.
+  The PC's panes appear as read-only widgets. Asked in #157.
+- **The widget grid on the Home** (#157, second part): widget pages are drawn natively on a 12 × 6 grid between the
+  bar and the dock (`lines`, `stat`, `text`, `chart` sparkline / bars, `image`, `page` (OK opens it), `shortcuts`,
+  `qr`); stale widgets dim after their ttl and hide after twice that. CH+ / CH- on the Home go from the classic Home
+  through the widget pages, then on to the workspaces as before. A long press on a widget: Move, Resize, Remove with
+  the arrows (only into free cells). Only the page on screen is built; images are decoded to the cell size.
+- **Unlimited widget pages and a page navigator** (#158, #159): up to 1 000 pages, created on demand by number or id,
+  named, reordered, hidden, rotated, removed (their widgets moved or not); empty pages leave by themselves after a
+  day. `/v1/widget-pages` and `tv_page_list / current / create / rename / reorder / delete / show`. On the Home the
+  navigator `⌂ ‹ 1 2 3 4 5 › 8 / 42 · name` (RIGHT past the last number shows the next five, a long press lists every
+  page), CH± through the pages, `widget_page_changed` on `/v1/events`. Published LAN pages (`tv_publish_page`) are no
+  longer stopped at 16 (200). The number keys keep switching workspaces.
+- **Home Assistant on the Home** (#160): `homeassistant.scenes` widgets run scenes, scripts and automations with the
+  remote (✓ / ✗ on the button, optional confirmation, `"items": "all"` for every scene), `homeassistant.entities`
+  widgets show states live over the HA websocket while on screen (a 30 s poll as fallback) and toggle lights,
+  switches, fans. `/v1/ha/*` and `tv_ha_status`, `tv_ha_list`, `tv_ha_run`. One HA setup (URL and token in Settings ›
+  Ambilight & Lights, now also without the lights hub); the token never leaves the TV.
+- **webOS 26** (#173, thanks to @Stargazer-ops; same approach as free-my-tv PR 285): webOS 26 closes the page's own
+  connection to the TV's app list with 1008 "invalid origin". The ipk now carries a small JS service
+  (`com.omarchytv.home.service`) that asks for the TV's apps with `Origin: file://` and only the READ_INSTALLED_APPS
+  permission, after the TV's normal "allow" prompt. The app tries its own connection first (no second prompt on
+  older TVs) and uses the service only where the TV refuses it.
+- **Widget pages on LG and Samsung** (#157, #158, #159, #160): the PC bridge (`omarchy-tv webos-serve`) keeps the
+  widgets and pages with the same rules and answers as an Android TV, so an agent's `tv_widget_*` / `tv_page_*` calls
+  (`omarchy-tv mcp --bridge`) work unchanged; the TV app reads them with its ask code. CH+ / CH- on the Home go ⌂ → 1 →
+  2 … → ⌂, BACK returns, the navigator sits at the bottom, `tv_page_show` brings a page up, pages marked `rotate` turn
+  (Settings › Home widgets › Rotate widget pages). Home Assistant scenes and switches run from the TV with the URL
+  and token of Ambilight & Lights (`confirm` asks for OK twice). Not on LG / Samsung in 2.22: moving and resizing
+  widgets with the remote (agents and the PC place them), the `tv_ha_*` tools, Android app and PC shortcuts.
+- **Radio plugin** (#162, `plugins.radio`, off by default): the `♪ Radio` pill in the bar opens a mini panel (play /
+  pause, next, previous, the radio's own volume, sleep timer, stations, Radiomarchy) without leaving the Home; a
+  `radio` widget shows what plays with ⏮ ⏯ ⏭ ☰; an optional play / pause key (a colour key or PLAY_PAUSE). Internet
+  stations next to Omarchy Radio: Icecast / Shoutcast MP3 or AAC, HLS, `.pls` / `.m3u` playlists, the ICY title in
+  the bar; https://, http:// only on the LAN unless Settings allows it. `/v1/radio` gains `station`, `volume`,
+  `sleep`; `/v1/radio/stations`; MCP `tv_radio_stations`, `tv_radio_station_add`, `tv_radio_station_remove`,
+  `tv_radio_sleep`. `PUT /v1/plugins` from an older PC no longer drops switches it does not know. Android TV.
+- **Web settings** (#163, off by default): Connect Omarchy Linux › Web settings (logo menu) turns on
+  `http://<tv-ip>:47800/settings/` for a phone or a computer on the same network. Each browser is approved on the TV
+  (Deny / Allow read-only / Allow, Deny has the focus; the QR on the TV carries a one-time code so the dialog says
+  the request comes from it). The session is an app token in an `HttpOnly; SameSite=Strict` cookie, 30 days,
+  revocable like any app token; changes need the session's CSRF value and the page's own Origin; the page must be
+  opened by IP address (or a `*.ts.net` name), against DNS rebinding; strict CSP, no CORS. Theme, Home, screensaver,
+  plugins, Home Assistant (the token is written, never read back), agents, and app tokens. One list of settings for
+  the page, app tokens (`GET/PATCH /v1/settings`, `/v1/settings/schema`) and MCP (`tv_settings_get`,
+  `tv_settings_set`): a request with one bad value changes nothing.
+- **The agent skill from the TV** (#161): Settings › Grok Bot & AI › Get the agent skill shows the skills page as a
+  QR, pinned to the installed version; "this TV" adds the TV's LAN address in the fragment (`#tv=…`, not sent to
+  GitHub), never a token. `tv_skill_qr` and `tv_open` `skill`; `tools/skills-tarball.sh` packs the skills for a
+  release. The `skill` preset of the `qr` widget shows the same page.
+- **Native Home details for a paired Mac** (#164, PR #165 by Chris OHearn, thank you): the PC widget can show
+  extra details, a new *omarchy · mac* widget shows the Mac's CPU / RAM and details, and AI credits move under the
+  terminal at its width, with every account row (no more five-row cut) and scrolling when they do not fit. All from
+  the reserved panes `native-pc-details`, `native-mac` and `native-ai` of the existing cached panes feed (no new
+  endpoint or poller); those panes no longer also show in the lower row. The right-hand widgets scroll when they
+  overflow. `homeWidgets.grokbot: false` hides the Grok Bot tile on Home (default on). Details:
+  [docs/native-home-details.md](docs/native-home-details.md). Not taken from the PR: the date stamp in the bar.
+- **`omarchy-link watch --only-fail`** (alias `--quiet-ok`): green runs stay off the TV, only failures show (as an
+  alert, spoken with `--speak`). The exit code is passed through as before. The GitHub Actions example has a
+  commented `if:` line that does the same for CI. Asked on X.
+- **Filter agent messages with the remote** (Android TV): Settings › Grok Bot & AI › *Which agent messages show*:
+  all, warnings and alerts, or alerts only, plus *Tones and voice for agent messages* on/off (until now only in the
+  config file). A message below the level is dropped and the sender gets `200 {"filtered": true}`, not an error;
+  `omarchy-link notify` prints a one-line hint. Strings in all 23 languages. Asked on X.
+- **Approvals read aloud**: `omarchy-link agents approvals on --speak` makes the TV say who asks, the project, the
+  tool and the whole command (up to 300 characters; the screen still shows the first ~110) before you press anything.
+  `omarchy-link ask --speak`, `POST /v1/ask` `speak`/`say` and the MCP `tv_ask_user` `speak` do the same for any
+  question. Silent when *Tones and voice for agent messages* is off. Asked on X.
+- **The whole command on screen**: approvals now show the full command (or path, URL) in a box under the short
+  question, up to 2000 characters and 40 lines, indentation kept. ↑ from the buttons focuses it, ↑ / ↓ scroll. Any
+  question can carry it: `detail` in `POST /v1/ask` and MCP `tv_ask_user`, `omarchy-link ask --detail`. Asked on X.
+- **A reflex OK never approves** (safety fix, found on X): the focus used to start on *Allow*, so an OK meant for the
+  film approved. Now it starts on *On the PC* for Claude Code's approvals and never on Allow / Yes / OK / Approve for
+  other questions, and OK is ignored for 1.5 s after a question appears.
+- **The diff for file changes**: when Claude Code wants to edit or write a file (Edit, MultiEdit, Write), the box
+  shows the path and the diff, `+` lines in the theme's green and `-` lines in its red. Read aloud it says only the
+  file and the size ("app.py: 2 lines added, 1 removed. The diff is on screen."). Asked on X.
+- **The owner decides how loud each agent may be**: `omarchy-link token add NAME --max-level info|warn` and
+  `omarchy-link token level ID LEVEL`. The TV lowers a notification above the token's level, drops its voice and
+  answers `capped`, for `POST /v1/notify` and MCP `tv_notify` alike (which now also always uses the token's name as
+  the sender). The paired PC is never capped. Asked on X ("letting Claude pick its own severity would cry wolf").
+  The PC's own MCP server does the same: `omarchy-tv mcp --max-level info|warn` (default `warn` through a tunnel,
+  `alert` on the LAN or tailnet), since its calls reach the TV as the paired PC.
+- **Risky requests are never approved from the couch** (asked on X): the PC sorts each Claude Code request; deletes,
+  pushes (force push named apart), `git reset --hard`, `sudo`, `curl | sh`, disk writes, dropped data, `chmod 777`,
+  shutdowns, publishing, infrastructure changes, and edits to secrets, system files or `.git/` reach the TV with a red
+  frame, the reason ("⚠ deletes files") and only *Deny* / *On the PC*, and the voice starts with "Risky". The TV
+  enforces it too (`risk` in `POST /v1/ask` removes every answer that approves), and the hook ignores an Allow for a
+  risky request whatever comes back. Routine requests keep the one-press Allow.
+- **One chatty agent never drowns out a red build** (asked on X): the TV's notification rate limit counted per PC;
+  now it counts per sender (3 info / warn per 10 s each) and alerts have their own allowance (10 per 10 s per
+  sender). Each token can also have its own floor: `token add --min-level warn`, `token floor ID LEVEL`
+  (`minLevel`), next to the global one on the remote.
+- **Nothing stays authed after the TV is gone** (found on X): `omarchy-link forget-tv [--dry-run] [--yes]` revokes
+  the TV's app tokens, unpairs, removes the omarchytv MCP server from Claude Code (`claude mcp remove`), Codex and
+  Hermes, every omarchy-link hook in Claude Code's settings, the Omarchy hook pack, the Tailscale switch and the PC
+  MCP server's bearer token, backing up each config it edits, and says what is left (the tailnet node). App tokens
+  now **expire** after 90 days without use (`token add --expire-days N`, 0 = never; tokens from 2.21 get 90).
+
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 
 Built on the published 2.20.0. The theme of this version: **OmarchyTV as the screen of your agents and dashboards**,

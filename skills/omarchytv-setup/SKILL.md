@@ -67,7 +67,9 @@ omarchy-link status
 ```
 
 The code never crosses the network (SPAKE2). If `discover` finds nothing, ask for the address shown on the TV and
-pass it to `pair`.
+pass it to `pair`. If the owner gave you this skill from the QR on the TV (Settings › Grok Bot & AI › Get the agent
+skill · this TV), the link ends with `#tv=192.168.1.40:47800`: that is the TV's address. It is never a code or a
+token; still ask the owner for the 6-digit code.
 
 ## 4. Turn on agent messages (on the TV)
 
@@ -105,13 +107,31 @@ Pick the agent you are running in. Ask before editing its config.
 The agent usually needs a restart to see new MCP servers. Then check: `tv_status` answers, and `tv_notify` puts a
 line on the TV.
 
+On an Android TV with 2.22 or later, tell the owner what else they can try (only what they ask for):
+
+- **AI LIVE**: `omarchy-link agents on` and the TV's Settings › Grok Bot & AI › AI LIVE show their agents at work
+  like a broadcast; an agent can add a line and a preview with `tv_live_update`.
+- **Night shift**: "start a night shift with these tasks until 7, wake me at 7:30" → `tv_shift_start`; then
+  `tv_shift_log` for each step and `tv_shift_queue` for anything risky (never push, merge, post or pay at night).
+- **Skills**: `tv_skill_list`, and `tv_skill_install` to ask the owner on the TV (Night shift, Homelab, Movie night).
+- **Morning briefing**: at the end of a night shift (or when asked), `tv_briefing_set` with short sections
+  (Overnight, Today, Waiting for you) and a `say` text; `wake` "07:30" puts it on air then.
+- **Debate**: `tv_debate_start {topic}`, then every agent answers with `tv_debate_post`; the owner picks on the TV,
+  read it with `tv_debate_result`.
+- **Televideo AI**: `tv_teletext_publish {page: 101-899, title, lines}` for a status page the owner can call up by
+  number (e.g. 101 builds, 200 the homelab, 300 the house); keep lines ≤40 characters.
+- **Guide**: before a long job, `tv_guide_add {title, start, end}`; then `tv_guide_update {id, state}` (on_air, done,
+  failed) so the owner sees it on the TV's schedule.
+- **Scenes** (Android TV): "movie night" → `tv_scene_save {name, steps}` (the owner approves on the TV), then
+  `tv_scene_run {name}`. Use only the tools the scene allows; check `tv_scene_result`.
+
 ## 6. An agent on another machine (LAN or tailnet)
 
 On the paired PC, make a token for that machine. `--remote` prints the exact lines to run there (a curl test and the
 `claude mcp add --transport http …` command with the TV's address and the token):
 
 ```sh
-omarchy-link token add "NAS" --scope notify --remote
+omarchy-link token add "NAS" --scope notify --remote          # 2.22: add --max-level warn so it can never alert
 omarchy-link token list
 omarchy-link token revoke ID          # when that machine no longer needs it
 ```
@@ -142,4 +162,5 @@ docs/RASPBERRY-PI.md and docs/TAILSCALE.md. Show the owner those guides instead 
 | Anything else | `omarchy-link tv diagnostics` and `omarchy-link tv logs` (no secrets inside); full guide: docs/REMOTE-AND-AI-GUIDE.md |
 
 When everything works, tell the owner in one or two lines what is connected, which scope the agent has, and how to
-undo it (`claude mcp remove omarchytv`, `omarchy-link token revoke ID`, `omarchy-link unpair`).
+undo it (`claude mcp remove omarchytv`, `omarchy-link token revoke ID`, `omarchy-link unpair`; from 2.22
+`omarchy-link forget-tv` undoes all of it at once).

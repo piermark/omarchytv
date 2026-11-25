@@ -23,6 +23,30 @@ TOOL_SCOPE = {
     "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control", "tv_radio": "control",
     "tv_open": "control", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_room_post": "notify", "tv_remind": "notify",
+    # v2.22 #157 Home widgets: content updates need notify, everything that changes the layout control
+    "tv_widget_types": "read", "tv_widget_list": "read", "tv_widget_update": "notify",
+    "tv_widget_create": "control", "tv_widget_move": "control", "tv_widget_delete": "control",
+    # v2.22 #158 / #159 Home widget pages
+    "tv_page_list": "read", "tv_page_current": "read", "tv_page_create": "control", "tv_page_rename": "control",
+    "tv_page_reorder": "control", "tv_page_delete": "control", "tv_page_show": "control",
+    # v2.22 #160 Home Assistant through the TV (the token stays on the TV)
+    "tv_ha_status": "read", "tv_ha_list": "read", "tv_ha_run": "control",
+    # v2.22 #162 the radio's stations and sleep timer
+    "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
+    "tv_radio_sleep": "control",
+    "tv_skill_qr": "control",   # v2.22 #161
+    "tv_settings_get": "read", "tv_settings_set": "control",   # v2.22 #163
+    "tv_live_update": "notify", "tv_live": "read",   # v2.22 AI LIVE
+    "tv_skill_list": "read", "tv_skill_install": "control", "tv_skill_remove": "control",   # v2.22 skills
+    # v2.22 the studio: the morning briefing, the agents' debate, the AI's scenes
+    "tv_briefing_set": "notify", "tv_briefing_show": "control",
+    "tv_teletext_publish": "notify", "tv_teletext_list": "read", "tv_teletext_remove": "control",   # v2.22 Televideo AI
+    "tv_guide": "read", "tv_guide_add": "notify", "tv_guide_update": "notify",   # v2.22 the agents' Guide
+    "tv_debate_start": "notify", "tv_debate_post": "notify", "tv_debate_result": "notify",
+    "tv_scene_run": "control", "tv_scene_save": "control", "tv_scene_list": "read", "tv_scene_result": "control",
+    # v2.22 the night shift
+    "tv_shift_start": "control", "tv_shift_end": "control", "tv_shift_status": "read",
+    "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
 }
 
 # v2.21 tools this PC answers itself (they push to the TV with the link it already has)

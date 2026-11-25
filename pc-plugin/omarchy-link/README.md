@@ -78,14 +78,15 @@ New in OmarchyTV 2.21 (the TV needs **AI agent alerts while you watch** on for n
 
 ```bash
 omarchy-link notify "Tests green" --from "Claude Code" [--level warn|alert] [--speak] [--title T] [--quiet]
-omarchy-link watch -- make release          # ✓ / ✗ on the TV when it ends
+omarchy-link watch -- make release          # ✓ / ✗ on the TV when it ends [--speak] [--only-fail]
 omarchy-link ask "Merge?" --choice Merge --choice Wait [--timeout 120]
 omarchy-link page URL [URL…] | --close      # LAN / tailnet pages full screen, up to 4 tiled
 omarchy-link pages add ID NAME URL [--icon H] [--badge N] | badge ID N | show ID | remove ID
 omarchy-link radio [now|play|pause|next|previous|stop]; omarchy-link open radiomarchy|cinemarchy|arcade|office|home
-omarchy-link token add NAME --scope read|notify|control [--remote] | list | revoke ID
+omarchy-link token add NAME --scope read|notify|control [--max-level info|warn] [--min-level warn|alert] [--expire-days N] [--remote] | list | level ID MAX | floor ID MIN | revoke ID
+omarchy-link forget-tv [--dry-run] [--yes]   # 2.22: the TV is leaving: revoke its tokens, unpair, undo the agent setup here
 omarchy-link mcp [--scope notify]           # claude mcp add omarchytv -- omarchy-link mcp
-omarchy-link agents approvals on|off        # Claude Code's permission prompts on the TV
+omarchy-link agents approvals on|off [--speak]   # Claude Code's permission prompts on the TV (2.22: read aloud)
 omarchy-link hook add [all|theme-set post-boot post-update battery-low font-set] | remove | list
 omarchy-link remind 20m TEXT | list | cancel ID
 omarchy-link room post NAME TEXT [--from WHO] | clear NAME | list

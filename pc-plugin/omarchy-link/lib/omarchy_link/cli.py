@@ -139,6 +139,63 @@ def cmd_unpair(a, cfg):
     return 0
 
 
+def cmd_forget_tv(a, cfg):
+    """v2.22 the TV is leaving: revoke its app tokens, unpair, and undo this PC's agent setup (see decommission.py)."""
+    from . import decommission, hookpack
+    p = config.Pairing.load()
+    steps = []
+    if p.paired:
+        steps.append("on the TV: revoke every app token, then unpair this PC")
+    steps += decommission.plan()
+    hooks_on = hookpack.installed()
+    if hooks_on:
+        steps.append("the Omarchy hook pack (" + ", ".join(hooks_on) + ")")
+    if cfg.get("tailscale") is True:
+        steps.append("Omarchy Link over Tailscale: off")
+    if not steps:
+        print("Nothing to forget: no pairing, no agent setup, no hooks.")
+        return 0
+    print("omarchy-link forget-tv will:")
+    for s in steps:
+        print("  - " + s)
+    if a.dry_run:
+        return 0
+    if not a.yes:
+        if not sys.stdin.isatty():
+            print("Run it again with --yes to go ahead.", file=sys.stderr)
+            return 2
+        if input("Go ahead? [y/N] ").strip().lower() not in ("y", "yes"):
+            print("Nothing changed.")
+            return 1
+    done = []
+    if p.paired:
+        try:
+            c = link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets"))
+            apps = c.request("GET", "/v1/tokens").get("apps", [])
+            for x in apps:
+                c.request("DELETE", "/v1/tokens/" + x["id"])
+            done.append(f"TV: {len(apps)} app token(s) revoked")
+            c.unpair()
+            done.append("TV: this PC unpaired")
+        except (link.LinkError, ValueError, OSError) as e:
+            done.append(f"TV not reached ({e}): on the TV, Settings > Connect Omarchy Linux > forget this PC and "
+                        "revoke the app tokens, or reset OmarchyTV (tokens live only there)")
+        p.forget()
+        done.append("this PC: pairing forgotten")
+    done += decommission.clean_pc()
+    if hooks_on:
+        hookpack.remove(hookpack.EVENTS)
+        done.append("Omarchy hook pack removed")
+    if cfg.get("tailscale") is True:
+        config.save_config({"tailscale": False})
+        done.append("Omarchy Link over Tailscale: off")
+    for d in done:
+        print("✓ " + d)
+    print("Left for you: remove the TV from your tailnet in the Tailscale admin console (login.tailscale.com/admin/machines), "
+          "and delete any omarchytv skill folders you copied (~/.claude/skills, ~/.hermes/skills) if you no longer want them.")
+    return 0
+
+
 def waybar(state: dict) -> dict:
     if not state.get("paired"):
         return {"text": "󰔂", "tooltip": "OmarchyTV: not paired (omarchy-link pair)", "class": "unpaired", "alt": "unpaired"}
@@ -204,7 +261,7 @@ def cmd_watch(a, cfg):
     if argv[:1] == ["--"]:
         argv = argv[1:]
     if not argv:
-        print("omarchy-link watch [--speak] -- COMMAND …", file=sys.stderr)
+        print("omarchy-link watch [--speak] [--only-fail] -- COMMAND …", file=sys.stderr)
         return 2
     t0 = _t.monotonic()
     last = ""
@@ -218,6 +275,8 @@ def cmd_watch(a, cfg):
         if line.strip():
             last = line.strip()
     rc = p.wait()
+    if rc == 0 and getattr(a, "only_fail", False):
+        return 0  # v2.22: --only-fail keeps green runs off the TV
     secs = int(_t.monotonic() - t0)
     took = f"{secs // 60}m{secs % 60:02d}s" if secs >= 60 else f"{secs}s"
     name = " ".join(argv)[:50]
@@ -248,6 +307,9 @@ def cmd_notify(a, cfg):
                                    "from": (a.source or "PC")[:40]}, timeout=4)
         if r.get("deferred") and not a.quiet:
             print("held: shown when the TV is back on Home (use --level warn to show it now)", file=sys.stderr)
+        if r.get("filtered") and not a.quiet:   # v2.22: below the level picked on the TV with the remote
+            print("filtered: the TV shows only higher levels (Settings > Grok Bot & AI > Which agent messages show)",
+                  file=sys.stderr)
         return 0
     except (link.LinkError, OSError, ValueError) as e:
         off = _alerts_off(e)
@@ -288,15 +350,38 @@ def cmd_token(a, cfg):
         if not a.name:
             print("omarchy-link token add NAME [--scope read|notify|control]", file=sys.stderr)
             return 2
-        r = _call(cfg, "POST", "/v1/tokens", {"name": " ".join(a.name), "scope": a.scope})
+        body = {"name": " ".join(a.name), "scope": a.scope}
+        if a.max_level:
+            body["maxLevel"] = a.max_level   # v2.22: higher levels from this app are lowered on the TV
+        if a.min_level:
+            body["minLevel"] = a.min_level   # v2.22: this app's own floor; lower levels are dropped on the TV
+        if a.expire_days is not None:
+            body["expireDays"] = a.expire_days   # v2.22: days without use before the TV drops it (0 = never)
+        r = _call(cfg, "POST", "/v1/tokens", body)
         if a.json:
             print(json.dumps(r, indent=2))
         else:
-            print(f"{r['name']} ({r['scope']}), id {r['id']}")
+            cap = f", at most {r['maxLevel']}" if r.get("maxLevel", "alert") != "alert" else ""
+            cap += f", at least {r['minLevel']}" if r.get("minLevel", "info") != "info" else ""
+            ed = r.get("expireDays")
+            exp = "" if ed is None else (", never expires" if ed == 0 else f", expires after {ed} days unused")
+            print(f"{r['name']} ({r['scope']}{cap}{exp}), id {r['id']}")
             print(r["token"])
             print("Shown once: keep it in your app's settings. Revoke: omarchy-link token revoke " + r["id"], file=sys.stderr)
             if a.remote:
                 print(remote_setup(cfg, r["token"]))
+        return 0
+    if a.action in ("level", "floor"):   # v2.22: token level ID MAX (ceiling) | token floor ID MIN
+        if len(a.name) != 2 or a.name[1] not in ("info", "warn", "alert"):
+            print(f"omarchy-link token {a.action} ID info|warn|alert", file=sys.stderr)
+            return 2
+        key = "maxLevel" if a.action == "level" else "minLevel"
+        try:
+            _call(cfg, "PUT", "/v1/tokens/" + a.name[0], {key: a.name[1]})
+        except link.LinkError as e:
+            print(f"omarchy-link token {a.action}: {e}", file=sys.stderr)
+            return 1
+        print(f"{a.name[0]}: " + (f"at most {a.name[1]}" if a.action == "level" else f"at least {a.name[1]}"))
         return 0
     if a.action == "revoke":
         if not a.name:
@@ -312,7 +397,9 @@ def cmd_token(a, cfg):
     if not r.get("apps"):
         print("No app tokens. Add one: omarchy-link token add \"My dashboard\" --scope read")
     for x in r.get("apps", []):
-        print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}")
+        lvl, low = x.get("maxLevel", "alert"), x.get("minLevel", "info")
+        notes = ([f"at least {low}"] if low != "info" else []) + ([f"at most {lvl}"] if lvl != "alert" else [])
+        print(f"{x['id']}\t{x['scope']:<8}\t{x['name']}" + (f"\t({', '.join(notes)})" if notes else ""))
     return 0
 
 
@@ -363,8 +450,12 @@ def cmd_ask(a, cfg):
         print("omarchy-link ask \"Deploy now?\" [--choice Yes --choice No] [--timeout 120]", file=sys.stderr)
         return 2
     try:
-        r = _call(cfg, "POST", "/v1/ask", {"question": q, "choices": a.choice or [], "timeout": a.timeout,
-                                           "from": (a.source or "PC")[:40]})
+        body = {"question": q, "choices": a.choice or [], "timeout": a.timeout, "from": (a.source or "PC")[:40]}
+        if getattr(a, "speak", False):
+            body["speak"] = True   # v2.22: the TV reads the question aloud first
+        if getattr(a, "detail", None):
+            body["detail"] = a.detail[:2000]   # v2.22: full text under the question, scrollable
+        r = _call(cfg, "POST", "/v1/ask", body)
     except link.LinkError as e:
         if getattr(e, "code", "") in NOT_REACHABLE:
             print(NOT_REACHABLE_HINT, file=sys.stderr)
@@ -1143,7 +1234,7 @@ def cmd_agents(a, cfg):
             p = config.Pairing.load()
             if p.paired:
                 c = link.Client(p.tv, p.pc_id, not cfg.get("allowOtherSubnets"))
-                out = permission.decide(payload, permission.tv_ask(c))
+                out = permission.decide(payload, permission.tv_ask(c, speak=bool(a.speak)))
                 if out:
                     print(json.dumps(out))
         except Exception:
@@ -1152,14 +1243,15 @@ def cmd_agents(a, cfg):
     if act == "approvals":   # v2.21 approve Claude Code's permission prompts on the TV
         from .agents import permission
         if (a.args or ["status"])[0] == "on":
-            f = permission.install(_exe())
+            f = permission.install(_exe(), speak=bool(a.speak))
             print(f"Claude Code asks the TV before its own prompt ({f}; backup next to it). "
-                  "Allow / Deny / On the PC; no answer = the usual prompt.")
+                  "Allow / Deny / On the PC; no answer = the usual prompt."
+                  + (" The TV reads each request aloud first." if a.speak else ""))
         elif a.args and a.args[0] == "off":
             print("Removed." if permission.remove() else "Was not on.")
         else:
-            on = permission.MARK in agent_ask.claude_settings().read_text() if agent_ask.claude_settings().exists() else False
-            print("on" if on else "off")
+            txt = agent_ask.claude_settings().read_text() if agent_ask.claude_settings().exists() else ""
+            print(("on, read aloud" if permission.MARK + " --speak" in txt else "on") if permission.MARK in txt else "off")
         return 0
     if act == "approve":
         ok = bool(a.args) and agent_ask.approve(a.args[0])
@@ -1337,16 +1429,28 @@ def main(argv=None) -> int:
     s.add_argument("--speak", action="store_true", help="also read it aloud on the TV")
     s.add_argument("--quiet", "-q", action="store_true", help="never fail (for hooks)")
     s.set_defaults(fn=cmd_notify)
+    s = sub.add_parser("forget-tv", help="2.22: the TV is leaving: revoke its tokens, unpair, undo the agent setup on this PC")
+    s.add_argument("--yes", action="store_true", help="do not ask")
+    s.add_argument("--dry-run", action="store_true", help="only list what would change")
+    s.set_defaults(fn=cmd_forget_tv)
     s = sub.add_parser("token", help="app tokens for dashboards and agents: list | add NAME --scope | revoke ID")
-    s.add_argument("action", nargs="?", choices=["list", "add", "revoke"], default="list")
+    s.add_argument("action", nargs="?", choices=["list", "add", "revoke", "level", "floor"], default="list")
     s.add_argument("name", nargs="*")
     s.add_argument("--scope", choices=["read", "notify", "control"], default="read")
+    s.add_argument("--min-level", choices=["info", "warn", "alert"],
+                   help="2.22: this app's own floor; the TV drops anything below it")
+    s.add_argument("--expire-days", type=int, metavar="N",
+                   help="2.22: the TV drops the token after N days without use (default 90; 0 = never)")
+    s.add_argument("--max-level", choices=["info", "warn", "alert"],
+                   help="2.22: the highest notification level this app may use; the TV lowers anything above it")
     s.add_argument("--remote", action="store_true", help="also print the setup for a machine on your tailnet")
     s.add_argument("--json", action="store_true")
     s.set_defaults(fn=cmd_token)
     s = sub.add_parser("watch", help="run a command, then tell the TV how it went (✓ / ✗, time, last line)")
     s.add_argument("--from", dest="source")
     s.add_argument("--speak", action="store_true")
+    s.add_argument("--only-fail", "--quiet-ok", dest="only_fail", action="store_true",
+                   help="tell the TV only when the command fails")
     s.add_argument("argv", nargs=argparse.REMAINDER)
     s.set_defaults(fn=cmd_watch)
     s = sub.add_parser("ask", help="ask the person at the TV, print the answer (agent hooks, scripts)")
@@ -1354,6 +1458,8 @@ def main(argv=None) -> int:
     s.add_argument("--choice", action="append", help="an answer (up to 4; default Yes / No)")
     s.add_argument("--timeout", type=int, default=120)
     s.add_argument("--from", dest="source")
+    s.add_argument("--speak", action="store_true", help="the TV reads the question aloud (2.22)")
+    s.add_argument("--detail", help="full text shown under the question, e.g. the whole command (2.22, 2000 chars, 40 lines)")
     s.set_defaults(fn=cmd_ask)
     s = sub.add_parser("page", help="open a LAN / tailnet page full screen on the TV, or up to 4 tiled (or --close)")
     s.add_argument("url", nargs="*")
@@ -1510,6 +1616,7 @@ def main(argv=None) -> int:
                    choices=["list", "preview", "enable", "disable", "hooks", "hook", "approve", "approvals", "permission"])
     s.add_argument("args", nargs="*")
     s.add_argument("--json", action="store_true")
+    s.add_argument("--speak", action="store_true", help="approvals on --speak: the TV reads each request aloud (2.22)")
     s.set_defaults(fn=cmd_agents)
     s = sub.add_parser("prompt", help="the TV home prompt user@host (sent with the theme)")
     s.add_argument("action", choices=["set", "show", "clear"])

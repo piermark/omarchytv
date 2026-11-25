@@ -25,9 +25,17 @@ import java.util.List;
  */
 public class AgentQuestionActivity extends Activity {
     static final String EXTRA_ID = "id", EXTRA_FROM = "from", EXTRA_Q = "q", EXTRA_DEADLINE = "deadline", EXTRA_CHOICES = "choices";
+    /** v2.22: the full text under the question (the whole command), in a box you scroll with the remote. */
+    static final String EXTRA_DETAIL = "detail";
+    /** v2.22: why the request is risky: a red frame and a red "⚠ risky" line; the remote never offers a yes. */
+    static final String EXTRA_RISK = "risk";
 
     private final Handler h = new Handler(Looper.getMainLooper());
     private String id;
+    /** v2.22: OK is ignored this long after a question appears, so a press meant for the film answers nothing. */
+    static final long OK_GUARD_MS = 1500;
+    static final String EXTRA_PREVIEW = "preview";   // v2.22 #3: JSON of LiveFeed.preview
+    private long shownAt;
 
     static Intent intent(Context c, String id, String from, String question, List<String> choices, long deadline) {
         return new Intent(c, AgentQuestionActivity.class)
@@ -73,8 +81,19 @@ public class AgentQuestionActivity extends Activity {
         card.setPadding(pad, pad, pad, pad);
         GradientDrawable box = new GradientDrawable();
         box.setColor(t.bgDark);
-        box.setStroke((int) dp(2), t.accent);
+        String risk = i.getStringExtra(EXTRA_RISK);
+        boolean risky = risk != null && !risk.isEmpty();
+        box.setStroke((int) dp(risky ? 4 : 2), risky ? t.red : t.accent);
         card.setBackground(box);
+        if (risky) {
+            TextView warn = new TextView(this);
+            warn.setText("⚠ " + risk);
+            warn.setTextColor(t.red);
+            warn.setTypeface(CastUi.font(this), android.graphics.Typeface.BOLD);
+            warn.setTextSize(TypedValue.COMPLEX_UNIT_SP, 18);
+            warn.setPadding(0, 0, 0, (int) dp(8));
+            card.addView(warn);
+        }
         TextView who = new TextView(this);
         who.setText("● " + (from == null || from.isEmpty() ? "PC" : from) + " " + getString(R.string.agentq_asks));
         who.setTextColor(t.accent);
@@ -88,10 +107,70 @@ public class AgentQuestionActivity extends Activity {
         text.setTextSize(TypedValue.COMPLEX_UNIT_SP, 24);
         text.setPadding(0, (int) dp(12), 0, (int) dp(20));
         card.addView(text);
+        String detail = i.getStringExtra(EXTRA_DETAIL);
+        // v2.22 #3 see the work before you approve it: the agent's preview (an image, or a diff / text as the detail)
+        org.json.JSONObject pv = null;
+        try {
+            String ps = i.getStringExtra(EXTRA_PREVIEW);
+            if (ps != null && !ps.isEmpty()) pv = new org.json.JSONObject(ps);
+        } catch (org.json.JSONException ignored) {
+        }
+        if (pv != null && ("diff".equals(pv.optString("kind")) || "text".equals(pv.optString("kind"))) && (detail == null || detail.isEmpty())) {
+            detail = pv.optString("text");
+        }
+        if (pv != null && "image".equals(pv.optString("kind"))) {
+            android.widget.ImageView iv = new android.widget.ImageView(this);
+            iv.setScaleType(android.widget.ImageView.ScaleType.FIT_CENTER);
+            iv.setAdjustViewBounds(true);
+            int maxW = (int) (getResources().getDisplayMetrics().widthPixels * 0.5f), maxH = (int) (getResources().getDisplayMetrics().heightPixels * 0.34f);
+            iv.setMaxHeight(maxH);
+            LinearLayout.LayoutParams il = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            il.bottomMargin = (int) dp(16);
+            card.addView(iv, il);
+            String url = pv.optString("url");
+            new Thread(() -> {
+                android.graphics.Bitmap bm = WidgetGrid.fetch(url, maxW, maxH);
+                if (bm != null) iv.post(() -> iv.setImageBitmap(bm));
+            }, "ask-preview").start();
+        }
+        if (detail != null && !detail.isEmpty()) {   // v2.22: ↑ from the buttons to focus it, ↑ / ↓ to scroll
+            android.widget.ScrollView sv = new android.widget.ScrollView(this);
+            sv.setFocusable(true);
+            GradientDrawable sb = new GradientDrawable();
+            sb.setColor(t.bg);
+            sb.setStroke((int) dp(1), t.muted);
+            sv.setBackground(sb);
+            sv.setOnFocusChangeListener((v, f) -> sb.setStroke((int) dp(f ? 2 : 1), f ? t.accent : t.muted));
+            TextView dt = new TextView(this);
+            dt.setText(coloured(detail, t.green, t.red));   // a diff: "+ " lines green, "- " lines red
+            dt.setTextColor(t.fg);
+            dt.setTypeface(android.graphics.Typeface.MONOSPACE);
+            dt.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+            int dp12 = (int) dp(12);
+            dt.setPadding(dp12, dp12, dp12, dp12);
+            sv.addView(dt);
+            LinearLayout.LayoutParams dl = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            dl.bottomMargin = (int) dp(20);
+            card.addView(sv, dl);
+            int maxH = (int) (getResources().getDisplayMetrics().heightPixels * 0.42f);
+            sv.post(() -> {
+                if (sv.getHeight() > maxH) {
+                    sv.getLayoutParams().height = maxH;
+                    sv.requestLayout();
+                }
+            });
+        }
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         List<Button> buttons = new ArrayList<>();
-        for (String c : choices) {
+        List<String> shown = new ArrayList<>();
+        for (String c : choices) if (!(risky && com.omarchytv.home.link.AppTokens.sayYes(c))) shown.add(c);   // no yes if risky
+        if (shown.isEmpty()) {
+            finish();
+            return;
+        }
+        for (String c : shown) {
             Button bt = new Button(this);
             bt.setText(c);
             bt.setAllCaps(false);
@@ -106,7 +185,9 @@ public class AgentQuestionActivity extends Activity {
                 bg.setStroke((int) dp(2), f ? t.accent : t.muted);
                 bt.setTextColor(f ? t.fgBright : t.fg);
             });
-            bt.setOnClickListener(v -> answer(c));
+            bt.setOnClickListener(v -> {
+                if (android.os.SystemClock.uptimeMillis() - shownAt >= OK_GUARD_MS) answer(c);
+            });
             LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, (int) dp(52));
             lp.setMarginEnd((int) dp(14));
             bt.setPadding((int) dp(22), 0, (int) dp(22), 0);
@@ -125,7 +206,8 @@ public class AgentQuestionActivity extends Activity {
                 LinearLayout.LayoutParams.WRAP_CONTENT);
         root.addView(card, cp);
         setContentView(root);
-        buttons.get(0).requestFocus();
+        buttons.get(startFocus(shown)).requestFocus();
+        shownAt = android.os.SystemClock.uptimeMillis();
         h.removeCallbacksAndMessages(null);
         h.postDelayed(this::finish, Math.max(0, deadline - System.currentTimeMillis()));
     }
@@ -148,6 +230,35 @@ public class AgentQuestionActivity extends Activity {
     protected void onDestroy() {
         h.removeCallbacksAndMessages(null);
         super.onDestroy();
+    }
+
+    /**
+     * v2.22: where the focus starts. Never on an answer that says yes: "On the PC" when there is one (Claude Code's
+     * approvals), else the first answer that is not Allow / Yes / OK, else the first one.
+     */
+    static int startFocus(List<String> choices) {
+        int pc = choices.indexOf("On the PC");
+        if (pc >= 0) return pc;
+        for (int i = 0; i < choices.size(); i++) {
+            String c = choices.get(i).trim().toLowerCase(java.util.Locale.ROOT);
+            if (!c.equals("allow") && !c.equals("yes") && !c.equals("ok") && !c.startsWith("approve")) return i;
+        }
+        return 0;
+    }
+
+    /** v2.22: the detail with "+ " lines in the theme's green and "- " lines in its red (diffs); other text as is. */
+    static CharSequence coloured(String detail, int plus, int minus) {
+        android.text.SpannableStringBuilder sb = new android.text.SpannableStringBuilder(detail);
+        int start = 0;
+        for (String line : detail.split("\n", -1)) {
+            int end = start + line.length();
+            if (line.startsWith("+ ") || line.startsWith("- ")) {
+                sb.setSpan(new android.text.style.ForegroundColorSpan(line.charAt(0) == '+' ? plus : minus), start, end,
+                        android.text.Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            start = end + 1;
+        }
+        return sb;
     }
 
     /** For tests: the choices as given. */

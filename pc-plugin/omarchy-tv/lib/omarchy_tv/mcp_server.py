@@ -136,6 +136,8 @@ ALLOWED_TOOLS = (
                 "timeout": {"type": "integer", "description": "Seconds the question stays on the TV (10-300, default 120)"},
                 "wait": {"type": "integer", "description": "Seconds to wait here for the answer (0-90, default 60)"},
                 "from": {"type": "string", "description": "Who asks, e.g. Claude Code"},
+                "speak": {"type": "boolean", "description": "Also read the question aloud (silent when the TV's tones and voice are off)"},
+                "detail": {"type": "string", "description": "The full text to read before answering, e.g. the whole command (2000 characters, 40 lines), scrollable on the TV"},
             },
             "required": ["question"],
         },
@@ -165,16 +167,129 @@ ALLOWED_TOOLS = (
     },
     {
         "name": "tv_radio",
-        "description": "Control Radiomarchy: play (resume or start the playlist), pause, next, previous, stop.",
-        "inputSchema": {"type": "object", "properties": {"action": {"type": "string", "enum": ["play", "pause", "next", "previous", "stop"]}},
-                        "required": ["action"]},
+        "description": "Control the radio: play (resume, or a station by name or id from tv_radio_stations), pause, next, "
+                       "previous, stop, volume (0-100, the radio's own).",
+        "inputSchema": {"type": "object", "properties": {
+            "action": {"type": "string", "enum": ["play", "pause", "next", "previous", "stop", "volume"]},
+            "station": {"type": "string"}, "volume": {"type": "integer", "minimum": 0, "maximum": 100}},
+            "required": ["action"]},
     },
+    {"name": "tv_radio_stations", "description": "The radio stations: Omarchy Radio first, then the owner's (favourites first).",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_radio_station_add", "description": "Add an internet radio station (Icecast / Shoutcast, HLS .m3u8, or a .pls / .m3u "
+                                                    "playlist). https://, or http:// on the LAN.",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "url": {"type": "string"},
+                                                      "logo": {"type": "string"}}, "required": ["name", "url"]}},
+    {"name": "tv_radio_station_remove", "description": "Remove a radio station (not Omarchy Radio).",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_radio_sleep", "description": "Stop the radio after some minutes (0 turns the timer off).",
+     "inputSchema": {"type": "object", "properties": {"minutes": {"type": "integer", "minimum": 0, "maximum": 240}},
+                     "required": ["minutes"]}},
     {
         "name": "tv_open",
-        "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade or office.",
-        "inputSchema": {"type": "object", "properties": {"target": {"type": "string", "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office"]}},
+        "description": "Open a part of OmarchyTV on the TV: home, radiomarchy, cinemarchy, arcade, office, skill "
+                       "(the agent skill as a QR), live (AI LIVE), replay (the night shift played back), teletext "
+                       "(Televideo AI) or guide (the agents' Guide). Android TV.",
+        "inputSchema": {"type": "object", "properties": {"target": {"type": "string",
+                                                                    "enum": ["home", "radiomarchy", "cinemarchy", "arcade", "office", "skill",
+                                                                             "live", "replay", "teletext", "guide"]}},
                         "required": ["target"]},
     },
+    {"name": "tv_skill_list", "description": "The skills the TV can install (id, name, author, permissions) and the installed ones "
+                                            "with their instructions for you (agent).", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_skill_install", "description": "Ask the owner to install a skill: the TV shows it with its permissions and the owner "
+                                               "answers with the remote.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_skill_remove", "description": "Remove an installed skill with its widgets and its page.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_live_update", "description": "Tell the TV's AI LIVE channel what you are doing now, like a live broadcast: a short line, "
+                                             "a progress 0-100 and a preview (image URL, diff, text or numbers). The preview also shows "
+                                             "on your next question, so the owner sees the work before approving it.",
+     "inputSchema": {"type": "object", "properties": {"text": {"type": "string"}, "progress": {"type": "integer"},
+                                                      "preview": {"type": "object"}}}},
+    {"name": "tv_live", "description": "The AI LIVE channel: every agent on it and the last events.",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_shift_start", "description": "Start a night shift: the owner's tasks, its end (\"07:00\" or epoch ms, within 16 h) and "
+                                             "when the TV shows the morning page (wake). The TV stays silent; write the diary with "
+                                             "tv_shift_log and leave anything risky for the morning with tv_shift_queue.",
+     "inputSchema": {"type": "object", "properties": {"tasks": {"type": "array", "items": {"type": "string"}},
+                                                      "until": {"type": "string"}, "wake": {"type": "string"},
+                                                      "replace": {"type": "boolean"}}, "required": ["tasks", "until"]}},
+    {"name": "tv_shift_end", "description": "End the night shift now.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_shift_status", "description": "The night shift: running / ended / none, tasks, end, wake, counts.",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_shift_log", "description": "A line in the night shift's diary: level ok | fail | info, text, optional detail and task index.",
+     "inputSchema": {"type": "object", "properties": {"level": {"type": "string", "enum": ["ok", "fail", "info"]},
+                                                      "text": {"type": "string"}, "detail": {"type": "string"},
+                                                      "task": {"type": "integer"}}, "required": ["text"]}},
+    {"name": "tv_shift_queue", "description": "Leave a risky step (push, merge, post, payment) for the owner's morning instead of doing it. "
+                                             "Returns an id for tv_shift_decision. Only the owner answers, on the TV.",
+     "inputSchema": {"type": "object", "properties": {"title": {"type": "string"}, "detail": {"type": "string"},
+                                                      "risk": {"type": "string"}}, "required": ["title"]}},
+    # v2.22 the studio
+    {"name": "tv_briefing_set", "description": "Prepare the owner's morning briefing: 1-8 sections of short lines (overnight, today, "
+                                             "the weather, what waits) and a text to read aloud. It goes on AI LIVE at the wake time "
+                                             "(\"07:30\") or with tv_briefing_show.",
+     "inputSchema": {"type": "object", "properties": {
+         "title": {"type": "string"}, "say": {"type": "string", "description": "read aloud, ≤1500"},
+         "wake": {"type": "string", "description": "\"07:30\" (optional)"},
+         "sections": {"type": "array", "description": "[{title, lines: [≤8 short strings]}]", "items": {"type": "object"}}},
+         "required": ["sections"]}},
+    {"name": "tv_briefing_show", "description": "Put the morning briefing on AI LIVE now.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_debate_start", "description": "Start a debate on AI LIVE: one question several agents answer side by side; the owner "
+                                             "picks the winner with the remote. Returns its id.",
+     "inputSchema": {"type": "object", "properties": {"topic": {"type": "string"}}, "required": ["topic"]}},
+    {"name": "tv_debate_post", "description": "Post your answer to a debate (≤1200 characters, optional preview); a second post replaces "
+                                            "the first.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "text": {"type": "string"},
+                                                      "preview": {"type": "object"}}, "required": ["id", "text"]}},
+    {"name": "tv_debate_result", "description": "A debate's answers, and the winner once the owner picked one.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_scene_run", "description": "Android TV: run a scene. {name} runs a saved one at once; {steps: [{tool, args}]} asks the "
+                                          "owner on the TV first. Steps use tv_ha_run, tv_launch_app, tv_set_theme, tv_radio, "
+                                          "tv_send_key, tv_open, tv_notify, tv_screensaver, tv_page_show.",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"},
+                                                      "steps": {"type": "array", "items": {"type": "object"}}}}},
+    {"name": "tv_scene_save", "description": "Android TV: save a scene under a name after the owner's OK on the TV.",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"},
+                                                      "steps": {"type": "array", "items": {"type": "object"}}},
+                     "required": ["name", "steps"]}},
+    {"name": "tv_scene_list", "description": "Android TV: the saved scenes and their steps.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_scene_result", "description": "Android TV: the owner's answer to a scene question (pending, ran, saved, denied).",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    # v2.22 Televideo AI and the agents' Guide
+    {"name": "tv_teletext_publish", "description": "Publish a Televideo page on the TV (the teletext of old): page 101-899, a title "
+                                                 "≤32 and up to 22 lines of 40 characters, each a string or {text, color} (white, "
+                                                 "red, green, yellow, blue, magenta, cyan). Page 100 is the index; the owner types the number.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": "integer", "minimum": 101, "maximum": 899},
+                                                      "title": {"type": "string"}, "lines": {"type": "array"}},
+                     "required": ["page", "title", "lines"]}},
+    {"name": "tv_teletext_list", "description": "The Televideo pages (page, title, by, at).", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_teletext_remove", "description": "Remove a Televideo page.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": "integer"}}, "required": ["page"]}},
+    {"name": "tv_guide", "description": "The agents' Guide: your programmes, the night shift and the morning briefing as a TV "
+                                      "schedule, each past, on_air or next.", "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_guide_add", "description": "Put a programme on the Guide: what you will do and when (start \"23:30\" or epoch "
+                                          "ms within 48 h, end ≤16 h later, default 1 h).",
+     "inputSchema": {"type": "object", "properties": {"title": {"type": "string"}, "start": {"type": ["string", "integer"]},
+                                                      "end": {"type": ["string", "integer"]}, "detail": {"type": "string"}},
+                     "required": ["title"]}},
+    {"name": "tv_guide_update", "description": "Say how a programme goes: state on_air, done, failed or cancelled, and a detail.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}, "state": {"type": "string",
+                                                      "enum": ["on_air", "done", "failed", "cancelled"]}, "detail": {"type": "string"}},
+                     "required": ["id", "state"]}},
+    {"name": "tv_shift_decision", "description": "The owner's answer to a queued step: pending, approved or denied.",
+     "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]}},
+    {"name": "tv_settings_get", "description": "The TV's settings (theme, Home, plugins, Home Assistant URL, agents…) as "
+                                              "{values, secrets}; secrets only say whether they are set.",
+     "inputSchema": {"type": "object", "properties": {"section": {"type": "string", "enum": [
+         "appearance", "home", "screensaver", "plugins", "homeassistant", "agents"]}}}},
+    {"name": "tv_settings_set", "description": "Change one TV setting, with the same checks as the web settings page "
+                                              "(e.g. key \"uiSize\", value \"large\").",
+     "inputSchema": {"type": "object", "properties": {"key": {"type": "string"}, "value": {}}, "required": ["key", "value"]}},
+    {"name": "tv_skill_qr", "description": "Show the OmarchyTV agent skill as a QR on the TV, for the owner's phone or "
+                                          "another agent. Only the public URL.",
+     "inputSchema": {"type": "object", "properties": {}}},
     {
         "name": "tv_list_pages",
         "description": "The agent pages published as tiles on the TV's Home.",
@@ -183,7 +298,7 @@ ALLOWED_TOOLS = (
     {
         "name": "tv_publish_page",
         "description": "Publish (or update) a LAN / tailnet page as a tile on the TV's Home: id, name, url, optional "
-                       "one-letter icon and badge count. At most 16.",
+                       "one-letter icon and badge count. At most 200 (16 before 2.22).",
         "inputSchema": {"type": "object", "properties": {
             "id": {"type": "string", "description": "a-z, 0-9, dashes"}, "name": {"type": "string"},
             "url": {"type": "string", "description": "http://<LAN or 100.x address>[:port]/path"},
@@ -199,6 +314,75 @@ ALLOWED_TOOLS = (
         "description": "Remove a published page from the TV's Home.",
         "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
     },
+    # v2.22 #157: positioned, typed widgets on the Home (12 x 6 cells per page); same names and schemas as the TV's MCP
+    {
+        "name": "tv_widget_types",
+        "description": "The Home widget types, the shape of each one's data, the grid (12 x 6 cells per page) and the limits.",
+        "inputSchema": {"type": "object", "properties": {}},
+    },
+    {
+        "name": "tv_widget_list",
+        "description": "The widgets on the TV's Home (one page, or every page) with position and size, and the free cells.",
+        "inputSchema": {"type": "object", "properties": {"page": {"type": "integer", "description": "Page, 1 = the Home"}}},
+    },
+    {
+        "name": "tv_widget_create",
+        "description": "Create a widget on the Home. type: lines, stat, text, image, chart, page, shortcuts, "
+                       "homeassistant.scenes, homeassistant.entities, radio, qr (see tv_widget_types). Without x/y it takes the "
+                       "first free slot; an occupied area answers cell_taken with free slots, unless push is true.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string"}, "type": {"type": "string"}, "page": {"type": "integer"},
+            "x": {"type": "integer"}, "y": {"type": "integer"}, "w": {"type": "integer"}, "h": {"type": "integer"},
+            "title": {"type": "string"}, "icon": {"type": "string"}, "ttl": {"type": "integer"},
+            "data": {"type": "object"}, "push": {"type": "boolean"}}, "required": ["id", "type"]},
+    },
+    {
+        "name": "tv_widget_update",
+        "description": "Change a widget's content (title, icon, ttl, data). Needs only the notify scope.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string"}, "title": {"type": "string"}, "icon": {"type": "string"},
+            "ttl": {"type": "integer"}, "data": {"type": "object"}}, "required": ["id"]},
+    },
+    {
+        "name": "tv_widget_move",
+        "description": "Move or resize a widget (page, x, y, w, h). cell_taken with free slots if the area is not free, "
+                       "unless push is true.",
+        "inputSchema": {"type": "object", "properties": {
+            "id": {"type": "string"}, "page": {"type": "integer"}, "x": {"type": "integer"}, "y": {"type": "integer"},
+            "w": {"type": "integer"}, "h": {"type": "integer"}, "push": {"type": "boolean"}}, "required": ["id"]},
+    },
+    {
+        "name": "tv_widget_delete",
+        "description": "Remove a widget from the Home.",
+        "inputSchema": {"type": "object", "properties": {"id": {"type": "string"}}, "required": ["id"]},
+    },
+    # v2.22 #158 / #159 Home widget pages (tv_list_pages / tv_show_page are the LAN agent pages)
+    {"name": "tv_page_list", "description": "The Home widget pages (index, id, name, widgets, hidden, rotate) and the one on screen.",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_page_current", "description": "The Home widget page on screen now (index 0 = the classic Home).",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_page_create", "description": "Create an empty Home widget page (name, id, after).",
+     "inputSchema": {"type": "object", "properties": {"name": {"type": "string"}, "id": {"type": "string"},
+                                                       "after": {"type": ["integer", "string"]}}}},
+    {"name": "tv_page_rename", "description": "Rename a Home widget page.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]}, "name": {"type": "string"}},
+                     "required": ["page", "name"]}},
+    {"name": "tv_page_reorder", "description": "Move a Home widget page to position 'to' (page 1 stays first).",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]}, "to": {"type": "integer"}},
+                     "required": ["page", "to"]}},
+    {"name": "tv_page_delete", "description": "Remove a Home widget page (not page 1); its widgets go to moveWidgetsTo or away.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]},
+                                                       "moveWidgetsTo": {"type": ["integer", "string"]}}, "required": ["page"]}},
+    {"name": "tv_page_show", "description": "Bring a Home widget page to the screen.",
+     "inputSchema": {"type": "object", "properties": {"page": {"type": ["integer", "string"]}}, "required": ["page"]}},
+    # v2.22 #160 Home Assistant through the TV's own connection (the token never leaves the TV)
+    {"name": "tv_ha_status", "description": "Is Home Assistant set up on the TV and reachable (configured, reachable, version, host).",
+     "inputSchema": {"type": "object", "properties": {}}},
+    {"name": "tv_ha_list", "description": "Home Assistant entities the TV sees: [{entity_id, name, state, unit}], optionally of one "
+                                          "domain (scene, script, light, switch, sensor, …) and matching a query.",
+     "inputSchema": {"type": "object", "properties": {"domain": {"type": "string"}, "query": {"type": "string"}}}},
+    {"name": "tv_ha_run", "description": "Run a scene, script or automation, or toggle a light / switch / fan / input_boolean.",
+     "inputSchema": {"type": "object", "properties": {"entity_id": {"type": "string"}}, "required": ["entity_id"]}},
     {
         "name": "tv_diagnostics",
         "description": "Diagnostics for troubleshooting: launcher version, device, network (LAN, Tailscale), Link, "
@@ -210,13 +394,31 @@ ALLOWED_TOOLS = (
 # v2.21 scopes, as on the TV: read < notify < control. A server reachable from the internet (--tunnel,
 # --cloudflare) defaults to notify: an agent in the cloud can read and talk to you, not drive the TV.
 SCOPES = ("read", "notify", "control")
+WIDGET_CREATE_KEYS = ("id", "type", "page", "x", "y", "w", "h", "title", "icon", "ttl", "data", "push")
 TOOL_SCOPE = {
     "tv_status": "read", "tv_list_themes": "read", "tv_list_apps": "read", "tv_get_theme": "read", "tv_get_state": "read",
     "tv_radio_now": "read", "tv_radio": "control", "tv_open": "control",
+    "tv_radio_stations": "read", "tv_radio_station_add": "control", "tv_radio_station_remove": "control",
+    "tv_radio_sleep": "control", "tv_skill_qr": "control",
+    "tv_settings_get": "read", "tv_settings_set": "control",
+    "tv_shift_start": "control", "tv_shift_end": "control", "tv_shift_status": "read",
+    "tv_shift_log": "notify", "tv_shift_queue": "notify", "tv_shift_decision": "notify",
+    "tv_live_update": "notify", "tv_live": "read",
+    "tv_skill_list": "read", "tv_skill_install": "control", "tv_skill_remove": "control",
+    "tv_teletext_publish": "notify", "tv_teletext_list": "read", "tv_teletext_remove": "control",
+    "tv_guide": "read", "tv_guide_add": "notify", "tv_guide_update": "notify",
+    "tv_briefing_set": "notify", "tv_briefing_show": "control",
+    "tv_debate_start": "notify", "tv_debate_post": "notify", "tv_debate_result": "notify",
+    "tv_scene_run": "control", "tv_scene_save": "control", "tv_scene_list": "read", "tv_scene_result": "control",
     "tv_list_pages": "read", "tv_page_badge": "notify", "tv_publish_page": "control", "tv_remove_page": "control",
     "tv_notify": "notify", "tv_ask_user": "notify", "tv_ask_result": "notify",
     "tv_set_theme": "control", "tv_push_theme": "control", "tv_send_key": "control", "tv_launch_app": "control",
     "tv_screensaver": "control", "tv_show_page": "control", "tv_close_page": "control", "tv_diagnostics": "control",
+    "tv_widget_types": "read", "tv_widget_list": "read", "tv_widget_update": "notify",
+    "tv_widget_create": "control", "tv_widget_move": "control", "tv_widget_delete": "control",
+    "tv_page_list": "read", "tv_page_current": "read", "tv_page_create": "control", "tv_page_rename": "control",
+    "tv_page_reorder": "control", "tv_page_delete": "control", "tv_page_show": "control",
+    "tv_ha_status": "read", "tv_ha_list": "read", "tv_ha_run": "control",
 }
 
 
@@ -239,7 +441,17 @@ def ensure_token(path: Path | None = None) -> str:
     return tok
 
 
-def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
+LEVELS = ("info", "warn", "alert")
+
+
+def default_max_level(public: bool, given: str | None) -> str:
+    """v2.22 the loudest tv_notify level this server passes on: alert locally, warn through the internet."""
+    if given in LEVELS:
+        return given
+    return "warn" if public else "alert"
+
+
+def handle_rpc(req: dict, tv_client, scope: str = "control", max_level: str = "alert") -> dict | None:
     """Process one MCP JSON-RPC 2.0 request dict and return response dict (or None for notifications)."""
     method = req.get("method", "")
     req_id = req.get("id")
@@ -272,7 +484,7 @@ def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
             return {"jsonrpc": "2.0", "id": req_id,
                     "error": {"code": -32601, "message": f"Not allowed on this server (scope {scope}): {name}"}}
         try:
-            out = _call_tool(name, args, tv_client)
+            out = _call_tool(name, args, tv_client, max_level)
             return {
                 "jsonrpc": "2.0",
                 "id": req_id,
@@ -287,7 +499,7 @@ def handle_rpc(req: dict, tv_client, scope: str = "control") -> dict | None:
     return {"jsonrpc": "2.0", "id": req_id, "error": {"code": -32601, "message": f"Method not found: {method}"}}
 
 
-def _call_tool(name: str, args: dict, c) -> dict:
+def _call_tool(name: str, args: dict, c, max_level: str = "alert") -> dict:
     if name == "tv_status":
         return c.status()
     if name == "tv_list_themes":
@@ -314,9 +526,16 @@ def _call_tool(name: str, args: dict, c) -> dict:
         text = str(args.get("text", "")).strip()
         if not text:
             raise ValueError("text is required")
-        level = args.get("level") if args.get("level") in ("info", "warn", "alert") else "info"
-        return c.request("POST", "/v1/notify", {"text": text[:200], "title": str(args.get("title") or "")[:60], "level": level,
-                                                 "speak": args.get("speak") is True, "from": str(args.get("from") or "AI agent")[:40]})
+        level = args.get("level") if args.get("level") in LEVELS else "info"
+        speak = args.get("speak") is True
+        capped = LEVELS.index(level) > LEVELS.index(max_level)   # v2.22: the owner's rule, as the TV does for tokens
+        if capped:
+            level, speak = max_level, False
+        out = c.request("POST", "/v1/notify", {"text": text[:200], "title": str(args.get("title") or "")[:60], "level": level,
+                                                "speak": speak, "from": str(args.get("from") or "AI agent")[:40]})
+        if capped and isinstance(out, dict):
+            out = dict(out, capped=level)
+        return out
     if name == "tv_get_state":
         return c.request("GET", "/v1/state")
     if name == "tv_ask_user":
@@ -325,7 +544,9 @@ def _call_tool(name: str, args: dict, c) -> dict:
             raise ValueError("question is required")
         r = c.request("POST", "/v1/ask", {"question": q[:200], "choices": [str(x)[:24] for x in (args.get("choices") or [])][:4],
                                          "timeout": max(10, min(300, int(args.get("timeout") or 120))),
-                                         "from": str(args.get("from") or "AI agent")[:40]})
+                                         "from": str(args.get("from") or "AI agent")[:40],
+                                         **({"speak": True} if args.get("speak") is True else {}),
+                                         **({"detail": str(args["detail"])[:2000]} if args.get("detail") else {})})
         return _await_ask(c, r, max(0, min(90, int(args.get("wait", 60) or 0))))
     if name == "tv_ask_result":
         aid = str(args.get("id", ""))
@@ -349,10 +570,147 @@ def _call_tool(name: str, args: dict, c) -> dict:
         return c.request("DELETE", f"/v1/pages/{pid}")
     if name == "tv_list_pages":
         return c.request("GET", "/v1/pages")
+    if name.startswith("tv_ha_"):   # v2.22 #160
+        from urllib.parse import urlencode
+        if name == "tv_ha_status":
+            return c.request("GET", "/v1/ha/status")
+        if name == "tv_ha_list":
+            return c.request("GET", "/v1/ha/states?" + urlencode({"domain": str(args.get("domain", ""))[:32],
+                                                                  "q": str(args.get("query", ""))[:64]}))
+        return c.request("POST", "/v1/ha/run", {"entity_id": str(args.get("entity_id", ""))[:100]})
+    if name.startswith("tv_page_"):   # v2.22 #158: the TV checks everything
+        from urllib.parse import quote
+        ref = quote(str(args.get("page", "")), safe="")
+        if name == "tv_page_list":
+            return c.request("GET", "/v1/widget-pages")
+        if name == "tv_page_current":
+            return c.request("GET", "/v1/widget-pages/current")
+        if name == "tv_page_create":
+            return c.request("POST", "/v1/widget-pages", {k: args[k] for k in ("name", "id", "after") if k in args})
+        if not ref:
+            raise ValueError("page is required")
+        if name == "tv_page_rename":
+            return c.request("PATCH", f"/v1/widget-pages/{ref}", {"name": str(args.get("name", ""))[:32]})
+        if name == "tv_page_reorder":
+            return c.request("PATCH", f"/v1/widget-pages/{ref}", {"to": int(args.get("to") or 0)})
+        if name == "tv_page_delete":
+            return c.request("DELETE", f"/v1/widget-pages/{ref}",
+                             {"moveWidgetsTo": args["moveWidgetsTo"]} if "moveWidgetsTo" in args else None)
+        return c.request("POST", f"/v1/widget-pages/{ref}/show", {})
+    if name.startswith("tv_widget_"):   # v2.22 #157: the TV checks and places everything
+        from urllib.parse import quote
+        wid = quote(str(args.get("id", "")), safe="")
+        if name == "tv_widget_types":
+            return c.request("GET", "/v1/widgets/types")
+        if name == "tv_widget_list":
+            page = args.get("page")
+            return c.request("GET", "/v1/widgets/list" + (f"?page={int(page)}" if isinstance(page, int) else ""))
+        if name == "tv_widget_create":
+            return c.request("POST", "/v1/widgets/item", {k: v for k, v in args.items() if k in WIDGET_CREATE_KEYS})
+        if name == "tv_widget_delete":
+            return c.request("DELETE", f"/v1/widgets/item/{wid}")
+        keys = ("title", "icon", "ttl", "data") if name == "tv_widget_update" else ("page", "x", "y", "w", "h", "push")
+        body = {k: v for k, v in args.items() if k in keys}
+        if not body:
+            raise ValueError("nothing to change")
+        return c.request("PATCH", f"/v1/widgets/item/{wid}", body)
     if name == "tv_radio_now":
         return c.request("GET", "/v1/radio")
     if name == "tv_radio":
-        return c.request("POST", "/v1/radio", {"action": str(args.get("action", ""))})
+        body = {"action": str(args.get("action", ""))}
+        if args.get("station"):
+            body["station"] = str(args["station"])
+        if "volume" in args:
+            body["volume"] = int(args["volume"])
+        return c.request("POST", "/v1/radio", body)
+    if name == "tv_radio_stations":
+        return c.request("GET", "/v1/radio/stations")
+    if name == "tv_radio_station_add":
+        return c.request("POST", "/v1/radio/stations", {k: str(args[k]) for k in ("name", "url", "logo") if args.get(k)})
+    if name == "tv_radio_station_remove":
+        sid = str(args.get("id", ""))
+        if not sid or not all(ch.isalnum() or ch == "-" for ch in sid):
+            raise ValueError("bad station id")
+        return c.request("DELETE", f"/v1/radio/stations/{sid}")
+    if name == "tv_radio_sleep":
+        return c.request("POST", "/v1/radio", {"action": "sleep", "minutes": int(args.get("minutes", 0))})
+    if name == "tv_skill_list":   # v2.22 skills
+        return c.request("GET", "/v1/skills")
+    if name in ("tv_skill_install", "tv_skill_remove"):
+        sid = str(args.get("id", ""))
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]{1,39}", sid):
+            raise ValueError("bad skill id")
+        if name == "tv_skill_install":
+            return c.request("POST", f"/v1/skills/{sid}/install", {})
+        return c.request("DELETE", f"/v1/skills/{sid}")
+    if name in ("tv_teletext_publish", "tv_teletext_remove"):   # v2.22 Televideo AI
+        try:
+            n = int(args.get("page", 0))
+        except (TypeError, ValueError):
+            n = 0
+        if not 101 <= n <= 899:
+            raise ValueError("page: 101 to 899")
+        if name == "tv_teletext_remove":
+            return c.request("DELETE", f"/v1/teletext/{n}")
+        return c.request("PUT", f"/v1/teletext/{n}", {k: args[k] for k in ("title", "lines") if k in args})
+    if name == "tv_teletext_list":
+        return c.request("GET", "/v1/teletext")
+    if name == "tv_guide":   # v2.22 the agents' Guide
+        return c.request("GET", "/v1/guide")
+    if name == "tv_guide_add":
+        return c.request("POST", "/v1/guide", {k: args[k] for k in ("title", "start", "end", "detail") if k in args})
+    if name == "tv_guide_update":
+        gid = str(args.get("id", ""))
+        if not re.fullmatch(r"p\d{1,6}", gid):
+            raise ValueError("bad id")
+        return c.request("POST", f"/v1/guide/{gid}", {k: args[k] for k in ("state", "detail") if k in args})
+    if name == "tv_briefing_set":   # v2.22 the studio
+        b = {k: args[k] for k in ("title", "say", "wake", "sections") if k in args}
+        return c.request("POST", "/v1/briefing", b)
+    if name == "tv_briefing_show":
+        return c.request("POST", "/v1/briefing/show", {})
+    if name == "tv_debate_start":
+        return c.request("POST", "/v1/debate", {"topic": str(args.get("topic", ""))})
+    if name in ("tv_debate_post", "tv_debate_result", "tv_scene_result"):
+        sid = str(args.get("id", ""))
+        if not re.fullmatch(r"[a-z0-9]{1,16}", sid):
+            raise ValueError("bad id")
+        if name == "tv_debate_post":
+            return c.request("POST", f"/v1/debate/{sid}", {k: args[k] for k in ("text", "preview") if k in args})
+        return c.request("GET", f"/v1/debate/{sid}" if name == "tv_debate_result" else f"/v1/scene/{sid}")
+    if name == "tv_scene_list":
+        return c.request("GET", "/v1/scenes")
+    if name in ("tv_scene_run", "tv_scene_save"):
+        return c.request("POST", "/v1/scene/run" if name == "tv_scene_run" else "/v1/scene/save",
+                         {k: args[k] for k in ("name", "steps") if k in args})
+    if name == "tv_live":   # v2.22 AI LIVE
+        return c.request("GET", "/v1/live")
+    if name == "tv_live_update":
+        return c.request("POST", "/v1/live", {k: args[k] for k in ("text", "progress", "preview") if k in args})
+    if name.startswith("tv_shift_"):   # v2.22 the night shift
+        if name == "tv_shift_status":
+            return c.request("GET", "/v1/shift")
+        if name == "tv_shift_decision":
+            qid = str(args.get("id", ""))
+            if not re.fullmatch(r"q\d{1,6}", qid):
+                raise ValueError("bad id")
+            return c.request("GET", f"/v1/shift/queue/{qid}")
+        op = name[len("tv_shift_"):]
+        keys = {"start": ("tasks", "until", "wake", "replace"), "end": (), "log": ("level", "text", "detail", "task"),
+                "queue": ("title", "detail", "risk")}[op]
+        return c.request("POST", f"/v1/shift/{op}", {k: args[k] for k in keys if k in args})
+    if name == "tv_settings_get":
+        sec = str(args.get("section", "") or "")
+        if sec and not sec.isalpha():
+            raise ValueError("bad section")
+        return c.request("GET", "/v1/settings" + (f"?section={sec}" if sec else ""))
+    if name == "tv_settings_set":
+        key = str(args.get("key", ""))
+        if not key or len(key) > 40 or "value" not in args:
+            raise ValueError("key and value")
+        return c.request("PATCH", "/v1/settings", {key: args["value"]})
+    if name == "tv_skill_qr":
+        return c.request("POST", "/v1/open", {"target": "skill"})
     if name == "tv_open":
         return c.request("POST", "/v1/open", {"target": str(args.get("target", ""))})
     if name == "tv_diagnostics":
@@ -446,7 +804,7 @@ class LazyClient:
         return getattr(self._get(), name)
 
 
-def serve_stdio(tv_client_factory, scope: str = "control") -> int:
+def serve_stdio(tv_client_factory, scope: str = "control", max_level: str = "alert") -> int:
     lazy = LazyClient(tv_client_factory)
     for line in sys.stdin:
         line = line.strip()
@@ -456,7 +814,7 @@ def serve_stdio(tv_client_factory, scope: str = "control") -> int:
             req = json.loads(line)
         except ValueError:
             continue
-        resp = handle_rpc(req, lazy, scope)
+        resp = handle_rpc(req, lazy, scope, max_level)
         if resp is not None:
             sys.stdout.write(json.dumps(resp) + "\n")
             sys.stdout.flush()
@@ -465,7 +823,7 @@ def serve_stdio(tv_client_factory, scope: str = "control") -> int:
 
 def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", port: int = 8990,
                        tailnet_only: bool = False, scope: str = "control", require_access: bool = False,
-                       verifier=None) -> ThreadingHTTPServer:
+                       verifier=None, max_level: str = "alert") -> ThreadingHTTPServer:
     expected = f"Bearer {token}"
 
     class Handler(BaseHTTPRequestHandler):
@@ -503,7 +861,7 @@ def create_http_server(tv_client_factory, token: str, host: str = "127.0.0.1", p
             except ValueError:
                 self._send(400, {"error": "invalid_json"})
                 return
-            resp = handle_rpc(req, LazyClient(tv_client_factory), scope)
+            resp = handle_rpc(req, LazyClient(tv_client_factory), scope, max_level)
             if resp is None:   # a notification: accepted, no body (MCP streamable HTTP)
                 self.send_response(202)
                 self.send_header("Content-Length", "0")
@@ -546,7 +904,7 @@ def default_scope(public: bool, scope: str | None) -> str:
 
 def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailscale: bool = False,
                cloudflare: str | None = None, scope: str | None = None, access: bool = False,
-               access_team: str | None = None, access_aud: str | None = None) -> int:
+               access_team: str | None = None, access_aud: str | None = None, max_level: str | None = None) -> int:
     token = ensure_token()
     bind = "127.0.0.1"
     if tailscale:
@@ -560,6 +918,7 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
         tunnel, cloudflare = False, None   # one or the other
     public = bool(tunnel or cloudflare)
     scope = default_scope(public, scope)
+    max_level = default_max_level(public, max_level)
     verifier = None
     if cloudflare and (access_team or access_aud):
         from .cf_access import AccessVerifier
@@ -574,10 +933,12 @@ def serve_http(tv_client_factory, port: int = 8990, tunnel: bool = False, tailsc
               "Put a Cloudflare Access policy in front and add --access-team/--access-aud (docs/CLOUDFLARE.md).",
               file=sys.stderr, flush=True)
     srv = create_http_server(tv_client_factory, token, bind, port, tailnet_only=tailscale, scope=scope,
-                             require_access=bool(cloudflare and (access or verifier)), verifier=verifier)
+                             require_access=bool(cloudflare and (access or verifier)), verifier=verifier,
+                             max_level=max_level)
     actual_port = srv.server_address[1]
     print(f"OmarchyTV MCP HTTP server listening on http://{bind}:{actual_port}/mcp"
-          + (" (tailnet peers only)" if tailscale else "") + f", tools: {scope}", flush=True)
+          + (" (tailnet peers only)" if tailscale else "") + f", tools: {scope}"
+          + (f", notifications at most {max_level}" if max_level != "alert" else ""), flush=True)
     print(f"Authorization: Bearer {token}", flush=True)
     proc = None
     if public:

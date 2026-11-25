@@ -20,6 +20,16 @@ The owner's TV runs OmarchyTV and is reachable through the `omarchytv` MCP serve
 - **Scheduled reports** (a cron job, a nightly check, a room's summary): `tv_room_post` with a room name
   (`hermes`, `backups`, …) and one line. The TV Home keeps a pane per room with its last 5 lines, without
   interrupting anyone. These tools are there when Hermes uses `omarchy-link mcp`.
+- **A dashboard the owner keeps on the Home** (2.22): `tv_widget_create` places a typed widget on a 12 x 6 grid
+  (`stat` for one number, `lines` for a few label/value rows, `chart` for a series, `text`, `image`, `page`,
+  `shortcuts`, Home Assistant scenes). Let it pick the first free slot unless the owner asked for a place; never
+  use `push` to shove the owner's own widgets around. Keep it fresh with `tv_widget_update` (content only, a
+  `notify` token is enough); `tv_widget_list` shows what is there and the free cells. One widget per thing, a
+  stable id (`nas-disk`, `living-temp`), and delete what you no longer update. Group related widgets on a page of
+  their own (`page: "server"` creates it); `tv_page_show` only when something there needs attention now.
+- **Home Assistant scenes on the Home** (2.22): `tv_ha_list {domain: "scene"}`, then a `homeassistant.scenes`
+  widget with the ones the owner uses (`confirm: true` for anything big, like "Away"). `tv_ha_run` only when the
+  owner asked for it now.
 - **"Remind me in 20 minutes"**: `tv_remind` with `when` (`20m`, `1h30m`, `18:45`) and the text. The TV says it
   aloud at that time.
 - **Pages you make for the TV**: include `http://<tv>:47800/v1/sdk/omarchytv.js` and call

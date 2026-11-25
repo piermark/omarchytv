@@ -4,7 +4,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   "use strict";
 
   // One shared app: LG webOS and the Samsung widget share one version number.
-  var APP_VERSION = "2.21.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
+  var APP_VERSION = "2.22.0";   // keep in step with webos/app/appinfo.json and tizen/config.xml (checked by tests)
 
   var DATA = window.OMARCHY_DATA || { version: APP_VERSION, themes: {}, wallpapers: {}, logo: "OMARCHY TV", notice: "" };
   var START_TIME = Date.now(); // real OmarchyTV uptime, no made-up offset (issue #5, point 10)
@@ -37,7 +37,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Animated logo", sys_text_tiles: "Text tiles (terminal style)", sys_all: "All OmarchyTV settings", sys_about: "About & licences",
       tile_move: "Move", tile_hide: "Hide", tile_cancel: "Cancel", move_hint: "◀▶▲▼ move · OK save · Back cancel",
       app_hidden: "Hidden. Show it again in All settings › Hidden apps", hidden_apps: "Hidden apps", hidden_none: "No hidden apps",
-      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", agent_asks: "asks", agent_hint: "OK answers · ◀ ▶ choose · BACK later", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
+      hidden_sub: "OK shows the app again", hidden_show: "show", hidden_show_all: "Show all hidden apps", hidden_all_shown: "All apps visible again", random_theme: "Random theme", agent_asks: "asks", wg_open: "Open", wg_rotate: "Rotate widget pages", wg_ha: "Set up Home Assistant in Ambilight & Lights", shift_title: "Night shift", skills_title: "Skills", teletext_title: "Televideo AI", guide_title: "Agents' Guide", agent_hint: "OK answers · ◀ ▶ choose · BACK later", pulse_notice: "New screensaver: Omarchy Pulse. Settings › Screensaver to change it or go back.", ss_pulse_scene: "Pulse scene", ss_restore_previous: "Previous screensaver", random_scope: "Random picks from", random_intros: "animated intros", random_all: "all themes", random_wallpaper: "Random wallpaper / intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "Reset app order", order_reset: "App order reset",
       wx_title: "Weather", wx_auto: "Automatic (from IP)", wx_auto_fail: "Couldn't find your location, keeping the current city", wx_search: "Search city…", wx_unit: "Temperature unit",
       root_boot: "Open when the TV starts", root_home: "Home button opens OmarchyTV", root_needed: "rooted TV only",
       root_keep: "Keep loaded in the background", root_keep_na: "not on this TV",
@@ -173,7 +173,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Logo animato", sys_text_tiles: "Tile solo testo (stile terminale)", sys_all: "Tutte le impostazioni OmarchyTV", sys_about: "Info e licenze",
       tile_move: "Sposta", tile_hide: "Nascondi", tile_cancel: "Annulla", move_hint: "◀▶▲▼ sposta · OK salva · Indietro annulla",
       app_hidden: "Nascosta. Mostrala di nuovo in Tutte le impostazioni › App nascoste", hidden_apps: "App nascoste", hidden_none: "Nessuna app nascosta",
-      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", agent_asks: "chiede", agent_hint: "OK risponde · ◀ ▶ scegli · BACK dopo", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV · Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
+      hidden_sub: "OK mostra di nuovo l'app", hidden_show: "mostra", hidden_show_all: "Mostra tutte le app nascoste", hidden_all_shown: "Tutte le app sono di nuovo visibili", random_theme: "Tema casuale", agent_asks: "chiede", wg_open: "Apri", wg_rotate: "Ruota le pagine dei widget", wg_ha: "Configura Home Assistant in Ambilight e luci", shift_title: "Turno di notte", skills_title: "Skill", teletext_title: "Televideo AI", guide_title: "Guida TV degli agenti", agent_hint: "OK risponde · ◀ ▶ scegli · BACK dopo", pulse_notice: "Nuovo salvaschermo: Omarchy Pulse. Impostazioni › Salvaschermo per cambiarlo o tornare a prima.", ss_pulse_scene: "Scena di Pulse", ss_restore_previous: "Salvaschermo precedente", random_scope: "Casuale tra", random_intros: "intro animate", random_all: "tutti i temi", random_wallpaper: "Sfondo / intro casuale", sys_plugins: "Plugin (SpaceX TV · Grok Bot)", reset_order: "Ripristina ordine app", order_reset: "Ordine app ripristinato",
       wx_title: "Meteo", wx_auto: "Automatica (da IP)", wx_auto_fail: "Posizione non trovata, resta la città attuale", wx_search: "Cerca città…", wx_unit: "Unità temperatura",
       root_boot: "Apri all'avvio della TV", root_home: "Il tasto Home apre OmarchyTV", root_needed: "solo TV con root",
       root_keep: "Tieni caricata in background", root_keep_na: "non su questa TV",
@@ -309,7 +309,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sys_logo_anim: "Animiertes Logo", sys_text_tiles: "Text-Kacheln (Terminal-Stil)", sys_all: "Alle OmarchyTV-Einstellungen", sys_about: "Info & Lizenzen",
       tile_move: "Verschieben", tile_hide: "Ausblenden", tile_cancel: "Abbrechen", move_hint: "◀▶▲▼ verschieben · OK speichern · Zurück abbrechen",
       app_hidden: "Ausgeblendet. Wieder einblenden unter Alle Einstellungen › Ausgeblendete Apps", hidden_apps: "Ausgeblendete Apps", hidden_none: "Keine ausgeblendeten Apps",
-      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", agent_asks: "fragt", agent_hint: "OK antwortet · ◀ ▶ wählen · BACK später", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
+      hidden_sub: "OK blendet die App wieder ein", hidden_show: "einblenden", hidden_show_all: "Alle ausgeblendeten Apps einblenden", hidden_all_shown: "Alle Apps wieder sichtbar", random_theme: "Zufälliges Thema", agent_asks: "fragt", wg_open: "Öffnen", wg_rotate: "Widget-Seiten wechseln", wg_ha: "Home Assistant unter Ambilight & Licht einrichten", shift_title: "Nachtschicht", skills_title: "Skills", teletext_title: "Videotext AI", guide_title: "Programmführer der Agenten", agent_hint: "OK antwortet · ◀ ▶ wählen · BACK später", pulse_notice: "Neuer Bildschirmschoner: Omarchy Pulse. Einstellungen › Bildschirmschoner zum Ändern oder Zurückgehen.", ss_pulse_scene: "Pulse-Szene", ss_restore_previous: "Vorheriger Bildschirmschoner", random_scope: "Zufällig aus", random_intros: "animierten Intros", random_all: "allen Themes", random_wallpaper: "Zufälliges Hintergrundbild / Intro", sys_plugins: "Plugins (SpaceX TV · Grok Bot)", reset_order: "App-Reihenfolge zurücksetzen", order_reset: "App-Reihenfolge zurückgesetzt",
       wx_title: "Wetter", wx_auto: "Automatisch (über IP)", wx_auto_fail: "Standort nicht gefunden, die aktuelle Stadt bleibt", wx_search: "Stadt suchen…", wx_unit: "Temperatureinheit",
       root_boot: "Beim Einschalten öffnen", root_home: "Home-Taste öffnet OmarchyTV", root_needed: "nur gerootete TVs",
       root_keep: "Im Hintergrund geladen lassen", root_keep_na: "nicht auf diesem TV",
@@ -1893,6 +1893,10 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { label: tr("w_racing"), right: cfg.widgets.racing ? "on" : "off", act: function () { tog("racing"); } },
       { label: tr("w_racing_bar"), right: cfg.racingBar ? "on" : "off", act: function () {
         cfg.racingBar = !cfg.racingBar; saveCfg(); racingKick(); renderAll(); openWidgetsModal();
+      } },
+      { label: tr("wg_rotate"), right: cfg.widgetPageRotateSec ? cfg.widgetPageRotateSec + " s" : "off", act: function () {   // v2.22 #158
+        var steps = [0, 15, 30, 60, 120], i = steps.indexOf(cfg.widgetPageRotateSec || 0);
+        cfg.widgetPageRotateSec = steps[(i + 1) % steps.length]; saveCfg(); openWidgetsModal();
       } }
     ].concat(cfg.widgets.racing || cfg.racingBar ? racingSeriesRows() : []).concat(window.OMARCHY_PLATFORM === "tizen" ? [] : [   // 2.15 (#131): LG Developer Mode's 1000-hour session
       { label: tr("w_devmode"), right: cfg.widgets.devmode ? "on" : "off", act: function () { tog("devmode"); } },
@@ -3111,10 +3115,19 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }
   window.OMARCHY_OPEN_OFFICE = openOffice;
   window.addEventListener("keydown", function (e) {
-    if (!officeUi) return;
+    if (!officeUi || (aiLive && aiLive.isOpen())) return;   // v2.22 AI LIVE over the Office takes the keys
     var n = window.OmarchyCinemarchy ? window.OmarchyCinemarchy.keyName(e) : "";
     var tgt = e.target, typing = tgt && /INPUT/.test(tgt.tagName);
     if (typing && (n === "red" || n === "green" || n === "yellow" || n === "blue" || /^[1-8]$/.test(n))) n = "";   // letters are text here
+    // v2.22 the Office is the control room: red → AI LIVE, green → the night's replay, yellow → skills
+    // (blue stays the Companion's key on LG / Samsung)
+    var kc = e.keyCode;
+    if (aiLive && !aiLive.isOpen() && (kc === 403 || kc === 404 || kc === 405 || e.key === "ColorF0Red" || e.key === "ColorF1Green" || e.key === "ColorF2Yellow")) {
+      var m = kc === 403 || e.key === "ColorF0Red" ? "live" : kc === 404 || e.key === "ColorF1Green" ? "replay" : "skills";
+      e.preventDefault();
+      aiLive.tick(true).then(function () { aiLive.open(m); });
+      return;
+    }
     if (officeUi.key(n, e)) e.preventDefault();
     e.stopPropagation(); if (e.stopImmediatePropagation) e.stopImmediatePropagation();
   }, true);
@@ -3124,7 +3137,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       { icon: "󰕼", label: "Cinemarchy", right: "C ›", act: function () { openCinemarchyModal(0); } },
       { icon: "🎮", label: "OmarchyTV Arcade", right: "V-HOLD · RICE WARS · FORK BOMB ›", act: openArcade },
       { icon: "♫", label: "Radiomarchy", right: "Omarchy Radio · R ›", act: function () { openRadio(); } },
-    ].concat(cfg.officeEnabled && OFF ? [{ icon: "󰚩", label: "GrokBot Office", right: "O ›", act: openOffice }] : []).concat([
+    ].concat(cfg.officeEnabled && OFF ? [{ icon: "󰚩", label: "GrokBot Office", right: "O ›", act: openOffice }] : []).concat(aiLive ? [
+      // v2.22 the TV that runs your AI (through the PC bridge)
+      { icon: "●", label: "AI LIVE", right: "›", act: function () { closeModal(); aiLive.open("live"); } },
+      { icon: "🌙", label: tr("shift_title"), right: "›", act: function () { closeModal(); aiLive.open("shift"); } },
+      { icon: "🧩", label: tr("skills_title"), right: "›", act: function () { closeModal(); aiLive.open("skills"); } },
+      { icon: "📺", label: tr("guide_title"), right: "›", act: function () { closeModal(); aiLive.open("guide"); } },
+      { icon: "📟", label: tr("teletext_title"), right: "100 ›", act: function () { closeModal(); aiLive.open("teletext"); } }
+    ] : []).concat([
       { icon: "", label: tr("menu_plugins"), right: "›", act: openPluginsModal },
       { icon: "󰀻", label: tr("menu_apps"), right: "›", act: openWalkerModal },
       { icon: "󰸌", label: tr("sys_themes"), right: "›", act: openThemesModal },
@@ -3514,10 +3534,14 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       permissions: ["CONTROL_POWER", "CONTROL_TV_SCREEN", "READ_POWER_STATE", "READ_INSTALLED_APPS", "LAUNCH"] } };
     try { var key = localStorage.getItem(SSAP_KEY); if (key) payload["client-key"] = key; } catch (e) {}
     ws.onerror = function () { finish(false, "unavailable"); };
+    // webOS 26 (and recent webOS 22 firmware) accepts the socket, then closes it with 1008 "invalid origin" (#173):
+    // say so at once instead of waiting for the 90 s timeout, so refreshTvApps can ask the app's JS service.
+    ws.onclose = function (ev) { finish(false, ev && ev.code === 1008 ? "invalid origin" : opened ? "closed" : "unavailable"); };
     ws.onopen = function () { opened = true; ws.send(JSON.stringify({ type: "register", id: "reg", payload: payload })); };
     ws.onmessage = function (m) {
       var msg;
       try { msg = JSON.parse(m.data); } catch (e) { return; }
+      // A "response" to "reg" (pairingType PROMPT, returnValue true) only means the prompt is on screen: keep waiting.
       if (msg.id === "reg" && msg.type === "registered") {
         try { localStorage.setItem(SSAP_KEY, msg.payload["client-key"]); } catch (e) {}
         ws.send(JSON.stringify({ type: "request", id: "req", uri: uri, payload: reqPayload || {} }));
@@ -3548,34 +3572,58 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
     if (apps) applyAppList(apps);
     return !!apps;
   }
+  // Where the page's own SSAP session is refused (webOS 26: 1008 "invalid origin", #173) the list comes from the
+  // app's JS service (webos/service), which pairs with the TV on its own; see OmarchyTvApps.discover in tvapps.js.
+  var TVAPPS_VIA = "omarchytv_tv_apps_via";
   function refreshTvApps(manual) {
     if (!isWebos() || !cfg.tvApps) return;
     try { if (!manual && localStorage.getItem(TVAPPS_DENIED)) return; } catch (e) {}
     if (manual) showToast("Accept OmarchyTV on the TV prompt if it appears");
-    ssapRequest("ssap://com.webos.applicationManager/listLaunchPoints", function (ok, info, data) {
-      var lps = ok && data && data.launchPoints;
-      if (lps) brokenIcons = {};   // a fresh SSAP session: its icon URLs load again
-      if (lps && useTvApps(lps)) {
-        try {
-          localStorage.removeItem(TVAPPS_DENIED);
-          localStorage.setItem(TVAPPS_CACHE, JSON.stringify(lps.map(function (l) {
-            return { id: l.id, title: l.title, launchPointId: l.launchPointId, lptype: l.lptype, icon: l.icon, largeIcon: l.largeIcon,
-              extraLargeIcon: l.extraLargeIcon, mediumLargeIcon: l.mediumLargeIcon, iconColor: l.iconColor, params: l.params, visible: l.visible };
-          })));
-        } catch (e) {}
-        if (manual) showToast("TV apps updated");
-      } else {
-        if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
-        if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
+    var preferService = false;
+    try { preferService = localStorage.getItem(TVAPPS_VIA) === "service"; } catch (e) {}
+    TVA.discover({
+      preferService: preferService,
+      ssap: function (cb) {
+        ssapRequest("ssap://com.webos.applicationManager/listLaunchPoints", cb, null, 0,
+          function (data, release) { cacheLaunchPointIcons(data && data.launchPoints, release); });
+      },
+      service: function (cb) {
+        // 100 s: the service itself waits up to 90 s for the TV prompt. It keeps its session open for 10 s after
+        // answering, so the icons can be copied the same way as on the page's own session.
+        TVA.callService(window, TVA.SERVICE_URI, { holdMs: 10000 }, 100000, function (ok, info, data) {
+          if (!ok) return cb(ok, info, data);
+          cacheLaunchPointIcons(data.launchPoints, function () { cb(ok, info, data); });
+        });
       }
-    }, null, 0, function (data, release) { cacheLaunchPointIcons(data && data.launchPoints, release); });
+    }, function (ok, info, data, via) {
+      if (ok) { try { if (via === "service") localStorage.setItem(TVAPPS_VIA, "service"); else localStorage.removeItem(TVAPPS_VIA); } catch (e) {} }
+      tvAppsAnswer(manual, ok, info, data);
+    });
+  }
+  function tvAppsAnswer(manual, ok, info, data) {
+    var lps = ok && data && data.launchPoints;
+    if (lps) brokenIcons = {};   // a fresh SSAP session: its icon URLs load again
+    if (lps && useTvApps(lps)) {
+      try {
+        localStorage.removeItem(TVAPPS_DENIED);
+        localStorage.setItem(TVAPPS_CACHE, JSON.stringify(lps.map(function (l) {
+          return { id: l.id, title: l.title, launchPointId: l.launchPointId, lptype: l.lptype, icon: l.icon, largeIcon: l.largeIcon,
+            extraLargeIcon: l.extraLargeIcon, mediumLargeIcon: l.mediumLargeIcon, iconColor: l.iconColor, params: l.params, visible: l.visible };
+        })));
+      } catch (e) {}
+      if (manual) showToast("TV apps updated");
+    } else {
+      if (info === "not approved") { try { localStorage.setItem(TVAPPS_DENIED, "1"); } catch (e) {} }
+      if (manual) showToast("Could not read the TV apps (" + (info || "no list") + "), the built-in list stays");
+    }
   }
   function setTvApps(on) {
     cfg.tvApps = on; saveCfg();
     if (on) refreshTvApps(true); else applyAppList(BUILTIN_APPS);
   }
   function repairTv() {
-    try { localStorage.removeItem(SSAP_KEY); localStorage.removeItem(TVAPPS_DENIED); } catch (e) {}
+    try { localStorage.removeItem(SSAP_KEY); localStorage.removeItem(TVAPPS_DENIED); localStorage.removeItem(TVAPPS_VIA); } catch (e) {}
+    if (isWebos()) TVA.callService(window, "luna://com.omarchytv.home.service/forget", {}, 5000, function () {});
     if (!cfg.tvApps) { cfg.tvApps = true; saveCfg(); }
     refreshTvApps(true);
   }
@@ -4457,6 +4505,9 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
 
     // v2.21 an agent's page or question is on screen: its keys first (BACK closes it, never the app)
     if (agentInbox && agentInbox.key(e.keyCode)) { e.preventDefault(); e.stopPropagation(); return; }
+    if (aiLive && aiLive.key(e.keyCode)) { e.preventDefault(); e.stopPropagation(); return; }   // v2.22 AI LIVE on screen
+    // v2.22 a widget page on screen (or CH+ / CH- on the Home): its keys first; BACK returns to the Home
+    if (homeGrid && homeGrid.key(e.keyCode)) { e.preventDefault(); e.stopPropagation(); return; }
     var code = e.keyCode;
     // webOS 3.x (Chrome 38) has no KeyboardEvent.key: derive it from the remote's keyCode
     var k = e.key || LEGACY_KEYS[code] || (code >= 48 && code <= 57 ? String(code - 48) : "");
@@ -4839,7 +4890,7 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
   }, 5000);
 
   // v2.21 agents on LG / Samsung: notifications, pages and questions kept by the PC bridge (inbox.js).
-  var agentInbox = null;
+  var agentInbox = null, homeGrid = null, aiLive = null;
   if (window.OmarchyInbox) {
     agentInbox = window.OmarchyInbox.create({
       base: pcBase, token: function () { return cfg.grokbotCode || ""; },
@@ -4847,5 +4898,40 @@ var CINEMARCHY_VERSION = "0.1.0-alpha";
       sound: function () { return cfg.notifySound !== false; }   // like Android's "link": {"notifySound": false}
     });
     setInterval(function () { if (!document.hidden) agentInbox.tick(); }, 3000);
+  }
+
+  // v2.22 (#157-#159) Home widget pages that agents build through the PC bridge (homegrid.js): CH+ / CH- on the Home.
+  if (window.OmarchyHomeGrid) {
+    homeGrid = window.OmarchyHomeGrid.create({
+      base: pcBase, token: function () { return cfg.grokbotCode || ""; }, tr: tr,
+      ha: function () { return cfg.haUrl && cfg.haToken ? { url: cfg.haUrl, token: cfg.haToken } : null; },
+      idle: function () {
+        var ov = document.getElementById("saver-overlay");
+        return state.ws === 0 && !state.modalOpen && !state.embedOpen && !state.movingId && !radioUi && !cineUi &&
+          !(agentInbox && agentInbox.isOpen()) && !(ov && ov.className === "active");
+      },
+      rotateSec: function () { return cfg.widgetPageRotateSec || 0; },
+      radioNow: function () { var t = radioEng && radioEng.current(); return t ? t.title + (t.artist ? " — " + t.artist : "") : ""; },
+      openRadio: function () { homeGrid.close(); openRadio(); },
+      openUrl: function (u) { openUrlOnTv(u); },
+      version: function () { return APP_VERSION; }
+    });
+    setTimeout(function () { homeGrid.tick(); }, 1500);
+    // v2.22 AI LIVE, the night shift and skills, kept by the PC bridge (ailive.js)
+    if (window.OmarchyAiLive) {
+      aiLive = window.OmarchyAiLive.create({
+        base: pcBase, token: function () { return cfg.grokbotCode || ""; }, tr: tr,
+        idle: function () { return !homeGrid.isOpen() && !state.modalOpen && !state.embedOpen && !radioUi && !cineUi && !officeUi; },
+        wakeShown: function () { return cfg.shiftWakeShown || 0; },
+        markWake: function (w) { cfg.shiftWakeShown = w; saveCfg(); },
+        speak: function (text) {   // the morning briefing read aloud, like Android (off with the notes' sound off)
+          if (cfg.notifySound === false || !window.speechSynthesis || typeof window.SpeechSynthesisUtterance !== "function") return;
+          try { window.speechSynthesis.cancel(); window.speechSynthesis.speak(new window.SpeechSynthesisUtterance(String(text).slice(0, 1500))); } catch (e) {}
+        }
+      });
+      setInterval(function () { if (!document.hidden && !aiLive.isOpen()) aiLive.tick(); }, 10000);
+      setInterval(function () { if (!document.hidden && aiLive.isOpen()) aiLive.tick(); }, 2000);
+    }
+    setInterval(function () { if (!document.hidden) homeGrid.tick(); }, 10000);
   }
 })();

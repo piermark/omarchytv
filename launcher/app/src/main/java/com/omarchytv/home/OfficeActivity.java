@@ -787,6 +787,16 @@ public class OfficeActivity extends Activity implements OmarchyLink.Listener {
             voice();   // the remote's mic key
             return true;
         }
+        // v2.22 the Office is the agents' control room: the red key goes ON AIR (AI LIVE), the blue key to the
+        // night shift's replay, the yellow key to the skills
+        if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) {
+            switch (e.getKeyCode()) {
+                case KeyEvent.KEYCODE_PROG_RED: startActivity(LiveActivity.intent(this, false)); return true;
+                case KeyEvent.KEYCODE_PROG_BLUE: startActivity(LiveActivity.intent(this, true)); return true;
+                case KeyEvent.KEYCODE_PROG_YELLOW: startActivity(SkillsActivity.intent(this, "")); return true;
+                default: break;
+            }
+        }
         return super.dispatchKeyEvent(e);
     }
 

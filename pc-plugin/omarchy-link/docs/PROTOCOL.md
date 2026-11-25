@@ -183,7 +183,7 @@ fake status or swallow commands.
 | `POST /v1/cast/control` | ✓ | `{action:"play"\|"pause"\|"stop"\|"seek", id?, position?}` → `{ok:true}` |
 | `POST /v1/notify` | ✓ (v2.21) | `{text, from?}` → `{ok:true, shown:true}` / `403 notify_off` (agent alerts off on the TV) / `400 bad_notify`. One line, 200 chars; 3 per 10 s. |
 | `POST /v1/mcp` | ✓ or `Bearer <pc token>` | MCP JSON-RPC 2.0: `tv_status`, `tv_get_theme`, `tv_notify`, themes, keys, apps… (docs/INTEGRATIONS.md) |
-| `GET/POST /v1/tokens`, `DELETE /v1/tokens/<id>` | ✓ (v2.21) | app tokens: list / `{name, scope}` → `{id, token, name, scope}` (token shown once) / revoke |
+| `GET/POST /v1/tokens`, `PUT/DELETE /v1/tokens/<id>` | ✓ (v2.21) | app tokens: list / `{name, scope, maxLevel?, minLevel?, expireDays?}` → `{id, token, name, scope, maxLevel, minLevel, expireDays}` (token shown once) / `PUT {maxLevel?, minLevel?}` (2.22; `minLevel` is the app's own floor, lower notifications are dropped with `filtered`) / revoke. `maxLevel` (info, warn, alert; default alert): a notification above it is lowered to it, without the voice, and the answer carries `capped`. `expireDays` (2.22; default 90, 0 = never, at most 3650): a token unused that long is dropped by the TV |
 | `GET /v1/state`, `GET /v1/stream`, `POST /v1/ask`, `GET /v1/ask/<id>`, `POST`/`DELETE /v1/page`, `GET /v1/diagnostics` | ✓ or app token (v2.21) | §6, App API |
 | `POST /v1/unpair` | ✓ | `{}` → `{ok:true}`. The TV deletes this PC. |
 | `GET /v1/events` | ✓ (on the upgrade) | WebSocket, §7 |
@@ -321,8 +321,8 @@ allow 30 requests per 10 s per token. A paired PC can do everything an app can, 
 |---|---|---|
 | `GET /v1/state` | read | `{screen: "home"\|"app"\|"screensaver"\|"off"\|"unknown", app: {package, label}\|null, theme, nowPlaying: {title, artist, source}\|null, launcherVersion, time}` |
 | `GET /v1/stream` | read | `text/event-stream`: `state` (on change, checked every 2 s), `theme` (every 5 s), `notify`, `ask_answer` (the asker's only), `: ping` every 20 s. At most 4 streams; each ends after 1 h. |
-| `POST /v1/notify` | notify | `{text \| body, title?, level?: info\|warn\|alert, speak?: bool, from?}` → `{ok, shown, deferred}`. *info* waits while an app is on screen (shown when Home comes back); an app's message carries the app's name as `from` |
-| `POST /v1/ask` | notify | `{question, choices?[≤4, ≤24 chars], timeout?: 10-300 (120), from?}` → `{id, state: "pending", choices, expires}` / `403 ask_off` (agent alerts off) / `429 busy` (4 waiting) |
+| `POST /v1/notify` | notify | `{text \| body, title?, level?: info\|warn\|alert, speak?: bool, from?}` → `{ok, shown, deferred, filtered?}`. *info* waits while an app is on screen (shown when Home comes back); `filtered` (2.22): below the level picked on the TV, dropped; an app's message carries the app's name as `from` |
+| `POST /v1/ask` | notify | `{question, choices?[≤4, ≤24 chars], timeout?: 10-300 (120), from?, speak?, say?[≤300], detail?[≤2000, 40 lines], risk?[≤60]}` (2.22: `speak` reads `say`, or the question, aloud; `detail` is shown in full under the question, scrollable; `risk` frames it red with the reason and the TV drops every answer that approves, Allow / Yes / OK / Approve…) → `{id, state: "pending", choices, expires}` / `403 ask_off` (agent alerts off) / `429 busy` (4 waiting) |
 | `GET /v1/ask/<id>?wait=0-25` | notify | `{id, state: "pending"\|"answered"\|"expired", answer}`; waits up to `wait` s for the answer. Only the asker (or a PC). |
 | `POST /v1/page` | control | `{url}` or `{urls: [≤4]}`: `http://` to literal LAN / tailnet addresses, tiled when several → `{ok, url, urls}` / `400 not_lan_url`. `DELETE` closes. |
 | `GET /v1/pages` | read | `{pages: [{id, name, url, icon, badge, by, updated}]}`: the agent pages shown as Home tiles (`omarchytv.json` `agentPages`) |
@@ -421,6 +421,192 @@ Shortcut actions on the TV:
   PC (§7). The PC runs only commands defined in its own `config.json`, and by
   default asks for confirmation with a desktop notification. The TV never sends
   a command line.
+
+### Home widgets v2 (`/v1/widgets/*`, v2.22, #157)
+
+Positioned, typed widgets on a grid of **12 × 6 cells per page** (pages 1–1000; page 1 is the Home). Stored in
+omarchytv.json `widgets`; each one is `{id, type, page, x, y, w, h, title, icon, ttl?, data, updatedAt, owner}`.
+Widgets never overlap and never leave the grid. The paired PC and app tokens use the same routes:
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/widgets/types` | read | the types, the shape of their `data`, the grid and the limits |
+| GET | `/v1/widgets/list?page=N` | read | the widgets (all pages without `page`) and up to 8 free 1×1 cells |
+| POST | `/v1/widgets/item` | control | create `{id, type, page?, x?, y?, w?, h?, title?, icon?, ttl?, data, push?}` |
+| PATCH | `/v1/widgets/item/<id>` | notify for `title` / `icon` / `ttl` / `data`; control for `page` / `x` / `y` / `w` / `h` | partial update (`PUT` works too); the type cannot change |
+| DELETE | `/v1/widgets/item/<id>` | control | |
+
+- Without `x`/`y` a create takes the first free slot (row-major). An occupied or out-of-grid area answers
+  `409 {"error": "cell_taken", "free": [{x, y}…]}`, unless `push: true`, which moves the widgets in the way to the
+  first free slot on the same page, then on the next pages.
+- Types: `lines` (≤ 8 label/value), `stat` (value, unit, label, delta, trend), `text` (≤ 1 KB, ≤ 30 lines),
+  `image` (https:// or LAN http://, PNG/JPEG ≤ 512 KB, `fit`), `chart` (1–120 numbers, `spark` or `bars`), `page`
+  (LAN / tailnet http://), `shortcuts` (≤ 16, same actions as `PUT /v1/widgets`), `homeassistant.scenes`,
+  `homeassistant.entities`, `radio`, `qr`. Everything is text; nothing is rendered as HTML.
+- Limits: 64 widgets per page, 2 000 in all, `data` ≤ 16 KB, 4 changes a second per widget (429 above).
+- The PC's panes (`PUT /v1/widgets`) are listed as read-only `lines` widgets on page 1, with ids `pane:<id>`, in the
+  cells the real widgets leave free; change them with `PUT /v1/widgets` as before (`409 pane_widget` here).
+- Every change emits `widgets_changed {op, id, page}` on `/v1/events`.
+- MCP (the TV's `/v1/mcp`, `omarchy-link mcp`, `omarchy-tv mcp`): `tv_widget_types`, `tv_widget_list` (read),
+  `tv_widget_update` (notify), `tv_widget_create`, `tv_widget_move`, `tv_widget_delete` (control).
+
+### Home widget pages (`/v1/widget-pages`, v2.22, #158 / #159)
+
+Any number of widget pages (up to 1 000). The classic Home panels come first (index 0 in `current`); page 1 is the
+first widget page. Optional names in omarchytv.json `widgetPages` [{index, id, name, rotate?, hidden?}].
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/widget-pages` | read | `{pages: [{index, id, name, widgets, hidden, rotate}], total, current}` |
+| GET | `/v1/widget-pages/current` | read | `{index, id, name, total, classicHome}` |
+| POST | `/v1/widget-pages` | control | `{name?, id?, after?}` → a new empty page |
+| PATCH | `/v1/widget-pages/<page>` | control | `{name?, to?, rotate?, hidden?}` (`to` reorders; page 1 stays first) |
+| DELETE | `/v1/widget-pages/<page>` | control | `{moveWidgetsTo?}` (or `?moveTo=`): the widgets move there, or go with the page; not page 1 |
+| POST | `/v1/widget-pages/<page>/show` | control | brings the page to the screen |
+
+- `<page>` is an index or an id everywhere, also in `page` of `/v1/widgets/item`: a number past the end makes the
+  next page (contiguous), an unknown id makes a page with that id; `strict: true` answers `404 no_such_page` instead.
+- Empty pages other than page 1 go away by themselves after a day.
+- `widgetPageRotateSec` (seconds, 0 = off): pages with `rotate: true` take turns while the Home is shown.
+- `widgetNavPosition`: `bottom` (default, above the dock) or `top` (under the bar).
+- `/v1/events`: `widget_page_changed {index, id, by: remote | agent | rotate}`.
+- MCP: `tv_page_list`, `tv_page_current` (read), `tv_page_create`, `tv_page_rename`, `tv_page_reorder`,
+  `tv_page_delete`, `tv_page_show` (control). Not to be confused with `tv_list_pages` / `tv_show_page` /
+  `tv_remove_page`, which are about LAN agent pages (`tv_publish_page`, now up to 200).
+
+On the TV: the navigator `⌂ ‹ 1 2 3 4 5 › 8 / 42 · Casa` (OK opens a page, RIGHT on the last number shows the next
+five, LEFT on the first the previous five, a long press lists every page); CH+ / CH- (PAGE UP / DOWN) go through the
+classic Home and the visible pages, then on to the workspaces. The number keys keep switching workspaces as before.
+
+**LG / Samsung (the bridge, v2.22).** `omarchy-tv webos-serve` keeps the widgets and pages itself
+(`~/.config/omarchy-tv/home-widgets.json`, 0600) and answers the same `/v1/widgets/*` and `/v1/widget-pages*` paths,
+bodies and errors, with the agents' key (`X-Omarchy-Agent`; GET, POST, PATCH, PUT, DELETE; bodies up to 32 KB), so
+`omarchy-tv mcp --bridge` needs nothing else. The TV app reads `GET /v1/home` with its ask code (`X-Omarchy-Token`) →
+`{grid, widgets[], pages[], visible[], show: {index, at}, now}` every 10 s and reports the page on screen with
+`POST /v1/home/shown {index}` (what `/v1/widget-pages/current` answers). Home Assistant widgets call Home Assistant
+from the TV. Not on LG / Samsung in 2.22: editing with the remote, `/v1/ha/*` and `tv_ha_*`.
+
+### Home Assistant (`/v1/ha/*`, v2.22, #160)
+
+The TV talks to Home Assistant itself, with the URL and long-lived token of Settings › Ambilight & Lights (also
+settable without turning the lights hub on). The token stays on the TV: no route, MCP answer, log line or
+diagnostics ever contains it.
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/ha/status` | read | `{configured, reachable, version, host}` |
+| GET | `/v1/ha/states?domain=scene&q=…` | read | `{entities: [{entity_id, name, state, unit?}]}` (≤ 200, by name) |
+| POST | `/v1/ha/run` | control | `{entity_id}`: scene / script `turn_on`, automation `trigger`, light / switch / fan / input_boolean `toggle` |
+
+Widgets: `homeassistant.scenes` `{items: [...] | "all", columns}` (buttons; ✓ / ✗ feedback; `confirm: true` asks
+first) and `homeassistant.entities` `{items: [...]}` (state and unit, live over the HA websocket `subscribe_entities`
+while on screen, a 30 s poll if the websocket fails; OK toggles switch-like entities). MCP: `tv_ha_status`,
+`tv_ha_list` (read), `tv_ha_run` (control).
+
+### Radio (`/v1/radio`, `/v1/radio/stations`, v2.22, #162)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/radio` | read | now playing: `{playing, title, artist, station, stationId, volume, sleepMinutes}` |
+| POST | `/v1/radio` | control | `{action}`: `play` (optional `station`: name or id), `pause`, `next`, `previous`, `stop`, `volume` (`volume` 0-100, the radio's own), `sleep` (`minutes` 0-240, 0 = off) |
+| GET | `/v1/radio/stations` | read | `{stations: [{id, name, url, logo?, fav?}]}`, Omarchy Radio (`omarchy`) first, then favourites |
+| POST | `/v1/radio/stations` | control | `{name, url, logo?}` → `{id}`; 400 `bad_url`, 409 `too_many` (200) |
+| DELETE | `/v1/radio/stations/{id}` | control | 400 for `omarchy`, 404 if unknown |
+
+A station URL is `https://`, or `http://` on the LAN; other `http://` streams only with `radio.allowHttp` (Settings ›
+Plugins › Radio). `.pls` / `.m3u` playlists are resolved to their first stream. Config: `plugins.radio` (the
+plugin: bar pill with the mini panel and the `radio` widget), `radio.key` (`off`, `red`, `green`, `yellow`, `blue`,
+`play_pause`), `radio.stations`. MCP: `tv_radio_now`, `tv_radio_stations` (read), `tv_radio`,
+`tv_radio_station_add`, `tv_radio_station_remove`, `tv_radio_sleep` (control).
+
+### Settings (`/v1/settings`, v2.22, #163)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/settings/schema` | read | `{version, sections: [{id, label, fields: [{key, type, label, values?, min?, max?, maxLength?, default?}]}]}` |
+| GET | `/v1/settings?section=…` | read | `{values: {key: value}, secrets: {key: {set}}, rev}`; a secret's value is never returned |
+| PATCH | `/v1/settings` | control | `{key: value, …}`: every value is checked first, one bad value → 400 `bad_value` and nothing changes |
+
+Types: `bool`, `int`, `number` (`null` clears), `enum`, `string`, `url` (`http(s)://host[:port]`), `secret`. Keys are
+paths in omarchytv.json (`plugins.radio`, `link.notifySound`), except `ha.url` / `ha.token`, kept in the TV's private
+store; a new `ha.url` without a new token forgets the old token. Event: `settings_changed {keys}`. MCP:
+`tv_settings_get {section?}` (read), `tv_settings_set {key, value}` (control).
+
+**The web page** (`link.webSettings`, off by default): `GET /settings/` (CSP `default-src 'none'`, no frames, no
+referrer). `POST /v1/settings/session {device, code?}` (one per address every 30 s, three waiting) shows Deny / Allow
+read-only / Allow on the TV; `GET /v1/settings/session/{id}` (long poll, only from the asking address) answers
+`pending | denied | expired | approved` and, when approved, sets `otv_web` (an app token named `web · <device>`,
+scope read or control, 30 days) as an `HttpOnly; SameSite=Strict` cookie. With the cookie: `GET /v1/settings/me`
+(`{device, scope, csrf}`), `GET /v1/settings/theme`, `DELETE /v1/settings/session` (sign out), `GET/POST
+/v1/settings/tokens`, `DELETE /v1/settings/tokens/{id}` (control), and the app routes above. Every write needs
+`X-Omarchy-CSRF` and `Origin: http://<Host>`; the Host must be an IP address or a `*.ts.net` name. No CORS headers.
+
+### AI LIVE, the night shift, talk and skills (v2.22, Android TV)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| POST | `/v1/live` | notify | `{text ≤120, progress 0-100 / -1, preview?}`: what the agent does now (memory only) |
+| GET | `/v1/live` | read | `{agents: [{agent, text, progress, at, since, waiting?: {id, question}, preview?}], events: [{seq, at, agent, kind, text}]}` |
+| GET | `/v1/shift` | read | `{state: none | running | ended, startedAt, until, wake, by, tasks[], counts: {ok, fail, info, waiting}}` |
+| POST | `/v1/shift/start` | control | `{tasks[1-20], until: "07:00" or ms (≤16 h), wake?, replace?}` |
+| POST | `/v1/shift/end` | control | |
+| POST | `/v1/shift/log` | notify | `{level: ok | fail | info, text ≤200, detail?, task?}`; 409 `no_shift` outside a shift (2 h of grace after `until`) |
+| POST | `/v1/shift/queue` | notify | `{title ≤120, detail?, risk?}` → `{item: {id: "q1", state: "pending"}}`; 50 waiting at most |
+| GET | `/v1/shift/queue/{id}` | notify | `pending | approved | denied`; only the TV's Night shift page answers |
+| GET | `/v1/skills` | read | `{catalog: [{id, name, author, version, description, permissions}], installed: {id: {…, agent}}}` |
+| POST | `/v1/skills/{id}/install` | control | shows the skill and its permissions on the TV; the owner answers there |
+| DELETE | `/v1/skills/{id}` | control | removes its widgets and its page |
+
+**LG / Samsung (the bridge).** `omarchy-tv webos-serve` answers the same `/v1/live`, `/v1/shift*` and `/v1/skills*`
+paths with the agents' key (`from` in the body names the agent), keeps the shift in
+`~/.config/omarchy-tv/night-shift.json` (0600) and the catalogue in `lib/omarchy_tv/skills` (a copy of the TV's, checked
+by a test). The TV app reads `GET /v1/tvlive` with its ask code → `{live, shift (with log and queue), skillAsk, skills,
+installed}` and answers with `POST /v1/shift/answer {id, yes}`, `POST /v1/skills/answer {id, yes}`, `POST
+/v1/tvskills/install | remove {id}` (the ask code only: agents get 401). During a shift `POST /v1/notify` answers
+`kept_for_morning`. While the bridge runs, omarchy-link's agent monitor (when turned on, already redacted) feeds the
+channel every 5 s.
+
+A preview (on `/v1/live` and `/v1/ask`): `{kind: image, url}` (https, or http to a LAN / tailnet IP),
+`{kind: diff | text, text}`, `{kind: chart, points[], label?}`, optional `title`; anything else is 400 `bad_preview`.
+During a running shift `POST /v1/notify` answers `kept_for_morning` (the note goes to the diary), and speech is off.
+Events: `live`, `shift_changed {op}`. Talk (web settings session, control): `GET /v1/settings/agents`,
+`POST /v1/settings/talk {agentId, text}` → the PC's `agent_ask`; the `agent_answer` is spoken on the TV.
+`tv_open` targets `live` and `replay`. MCP: `tv_live_update`, `tv_live`, `tv_shift_start | end | status | log | queue |
+decision`, `tv_skill_list | install | remove`.
+
+### The studio: the morning briefing, the debate, scenes (v2.22)
+
+| Method | Path | Scope | |
+|---|---|---|---|
+| GET | `/v1/briefing` | read | the briefing, or `{state: "none"}` |
+| POST | `/v1/briefing` | notify | `{title?, sections: [1-8 {title ≤40, lines: [1-8, ≤120]}], say? ≤1500, wake?: "07:30" or ms (≤24 h)}` |
+| POST | `/v1/briefing/show` | control | on AI LIVE now; 409 `no_briefing` |
+| POST | `/v1/debate` | notify | `{topic ≤160}` → `{debate: {id: "d1", state: "open", entries: []}}`; on AI LIVE at once |
+| POST | `/v1/debate/{id}` | notify | `{text ≤1200, preview?}`: your answer (by the token's name; a second post replaces it); 4 agents at most; 409 `closed` |
+| GET | `/v1/debate/{id}` | notify | `{topic, state: open | chosen, entries[], winner?}`; only the TV picks |
+| GET | `/v1/scenes` | read | `{scenes: {name: {steps, by, at}}}` |
+| POST | `/v1/scene/run` | control | `{name}`: a saved scene, at once → `{results: [{step, ok, error?}]}`; `{name?, steps}`: asks the owner on the TV → `{id}` |
+| POST | `/v1/scene/save` | control | `{name ≤40, steps}`: asks the owner on the TV → `{id}`; 24 scenes at most |
+| GET | `/v1/scene/{id}` | control | `pending | ran (results) | saved | denied` |
+
+| GET | `/v1/teletext` | read | `{pages: [{page, title, by, at}], max: 60}` |
+| GET | `/v1/teletext/{n}` | read | `{page, title, lines: [{text ≤40, color}], by, at}`; 100 is the index, made by the TV |
+| PUT | `/v1/teletext/{101-899}` | notify | `{title ≤32, lines: [1-22, "text" or {text, color: white | red | green | yellow | blue | magenta | cyan}]}`; 60 pages at most |
+| DELETE | `/v1/teletext/{101-899}` | control | |
+| GET | `/v1/guide` | read | `{programmes: [{id, kind: agent | shift | briefing, agent, title, detail, start, end, state, now: past | on_air | next}], now}` |
+| POST | `/v1/guide` | notify | `{title ≤60, start?: "23:30" or ms (≤48 h ahead, default now), end? (≤16 h, default 1 h), detail?}` → `{programme: {id: "p1"}}`; 50 at most |
+| POST | `/v1/guide/{id}` | notify | `{state: on_air | done | failed | cancelled, detail?}` |
+| DELETE | `/v1/guide/{id}` | control | |
+
+A scene step is `{tool, args}`, with `tool` one of `tv_ha_run`, `tv_launch_app`, `tv_set_theme`, `tv_radio`,
+`tv_send_key`, `tv_open`, `tv_notify`, `tv_screensaver`, `tv_page_show` (12 steps at most). Steps run as the TV's
+own MCP calls, and a failed step does not stop the others. Event: `debate {id, op: start | post | chosen}`. MCP:
+`tv_briefing_set | show`, `tv_debate_start | post | result`, `tv_scene_run | save | list | result`,
+`tv_teletext_publish | list | remove`, `tv_guide | tv_guide_add | tv_guide_update`. Events: `teletext {page}`,
+`guide {id}`. `tv_open` also takes `teletext` and `guide`. On LG / Samsung the bridge keeps the pages and the Guide
+too (`GET /v1/tvlive` has `teletext` and `guide`). On LG / Samsung
+the PC bridge has the briefing and the debate (not scenes): the TV reads them in `GET /v1/tvlive` (`briefing`,
+`debate`) and answers with `POST /v1/tvstudio/briefing-shown` and `POST /v1/tvstudio/debate {id, index}`.
 
 ### AI credits (`PUT /v1/ai`)
 

@@ -433,6 +433,8 @@ class Handler(BaseHTTPRequestHandler):
             handler = self._ask_get
         if not handler and method == "DELETE" and path.startswith("/v1/tokens/"):
             handler = lambda pc, a, b, p=path: self._token_del(p.rsplit("/", 1)[1])
+        if not handler and method == "PUT" and path.startswith("/v1/tokens/"):   # v2.22 maxLevel
+            handler = lambda pc, a, b, p=path: self._token_level(p.rsplit("/", 1)[1], a.get("maxLevel"), a.get("minLevel"))
         if not handler:
             return self._json(404, {"error": "not_found"}, sign)
         status, obj = handler(pc_id, payload, body)
@@ -592,6 +594,9 @@ class Handler(BaseHTTPRequestHandler):
             return 400, {"error": "bad_notify"}
         if not self.tv.config().get("agentAlert"):
             return 403, {"error": "notify_off", "message": "turn on agent alerts on the TV"}
+        rank = {"info": 0, "warn": 1, "alert": 2}   # v2.22 agentAlertMin, picked with the remote
+        if rank.get(a.get("level", "info"), 0) < rank.get(self.tv.config().get("agentAlertMin", "info"), 0):
+            return 200, {"ok": True, "shown": False, "deferred": False, "filtered": True}
         self.tv.notes = getattr(self.tv, "notes", []) + [(str(a.get("from") or "PC")[:40], text)]
         held = a.get("level", "info") == "info" and getattr(self.tv, "watching", False)
         return 200, {"ok": True, "shown": not held, "deferred": held}
@@ -599,12 +604,28 @@ class Handler(BaseHTTPRequestHandler):
     # v2.21 app API (a small model of the TV's AppApi)
     def _token_add(self, pc, a, body):
         apps = getattr(self.tv, "app_tokens", [])
-        tok = {"id": f"{len(apps) + 1:08x}", "name": a.get("name", ""), "scope": a.get("scope", "read")}
+        tok = {"id": f"{len(apps) + 1:08x}", "name": a.get("name", ""), "scope": a.get("scope", "read"),
+               "maxLevel": a.get("maxLevel", "alert"), "minLevel": a.get("minLevel", "info"), "expireDays": a.get("expireDays", 90)}
+        if tok["maxLevel"] not in ("info", "warn", "alert"):
+            return 400, {"error": "bad_level"}
         self.tv.app_tokens = apps + [tok]
         return 200, dict(tok, token="otva_mock" + tok["id"])
 
     def _token_list(self, pc, a, body):
         return 200, {"apps": getattr(self.tv, "app_tokens", []), "max": 16}
+
+    def _token_level(self, tid, lvl, low=None):
+        rank = {"info": 0, "warn": 1, "alert": 2}
+        if lvl is None and low is None or lvl is not None and lvl not in rank or low is not None and low not in rank:
+            return 400, {"error": "bad_level"}
+        for x in getattr(self.tv, "app_tokens", []):
+            if x["id"] == tid:
+                hi, lo = lvl or x.get("maxLevel", "alert"), low or x.get("minLevel", "info")
+                if rank[lo] > rank[hi]:
+                    return 400, {"error": "bad_level"}
+                x["maxLevel"], x["minLevel"] = hi, lo
+                return 200, {"ok": True, "maxLevel": hi, "minLevel": lo}
+        return 404, {"error": "no_such_app"}
 
     def _token_del(self, tid):
         apps = getattr(self.tv, "app_tokens", [])

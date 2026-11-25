@@ -1039,6 +1039,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     protected void onResume() {
         super.onResume();
         BootScreenView.onResume(this, findViewById(R.id.root));
+        if (ShiftWake.dueOnHome(this)) startActivity(ShiftActivity.intent(this, false));   // v2.22 the night shift's morning
+        if (ShiftWake.briefingDue(this)) startActivity(LiveActivity.intent(this, LiveActivity.BRIEFING));   // on top: the briefing first
         // migrations first, then the wallpaper layers: a first launch must not attach OmaFire/fractals to the old default
         LauncherConfig.update(this, j -> {
             LauncherConfig.pulseDefault(j);
@@ -1975,6 +1977,45 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(this::showSpacexMenu);
             return false;
         });
+        // v2.22 #162 the Radio plugin: a mini player in the bar and a radio widget, without opening Radiomarchy
+        String lRadio = "Radio (com.omarchytv.radio) · mini player";
+        p.add(lRadio, cfg.pluginRadio ? on : off, r -> {
+            boolean n = !cfg.pluginRadio;
+            applyLive("plugins", lRadio, j -> {
+                org.json.JSONObject pl = j.optJSONObject("plugins");
+                if (pl == null) j.put("plugins", pl = new org.json.JSONObject());
+                pl.put("radio", n);
+            });
+            return true;
+        });
+        if (cfg.pluginRadio) {
+            String lKey = "Radio · play / pause key";
+            p.add(lKey, cfg.radioKey, r -> {
+                java.util.List<String> keys = java.util.Arrays.asList("off", "red", "green", "yellow", "blue", "play_pause");
+                String n = keys.get((keys.indexOf(cfg.radioKey) + 1) % keys.size());
+                applyLive("plugins", lKey, j -> {
+                    org.json.JSONObject ro = j.optJSONObject("radio");
+                    if (ro == null) j.put("radio", ro = new org.json.JSONObject());
+                    ro.put("key", n);
+                });
+                return true;
+            });
+            boolean http = LauncherConfig.readJson(this).optJSONObject("radio") != null
+                    && LauncherConfig.readJson(this).optJSONObject("radio").optBoolean("allowHttp");
+            String lHttp = "Radio · allow http:// streams from the internet";
+            p.add(lHttp, http ? on : off, r -> {
+                applyLive("plugins", lHttp, j -> {
+                    org.json.JSONObject ro = j.optJSONObject("radio");
+                    if (ro == null) j.put("radio", ro = new org.json.JSONObject());
+                    ro.put("allowHttp", !http);
+                });
+                return true;
+            });
+            p.add("Radio · stations", "☰ ›", r -> {
+                handler.post(() -> RadioMini.stations(this));
+                return false;
+            });
+        }
         String lGb = "Grok Bot Companion (TV) · experimental (@tcballard, MIT)";
         p.add(lGb, cfg.pluginGrokbot ? on : off, r -> {
             boolean n = !cfg.pluginGrokbot;
@@ -2748,7 +2789,8 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             return true;
         });
         if ("hue".equals(hub)) addHueRows(p);
-        else if ("homeassistant".equals(hub)) addHaRows(p);
+        else if ("homeassistant".equals(hub)) addHaRows(p, true);
+        if (!"homeassistant".equals(hub)) addHaRows(p, false);   // v2.22 #160: HA for the Home widgets, without the lights
         else p.hint(str(R.string.lights_hint_none));
         if (!"none".equals(hub)) {
             p.add(str(R.string.lights_push), "›", r -> {
@@ -2880,7 +2922,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
         }
     }
 
-    private void addHaRows(AsciiMenu.Page p) {
+    private void addHaRows(AsciiMenu.Page p, boolean lights) {
         android.content.Context c = this;
         String url = com.omarchytv.home.lights.LightsStore.get(c, "ha_url");
         String ents = com.omarchytv.home.lights.LightsStore.get(c, "ha_entities");
@@ -2901,11 +2943,11 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> textDialog(lTok, "", "long-lived access token", true, v -> {
                 if (v.isEmpty()) return;
                 com.omarchytv.home.lights.LightsStore.put(c, "ha_token", v);
-                reopenAt("lights", lEnt);
+                reopenAt("lights", lights ? lEnt : lTok);
             }));
             return false;
         });
-        p.add(lEnt, ents.isEmpty() ? "—" : ents, r -> {
+        if (lights) p.add(lEnt, ents.isEmpty() ? "—" : ents, r -> {
             handler.post(() -> textDialog(lEnt, ents, "light.living_room, light.tv_strip", false, v -> {
                 com.omarchytv.home.lights.LightsStore.put(c, "ha_entities", v);
                 reopenAt("lights", lEnt);
@@ -3743,6 +3785,28 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
             return true;
         });
+        // v2.22 #163: the web settings page, off by default; each browser is approved here, once
+        boolean webOn = LauncherConfig.get(this).webSettings;
+        p.add(str(R.string.web_settings_row), str(webOn ? R.string.on : R.string.off), r -> {
+            boolean n = !LauncherConfig.get(this).webSettings;
+            builtWith = LauncherConfig.update(this, j -> {
+                org.json.JSONObject l = j.optJSONObject("link");
+                if (l == null) j.put("link", l = new org.json.JSONObject());
+                l.put("webSettings", n);
+            });
+            r.setValue(str(n ? R.string.on : R.string.off));
+            refreshMenu("link");
+            return true;
+        });
+        if (webOn) {
+            p.add(str(R.string.web_settings_open), "QR ›", r -> {
+                String wIp = OmarchyLink.lanIp(), wCode = OmarchyLink.webCode();
+                if (wIp == null || wCode == null) return true;
+                String url = "http://" + wIp + ":" + com.omarchytv.home.link.LinkServer.PORT + "/settings/?code=" + wCode;
+                handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.web_settings_row), url, str(R.string.web_settings_hint), true)));
+                return false;
+            });
+        }
         // v2.21: GET /v1/theme, the theme for dashboards and agent pages on the network (on by default).
         p.add(str(R.string.link_share_theme), str(LauncherConfig.get(this).shareTheme ? R.string.on : R.string.off), r -> {
             boolean n = !LauncherConfig.get(this).shareTheme;
@@ -4060,6 +4124,61 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             handler.post(() -> openCompanionChat(false));
             return false;
         });
+        // v2.22 AI LIVE: the agents' work as a TV channel; the night shift's page and its replay
+        p.add("AI LIVE", "● ›", r -> {
+            handler.post(() -> startActivity(LiveActivity.intent(this, false)));
+            return false;
+        });
+        String lLiveCorner = str(R.string.corner_row);   // v2.22 AI LIVE in the corner while you watch
+        p.add(lLiveCorner, str("live".equals(gc.liveCorner) ? R.string.corner_live : "questions".equals(gc.liveCorner) ? R.string.corner_questions : R.string.off), r -> {
+            String n = "off".equals(gc.liveCorner) ? "questions" : "questions".equals(gc.liveCorner) ? "live" : "off";
+            if (!"off".equals(n) && !LiveCorner.overlayAllowed(this)) {
+                try {
+                    startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:" + getPackageName())));
+                } catch (RuntimeException e) {
+                    android.widget.Toast.makeText(this, getString(R.string.corner_permission, getPackageName()), android.widget.Toast.LENGTH_LONG).show();
+                }
+            }
+            applyLive("grok-bot", lLiveCorner, j -> j.put("liveCorner", n));
+            return true;
+        });
+        p.add("🎙 " + str(R.string.talk_phone), "QR ›", r -> {   // v2.22 the phone is the microphone (the web settings page)
+            String wIp = OmarchyLink.lanIp(), wCode = OmarchyLink.webCode();
+            org.json.JSONObject lk = LauncherConfig.readJson(this).optJSONObject("link");
+            if (lk == null || !lk.optBoolean("webSettings") || wIp == null || wCode == null) {
+                android.widget.Toast.makeText(this, str(R.string.talk_needs_web), android.widget.Toast.LENGTH_LONG).show();
+                return true;
+            }
+            String url = "http://" + wIp + ":" + com.omarchytv.home.link.LinkServer.PORT + "/settings/?tab=talk&code=" + wCode;
+            handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.talk_phone), url, str(R.string.web_settings_hint), false)));
+            return false;
+        });
+        p.add("📺 " + str(R.string.guide_title), "›", r -> {   // v2.22 the agents' Guide and Televideo AI
+            handler.post(() -> startActivity(GuideActivity.intent(this)));
+            return false;
+        });
+        p.add("📟 " + str(R.string.teletext_title), "100 ›", r -> {
+            handler.post(() -> startActivity(TeletextActivity.intent(this, 100)));
+            return false;
+        });
+        p.add("🧩 " + str(R.string.skills_title), "›", r -> {   // v2.22 skills from the community
+            handler.post(() -> startActivity(SkillsActivity.intent(this, "")));
+            return false;
+        });
+        p.add(str(R.string.shift_title), "🌙 ›", r -> {
+            handler.post(() -> startActivity(ShiftActivity.intent(this, false)));
+            return false;
+        });
+        // v2.22 #161: the agent skill as a QR, for a phone or an agent; "this TV" adds the TV's address, never a token
+        p.add(str(R.string.skill_qr_label), "QR ›", r -> {
+            handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.skill_qr_label), SkillQr.url(this), str(R.string.skill_qr_hint), false)));
+            return false;
+        });
+        p.add(str(R.string.skill_qr_label) + " · " + str(R.string.skill_qr_this_tv), "QR ›", r -> {
+            String u = SkillQr.thisTv(SkillQr.url(this), OmarchyLink.lanIp(), com.omarchytv.home.link.LinkServer.PORT);
+            handler.post(() -> startActivity(QrActivity.intent(this, str(R.string.skill_qr_label), u, str(R.string.skill_qr_hint), false)));
+            return false;
+        });
         // v2.20: GrokBot Office, off by default. On adds its tile to the TV's app row, the Walker and the "office" key.
         p.add(str(R.string.office_setting), str(OfficeActivity.enabled(this) ? R.string.on : R.string.off), r -> {
             boolean n = !OfficeActivity.enabled(this);
@@ -4077,6 +4196,27 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             applyLive("grok-bot", lAgentAlert, j -> j.put("agentAlert", n));
             return true;
         });
+        if (gc.agentAlert) {   // v2.22: which levels reach the screen, and whether they make a sound
+            String lMin = str(R.string.agent_alert_min_row);
+            int minLabel = "alert".equals(gc.agentAlertMin) ? R.string.agent_alert_min_alert
+                    : "warn".equals(gc.agentAlertMin) ? R.string.agent_alert_min_warn : R.string.agent_alert_min_all;
+            p.add(lMin, str(minLabel), r -> {
+                String n = "info".equals(gc.agentAlertMin) ? "warn" : "warn".equals(gc.agentAlertMin) ? "alert" : "info";
+                applyLive("grok-bot", lMin, j -> j.put("agentAlertMin", n));
+                return true;
+            });
+            String lSound = str(R.string.agent_alert_sound_row);
+            p.add(lSound, str(gc.notifySound ? R.string.on : R.string.off), r -> {
+                boolean n = !gc.notifySound;
+                applyLive("grok-bot", lSound, j -> {
+                    org.json.JSONObject l = j.optJSONObject("link");
+                    if (l == null) j.put("link", l = new org.json.JSONObject());
+                    if (n) l.remove("notifySound");
+                    else l.put("notifySound", false);
+                });
+                return true;
+            });
+        }
         String lOv = "Floating companion on the home screen";
         p.add(lOv, str(gc.companionOverlay ? R.string.on : R.string.off), r -> {
             boolean n = !gc.companionOverlay;
@@ -4443,6 +4583,27 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     }
 
     /** Play / pause / next on Home, even when another app has stolen the MediaSession (audio focus). */
+    /** v2.22 #162: the Radio plugin's play / pause key (a colour key or PLAY_PAUSE) on the Home. */
+    private boolean radioPluginKey(KeyEvent e) {
+        LauncherConfig c = LauncherConfig.get(this);
+        if (!c.pluginRadio || "off".equals(c.radioKey) || walker != null || (menu != null && menu.isShowing())) return false;
+        int want;
+        switch (c.radioKey) {
+            case "red": want = KeyEvent.KEYCODE_PROG_RED; break;
+            case "green": want = KeyEvent.KEYCODE_PROG_GREEN; break;
+            case "yellow": want = KeyEvent.KEYCODE_PROG_YELLOW; break;
+            case "blue": want = KeyEvent.KEYCODE_PROG_BLUE; break;
+            default: want = KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE; break;
+        }
+        if (e.getKeyCode() != want) return false;
+        if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) {
+            RadioPlayer p = RadioPlayer.get(this);
+            if (p.current() == null) p.playOrStart();
+            else p.toggle();
+        }
+        return true;
+    }
+
     private boolean radioMediaKey(KeyEvent e) {
         RadioPlayer p = RadioPlayer.peek();
         if (p == null || p.current() == null || !RadioPlayer.isMediaKey(e.getKeyCode())) return false;
@@ -4454,6 +4615,7 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
     public boolean dispatchKeyEvent(KeyEvent e) {
         if (BootScreenView.consumeKey(e)) return true;   // boot screen: any key skips, none reaches Home
         if (LiftoffView.consumeKey(e)) return true;      // liftoff countdown: any key hides it
+        if (radioPluginKey(e)) return true;
         if (radioMediaKey(e)) return true;
         if (swallowKeyUp == e.getKeyCode() && e.getAction() == KeyEvent.ACTION_UP) {
             swallowKeyUp = -1;
@@ -4495,7 +4657,10 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
             }
             if (kc == KeyEvent.KEYCODE_CHANNEL_UP || kc == KeyEvent.KEYCODE_CHANNEL_DOWN || kc == KeyEvent.KEYCODE_PAGE_UP || kc == KeyEvent.KEYCODE_PAGE_DOWN) {
                 boolean up = kc == KeyEvent.KEYCODE_CHANNEL_UP || kc == KeyEvent.KEYCODE_PAGE_DOWN;
-                if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0) setWorkspace(LauncherConfig.get(this).nextWorkspace(workspace, up ? 1 : -1));
+                if (e.getAction() == KeyEvent.ACTION_DOWN && e.getRepeatCount() == 0
+                        && !home.widgetStep(up ? 1 : -1)) {   // v2.22: widget pages first, then the workspaces
+                    setWorkspace(LauncherConfig.get(this).nextWorkspace(workspace, up ? 1 : -1));
+                }
                 return true;
             }
             if (workspace != 1 && kc == KeyEvent.KEYCODE_BACK) {
@@ -5461,6 +5626,14 @@ public class MainActivity extends Activity implements AppAdapter.TileListener, T
                 : "yellow".equals(cfg.askKey) ? KeyEvent.KEYCODE_PROG_YELLOW : "blue".equals(cfg.askKey) ? KeyEvent.KEYCODE_PROG_BLUE : -1;
         if (keyCode == ask) {
             open(new Intent(this, AskActivity.class));
+            return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_TV_TELETEXT && movingPos < 0) {   // v2.22 the remote's TEXT key: Televideo AI
+            startActivity(TeletextActivity.intent(this, 100));
+            return true;
+        }
+        if (keyCode == KeyEvent.KEYCODE_GUIDE && movingPos < 0) {   // v2.22 the remote's GUIDE key: the agents' Guide
+            startActivity(GuideActivity.intent(this));
             return true;
         }
         return super.onKeyDown(keyCode, event);

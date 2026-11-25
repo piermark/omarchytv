@@ -74,6 +74,8 @@ final class AppApi {
         final String id, owner, from, question;
         final List<String> choices;
         final long deadline;
+        String detail = "";   // v2.22: the full text shown under the question (the whole command), scrollable
+        String risk = "";     // v2.22: why it is risky; framed red, no yes on the remote
         volatile String answer;
 
         Ask(String id, String owner, String from, String question, List<String> choices, long deadline) {
@@ -128,7 +130,15 @@ final class AppApi {
         return "/v1/state".equals(p) || "/v1/stream".equals(p) || "/v1/notify".equals(p) || "/v1/ask".equals(p)
                 || ASK_PATH.matcher(p).matches() || "/v1/page".equals(p) || "/v1/diagnostics".equals(p)
                 || "/v1/mcp".equals(p) || "/mcp".equals(p) || "/v1/sdk/omarchytv.js".equals(p)
-                || "/v1/radio".equals(p) || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches();
+                || "/v1/radio".equals(p) || p.startsWith("/v1/radio/") || "/v1/open".equals(p) || "/v1/pages".equals(p) || PAGE_PATH.matcher(p).matches()
+                || p.startsWith("/v1/widgets/") || p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")
+                || "/v1/shift".equals(p) || p.startsWith("/v1/shift/")   // v2.22 the night shift
+                || "/v1/live".equals(p)   // v2.22 AI LIVE
+                || "/v1/skills".equals(p) || p.startsWith("/v1/skills/")   // v2.22 skills
+                || p.startsWith("/v1/briefing") || p.startsWith("/v1/debate") || p.startsWith("/v1/scene")   // v2.22 studio
+                || p.startsWith("/v1/teletext") || p.startsWith("/v1/guide")   // v2.22 Televideo AI and the Guide
+                || p.startsWith("/v1/ha/")   // v2.22 #157 (PUT /v1/widgets, the PC's panes, stays PC-only)
+                || "/v1/settings".equals(p) || "/v1/settings/schema".equals(p);   // v2.22 #163
     }
 
     /** The app token a request presents: "Authorization: Bearer otva_…", or ?token= on GET /v1/state and /v1/stream. */
@@ -189,7 +199,7 @@ final class AppApi {
 
     static LinkServer.Response cors(LinkServer.Response r) {
         r.headers.put("Access-Control-Allow-Origin", "*");
-        r.headers.put("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        r.headers.put("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
         r.headers.put("Access-Control-Allow-Headers", "Authorization, Content-Type");
         r.headers.put("Access-Control-Allow-Private-Network", "true");
         r.headers.put("Access-Control-Max-Age", "600");
@@ -203,12 +213,19 @@ final class AppApi {
     /** Shared by app tokens and signed PCs. Null when the path is not an app route. */
     LinkServer.Response route(Principal who, LinkServer.Request req, JSONObject body) throws Exception {
         String m = req.method, p = path(req.target);
+        if (p.startsWith("/v1/widgets/")) return widgetRoute(who, m, p, req.target, req.peer, body);   // v2.22 #157
+        if (p.equals("/v1/widget-pages") || p.startsWith("/v1/widget-pages/")) return pageRoute(who, m, p, req.target, body);   // #158
+        if (p.startsWith("/v1/ha/")) return haRoute(who, m, p, req.target, body);   // #160
+        if ("/v1/shift".equals(p) || p.startsWith("/v1/shift/")) return shiftRoute(who, m, p, body);   // v2.22
+        if ("/v1/live".equals(p)) return liveRoute(who, m, body);   // v2.22 AI LIVE
+        if ("/v1/skills".equals(p) || p.startsWith("/v1/skills/")) return skillsRoute(who, m, p);   // v2.22 skills
+        if (p.startsWith("/v1/briefing") || p.startsWith("/v1/debate") || p.startsWith("/v1/scene")) return studioRoute(who, m, p, body);
+        if (p.startsWith("/v1/teletext") || p.startsWith("/v1/guide")) return channelRoute(who, m, p, body);
+        if ("/v1/settings".equals(p) || "/v1/settings/schema".equals(p)) return settingsRoute(who, m, p, req.target, body);   // #163
         if ("GET".equals(m) && "/v1/state".equals(p)) return who.can("read") ? new LinkServer.Response(200, state()) : forbidden("read");
         if ("POST".equals(m) && "/v1/notify".equals(p)) {
             if (!who.can("notify")) return forbidden("notify");
-            JSONObject b = new JSONObject(body.toString());
-            if (!who.pc) b.put("from", who.name);
-            return s.notifyPost(b);
+            return notifyAs(who, body);
         }
         if ("POST".equals(m) && "/v1/ask".equals(p)) return who.can("notify") ? askPost(who, body) : forbidden("notify");
         Matcher am = ASK_PATH.matcher(p);
@@ -231,14 +248,21 @@ final class AppApi {
                     : new LinkServer.Response("not_lan_url".equals(e) ? 400 : 409, LinkServer.err(e, "a http:// page on the LAN or tailnet, by IP address"));
         }
         if ("/v1/radio".equals(p) && ("GET".equals(m) || "POST".equals(m))) {   // v2.21 Radiomarchy
-            if ("GET".equals(m)) return who.can("read") ? radio("now") : forbidden("read");
-            return who.can("control") ? radio(body.optString("action", "")) : forbidden("control");
+            if ("GET".equals(m)) return who.can("read") ? radioCmd(new JSONObject().put("action", "now")) : forbidden("read");
+            return who.can("control") ? radioCmd(body) : forbidden("control");   // v2.22: station, volume, sleep
+        }
+        if ("/v1/radio/stations".equals(p)) {   // v2.22 #162
+            if ("GET".equals(m)) return who.can("read") ? radioStationsGet() : forbidden("read");
+            if ("POST".equals(m)) return who.can("control") ? radioStationAdd(body) : forbidden("control");
+        }
+        if (p.startsWith("/v1/radio/stations/") && "DELETE".equals(m)) {
+            return who.can("control") ? radioStationRemove(p.substring("/v1/radio/stations/".length())) : forbidden("control");
         }
         if ("POST".equals(m) && "/v1/open".equals(p)) {
             if (!who.can("control")) return forbidden("control");
             String e = host.openTarget(body.optString("target", ""));
             return e == null ? new LinkServer.Response(200, LinkServer.ok().put("target", body.optString("target")))
-                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office"));
+                    : new LinkServer.Response(400, LinkServer.err(e, "home, radiomarchy, cinemarchy, arcade, office, skill, live, replay, teletext, guide"));
         }
         if ("GET".equals(m) && "/v1/pages".equals(p)) return who.can("read") ? new LinkServer.Response(200, new JSONObject().put("pages", pages())) : forbidden("read");
         Matcher pm = PAGE_PATH.matcher(p);
@@ -286,15 +310,35 @@ final class AppApi {
             if ("GET".equals(m)) return new LinkServer.Response(200, new JSONObject().put("apps", tokens.list()).put("max", AppTokens.MAX));
             if ("POST".equals(m)) {
                 String name = LinkServer.printable(body.optString("name", ""), 40), scope = body.optString("scope", "read");
+                String maxLevel = body.optString("maxLevel", "alert"), minLevel = body.optString("minLevel", "info");
                 if (name.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_name", "name is required"));
                 if (!AppTokens.validScope(scope)) return new LinkServer.Response(400, LinkServer.err("bad_scope", "read, notify or control"));
-                String[] t = tokens.add(name, scope, System.currentTimeMillis() / 1000);
+                if (AppTokens.levelRank(maxLevel) < 0 || AppTokens.levelRank(minLevel) < 0 || AppTokens.levelRank(minLevel) > AppTokens.levelRank(maxLevel)) {
+                    return new LinkServer.Response(400, LinkServer.err("bad_level", "info, warn or alert; the floor not above the ceiling"));
+                }
+                int expireDays = body.optInt("expireDays", AppTokens.DEFAULT_EXPIRE_DAYS);
+                if (expireDays < 0 || expireDays > AppTokens.MAX_EXPIRE_DAYS) {
+                    return new LinkServer.Response(400, LinkServer.err("bad_expiry", "expireDays 0 (never) to " + AppTokens.MAX_EXPIRE_DAYS));
+                }
+                String[] t = tokens.add(name, scope, maxLevel, expireDays, System.currentTimeMillis() / 1000);
+                if (t != null && !"info".equals(minLevel)) tokens.setLevels(t[0], minLevel, null);
                 if (t == null) return new LinkServer.Response(409, LinkServer.err("too_many_apps", AppTokens.MAX + " app tokens; revoke one"));
                 host.log("app token added: " + name + " (" + scope + ")");
-                return new LinkServer.Response(200, new JSONObject().put("id", t[0]).put("token", t[1]).put("name", name).put("scope", scope));
+                return new LinkServer.Response(200, new JSONObject().put("id", t[0]).put("token", t[1]).put("name", name).put("scope", scope)
+                        .put("maxLevel", maxLevel).put("minLevel", minLevel).put("expireDays", expireDays));
             }
         }
         Matcher tm = TOKEN_PATH.matcher(p);
+        if (who.pc && "PUT".equals(m) && tm.matches()) {   // v2.22 {"maxLevel"?, "minLevel"?}: info | warn | alert
+            String max = body.has("maxLevel") ? body.optString("maxLevel") : null, min = body.has("minLevel") ? body.optString("minLevel") : null;
+            if (max == null && min == null || max != null && AppTokens.levelRank(max) < 0 || min != null && AppTokens.levelRank(min) < 0) {
+                return new LinkServer.Response(400, LinkServer.err("bad_level", "maxLevel / minLevel: info, warn or alert"));
+            }
+            if (tokens.byId(tm.group(1)) == null) return new LinkServer.Response(404, LinkServer.err("no_such_app", null));
+            if (!tokens.setLevels(tm.group(1), min, max)) return new LinkServer.Response(400, LinkServer.err("bad_level", "the floor is above the ceiling"));
+            AppTokens.App x = tokens.byId(tm.group(1));
+            return new LinkServer.Response(200, LinkServer.ok().put("minLevel", x.minLevel).put("maxLevel", x.maxLevel));
+        }
         if (who.pc && "DELETE".equals(m) && tm.matches()) {
             closeStreams("app:" + tm.group(1));
             return tokens.remove(tm.group(1)) ? new LinkServer.Response(200, LinkServer.ok()) : new LinkServer.Response(404, LinkServer.err("no_such_app", null));
@@ -303,6 +347,155 @@ final class AppApi {
     }
 
     static final java.util.Set<String> RADIO = new java.util.HashSet<>(java.util.Arrays.asList("now", "play", "pause", "next", "previous", "stop"));
+
+    // ---- v2.22 #163 settings: one backend for the web page, app tokens and MCP ----------------------------------
+
+    LinkServer.Response settingsRoute(Principal who, String m, String p, String target, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/settings/schema".equals(p)) {
+            return who.can("read") ? new LinkServer.Response(200, WebSettings.schema(host.settingsChoices())) : forbidden("read");
+        }
+        if ("GET".equals(m)) {
+            if (!who.can("read")) return forbidden("read");
+            String section = query(target, "section");
+            return new LinkServer.Response(200, settingsGet(section == null ? null : java.net.URLDecoder.decode(section, "UTF-8")));
+        }
+        if ("PATCH".equals(m)) return who.can("control") ? settingsSet(body) : forbidden("control");
+        return new LinkServer.Response(405, LinkServer.err("method", "GET or PATCH"));
+    }
+
+    JSONObject settingsGet(String section) throws JSONException {
+        JSONObject ha = host.haConfig();
+        JSONObject ext = new JSONObject().put(WebSettings.HA_URL, ha.optString("url", ""))
+                .put(WebSettings.HA_TOKEN, ha.optBoolean("tokenSet", false));
+        JSONObject v = WebSettings.values(host.config(), ext, section);
+        String rev = LinkCrypto.hex(LinkCrypto.sha256(LinkCrypto.utf8(v.toString()))).substring(0, 16);
+        return v.put("rev", rev);
+    }
+
+    /** {key: value, …}: all checked first, then written at once; "ha.url" / "ha.token" go to the TV's lights store. */
+    LinkServer.Response settingsSet(JSONObject changes) throws Exception {
+        java.util.LinkedHashMap<WebSettings.Field, Object> ch;
+        try {
+            ch = WebSettings.check(changes, host.settingsChoices());
+        } catch (IllegalArgumentException e) {
+            return new LinkServer.Response(400, LinkServer.err("bad_value", e.getMessage()));
+        }
+        String haUrl = null, haToken = null;
+        boolean cfg = false;
+        JSONArray keys = new JSONArray();
+        for (Map.Entry<WebSettings.Field, Object> e : ch.entrySet()) {
+            keys.put(e.getKey().key);
+            if (WebSettings.HA_URL.equals(e.getKey().key)) haUrl = (String) e.getValue();
+            else if (WebSettings.HA_TOKEN.equals(e.getKey().key)) haToken = (String) e.getValue();
+            else cfg = true;
+        }
+        if (cfg) {
+            host.editConfig(j -> {
+                for (Map.Entry<WebSettings.Field, Object> e : ch.entrySet()) {
+                    if (!WebSettings.external(e.getKey())) WebSettings.write(j, e.getKey(), e.getValue());
+                }
+            });
+        }
+        if (haUrl != null || haToken != null) host.haConfigure(haUrl, haToken);   // a new URL without a token forgets the old one
+        s.broadcast("settings_changed", new JSONObject().put("keys", keys));
+        return new LinkServer.Response(200, LinkServer.ok().put("changed", keys));
+    }
+
+    /** v2.22 #162 POST /v1/radio {action, station?, volume?, minutes?}. */
+    LinkServer.Response radioCmd(JSONObject b) throws JSONException {
+        String action = b.optString("action", "");
+        if (!RADIO.contains(action) && !"volume".equals(action) && !"sleep".equals(action)) {
+            return new LinkServer.Response(400, LinkServer.err("bad_action", "now, play, pause, next, previous, stop, volume, sleep"));
+        }
+        if ("volume".equals(action) && (!b.has("volume") || b.optInt("volume", -1) < 0 || b.optInt("volume", -1) > 100)) {
+            return new LinkServer.Response(400, LinkServer.err("bad_volume", "0-100"));
+        }
+        if ("sleep".equals(action) && (b.optInt("minutes", -1) < 0 || b.optInt("minutes", -1) > 240)) {
+            return new LinkServer.Response(400, LinkServer.err("bad_minutes", "0-240"));
+        }
+        JSONObject cmd = new JSONObject().put("action", action);
+        if (b.has("station")) cmd.put("station", LinkServer.printable(b.optString("station", ""), 512));
+        if (b.has("volume")) cmd.put("volume", b.optInt("volume"));
+        if (b.has("minutes")) cmd.put("minutes", b.optInt("minutes"));
+        JSONObject r = host.radioCmd(cmd);
+        if (r != null && r.has("error")) return new LinkServer.Response(404, r);
+        return r == null ? new LinkServer.Response(409, LinkServer.err("no_radio", "Radiomarchy is not available"))
+                : new LinkServer.Response(200, r);
+    }
+
+    LinkServer.Response radioStationsGet() throws JSONException {
+        JSONObject cfg = host.config();
+        JSONObject radio = cfg != null ? cfg.optJSONObject("radio") : null;
+        JSONArray a = radio != null ? radio.optJSONArray("stations") : null;
+        JSONArray out = new JSONArray().put(new JSONObject().put("id", "omarchy").put("name", "Omarchy Radio").put("url", "https://radio.omarchy.org"));
+        for (int i = 0; a != null && i < a.length(); i++) {
+            JSONObject o = a.optJSONObject(i);
+            if (o != null) out.put(new JSONObject().put("id", o.optString("id")).put("name", o.optString("name")).put("url", o.optString("url"))
+                    .put("fav", o.optBoolean("fav")));
+        }
+        return new LinkServer.Response(200, new JSONObject().put("stations", out));
+    }
+
+    /** {name, url, logo?}: https any host, http only on the LAN unless radio.allowHttp; at most 200. */
+    LinkServer.Response radioStationAdd(JSONObject b) throws Exception {
+        String name = LinkServer.printable(b.optString("name", ""), 40), url = b.optString("url", "").trim(), logo = b.optString("logo", "").trim();
+        if (name.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_name", "1 to 40 characters"));
+        String[] id = new String[1];
+        String[] bad = new String[1];
+        host.editConfig(j -> {
+            JSONObject radio = j.optJSONObject("radio");
+            if (radio == null) j.put("radio", radio = new JSONObject());
+            if (!stationUrlOk(url, radio.optBoolean("allowHttp"))) {
+                bad[0] = "bad_url";
+                return;
+            }
+            JSONArray a = radio.optJSONArray("stations");
+            if (a == null) radio.put("stations", a = new JSONArray());
+            if (a.length() >= 200) {
+                bad[0] = "too_many";
+                return;
+            }
+            java.util.Set<String> taken = new java.util.HashSet<>();
+            for (int i = 0; i < a.length(); i++) if (a.optJSONObject(i) != null) taken.add(a.optJSONObject(i).optString("id"));
+            String base = name.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-").replaceAll("^-+|-+$", "");
+            if (base.isEmpty()) base = "station";
+            if (base.length() > 32) base = base.substring(0, 32);
+            String nid = base;
+            for (int n = 2; taken.contains(nid) || "omarchy".equals(nid); n++) nid = base + "-" + n;
+            JSONObject st = new JSONObject().put("id", nid).put("name", name).put("url", url);
+            if (stationUrlOk(logo, false) && logo.startsWith("https://")) st.put("logo", logo);
+            a.put(st);
+            id[0] = nid;
+        });
+        if ("bad_url".equals(bad[0])) return new LinkServer.Response(400, LinkServer.err("bad_url", "https://, or http:// on the LAN (or allow http streams on the TV)"));
+        if ("too_many".equals(bad[0])) return new LinkServer.Response(409, LinkServer.err("too_many", "200 stations"));
+        return new LinkServer.Response(200, LinkServer.ok().put("id", id[0]).put("name", name));
+    }
+
+    static boolean stationUrlOk(String url, boolean allowHttp) {
+        if (url == null || url.length() > 512 || url.indexOf(' ') >= 0) return false;
+        if (url.startsWith("https://")) return url.length() > 9;
+        if (!url.startsWith("http://")) return false;
+        return allowHttp ? url.length() > 8 : lanUrl(url) || url.matches("http://(10|127|192\\.168|172\\.(1[6-9]|2\\d|3[01]))\\.[0-9.]+(:\\d+)?(/.*)?");
+    }
+
+    LinkServer.Response radioStationRemove(String id) throws Exception {
+        if ("omarchy".equals(id)) return new LinkServer.Response(400, LinkServer.err("built_in", "Omarchy Radio stays"));
+        boolean[] gone = new boolean[1];
+        host.editConfig(j -> {
+            JSONObject radio = j.optJSONObject("radio");
+            JSONArray a = radio != null ? radio.optJSONArray("stations") : null;
+            for (int i = a == null ? -1 : a.length() - 1; i >= 0; i--) {
+                JSONObject o = a.optJSONObject(i);
+                if (o != null && id.equals(o.optString("id"))) {
+                    a.remove(i);
+                    gone[0] = true;
+                }
+            }
+        });
+        return gone[0] ? new LinkServer.Response(200, LinkServer.ok().put("removed", id))
+                : new LinkServer.Response(404, LinkServer.err("no_such_station", id));
+    }
 
     LinkServer.Response radio(String action) throws JSONException {
         if (!RADIO.contains(action)) return new LinkServer.Response(400, LinkServer.err("bad_action", "now, play, pause, next, previous, stop"));
@@ -359,7 +552,7 @@ final class AppApi {
             JSONObject o = null;
             for (int i = 0; i < a.length(); i++) if (id.equals(a.optJSONObject(i) != null ? a.optJSONObject(i).optString("id") : "")) o = a.optJSONObject(i);
             if (o == null) {
-                if (a.length() >= 16) {
+                if (a.length() >= HomePages.MAX_AGENT_PAGES) {   // v2.22 #158: was 16
                     full[0] = true;
                     return;
                 }
@@ -368,7 +561,7 @@ final class AppApi {
             o.put("name", name).put("url", url).put("icon", icon).put("badge", badge).put("by", who.name)
                     .put("updated", System.currentTimeMillis() / 1000);
         });
-        if (full[0]) return new LinkServer.Response(409, LinkServer.err("too_many_pages", "16 pages; remove one"));
+        if (full[0]) return new LinkServer.Response(409, LinkServer.err("too_many_pages", HomePages.MAX_AGENT_PAGES + " pages; remove one"));
         host.log("page published by " + who.name + ": " + id);
         return new LinkServer.Response(200, LinkServer.ok().put("id", id));
     }
@@ -430,6 +623,608 @@ final class AppApi {
         return LinkCrypto.hex(LinkCrypto.randomBytes(8));
     }
 
+    /**
+     * POST /v1/notify and MCP tv_notify on behalf of a caller. An app token: its name is the sender, and (v2.22) a level
+     * above its maxLevel is lowered to it, without the voice, and the answer says "capped". A paired PC is not capped.
+     */
+    LinkServer.Response notifyAs(Principal who, JSONObject body) throws Exception {
+        JSONObject b = new JSONObject(body.toString());
+        boolean capped = false;
+        if (!who.pc) {
+            b.put("from", who.name);
+            String max = who.app != null ? who.app.maxLevel : "alert";
+            String lvl = b.optString("level", "info");
+            if (!LinkServer.LEVELS.contains(lvl)) lvl = "info";
+            String min = who.app != null ? who.app.minLevel : "info";
+            if (AppTokens.levelRank(lvl) < AppTokens.levelRank(min)) {   // v2.22: below this app's own floor
+                host.log("notify from " + who.name + " (" + lvl + ", below its floor " + min + ")");
+                return new LinkServer.Response(200, LinkServer.ok().put("shown", false).put("deferred", false).put("filtered", true));
+            }
+            if (AppTokens.levelRank(lvl) > AppTokens.levelRank(max)) {
+                b.put("level", max).remove("speak");
+                capped = true;
+            }
+        }
+        LinkServer.Response r = s.notifyPost(b);
+        if (!capped || r.status != 200) return r;
+        return new LinkServer.Response(200, new JSONObject(new String(r.body, java.nio.charset.StandardCharsets.UTF_8))
+                .put("capped", b.optString("level")));
+    }
+
+    // ---------------------------------------------------------------- v2.22 #157 Home widgets
+
+    static final Pattern WIDGET_ITEM = Pattern.compile("^/v1/widgets/item/([^/?#]{1,60})$");
+
+    /** The widgets API, shared by the paired PC, app tokens and MCP (the tool calls build the same requests). */
+    LinkServer.Response widgetRoute(Principal who, String m, String p, String target, String peer, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/widgets/types".equals(p)) return who.can("read") ? new LinkServer.Response(200, HomeWidgets.types()) : forbidden("read");
+        if ("GET".equals(m) && "/v1/widgets/list".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            int page = 0;
+            String q = query(target, "page");
+            if (q != null && !q.isEmpty()) {
+                try {
+                    page = Integer.parseInt(q);
+                } catch (NumberFormatException e) {
+                    return new LinkServer.Response(400, LinkServer.err("bad_page", "page: a number"));
+                }
+            }
+            return new LinkServer.Response(200, widgetList(page));
+        }
+        if ("POST".equals(m) && "/v1/widgets/item".equals(p)) {
+            if (!who.can("control")) return forbidden("control");
+            return widgetEdit((cfg, all) -> {
+                JSONObject in = new JSONObject(body.toString());
+                if (in.has("page")) in.put("page", HomePages.onDemand(cfg, in.opt("page"), in.optBoolean("strict"), nowS()));   // #158
+                JSONObject wd = HomeWidgets.create(all, in, who.pc ? "pc" : "app:" + who.name, nowS());
+                HomePages.touch(cfg, wd.optInt("page", 1), nowS());
+                return wd;
+            }, "created");
+        }
+        Matcher im = WIDGET_ITEM.matcher(p);
+        if (!im.matches()) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        String id = im.group(1);
+        if (id.startsWith("pane:")) {
+            return new LinkServer.Response(409, LinkServer.err("pane_widget", "a pane pushed by the PC (PUT /v1/widgets): change it there"));
+        }
+        if ("DELETE".equals(m)) {
+            if (!who.can("control")) return forbidden("control");
+            return widgetEdit((cfg, all) -> {
+                int i = HomeWidgets.indexOf(all, id);
+                if (i < 0) throw new HomeWidgets.Bad(404, "no_such_widget", id, null);
+                JSONObject gone = all.getJSONObject(i);
+                HomeWidgets.delete(all, id);
+                return gone;
+            }, "deleted");
+        }
+        if ("PATCH".equals(m) || "PUT".equals(m)) {
+            if (body.has("type")) return new LinkServer.Response(400, LinkServer.err("bad_type", "the type cannot change: delete and create"));
+            boolean shape = body.has("page") || body.has("x") || body.has("y") || body.has("w") || body.has("h");
+            if (!who.can(shape ? "control" : "notify")) return forbidden(shape ? "control" : "notify");
+            long retry = s.limited(peer + "|widget:" + id, 4, 1000);   // at most 4 changes a second per widget
+            if (retry > 0) return new LinkServer.Response(429, LinkServer.err("rate_limited", "4 changes a second per widget"));
+            boolean content = body.has("title") || body.has("icon") || body.has("ttl") || body.has("data");
+            return widgetEdit((cfg, all) -> {
+                JSONObject wd = null;
+                JSONObject in = new JSONObject(body.toString());
+                if (in.has("page")) in.put("page", HomePages.onDemand(cfg, in.opt("page"), in.optBoolean("strict"), nowS()));   // #158
+                if (shape) wd = HomeWidgets.move(all, id, in, nowS());
+                if (content || !shape) wd = HomeWidgets.update(all, id, in, nowS());
+                if (wd != null) HomePages.touch(cfg, wd.optInt("page", 1), nowS());
+                return wd;
+            }, shape ? "moved" : "updated");
+        }
+        return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+    }
+
+    // ---------------------------------------------------------------- v2.22 #158 / #159 widget pages
+
+    static final Pattern WPAGE = Pattern.compile("^/v1/widget-pages/([^/?#]{1,40})(/show)?$");
+
+    LinkServer.Response pageRoute(Principal who, String m, String p, String target, JSONObject body) throws Exception {
+        if ("GET".equals(m) && ("/v1/widget-pages".equals(p) || "/v1/widget-pages/current".equals(p))) {
+            if (!who.can("read")) return forbidden("read");
+            JSONObject cfg = host.config();
+            if (cfg == null) cfg = new JSONObject();
+            JSONObject cur = currentPage(cfg);
+            if ("/v1/widget-pages/current".equals(p)) return new LinkServer.Response(200, cur);
+            return new LinkServer.Response(200, new JSONObject().put("pages", HomePages.list(new JSONObject(cfg.toString()), nowS()))
+                    .put("total", HomePages.total(cfg)).put("current", cur));
+        }
+        if (!who.can("control")) return forbidden("control");
+        if ("POST".equals(m) && "/v1/widget-pages".equals(p)) {
+            int[] at = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> at[0] = HomePages.create(cfg, body, nowS()));
+            return r != null ? r : pageOk("created", at[0]);
+        }
+        Matcher pm = WPAGE.matcher(p);
+        if (!pm.matches()) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        String ref = java.net.URLDecoder.decode(pm.group(1), "UTF-8");
+        Object r0 = ref.matches("\\d{1,4}") ? (Object) Integer.parseInt(ref) : ref;
+        if (pm.group(2) != null) {   // POST /v1/widget-pages/<page>/show
+            if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+            int[] at = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> {
+                int idx = HomePages.resolve(cfg, r0);
+                if (idx < 1 || idx > HomePages.total(cfg)) throw new HomeWidgets.Bad(404, "no_such_page", ref, null);
+                cfg.put("widgetPageCurrent", idx).put("widgetPageShowAt", System.currentTimeMillis());
+                at[0] = idx;
+            });
+            return r != null ? r : pageOk("shown", at[0]);
+        }
+        if ("PATCH".equals(m) || "PUT".equals(m)) {
+            int[] at = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> {
+                int idx = HomePages.resolve(cfg, r0);
+                if (body.has("name")) HomePages.rename(cfg, idx > 0 ? idx : r0, body.optString("name"), nowS());
+                if (body.has("to")) idx = HomePages.reorder(cfg, idx > 0 ? idx : r0, body.optInt("to"), nowS());
+                if (body.has("rotate") || body.has("hidden")) {
+                    if (idx < 1 || idx > HomePages.total(cfg)) throw new HomeWidgets.Bad(404, "no_such_page", ref, null);
+                    HomePages.rename(cfg, idx, HomePages.name(cfg, idx), nowS());   // makes sure the entry exists
+                    JSONObject meta = HomePages.meta(cfg, idx);
+                    if (body.has("rotate")) meta.put("rotate", body.optBoolean("rotate"));
+                    if (body.has("hidden")) meta.put("hidden", idx != 1 && body.optBoolean("hidden"));
+                }
+                at[0] = idx;
+            });
+            return r != null ? r : pageOk("updated", at[0]);
+        }
+        if ("DELETE".equals(m)) {
+            Object moveTo = body.has("moveWidgetsTo") ? body.opt("moveWidgetsTo") : query(target, "moveTo");
+            int[] moved = new int[1];
+            LinkServer.Response r = pageEdit(cfg -> moved[0] = HomePages.delete(cfg, r0, moveTo, nowS()));
+            return r != null ? r : new LinkServer.Response(200, LinkServer.ok().put("deleted", true).put("movedWidgets", moved[0]));
+        }
+        return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+    }
+
+    private JSONObject currentPage(JSONObject cfg) throws JSONException {
+        int idx = HomePages.shown;
+        return new JSONObject().put("index", idx).put("name", idx == 0 ? "Home" : HomePages.name(cfg, idx))
+                .put("id", idx == 0 ? "home" : HomePages.meta(cfg, idx) != null ? HomePages.meta(cfg, idx).optString("id", "") : "")
+                .put("total", HomePages.total(cfg)).put("classicHome", idx == 0);
+    }
+
+    interface PageOp {
+        void apply(JSONObject cfg) throws Exception;
+    }
+
+    private LinkServer.Response pageEdit(PageOp op) throws Exception {
+        try {
+            host.editConfig(op::apply);
+        } catch (HomeWidgets.Bad e) {
+            return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+        }
+        s.broadcast("widgets_changed", new JSONObject().put("op", "pages"));
+        return null;
+    }
+
+    private LinkServer.Response pageOk(String what, int index) throws JSONException {
+        JSONObject cfg = host.config();
+        return new LinkServer.Response(200, LinkServer.ok().put(what, true).put("index", index)
+                .put("name", cfg != null ? HomePages.name(cfg, index) : "Page " + index));
+    }
+
+    // ---------------------------------------------------------------- v2.22 #160 Home Assistant
+
+    LinkServer.Response haRoute(Principal who, String m, String p, String target, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/ha/status".equals(p)) return who.can("read") ? new LinkServer.Response(200, host.haStatus()) : forbidden("read");
+        if ("GET".equals(m) && "/v1/ha/states".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            String d = query(target, "domain"), q = query(target, "q");
+            if (d != null && !d.isEmpty() && !d.matches("[a-z_]{1,32}")) return new LinkServer.Response(400, LinkServer.err("bad_domain", "e.g. scene"));
+            try {
+                return new LinkServer.Response(200, new JSONObject().put("entities", host.haList(d == null ? "" : d, q == null ? "" : LinkServer.printable(q, 64))));
+            } catch (Exception e) {
+                String code = e.getMessage() == null ? "unreachable" : e.getMessage();
+                return new LinkServer.Response("not_configured".equals(code) ? 409 : 502, LinkServer.err("ha_" + code, "Home Assistant"));
+            }
+        }
+        if ("POST".equals(m) && "/v1/ha/run".equals(p)) {
+            if (!who.can("control")) return forbidden("control");
+            String e = body.optString("entity_id", "");
+            String err = host.haRun(e);
+            if (err == null) {
+                host.log("Home Assistant: " + e + " run by " + who.name);
+                return new LinkServer.Response(200, LinkServer.ok().put("entity_id", e));
+            }
+            int st = "read_only".equals(err) ? 400 : "not_configured".equals(err) ? 409 : 502;
+            return new LinkServer.Response(st, LinkServer.err("ha_" + err, "Home Assistant"));
+        }
+        return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    // ---- v2.22 the studio: morning briefing, the agents' debate, the AI's scenes (Studio) ----
+    static final java.util.regex.Pattern DEBATE_PATH = java.util.regex.Pattern.compile("/v1/debate/(d[0-9]{1,6})");
+    static final java.util.regex.Pattern SCENE_ASK = java.util.regex.Pattern.compile("/v1/scene/(s[0-9a-f]{8})");
+    /** Scenes waiting for the owner's OK on the TV: id → {name, steps, save, state: pending|ran|saved|denied, results?}. */
+    final java.util.Map<String, JSONObject> sceneAsks = java.util.Collections.synchronizedMap(new java.util.LinkedHashMap<>());
+
+    private static LinkServer.Response bad(Studio.Bad e) {
+        return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+    }
+
+    LinkServer.Response studioRoute(Principal who, String m, String p, JSONObject body) throws Exception {
+        long now = System.currentTimeMillis();
+        String from = who.pc ? LinkServer.printable(body.optString("from", ""), 40) : who.name;
+        if (from.isEmpty()) from = "PC";
+        try {
+            switch (p) {
+                case "/v1/briefing":
+                    if ("GET".equals(m)) {
+                        if (!who.can("read")) return forbidden("read");
+                        JSONObject b = host.config().optJSONObject("briefing");
+                        return new LinkServer.Response(200, b == null ? new JSONObject().put("state", "none") : b);
+                    }
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject[] out = new JSONObject[1];
+                    String f = from;
+                    host.editConfig(j -> out[0] = Studio.briefingSet(j, body, f, now, java.util.TimeZone.getDefault()));
+                    LiveFeed.get().event(from, "info", "prepared the morning briefing", now);
+                    host.shiftChanged("briefing");
+                    return new LinkServer.Response(200, LinkServer.ok().put("briefing", out[0]));
+                case "/v1/briefing/show":
+                    if (!who.can("control")) return forbidden("control");
+                    if (host.config().optJSONObject("briefing") == null) return new LinkServer.Response(409, LinkServer.err("no_briefing", "set one first"));
+                    return host.showStudio("briefing", "") ? new LinkServer.Response(200, LinkServer.ok())
+                            : new LinkServer.Response(409, LinkServer.err("no_screen", "the TV cannot show it now"));
+                case "/v1/debate":
+                    if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject d = Studio.debateStart(body, from, now);
+                    LiveFeed.get().event(from, "info", "debate: " + d.optString("topic"), now);
+                    host.showStudio("debate", d.optString("id"));
+                    s.broadcast("debate", new JSONObject().put("id", d.optString("id")).put("op", "start"));
+                    return new LinkServer.Response(200, LinkServer.ok().put("debate", d));
+                case "/v1/scenes":
+                    if (!who.can("read")) return forbidden("read");
+                    JSONObject sc = host.config().optJSONObject("scenes");
+                    return new LinkServer.Response(200, new JSONObject().put("scenes", sc == null ? new JSONObject() : sc));
+                case "/v1/scene/run":
+                case "/v1/scene/save": {
+                    if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+                    if (!who.can("control")) return forbidden("control");
+                    boolean save = p.endsWith("/save");
+                    String name = body.has("name") || save ? Studio.sceneName(body.optString("name")) : "";
+                    if (!save && !body.has("steps")) {   // a saved scene: the owner approved it when it was saved
+                        JSONArray steps = Studio.scene(host.config(), name).getJSONArray("steps");
+                        LiveFeed.get().event(from, "status", "scene: " + name, now);
+                        return new LinkServer.Response(200, LinkServer.ok().put("ran", name).put("results", runScene(steps)));
+                    }
+                    JSONArray steps = Studio.sceneSteps(body.optJSONArray("steps"));
+                    String id = "s" + LinkCrypto.hex(LinkCrypto.randomBytes(4));
+                    while (sceneAsks.size() >= 8) sceneAsks.remove(sceneAsks.keySet().iterator().next());
+                    sceneAsks.put(id, new JSONObject().put("id", id).put("name", name).put("steps", steps).put("save", save)
+                            .put("by", from).put("state", "pending").put("at", now));
+                    if (!host.askScene(id, from, name, steps, save)) {
+                        sceneAsks.remove(id);
+                        return new LinkServer.Response(409, LinkServer.err("no_screen", "the TV cannot show the question now"));
+                    }
+                    return new LinkServer.Response(200, LinkServer.ok().put("asked", true).put("id", id)
+                            .put("message", "the owner answers on the TV; check GET /v1/scene/" + id));
+                }
+                default:
+                    break;
+            }
+            java.util.regex.Matcher dm = DEBATE_PATH.matcher(p);
+            if (dm.matches()) {
+                if (!who.can("notify")) return forbidden("notify");
+                if ("GET".equals(m)) return new LinkServer.Response(200, Studio.debate(dm.group(1)));
+                JSONObject d = Studio.debatePost(dm.group(1), from, body, now);
+                LiveFeed.get().event(from, "info", "answered the debate", now);
+                s.broadcast("debate", new JSONObject().put("id", d.optString("id")).put("op", "post"));
+                return new LinkServer.Response(200, LinkServer.ok().put("debate", d));
+            }
+            java.util.regex.Matcher sm = SCENE_ASK.matcher(p);
+            if (sm.matches() && "GET".equals(m)) {
+                if (!who.can("control")) return forbidden("control");
+                JSONObject a = sceneAsks.get(sm.group(1));
+                return a == null ? new LinkServer.Response(404, LinkServer.err("no_such_scene_question", sm.group(1))) : new LinkServer.Response(200, a);
+            }
+        } catch (Studio.Bad e) {
+            return bad(e);
+        }
+        return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    // ---- v2.22 Televideo AI and the Guide ----
+    static final java.util.regex.Pattern TELETEXT_PATH = java.util.regex.Pattern.compile("/v1/teletext/([0-9]{3})");
+    static final java.util.regex.Pattern GUIDE_PATH = java.util.regex.Pattern.compile("/v1/guide/(p[0-9]{1,6})");
+
+    LinkServer.Response channelRoute(Principal who, String m, String p, JSONObject body) throws Exception {
+        long now = System.currentTimeMillis();
+        String from = who.pc ? LinkServer.printable(body.optString("from", ""), 40) : who.name;
+        if (from.isEmpty()) from = "PC";
+        String by = from;
+        try {
+            if ("/v1/teletext".equals(p) && "GET".equals(m)) {
+                if (!who.can("read")) return forbidden("read");
+                return new LinkServer.Response(200, new JSONObject().put("pages", Teletext.list(host.config())).put("max", Teletext.MAX_PAGES));
+            }
+            java.util.regex.Matcher tm = TELETEXT_PATH.matcher(p);
+            if (tm.matches()) {
+                int n = Integer.parseInt(tm.group(1));
+                if ("GET".equals(m)) {
+                    if (!who.can("read")) return forbidden("read");
+                    return new LinkServer.Response(200, Teletext.page(host.config(), n));
+                }
+                if ("PUT".equals(m) || "POST".equals(m)) {
+                    if (!who.can("notify")) return forbidden("notify");
+                    int pn = Teletext.number(n);
+                    JSONObject[] out = new JSONObject[1];
+                    host.editConfig(j -> out[0] = Teletext.publish(j, pn, body, by, now));
+                    LiveFeed.get().event(from, "info", "teletext P" + pn + ": " + out[0].optString("title"), now);
+                    s.broadcast("teletext", new JSONObject().put("page", pn));
+                    return new LinkServer.Response(200, LinkServer.ok().put("page", out[0]));
+                }
+                if ("DELETE".equals(m)) {
+                    if (!who.can("control")) return forbidden("control");
+                    int pn = Teletext.number(n);
+                    host.editConfig(j -> Teletext.remove(j, pn));
+                    s.broadcast("teletext", new JSONObject().put("page", pn).put("removed", true));
+                    return new LinkServer.Response(200, LinkServer.ok());
+                }
+            }
+            if ("/v1/guide".equals(p)) {
+                if ("GET".equals(m)) {
+                    if (!who.can("read")) return forbidden("read");
+                    return new LinkServer.Response(200, new JSONObject().put("programmes", Guide.view(host.config(), now)).put("now", now));
+                }
+                if ("POST".equals(m)) {
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject[] out = new JSONObject[1];
+                    host.editConfig(j -> out[0] = Guide.add(j, body, by, now, java.util.TimeZone.getDefault()));
+                    s.broadcast("guide", new JSONObject().put("id", out[0].optString("id")));
+                    return new LinkServer.Response(200, LinkServer.ok().put("programme", out[0]));
+                }
+            }
+            java.util.regex.Matcher gm = GUIDE_PATH.matcher(p);
+            if (gm.matches()) {
+                String id = gm.group(1);
+                if ("POST".equals(m)) {
+                    if (!who.can("notify")) return forbidden("notify");
+                    JSONObject[] out = new JSONObject[1];
+                    host.editConfig(j -> out[0] = Guide.update(j, id, body, now));
+                    String st = out[0].optString("state");
+                    if (!"scheduled".equals(st)) LiveFeed.get().event(from, "failed".equals(st) ? "fail" : "done".equals(st) ? "ok" : "info",
+                            out[0].optString("title") + " · " + st.replace('_', ' '), now);
+                    s.broadcast("guide", new JSONObject().put("id", id));
+                    return new LinkServer.Response(200, LinkServer.ok().put("programme", out[0]));
+                }
+                if ("DELETE".equals(m)) {
+                    if (!who.can("control")) return forbidden("control");
+                    host.editConfig(j -> Guide.remove(j, id));
+                    s.broadcast("guide", new JSONObject().put("id", id).put("removed", true));
+                    return new LinkServer.Response(200, LinkServer.ok());
+                }
+            }
+        } catch (Studio.Bad e) {
+            return bad(e);
+        } catch (Exception e) {
+            Throwable c = e.getCause() != null ? e.getCause() : e;
+            if (c instanceof Studio.Bad) return bad((Studio.Bad) c);
+            if (e instanceof Studio.Bad) return bad((Studio.Bad) e);
+            throw e;
+        }
+        return new LinkServer.Response(404, LinkServer.err("not_found", null));
+    }
+
+    /** Runs a scene's steps as the TV's own MCP calls, one after the other; a failed step does not stop the rest. */
+    JSONArray runScene(JSONArray steps) throws Exception {
+        JSONArray out = new JSONArray();
+        Principal owner = Principal.pc("scene");
+        for (int i = 0; i < steps.length(); i++) {
+            JSONObject st = steps.getJSONObject(i);
+            JSONObject req = new JSONObject().put("jsonrpc", "2.0").put("id", i + 1).put("method", "tools/call")
+                    .put("params", new JSONObject().put("name", st.getString("tool")).put("arguments", st.optJSONObject("args")));
+            LinkServer.Response r = s.mcp(req, owner);
+            JSONObject res = new JSONObject(new String(r.body, java.nio.charset.StandardCharsets.UTF_8)).optJSONObject("result");
+            boolean ok = res != null && !res.optBoolean("isError");
+            JSONObject one = new JSONObject().put("step", Studio.describe(st)).put("ok", ok);
+            if (!ok) {   // the agent sees why a step failed, in a few words
+                JSONArray c = res == null ? null : res.optJSONArray("content");
+                String why = c != null && c.length() > 0 ? c.optJSONObject(0).optString("text") : new String(r.body, java.nio.charset.StandardCharsets.UTF_8);
+                one.put("error", LinkServer.printable(why, 200));
+            }
+            out.put(one);
+        }
+        return out;
+    }
+
+    /** The owner's answer on the TV (SceneActivity): run it, save it, or nothing. */
+    public JSONObject sceneAnswered(String id, boolean yes) throws Exception {
+        JSONObject a = sceneAsks.get(id);
+        if (a == null || !"pending".equals(a.optString("state"))) return null;
+        if (!yes) return a.put("state", "denied");
+        JSONArray steps = a.getJSONArray("steps");
+        if (a.optBoolean("save")) {
+            host.editConfig(j -> Studio.sceneSave(j, a.optString("name"), steps, a.optString("by"), System.currentTimeMillis()));
+            return a.put("state", "saved");
+        }
+        LiveFeed.get().event(a.optString("by"), "status", "scene: " + (a.optString("name").isEmpty() ? "(new)" : a.optString("name")), System.currentTimeMillis());
+        return a.put("state", "ran").put("results", runScene(steps));
+    }
+
+    // ---- v2.22 skills from the community: list, ask the owner to install, remove ----
+    static final java.util.regex.Pattern SKILL_PATH = java.util.regex.Pattern.compile("/v1/skills/([a-z0-9][a-z0-9-]{1,39})(/install)?");
+
+    LinkServer.Response skillsRoute(Principal who, String m, String p) throws Exception {
+        if ("GET".equals(m) && "/v1/skills".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            JSONArray cat = new JSONArray();
+            for (JSONObject sk : host.skillCatalog().values()) {
+                cat.put(new JSONObject().put("id", sk.optString("id")).put("name", sk.optString("name")).put("author", sk.optString("author"))
+                        .put("version", sk.optString("version")).put("description", sk.optString("description"))
+                        .put("permissions", sk.optJSONArray("permissions")));
+            }
+            JSONObject inst = host.config().optJSONObject("skills");
+            return new LinkServer.Response(200, new JSONObject().put("catalog", cat).put("installed", inst == null ? new JSONObject() : inst));
+        }
+        java.util.regex.Matcher sm = SKILL_PATH.matcher(p);
+        if (!sm.matches()) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        if (!who.can("control")) return forbidden("control");
+        String id = sm.group(1);
+        if ("POST".equals(m) && sm.group(2) != null) {   // the owner decides on the TV, with the permissions spelled out
+            if (!host.skillCatalog().containsKey(id)) return new LinkServer.Response(404, LinkServer.err("no_such_skill", id));
+            if (!host.askSkillInstall(id)) return new LinkServer.Response(409, LinkServer.err("no_screen", "the TV cannot show the question now"));
+            return new LinkServer.Response(200, LinkServer.ok().put("asked", true).put("message", "the owner answers on the TV; check GET /v1/skills"));
+        }
+        if ("DELETE".equals(m) && sm.group(2) == null) {
+            JSONObject[] out = new JSONObject[1];
+            try {
+                host.editConfig(j -> out[0] = Skills.remove(j, id));
+            } catch (HomeWidgets.Bad e) {
+                return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+            }
+            s.broadcast("widgets_changed", new JSONObject().put("op", "skill").put("id", id));
+            return new LinkServer.Response(200, LinkServer.ok().put("removed", id));
+        }
+        return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+    }
+
+    // ---- v2.22 AI LIVE: what each agent does now, for the LIVE channel (LiveFeed, memory only) ----
+    LinkServer.Response liveRoute(Principal who, String m, JSONObject body) throws Exception {
+        if ("GET".equals(m)) {
+            if (!who.can("read")) return forbidden("read");
+            return new LinkServer.Response(200, LiveFeed.get().snapshot(System.currentTimeMillis(), 60));
+        }
+        if (!"POST".equals(m)) return new LinkServer.Response(405, LinkServer.err("bad_method", null));
+        if (!who.can("notify")) return forbidden("notify");
+        if (body.has("preview") && !JSONObject.NULL.equals(body.opt("preview")) && LiveFeed.preview(body.optJSONObject("preview")) == null) {
+            return new LinkServer.Response(400, LinkServer.err("bad_preview", "{kind: image, url} (https or LAN), {kind: diff | text, text}, {kind: chart, points}"));
+        }
+        String from = who.pc ? LinkServer.printable(body.optString("from", ""), 40) : who.name;
+        JSONObject n = LiveFeed.get().now(from.isEmpty() ? "PC" : from, body, System.currentTimeMillis());
+        s.broadcast("live", new JSONObject().put("agent", n.optString("agent")));
+        return new LinkServer.Response(200, LinkServer.ok().put("now", n));
+    }
+
+    // ---- v2.22 the night shift: a diary on the TV and a queue for the morning (NightShift) ----
+    static final java.util.regex.Pattern SHIFT_ITEM = java.util.regex.Pattern.compile("/v1/shift/queue/(q[0-9]{1,6})");
+
+    interface ShiftOp {
+        JSONObject apply(JSONObject cfg, long now) throws Exception;
+    }
+
+    LinkServer.Response shiftRoute(Principal who, String m, String p, JSONObject body) throws Exception {
+        if ("GET".equals(m) && "/v1/shift".equals(p)) {
+            if (!who.can("read")) return forbidden("read");
+            return new LinkServer.Response(200, NightShift.status(host.config(), System.currentTimeMillis()));
+        }
+        java.util.regex.Matcher im = SHIFT_ITEM.matcher(p);
+        if ("GET".equals(m) && im.matches()) {
+            if (!who.can("notify")) return forbidden("notify");
+            try {
+                return new LinkServer.Response(200, NightShift.decision(host.config(), im.group(1)));
+            } catch (NightShift.Bad e) {
+                return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+            }
+        }
+        if (!"POST".equals(m)) return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        ShiftOp op;
+        String need, event;
+        switch (p) {
+            case "/v1/shift/start":
+                need = "control"; event = "started";
+                op = (cfg, now) -> NightShift.start(cfg, body, who.name, now, java.util.TimeZone.getDefault());
+                break;
+            case "/v1/shift/end":
+                need = "control"; event = "ended";
+                op = (cfg, now) -> NightShift.end(cfg, now);
+                break;
+            case "/v1/shift/log":
+                need = "notify"; event = "log";
+                op = (cfg, now) -> NightShift.log(cfg, who.name, body, now);
+                break;
+            case "/v1/shift/queue":
+                need = "notify"; event = "queued";
+                op = (cfg, now) -> NightShift.queue(cfg, who.name, body, now);
+                break;
+            default:
+                return new LinkServer.Response(404, LinkServer.err("not_found", null));
+        }
+        if (!who.can(need)) return forbidden(need);
+        JSONObject[] out = new JSONObject[1];
+        try {
+            host.editConfig(j -> out[0] = op.apply(j, System.currentTimeMillis()));
+        } catch (NightShift.Bad e) {
+            return new LinkServer.Response(e.status, LinkServer.err(e.code, e.getMessage()));
+        }
+        s.broadcast("shift_changed", new JSONObject().put("op", event));
+        host.shiftChanged(event);
+        if ("log".equals(event)) LiveFeed.get().event(who.name, out[0].optString("level"), out[0].optString("text"), System.currentTimeMillis());
+        else if ("queued".equals(event)) LiveFeed.get().event(who.name, "queued", out[0].optString("title"), System.currentTimeMillis());
+        boolean whole = "started".equals(event) || "ended".equals(event);
+        return new LinkServer.Response(200, LinkServer.ok().put(whole ? "shift" : "item", out[0]));
+    }
+
+    interface WidgetOp {
+        JSONObject apply(JSONObject cfg, JSONArray all) throws Exception;
+    }
+
+    /** Runs one change on omarchytv.json "widgets" atomically (nothing is written on an error) and tells /v1/events. */
+    private LinkServer.Response widgetEdit(WidgetOp op, String what) throws Exception {
+        JSONObject[] out = new JSONObject[1];
+        try {
+            host.editConfig(j -> {
+                JSONArray all = j.optJSONArray("widgets");
+                if (all == null) j.put("widgets", all = new JSONArray());
+                out[0] = op.apply(j, all);
+            });
+        } catch (HomeWidgets.Bad e) {
+            JSONObject err = LinkServer.err(e.code, e.getMessage());
+            if (e.free != null) err.put("free", e.free);
+            return new LinkServer.Response(e.status, err);
+        }
+        JSONObject wd = out[0];
+        if (wd != null) {
+            s.broadcast("widgets_changed", new JSONObject().put("op", what).put("id", wd.optString("id")).put("page", wd.optInt("page", 1)));
+        }
+        return new LinkServer.Response(200, LinkServer.ok().put(what, true).put("widget", wd == null ? JSONObject.NULL : wd));
+    }
+
+    /** The widgets, the PC's panes as read-only "lines" widgets on page 1, and the free 1x1 cells of the page asked. */
+    JSONObject widgetList(int page) throws JSONException {
+        JSONObject cfg = host.config();
+        JSONArray all = cfg != null && cfg.optJSONArray("widgets") != null ? cfg.optJSONArray("widgets") : new JSONArray();
+        JSONObject link = cfg != null ? cfg.optJSONObject("link") : null;
+        JSONArray panes = HomeWidgets.paneWidgets(all, link != null ? link.optJSONArray("panes") : null);
+        JSONArray shown = HomeWidgets.list(all, page);
+        if (page == 0 || page == 1) for (int i = 0; i < panes.length(); i++) shown.put(panes.get(i));
+        JSONObject o = new JSONObject().put("widgets", shown).put("grid", new JSONObject().put("cols", HomeWidgets.COLS).put("rows", HomeWidgets.ROWS));
+        if (page > 0) {
+            JSONArray occupied = new JSONArray();
+            for (int i = 0; i < all.length(); i++) occupied.put(all.get(i));
+            if (page == 1) for (int i = 0; i < panes.length(); i++) occupied.put(panes.get(i));
+            o.put("page", page).put("free", HomeWidgets.freeSlots(occupied, page, 1, 1, null));
+        }
+        return o;
+    }
+
+    private static long nowS() {
+        return System.currentTimeMillis() / 1000;
+    }
+
+    /** v2.22 "detail": at most 40 lines and 2000 characters, each line printable (tabs become spaces). */
+    static String detail(String s) {
+        if (s == null || s.trim().isEmpty()) return "";
+        StringBuilder out = new StringBuilder();
+        String[] lines = s.replace("\r\n", "\n").replace('\t', ' ').split("\n", -1);
+        for (int i = 0; i < lines.length && i < 40 && out.length() < 2000; i++) {
+            if (i > 0) out.append('\n');
+            String l = lines[i];   // like LinkServer.printable, but keeps the indentation (diffs, YAML)
+            for (int k = 0; k < l.length() && out.length() < 2000; ) {
+                int cp = l.codePointAt(k);
+                k += Character.charCount(cp);
+                if (Character.isISOControl(cp) || Character.getType(cp) == Character.FORMAT && cp != 0x200D) continue;
+                out.appendCodePoint(cp);
+            }
+        }
+        while (out.length() > 0 && Character.isWhitespace(out.charAt(out.length() - 1))) out.setLength(out.length() - 1);
+        while (out.length() > 0 && out.charAt(0) == '\n') out.deleteCharAt(0);
+        return out.toString();
+    }
+
     LinkServer.Response askPost(Principal who, JSONObject b) throws JSONException {
         String q = LinkServer.printable(b.optString("question", "").replace('\n', ' '), 200);
         if (q.isEmpty()) return new LinkServer.Response(400, LinkServer.err("bad_ask", "question is required"));
@@ -439,14 +1234,21 @@ final class AppApi {
             String x = LinkServer.printable(c.optString(i, ""), 24);
             if (!x.isEmpty() && !choices.contains(x)) choices.add(x);
         }
+        String risk = LinkServer.printable(b.optString("risk", "").replace('\n', ' '), 60);
+        if (!risk.isEmpty()) choices.removeIf(AppTokens::sayYes);   // v2.22: a risky request is approved at the PC only
         if (choices.isEmpty()) {
-            choices.add("Yes");
-            choices.add("No");
+            choices.add(risk.isEmpty() ? "Yes" : "Deny");
+            choices.add(risk.isEmpty() ? "No" : "On the PC");
         }
         int timeout = Math.max(10, Math.min(300, b.optInt("timeout", 120)));
         String from = who.pc ? LinkServer.printable(b.optString("from", ""), 40) : who.name;
         if (from.isEmpty()) from = "PC";
         long now = System.currentTimeMillis();
+        if (b.has("preview")) {   // v2.22 #3: see the work before you approve it
+            JSONObject pv = LiveFeed.preview(b.optJSONObject("preview"));
+            if (pv == null) return new LinkServer.Response(400, LinkServer.err("bad_preview", "{kind: image, url}, {kind: diff | text, text}, {kind: chart, points}"));
+            LiveFeed.get().now(from, new JSONObject().put("preview", pv), now);
+        }
         Ask ask;
         synchronized (asks) {
             for (Iterator<Ask> it = asks.values().iterator(); it.hasNext(); ) {
@@ -457,14 +1259,22 @@ final class AppApi {
             for (Ask x : asks.values()) if ("pending".equals(x.state(now))) pending++;
             if (pending >= MAX_ASKS) return new LinkServer.Response(429, LinkServer.err("busy", MAX_ASKS + " questions are already waiting on the TV"));
             ask = new Ask(newAskId(), who.key, from, q, choices, now + timeout * 1000L);
+            ask.detail = detail(b.optString("detail", ""));
+            ask.risk = risk;
             asks.put(ask.id, ask);
         }
-        String e = host.askUser(ask.id, ask.from, ask.question, ask.choices, ask.deadline);
+        LiveFeed.get().waiting(ask.from, ask.id, ask.question, now);   // v2.22 AI LIVE: the director cuts to it
+        String e = host.askUser(ask.id, ask.from, ask.question, ask.choices, ask.deadline, ask.detail, ask.risk);
         if (e != null) {
+            LiveFeed.get().answered(ask.id, "—", now);
             synchronized (asks) {
                 asks.remove(ask.id);
             }
             return new LinkServer.Response(403, LinkServer.err(e, "turn on agent alerts on the TV (Settings > Grok Bot & AI > AI agent alerts while you watch)"));
+        }
+        if (b.optBoolean("speak")) {   // v2.22: read it aloud first ("say": the full text, e.g. the whole command)
+            String say = LinkServer.printable(b.optString("say", "").replace('\n', ' ').trim(), 300);
+            host.speak(say.isEmpty() ? ask.from + ". " + ask.question : say);   // silent when tones and voice are off
         }
         return new LinkServer.Response(200, ask.json(now));
     }
@@ -517,6 +1327,7 @@ final class AppApi {
             a.answer = choice;
             a.notifyAll();
         }
+        LiveFeed.get().answered(id, choice, System.currentTimeMillis());   // v2.22 AI LIVE
         try {
             JSONObject ev = new JSONObject().put("id", id).put("answer", choice);
             s.broadcast("ask_answer", ev);   // PCs (WebSocket) and pages (SSE)

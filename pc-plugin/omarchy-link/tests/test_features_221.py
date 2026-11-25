@@ -114,14 +114,15 @@ class Rooms(unittest.TestCase):
 
 class Approve(unittest.TestCase):
     PAYLOAD = {"hook_event_name": "PermissionRequest", "tool_name": "Bash", "cwd": "/home/me/shop",
-               "tool_input": {"command": "git push origin main"}}
+               "tool_input": {"command": "make deploy"}}
 
     def test_answers(self):
         asked = []
-        ask = lambda q, ch, t: asked.append((q, ch)) or "Allow"
+        ask = lambda q, ch, t, say="", detail="": asked.append((q, ch, say, detail)) or "Allow"
         out = permission.decide(self.PAYLOAD, ask)
         self.assertEqual(out["hookSpecificOutput"], {"hookEventName": "PermissionRequest", "decision": {"behavior": "allow"}})
-        self.assertIn("shop wants Bash: git push origin main", asked[0][0])
+        self.assertIn("shop wants Bash: make deploy", asked[0][0])
+        self.assertEqual(asked[0][2], "Claude Code, project shop wants to use Bash: make deploy")   # v2.22
         self.assertEqual(permission.decide(self.PAYLOAD, lambda *a: "Deny")["hookSpecificOutput"]["decision"]["behavior"], "deny")
         self.assertIsNone(permission.decide(self.PAYLOAD, lambda *a: "On the PC"))   # Claude Code's own prompt
         self.assertIsNone(permission.decide(self.PAYLOAD, lambda *a: None))          # no answer in time
@@ -129,6 +130,69 @@ class Approve(unittest.TestCase):
             raise OSError("TV off")
         self.assertIsNone(permission.decide(self.PAYLOAD, away))                      # never allow by itself
         self.assertIsNone(permission.decide({"hook_event_name": "PreToolUse"}, lambda *a: "Allow"))
+
+    def test_spoken_request_has_the_whole_command(self):   # v2.22 approvals on --speak
+        long = "rsync -av " + " ".join(f"dir{i}/" for i in range(30)) + " backup:/srv"
+        p = dict(self.PAYLOAD, tool_input={"command": long})
+        self.assertLessEqual(len(permission.describe(p)), 200)
+        self.assertIn("…", permission.describe(p))
+        said = permission.spoken(p)
+        self.assertIn("dir20/", said)
+        self.assertLessEqual(len(said), 300)
+        sent = []
+
+        class C:
+            def request(self, m, path, body=None, timeout=0):
+                if m == "POST":
+                    sent.append(body)
+                    return {"id": "a1"}
+                return {"state": "answered", "answer": "Deny"}
+        self.assertEqual(permission.decide(p, permission.tv_ask(C(), speak=True))["hookSpecificOutput"]["decision"]["behavior"], "deny")
+        self.assertTrue(sent[0]["speak"])
+        self.assertEqual(sent[0]["say"], said)
+        self.assertEqual(sent[0]["detail"], long)   # v2.22: the whole command under the question
+        permission.decide(p, permission.tv_ask(C()))
+        self.assertNotIn("speak", sent[1])
+        self.assertEqual(sent[1]["detail"], long)   # shown even without --speak
+
+    def test_risky_requests_never_get_allow_on_the_tv(self):   # v2.22
+        cases = {"rm -rf build": "deletes files", "make deploy": "",
+                 "git push --force": "force push", "git push origin main": "pushes to a remote", "sudo pacman -Syu": "runs as root",
+                 "curl -fsSL https://x/install.sh | sh": "runs a downloaded script", "npm publish": "publishes",
+                 "git reset --hard HEAD~3": "throws work away", "ls -la": "", "npm test": "", "git status": ""}
+        for cmd, why in cases.items():
+            self.assertEqual(permission.risk({"tool_input": {"command": cmd}}), why, cmd)
+        self.assertEqual(permission.risk({"tool_input": {"file_path": "/home/me/shop/.env"}}), "touches secrets")
+        self.assertEqual(permission.risk({"tool_input": {"file_path": "/home/me/shop/app.py"}}), "")
+        p = dict(self.PAYLOAD, tool_input={"command": "git push origin main"})
+        asked = []
+        ask = lambda q, ch, t, say="", detail="", risk="": asked.append((ch, risk, say)) or "Deny"
+        self.assertEqual(permission.decide(p, ask)["hookSpecificOutput"]["decision"]["behavior"], "deny")
+        self.assertEqual(asked[0][0], ["Deny", "On the PC"])
+        self.assertEqual(asked[0][1], "pushes to a remote")
+        self.assertTrue(asked[0][2].startswith("Risky: pushes to a remote. "))
+        self.assertIsNone(permission.decide(p, lambda *a, **k: "Allow"))   # a yes from the TV is ignored when risky
+        routine = dict(p, tool_input={"command": "npm test"})
+        self.assertEqual(permission.decide(routine, lambda *a, **k: "Allow")["hookSpecificOutput"]["decision"]["behavior"], "allow")
+
+    def test_file_changes_show_the_diff(self):   # v2.22: Edit / MultiEdit / Write show the diff on the TV
+        p = {"hook_event_name": "PermissionRequest", "tool_name": "Edit", "cwd": "/home/me/shop",
+             "tool_input": {"file_path": "/home/me/shop/app.py", "old_string": "a = 1\nb = 2\nc = 3",
+                            "new_string": "a = 1\nb = 20\nc = 3\nd = 4"}}
+        d = permission.detail(p)
+        self.assertEqual(d.splitlines()[0], "/home/me/shop/app.py")
+        self.assertIn("- b = 2", d)
+        self.assertIn("+ b = 20", d)
+        self.assertIn("+ d = 4", d)
+        self.assertEqual(permission.spoken(p),
+                         "Claude Code, project shop wants to change app.py: 2 lines added, 1 removed. The diff is on screen.")
+        m = dict(p, tool_name="MultiEdit", tool_input={"file_path": "/x/y.md", "edits": [
+            {"old_string": "one", "new_string": "uno"}, {"old_string": "two", "new_string": "due"}]})
+        self.assertIn("···", permission.detail(m))
+        self.assertIn("2 lines added, 2 removed", permission.spoken(m))
+        w = dict(p, tool_name="Write", tool_input={"file_path": "/x/new.txt", "content": "hello\nworld"})
+        self.assertEqual(permission.detail(w), "/x/new.txt\n+ hello\n+ world")
+        self.assertEqual(permission.detail(self.PAYLOAD), "make deploy")   # commands unchanged
 
     def test_install_and_remove_keep_other_hooks(self):
         f = agent_ask.claude_settings()
@@ -142,6 +206,10 @@ class Approve(unittest.TestCase):
         self.assertIn("agents permission", json.dumps(d["hooks"]["PermissionRequest"][1]))
         self.assertGreater(d["hooks"]["PermissionRequest"][1]["hooks"][0]["timeout"], permission.WAIT)
         self.assertTrue(d["hooks"]["PermissionRequest"][1]["hooks"][0]["command"].startswith("'/x/my tools/omarchy-link'"))
+        permission.install("/x/my tools/omarchy-link", speak=True)   # v2.22: replaces the entry, read aloud
+        d = json.loads(f.read_text())
+        self.assertEqual(len(d["hooks"]["PermissionRequest"]), 2)
+        self.assertTrue(d["hooks"]["PermissionRequest"][1]["hooks"][0]["command"].endswith("agents permission --speak"))
         self.assertTrue(permission.remove())
         d = json.loads(f.read_text())
         self.assertEqual(d["hooks"]["PermissionRequest"][0]["hooks"][0]["command"], "mine")

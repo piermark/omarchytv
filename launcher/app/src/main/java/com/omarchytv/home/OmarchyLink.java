@@ -122,6 +122,7 @@ public final class OmarchyLink implements LinkServer.Host {
         OmarchyLink r = new OmarchyLink();
         r.app = app;
         runtime = r;
+        LiveCorner.init(app);   // v2.22 AI LIVE in the corner while you watch
         bg.execute(r::boot);
     }
 
@@ -178,11 +179,22 @@ public final class OmarchyLink implements LinkServer.Host {
     static void setHomeVisible(boolean v) {
         homeVisible = v;
         statusChanged();
+        if (v) LiveCorner.homeBack();   // v2.22 AI LIVE in the corner: off on the Home; a question left there opens now
+        else LiveCorner.refresh();
     }
 
     static void setScreensaver(boolean v) {
         screensaver = v;
         statusChanged();
+        LiveCorner.refresh();
+    }
+
+    static boolean homeShown() {
+        return homeVisible;
+    }
+
+    static boolean screensaverShown() {
+        return screensaver;
     }
 
     static void launched(String pkg) {
@@ -286,6 +298,118 @@ public final class OmarchyLink implements LinkServer.Host {
         return r != null && r.live() && r.server.answerAsk(id, choice);
     }
 
+    // ---- v2.22 skills: the catalogue in assets/skills (checked once), the install question on the TV ----
+    private static java.util.Map<String, JSONObject> catalog;
+
+    static synchronized java.util.Map<String, JSONObject> catalog(Context c) {
+        if (catalog != null) return catalog;
+        java.util.Map<String, JSONObject> m = new java.util.TreeMap<>();
+        try {
+            String[] names = c.getAssets().list("skills");
+            for (String n : names == null ? new String[0] : names) {
+                if (!n.endsWith(".json")) continue;
+                try (java.io.InputStream in = c.getAssets().open("skills/" + n)) {
+                    java.io.ByteArrayOutputStream bo = new java.io.ByteArrayOutputStream();
+                    byte[] buf = new byte[8192];
+                    for (int k; (k = in.read(buf)) > 0; ) bo.write(buf, 0, k);
+                    JSONObject sk = com.omarchytv.home.link.Skills.check(new JSONObject(bo.toString("UTF-8")));
+                    m.put(sk.getString("id"), sk);
+                } catch (Exception e) {
+                    Log.w(TAG, "skill " + n + ": " + e.getMessage());
+                }
+            }
+        } catch (java.io.IOException ignored) {
+        }
+        return catalog = m;
+    }
+
+    /** v2.22 a skill installed or removed on the TV: the config, then widgets_changed for the Home and the PCs. */
+    static void skillEdit(Context c, ShiftOp op) throws Exception {
+        LauncherConfig.updateOrThrow(c, j -> op.apply(j));
+        OmarchyLink r = runtime;
+        if (r != null && r.server != null) r.server.broadcast("widgets_changed", new JSONObject().put("op", "skill"));
+        if (r != null) r.emit("config", new JSONObject());
+    }
+
+    // ---- v2.22 the studio ----
+    /** Reads a text aloud on the TV (the same rules as /v1/notify speak: off with notifySound off or a night shift). */
+    static void speakNow(String text) {
+        OmarchyLink r = runtime;
+        if (r != null) r.speak(text);
+    }
+
+    @Override
+    public boolean showStudio(String what, String arg) {
+        main.post(() -> {
+            try {
+                app.startActivity(LiveActivity.intent(app, "debate".equals(what) ? LiveActivity.DEBATE : LiveActivity.BRIEFING)
+                        .putExtra(LiveActivity.EXTRA_ARG, arg == null ? "" : arg));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "studio: " + e);
+            }
+        });
+        return true;
+    }
+
+    @Override
+    public boolean askScene(String id, String from, String name, org.json.JSONArray steps, boolean save) {
+        main.post(() -> {
+            try {
+                app.startActivity(SceneActivity.intent(app, id, from, name, steps.toString(), save));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "scene: " + e);
+            }
+        });
+        return true;
+    }
+
+    /** v2.22 the owner's answer to a scene question, from SceneActivity (off the main thread: it may run steps). */
+    static JSONObject sceneAnswer(String id, boolean yes) throws Exception {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live()) return null;
+        return r.server.sceneAnswered(id, yes);
+    }
+
+    /** v2.22 the owner's pick in a debate, from AI LIVE. */
+    static void debateChosen(String id, int index) throws Exception {
+        JSONObject d = com.omarchytv.home.link.Studio.debateChoose(id, index, System.currentTimeMillis());
+        com.omarchytv.home.link.LiveFeed.get().event("you", "answer", "picked " + d.optString("winner"), System.currentTimeMillis());
+        OmarchyLink r = runtime;
+        if (r != null && r.server != null) r.server.broadcast("debate", new JSONObject().put("id", id).put("op", "chosen").put("winner", d.optString("winner")));
+    }
+
+    @Override
+    public java.util.Map<String, JSONObject> skillCatalog() {
+        return catalog(app);
+    }
+
+    @Override
+    public boolean askSkillInstall(String id) {
+        main.post(() -> {
+            try {
+                app.startActivity(SkillsActivity.intent(app, id));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "skill ask: " + e);
+            }
+        });
+        return true;
+    }
+
+    /** v2.22 AI LIVE: OK on the agent on camera opens its question (with its preview). */
+    static void showAsk(android.app.Activity a, String id) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || id == null) return;
+        for (String[] q : r.server.pendingAsks()) {
+            if (!id.equals(q[0])) continue;
+            java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(6, q.length));
+            JSONObject pv = com.omarchytv.home.link.LiveFeed.get().previewOf(q[1], System.currentTimeMillis());
+            a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3]))
+                    .putExtra(AgentQuestionActivity.EXTRA_DETAIL, q[4]).putExtra(AgentQuestionActivity.EXTRA_RISK, q[5])
+                    .putExtra(AgentQuestionActivity.EXTRA_PREVIEW, pv == null ? "" : pv.toString()));
+            return;
+        }
+    }
+
     /** Home came back: show the oldest question still waiting, if any. */
     static void showPendingAsk(android.app.Activity a) {
         OmarchyLink r = runtime;
@@ -293,8 +417,9 @@ public final class OmarchyLink implements LinkServer.Host {
         java.util.List<String[]> p = r.server.pendingAsks();
         if (p.isEmpty()) return;
         String[] q = p.get(0);
-        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(4, q.length));
-        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3])));
+        java.util.List<String> choices = new java.util.ArrayList<>(java.util.Arrays.asList(q).subList(6, q.length));
+        a.startActivity(AgentQuestionActivity.intent(a, q[0], q[1], q[2], choices, Long.parseLong(q[3]))
+                .putExtra(AgentQuestionActivity.EXTRA_DETAIL, q[4]).putExtra(AgentQuestionActivity.EXTRA_RISK, q[5]));
     }
 
     /** v2.21 Settings › System info: the same as /v1/diagnostics, with whole-server numbers when Link runs. */
@@ -413,6 +538,18 @@ public final class OmarchyLink implements LinkServer.Host {
     /** Cinemarchy: play one of the PC's files here (the PC streams it once, to this TV only, like omarchy-tv send). */
     static void mediaPlay(String path, double position) {
         mediaSend("media_play", path, position);
+    }
+
+    /** v2.22 #159 the Home showed another widget page: widget_page_changed {index, id, by} on /v1/events. */
+    static void widgetPageChanged(int index, String id, String by) {
+        OmarchyLink r = runtime;
+        if (r == null || !r.live() || r.server.connectedClients() == 0) return;
+        bg.execute(() -> {
+            try {
+                r.server.broadcast("widget_page_changed", new JSONObject().put("index", index).put("id", id == null ? "" : id).put("by", by));
+            } catch (Exception ignored) {
+            }
+        });
     }
 
     private static void mediaSend(String type, String path, double position) {
@@ -1174,11 +1311,40 @@ public final class OmarchyLink implements LinkServer.Host {
     /** v2.21 notifications that waited for Home (level info while an app was on screen); at most 10, oldest dropped. */
     private static final java.util.ArrayDeque<String> HELD = new java.util.ArrayDeque<>();
 
+    /** v2.22 the night shift: an edit of the shift (from the TV page), then the event and the wake-up plan. */
+    static void shiftEdit(Context c, ShiftOp op, String event) throws Exception {
+        LauncherConfig.updateOrThrow(c, j -> op.apply(j));
+        OmarchyLink r = runtime;
+        if (r != null && r.server != null) r.server.broadcast("shift_changed", new JSONObject().put("op", event));
+        ShiftWake.plan(c);
+    }
+
+    interface ShiftOp {
+        Object apply(JSONObject cfg) throws Exception;
+    }
+
+    @Override
+    public void shiftChanged(String what) {
+        main.post(() -> ShiftWake.plan(app));
+    }
+
     /** v2.21 POST /v1/notify, MCP tv_notify: only with agent alerts on; "info" waits while an app is on screen. */
     @Override
     public String notify(String from, String title, String text, String level) {
-        if (!LauncherConfig.get(app).agentAlert) return null;
+        LauncherConfig cfg = LauncherConfig.get(app);
+        if (!cfg.agentAlert) return null;
+        if (LauncherConfig.belowAgentMin(cfg.agentAlertMin, level)) return "filtered";   // v2.22, set with the remote
         String body = title.isEmpty() ? text : text.isEmpty() ? title : title + " · " + text;
+        com.omarchytv.home.link.LiveFeed.get().event(from, "alert".equals(level) ? "alert" : "note", body, System.currentTimeMillis());   // v2.22 AI LIVE
+        if (ShiftWake.quiet(app)) {   // v2.22 night shift: no toast, no tone; the note waits in the diary for the morning
+            try {
+                JSONObject line = new JSONObject().put("level", "alert".equals(level) ? "fail" : "info").put("text", body);
+                LauncherConfig.updateOrThrow(app, j -> com.omarchytv.home.link.NightShift.log(j, from, line, System.currentTimeMillis()));
+                return "kept_for_morning";
+            } catch (Exception e) {
+                return "kept_for_morning";
+            }
+        }
         String msg = app.getString(R.string.agent_note, from, body);
         try {
             emit("agent", new JSONObject().put("name", from).put("text", body));
@@ -1224,6 +1390,7 @@ public final class OmarchyLink implements LinkServer.Host {
     @Override
     public void speak(String text) {
         if (text == null || text.isEmpty() || !LauncherConfig.get(app).notifySound) return;   // notifySound: false = silent
+        if (ShiftWake.quiet(app)) return;   // v2.22 the night shift: silent until the morning
         String say = text.length() > 300 ? text.substring(0, 300) : text;
         main.post(() -> {
             if (tts == null) {
@@ -1272,11 +1439,27 @@ public final class OmarchyLink implements LinkServer.Host {
     /** v2.21 ask_user: only with agent alerts on; the dialog opens over the current app when Android allows it. */
     @Override
     public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs) {
+        return askUser(id, from, question, choices, deadlineMs, "");
+    }
+
+    @Override
+    public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs, String detail) {
+        return askUser(id, from, question, choices, deadlineMs, detail, "");
+    }
+
+    @Override
+    public String askUser(String id, String from, String question, java.util.List<String> choices, long deadlineMs, String detail, String risk) {
         if (!LauncherConfig.get(app).agentAlert) return "ask_off";
         String msg = app.getString(R.string.agent_note, from, question);
         main.post(() -> {
             try {
-                app.startActivity(AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs));
+                JSONObject pv = com.omarchytv.home.link.LiveFeed.get().previewOf(from, System.currentTimeMillis());   // v2.22 #3
+                Intent q = AgentQuestionActivity.intent(app, id, from, question, choices, deadlineMs)
+                        .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail == null ? "" : detail)
+                        .putExtra(AgentQuestionActivity.EXTRA_RISK, risk == null ? "" : risk)
+                        .putExtra(AgentQuestionActivity.EXTRA_PREVIEW, pv == null ? "" : pv.toString());
+                if (LiveCorner.ask(q, deadlineMs)) return;   // v2.22 a film is on: the corner asks, the film keeps playing
+                app.startActivity(q);
             } catch (RuntimeException e) {
                 Log.w(TAG, "ask: " + e);
             }
@@ -1284,6 +1467,28 @@ public final class OmarchyLink implements LinkServer.Host {
         });
         log("question from " + from);
         return null;
+    }
+
+    // v2.22 #160 Home Assistant, with the URL and token of Settings › Ambilight & Lights (never returned)
+    @Override
+    public JSONObject haStatus() {
+        return com.omarchytv.home.lights.HomeAssistantClient.fromStore(app).status();
+    }
+
+    @Override
+    public org.json.JSONArray haList(String domain, String query) throws Exception {
+        com.omarchytv.home.lights.HomeAssistantClient ha = com.omarchytv.home.lights.HomeAssistantClient.fromStore(app);
+        if (!ha.configured()) throw new Exception("not_configured");
+        try {
+            return ha.states(domain, query, 200);
+        } catch (Exception e) {
+            throw new Exception(com.omarchytv.home.lights.HomeAssistantClient.errorCode(e));
+        }
+    }
+
+    @Override
+    public String haRun(String entity) {
+        return com.omarchytv.home.lights.HomeAssistantClient.fromStore(app).run(entity);
     }
 
     @Override
@@ -1355,6 +1560,56 @@ public final class OmarchyLink implements LinkServer.Host {
         return out[0];
     }
 
+    /** v2.22 #162: radio with a station, the volume and the sleep timer; "now" gets station, volume, sleep too. */
+    @Override
+    public JSONObject radioCmd(JSONObject cmd) {
+        String action = cmd.optString("action", "");
+        final JSONObject[] out = {null};
+        java.util.concurrent.CountDownLatch done = new java.util.concurrent.CountDownLatch(1);
+        main.post(() -> {
+            try {
+                RadioPlayer p = RadioPlayer.get(app);
+                JSONObject radio = LauncherConfig.readJson(app).optJSONObject("radio");
+                switch (action) {
+                    case "play":
+                        if (cmd.has("station")) {
+                            RadioStations.Station st = RadioStations.find(RadioStations.list(radio), cmd.optString("station"));
+                            if (st == null) {
+                                out[0] = new JSONObject().put("error", "no_such_station").put("message", cmd.optString("station"));
+                                return;
+                            }
+                            p.playStation(st, radio != null && radio.optBoolean("allowHttp"));
+                        } else p.playOrStart();
+                        break;
+                    case "pause": p.pause(); break;
+                    case "next": p.advance(1, true); break;
+                    case "previous": p.advance(-1, true); break;
+                    case "stop": p.stop(); break;
+                    case "volume": p.setVolume(cmd.optInt("volume", 100)); break;
+                    case "sleep": p.setSleep(cmd.optInt("minutes", 0)); break;
+                    default: break;
+                }
+                RadioCatalog.Track t = p.current();
+                String sid = p.stationId();
+                out[0] = new JSONObject().put("playing", p.playing()).put("title", t == null ? JSONObject.NULL : t.title)
+                        .put("artist", t == null ? JSONObject.NULL : sid != null ? p.icyTitle() : t.artist)
+                        .put("station", sid != null && t != null ? t.title : "Omarchy Radio").put("stationId", sid != null ? sid : "omarchy")
+                        .put("volume", p.volume()).put("sleepMinutes", p.sleepLeft());
+            } catch (Exception e) {
+                Log.w(TAG, "radio " + action + ": " + e);
+            } finally {
+                done.countDown();
+            }
+        });
+        try {
+            done.await(3, java.util.concurrent.TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        log("radio " + action);
+        return out[0];
+    }
+
     @Override
     public String openTarget(String target) {
         Class<?> c;
@@ -1364,6 +1619,43 @@ public final class OmarchyLink implements LinkServer.Host {
             case "cinemarchy": c = CinemarchyActivity.class; break;
             case "arcade": c = ArcadeActivity.class; break;
             case "office": c = OfficeActivity.class; break;
+            case "live":   // v2.22 AI LIVE, and the night's replay
+            case "replay": {
+                boolean rp = "replay".equals(target);
+                main.post(() -> {
+                    try {
+                        app.startActivity(LiveActivity.intent(app, rp));
+                    } catch (RuntimeException e) {
+                        Log.w(TAG, "open live: " + e);
+                    }
+                });
+                log("open " + target);
+                return null;
+            }
+            case "teletext":   // v2.22 Televideo AI and the agents' Guide
+            case "guide": {
+                boolean tt = "teletext".equals(target);
+                main.post(() -> {
+                    try {
+                        app.startActivity(tt ? TeletextActivity.intent(app, 100) : GuideActivity.intent(app));
+                    } catch (RuntimeException e) {
+                        Log.w(TAG, "open " + target + ": " + e);
+                    }
+                });
+                log("open " + target);
+                return null;
+            }
+            case "skill":   // v2.22 #161: the public skill page as a QR (no address, no token)
+                main.post(() -> {
+                    try {
+                        app.startActivity(QrActivity.intent(app, app.getString(R.string.skill_qr_label), SkillQr.url(app),
+                                app.getString(R.string.skill_qr_hint), false));
+                    } catch (RuntimeException e) {
+                        Log.w(TAG, "open skill: " + e);
+                    }
+                });
+                log("open skill");
+                return null;
             default: return "no_such_target";
         }
         Class<?> fc = c;
@@ -1381,6 +1673,81 @@ public final class OmarchyLink implements LinkServer.Host {
     @Override
     public JSONObject config() {
         return LauncherConfig.readJson(app);
+    }
+
+    @Override
+    public byte[] settingsAsset(String name) {   // v2.22 #163 assets/settings/ (WebAccess checked the name)
+        try (java.io.InputStream in = app.getAssets().open("settings/" + name)) {
+            java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+            byte[] b = new byte[8192];
+            int n;
+            while ((n = in.read(b)) > 0) out.write(b, 0, n);
+            return out.toByteArray();
+        } catch (java.io.IOException e) {
+            return null;
+        }
+    }
+
+    @Override
+    public java.util.Map<String, java.util.List<String>> settingsChoices() {
+        java.util.Map<String, java.util.List<String>> m = new java.util.HashMap<>();
+        m.put("theme", java.util.Arrays.asList(Theme.names(app)));
+        m.put("language", java.util.Arrays.asList(LauncherConfig.LANGUAGES));
+        return m;
+    }
+
+    @Override
+    public JSONObject haConfig() throws org.json.JSONException {
+        return new JSONObject().put("url", com.omarchytv.home.lights.LightsStore.get(app, "ha_url"))
+                .put("tokenSet", com.omarchytv.home.lights.LightsStore.hasSecret(app, "ha_token"));
+    }
+
+    @Override
+    public void haConfigure(String url, String token) {
+        String old = com.omarchytv.home.lights.LightsStore.get(app, "ha_url");
+        if (url != null) {
+            com.omarchytv.home.lights.LightsStore.put(app, "ha_url", url);
+            if (token == null && !url.equals(old)) com.omarchytv.home.lights.LightsStore.put(app, "ha_token", "");   // not to a new address
+        }
+        if (token != null) com.omarchytv.home.lights.LightsStore.put(app, "ha_token", token);
+        log("web settings: Home Assistant " + (url != null ? "URL" : "") + (url != null && token != null ? " and " : "") + (token != null ? "token" : "") + " changed");
+        emit("config", new JSONObject());
+    }
+
+    @Override
+    public java.util.List<String> webChoices() {
+        return java.util.Arrays.asList(app.getString(R.string.web_deny), app.getString(R.string.web_allow_read), app.getString(R.string.web_allow));
+    }
+
+    @Override
+    public String approveWeb(String id, String device, String peer, boolean fromQr, java.util.List<String> choices, long deadlineMs) {
+        if (!LauncherConfig.get(app).webSettings) return "off";
+        String q = app.getString(R.string.web_approve_q, device, peer);
+        String detail = app.getString(fromQr ? R.string.web_approve_qr : R.string.web_approve_typed);
+        main.post(() -> {
+            try {
+                app.startActivity(AgentQuestionActivity.intent(app, id, app.getString(R.string.web_settings_row), q, choices, deadlineMs)
+                        .putExtra(AgentQuestionActivity.EXTRA_DETAIL, detail));
+            } catch (RuntimeException e) {
+                Log.w(TAG, "web approval: " + e);
+            }
+        });
+        return null;
+    }
+
+    @Override
+    public JSONObject webTheme() {
+        try {
+            return ThemeShare.payload(Theme.cur(), null, ThemeShare.source(themeCfg()));
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /** v2.22 #163 a one-time code for the web settings QR; null when the link is not running. */
+    static String webCode() {
+        OmarchyLink r = runtime;
+        return r != null && r.live() ? r.server.newWebCode() : null;
     }
 
     @Override

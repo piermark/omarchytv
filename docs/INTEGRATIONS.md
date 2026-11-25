@@ -94,6 +94,7 @@ silences both the tones and the voice.
 
 ```sh
 omarchy-link watch -- make release      # runs it, then ✓ / ✗, the time and the last line on the TV (alert on failure)
+omarchy-link watch --only-fail -- make  # 2.22: nothing on the TV when it passes, the alert only when it fails
 ```
 
 Codex: `notify = ["omarchy-link", "notify", "-q", "--from", "Codex"]` in `~/.codex/config.toml` (its JSON event is
