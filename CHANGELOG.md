@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — 2.22
+## [2.22.0] — 2026-11-25 (`versionCode 31`; webOS 2.22.0, Tizen 2.22.0, PC plugins 2.22.0)
 
 ### The TV that runs your AI (Android TV)
 
@@ -99,6 +99,11 @@
   widgets show states live over the HA websocket while on screen (a 30 s poll as fallback) and toggle lights,
   switches, fans. `/v1/ha/*` and `tv_ha_status`, `tv_ha_list`, `tv_ha_run`. One HA setup (URL and token in Settings ›
   Ambilight & Lights, now also without the lights hub); the token never leaves the TV.
+- **webOS 26** (#173, thanks to @Stargazer-ops; same approach as free-my-tv PR 285): webOS 26 closes the page's own
+  connection to the TV's app list with 1008 "invalid origin". The ipk now carries a small JS service
+  (`com.omarchytv.home.service`) that asks for the TV's apps with `Origin: file://` and only the READ_INSTALLED_APPS
+  permission, after the TV's normal "allow" prompt. The app tries its own connection first (no second prompt on
+  older TVs) and uses the service only where the TV refuses it.
 - **Widget pages on LG and Samsung** (#157, #158, #159, #160): the PC bridge (`omarchy-tv webos-serve`) keeps the
   widgets and pages with the same rules and answers as an Android TV, so an agent's `tv_widget_*` / `tv_page_*` calls
   (`omarchy-tv mcp --bridge`) work unchanged; the TV app reads them with its ask code. CH+ / CH- on the Home go ⌂ → 1 →

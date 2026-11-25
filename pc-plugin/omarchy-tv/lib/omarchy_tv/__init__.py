@@ -1,3 +1,3 @@
 """OmarchyTV PC plugin: the omarchy-tv CLI, the MCP server and the LG/Samsung web bridge."""
 
-VERSION = "2.21.0"
+VERSION = "2.22.0"
