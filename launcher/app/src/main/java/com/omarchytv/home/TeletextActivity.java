@@ -67,7 +67,7 @@ public class TeletextActivity extends Activity {
         box.addView(title);
         for (int i = 0; i < rows.length; i++) box.addView(rows[i] = cell(0xFFFFFFFF));
         LinearLayout fast = new LinearLayout(this);
-        String[] labels = {"◀", "▶", "100", getString(R.string.guide_title)};
+        String[] labels = {"◀", "▶", "100", "📺"};   // blue: the agents' Guide
         int[] colors = {0xFFFF3B3B, 0xFF3BFF3B, 0xFFFFFF3B, 0xFF3BFFFF};
         for (int i = 0; i < 4; i++) {
             TextView f = cell(colors[i]);
@@ -128,7 +128,7 @@ public class TeletextActivity extends Activity {
             p = null;
         }
         String key = p == null ? "none" : page + ":" + p.optLong("at") + ":" + p.optString("title") + ":" + (page == Teletext.INDEX ? Teletext.numbers(cfg).toString() : "");
-        if (!force && key.equals(shownKey) && System.currentTimeMillis() > missingUntil) return;
+        if (!force && key.equals(shownKey) && missingUntil == 0) return;   // a missing page keeps ticking until it goes back to 100
         shownKey = key;
         if (p == null) {   // as the old teletext: the page is not there, back to the index
             title.setText(pad(" P" + page + "  " + getString(R.string.teletext_missing), Teletext.COLS));

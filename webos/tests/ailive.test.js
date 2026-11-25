@@ -116,9 +116,13 @@ test("the studio: the briefing goes on air once and is read aloud; only a held O
   assert.deepStrictEqual(said, ["Good morning Marco."]);
   assert.deepStrictEqual(b.posts[0], ["/v1/tvstudio/briefing-shown", {}]);
   assert.ok(/OVERNIGHT/.test(b.doc.body.textContent));
+  const shown = view.briefing;
+  view.briefing = null;   // once shown, the bridge stops sending it: the briefing on screen stays
+  await b.g.tick();
   b.g.key(39);
   assert.ok(/▶ Today/.test(b.doc.body.textContent));
   b.g.key(461);
+  view.briefing = shown;
   await b.g.tick();
   assert.strictEqual(b.g.isOpen(), false);   // once
   view.debate = { id: "d1", topic: "Cache the widgets how?", state: "open", entries: [{ agent: "Claude", text: "LRU of 32" }, { agent: "Grok", text: "disk" }] };

@@ -60,6 +60,7 @@ public class GuideActivity extends Activity {
         head.addView(clock);
         root.addView(head);
         ScrollView sv = new ScrollView(this);
+        sv.setFocusable(false);   // the focus goes to a programme, never to the list itself
         list = new LinearLayout(this);
         list.setOrientation(LinearLayout.VERTICAL);
         list.setPadding(0, dp(12), 0, dp(12));
@@ -147,7 +148,9 @@ public class GuideActivity extends Activity {
             list.addView(r);
         }
         int want = focusIndex >= 0 && focusIndex < list.getChildCount() ? focusIndex : Math.max(0, firstLive);
-        list.getChildAt(Math.min(want, list.getChildCount() - 1)).requestFocus();
+        View target = list.getChildAt(Math.min(want, list.getChildCount() - 1));
+        target.requestFocus();
+        list.post(target::requestFocus);   // again after the first layout, when the window has the focus
     }
 
     private void open(JSONObject p) {

@@ -73,7 +73,7 @@
     var onCamera = "", cutAt = 0, handUntil = 0, tape = [], cursor = 0, paused = false, stopped = false, speed = 1;
     var sel = 0, dialog = null, lastAsk = "", timer = 0, tickerX = 0, tickerTimer = 0;
     var section = 0, sectionAt = 0, lastBriefing = 0, lastDebate = "", pick = 0, pickAt = 0, debateId = "";
-    var ttPage = 100, ttTyped = "", ttMissingAt = 0;
+    var ttPage = 100, ttTyped = "", ttMissingAt = 0, onAir = null;   // onAir: the briefing being shown
 
     function el(tag, style, text) {
       var e = doc.createElement(tag);
@@ -404,7 +404,7 @@
 
     // ---- BRIEFING and DEBATE: the studio's shows ---------------------------------------------------------------
     function renderBriefing() {
-      var b = data && data.briefing, now = Date.now();
+      var b = onAir, now = Date.now();
       els.clock.textContent = hhmm(now);
       if (!b || !b.sections || !b.sections.length) { els.name.textContent = "AI LIVE"; els.line.textContent = "No briefing."; return; }
       var secs = b.sections;
@@ -470,16 +470,18 @@
     function ttFrame() {
       close(true);
       layer = el("div", "position:fixed;left:0;top:0;right:0;bottom:0;z-index:99965;background:#000;color:#fff;font-family:monospace;font-weight:bold;" +
-        "font-size:" + vh(36) + ";line-height:1.12;padding:" + vh(40) + " 0 0 " + vh(200) + ";white-space:pre;overflow:hidden");
+        "font-size:" + vh(36) + ";line-height:1.12;padding-top:" + vh(40) + ";white-space:pre;overflow:hidden");
       layer.id = "otv-ailive";
+      var page = el("div", "width:40ch;margin:0 auto");   // 40 columns in the middle of the screen, as on a TV
+      layer.appendChild(page);
       els.ttHead = el("div", "", ""); els.ttTitle = el("div", "color:#ffff3b;background:#1530a8", "");
-      layer.appendChild(els.ttHead); layer.appendChild(els.ttTitle);
+      page.appendChild(els.ttHead); page.appendChild(els.ttTitle);
       els.ttRows = [];
-      for (var i = 0; i < 22; i++) { var r = el("div", "", " "); els.ttRows.push(r); layer.appendChild(r); }
-      var f = el("div", "padding-top:" + vh(8), "");
-      var lab = [["◀", "#ff3b3b"], ["▶", "#3bff3b"], ["100", "#ffff3b"], [(opts.tr && opts.tr("guide_title")) || "Guide", "#3bffff"]];
-      for (var k = 0; k < 4; k++) f.appendChild(el("span", "color:" + lab[k][1], pad("  " + lab[k][0], 10)));
-      layer.appendChild(f);
+      for (var i = 0; i < 22; i++) { var r = el("div", "", " "); els.ttRows.push(r); page.appendChild(r); }
+      var f = el("div", "padding-top:" + vh(8) + ";display:table;width:100%;table-layout:fixed");
+      var lab = [["◀", "#ff3b3b"], ["▶", "#3bff3b"], ["100", "#ffff3b"], ["📺", "#3bffff"]];   // blue: the Guide
+      for (var k = 0; k < 4; k++) f.appendChild(el("span", "display:table-cell;text-align:center;overflow:hidden;text-overflow:ellipsis;color:" + lab[k][1], lab[k][0]));
+      page.appendChild(f);
       doc.body.appendChild(layer);
     }
     function renderTeletext() {
@@ -556,7 +558,7 @@
         frame("◆ MORNING", "var(--yellow,#e0af68)", "NEWS"); stage();
         els.hint.textContent = "◀ ▶ news   OK / BACK";
         section = 0; sectionAt = Date.now();
-        var b = data && data.briefing;
+        var b = onAir = (data && data.briefing) || onAir;   // kept: after "shown" the bridge stops sending it
         cutTo((b && b.by) || "AI");
         if (b) { lastBriefing = b.at; post("/v1/tvstudio/briefing-shown", {}).then(null, function () { return null; }); }
         if (b && b.say && opts.speak) opts.speak(b.say);
@@ -620,7 +622,7 @@
         if (code === K_BLUE) { open("teletext"); return true; }
       }
       if (mode === "briefing") {
-        var secs = (data && data.briefing && data.briefing.sections) || [];
+        var secs = (onAir && onAir.sections) || [];
         if ((code === LEFT || code === RIGHT) && secs.length) { section = (section + (code === RIGHT ? 1 : -1) + secs.length) % secs.length; sectionAt = Date.now(); renderBriefing(); }
         else if (code === OK) close();
         return true;
