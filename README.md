@@ -53,7 +53,7 @@ I sign every Android APK with the OmarchyTV release certificate (`SHA-256: 90aa6
 | **`omarchy-tv-2.22.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchy-tv-2.22.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | PC plugin `omarchy-tv` only | `2.22.0` | `127 KB` | `ddc58b1c30370ababae43d032f9e8355815aa053defb1dacfce4e72a5177a4a0` |
 | **`omarchy-link-2.22.0.tar.gz`** | **[GitHub](https://github.com/piermark/omarchytv/releases/download/v2.22.0/omarchy-link-2.22.0.tar.gz)** · **[GitLab](https://gitlab.com/piermark/omarchytv/-/releases/v2.22.0)** | PC plugin `omarchy-link` only | `2.22.0` | `264 KB` | `7fceb84561f76e605267aa3c33f2820466663f9151cfec35016c09001bcb8bab` |
 
-All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.20.0](https://github.com/piermark/omarchytv/releases/tag/v2.20.0).
+All releases are on **[GitHub Releases](https://github.com/piermark/omarchytv/releases)** and **[GitLab Releases](https://gitlab.com/piermark/omarchytv/-/releases)**. Full notes: **[CHANGELOG.md](CHANGELOG.md)**. Previous release: [v2.21.0](https://github.com/piermark/omarchytv/releases/tag/v2.21.0).
 
 ---
 
