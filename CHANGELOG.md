@@ -2,7 +2,7 @@
 
 ## [2.22.0] — 2026-11-25 (`versionCode 31`; webOS 2.22.0, Tizen 2.22.0, PC plugins 2.22.0)
 
-### The TV that runs your AI (Android TV)
+### The TV that runs your AI
 
 - **AI LIVE, your agents as a TV broadcast**: Settings › Grok Bot & AI › AI LIVE (or `tv_open live`). The ● LIVE
   bug, the channel logo and the clock, the studios strip, one agent on camera (its avatar, what it does, the progress,
@@ -78,6 +78,8 @@
   an LG or Samsung app cannot draw over other apps. Not on LG / Samsung in 2.22: talking from the phone and scenes (they need the TV's own
   tools).
 
+### Home widgets and pages
+
 - **Home widgets an agent can manage** (#157, first part): typed widgets with a place and a size on a 12 × 6 grid per
   page, created, updated, moved, resized and removed through `/v1/widgets/*` and the MCP tools `tv_widget_types`,
   `tv_widget_list`, `tv_widget_create`, `tv_widget_update` (content only, a notify token is enough), `tv_widget_move`
@@ -99,11 +101,6 @@
   widgets show states live over the HA websocket while on screen (a 30 s poll as fallback) and toggle lights,
   switches, fans. `/v1/ha/*` and `tv_ha_status`, `tv_ha_list`, `tv_ha_run`. One HA setup (URL and token in Settings ›
   Ambilight & Lights, now also without the lights hub); the token never leaves the TV.
-- **webOS 26** (#173, thanks to @Stargazer-ops; same approach as free-my-tv PR 285): webOS 26 closes the page's own
-  connection to the TV's app list with 1008 "invalid origin". The ipk now carries a small JS service
-  (`com.omarchytv.home.service`) that asks for the TV's apps with `Origin: file://` and only the READ_INSTALLED_APPS
-  permission, after the TV's normal "allow" prompt. The app tries its own connection first (no second prompt on
-  older TVs) and uses the service only where the TV refuses it.
 - **Widget pages on LG and Samsung** (#157, #158, #159, #160): the PC bridge (`omarchy-tv webos-serve`) keeps the
   widgets and pages with the same rules and answers as an Android TV, so an agent's `tv_widget_*` / `tv_page_*` calls
   (`omarchy-tv mcp --bridge`) work unchanged; the TV app reads them with its ask code. CH+ / CH- on the Home go ⌂ → 1 →
@@ -111,6 +108,16 @@
   (Settings › Home widgets › Rotate widget pages). Home Assistant scenes and switches run from the TV with the URL
   and token of Ambilight & Lights (`confirm` asks for OK twice). Not on LG / Samsung in 2.22: moving and resizing
   widgets with the remote (agents and the PC place them), the `tv_ha_*` tools, Android app and PC shortcuts.
+### LG webOS
+
+- **webOS 26** (#173, thanks to @Stargazer-ops; same approach as free-my-tv PR 285): webOS 26 closes the page's own
+  connection to the TV's app list with 1008 "invalid origin". The ipk now carries a small JS service
+  (`com.omarchytv.home.service`) that asks for the TV's apps with `Origin: file://` and only the READ_INSTALLED_APPS
+  permission, after the TV's normal "allow" prompt. The app tries its own connection first (no second prompt on
+  older TVs) and uses the service only where the TV refuses it.
+
+### Plugins, settings and the Mac
+
 - **Radio plugin** (#162, `plugins.radio`, off by default): the `♪ Radio` pill in the bar opens a mini panel (play /
   pause, next, previous, the radio's own volume, sleep timer, stations, Radiomarchy) without leaving the Home; a
   `radio` widget shows what plays with ⏮ ⏯ ⏭ ☰; an optional play / pause key (a colour key or PLAY_PAUSE). Internet
@@ -138,6 +145,8 @@
   endpoint or poller); those panes no longer also show in the lower row. The right-hand widgets scroll when they
   overflow. `homeWidgets.grokbot: false` hides the Grok Bot tile on Home (default on). Details:
   [docs/native-home-details.md](docs/native-home-details.md). Not taken from the PR: the date stamp in the bar.
+### Agents, approvals and safety
+
 - **`omarchy-link watch --only-fail`** (alias `--quiet-ok`): green runs stay off the TV, only failures show (as an
   alert, spoken with `--speak`). The exit code is passed through as before. The GitHub Actions example has a
   commented `if:` line that does the same for CI. Asked on X.
@@ -179,6 +188,11 @@
   Hermes, every omarchy-link hook in Claude Code's settings, the Omarchy hook pack, the Tailscale switch and the PC
   MCP server's bearer token, backing up each config it edits, and says what is left (the tailnet node). App tokens
   now **expire** after 90 days without use (`token add --expire-days N`, 0 = never; tokens from 2.21 get 90).
+
+### Docs
+
+- **The 2.21.0 checksums in the webOS install guide** (PR #174 by Edney Matias, thank you): the SHA-256 of the
+  2.21.0 ipk and PC plugin now match the release.
 
 ## [2.21.0] — 2026-11-19 (`versionCode 30`; webOS 2.21.0, Tizen 2.21.0, PC plugins 2.21.0)
 
