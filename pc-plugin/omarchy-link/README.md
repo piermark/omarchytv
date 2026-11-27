@@ -21,6 +21,21 @@ The TV never contacts AI services and never holds credentials. Everything stays 
 
 ## Install
 
+From the Omarchy plugin marketplace ([plugins.omarchy.org](https://plugins.omarchy.org)), or by hand with the same
+repository ([piermark/omarchytv-plugin](https://github.com/piermark/omarchytv-plugin), this folder on its own):
+
+```bash
+omarchy plugin add https://github.com/piermark/omarchytv-plugin.git   # lands disabled, so you can read the code
+omarchy plugin enable com.omarchytv.link                              # the OmarchyTV widget on the right of the bar
+mkdir -p ~/.local/bin
+ln -sf ~/.config/omarchy/plugins/com.omarchytv.link/bin/omarchy-link ~/.local/bin/omarchy-link   # the CLI
+omarchy-link hook add      # optional: sync the theme to the TV on every `omarchy theme set`
+```
+
+`omarchy plugin update` keeps it current (it shows the diff first).
+
+Or from the OmarchyTV repository:
+
 ```bash
 git clone https://github.com/piermark/omarchytv.git && cd omarchytv/pc-plugin
 # (or the GitLab mirror: https://gitlab.com/piermark/omarchytv.git)
@@ -169,6 +184,8 @@ Keys, when you choose to use API providers, are referenced (`env:NAME`, `file:PA
 omarchy-link unpair
 omarchy-link hook remove
 omarchy plugin remove com.omarchytv.link
+rm -f ~/.local/bin/omarchy-link
+rm -rf ~/.local/share/omarchy-link   # only if you installed from the OmarchyTV repository
 rm -rf ~/.config/omarchy-link ~/.local/state/omarchy-link ~/.cache/omarchy-link
 ```
 
