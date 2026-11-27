@@ -405,7 +405,7 @@ final class HomeV29 extends FrameLayout {
         aiLp.leftMargin = px(32);
         aiLp.topMargin = px(360);
         addView(ai, aiLp);
-        // Keep the PC and AI panels one column wide. Give Weather the 80 px used to fill the left gutter.
+        // Keep the PC and Mac panels one column wide beside Weather.
         float colWidth = sideColWidth(false);
         LinearLayout.LayoutParams wxl = (LinearLayout.LayoutParams) wxBox.getLayoutParams();
         wxl.width = px(weatherColWidth(false));
@@ -1025,10 +1025,18 @@ final class HomeV29 extends FrameLayout {
             String label = entry.optString("label"), value = entry.optString("value");
             if (mac && ("cpu".equals(label) || "ram".equals(label))) {
                 double percent = nativePercent(value);
-                if (percent >= 0) body.addView(barRow(label, 4, percent / 100,
-                        "cpu".equals(label) ? t.green : t.yellow, 12, Math.round(percent) + "%"));
-                else body.addView(line(label + "  " + value));
-            } else body.addView(line(label + "  " + value));
+                if (percent >= 0) {
+                    body.addView(barRow(label, 4, percent / 100, "cpu".equals(label) ? t.green : t.yellow,
+                            12, Math.round(percent) + "%"));
+                    continue;
+                }
+            }
+            SpannableStringBuilder detail = new SpannableStringBuilder();
+            span(detail, String.format(Locale.ROOT, "%-8s  ", label), t.accent);
+            span(detail, value, t.fg);
+            TextView detailRow = line("");
+            detailRow.setText(detail);
+            body.addView(detailRow);
         }
         float alpha = nativeAlpha(pane);
         for (int i = first; i < body.getChildCount(); i++) body.getChildAt(i).setAlpha(alpha);
@@ -2643,9 +2651,7 @@ final class HomeV29 extends FrameLayout {
 
     /**
      * Right-aligned widgets row width in design px: the space from the term box gutter to the right margin (1200),
-     * never the term box. Since #126 Weather is 80 px wider than a column in both layouts, so the row is 1200 with
-     * racing off too; at WIDGETS_W the three columns (442 + 362 + 362 + two gaps = 1198) overflowed the right edge of
-     * the screen and the AI panel lost its numbers.
+     * never the term box. Weather and the paired devices share this space.
      */
     static int widgetsWidth(boolean racing) {
         return HOME_W - HOME_MARGIN - (HOME_MARGIN + TERM_W + WIDGET_GAP);
@@ -2661,7 +2667,9 @@ final class HomeV29 extends FrameLayout {
     }
 
     static int weatherColWidth(boolean racing) {
-        return sideColWidth(racing) + 80;
+        if (racing) return sideColWidth(true) + 80;
+        // The weather card starts just beyond the terminal. Mirror that left edge around the screen center.
+        return HOME_W - 2 * widgetsLeft(false);
     }
 
     /** Left edge of the right-aligned widgets row; must stay to the right of the term box. */
@@ -2679,6 +2687,7 @@ final class HomeV29 extends FrameLayout {
         wxl.width = px(weather);
         wxl.weight = 0f;
         wxBox.setLayoutParams(wxl);
+        wxTemp.setTextSize(TypedValue.COMPLEX_UNIT_PX, px(racing ? 50 : 60));
         LinearLayout.LayoutParams statsLp = (LinearLayout.LayoutParams) statsColumn.getLayoutParams();
         statsLp.width = px(side);
         statsColumn.setLayoutParams(statsLp);
